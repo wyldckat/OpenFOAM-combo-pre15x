@@ -15,9 +15,8 @@ for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
         fvm::laplacian(rho*rUA, pd) == fvc::div(phi)
     );
 
-    fvScalarMatrix::reference pdRef = pdEqn.setReference(pdRefCell, pdRefValue);
+    pdEqn.setReference(pdRefCell, pdRefValue);
     pdEqn.solve();
-    pdEqn.unsetReference(pdRef);
 
     if (nonOrth == nNonOrthCorr)
     {
@@ -25,7 +24,7 @@ for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     }
 }
 
-#include "incompressible/continuityErrs.H"
+#include "continuityErrs.H"
 
 // Explicitly relax pressure for momentum corrector
 pd.relax();

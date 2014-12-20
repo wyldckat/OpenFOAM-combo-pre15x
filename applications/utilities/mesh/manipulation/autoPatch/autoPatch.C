@@ -29,10 +29,11 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "polyMesh.H"
 #include "Time.H"
 #include "boundaryMesh.H"
-#include "repatchPolyMesh.H"
-#include "physicalConstants.H"
+#include "repatchPolyTopoChanger.H"
+#include "mathematicalConstants.H"
 #include "OFstream.H"
 #include "ListOps.H"
 
@@ -73,17 +74,7 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-
-    // Read original mesh
-    repatchPolyMesh mesh
-    (
-        IOobject
-        (
-            repatchPolyMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
+#   include "createPolyMesh.H"
 
     Info<< "Mesh read in = "
         << runTime.cpuTimeIncrement()
@@ -98,7 +89,7 @@ int main(int argc, char *argv[])
 
     scalar featureAngle(readScalar(IStringStream(args.args()[3])()));
 
-    scalar minCos = Foam::cos(featureAngle * physicalConstant::pi/180.0);
+    scalar minCos = Foam::cos(featureAngle * mathematicalConstant::pi/180.0);
 
     Info<< "Feature:" << featureAngle << endl
         << "minCos :" << minCos << endl
@@ -226,7 +217,8 @@ int main(int argc, char *argv[])
 
 
     // Change patches
-    mesh.changePatches(newPatchPtrList);
+    repatchPolyTopoChanger polyMeshRepatcher(mesh);    
+    polyMeshRepatcher.changePatches(newPatchPtrList);
 
 
     // Change face ordering
@@ -239,10 +231,10 @@ int main(int argc, char *argv[])
     {
         label meshFaceI = meshFace[faceI];
 
-        mesh.changePatchID(meshFaceI, patchIDs[faceI]);
+        polyMeshRepatcher.changePatchID(meshFaceI, patchIDs[faceI]);
     }
 
-    mesh.repatch();
+    polyMeshRepatcher.repatch();
 
     // Write resulting mesh
     mesh.write();

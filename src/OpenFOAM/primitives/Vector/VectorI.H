@@ -22,15 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Templated 3D Vector derived from VectorSpace adding construction from
-    3 components, element access using x(), y() and z() member functions and
-    the iner-product (dot-product) and cross product operators.
-
-    A centre() member function which returns the Vector for which it is called
-    is defined so that point which is a typedef to Vector<scalar> behaves as
-    other shapes in the shape hierachy.
-
 \*---------------------------------------------------------------------------*/
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -56,21 +47,11 @@ inline Vector<Cmpt>::Vector(const VectorSpace<Vector<Cmpt>, Cmpt, 3>& vs)
 
 // Construct given three Cmpts
 template <class Cmpt>
-inline Vector<Cmpt>::Vector(const Cmpt& Vx, const Cmpt& Vy, const Cmpt& Vz)
+inline Vector<Cmpt>::Vector(const Cmpt& vx, const Cmpt& vy, const Cmpt& vz)
 {
-    this->v_[X] = Vx;
-    this->v_[Y] = Vy;
-    this->v_[Z] = Vz;
-}
-
-
-// Construct given two Cmpts
-template <class Cmpt>
-inline Vector<Cmpt>::Vector(const Cmpt& Vx, const Cmpt& Vy)
-{
-    this->v_[X] = Vx;
-    this->v_[Y] = Vy;
-    this->v_[Z] = 0.0;
+    this->v_[X] = vx;
+    this->v_[Y] = vy;
+    this->v_[Z] = vz;
 }
 
 

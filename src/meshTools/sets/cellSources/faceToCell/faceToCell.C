@@ -106,9 +106,10 @@ void Foam::faceToCell::combine(topoSet& set, const bool add) const
     // Handle all selection.
     if (option_ == ALL)
     {
+        // Count number of selected faces per cell.
+
         Map<label> facesPerCell(loadedSet.size());
 
-        // Collect all cells referenced in any way
         for
         (
             faceSet::const_iterator iter = loadedSet.begin();
@@ -124,7 +125,7 @@ void Foam::faceToCell::combine(topoSet& set, const bool add) const
 
             if (fndOwn == facesPerCell.end())
             {
-                facesPerCell.insert(own, 0);
+                facesPerCell.insert(own, 1);
             }
             else
             {
@@ -139,7 +140,7 @@ void Foam::faceToCell::combine(topoSet& set, const bool add) const
 
                 if (fndNei == facesPerCell.end())
                 {
-                    facesPerCell.insert(nei, 0);
+                    facesPerCell.insert(nei, 1);
                 }
                 else
                 {

@@ -96,9 +96,7 @@ public:
 
             void abort();
 
-            void sigInt() const;
-
-            void sigQuit() const;
+            void signalEnd() const;
 };
 
 

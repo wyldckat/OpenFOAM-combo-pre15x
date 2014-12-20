@@ -33,7 +33,7 @@ Description
 #ifndef vectorIOField_H
 #define vectorIOField_H
 
-#include "primitiveFields.H"
+#include "vectorField.H"
 #include "IOField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

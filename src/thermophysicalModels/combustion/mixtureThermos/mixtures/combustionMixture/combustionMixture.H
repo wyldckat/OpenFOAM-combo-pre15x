@@ -130,7 +130,7 @@ public:
             const dimensionedScalar& stoicRatio
         ) const
         {
-            return max(ft - (1.0 - ft)/stoicRatio.value(), 0.0);
+            return max(ft - (scalar(1) - ft)/stoicRatio.value(), scalar(0));
         }
 };
 

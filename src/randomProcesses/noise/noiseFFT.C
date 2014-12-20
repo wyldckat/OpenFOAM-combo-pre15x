@@ -30,7 +30,7 @@ Description
 #include "IFstream.H"
 #include "DynamicList.H"
 #include "fft.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "SubField.H"
 
 // * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * //
@@ -172,7 +172,7 @@ Foam::tmp<Foam::scalarField> Foam::noiseFFT::Hanning(const label N) const
 
     scalar T = N*deltat_;
 
-    return 2*(0.5 - 0.5*cos(2*physicalConstant::pi*t/T));
+    return 2*(0.5 - 0.5*cos(2*mathematicalConstant::pi*t/T));
 }
 
 

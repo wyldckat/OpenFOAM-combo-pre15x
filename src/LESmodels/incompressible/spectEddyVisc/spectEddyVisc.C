@@ -84,8 +84,12 @@ void spectEddyVisc::correct(const tmp<volTensorField>& gradU)
 
     for (label i=0; i<5; i++)
     {
-        nuSgs_ =  nu()/
-        (1.0 - exp(-cB_*pow(nu()/(nuSgs_ + nu()), 1.0/3.0)*pow(Re, -2.0/3.0)));
+        nuSgs_ = 
+            nu()
+           /(
+               scalar(1)
+             - exp(-cB_*pow(nu()/(nuSgs_ + nu()), 1.0/3.0)*pow(Re, -2.0/3.0))
+            );
     }
 
     nuSgs_.correctBoundaryConditions();

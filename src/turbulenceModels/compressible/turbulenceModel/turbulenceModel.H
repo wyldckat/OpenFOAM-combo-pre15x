@@ -83,8 +83,8 @@ protected:
         Switch turbulence_;
         dictionary turbulenceModelCoeffs_;
 
-        dimensionedScalar kappa_;
-        dimensionedScalar E_;
+        scalar kappa_;
+        scalar E_;
 
         scalar yPlusLam(const scalar kappa, const scalar E);
         scalar yPlusLam_;
@@ -215,6 +215,26 @@ public:
             dimensionedScalar& epsilonSmall()
             {
                 return epsilonSmall_;
+            }
+
+
+            //- Return kappa for use in wall-functions
+            scalar kappa() const
+            {
+                return kappa_;
+            }
+
+            //- Return E for use in wall-functions
+            scalar E() const
+            {
+                return E_;
+            }
+
+            //- Return y+ at the edge of the laminar sublayer
+            //  for use in wall-functions
+            scalar yPlusLam() const
+            {
+                return yPlusLam_;
             }
 
 

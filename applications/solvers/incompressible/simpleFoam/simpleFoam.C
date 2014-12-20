@@ -90,10 +90,8 @@ int main(int argc, char *argv[])
                     fvm::laplacian(1.0/AU, p) == fvc::div(phi)
                 );
 
-                fvScalarMatrix::reference pRef =
-                    pEqn.setReference(pRefCell, pRefValue);
+                pEqn.setReference(pRefCell, pRefValue);
                 pEqn.solve();
-                pEqn.unsetReference(pRef);
 
                 if (nonOrth == nNonOrthCorr)
                 {
@@ -115,9 +113,9 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

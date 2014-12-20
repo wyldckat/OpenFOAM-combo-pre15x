@@ -22,11 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "string.H"
+#include "debug.H"
 #include "OSspecific.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -36,7 +35,7 @@ namespace Foam
 
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
-//- Null string
+int string::debug(debug::debugSwitch("string", 0));
 const string string::null;
 
 
@@ -51,7 +50,7 @@ string::size_type string::count(const char c) const
     (
         const_iterator iter = begin();
         iter != end();
-        iter++
+        ++iter
     )
     {
         if (*iter == c)
@@ -138,8 +137,8 @@ string& string::expand()
 
                 while (iter != end() && (isalnum(*iter) || *iter == '_'))
                 {
-                    iter++;
-                    endEnvar++;
+                    ++iter;
+                    ++endEnvar;
                 }
             }
 

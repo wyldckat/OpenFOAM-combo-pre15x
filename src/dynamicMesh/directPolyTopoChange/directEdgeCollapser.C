@@ -578,7 +578,10 @@ bool Foam::directEdgeCollapser::setRefinement(directPolyTopoChange& meshMod)
                         faceI,                      // faceI to change
                         own,                        // owner
                         nei,                        // neighbour
-                        patchID                     // patch
+                        false,                      // flipFaceFlux
+                        patchID,                    // patch
+                        zoneID,
+                        zoneFlip
                     );
                     meshChanged = true;
                 }

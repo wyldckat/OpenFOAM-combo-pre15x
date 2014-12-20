@@ -210,21 +210,23 @@ void LienCubicKE::correct()
 
     volScalarField G = Cmu*sqr(k_)/epsilon_*S2 - (nonlinearStress && gradU);
 
+#   include "nonLinearWallFunctionsI.H"
+
     // Dissipation equation
-
-#   include "wallNonlinearDissipationI.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
       + fvm::div(phi_, epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
       ==
-        C1*G*epsilon_/k_ + boundarySource
-      - fvm::Sp(C2*epsilon_/k_ + boundaryCentral, epsilon_)
+        C1*G*epsilon_/k_
+      - fvm::Sp(C2*epsilon_/k_, epsilon_)
     );
 
     epsEqn().relax();
+
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 
@@ -257,7 +259,7 @@ void LienCubicKE::correct()
         - 2.0*pow(Cmu, 3.0)*pow(k_, 4.0)/pow(epsilon_, 3.0)*
         (magSqr(gradU + gradU.T()) - magSqr(gradU - gradU.T()));
 
-    nut_ = Cmu*sqr(k_)/(epsilon_ + epsilonSmall_) + C5viscosity;
+    nut_ = Cmu*sqr(k_)/epsilon_ + C5viscosity;
 
 #   include "wallNonlinearViscosityI.H"
 

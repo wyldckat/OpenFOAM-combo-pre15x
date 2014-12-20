@@ -282,7 +282,7 @@ public:
             void setRefinement(const cellCuts& cuts, polyTopoChange& meshMod);
 
             //- Force recalculation of locally stored data on topological change
-            void updateTopology(const mapPolyMesh&);
+            void updateMesh(const mapPolyMesh&);
 
         // Access
 

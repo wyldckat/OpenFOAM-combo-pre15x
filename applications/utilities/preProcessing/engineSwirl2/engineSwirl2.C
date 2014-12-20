@@ -32,7 +32,7 @@ Description
 
 #include "fvCFD.H"
 #include "engineTime.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     );
 
     dimensionedVector Omega =
-        (physicalConstant::pi*swirlRPMRatio*runTime.rpm()/30)*swirlAxis;
+        (mathematicalConstant::pi*swirlRPMRatio*runTime.rpm()/30)*swirlAxis;
 
     volVectorField r = 
         (mesh.C() - swirlCenter)

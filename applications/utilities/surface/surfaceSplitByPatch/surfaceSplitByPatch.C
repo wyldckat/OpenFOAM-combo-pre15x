@@ -28,8 +28,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
-#include "Time.H"
-#include "fvMesh.H"
 #include "triSurface.H"
 
 using namespace Foam;

@@ -26,6 +26,8 @@ License
 
 #include "error.H"
 #include "products.H"
+#include "VectorSpaceM.H"
+#include "ops.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -34,10 +36,19 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct null
 template<class Form, class Cmpt, int nCmpt>
 inline VectorSpace<Form, Cmpt, nCmpt>::VectorSpace()
 {}
+
+
+template<class Form, class Cmpt, int nCmpt>
+inline VectorSpace<Form, Cmpt, nCmpt>::VectorSpace
+(
+    const VectorSpace<Form, Cmpt, nCmpt>& vs
+)
+{
+    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, eqOp<Cmpt>());
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -170,15 +181,22 @@ inline Cmpt& VectorSpace<Form, Cmpt, nCmpt>::operator[]
 
 
 template<class Form, class Cmpt, int nCmpt>
+inline void VectorSpace<Form, Cmpt, nCmpt>::operator=
+(
+    const VectorSpace<Form, Cmpt, nCmpt>& vs
+)
+{
+    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, eqOp<Cmpt>());
+}
+
+
+template<class Form, class Cmpt, int nCmpt>
 inline void VectorSpace<Form, Cmpt, nCmpt>::operator+=
 (
     const VectorSpace<Form, Cmpt, nCmpt>& vs
 )
 {
-    for (int i=0; i<nCmpt; i++)
-    {
-        v_[i] += vs.v_[i];
-    }
+    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, plusEqOp<Cmpt>());
 }
 
 
@@ -188,10 +206,7 @@ inline void VectorSpace<Form, Cmpt, nCmpt>::operator-=
     const VectorSpace<Form, Cmpt, nCmpt>& vs
 )
 {
-    for (int i=0; i<nCmpt; i++)
-    {
-        v_[i] -= vs.v_[i];
-    }
+    VectorSpaceOps<nCmpt,0>::eqOp(*this, vs, minusEqOp<Cmpt>());
 }
 
 
@@ -201,10 +216,7 @@ inline void VectorSpace<Form, Cmpt, nCmpt>::operator*=
     const scalar s
 )
 {
-    for (int i=0; i<nCmpt; i++)
-    {
-        v_[i] *= s;
-    }
+    VectorSpaceOps<nCmpt,0>::eqOpS(*this, s, multiplyEqOp2<Cmpt, scalar>());
 }
 
 
@@ -214,14 +226,22 @@ inline void VectorSpace<Form, Cmpt, nCmpt>::operator/=
     const scalar s
 )
 {
-    for (int i=0; i<nCmpt; i++)
-    {
-        v_[i] /= s;
-    }
+    VectorSpaceOps<nCmpt,0>::eqOpS(*this, s, divideEqOp2<Cmpt, scalar>());
 }
 
 
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
+
+template<class Form, class Cmpt, int nCmpt>
+inline Cmpt& setComponent
+(
+    VectorSpace<Form, Cmpt, nCmpt>& vs,
+    const direction d
+)
+{
+    return vs.component(d);
+}
+
 
 template<class Form, class Cmpt, int nCmpt>
 inline const Cmpt& component
@@ -315,10 +335,7 @@ inline scalar magSqr
 )
 {
     scalar ms = magSqr(vs.v_[0]);
-    for (int i=1; i<nCmpt; i++)
-    {
-        ms += magSqr(vs.v_[i]);
-    }
+    VectorSpaceOps<nCmpt,1>::SeqOp(ms, vs, plusEqMagSqrOp2<scalar, Cmpt>());
     return ms;
 }
 
@@ -340,10 +357,7 @@ inline Cmpt cmptMax
 )
 {
     Cmpt cMax = vs.v_[0];
-    for (int i=1; i<nCmpt; i++)
-    {
-        cMax = max(cMax, vs.v_[i]);
-    }
+    VectorSpaceOps<nCmpt,1>::SeqOp(cMax, vs, maxEqOp<Cmpt>());
     return cMax;
 }
 
@@ -355,10 +369,7 @@ inline Cmpt cmptMin
 )
 {
     Cmpt cMin = vs.v_[0];
-    for (int i=1; i<nCmpt; i++)
-    {
-        cMin = min(cMin, vs.v_[i]);
-    }
+    VectorSpaceOps<nCmpt,1>::SeqOp(cMin, vs, minEqOp<Cmpt>());
     return cMin;
 }
 
@@ -370,10 +381,7 @@ inline Cmpt cmptSum
 )
 {
     Cmpt sum = vs.v_[0];
-    for (int i=1; i<nCmpt; i++)
-    {
-        sum += vs.v_[i];
-    }
+    VectorSpaceOps<nCmpt,1>::SeqOp(sum, vs, plusEqOp<Cmpt>());
     return sum;
 }
 
@@ -395,10 +403,7 @@ inline Form cmptMag
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = mag(vs.v_[i]);
-    }
+    VectorSpaceOps<nCmpt,0>::eqOp(v, vs, eqMagOp<Cmpt>());
     return v;
 }
 
@@ -411,10 +416,7 @@ inline Form max
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = max(vs1.v_[i], vs2.v_[i]);
-    }
+    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, maxOp<Cmpt>());
     return v;
 }
 
@@ -427,10 +429,7 @@ inline Form min
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = min(vs1.v_[i], vs2.v_[i]);
-    }
+    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, minOp<Cmpt>());
     return v;
 }
 
@@ -438,15 +437,12 @@ inline Form min
 template<class Form, class Cmpt, int nCmpt>
 inline VectorSpace<Form, Cmpt, nCmpt> scale
 (
-    const VectorSpace<Form, Cmpt, nCmpt>& s,
-    const VectorSpace<Form, Cmpt, nCmpt>& vs
+    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
+    const VectorSpace<Form, Cmpt, nCmpt>& vs2
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = scale(s.v_[i], vs.v_[i]);
-    }
+    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, scaleOp<Cmpt>());
     return v;
 }
 
@@ -460,10 +456,7 @@ inline Form operator-
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = -vs.v_[i];
-    }
+    VectorSpaceOps<nCmpt,0>::eqOp(v, vs, eqMinusOp<Cmpt>());
     return v;
 }
 
@@ -476,10 +469,7 @@ inline Form operator+
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = vs1.v_[i] + vs2.v_[i];
-    }
+    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, plusOp<Cmpt>());
     return v;
 }
 
@@ -492,10 +482,7 @@ inline Form operator-
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = vs1.v_[i] - vs2.v_[i];
-    }
+    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, minusOp<Cmpt>());
     return v;
 }
 
@@ -508,10 +495,7 @@ inline Form operator*
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = s*vs.v_[i];
-    }
+    VectorSpaceOps<nCmpt,0>::opSV(v, s, vs, multiplyOp3<Cmpt, scalar, Cmpt>());
     return v;
 }
 
@@ -524,10 +508,7 @@ inline Form operator*
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = vs.v_[i]*s;
-    }
+    VectorSpaceOps<nCmpt,0>::opVS(v, vs, s, multiplyOp3<Cmpt, Cmpt, scalar>());
     return v;
 }
 
@@ -540,10 +521,7 @@ inline Form operator/
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = vs.v_[i]/s;
-    }
+    VectorSpaceOps<nCmpt,0>::opVS(v, vs, s, divideOp3<Cmpt, Cmpt, scalar>());
     return v;
 }
 
@@ -556,10 +534,7 @@ inline Form operator/
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = vs1.v_[i]/vs2.v_[i];
-    }
+    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, divideOp<Cmpt>());
     return v;
 }
 
@@ -572,10 +547,7 @@ inline Form operator/
 )
 {
     Form v;
-    for (int i=0; i<nCmpt; i++)
-    {
-        v.v_[i] = s/vs.v_[i];
-    }
+    VectorSpaceOps<nCmpt,0>::opSV(v, s, vs, divideOp2<scalar, Cmpt>());
     return v;
 }
 */
@@ -588,7 +560,7 @@ inline Cmpt operator&&
 )
 {
     Cmpt ddProd = vs1.v_[0]*vs2.v_[0];
-    for (int i=1; i<nCmpt; i++)
+    for (int i=1; i<nCmpt; ++i)
     {
         ddProd += vs1.v_[i]*vs2.v_[i];
     }
@@ -604,7 +576,7 @@ inline bool operator==
 )
 {
     bool eq = true;
-    for (int i=0; i<nCmpt; i++)
+    for (int i=0; i<nCmpt; ++i)
     {
         if (!(eq &= (equal(vs1.v_[i], vs2.v_[i])))) break;
     }

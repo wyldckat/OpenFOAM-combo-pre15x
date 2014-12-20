@@ -116,7 +116,14 @@ Ostream& prefixOSstream::write(const label l)
 }
 
 
-Ostream& prefixOSstream::write(const scalar s)
+Ostream& prefixOSstream::write(const floatScalar s)
+{
+    checkWritePrefix();
+    return OSstream::write(s);
+}
+
+
+Ostream& prefixOSstream::write(const doubleScalar s)
 {
     checkWritePrefix();
     return OSstream::write(s);

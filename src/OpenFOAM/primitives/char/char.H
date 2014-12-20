@@ -51,6 +51,16 @@ Istream& operator>>(Istream&, char&);
 Ostream& operator<<(Ostream&, const char);
 Ostream& operator<<(Ostream&, const char*);
 
+inline bool isspace(char c)
+{
+    return
+    (
+        c == ' '
+     || c == '\n'
+     || c == '\t'
+    );
+}
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

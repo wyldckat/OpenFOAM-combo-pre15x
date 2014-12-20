@@ -210,11 +210,9 @@ void LaunderGibsonRSTM::correct()
 
     volScalarField G = 0.5*tr(P);
 
+#   include "wallFunctionsI.H"
 
     // Dissipation equation
-
-#   include "wallDissipationI.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
@@ -222,11 +220,14 @@ void LaunderGibsonRSTM::correct()
     //- fvm::laplacian(Ceps*(k_/epsilon_)*R_, epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
      ==
-        C1*G*epsilon_/k_ + boundarySource
-      - fvm::Sp(C2*epsilon_/k_ + boundaryCentral, epsilon_)
+        C1*G*epsilon_/k_
+      - fvm::Sp(C2*epsilon_/k_, epsilon_)
     );
 
     epsEqn().relax();
+
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 
@@ -295,7 +296,7 @@ void LaunderGibsonRSTM::correct()
 
 
     // Re-calculate turbulent viscosity
-    nut_ = Cmu*sqr(k_)/(epsilon_ + epsilonSmall_);
+    nut_ = Cmu*sqr(k_)/epsilon_;
 
 
 #   include "wallViscosityI.H"

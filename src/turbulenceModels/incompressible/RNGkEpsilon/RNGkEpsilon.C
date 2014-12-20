@@ -162,25 +162,27 @@ void RNGkEpsilon::correct()
     volScalarField G = nut_*S2;
 
     volScalarField eta = sqrt(S2)*k_/epsilon_;
-    volScalarField R = ((eta*(1.0 - eta/eta0))/(1.0 + beta*eta*sqr(eta)));
+    volScalarField R = 
+        ((eta*(scalar(1) - eta/eta0))/(scalar(1) + beta*eta*sqr(eta)));
 
+#   include "wallFunctionsI.H"
 
     // Dissipation equation
-
-#   include "wallDissipationI.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
       + fvm::div(phi_, epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
      ==
-        (C1 - R)*G*epsilon_/k_ + boundarySource
+        (C1 - R)*G*epsilon_/k_
     //- fvm::SuSp(R*G/k_, epsilon_)
-      - fvm::Sp(C2*epsilon_/k_ + boundaryCentral, epsilon_)
+      - fvm::Sp(C2*epsilon_/k_, epsilon_)
     );
 
     epsEqn().relax();
+
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 
@@ -202,7 +204,7 @@ void RNGkEpsilon::correct()
 
 
     // Re-calculate viscosity
-    nut_ = Cmu*sqr(k_)/(epsilon_ + epsilonSmall_);
+    nut_ = Cmu*sqr(k_)/epsilon_;
 
 #   include "wallViscosityI.H"
 

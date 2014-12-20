@@ -58,11 +58,11 @@ void setUpdater::updateSets(const mapPolyMesh& morphMap) const
 
         if (debug)
         {
-            Info<< "Set:" << set.name() << " size:" << set.size()
+            Pout<< "Set:" << set.name() << " size:" << set.size()
                 << " updated in memory" << endl;
         }
 
-        set.updateTopology(morphMap);
+        set.updateMesh(morphMap);
 
         // Write or not? Debatable.
         set.write();
@@ -80,7 +80,7 @@ void setUpdater::updateSets(const mapPolyMesh& morphMap) const
         morphMap.mesh().time().findInstance
         (
             morphMap.mesh().meshDir(),
-            "cells"
+            "faces"
         ),
         "polyMesh/sets"
     );
@@ -101,11 +101,11 @@ void setUpdater::updateSets(const mapPolyMesh& morphMap) const
 
             if (debug)
             {
-                Info<< "Set:" << set.name() << " size:" << set.size()
+                Pout<< "Set:" << set.name() << " size:" << set.size()
                     << " updated on disk" << endl;
             }
 
-            set.updateTopology(morphMap);
+            set.updateMesh(morphMap);
 
             set.write();
         }
@@ -113,7 +113,7 @@ void setUpdater::updateSets(const mapPolyMesh& morphMap) const
         {
             if (debug)
             {
-                Info<< "Set:" << iter.key() << " already updated from memory"
+                Pout<< "Set:" << iter.key() << " already updated from memory"
                     << endl;
             }
         }

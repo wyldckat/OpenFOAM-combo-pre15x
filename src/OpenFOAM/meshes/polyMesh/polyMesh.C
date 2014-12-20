@@ -27,12 +27,13 @@ License
 #include "polyMesh.H"
 #include "Time.H"
 #include "primitiveMesh.H"
+#include "cellIOList.H"
 #include "SubList.H"
-#include "OSspecific.H"
-#include "demandDrivenData.H"
 #include "polyPatch.H"
 #include "parallelInfo.H"
 #include "processorPolyPatch.H"
+#include "OSspecific.H"
+#include "demandDrivenData.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,12 +43,6 @@ namespace Foam
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 defineTypeNameAndDebug(polyMesh, 0);
-
-// Additional morphing debug switch
-int Foam::polyMesh::morphDebug
-(
-    Foam::debug::debugSwitch("polyMeshMorph", 0)
-);
 
 word polyMesh::defaultRegion = "region0";
 word polyMesh::meshSubDir = "polyMesh";
@@ -87,15 +82,27 @@ polyMesh::polyMesh(const IOobject& io)
             IOobject::NO_WRITE
         )
     ),
-    cells_
+    allOwner_
     (
         IOobject
         (
-            "cells",
-            time().findInstance(meshDir(), "cells"),
+            "owner",
+            time().findInstance(meshDir(), "faces"),
             meshSubDir,
             *this,
-            IOobject::MUST_READ,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE
+        )
+    ),
+    allNeighbour_
+    (
+        IOobject
+        (
+            "neighbour",
+            time().findInstance(meshDir(), "faces"),
+            meshSubDir,
+            *this,
+            IOobject::READ_IF_PRESENT,
             IOobject::NO_WRITE
         )
     ),
@@ -167,21 +174,38 @@ polyMesh::polyMesh(const IOobject& io)
         *this
     ),
     parallelDataPtr_(NULL),
-    morphEnginePtr_(NULL),
-    allOwnerPtr_(NULL),
-    allNeighbourPtr_(NULL),
     moving_(false),
     curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(NULL),
-    morphing_(false),
-    curMorphTimeIndex_(time().timeIndex()),
-    morphMap_(NULL)
+    oldPointsPtr_(NULL)
 {
-    // Set the primitive mesh
-    calcFaceCells();
+    if (allOwner_.size())
+    {
+        initMesh();
+    }
+    else
+    {
+        cellIOList c
+        (
+            IOobject
+            (
+                "cells",
+                time().findInstance(meshDir(), "cells"),
+                meshSubDir,
+                *this,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE
+            )
+        );
+
+        // Set the primitive mesh
+        initMesh(c);
+
+        allOwner_.write();
+        allNeighbour_.write();
+    }
 
     // Calculate topology for the patches (processor-processor comms etc.)
-    boundary_.updateTopology();
+    boundary_.updateMesh();
 
     // Calculate the geometry for the patches (transformation tensors etc.)
     boundary_.calcGeometry();
@@ -227,18 +251,31 @@ polyMesh::polyMesh
         ),
         faces
     ),
-    cells_
+    allOwner_
     (
         IOobject
         (
-            "cells",
+            "owner",
             instance(),
             meshSubDir,
             *this,
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        cells
+        0
+    ),
+    allNeighbour_
+    (
+        IOobject
+        (
+            "neighbour",
+            instance(),
+            meshSubDir,
+            *this,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        0
     ),
     boundary_
     (
@@ -297,15 +334,9 @@ polyMesh::polyMesh
         0
     ),
     parallelDataPtr_(NULL),
-    morphEnginePtr_(NULL),
-    allOwnerPtr_(NULL),
-    allNeighbourPtr_(NULL),
     moving_(false),
     curMotionTimeIndex_(time().timeIndex()),
-    oldPointsPtr_(NULL),
-    morphing_(false),
-    curMorphTimeIndex_(time().timeIndex()),
-    morphMap_(NULL)
+    oldPointsPtr_(NULL)
 {
     // Check if the faces and cells are valid
     forAll (faces_, faceI)
@@ -330,9 +361,9 @@ polyMesh::polyMesh
     }
 
     // Check if the faces and cells are valid
-    forAll (cells_, cellI)
+    forAll (cells, cellI)
     {
-        const cell& curCell = cells_[cellI];
+        const cell& curCell = cells[cellI];
 
         if (min(curCell) < 0 || max(curCell) > faces_.size())
         {
@@ -352,63 +383,64 @@ polyMesh::polyMesh
     }
 
     // Set the primitive mesh
-    calcFaceCells();
+    initMesh(const_cast<cellList&>(cells));
 }
 
 
 
-
-// Reset components without boundary.
-// Boundary is added using addPatches() member function
-// WARNING: ASSUMES CORRECT ORDERING OF DATA. 
-void polyMesh::polyMesh::reset
+// Reset mesh primitive data
+// WARNING: ASSUMES CORRECT ORDERING OF DATA.
+void polyMesh::resetPrimitives
 (
+    const label nUsedFaces,
     const pointField& points,
     const faceList& faces,
-    const cellList& cells
+    const labelList& owner,
+    const labelList& neighbour,
+    const labelList& patchSizes,
+    const labelList& patchStarts,
+    const bool validBoundary
 )
 {
     // Clear everything (copied from ~polyMesh)
     clearOut();
     resetMotion();
-    resetMorph();
 
-    // Clear minimal data
-    deleteDemandDrivenData(parallelDataPtr_);
-    deleteDemandDrivenData(morphEnginePtr_);
-    deleteDemandDrivenData(allOwnerPtr_);
-    deleteDemandDrivenData(allNeighbourPtr_);
+    // Take over new primitive data. Note extra optimization to prevent
+    // assignment to self.
+    if (&points_ != &points)
+    {
+        points_ = points;
+    }
+    if (&faces_ != &faces)
+    {
+        faces_ = faces;
+    }
+    if (&allOwner_ != &owner)
+    {
+        allOwner_ = owner;
+    }
+    if (&allNeighbour_ != &neighbour)
+    {
+        allNeighbour_ = neighbour;
+    }
+
+    // Reset patch sizes and starts
+    forAll(boundary_, patchI)
+    {
+        boundary_[patchI] = polyPatch
+        (
+            boundary_[patchI].name(),
+            patchSizes[patchI],
+            patchStarts[patchI],
+            patchI,
+            boundary_
+        );
+    }
 
 
-    // Take over new primitive data.
-
-    points_ = points;
-    faces_ = faces;
-    cells_ = cells;
-
-
-    // Flags the mesh files as being changed (copied from morph())
-    points_.writeOpt() = IOobject::AUTO_WRITE;
-    points_.instance() = time().timeName();
-
-    faces_.writeOpt() = IOobject::AUTO_WRITE;
-    faces_.instance() = time().timeName();
-
-    cells_.writeOpt() = IOobject::AUTO_WRITE;
-    cells_.instance() = time().timeName();
-
-    boundary_.writeOpt() = IOobject::AUTO_WRITE;
-    boundary_.instance() = time().timeName();
-
-    pointZones_.writeOpt() = IOobject::AUTO_WRITE;
-    pointZones_.instance() = time().timeName();
-
-    faceZones_.writeOpt() = IOobject::AUTO_WRITE;
-    faceZones_.instance() = time().timeName();
-
-    cellZones_.writeOpt() = IOobject::AUTO_WRITE;
-    cellZones_.instance() = time().timeName();
-
+    // Flags the mesh files as being changed
+    setInstance(time().timeName());
 
     // Check if the faces and cells are valid
     forAll (faces_, faceI)
@@ -419,11 +451,15 @@ void polyMesh::polyMesh::reset
         {
             FatalErrorIn
             (
-                "polyMesh::polyMesh::reset\n"
+                "polyMesh::polyMesh::resetPrimitives\n"
                 "(\n"
+                "    const label nUsedFaces,\n"
                 "    const pointField& points,\n"
                 "    const faceList& faces,\n"
-                "    const cellList& cells\n"
+                "    const labelList& owner,\n"
+                "    const labelList& neighbour,\n"
+                "    const labelList& patchSizes,\n"
+                "    const labelList& patchStarts\n"
                 ")\n"
             )   << "Face " << faceI << "contains vertex labels out of range: "
                 << curFace << " Max point index = " << points_.size()
@@ -431,29 +467,24 @@ void polyMesh::polyMesh::reset
         }
     }
 
-    // Check if the faces and cells are valid
-    forAll (cells_, cellI)
+
+    // Set the primitive mesh from the allOwner_, allNeighbour_. Works
+    // out from patch end where the active faces stop.
+    initMesh();
+
+
+    if (validBoundary)
     {
-        const cell& curCell = cells_[cellI];
+        // Note that we assume that all the patches stay the same and are
+        // correct etc. so we can already use the patches to do
+        // processor-processor comms.
 
-        if (min(curCell) < 0 || max(curCell) > faces_.size())
-        {
-            FatalErrorIn
-            (
-                "polyMesh::polyMesh::reset\n"
-                "(\n"
-                "    const pointField& points,\n"
-                "    const faceList& faces,\n"
-                "    const cellList& cells\n"
-                ")\n"
-            )   << "Cell " << cellI << "contains face labels out of range: "
-                << curCell << " Max face index = " << faces_.size()
-                << abort(FatalError);
-        }
+        // Calculate topology for the patches (processor-processor comms etc.)
+        boundary_.updateMesh();
+
+        // Calculate the geometry for the patches (transformation tensors etc.)
+        boundary_.calcGeometry();
     }
-
-    // Set the primitive mesh
-    calcFaceCells();
 }
 
 
@@ -463,13 +494,6 @@ polyMesh::~polyMesh()
 {
     clearOut();
     resetMotion();
-    resetMorph();
-
-    // Clear minimal data
-    deleteDemandDrivenData(parallelDataPtr_);
-    deleteDemandDrivenData(morphEnginePtr_);
-    deleteDemandDrivenData(allOwnerPtr_);
-    deleteDemandDrivenData(allNeighbourPtr_);
 }
 
 
@@ -500,9 +524,9 @@ const fileName& polyMesh::pointsInstance() const
 }
 
 
-const fileName& polyMesh::cellsInstance() const
+const fileName& polyMesh::facesInstance() const
 {
-    return cells_.instance();
+    return faces_.instance();
 }
 
 
@@ -531,7 +555,7 @@ void polyMesh::addPatches(const List<polyPatch*> & p)
     deleteDemandDrivenData(parallelDataPtr_);
 
     // Calculate topology for the patches (processor-processor comms etc.)
-    boundary_.updateTopology();
+    boundary_.updateMesh();
 
     // Calculate the geometry for the patches (transformation tensors etc.)
     boundary_.calcGeometry();
@@ -596,7 +620,7 @@ void polyMesh::addZones
     }
 
     // Cell zones
-    if (fz.size())
+    if (cz.size())
     {
         cellZones_.setSize(cz.size());
 
@@ -607,44 +631,6 @@ void polyMesh::addZones
         }
 
         cellZones_.writeOpt() = IOobject::AUTO_WRITE;
-    }
-}
-
-
-// Add mesh modifiers to the morph engine. Constructor helper
-void polyMesh::addTopologyModifiers(const List<polyMeshModifier*>& tm)
-{
-    if (morphEnginePtr_ && morphEnginePtr_->size() > 0)
-    {
-        FatalErrorIn
-        (
-            "void polyMesh::addTopologyModifiers("
-            "const List<polyMeshModifier*>& tm)"
-        )   << "morph engine already exists"
-            << abort(FatalError);
-    }
-
-    deleteDemandDrivenData(morphEnginePtr_);
-
-    morphEnginePtr_ = new polyMeshMorphEngine
-    (
-        IOobject
-        (
-            "meshModifiers",
-            cellsInstance(),
-            meshSubDir,
-            *this,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        *this,
-        tm.size()
-    );
-
-    // Copy the patch pointers
-    forAll (tm, tmI)
-    {
-        morphEnginePtr_->hook(tm[tmI]);
     }
 }
 
@@ -675,16 +661,15 @@ const faceList& polyMesh::allFaces() const
 }
 
 
-const cellList& polyMesh::allCells() const
+const labelList& polyMesh::allOwner() const
 {
-    if (cells_.size() == 0)
-    {
-        FatalErrorIn("const cellList& polyMesh::allCells() const")
-            << "cells deallocated"
-            << abort(FatalError);
-    }
+    return allOwner_;
+}
 
-    return cells_;
+
+const labelList& polyMesh::allNeighbour() const
+{
+    return allNeighbour_;
 }
 
 
@@ -693,7 +678,7 @@ const pointField& polyMesh::oldAllPoints() const
 {
     if (!oldPointsPtr_)
     {
-        if (debug || morphDebug)
+        if (debug)
         {
             WarningIn("const pointField& polyMesh::oldAllPoints() const")
                 << "Old points not available.  Forcing storage of old points"
@@ -711,7 +696,7 @@ const pointField& polyMesh::oldAllPoints() const
 // Move points
 tmp<scalarField> polyMesh::movePoints(const pointField& newPoints)
 {
-    if (debug || morphDebug)
+    if (debug)
     {
         Info<< "tmp<scalarField> polyMesh::movePoints(const pointField&) : "
             << " Moving points for time " << time().value()
@@ -737,13 +722,7 @@ tmp<scalarField> polyMesh::movePoints(const pointField& newPoints)
         parallelDataPtr_->movePoints(points_);
     }
 
-    // Adjust the motion points as required by the morphing engine
-    if (morphEnginePtr_)
-    {
-        morphEnginePtr_->modifyMotionPoints(points_);
-    }
-
-    if (debug || morphDebug)
+    if (debug)
     {
         // Check mesh motion
         if (primitiveMesh::checkMeshMotion(points_, true))
@@ -779,50 +758,20 @@ void polyMesh::resetMotion() const
 }
 
 
-bool polyMesh::isActiveFace(const label faceIndex) const
-{
-    return faceIndex < nFaces();
-}
-
-
 // Return parallel info
 const parallelInfo& polyMesh::parallelData() const
 {
     if (!parallelDataPtr_)
     {
-        if (debug & 2)
+        if (debug)
         {
-            WarningIn("polyMesh::parallelData() const")
-                << "Reading parallelInfo from file" << endl;
-
-            // Old behaviour: read from file.
-            parallelDataPtr_ =
-                new parallelInfo
-                (
-                    IOobject
-                    (
-                        "parallelData",
-                        time().findInstance(meshDir(), "parallelData"),
-                        meshSubDir,
-                        *this,
-                        IOobject::MUST_READ,
-                        IOobject::NO_WRITE
-                    ),
-                    *this
-                );
+            Info<< "polyMesh::parallelData() const : "
+                << "Constructing parallelData from processor topology" << nl
+                << "This needs the patch faces to be correctly matched"
+                << endl;
         }
-        else
-        {
-            if (debug || morphDebug)
-            {
-                Info<< "polyMesh::parallelData() const : "
-                    << "Constructing parallelData from processor topology" << nl
-                    << "This needs the patch faces to be correctly matched"
-                    << endl;
-            }
-            // Construct parallelInfo using processorPatch information only.
-            parallelDataPtr_ = new parallelInfo(*this);
-        }
+        // Construct parallelInfo using processorPatch information only.
+        parallelDataPtr_ = new parallelInfo(*this);
     }
 
     return *parallelDataPtr_;
@@ -836,6 +785,8 @@ void polyMesh::removeFiles(const fileName& instanceDir) const
 
     rm(meshFilesPath/"points");
     rm(meshFilesPath/"faces");
+    rm(meshFilesPath/"owner");
+    rm(meshFilesPath/"neighbour");
     rm(meshFilesPath/"cells");
     rm(meshFilesPath/"boundary");
     rm(meshFilesPath/"pointZones");

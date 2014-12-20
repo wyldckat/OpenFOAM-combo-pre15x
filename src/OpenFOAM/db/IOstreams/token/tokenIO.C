@@ -84,8 +84,12 @@ Ostream& operator<<(Ostream& os, const token& t)
             os << t.labelToken_;
         break;
 
-        case token::SCALAR:
-            os << t.scalarToken_;
+        case token::FLOAT_SCALAR:
+            os << t.floatScalarToken_;
+        break;
+
+        case token::DOUBLE_SCALAR:
+            os << t.doubleScalarToken_;
         break;
 
         case token::COMPOUND:
@@ -154,8 +158,12 @@ Ostream& operator<<(Ostream& os, const InfoProxy<token>& ip)
             os  << " the label " << t.labelToken();
         break;
 
-        case token::SCALAR:
-            os  << " the scalar " << t.scalarToken();
+        case token::FLOAT_SCALAR:
+            os  << " the floatScalar " << t.floatScalarToken();
+        break;
+
+        case token::DOUBLE_SCALAR:
+            os  << " the doubleScalar " << t.doubleScalarToken();
         break;
 
         case token::COMPOUND:
@@ -213,8 +221,12 @@ ostream& operator<<(ostream& os, const InfoProxy<token>& ip)
             os  << " the label " << t.labelToken();
         break;
 
-        case token::SCALAR:
-            os  << " the scalar " << t.scalarToken();
+        case token::FLOAT_SCALAR:
+            os  << " the floatScalar " << t.floatScalarToken();
+        break;
+
+        case token::DOUBLE_SCALAR:
+            os  << " the doubleScalar " << t.doubleScalarToken();
         break;
 
         case token::COMPOUND:

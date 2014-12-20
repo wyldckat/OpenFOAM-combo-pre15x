@@ -93,6 +93,10 @@ public:
             //- Is this really a temporary object
             inline bool isTmp() const;
 
+            //- Is this temporary object valid, i.e. is it a reference
+            //  or a temporary that has been allocated
+            inline bool valid() const;
+
 
         // Edit
 

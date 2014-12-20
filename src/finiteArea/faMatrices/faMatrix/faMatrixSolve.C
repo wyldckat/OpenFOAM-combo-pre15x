@@ -132,6 +132,8 @@ lduMatrix::solverPerformance faMatrix<Type>::solve(Istream& solverControls)
             solverControls.rewind()
         )->solve();
 
+        solverPerf.print();
+
         if
         (
             solverPerf.initialResidual() > this->solverPerfVec.initialResidual()

@@ -121,7 +121,15 @@ Ostream& OSstream::write(const label l)
 }
 
 
-Ostream& OSstream::write(const scalar s)
+Ostream& OSstream::write(const floatScalar s)
+{
+    os_ << s;
+    setState(os_.rdstate());
+    return *this;
+}
+
+
+Ostream& OSstream::write(const doubleScalar s)
 {
     os_ << s;
     setState(os_.rdstate());

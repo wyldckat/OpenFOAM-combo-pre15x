@@ -58,7 +58,7 @@ tmp<volScalarField> BirdCarreau::calcNu() const
     return 
         nuInf_
       + (nu0_ - nuInf_)
-       *pow(1.0 + sqr(k_*strainRate()), (n_ - 1.0)/2.0);
+       *pow(scalar(1) + sqr(k_*strainRate()), (n_ - 1.0)/2.0);
 }
 
 
@@ -67,12 +67,13 @@ tmp<volScalarField> BirdCarreau::calcNu() const
 // from components
 BirdCarreau::BirdCarreau
 (
+    const word& name,
     const dictionary& viscosityProperties,
     const volVectorField& U,
     const surfaceScalarField& phi
 )
 :
-    viscosityModel(viscosityProperties, U, phi),
+    viscosityModel(name, viscosityProperties, U, phi),
     BirdCarreauCoeffs_(viscosityProperties.subDict(typeName + "Coeffs")),
     nu0_(BirdCarreauCoeffs_.lookup("nu0")),
     nuInf_(BirdCarreauCoeffs_.lookup("nuInf")),

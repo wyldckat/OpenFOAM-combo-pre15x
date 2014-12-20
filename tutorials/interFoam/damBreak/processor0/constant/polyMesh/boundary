@@ -1,0 +1,69 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.3                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version 2.0;
+    format ascii;
+
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorials/interFoam";
+    case "damBreak/processor0";
+    instance ""constant"";
+    local "polyMesh";
+
+    class polyBoundaryMesh;
+    object boundary;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+5
+(
+leftWall
+{
+    type wall;
+    physicalType wall;
+    nFaces 26;
+    startFace 1101;
+}
+
+lowerWall
+{
+    type wall;
+    physicalType wall;
+    nFaces 22;
+    startFace 1127;
+}
+
+defaultFaces
+{
+    type empty;
+    nFaces 1150;
+    startFace 1149;
+}
+
+procBoundary0to1
+{
+    type processor;
+    nFaces 26;
+    startFace 2299;
+    myProcNo 0;
+    neighbProcNo 1;
+}
+
+procBoundary0to2
+{
+    type processor;
+    nFaces 24;
+    startFace 2325;
+    myProcNo 0;
+    neighbProcNo 2;
+}
+)
+
+// ************************************************************************* //

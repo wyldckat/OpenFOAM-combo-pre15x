@@ -101,7 +101,14 @@ Istream& IPstream::read(label& l)
 }
 
 
-Istream& IPstream::read(scalar& s)
+Istream& IPstream::read(floatScalar& s)
+{
+    readFromBuffer(s);
+    return *this;
+}
+
+
+Istream& IPstream::read(doubleScalar& s)
 {
     readFromBuffer(s);
     return *this;

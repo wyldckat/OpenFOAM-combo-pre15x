@@ -26,6 +26,7 @@ License
 
 // Foam header files.
 #include "emptyPolyPatch.H"
+#include "polyPatch.H"
 
 // FoamX header files.
 #include "FoamX.H"

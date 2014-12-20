@@ -1,12 +1,11 @@
 EXE_INC = \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/browser/lnInclude \
     -I$(LIB_SRC)/sampling/lnInclude \
     -I$(LIB_SRC)/lagrangian/basic/lnInclude
 
 LIB_LIBS = \
+    -lfiniteVolume \
     -llagrangian \
     -lfoamUtil \
-    -lOpenFOAM \
-    $(GLIBS)
-
+    -lOpenFOAM

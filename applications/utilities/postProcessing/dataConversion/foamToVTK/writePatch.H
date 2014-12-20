@@ -43,7 +43,7 @@ SourceFiles
 namespace Foam
 {
 
-// Write lagrangian fields.
+// Write patch fields.
 // nearCellValue writes the patchInternalField which is useful for e.g.
 // walls where the wall velocity is usually not terribly interesting but
 // the neighbouring cell value is.

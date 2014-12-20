@@ -84,7 +84,7 @@
         psi*p
     );
 
-#   include "createPhi.H"
+#   include "compressibleCreatePhi.H"
 
 
     Info<< "Creating field phid\n" << endl;

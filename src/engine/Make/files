@@ -7,4 +7,10 @@ ignition/ignitionSiteIO.C
 engineValve/engineValve.C
 enginePiston/enginePiston.C
 
+engineMesh/engineMesh/engineMesh.C
+engineMesh/engineMesh/newEngineMesh.C
+engineMesh/staticEngineMesh/staticEngineMesh.C
+engineMesh/layeredEngineMesh/layeredEngineMesh.C
+engineMesh/tetDecompositionEngineMesh/tetDecompositionEngineMesh.C
+
 LIB = $(FOAM_LIBBIN)/libengine

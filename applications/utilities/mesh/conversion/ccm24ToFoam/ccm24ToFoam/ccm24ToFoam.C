@@ -35,6 +35,8 @@ Description
     only add the compacting of vertices and cells (vertices might be
     non-compact, cells might start from 1 but probably are compact?)
 
+    Note:boundary regions have to be compact!
+
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
@@ -341,21 +343,32 @@ int main(int argc, char *argv[])
             faceI++;
         }
 
-        // Map from ccm boundary id to Foam patch
-        Map<label> ccmToPatch(ccMesh.boundaryRegionInfo.size());
+        Pout<< "*** InternalFaces:" << faceI << endl;
+
+        // Map from Prostar boundary id to Foam patch
+        Map<label> prostarToPatch(ccMesh.boundaryRegionInfo.size());
+
+        label nPatches = ccMesh.boundaryRegionInfo.size();
+
+        Pout<< "*** Number of patches:" << nPatches
+            << endl;
 
         // Patches
         patchNames.setSize(ccMesh.boundaryRegionInfo.size());
         patchTypes.setSize(patchNames.size());
         forAll(patchNames, pnI)
         {
-            ccmToPatch.insert(ccMesh.boundaryRegionInfo[pnI].boundary, pnI);
+            prostarToPatch.insert
+            (
+                ccMesh.boundaryRegionInfo[pnI].prostarRegion,
+                pnI
+            );
             patchNames[pnI] = ccMesh.boundaryRegionInfo[pnI].label;
             patchTypes[pnI] = ccMesh.boundaryRegionInfo[pnI].boundaryType;
 
             Info<< "Patch:" << pnI
                 << " ccm boundary id:"
-                << ccMesh.boundaryRegionInfo[pnI].boundary
+                << ccMesh.boundaryRegionInfo[pnI].prostarRegion
                 << " name:" << patchNames[pnI]
                 << " type:" << patchTypes[pnI] << endl;
         }
@@ -383,7 +396,40 @@ int main(int argc, char *argv[])
 
             owner[faceI] = ccFace.cells[0];
 
-            region[faceI] = ccmToPatch[ccFace.boundary];
+            Map<label>::const_iterator iter =
+                prostarToPatch.find(ccFace.prostarRegion);
+
+            if (iter != prostarToPatch.end())
+            {
+                region[faceI] = iter();
+            }
+            else
+            {
+                Pout<< "Boundary face has invalid region." << nl
+                    << "Face:" << faceI << " verts:" << f
+                    << " owner:" << owner[faceI]
+                    << " neighbour:" << ccFace.cells[1]
+                    << " has ccm.boundary:" << ccFace.boundary
+                    << " which has no Foam patch equivalence. Assigning it"
+                    << " to patch 0." << endl
+                    << "To prevent this compact your boundary regions!"
+                    << endl;
+
+                region[faceI] = 0;
+            }
+
+            if (region[faceI] < 0 || region[faceI] >= patchNames.size())
+            {
+                FatalErrorIn(args.executable())
+                    << "Boundary face has invalid region." << nl
+                    << "Face:" << faceI << " verts:" << f
+                    << " ccm.boundary:" << ccFace.boundary
+                    << " patch:" << region[faceI]
+                    << " owner:" << owner[faceI]
+                    << " neighbour:" << ccFace.cells[1]
+                    << abort(FatalError);
+            }
+
 
             if (ccFace.cells[1] >= 0)
             {
@@ -397,6 +443,14 @@ int main(int argc, char *argv[])
             }
 
             faceI++;
+        }
+
+        Pout<< "*** Total Faces:" << faceI << endl;
+
+        if (faceI != faces.size())
+        {
+            FatalErrorIn(args.executable())
+                << "Problem" << abort(FatalError);
         }
 
     } // release the MeshCCMIO mesh.
@@ -695,7 +749,6 @@ int main(int argc, char *argv[])
     mesh.addFvPatches(newPatches);
 
     //merge couples
-
 
     Info<< "Writing polyMesh to " << mesh.objectRegistry::objectPath()
         << "..." << nl << endl;

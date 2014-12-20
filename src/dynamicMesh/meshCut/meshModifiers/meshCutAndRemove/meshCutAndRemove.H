@@ -200,15 +200,20 @@ public:
 
             //- Do actual cutting with cut description. Inserts mesh changes
             //  into meshMod.
+            //  cuts: all loops and topological information
+            //  cutPatch: for every cell that has loop the patch number
+            //  exposedPatch: patch for other exposed faces
             void setRefinement
             (
                 const label exposedPatchI,
                 const cellCuts& cuts,
+                const labelList& cutPatch,
                 polyTopoChange& meshMod
             );
 
             //- Force recalculation of locally stored data on topological change
-            void updateTopology(const mapPolyMesh&);
+            void updateMesh(const mapPolyMesh&);
+
 
         // Access
 
@@ -218,7 +223,9 @@ public:
                 return addedFaces_;
             }
 
-            //- Points added. Per split edge label of added point
+            //- Points added. Per split edge label of added point.
+            //  (note: fairly useless across topology changes since one of the
+            //  points of the edge will probably disappear)
             const HashTable<label, edge, Hash<edge> >& addedPoints() const
             {
                 return addedPoints_;

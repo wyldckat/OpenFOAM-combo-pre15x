@@ -54,6 +54,19 @@ oneEqEddy::oneEqEddy
     LESmodel(typeName, U, phi, transport),
     GenEddyVisc(U, phi, transport),
 
+    k_
+    (
+        IOobject
+        (
+            "k",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
+    ),
+
     ck_(LESmodelProperties().lookup("ck"))
 {}
 

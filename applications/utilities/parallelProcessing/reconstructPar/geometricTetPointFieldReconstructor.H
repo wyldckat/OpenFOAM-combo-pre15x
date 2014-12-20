@@ -42,7 +42,7 @@ SourceFiles
 #include "tetPointMesh.H"
 #include "IOobjectList.H"
 #include "tetPolyPatchField.H"
-#include "PointPatchFieldMapper.H"
+#include "TetPointPatchFieldMapper.H"
 #include "GeometricField.H"
 #include "labelIOList.H"
 
@@ -50,7 +50,6 @@ SourceFiles
 
 namespace Foam
 {
-
 
 /*---------------------------------------------------------------------------*\
               Class geometricTetPointFieldReconstructor Declaration
@@ -106,18 +105,18 @@ public:
 
         class tetPolyPatchFieldReconstructor
         :
-            public PointPatchFieldMapper
+            public TetPointPatchFieldMapper
         {
-            labelList directAddressing_;
+            label size_;
 
         public:
 
             // Constructors
 
-                //- Construct given addressing
+                //- Construct given size
                 tetPolyPatchFieldReconstructor(const label size)
                 :
-                    directAddressing_(size, 0)
+                    size_(size)
                 {}
 
 
@@ -125,7 +124,7 @@ public:
 
                 label size() const
                 {
-                    return directAddressing_.size();
+                    return size_;
                 }
 
                 bool direct() const
@@ -135,7 +134,7 @@ public:
 
                 const unallocLabelList& directAddressing() const
                 {
-                    return directAddressing_;
+                    return unallocLabelList::null();
                 }
         };
 

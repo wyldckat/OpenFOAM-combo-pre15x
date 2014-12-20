@@ -40,8 +40,6 @@ SourceFiles
 #include "labelledTri.H"
 #include "PrimitivePatch.H"
 #include "boolList.H"
-#include "hashSignedLabel.H"
-#include "DynamicList.H"
 #include "geometricSurfacePatchList.H"
 #include "surfacePatchList.H"
 #include "triFaceList.H"
@@ -102,27 +100,8 @@ class triSurface
         (
             const pointField& rawPoints,
             const scalar tol = SMALL,
-            bool verbose = false
+            const bool verbose = false
         );
-
-        //- Gets labels of changed faces and propagates them to the edges.
-        //  Returns labels of edges changed. Does not cross edges marked in
-        //  regionEdge
-        labelList faceToEdge
-        (
-            const boolList& regionEdge,
-            const label region,
-            const labelList& changedFaces,
-            labelList& edgeRegion
-        ) const;
-
-        //- Reverse of faceToEdge: gets edges and returns faces
-        labelList edgeToFace
-        (
-            const label region,
-            const labelList& changedEdges,
-            labelList& faceRegion
-        ) const;
 
         //- Read in Foam format
         bool read(Istream&);
@@ -317,18 +296,18 @@ public:
             virtual void movePoints(const pointField&);
 
             //- Check/fix duplicate/degenerate triangles
-            void checkTriangles(bool verbose);
+            void checkTriangles(const bool verbose);
 
             //- Check triply (or more) connected edges. Return list of faces
             //  sharing these edges.
-            void checkEdges(bool verbose);
+            void checkEdges(const bool verbose);
 
             //- Check orientation (normals) and normals of neighbouring
             //  triangles
-            boolList checkOrientation(bool verbose);
+            boolList checkOrientation(const bool verbose);
 
             //- Remove non-valid triangles
-            void cleanup(bool verbose);
+            void cleanup(const bool verbose);
 
             //- Fill faceZone with currentZone for every face reachable
             //  from faceI without crossing edge marked in borderEdge.
@@ -336,8 +315,8 @@ public:
             void markZone
             (
                 const boolList& borderEdge,
-                label faceI,
-                label currentZone,
+                const label faceI,
+                const label currentZone,
                 labelList& faceZone
             ) const;
 

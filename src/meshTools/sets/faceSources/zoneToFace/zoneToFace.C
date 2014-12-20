@@ -61,7 +61,7 @@ void Foam::zoneToFace::combine(topoSet& set, const bool add) const
 
     if (zoneI != -1)
     {
-        const labelList& faceLabels = mesh_.faceZones()[zoneI].addressing();
+        const labelList& faceLabels = mesh_.faceZones()[zoneI];
 
         forAll(faceLabels, i)
         {

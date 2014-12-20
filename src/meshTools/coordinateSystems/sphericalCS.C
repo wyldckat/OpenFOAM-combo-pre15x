@@ -89,8 +89,8 @@ sphericalCS::sphericalCS
 vector sphericalCS::toGlobal(const vector& localV) const
 {
     scalar r = localV.x();
-    scalar theta = localV.y()*physicalConstant::pi/180.0;
-    scalar phi = localV.z()*physicalConstant::pi/180.0;
+    scalar theta = localV.y()*mathematicalConstant::pi/180.0;
+    scalar phi = localV.z()*mathematicalConstant::pi/180.0;
 
     return cartesianCS::toGlobal
     (
@@ -107,10 +107,10 @@ tmp<vectorField> sphericalCS::toGlobal
     const scalarField r = localV.component(vector::X);
 
     const scalarField theta =
-        localV.component(vector::Y)*physicalConstant::pi/180.0;
+        localV.component(vector::Y)*mathematicalConstant::pi/180.0;
 
     const scalarField phi =
-        localV.component(vector::Z)*physicalConstant::pi/180.0;
+        localV.component(vector::Z)*mathematicalConstant::pi/180.0;
 
     vectorField lc(localV.size());
     lc.replace(vector::X, r*cos(theta)*sin(phi));
@@ -131,8 +131,8 @@ vector sphericalCS::toLocal(const vector& globalV) const
         vector
         (
             r,
-            atan2(lc.y(), lc.x())*180.0/physicalConstant::pi,
-            acos(lc.z()/(r + SMALL))*180.0/physicalConstant::pi
+            atan2(lc.y(), lc.x())*180.0/mathematicalConstant::pi,
+            acos(lc.z()/(r + SMALL))*180.0/mathematicalConstant::pi
         );
 }
 
@@ -162,13 +162,13 @@ tmp<vectorField> sphericalCS::toLocal
         (
             lc.component(vector::Y),
             lc.component(vector::X)
-        )*180.0/physicalConstant::pi
+        )*180.0/mathematicalConstant::pi
     );
 
     result.replace
     (
         vector::Z,
-        acos(lc.component(vector::Z)/(r + SMALL))*180.0/physicalConstant::pi
+        acos(lc.component(vector::Z)/(r + SMALL))*180.0/mathematicalConstant::pi
     );
 
     return tresult;

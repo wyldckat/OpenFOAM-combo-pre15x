@@ -28,7 +28,7 @@ Class
 Description
     Templated 3D Vector derived from VectorSpace adding construction from
     3 components, element access using x(), y() and z() member functions and
-    the iner-product (dot-product) and cross product operators.
+    the inner-product (dot-product) and cross product operators.
 
     A centre() member function which returns the Vector for which it is called
     is defined so that point which is a typedef to Vector<scalar> behaves as
@@ -93,9 +93,6 @@ public:
 
         //- Construct given three components
         inline Vector(const Cmpt& vx, const Cmpt& vy, const Cmpt& vz);
-
-        //- Construct given two components (z-component = 0)
-        inline Vector(const Cmpt& vx, const Cmpt& vy);
 
         //- Construct from Istream
         inline Vector(Istream&);

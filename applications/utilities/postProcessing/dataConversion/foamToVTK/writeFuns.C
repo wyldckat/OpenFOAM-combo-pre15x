@@ -35,6 +35,15 @@ Description
 #include <sys/endian.h>
 #endif
 
+// MacOSX
+#ifdef __DARWIN_BYTE_ORDER
+#if __DARWIN_BYTE_ORDER==__DARWIN_BIG_ENDIAN
+#undef LITTLE_ENDIAN
+#else
+#undef BIG_ENDIAN
+#endif
+#endif
+
 #if defined(LITTLE_ENDIAN) \
  || defined(_LITTLE_ENDIAN) \
  || defined(__LITTLE_ENDIAN)

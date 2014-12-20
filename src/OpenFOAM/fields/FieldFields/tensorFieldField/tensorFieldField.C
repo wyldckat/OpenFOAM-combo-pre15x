@@ -122,27 +122,6 @@ tmp<FieldField<Field, tensor> > func                                          \
 
 
 template<template<class> class Field>
-void diag(FieldField<Field, vector>& vf, const FieldField<Field, tensor>& tf)
-{
-    forAll(vf, i)
-    {
-        diag(vf[i], tf[i]);
-    }
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, vector> > diag(const tmp<FieldField<Field, tensor> >& tf)
-{
-    tmp<FieldField<Field, vector> > result
-    (
-        FieldField<Field, vector>::NewCalculatedType(tf())
-    );
-    diag(result(), tf);
-    tf.clear();
-    return result;
-}
-
-template<template<class> class Field>
 void tr(FieldField<Field, scalar>& sf, const FieldField<Field, tensor>& tf)
 {
     forAll(sf, i)

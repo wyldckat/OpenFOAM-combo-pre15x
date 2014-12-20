@@ -82,6 +82,12 @@ void setFieldType
             }
         }
 
+        forAll(field.boundaryField(), patchi)
+        {
+            field.boundaryField()[patchi] =
+                field.boundaryField()[patchi].patchInternalField();
+        }
+
         field.write();
     }
     else
@@ -136,7 +142,7 @@ public:
                 setFieldType<volVectorField>
                     (mesh_, selectedCells_, fieldValues);
             }
-            else if (fieldType == "volTectorFieldValue")
+            else if (fieldType == "volTensorFieldValue")
             {
                 setFieldType<volTensorField>
                     (mesh_, selectedCells_, fieldValues);

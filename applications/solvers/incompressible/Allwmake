@@ -2,8 +2,7 @@
 set -x
 
 wmake icoFoam
-wmake icoFoamAutoMotion
-wmake icoTopoFoam
+wmake icoDyMFoam
 wmake nonNewtonianIcoFoam
 wmake simpleFoam
 wmake turbFoam

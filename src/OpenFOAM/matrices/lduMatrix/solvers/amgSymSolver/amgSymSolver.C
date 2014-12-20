@@ -27,8 +27,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "amgSymSolver.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -99,7 +97,7 @@ amgSymSolver::amgSymSolver
     label nCreatedLevels = 0;
 
 #   ifdef FULLDEBUG
-    if (lduMatrix::debug >= 2)
+    if (debug >= 2)
     {
         Info << "number of cells per level: ";
     }
@@ -112,7 +110,7 @@ amgSymSolver::amgSymSolver
         makeCoarseMatrix(nCreatedLevels);
 
 #       ifdef FULLDEBUG
-        if (lduMatrix::debug >= 2)
+        if (debug >= 2)
         {
             Info << addrLevels_[nCreatedLevels].size() << " ";
         }
@@ -122,7 +120,7 @@ amgSymSolver::amgSymSolver
     }
 
 #   ifdef FULLDEBUG
-    if (lduMatrix::debug >= 3)
+    if (debug >= 3)
     {
         Info << endl;
 
@@ -137,7 +135,7 @@ amgSymSolver::amgSymSolver
     interfaceCoeffs_.setSize(nCreatedLevels);
 
 #   ifdef FULLDEBUG
-    if (lduMatrix::debug >= 3)
+    if (debug >= 3)
     {
         Info<< "coarse levels addressing " << cpu_.cpuTimeIncrement() << endl;
     }

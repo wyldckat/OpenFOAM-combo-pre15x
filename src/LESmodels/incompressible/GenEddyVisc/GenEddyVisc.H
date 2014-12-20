@@ -68,7 +68,6 @@ protected:
 
         dimensionedScalar ce_;
 
-        volScalarField k_;
         volScalarField nuSgs_;
 
 
@@ -98,15 +97,12 @@ public:
         virtual tmp<volTensorField> B() const;
 
         //- Return SGS kinetic energy
-        virtual tmp<volScalarField> k() const
-        {
-            return k_;
-        }
+        virtual tmp<volScalarField> k() const = 0;
 
         //- Return sub-grid disipation rate
         virtual tmp<volScalarField> epsilon() const
         {
-            return ce_*k_*sqrt(k_)/delta();
+            return ce_*k()*sqrt(k())/delta();
         }
 
         //- Return the SGS viscosity.

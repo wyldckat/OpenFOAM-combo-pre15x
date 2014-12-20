@@ -20,10 +20,10 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
 Description
-    Manipulates mesh boundary elements.
+    Manipulates mesh elements.
 
     Actions are:
         (boundary)points:
@@ -35,25 +35,35 @@ Description
         (boundary)faces:
             - split(triangulate) and move introduced point
 
-    For later:
-    - collapse edges
-    - split cells into pyramids around point
-    - split cells with plane
+        edges:
+            - collapse
+
+        cells:
+            - split into polygonal base pyramids around newly introduced mid
+              point
+
+    Is a bit of a loose collection of mesh change drivers.
 
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
 #include "Time.H"
-#include "morphMesh.H"
+#include "polyMesh.H"
+#include "directPolyTopoChange.H"
 #include "polyTopoChange.H"
+#include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
 #include "boundaryCutter.H"
+#include "cellSplitter.H"
+#include "directEdgeCollapser.H"
 #include "meshTools.H"
+#include "Pair.H"
 
 using namespace Foam;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+// Locate point on patch. Returns (mesh) point label.
 label findPoint(const primitivePatch& pp, const point& nearPoint)
 {
     const pointField& points = pp.points();
@@ -110,6 +120,7 @@ label findPoint(const primitivePatch& pp, const point& nearPoint)
 }
 
 
+// Locate edge on patch. Return mesh edge label.
 label findEdge
 (
     const primitiveMesh& mesh,
@@ -194,6 +205,7 @@ label findEdge
 }
 
 
+// Find face on patch. Return mesh face label.
 label findFace
 (
     const primitiveMesh& mesh,
@@ -244,10 +256,10 @@ label findFace
     Info<< "Found to point " << nearPoint << nl
         << "    nearest face      : " << minI
         << " distance " << minDist
-        << " with face centre " << mesh.faceCentres()[minI] << nl
+        << " to face centre " << mesh.faceCentres()[minI] << nl
         << "    next nearest face : " << almostMinI
         << " distance " << almostMinDist
-        << " with face centre " << mesh.faceCentres()[almostMinI] << nl
+        << " to face centre " << mesh.faceCentres()[almostMinI] << nl
         << endl;
 
     if (almostMinDist < 2*minDist)
@@ -263,6 +275,56 @@ label findFace
 }
 
 
+// Find cell with cell centre close to given point.
+label findCell(const primitiveMesh& mesh, const point& nearPoint)
+{
+    label cellI = mesh.findCell(nearPoint);
+
+    if (cellI != -1)
+    {
+        scalar distToCcSqr = magSqr(nearPoint - mesh.cellCentres()[cellI]);
+
+        const labelList& cPoints = mesh.cellPoints()[cellI];
+
+        label minI = -1;
+        scalar minDistSqr = GREAT;
+
+        forAll(cPoints, i)
+        {
+            label pointI = cPoints[i];
+
+            scalar distSqr = magSqr(nearPoint - mesh.points()[pointI]);
+
+            if (distSqr < minDistSqr)
+            {
+                minDistSqr = distSqr;
+                minI = pointI;
+            }
+        }
+
+        // Decide if nearPoint unique enough.
+        Info<< "Found to point " << nearPoint << nl
+            << "    nearest cell       : " << cellI
+            << " distance " << Foam::sqrt(distToCcSqr)
+            << " to cell centre " << mesh.cellCentres()[cellI] << nl
+            << "    nearest mesh point : " << minI
+            << " distance " << Foam::sqrt(minDistSqr)
+            << " to " << mesh.points()[minI] << nl
+            << endl;
+
+        if (minDistSqr < 4*distToCcSqr)
+        {
+            Info<< "Mesh point too close to nearest cell centre. Aborting"
+                << endl;
+
+            cellI = -1;
+        }
+    }
+
+    return cellI;
+}
+
+
 
 // Main program:
 
@@ -270,19 +332,7 @@ int main(int argc, char *argv[])
 {
 #   include "setRootCase.H"
 #   include "createTime.H"
-
-    Info<< "Reading mesh for time = " << runTime.value() << endl;
-
-    Info<< "Create mesh\n" << endl;
-    morphMesh mesh
-    (
-        IOobject
-        (
-            polyMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
+#   include "createPolyMesh.H"
 
     Info<< "Reading modifyMeshDict\n" << endl;
 
@@ -298,12 +348,54 @@ int main(int argc, char *argv[])
         )
     );
 
-    List<FixedList<point, 2> > pointsToMove(dict.lookup("pointsToMove"));
-    List<FixedList<point, 2> > edgesToSplit(dict.lookup("edgesToSplit"));
-    List<FixedList<point, 2> > facesToTriangulate
+    // Read all from the dictionary.
+    List<Pair<point> > pointsToMove(dict.lookup("pointsToMove"));
+    List<Pair<point> > edgesToSplit(dict.lookup("edgesToSplit"));
+    List<Pair<point> > facesToTriangulate
     (
         dict.lookup("facesToTriangulate")
     );
+    bool cutBoundary =
+            pointsToMove.size() > 0
+         || edgesToSplit.size() > 0
+         || facesToTriangulate.size() > 0;
+
+    List<Pair<point> > edgesToCollapse(dict.lookup("edgesToCollapse"));
+
+    bool collapseEdge = edgesToCollapse.size() > 0;
+
+    List<Pair<point> > cellsToPyramidise(dict.lookup("cellsToSplit"));
+
+    bool cellsToSplit = cellsToPyramidise.size() > 0;
+
+    //List<Tuple<pointField,point> > 
+    //  cellsToCreate(dict.lookup("cellsToCreate"));
+
+    Info<< "Read from " << dict.name() << nl
+        << "  Boundary cutting module:" << nl
+        << "    points to move      :" << pointsToMove.size() << nl
+        << "    edges to split      :" << edgesToSplit.size() << nl
+        << "    faces to triangulate:" << facesToTriangulate.size() << nl
+        << "  Cell splitting module:" << nl
+        << "    cells to split      :" << cellsToPyramidise.size() << nl
+        << "  Edge collapsing module:" << nl
+        << "    edges to collapse   :" << edgesToCollapse.size() << nl
+        //<< "    cells to create     :" << cellsToCreate.size() << nl
+        << endl;
+
+    if
+    (
+        (cutBoundary && collapseEdge)
+     || (cutBoundary && cellsToSplit)
+     || (collapseEdge && cellsToSplit)
+    )
+    {
+        FatalErrorIn(args.executable())
+            << "Used more than one mesh modifying module "
+            << "(boundary cutting, cell splitting, edge collapsing)" << nl
+            << "Please do them in separate passes." << exit(FatalError);
+    }
+
 
 
     // Get calculating engine for all of outside
@@ -318,24 +410,22 @@ int main(int argc, char *argv[])
 
 
     // Look up mesh labels and convert to input for boundaryCutter.
-    Map<point> pointToPos(pointsToMove.size());
-    Map<List<point> > edgeToCuts(edgesToSplit.size());
-    Map<point> faceToSplit(facesToTriangulate.size());
-
 
     bool validInputs = true;
 
+
     Info<< nl << "Looking up points to move ..." << nl << endl;
+    Map<point> pointToPos(pointsToMove.size());
     forAll(pointsToMove, i)
     {
-        const FixedList<point, 2>& pts = pointsToMove[i];
+        const Pair<point>& pts = pointsToMove[i];
 
-        label pointI = findPoint(allBoundary, pts[0]);
+        label pointI = findPoint(allBoundary, pts.first());
 
-        if (pointI == -1 || !pointToPos.insert(pointI, pts[1]))
+        if (pointI == -1 || !pointToPos.insert(pointI, pts.second()))
         {
             Info<< "Could not insert mesh point " << pointI
-                << " for input point " << pts[0] << nl
+                << " for input point " << pts.first() << nl
                 << "Perhaps the point is already marked for moving?" << endl;
             validInputs = false;
         }
@@ -343,16 +433,21 @@ int main(int argc, char *argv[])
 
 
     Info<< nl << "Looking up edges to split ..." << nl << endl;
+    Map<List<point> > edgeToCuts(edgesToSplit.size());
     forAll(edgesToSplit, i)
     {
-        const FixedList<point, 2>& pts = edgesToSplit[i];
+        const Pair<point>& pts = edgesToSplit[i];
 
-        label edgeI = findEdge(mesh, allBoundary, pts[0]);
+        label edgeI = findEdge(mesh, allBoundary, pts.first());
 
-        if (edgeI == -1 || !edgeToCuts.insert(edgeI, List<point>(1, pts[1])))
+        if
+        (
+            edgeI == -1
+        || !edgeToCuts.insert(edgeI, List<point>(1, pts.second()))
+        )
         {
             Info<< "Could not insert mesh edge " << edgeI
-                << " for input point " << pts[0] << nl
+                << " for input point " << pts.first() << nl
                 << "Perhaps the edge is already marked for cutting?" << endl;
 
             validInputs = false;
@@ -361,31 +456,152 @@ int main(int argc, char *argv[])
 
 
     Info<< nl << "Looking up faces to triangulate ..." << nl << endl;
+    Map<point> faceToDecompose(facesToTriangulate.size());
     forAll(facesToTriangulate, i)
     {
-        const FixedList<point, 2>& pts = facesToTriangulate[i];
+        const Pair<point>& pts = facesToTriangulate[i];
 
-        label faceI = findFace(mesh, allBoundary, pts[0]);
+        label faceI = findFace(mesh, allBoundary, pts.first());
 
-        if (faceI == -1 || !faceToSplit.insert(faceI, pts[1]))
+        if (faceI == -1 || !faceToDecompose.insert(faceI, pts.second()))
         {
             Info<< "Could not insert mesh face " << faceI
-                << " for input point " << pts[0] << nl
+                << " for input point " << pts.first() << nl
                 << "Perhaps the face is already marked for splitting?" << endl;
 
             validInputs = false;
         }
     }
 
+
+
+    Info<< nl << "Looking up cells to convert to pyramids around"
+        << " cell centre ..." << nl << endl;
+    Map<point> cellToPyrCentre(cellsToPyramidise.size());
+    forAll(cellsToPyramidise, i)
+    {
+        const Pair<point>& pts = cellsToPyramidise[i];
+
+        label cellI = findCell(mesh, pts.first());
+
+        if (cellI == -1 || !cellToPyrCentre.insert(cellI, pts.second()))
+        {
+            Info<< "Could not insert mesh cell " << cellI
+                << " for input point " << pts.first() << nl
+                << "Perhaps the cell is already marked for splitting?" << endl;
+
+            validInputs = false;
+        }
+    }
+
+
+    Info<< nl << "Looking up edges to collapse ..." << nl << endl;
+    Map<point> edgeToPos(edgesToCollapse.size());
+    forAll(edgesToCollapse, i)
+    {
+        const Pair<point>& pts = edgesToCollapse[i];
+
+        label edgeI = findEdge(mesh, allBoundary, pts.first());
+
+        if (edgeI == -1 || !edgeToPos.insert(edgeI, pts.second()))
+        {
+            Info<< "Could not insert mesh edge " << edgeI
+                << " for input point " << pts.first() << nl
+                << "Perhaps the edge is already marked for collaping?" << endl;
+
+            validInputs = false;
+        }
+    }
+
+
+
     if (!validInputs)
     {
         Info<< nl << "There was a problem in one of the inputs in the"
             << " dictionary. Not modifying mesh." << endl;
     }
+    else if (cellToPyrCentre.size() > 0)
+    {
+        Info<< nl << "All input cells located. Modifying mesh." << endl;
+
+        // Mesh change engine
+        cellSplitter cutter(mesh);
+
+        // Topo change container
+        polyTopoChange meshMod(mesh);
+
+        // Insert commands into meshMod
+        cutter.setRefinement(cellToPyrCentre, meshMod);
+
+        // Do changes
+        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
+        (
+            mesh,
+            meshMod
+        );
+
+        if (morphMap().hasMotionPoints())
+        {
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
+
+        cutter.updateMesh(morphMap());
+
+        runTime++;
+
+        // Write resulting mesh
+        Info << "Writing modified mesh to time " << runTime.value() << endl;
+        mesh.write();
+    }
+    else if (edgeToPos.size() > 0)
+    {
+        Info<< nl << "All input edges located. Modifying mesh." << endl;
+
+        // Mesh change engine
+        directEdgeCollapser cutter(mesh);
+
+        pointField newPoints(mesh.points());
+
+        // Get new positions and construct collapse network
+        forAllConstIter(Map<point>, edgeToPos, iter)
+        {
+            label edgeI = iter.key();
+            const edge& e = mesh.edges()[edgeI];
+
+            cutter.collapseEdge(edgeI, e[0]);
+            newPoints[e[0]] = iter();
+        }
+
+        // Move master point to destination.
+        mesh.movePoints(newPoints);
+
+        // Topo change container
+        directPolyTopoChange meshMod(mesh);
+
+        // Insert 
+        cutter.setRefinement(meshMod);
+
+        // Do changes
+        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh);
+
+        if (morphMap().hasMotionPoints())
+        {
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
+
+        // Not implemented yet:
+        //cutter.updateMesh(morphMap());
+
+
+        runTime++;
+
+        // Write resulting mesh
+        Info << "Writing modified mesh to time " << runTime.value() << endl;
+        mesh.write();
+    }
     else
     {
         Info<< nl << "All input points located. Modifying mesh." << endl;
-
 
         // Mesh change engine
         boundaryCutter cutter(mesh);
@@ -398,14 +614,24 @@ int main(int argc, char *argv[])
         (
             pointToPos,
             edgeToCuts,
-            faceToSplit,
+            Map<labelPair>(0),  // Faces to split diagonally
+            faceToDecompose,    // Faces to triangulate
             meshMod
         );
 
-        mesh.setMorphTimeIndex(runTime.timeIndex());
-        mesh.updateTopology(meshMod);
-        cutter.updateTopology(mesh.morphMap());
-        mesh.movePoints(mesh.morphMap().preMotionPoints());
+        // Do changes
+        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
+        (
+            mesh,
+            meshMod
+        );
+
+        if (morphMap().hasMotionPoints())
+        {
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
+
+        cutter.updateMesh(morphMap());
 
         runTime++;
 

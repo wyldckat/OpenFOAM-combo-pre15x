@@ -41,6 +41,62 @@ label hexBlock::vtxLabel(label a, label b, label c) const
 }
 
 
+// Calculate the handedness of the block by looking at the orientation
+// of the spanning edges of a hex. Loops until valid cell found (since might
+// be prism)
+void hexBlock::setHandedness()
+{
+    const pointField& p = points_;
+
+    for (label k = 0; k <= zDim_ - 1; k++)
+    {
+        for (label j = 0; j <= yDim_ - 1; j++)
+        {
+            for (label i = 0; i <= xDim_ - 1; i++)
+            {
+                vector x = p[vtxLabel(i+1, j, k)] - p[vtxLabel(i, j, k)];
+                vector y = p[vtxLabel(i, j+1, k)] - p[vtxLabel(i, j, k)];
+                vector z = p[vtxLabel(i, j, k+1)] - p[vtxLabel(i, j, k)];
+
+                if (mag(x) > SMALL && mag(y) > SMALL && mag(z) > SMALL)
+                {
+                    Info<< "Looking at cell "
+                        << i << ' ' << j << ' ' << k
+                        << " to determine orientation."
+                        << endl;
+
+                    if (((x ^ y) & z) > 0)
+                    {
+                        Info<< "Right-handed block." << endl;
+                        blockHandedness_ = right;
+                    }
+                    else
+                    {
+                        Info << "Left-handed block." << endl;
+                        blockHandedness_ = left;
+                    }
+                    return;
+                }
+                else
+                {
+                    Info<< "Cannot determine orientation of cell "
+                        << i << ' ' << j << ' ' << k
+                        << " since has base vectors " << x << y << z << endl;
+                }
+            }
+        }
+    }
+
+    if (blockHandedness_ == noPoints)
+    {
+        WarningIn("hexBlock::readPoints(const bool, Istream&)")
+            << "Cannot determine orientation of block."
+            << " Continuing as if right handed." << endl;
+        blockHandedness_ = right;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
@@ -51,7 +107,9 @@ hexBlock::hexBlock(const label nx, const label ny, const label nz)
     zDim_(nz - 1),
     blockHandedness_(noPoints),
     points_((xDim_ + 1)*(yDim_ + 1)*(zDim_ + 1))
-{}
+{
+    Pout<< "xDim:" << nx << " yDim:" << ny << " zDim:" << nz << endl;
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -83,22 +141,8 @@ void hexBlock::readPoints(const bool readBlank, Istream& is)
         }
     }
 
-    // Calculate the handedness of the block by looking at cell 0
-
-    vector i = points_[vtxLabel(1, 0, 0)] - points_[vtxLabel(0, 0, 0)];
-    vector j = points_[vtxLabel(0, 1, 0)] - points_[vtxLabel(0, 0, 0)];
-    vector k = points_[vtxLabel(0, 0, 1)] - points_[vtxLabel(0, 0, 0)];
-
-    if (((i ^ j) & k) > 0)
-    {
-        Info << "right-handed block" << endl;
-        blockHandedness_ = right;
-    }
-    else
-    {
-        Info << "left-handed block" << endl;
-        blockHandedness_ = left;
-    }
+    // Set left- or righthandedness of block by looking at a cell.
+    setHandedness();
 }
 
 

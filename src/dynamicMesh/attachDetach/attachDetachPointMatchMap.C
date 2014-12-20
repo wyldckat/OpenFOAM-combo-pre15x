@@ -22,14 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "attachDetach.H"
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "primitiveFacePatch.H"
+#include "polyTopoChanger.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -49,7 +48,7 @@ void Foam::attachDetach::calcPointMatchMap() const
 {
     if (debug)
     {
-        Info<< "void attachDetach::calcPointMatchMap() const "
+        Pout<< "void attachDetach::calcPointMatchMap() const "
             << " for object " << name() << " : "
             << "Calculating point matching" << endl;
     }
@@ -63,18 +62,17 @@ void Foam::attachDetach::calcPointMatchMap() const
             << abort(FatalError);
     }
 
-    const faceList& faces = mesh().faces();
+    const polyMesh& mesh = topoChanger().mesh();
+    const faceList& faces = mesh.faces();
 
-    const polyPatch& masterPatch =
-        mesh().boundaryMesh()[masterPatchID_.index()];
-    const polyPatch& slavePatch =
-        mesh().boundaryMesh()[slavePatchID_.index()];
+    const polyPatch& masterPatch = mesh.boundaryMesh()[masterPatchID_.index()];
+    const polyPatch& slavePatch = mesh.boundaryMesh()[slavePatchID_.index()];
 
     // Create the reverse patch out of the slave patch
     primitiveFacePatch reverseSlavePatch
     (
         faceList(slavePatch.size()),
-        mesh().points()
+        mesh.points()
     );
 
     const label slavePatchStart = slavePatch.start();
@@ -111,7 +109,7 @@ void Foam::attachDetach::calcPointMatchMap() const
              != slaveMeshPoints[curSlavePoints[pointI]]
             )
             {
-// Info << "Matching slave point " << slaveMeshPoints[curSlavePoints[pointI]] << " with " << masterMeshPoints[curMasterPoints[pointI]] << endl;
+// Pout << "Matching slave point " << slaveMeshPoints[curSlavePoints[pointI]] << " with " << masterMeshPoints[curMasterPoints[pointI]] << endl;
 
                 // Grab the addressing
                 removedPointMap.insert
@@ -125,7 +123,7 @@ void Foam::attachDetach::calcPointMatchMap() const
 
     if (debug)
     {
-        Info<< "void attachDetach::calcPointMatchMap() const "
+        Pout<< "void attachDetach::calcPointMatchMap() const "
             << " for object " << name() << " : "
             << "Finished calculating point matching" << endl;
     }

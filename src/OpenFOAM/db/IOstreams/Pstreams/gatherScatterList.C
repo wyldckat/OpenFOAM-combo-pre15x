@@ -53,6 +53,18 @@ void Pstream::gatherList
 {
     if (Pstream::parRun())
     {
+        if (Values.size() != Pstream::nProcs())
+        {
+            FatalErrorIn
+            (
+                "Pstream::gatherList(const List<Pstream::commsStruct>&"
+                ", List<T>)"
+            )   << "Size of list:" << Values.size()
+                << " does not equal the number of processors:"
+                << Pstream::nProcs()
+                << Foam::abort(FatalError);
+        }
+
         // Get my communication order
         const commsStruct& myComm = comms[Pstream::myProcNo()];
 
@@ -148,6 +160,18 @@ void Pstream::scatterList
 {
     if (Pstream::parRun())
     {
+        if (Values.size() != Pstream::nProcs())
+        {
+            FatalErrorIn
+            (
+                "Pstream::scatterList(const List<Pstream::commsStruct>&"
+                ", List<T>)"
+            )   << "Size of list:" << Values.size()
+                << " does not equal the number of processors:"
+                << Pstream::nProcs()
+                << Foam::abort(FatalError);
+        }
+
         // Get my communication order
         const commsStruct& myComm = comms[Pstream::myProcNo()];
 

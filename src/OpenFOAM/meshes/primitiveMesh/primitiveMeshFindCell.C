@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "primitiveMesh.H"
@@ -41,7 +39,7 @@ bool primitiveMesh::pointInCellBB(const point& p, label celli) const
 {
     const faceList& f = faces();
     const vectorField& centres = cellCentres();
-    const cellList cf = cells();
+    const cellList& cf = cells();
 
     labelList cellVertices = cf[celli].labels(f);
 

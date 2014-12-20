@@ -69,7 +69,8 @@ blockDescriptor::blockDescriptor
     const pointField& blockMeshPoints,
     const curvedEdgeList& edges,
     const Vector<label>& n,
-    const scalarList& expand
+    const scalarList& expand,
+    const word& zoneName
 )
 :
     blockMeshPoints_(blockMeshPoints),
@@ -78,7 +79,8 @@ blockDescriptor::blockDescriptor
     edgePoints_(12),
     edgeWeights_(12),
     n_(n),
-    expand_(expand)
+    expand_(expand),
+    zoneName_(zoneName)
 {
     if (expand_.size() != 12)
     {
@@ -87,7 +89,7 @@ blockDescriptor::blockDescriptor
             "blockDescriptor::blockDescriptor"
             "(const cellShape& bshape, const pointField& blockMeshPoints, "
             "const curvedEdgeList& edges, label xnum, label ynum, label znum, "
-            "const scalarList& expand)"
+            "const scalarList& expand, const word& zoneName)"
         )   << "Unknown definition of expansion ratios"
             << exit(FatalError);
     }
@@ -109,11 +111,26 @@ blockDescriptor::blockDescriptor
     curvedEdges_(edges),
     edgePoints_(12),
     edgeWeights_(12),
-    //n_(is),
-    expand_(12)
+    n_(),
+    expand_(12),
+    zoneName_()
 {
+    // Look at first token
     token t(is);
     is.putBack(t);
+
+    // Optional zone name
+    if (t.isWord())
+    {
+        zoneName_ = t.wordToken();
+
+        // Consume zoneName token
+        is >> t;
+
+        // New look-ahead
+        is >> t;
+        is.putBack(t);
+    }
 
     if (t.isPunctuation())
     {
@@ -208,6 +225,11 @@ const scalarListList& blockDescriptor::blockEdgeWeights() const
 const Vector<label>& blockDescriptor::n() const
 {
     return n_;
+}
+
+const word& blockDescriptor::zoneName() const
+{
+    return zoneName_;
 }
 
 

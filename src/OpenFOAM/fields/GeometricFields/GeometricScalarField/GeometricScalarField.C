@@ -138,7 +138,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
         (
             IOobject
             (
-                ds.name() + "/" + gsf.name(),
+                ds.name() + '|' + gsf.name(),
                 gsf.instance(),
                 gsf.db(),
                 IOobject::NO_READ,
@@ -169,7 +169,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
         (
             IOobject
             (
-                ds.name() + "/" + gsf.name(),
+                ds.name() + '|' + gsf.name(),
                 gsf.instance(),
                 gsf.db(),
                 IOobject::NO_READ,
@@ -235,7 +235,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         (
             IOobject
             (
-                "pow(" + gsf1.name() + ", " + gsf2.name() + ')',
+                "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
                 gsf1.instance(),
                 gsf1.db(),
                 IOobject::NO_READ,
@@ -271,7 +271,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         (
             IOobject
             (
-                "pow(" + gsf1.name() + ", " + gsf2.name() + ')',
+                "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
                 gsf1.instance(),
                 gsf1.db(),
                 IOobject::NO_READ,
@@ -307,7 +307,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         (
             IOobject
             (
-                "pow(" + gsf1.name() + ", " + gsf2.name() + ')',
+                "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
                 gsf1.instance(),
                 gsf1.db(),
                 IOobject::NO_READ,
@@ -343,7 +343,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         (
             IOobject
             (
-                "pow(" + gsf1.name() + ", " + gsf2.name() + ')',
+                "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
                 gsf1.instance(),
                 gsf1.db(),
                 IOobject::NO_READ,
@@ -392,7 +392,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         (
             IOobject
             (
-                "pow(" + gsf.name() + ", " + ds.name() + ')',
+                "pow(" + gsf.name() + ',' + ds.name() + ')',
                 gsf.instance(),
                 gsf.db(),
                 IOobject::NO_READ,
@@ -423,7 +423,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         (
             IOobject
             (
-                "pow(" + gsf.name() + ", " + ds.name() + ')',
+                "pow(" + gsf.name() + ',' + ds.name() + ')',
                 gsf.instance(),
                 gsf.db(),
                 IOobject::NO_READ,
@@ -486,7 +486,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         (
             IOobject
             (
-                "pow(" + ds.name() + ", " + gsf.name() + ')',
+                "pow(" + ds.name() + ',' + gsf.name() + ')',
                 gsf.instance(),
                 gsf.db(),
                 IOobject::NO_READ,
@@ -518,7 +518,7 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         (
             IOobject
             (
-                "pow(" + ds.name() + ", " + gsf.name() + ')',
+                "pow(" + ds.name() + ',' + gsf.name() + ')',
                 gsf.instance(),
                 gsf.db(),
                 IOobject::NO_READ,

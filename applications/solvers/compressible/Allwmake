@@ -5,7 +5,7 @@ wmake rhoTurbFoam
 wmake rhoSimpleFoam
 wmake sonicFoam
 wmake rhoSonicFoam
-wmake rhopSonicFoam
+(cd rhopSonicFoam; Allwmake)
 wmake sonicFoamAutoMotion
 wmake sonicLiquidFoam
 wmake sonicTurbFoam

@@ -74,9 +74,6 @@ class faceTriangulation
 
     // Static Member Functions
 
-        //- Next vertex on face
-        static label nexti(const label size, label i);
-
         //- Edge to the right of face vertex i
         static label right(const label size, label i);
 
@@ -128,7 +125,7 @@ class faceTriangulation
             const face& f,
             const vectorField& edges,
             const vector& normal,
-            const label& startIndex,
+            const label startIndex,
             label& index1,
             label& index2
         );
@@ -151,6 +148,7 @@ class faceTriangulation
         //  polygons. Returns false if could not produce valid split.
         bool split
         (
+            const bool fallBack,
             const pointField& points,
             const face& f,
             const vector& normal,
@@ -166,15 +164,25 @@ public:
 
         //- Construct from face and points. Decomposition based on average
         //  normal. After construction *this is size 0 or holds the triangles.
-        faceTriangulation(const pointField& points, const face& f);
-
-        //- Construct from face and points and user supplied (unit) normal.
-        //  After construction *this is size 0 or holds the triangles.
+        //  If fallBack and triangulation fails does naive triangulation
+        //  and never returns 0 size.
         faceTriangulation
         (
             const pointField& points,
             const face& f,
-            const vector& n
+            const bool fallBack = false
+        );
+
+        //- Construct from face and points and user supplied (unit) normal.
+        //  After construction *this is size 0 or holds the triangles.
+        //  If fallBack and triangulation fails does naive triangulation
+        //  and never returns 0 size.
+        faceTriangulation
+        (
+            const pointField& points,
+            const face& f,
+            const vector& n,
+            const bool fallBack = false
         );
 
         //- Construct from Istream

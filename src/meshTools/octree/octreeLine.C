@@ -86,7 +86,7 @@ void octreeLine<Type>::calcSortedIntersections()
     //// After sorting
     //forAll(sortedIntersections_, i)
     //{
-    //    Info<< "calcSortedIntersections: After sorting:"
+    //    Pout<< "calcSortedIntersections: After sorting:"
     //        << i << "  distance:"
     //        << sortedIntersections_[i].inter().distance()
     //        << "  index:" << sortedIntersections_[i].index()
@@ -99,7 +99,7 @@ void octreeLine<Type>::calcSortedIntersections()
     {
         lastElem_ = sortedIntersections_[nHits - 1].index();
 
-        //Info<< "Storing lastElem_:" << lastElem_ << endl;
+        //Pout<< "Storing lastElem_:" << lastElem_ << endl;
     }
 
     // Reset index into sortedIntersections_

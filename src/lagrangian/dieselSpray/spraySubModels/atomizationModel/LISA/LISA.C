@@ -172,7 +172,7 @@ void LISA::atomizeParcel
     
     scalar massFlow = it.massFlowRate(max(0.0,elapsedTime-time));
     
-    scalar hSheet = massFlow/(physicalConstant::pi*d*rhoFuel*mag(p.U()));    
+    scalar hSheet = massFlow/(mathematicalConstant::pi*d*rhoFuel*mag(p.U()));    
     
     p.d() = min(hSheet,p.d());
 
@@ -286,7 +286,7 @@ void LISA::atomizeParcel
             pow(0.5 + 1.5 * muFuel/pow((rhoFuel*sigma*dL), 0.5), 0.5)
         );
 
-    scalar dD = pow(3.0*physicalConstant::pi*pow(dL, 2.0)/kL, 1.0/3.0);     
+    scalar dD = pow(3.0*mathematicalConstant::pi*pow(dL, 2.0)/kL, 1.0/3.0);     
     
     scalar lisaExp = 0.27;
     scalar ambientPressure = 1.0e+5;

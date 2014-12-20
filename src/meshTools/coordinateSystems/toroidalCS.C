@@ -92,8 +92,8 @@ toroidalCS::toroidalCS
 vector toroidalCS::toGlobal(const vector& localV) const
 {
     // Notation: r = localV.x()
-    scalar theta = localV.y()*physicalConstant::pi/180.0;
-    scalar phi = localV.z()*physicalConstant::pi/180.0;
+    scalar theta = localV.y()*mathematicalConstant::pi/180.0;
+    scalar phi = localV.z()*mathematicalConstant::pi/180.0;
 
     scalar rprime = radius_ + localV.x()*sin(phi);
 
@@ -119,10 +119,10 @@ tmp<vectorField> toroidalCS::toGlobal
     const scalarField r = localV.component(vector::X);
 
     const scalarField theta =
-        localV.component(vector::Y)*physicalConstant::pi/180.0;
+        localV.component(vector::Y)*mathematicalConstant::pi/180.0;
 
     const scalarField phi =
-        localV.component(vector::Z)*physicalConstant::pi/180.0;
+        localV.component(vector::Z)*mathematicalConstant::pi/180.0;
 
     const scalarField rprime = radius_ + r*sin(phi);
 

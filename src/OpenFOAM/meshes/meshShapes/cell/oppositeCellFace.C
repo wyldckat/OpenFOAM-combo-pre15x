@@ -28,8 +28,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "cell.H"
 #include "oppositeFace.H"
 #include "boolList.H"

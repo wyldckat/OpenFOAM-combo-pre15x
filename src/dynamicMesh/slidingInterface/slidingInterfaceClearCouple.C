@@ -22,16 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "slidingInterface.H"
 #include "polyTopoChange.H"
 #include "polyMesh.H"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
+#include "polyTopoChanger.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -42,14 +38,17 @@ void Foam::slidingInterface::clearCouple
 {
     if (debug)
     {
-        Info<< "void slidingInterface::clearCouple("
+        Pout<< "void slidingInterface::clearCouple("
             << "polyTopoChange& ref) const for object " << name() << " : "
             << "Clearing old couple points and faces." << endl;
     }
 
     // Remove all points from the point zone
+
+    const polyMesh& mesh = topoChanger().mesh();
+
     const labelList& cutPointZoneLabels =
-        mesh().pointZones()[cutPointZoneID_.index()].addressing();
+        mesh.pointZones()[cutPointZoneID_.index()];
 
     forAll (cutPointZoneLabels, pointI)
     {
@@ -58,7 +57,7 @@ void Foam::slidingInterface::clearCouple
 
     // Remove all faces from the face zone
     const labelList& cutFaceZoneLabels =
-        mesh().faceZones()[cutFaceZoneID_.index()].addressing();
+        mesh.faceZones()[cutFaceZoneID_.index()];
 
     forAll (cutFaceZoneLabels, faceI)
     {
@@ -67,7 +66,7 @@ void Foam::slidingInterface::clearCouple
 
     if (debug)
     {
-        Info<< "void slidingInterface::clearCouple("
+        Pout<< "void slidingInterface::clearCouple("
             << "polyTopoChange& ref) const for object " << name() << " : "
             << "Finished clearing old couple points and faces." << endl;
     }

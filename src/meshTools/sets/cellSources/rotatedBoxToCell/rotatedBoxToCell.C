@@ -87,7 +87,7 @@ void Foam::rotatedBoxToCell::combine(topoSet& set, const bool add) const
     {
         boxFaceNormals[i] = boxFaces[i].normal(boxPoints);
 
-        Info<< "Face:" << i << " position:" << boxFaces[i].centre(boxPoints)
+        Pout<< "Face:" << i << " position:" << boxFaces[i].centre(boxPoints)
             << " normal:" << boxFaceNormals[i] << endl;
     }    
 

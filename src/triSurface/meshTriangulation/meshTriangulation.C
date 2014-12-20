@@ -1,23 +1,28 @@
-// The FOAM Project // File: meshTriangulation.C
-/*
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
 -------------------------------------------------------------------------------
- =========         | Class Implementation
- \\      /         |
-  \\    /          | Name:   meshTriangulation
-   \\  /           | Family: mesh
-    \\/            |
-    F ield         | FOAM version: 2.2
-    O peration     |
-    A and          | Copyright (C) 1991-2003 Nabla Ltd.
-    M anipulation  |          All Rights Reserved.
--------------------------------------------------------------------------------
-DESCRIPTION
+License
+    This file is part of OpenFOAM.
 
-AUTHOR
-    Mattijs Janssens.
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
 
--------------------------------------------------------------------------------
-*/
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+\*---------------------------------------------------------------------------*/
 
 #include "meshTriangulation.H"
 #include "polyMesh.H"
@@ -55,36 +60,21 @@ bool Foam::meshTriangulation::isInternalFace
 }
 
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-// Null constructor
-Foam::meshTriangulation::meshTriangulation()
-:
-    triSurface(),
-    nInternalFaces_(0),
-    faceMap_()
-{}
-
-
-// Construct from faces of cells
-Foam::meshTriangulation::meshTriangulation
+void Foam::meshTriangulation::getFaces
 (
-    const polyMesh& mesh,
-    const label internalFacesPatch,
-    const boolList& includedCell
+    const primitiveMesh& mesh,
+    const boolList& includedCell,
+    boolList& faceIsCut,
+    label& nFaces,
+    label& nInternalFaces
 )
-:
-    triSurface(),
-    nInternalFaces_(0),
-    faceMap_()
-{
-    const faceList& faces = mesh.faces();
-    const pointField& points = mesh.points();
-
+{    
     // All faces to be triangulated.     
-    boolList faceIsCut(mesh.nFaces(), false);
-    label nFaces = 0;
-    label nInternalFaces = 0;
+    faceIsCut.setSize(mesh.nFaces());
+    faceIsCut = false;
+
+    nFaces = 0;
+    nInternalFaces = 0;
     
     forAll(includedCell, cellI)
     {
@@ -113,96 +103,185 @@ Foam::meshTriangulation::meshTriangulation
         }
     }
 
-    Info<< "Subset consists of " << nFaces << " faces out of " << mesh.nFaces()
+    Pout<< "Subset consists of " << nFaces << " faces out of " << mesh.nFaces()
         << " of which " << nInternalFaces << " are internal" << endl;
+}
+
+
+void Foam::meshTriangulation::insertTriangles
+(
+    const triFaceList& faceTris,
+    const label faceI,
+    const label regionI,
+    const bool reverse,
+
+    List<labelledTri>& triangles,
+    label& triI
+)
+{
+    // Copy triangles. Optionally reverse them
+    forAll(faceTris, i)
+    {
+        const triFace& f = faceTris[i];
+
+        labelledTri& tri = triangles[triI];
+
+        if (reverse)
+        {
+            tri[0] = f[0];
+            tri[2] = f[1];
+            tri[1] = f[2];
+        }
+        else
+        {
+            tri[0] = f[0];
+            tri[1] = f[1];
+            tri[2] = f[2];
+        }
+
+        tri.region() = regionI;
+
+        faceMap_[triI] = faceI;
+
+        triI++;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Null constructor
+Foam::meshTriangulation::meshTriangulation()
+:
+    triSurface(),
+    nInternalFaces_(0),
+    faceMap_()
+{}
+
+
+// Construct from faces of cells
+Foam::meshTriangulation::meshTriangulation
+(
+    const polyMesh& mesh,
+    const label internalFacesPatch,
+    const boolList& includedCell,
+    const bool faceCentreDecomposition
+)
+:
+    triSurface(),
+    nInternalFaces_(0),
+    faceMap_()
+{
+    const faceList& faces = mesh.faces();
+    const pointField& points = mesh.points();
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    // All faces to be triangulated.     
+    boolList faceIsCut;
+    label nFaces, nInternalFaces;
+
+    getFaces
+    (
+        mesh,
+        includedCell,
+        faceIsCut,
+        nFaces,
+        nInternalFaces
+    );
 
 
     // Find upper limit for number of triangles
     // (can be less if triangulation fails)
     label nTotTri = 0;
 
-    forAll(faceIsCut, faceI)
+    if (faceCentreDecomposition)
     {
-        if (faceIsCut[faceI])
+        forAll(faceIsCut, faceI)
         {
-            nTotTri += faces[faceI].nTriangles(points);
+            if (faceIsCut[faceI])
+            {
+                nTotTri += faces[faceI].size();
+            }
         }
     }
+    else
+    {
+        forAll(faceIsCut, faceI)
+        {
+            if (faceIsCut[faceI])
+            {
+                nTotTri += faces[faceI].nTriangles(points);
+            }
+        }
+    }
+    Pout<< "nTotTri : " << nTotTri << endl;
 
-    Info<< "nTotTri : " << nTotTri << endl;
 
+    // Storage for new and old points (only for faceCentre decomposition;
+    // for triangulation uses only existing points)
+    pointField newPoints;
 
-    const polyBoundaryMesh& patches = mesh.boundaryMesh();
-
+    if (faceCentreDecomposition)
+    {
+        newPoints.setSize(mesh.nPoints() + faces.size());
+        forAll(mesh.points(), pointI)
+        {
+            newPoints[pointI] = mesh.points()[pointI];
+        }
+        // Face centres
+        forAll(faces, faceI)
+        {
+            newPoints[mesh.nPoints() + faceI] = mesh.faceCentres()[faceI];
+        }
+    }
 
     // Storage for all triangles
     List<labelledTri> triangles(nTotTri);
     faceMap_.setSize(nTotTri);
-
     label triI = 0;
 
-    // Triangulate internal faces
-    forAll(faceIsCut, faceI)
+
+    if (faceCentreDecomposition)
     {
-        if (faceIsCut[faceI] && isInternalFace(mesh, includedCell, faceI))
+        // Decomposition around face centre
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        // Triangulate internal faces
+        forAll(faceIsCut, faceI)
         {
-            // Face was internal to the mesh and will be 'internal' to
-            // the surface.
-
-            // Triangulate face
-            faceTriangulation faceTris(points, faces[faceI]);
-
-            if (faceTris.size() == 0)
+            if (faceIsCut[faceI] && isInternalFace(mesh, includedCell, faceI))
             {
-                WarningIn("meshTriangulation::meshTriangulation")
-                    << "Could not find triangulation for face " << faceI
-                    << " vertices " << faces[faceI] << " coords "
-                    << IndirectList<point>(points, faces[faceI]) << endl;
-            }
-            else
-            {
-                // Copy triangles. Make them internalFacesPatch
-                forAll(faceTris, i)
+                // Face was internal to the mesh and will be 'internal' to
+                // the surface.
+
+                // Triangulate face
+                const face& f = faces[faceI];
+
+                forAll(f, fp)
                 {
-                    const triFace& f = faceTris[i];
-
-                    labelledTri& tri = triangles[triI];
-
-                    tri[0] = f[0];
-                    tri[1] = f[1];
-                    tri[2] = f[2];
-
-                    tri.region() = internalFacesPatch;
-
                     faceMap_[triI] = faceI;
 
-                    triI++;
+                    triangles[triI++] =
+                        labelledTri
+                        (
+                            f[fp],
+                            f.nextLabel(fp),
+                            mesh.nPoints() + faceI,     // face centre
+                            internalFacesPatch
+                        );
                 }
             }
         }
-    }
-    nInternalFaces_ = triI;
+        nInternalFaces_ = triI;
 
 
-    // Triangulate external faces
-    forAll(faceIsCut, faceI)
-    {
-        if (faceIsCut[faceI] && !isInternalFace(mesh, includedCell, faceI))
+        // Triangulate external faces
+        forAll(faceIsCut, faceI)
         {
-            // Face will become outside of the surface.
-
-            // Triangulate face
-            faceTriangulation faceTris(points, faces[faceI]);
-
-            if (faceTris.size() == 0)
+            if (faceIsCut[faceI] && !isInternalFace(mesh, includedCell, faceI))
             {
-                WarningIn("meshTriangulation::meshTriangulation")
-                    << "Could not find triangulation for face " << faceI
-                    << " vertices " << faces[faceI] << " coords "
-                    << IndirectList<point>(points, faces[faceI]) << endl;
-            }
-            else
-            {
+                // Face will become outside of the surface.
+
                 label patchI = -1;
                 bool reverse = false;
 
@@ -230,31 +309,144 @@ Foam::meshTriangulation::meshTriangulation
                     reverse = false;
                 }
 
-                // Copy triangles. Optionally reverse them
-                forAll(faceTris, i)
+
+                // Triangulate face
+                const face& f = faces[faceI];
+
+                if (reverse)
                 {
-                    const triFace& f = faceTris[i];
-
-                    labelledTri& tri = triangles[triI];
-
-                    if (reverse)
+                    forAll(f, fp)
                     {
-                        tri[0] = f[0];
-                        tri[2] = f[1];
-                        tri[1] = f[2];
+                        faceMap_[triI] = faceI;
+
+                        triangles[triI++] =
+                            labelledTri
+                            (
+                                f.nextLabel(fp),
+                                f[fp],
+                                mesh.nPoints() + faceI,     // face centre
+                                patchI
+                            );
+                    }
+                }
+                else
+                {
+                    forAll(f, fp)
+                    {
+                        faceMap_[triI] = faceI;
+
+                        triangles[triI++] =
+                            labelledTri
+                            (
+                                f[fp],
+                                f.nextLabel(fp),
+                                mesh.nPoints() + faceI,     // face centre
+                                patchI
+                            );
+                    }
+                }
+            }
+        }
+    }
+    else
+    {
+        // Triangulation using existing vertices
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        // Triangulate internal faces
+        forAll(faceIsCut, faceI)
+        {
+            if (faceIsCut[faceI] && isInternalFace(mesh, includedCell, faceI))
+            {
+                // Face was internal to the mesh and will be 'internal' to
+                // the surface.
+
+                // Triangulate face. Fall back to naive triangulation if failed.
+                faceTriangulation faceTris(points, faces[faceI], true);
+
+                if (faceTris.size() == 0)
+                {
+                    WarningIn("meshTriangulation::meshTriangulation")
+                        << "Could not find triangulation for face " << faceI
+                        << " vertices " << faces[faceI] << " coords "
+                        << IndirectList<point>(points, faces[faceI]) << endl;
+                }
+                else
+                {
+                    // Copy triangles. Make them internalFacesPatch
+                    insertTriangles
+                    (
+                        faceTris,
+                        faceI,
+                        internalFacesPatch,
+                        false,                  // no reverse
+
+                        triangles,
+                        triI
+                    );
+                }
+            }
+        }
+        nInternalFaces_ = triI;
+
+
+        // Triangulate external faces
+        forAll(faceIsCut, faceI)
+        {
+            if (faceIsCut[faceI] && !isInternalFace(mesh, includedCell, faceI))
+            {
+                // Face will become outside of the surface.
+
+                label patchI = -1;
+                bool reverse = false;
+
+                if (mesh.isInternalFace(faceI))
+                {
+                    patchI = internalFacesPatch;
+
+                    // Check orientation. Check which side of the face gets
+                    // included (note: only one side is).
+                    if (includedCell[mesh.faceOwner()[faceI]])
+                    {
+                        reverse = false;
                     }
                     else
                     {
-                        tri[0] = f[0];
-                        tri[1] = f[1];
-                        tri[2] = f[2];
+                        reverse = true;
                     }
+                }
+                else
+                {
+                    // Face was already outside so orientation ok.
 
-                    tri.region() = patchI;
+                    patchI = patches.whichPatch(faceI);
 
-                    faceMap_[triI] = faceI;
+                    reverse = false;
+                }
 
-                    triI++;
+                // Triangulate face
+                faceTriangulation faceTris(points, faces[faceI], true);
+
+                if (faceTris.size() == 0)
+                {
+                    WarningIn("meshTriangulation::meshTriangulation")
+                        << "Could not find triangulation for face " << faceI
+                        << " vertices " << faces[faceI] << " coords "
+                        << IndirectList<point>(points, faces[faceI]) << endl;
+                }
+                else
+                {
+                    // Copy triangles. Optionally reverse them
+                    insertTriangles
+                    (
+                        faceTris,
+                        faceI,
+                        patchI,
+                        reverse,    // whether to reverse
+
+                        triangles,
+                        triI
+                    );
                 }
             }
         }
@@ -264,8 +456,8 @@ Foam::meshTriangulation::meshTriangulation
     triangles.setSize(triI);
     faceMap_.setSize(triI);
 
-    Info<< "nInternalFaces_:" << nInternalFaces_ << endl;
-    Info<< "triangles:" << triangles.size() << endl;
+    Pout<< "nInternalFaces_:" << nInternalFaces_ << endl;
+    Pout<< "triangles:" << triangles.size() << endl;
 
 
     geometricSurfacePatchList surfPatches(patches.size());
@@ -282,18 +474,38 @@ Foam::meshTriangulation::meshTriangulation
     }
 
     // Create globally numbered tri surface
-    triSurface globalSurf(triangles, surfPatches, points);
+    if (faceCentreDecomposition)
+    {
+        // Use newPoints (mesh points + face centres)
+        triSurface globalSurf(triangles, surfPatches, newPoints);
 
-    // Create locally numbered tri surface
-    triSurface::operator=
-    (
-        triSurface
+        // Create locally numbered tri surface
+        triSurface::operator=
         (
-            globalSurf.localFaces(),
-            surfPatches,
-            globalSurf.localPoints()
-        )
-    );
+            triSurface
+            (
+                globalSurf.localFaces(),
+                surfPatches,
+                globalSurf.localPoints()
+            )
+        );
+    }
+    else
+    {
+        // Use mesh points
+        triSurface globalSurf(triangles, surfPatches, mesh.points());
+
+        // Create locally numbered tri surface
+        triSurface::operator=
+        (
+            triSurface
+            (
+                globalSurf.localFaces(),
+                surfPatches,
+                globalSurf.localPoints()
+            )
+        );
+    }
 }
 
 

@@ -163,6 +163,19 @@ int main(int argc, char *argv[])
 
 #   include "ensightCaseHeader.H"
 
+#   include "checkMeshMoving.H"
+
+    word geomCaseFileName = prepend + "000";
+    if (Pstream::master())
+    {
+        // test pre check variable if there is a moving mesh
+        if (meshMoving == true) geomCaseFileName = prepend + "***";
+        ensightCaseFile
+            << "GEOMETRY" << nl
+            << "model:        1     "
+            << (geomCaseFileName + ".mesh").c_str() << nl;
+    }
+
     label nTimeSteps = 0;
     for (label n=startTime; n<endTime; n++)
     {
@@ -190,7 +203,18 @@ int main(int argc, char *argv[])
 
         if (Pstream::master() && timeIndex == 0)
         {
-            ensightCaseFile << nl << "VARIABLE" << nl;
+            if (lagrangianExist)
+            {
+                ensightCaseFile
+                    <<  (
+                            "measured:     1     "
+                          + prepend
+                          + "***."
+                          + sprayName
+                        ).c_str()
+                    << nl;
+             }
+             ensightCaseFile << nl << "VARIABLE" << nl;
         }
 
         for (label i=0; i<nTypes; i++)

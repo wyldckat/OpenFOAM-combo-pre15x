@@ -30,7 +30,7 @@ Description
 
 #include "argList.H"
 #include "Time.H"
-#include "fvMesh.H"
+#include "polyMesh.H"
 #include "triSurface.H"
 #include "triSurfaceSearch.H"
 #include "cellSet.H"
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-#   include "createMesh.H"
+#   include "createPolyMesh.H"
 
     fileName surfName(args.args()[3]);
 

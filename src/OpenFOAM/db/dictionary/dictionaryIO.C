@@ -187,7 +187,7 @@ void dictionary::write(Ostream& os, bool subDict) const
         // Check stream before going to next entry.
         if (!os.good())
         {
-            Info<< "dictionary::write(Ostream& os, bool subDict) : "
+            WarningIn("dictionary::write(Ostream& os, bool subDict)")
                 << "Can't write entry " << (*iter).keyword()
                 << " for dictionary " << name()
                 << endl;

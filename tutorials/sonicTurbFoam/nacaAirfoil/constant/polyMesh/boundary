@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.2                                   |
+|  \\    /   O peration     | Version:  1.3                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,7 +11,7 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorials/sonicTurbFoam";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.3/tutorials/sonicTurbFoam";
     case "nacaAirfoil";
     instance ""constant"";
     local "polyMesh";
@@ -27,7 +27,6 @@ FoamFile
 INLE1
 {
     type patch;
-    physicalType    supersonicFreestream;
     nFaces 400;
     startFace 79570;
 }
@@ -35,7 +34,6 @@ INLE1
 OUTL2
 {
     type patch;
-    physicalType    pressureTransmissiveOutlet;
     nFaces 200;
     startFace 79970;
 }
@@ -50,7 +48,6 @@ SYMP3
 WALL10
 {
     type wall;
-    physicalType    adiabaticWallFunctions;
     nFaces 260;
     startFace 160170;
 }

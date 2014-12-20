@@ -191,7 +191,7 @@ bool triSurface::readAC(const fileName& ACfileName)
         // Object global values
         string patchName = string("patch") + name(patchI);
         label nVerts = 0;
-        tensor rot(Foam::I);
+        tensor rot(tensor::I);
         vector loc(0, 0, 0);
 
         // Read all info for current patch

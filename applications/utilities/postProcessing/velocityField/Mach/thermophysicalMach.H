@@ -32,7 +32,7 @@
                 (
                     "Ma",
                     runTime.timeName(),
-                    runTime
+                    mesh
                 ),
                 mag(U)/(sqrt((Cp/Cv)*(Cp - Cv)*thermo->T()))
             );

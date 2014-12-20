@@ -40,16 +40,44 @@ namespace Foam
 
 OPstream::~OPstream()
 {
+    if
+    (
+        !write
+        (
+            toProcNo_,
+            buf_.begin(),
+            bufPosition_,
+            bufferedTransfer_
+        )
+    )
+    {
+        FatalErrorIn("OPstream::~OPstream()")
+            << "MPI_Bsend cannot send outgoing message";
+        abort();
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool OPstream::write
+(
+    const int toProcNo,
+    const char* buf,
+    const std::streamsize bufSize,
+    const bool bufferedTransfer
+)
+{
     bool transferFailed = true;
 
-    if (bufferedTransfer_)
+    if (bufferedTransfer)
     {
         transferFailed = MPI_Bsend
         (
-            buf_.begin(),
-            bufPosition_,
+            (char*)buf,
+            bufSize,
             MPI_PACKED,
-            procID(toProcNo_),
+            procID(toProcNo),
             msgType(),
             MPI_COMM_WORLD
         );
@@ -58,21 +86,16 @@ OPstream::~OPstream()
     {
         transferFailed = MPI_Send
         (
-            buf_.begin(),
-            bufPosition_,
+            (char*)buf,
+            bufSize,
             MPI_PACKED,
-            procID(toProcNo_),
+            procID(toProcNo),
             msgType(),
             MPI_COMM_WORLD
         );
     }
 
-    if (transferFailed)
-    {
-        FatalErrorIn("OPstream::~OPstream()")
-            << "MPI_Bsend cannot send outgoing message";
-        abort();
-    }
+    return !transferFailed;
 }
 
 

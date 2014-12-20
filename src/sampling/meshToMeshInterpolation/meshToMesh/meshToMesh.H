@@ -42,7 +42,7 @@ SourceFiles
 #include "fvMesh.H"
 #include "pointMesh.H"
 #include "HashTable.H"
-#include "fvPatchFieldMapperPatchRef.H"
+#include "fvPatchMapper.H"
 #include "scalarList.H"
 #include "className.H"
 
@@ -178,16 +178,17 @@ public:
             {}
 
 
+        // Destructor
+
+            virtual ~patchFieldInterpolator()
+            {}
+
+
         // Member Functions
 
             label size() const
             {
                 return directAddressing_.size();
-            }
-
-            virtual bool resizeOnly() const
-            {
-                return false;
             }
 
             bool direct() const

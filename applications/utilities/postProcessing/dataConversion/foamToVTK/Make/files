@@ -1,5 +1,6 @@
-foamToVTK.C
+writePatches.C
 writeInternal.C
+foamToVTK.C
 writePatchGeom.C
 writeFaceSet.C
 writePatch.C

@@ -91,7 +91,7 @@
 
 EXE_INC = \
     -I$(FV_HOME)/uns \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude \
     -I$(LIB_SRC)/browser/lnInclude \
     -I$(FOAM_SRC)/lagrangian/basic/lnInclude \
@@ -99,6 +99,7 @@ EXE_INC = \
 
 EXE_LIBS = \
     $(FV_LIBS) \
+    -lfiniteVolume \
     -lmeshTools \
     -lfoamUtil
 

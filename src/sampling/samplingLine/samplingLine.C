@@ -29,8 +29,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "samplingLine.H"
 #include "Istream.H"
 #include "fvMesh.H"

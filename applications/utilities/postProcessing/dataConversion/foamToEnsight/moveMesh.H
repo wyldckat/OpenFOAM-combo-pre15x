@@ -3,10 +3,10 @@
     (
         "points", 
         runTime.timeName(),
-        mesh.name(),
+        polyMesh::meshSubDir,
         mesh
     );
-
+ 
     if (ioPoints.headerOk())
     {
         // Reading new points
@@ -16,7 +16,7 @@
             (
                 "points",
                 mesh.time().timeName(),
-                mesh.name(),
+                polyMesh::meshSubDir,
                 mesh,
                 IOobject::MUST_READ,
                 IOobject::NO_WRITE

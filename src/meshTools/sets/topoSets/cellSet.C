@@ -22,13 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "cellSet.H"
 #include "mapPolyMesh.H"
 #include "polyMesh.H"
+//#include "directPolyTopoChange.H"
 #include "Time.H"
 #include "addToRunTimeSelectionTable.H"
 
@@ -106,7 +105,7 @@ cellSet::cellSet
         IOobject
         (
             name,
-            runTime.findInstance(polyMesh::meshSubDir, "cells"),
+            runTime.findInstance(polyMesh::meshSubDir, "faces"),
             polyMesh::meshSubDir/"sets",
             runTime,
             r,
@@ -130,7 +129,7 @@ cellSet::cellSet
         IOobject
         (
             name,
-            runTime.findInstance(polyMesh::meshSubDir, "cells"),
+            runTime.findInstance(polyMesh::meshSubDir, "faces"),
             polyMesh::meshSubDir/"sets",
             runTime,
             NO_READ,
@@ -154,7 +153,7 @@ cellSet::cellSet
         IOobject
         (
             name,
-            runTime.findInstance(polyMesh::meshSubDir, "cells"),
+            runTime.findInstance(polyMesh::meshSubDir, "faces"),
             polyMesh::meshSubDir/"sets",
             runTime,
             NO_READ,
@@ -173,16 +172,22 @@ cellSet::~cellSet()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::label Foam::cellSet::maxSize(const polyMesh& mesh) const
+label cellSet::maxSize(const polyMesh& mesh) const
 {
     return mesh.nCells();
 }
 
 
-void cellSet::updateTopology(const mapPolyMesh& morphMap)
+void cellSet::updateMesh(const mapPolyMesh& morphMap)
 {
     updateLabels(morphMap.reverseCellMap());
 }
+
+
+//void cellSet::updateMesh(const directPolyTopoChange& meshMod)
+//{
+//    updateLabels(meshMod.cellMap());
+//}
 
 
 void Foam::cellSet::writeDebug

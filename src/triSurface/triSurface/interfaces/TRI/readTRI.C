@@ -102,7 +102,7 @@ bool triSurface::readTRI(const fileName& TRIfileName)
         }
         else
         {
-            Info<< "Mapping triangle colour 0" << rawSolidName
+            Pout<< "Mapping triangle colour 0" << rawSolidName
                 << " to region " << maxRegion << " name " << solidName
                 << endl;
 
@@ -149,9 +149,8 @@ bool triSurface::readTRI(const fileName& TRIfileName)
     forAll(names, nameI)
     {
         patches_[nameI].name() = names[nameI];
+        patches_[nameI].geometricType() = "empty";
     }
-
-    setDefaultPatches();
 
     return true;
 }

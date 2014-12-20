@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
     {        
 
 #       include "readTimeControls.H"
-#       include "CourantNo.H"
+#       include "compressibleCourantNo.H"
 #       include "setDeltaT.H"
 
         runTime++;
@@ -81,9 +81,9 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

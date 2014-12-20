@@ -26,7 +26,7 @@ License
 
 #include "Cloud.H"
 #include "particle.H"
-#include "surfaceFields.H"
+#include "Time.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -39,8 +39,7 @@ namespace Foam
 template<class particleType>
 Cloud<particleType>::Cloud
 (
-    const polyMesh& pMesh,
-    const bool softAlgorithm
+    const polyMesh& pMesh
 )
 :
     cloud(pMesh),
@@ -50,8 +49,7 @@ Cloud<particleType>::Cloud
     cellFaces_(pMesh.cells()),
     allFaceCentres_(pMesh.faceCentres()),
     owner_(pMesh.faceOwner()),
-    neighbour_(pMesh.faceNeighbour()),
-    softAlgorithm_(softAlgorithm)
+    neighbour_(pMesh.faceNeighbour())
 {
     readOpt() = IOobject::MUST_READ;
 
@@ -143,7 +141,8 @@ IOobject Cloud<particleType>::fieldIOobject(const word& fieldName) const
         "lagrangian",
         polyMesh_,
         IOobject::MUST_READ,
-        IOobject::NO_WRITE
+        IOobject::NO_WRITE,
+        false
     );
 }
 

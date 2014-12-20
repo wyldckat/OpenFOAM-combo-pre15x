@@ -61,7 +61,7 @@ Foam::vtkMesh::vtkMesh
     const word& setName
 )
 :
-    meshSubset(io),
+    fvMeshSubset(io),
     setName_(setName),
     cMapPtr_(NULL),
     pMapPtr_(NULL),
@@ -92,11 +92,11 @@ Foam::vtkMesh::~vtkMesh()
 
 Foam::polyMesh::readUpdateState Foam::vtkMesh::readUpdate()
 {
-    polyMesh::readUpdateState meshState = meshSubset::readUpdate();
+    polyMesh::readUpdateState meshState = fvMeshSubset::readUpdate();
 
     if (meshState != polyMesh::UNCHANGED)
     {
-        // Note: since meshSubset has no movePoints() functionality reconstruct
+        // Note: since fvMeshSubset has no movePoints() functionality reconstruct
         // the subset even if only movement.
 
         deleteDemandDrivenData(cMapPtr_);
@@ -105,7 +105,7 @@ Foam::polyMesh::readUpdateState Foam::vtkMesh::readUpdate()
 
         if (setName_.size() > 0)
         {
-            Info<< "Subsetting mesh based on cellSet " << setName_ << endl;
+            Pout<< "Subsetting mesh based on cellSet " << setName_ << endl;
 
             // Read cellSet using whole mesh
             cellSet currentSet(*this, setName_);

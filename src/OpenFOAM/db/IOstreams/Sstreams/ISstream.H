@@ -119,7 +119,7 @@ public:
 
     // Member functions
 
-        // Inquirery
+        // Inquiry
 
             //- Return the name of the stream
             //  Useful for Fstream to return the filename
@@ -162,8 +162,11 @@ public:
             //- Read a label
             virtual Istream& read(label&);
 
-            //- Read a scalar
-            virtual Istream& read(scalar&);
+            //- Read a floatScalar
+            virtual Istream& read(floatScalar&);
+
+            //- Read a doubleScalar
+            virtual Istream& read(doubleScalar&);
 
             //- Read binary block
             virtual Istream& read(char*, std::streamsize);

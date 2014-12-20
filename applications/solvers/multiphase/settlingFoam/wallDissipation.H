@@ -1,122 +1,51 @@
-// Initialise the boundary condition fields for epsilon to zero
-// They are used to accumulate the information for all the wall faces
-// of a cell which is subsequently averaged.
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
 
-    volScalarField boundaryCentral
-    (
-        IOobject
-        (
-            "boundaryCentral",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionedScalar("zero", rho.dimensions()/dimTime, 0.0)
-    );
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
 
-    volScalarField boundarySource
-    (
-        IOobject
-        (
-            "boundarySource",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh,
-        dimensionedScalar
-        (
-            "zero",
-            rho.dimensions()*epsilon.dimensions()/dimTime,
-            0.0
-        )
-    );
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
 
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Global
+    wallDissipation
+
+Description
+    Set wall dissipation in the epsilon matrix
+
+\*---------------------------------------------------------------------------*/
 
 {
-    scalar Cmu25 = ::pow(Cmu.value(), 0.25);
-    scalar Cmu75 = ::pow(Cmu.value(), 0.75);
-
     const fvPatchList& patches = mesh.boundary();
 
-    //- Initialise the near-wall P field to zero
     forAll(patches, patchi)
     {
-        const fvPatch& curPatch = patches[patchi];
+        const fvPatch& p = patches[patchi];
 
-        if (isType<wallFvPatch>(curPatch))
+        if (isType<wallFvPatch>(p))
         {
-            forAll(curPatch, facei)
-            {
-                label faceCelli = curPatch.faceCells()[facei];
-
-                G[faceCelli] = 0.0;
-            }
-        }
-    }
-
-    //- Accumulate the wall face contributions to P and boundarySource
-    //  Increment boundaryCentral for each face for averaging
-    forAll(patches, patchi)
-    {
-        const fvPatch& curPatch = patches[patchi];
-
-        if (isType<wallFvPatch>(curPatch))
-        {
-            const scalarField& rhow = rho.boundaryField()[patchi];
-
-            const scalarField muw = mul.boundaryField()[patchi];
-            const scalarField& mutw = mut.boundaryField()[patchi];
-
-            scalarField magFaceGradU =
-                mag(U.boundaryField()[patchi].snGrad());
-
-            forAll(curPatch, facei)
-            {
-                label faceCelli = curPatch.faceCells()[facei];
-
-                scalar yPlus =
-                    Cmu25*y[patchi][facei]*::sqrt(k[faceCelli])
-                   /(muw[facei]/rhow[facei]);
-
-                // For corner cells (with two boundary or more faces),
-                // boundarySource and G in the near - wall cell
-                // are calculated as an average
-
-                boundaryCentral[faceCelli] += 1.0;
-
-                boundarySource[faceCelli] +=
-                    1.0e+10
-                   *Cmu75*rho[faceCelli]*::pow(k[faceCelli], 1.5)
-                   /(kappa.value()*y[patchi][facei]);
-
-                if (yPlus > 11.6)
-                {
-                    G[faceCelli] +=
-                        mutw[facei]*magFaceGradU[facei]
-                       *Cmu25*::sqrt(k[faceCelli])
-                       /(kappa.value()*y[patchi][facei]);
-                }
-            }
-        }
-    }
-
-
-    // perform the averaging
-
-    scalarField& Gint = G.internalField();
-
-    forAll (Gint, celli)
-    {
-        if (boundaryCentral[celli] > 0.5)
-        {
-            Gint[celli] /= boundaryCentral[celli];
-            boundarySource[celli] /= boundaryCentral[celli];
-
-            boundaryCentral[celli] = 1.0e+10*rho[celli];
+            epsEqn.setValues
+            (
+                p.faceCells(),
+                epsilon.boundaryField()[patchi].patchInternalField()
+            );
         }
     }
 }
+
+// ************************************************************************* //

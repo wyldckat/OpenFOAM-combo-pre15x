@@ -183,6 +183,10 @@ public:
             //  allocated entries.
             void clear();
 
+            //- Transfer the contents of the argument PtrList into this PtrList
+            //  and annull the argument list.
+            void transfer(PtrList<T>&);
+
             //- Return an element pointer to be set.  The pointer is checked
             //  if already set and the index range checked.
             typedef T* Tptr;

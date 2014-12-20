@@ -62,10 +62,10 @@ void Foam::enrichedPatch::calcCutFaces() const
     const faceList& lf = localFaces();
     const pointField& lp = localPoints();
     const labelListList& pp = pointPoints();
-//     Info << "enFaces: " << enFaces << endl;
-//     Info << "lf: " << lf << endl;
-//     Info << "lp: " << lp << endl;
-//     Info << "pp: " << pp << endl;
+//     Pout << "enFaces: " << enFaces << endl;
+//     Pout << "lf: " << lf << endl;
+//     Pout << "lp: " << lp << endl;
+//     Pout << "pp: " << pp << endl;
     const Map<labelList>& masterPointFaceAddr = masterPointFaces();
 
     // Prepare the storage
@@ -105,16 +105,16 @@ void Foam::enrichedPatch::calcCutFaces() const
         const face& curLocalFace = lf[faceI];
         const face& curGlobalFace = enFaces[faceI];
 
-//         Info<< "Doing face " << faceI << " local: " << curLocalFace << " or " << curGlobalFace << endl;
+//         Pout<< "Doing face " << faceI << " local: " << curLocalFace << " or " << curGlobalFace << endl;
 //         if (faceI < slavePatch_.size())
 //         {
-//             Info<< "original slave: " << slavePatch_[faceI]
+//             Pout<< "original slave: " << slavePatch_[faceI]
 //                 << " local: " << slavePatch_.localFaces()[faceI] << endl;
 //         }
 //         else
 //         {
-//             Info<< "original master: "
-//                 << masterPatch_[faceI - slavePatch_.size()]
+//             Pout<< "original master: "
+//                 << masterPatch_[faceI - slavePatch_.size()] << " "
 //                 << masterPatch_.localFaces()[faceI - slavePatch_.size()]
 //                 << endl;
 //         }
@@ -122,7 +122,7 @@ void Foam::enrichedPatch::calcCutFaces() const
 //             pointField facePoints = curLocalFace.points(lp);
 //             forAll (curLocalFace, pointI)
 //             {
-//                 Info << "v " << facePoints[pointI].x() << " "
+//                 Pout << "v " << facePoints[pointI].x() << " "
 //                     << facePoints[pointI].y() << " "
 //                     << facePoints[pointI].z() << endl;
 //             }
@@ -153,7 +153,7 @@ void Foam::enrichedPatch::calcCutFaces() const
 
         while (edgeSeeds.size() > 0)
         {
-//             Info << "edgeSeeds.size(): " << edgeSeeds.size() << endl;
+//             Pout << "edgeSeeds.size(): " << edgeSeeds.size() << endl;
             const edge curEdge = edgeSeeds.removeHead();
 
             // Locate the edge in current face
@@ -176,7 +176,7 @@ void Foam::enrichedPatch::calcCutFaces() const
 
             // If the edge has already been used twice, skip it
             if (edgesUsedTwice.found(curEdge)) continue;
-//             Info << "Trying new edge (" << mp[curEdge.start()] << ", " << mp[curEdge.end()] << ") seed: " << curEdge << " used: " << edgesUsedTwice.found(curEdge) << endl;
+//             Pout << "Trying new edge (" << mp[curEdge.start()] << ", " << mp[curEdge.end()] << ") seed: " << curEdge << " used: " << edgesUsedTwice.found(curEdge) << endl;
 
             // Estimate the size of cut face as twice the size of original face
             DynamicList<label> cutFaceGlobalPoints(2*curLocalFace.size());
@@ -186,7 +186,7 @@ void Foam::enrichedPatch::calcCutFaces() const
             label prevPointLabel = curEdge.start();
             cutFaceGlobalPoints.append(mp[prevPointLabel]);
             cutFaceLocalPoints.append(prevPointLabel);
-//             Info << "prevPointLabel: " << mp[prevPointLabel] << endl;
+//             Pout << "prevPointLabel: " << mp[prevPointLabel] << endl;
             // Grab current point and append it to the list
             label curPointLabel = curEdge.end();
             point curPoint = lp[curPointLabel];
@@ -200,9 +200,9 @@ void Foam::enrichedPatch::calcCutFaces() const
             do
             {
                 // Grab the next point options
-//                 Info << "curPointLabel: " << mp[curPointLabel] << endl;
+//                 Pout << "curPointLabel: " << mp[curPointLabel] << endl;
                 const labelList& nextPoints = pp[curPointLabel];
-//                 Info << "nextPoints: " << IndirectList<label>(mp, nextPoints) << endl;
+//                 Pout << "nextPoints: " << IndirectList<label>(mp, nextPoints) << endl;
                 // Get the vector along the edge and the right vector
                 vector ahead = curPoint - lp[prevPointLabel];
                 ahead -= normal*(normal & ahead);
@@ -210,7 +210,7 @@ void Foam::enrichedPatch::calcCutFaces() const
 
                 vector right = normal ^ ahead;
                 right /= mag(right);
-//                 Info<< "normal: " << normal << " ahead: " << ahead << " right: " << right << endl;
+//                 Pout<< "normal: " << normal << " ahead: " << ahead << " right: " << right << endl;
 
                 scalar atanTurn = -GREAT;
                 label bestAtanPoint = -1;
@@ -221,17 +221,33 @@ void Foam::enrichedPatch::calcCutFaces() const
                     // be more than one edge, so this is safe
                     if (nextPoints[nextI] != prevPointLabel)
                     {
-// Info << "cur point: " << curPoint << " trying for point: " << mp[nextPoints[nextI]] << " " << lp[nextPoints[nextI]];
+// Pout << "cur point: " << curPoint << " trying for point: " << mp[nextPoints[nextI]] << " " << lp[nextPoints[nextI]];
                         vector newDir = lp[nextPoints[nextI]] - curPoint;
-// Info << " newDir: " << newDir << " mag: " << mag(newDir) << flush;
+// Pout << " newDir: " << newDir << " mag: " << mag(newDir) << flush;
                         newDir -= normal*(normal & newDir);
-// Info << " corrected: " << newDir << " mag: " << mag(newDir) << flush;
-                        newDir /= mag(newDir);
+                        scalar magNewDir = mag(newDir);
+// Pout << " corrected: " << newDir << " mag: " << mag(newDir) << flush;
+
+                        if (magNewDir < SMALL)
+                        {
+                            FatalErrorIn
+                            (
+                                "void enrichedPatch::"
+                                "calcCutFaces() const"
+                            )   << "Zero length edge detected.  Probable "
+                                << "projection error: slave patch probably "
+                                << "does not project onto master.  "
+                                << "Please switch on "
+                                << "enriched patch debug for more info"
+                                << abort(FatalError);
+                        }
+
+                        newDir /= magNewDir;
 
                         scalar curAtanTurn =
                             atan2(newDir & right, newDir & ahead);
 
-//                         Info << " atan: " << curAtanTurn << endl;
+//                         Pout << " atan: " << curAtanTurn << endl;
 
                         if (curAtanTurn > atanTurn)
                         {
@@ -240,10 +256,10 @@ void Foam::enrichedPatch::calcCutFaces() const
                         }
                     } // end of prev point skip
                 } // end of next point selection
-//                 Info<< "   bestAtanPoint: " << bestAtanPoint << " or "
+//                 Pout<< "   bestAtanPoint: " << bestAtanPoint << " or "
 //                     << mp[bestAtanPoint] << endl;
                 // Selected next best point.
-//                 Info << "cutFaceGlobalPoints: " << cutFaceGlobalPoints << endl;
+//                 Pout << "cutFaceGlobalPoints: " << cutFaceGlobalPoints << endl;
                 // Check if the edge about to be added has been used
                 // in the current face or twice in other faces.  If
                 // so, the face is bad.
@@ -258,7 +274,7 @@ void Foam::enrichedPatch::calcCutFaces() const
                 {
                     // This edge is already used in current face
                     // face cannot be good; start on a new one
-//                     Info << "Double usage in current face, cannot be good" << endl;
+//                     Pout << "Double usage in current face, cannot be good" << endl;
                     completedCutFace = true;
                 }
 
@@ -268,7 +284,7 @@ void Foam::enrichedPatch::calcCutFaces() const
                     // This edge is already used -
                     // face cannot be good; start on a new one
                     completedCutFace = true;
-//                     Info << "Double usage elsewhere, cannot be good" << endl;
+//                     Pout << "Double usage elsewhere, cannot be good" << endl;
                 }
 
                 if (completedCutFace) continue;
@@ -282,7 +298,7 @@ void Foam::enrichedPatch::calcCutFaces() const
 
                     if (debug)
                     {
-                        Info<< " local: " << cutFaceLocalPoints
+                        Pout<< " local: " << cutFaceLocalPoints
                             << " one side: " << faceI;
                     }
 
@@ -294,7 +310,7 @@ void Foam::enrichedPatch::calcCutFaces() const
 
                     face cutFaceLocal;
                     cutFaceLocal.transfer(cutFaceLocalPoints.shrink());
-//                     Info << "\ncutFaceLocal: " << cutFaceLocal.points(lp) << endl;
+//                     Pout << "\ncutFaceLocal: " << cutFaceLocal.points(lp) << endl;
                     // Go through all edges of the cut faces.
                     // If the edge corresponds to a starting face edge,
                     // mark the starting face edge as true
@@ -313,12 +329,12 @@ void Foam::enrichedPatch::calcCutFaces() const
 
                         if (euoIter == edgesUsedOnce.end())
                         {
-//                             Info << "Found edge not used before: "<< curCutFaceEdge << endl;
+//                             Pout << "Found edge not used before: "<< curCutFaceEdge << endl;
                             edgesUsedOnce.insert(curCutFaceEdge);
                         }
                         else
                         {
-//                             Info << "Found edge used once: " << curCutFaceEdge << endl;
+//                             Pout << "Found edge used once: " << curCutFaceEdge << endl;
                             edgesUsedOnce.erase(euoIter);
                             edgesUsedTwice.insert(curCutFaceEdge);
                         }
@@ -332,13 +348,13 @@ void Foam::enrichedPatch::calcCutFaces() const
                         )
                         {
                             // Found edge in original face
-//                             Info << "Found edge in orig face: " << curCutFaceEdge << ": " << curCutFaceEdgeWhich << endl;
+//                             Pout << "Found edge in orig face: " << curCutFaceEdge << ": " << curCutFaceEdgeWhich << endl;
                             usedFaceEdges[curCutFaceEdgeWhich] = true;
                         }
                         else
                         {
                             // Edge not in original face.  Add it to seeds
-//                             Info << "Found new edge seed: " << curCutFaceEdge << endl;
+//                             Pout << "Found new edge seed: " << curCutFaceEdge << endl;
                             edgeSeeds.append(curCutFaceEdge.reverseEdge());
                         }
                     }
@@ -450,7 +466,7 @@ void Foam::enrichedPatch::calcCutFaces() const
 
                                         if (debug)
                                         {
-                                            Info<< " other side: "
+                                            Pout<< " other side: "
                                                 << masterFacesOfPZero[pointI]
                                                 << endl;
                                         }
@@ -463,7 +479,7 @@ void Foam::enrichedPatch::calcCutFaces() const
                             {
                                 if (debug)
                                 {
-                                    Info << " solo slave A" << endl;
+                                    Pout << " solo slave A" << endl;
                                 }
 
                                 cfMaster.append(-1);
@@ -475,7 +491,7 @@ void Foam::enrichedPatch::calcCutFaces() const
                             // First point not in master patch
                             if (debug)
                             {
-                                Info << " solo slave B" << endl;
+                                Pout << " solo slave B" << endl;
                             }
 
                             cfMaster.append(-1);
@@ -486,7 +502,7 @@ void Foam::enrichedPatch::calcCutFaces() const
                     {
                         if (debug)
                         {
-                            Info << " master side" << endl;
+                            Pout << " master side" << endl;
                         }
 
                         cfMaster.append(faceI - slavePatch_.size());
@@ -526,14 +542,21 @@ void Foam::enrichedPatch::calcCutFaces() const
                                     cutFaceLocalPoints.shrink();
 
                                     face origFace;
+                                    face origFaceLocal;
                                     if (faceI < slavePatch_.size())
                                     {
                                         origFace = slavePatch_[faceI];
+                                        origFaceLocal =
+                                            slavePatch_.localFaces()[faceI];
                                     }
                                     else
                                     {
                                         origFace =
                                             masterPatch_
+                                            [faceI - slavePatch_.size()];
+
+                                        origFaceLocal =
+                                            masterPatch_.localFaces()
                                             [faceI - slavePatch_.size()];
                                     }
 
@@ -545,7 +568,11 @@ void Foam::enrichedPatch::calcCutFaces() const
                                         << "Error in the face cutting "
                                         << "algorithm for global face "
                                         << origFace << " local face "
-                                        << faceI << "." << nl
+                                        << origFaceLocal << nl
+                                        << "Slave size: " << slavePatch_.size()
+                                        << " Master size: "
+                                        << masterPatch_.size()
+                                        << " index: " << faceI << ".\n"
                                         << "Face: " << curGlobalFace << nl
                                         << "Cut face: " << cutFaceGlobalPoints
                                         << " local: " << cutFaceLocalPoints
@@ -562,7 +589,7 @@ void Foam::enrichedPatch::calcCutFaces() const
 
         if (debug)
         {
-            Info << " Finished face " << faceI << endl;
+            Pout << " Finished face " << faceI << endl;
         }
 
     } // end of local faces

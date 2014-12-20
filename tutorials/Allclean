@@ -48,7 +48,7 @@ do
         cd $application
         if [ -f "Allclean" ] 
         then
-            Allclean
+            ./Allclean
         else
             for case in *
             do

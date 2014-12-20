@@ -22,18 +22,17 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "multiDirRefinement.H"
+#include "polyMesh.H"
+#include "polyTopoChanger.H"
 #include "Time.H"
 #include "undoableMeshCutter.H"
 #include "hexCellLooper.H"
 #include "geomCellLooper.H"
 #include "topoSet.H"
 #include "directions.H"
-#include "morphMesh.H"
 #include "hexRef8.H"
 #include "mapPolyMesh.H"
 #include "polyTopoChange.H"
@@ -253,14 +252,14 @@ Foam::labelList Foam::multiDirRefinement::splitOffHex(const primitiveMesh& mesh)
 
 void Foam::multiDirRefinement::refineHex8
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     const labelList& hexCells,
     const bool writeMesh
 )
 {
     if (debug)
     {
-        Info<< "multiDirRefinement : Refining hexes " << hexCells.size()
+        Pout<< "multiDirRefinement : Refining hexes " << hexCells.size()
             << endl;
     }
 
@@ -270,19 +269,13 @@ void Foam::multiDirRefinement::refineHex8
 
     hexRefiner.setRefinement(hexCells, meshMod);
 
-    if (writeMesh)
-    {
-        const_cast<Time&>(mesh.time())++;
-        mesh.setMorphTimeIndex(mesh.time().timeIndex());
-    }
-    else
-    {
-        mesh.resetMorph();
-    }
+    autoPtr<mapPolyMesh> morphMap = 
+        polyTopoChanger::changeMesh(mesh, meshMod);
 
-    mesh.updateTopology(meshMod);
-
-    mesh.movePoints(mesh.morphMap().preMotionPoints());
+    if (morphMap().hasMotionPoints())
+    {
+        mesh.movePoints(morphMap().preMotionPoints());
+    }
 
     if (writeMesh)
     {
@@ -291,7 +284,7 @@ void Foam::multiDirRefinement::refineHex8
 
     if (debug)
     {
-        Info<< "multiDirRefinement : updated mesh at time "
+        Pout<< "multiDirRefinement : updated mesh at time "
             << mesh.time().timeName() << endl;
     }
 
@@ -303,7 +296,7 @@ void Foam::multiDirRefinement::refineHex8
 
 void Foam::multiDirRefinement::refineAllDirs
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     List<vectorField>& cellDirections,
     const cellLooper& cellWalker,
     undoableMeshCutter& cutter,
@@ -317,7 +310,7 @@ void Foam::multiDirRefinement::refineAllDirs
     {
         if (debug)
         {
-            Info<< "multiDirRefinement : Refining " << cellLabels_.size()
+            Pout<< "multiDirRefinement : Refining " << cellLabels_.size()
                 << " cells in direction " << dirI << endl
                 << endl;
         }
@@ -334,7 +327,7 @@ void Foam::multiDirRefinement::refineAllDirs
             // Uniform directions.
             if (debug)
             {
-                Info<< "multiDirRefinement : Uniform refinement:"
+                Pout<< "multiDirRefinement : Uniform refinement:"
                     << dirField[0] << endl;
             }
 
@@ -376,7 +369,7 @@ void Foam::multiDirRefinement::refineAllDirs
 
         if (debug)
         {
-            Info<< "multiDirRefinement : Done refining direction " << dirI
+            Pout<< "multiDirRefinement : Done refining direction " << dirI
                 << " resulting in " << cellLabels_.size() << " cells" << nl
                 << endl;
         }
@@ -386,7 +379,7 @@ void Foam::multiDirRefinement::refineAllDirs
 
 void Foam::multiDirRefinement::refineFromDict
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     List<vectorField>& cellDirections,
     const dictionary& dict,
     const bool writeMesh
@@ -421,7 +414,7 @@ void Foam::multiDirRefinement::refineFromDict
 // Construct from dictionary
 Foam::multiDirRefinement::multiDirRefinement
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     const labelList& cellLabels,        // list of cells to refine
     const dictionary& dict
 )
@@ -463,7 +456,7 @@ Foam::multiDirRefinement::multiDirRefinement
 // Construct from directionary and directions to refine.
 Foam::multiDirRefinement::multiDirRefinement
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     const labelList& cellLabels,        // list of cells to refine
     const List<vectorField>& cellDirs,  // Explicitly provided directions
     const dictionary& dict
@@ -505,7 +498,7 @@ Foam::multiDirRefinement::multiDirRefinement
 // Construct from components. Implies meshCutter since directions provided.
 Foam::multiDirRefinement::multiDirRefinement
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     undoableMeshCutter& cutter,     // actual mesh modifier
     const cellLooper& cellWalker,   // how to cut a single cell with
                                     // a plane

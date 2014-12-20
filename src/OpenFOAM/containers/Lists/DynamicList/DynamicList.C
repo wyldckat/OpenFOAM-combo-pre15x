@@ -26,7 +26,16 @@ License
 
 #include "DynamicList.H"
 
-// * * * * * * * * * * * * * * * Ostream Operator *  * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
+
+// Construct from Istream
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::DynamicList(Istream& is)
+:
+    List<T>(is),
+    nextFree_(List<T>::size())
+{}
+
 
 template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
 Foam::Ostream& Foam::operator<<
@@ -40,6 +49,20 @@ Foam::Ostream& Foam::operator<<
 
     os << static_cast<const List<T>&>(DL);
     return os;
+}
+
+
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+Foam::Istream& Foam::operator>>
+(
+    Foam::Istream& is,
+    Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>& DL
+)
+{
+    is >> static_cast<List<T>&>(DL);
+    DL.nextFree_ = DL.List<T>::size();
+
+    return is;
 }
 
 

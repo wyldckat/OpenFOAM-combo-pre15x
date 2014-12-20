@@ -132,7 +132,8 @@ word Time::findInstance
     {
         FatalErrorIn("Time::findInstance(const word& dir, const word& name)")
             << "Cannot find file \"" << name << "\" in directory "
-            << "constant"/dir << exit(FatalError);
+            << "constant"/dir
+            << exit(FatalError);
     }
 
     return "constant";

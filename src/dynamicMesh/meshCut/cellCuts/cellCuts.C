@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "cellCuts.H"
@@ -68,18 +66,6 @@ Foam::label Foam::cellCuts::findPartIndex
 }
 
 
-Foam::labelList Foam::cellCuts::makeIdent(const label size)
-{
-    labelList result(size);
-
-    forAll(result, i)
-    {
-        result[i] = i;
-    }
-    return result;
-}
-
-
 Foam::boolList Foam::cellCuts::expand
 (
     const label size,
@@ -113,7 +99,84 @@ Foam::scalarField Foam::cellCuts::expand
 }
 
 
+// Find first point in lst not in map.
+Foam::label Foam::cellCuts::firstUnique
+(
+    const labelList& lst,
+    const Map<label>& map
+)
+{
+    forAll(lst, i)
+    {
+        if (!map.found(lst[i]))
+        {
+            return i;
+        }
+    }
+    return -1;
+}
+
+
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+// Write cell and raw cuts on any of the elements
+void Foam::cellCuts::writeUncutOBJ
+(
+    const fileName& dir,
+    const label cellI
+) const
+{
+    //- Cell edges
+    OFstream cutsStream(dir / "cell_" + name(cellI) + ".obj");
+
+    Pout<< "Writing cell for time " <<  mesh().time().timeName()
+        << " to " << cutsStream.name() << nl;
+
+    meshTools::writeOBJ
+    (
+        cutsStream,
+        mesh().cells(),
+        mesh().faces(),
+        mesh().points(),
+        labelList(1, cellI)
+    );
+
+    //- Loop cutting cell in two
+    OFstream cutStream(dir / "cellCuts_" + name(cellI) + ".obj");
+
+    Pout<< "Writing raw cuts on cell for time " <<  mesh().time().timeName()
+        << " to " << cutStream.name() << nl;
+
+    const labelList& cPoints = mesh().cellPoints()[cellI];
+
+    forAll(cPoints, i)
+    {
+        label pointI = cPoints[i];
+        if (pointIsCut_[pointI])
+        {
+            meshTools::writeOBJ(cutStream, mesh().points()[pointI]);
+        }
+    }
+
+    const pointField& pts = mesh().points();
+
+    const labelList& cEdges = mesh().cellEdges()[cellI];
+
+    forAll(cEdges, i)
+    {
+        label edgeI = cEdges[i];
+
+        if (edgeIsCut_[edgeI])
+        {
+            const edge& e = mesh().edges()[edgeI];
+
+            const scalar w = edgeWeight_[edgeI];
+
+            meshTools::writeOBJ(cutStream, w*pts[e[1]] + (1-w)*pts[e[0]]);
+        }
+    }
+}
+
 
 void Foam::cellCuts::writeOBJ
 (
@@ -124,12 +187,10 @@ void Foam::cellCuts::writeOBJ
 ) const
 {
     //- Cell edges
-    fileName cutsFile(dir / "cell_" + name(cellI) + ".obj");
+    OFstream cutsStream(dir / "cell_" + name(cellI) + ".obj");
 
-    Info<< "Writing cell for time " <<  mesh().time().timeName()
-        << " to " << cutsFile << nl;
-
-    OFstream cutsStream(cutsFile);
+    Pout<< "Writing cell for time " <<  mesh().time().timeName()
+        << " to " << cutsStream.name() << nl;
 
     meshTools::writeOBJ
     (
@@ -142,12 +203,10 @@ void Foam::cellCuts::writeOBJ
 
 
     //- Loop cutting cell in two
-    fileName loopFile(dir / "cellLoop_" + name(cellI) + ".obj");
+    OFstream loopStream(dir / "cellLoop_" + name(cellI) + ".obj");
 
-    Info<< "Writing loop for time " <<  mesh().time().timeName()
-        << " to " << loopFile << nl;
-
-    OFstream loopStream(loopFile);
+    Pout<< "Writing loop for time " <<  mesh().time().timeName()
+        << " to " << loopStream.name() << nl;
 
     label vertI = 0;
 
@@ -155,12 +214,10 @@ void Foam::cellCuts::writeOBJ
 
 
     //- Anchors for cell
-    fileName anchorFile(dir / "anchors_" + name(cellI) + ".obj");
+    OFstream anchorStream(dir / "anchors_" + name(cellI) + ".obj");
 
-    Info<< "Writing anchors for time " <<  mesh().time().timeName()
-        << " to " << anchorFile << endl;
-
-    OFstream anchorStream(anchorFile);
+    Pout<< "Writing anchors for time " <<  mesh().time().timeName()
+        << " to " << anchorStream.name() << endl;
 
     forAll(anchors, i)
     {
@@ -313,7 +370,8 @@ void Foam::cellCuts::calcFaceCuts() const
     {
         const face& f = faces[faceI];
 
-        // Big enough storage. Shrink later on.
+        // Big enough storage (possibly all points and all edges cut). Shrink
+        // later on.
         labelList& cuts = faceCuts[faceI];
 
         cuts.setSize(2*f.size());
@@ -630,10 +688,13 @@ bool Foam::cellCuts::addCut
         labelList truncVisited(visited);
         truncVisited.setSize(nVisited);
 
-        Info<< "For cell " << cellI << " : found duplicate cut " << cut
-            << " in path:";
-        writeCuts(Info, truncVisited);
-        Info<< endl;
+        Pout<< "For cell " << cellI << " : trying to add duplicate cut " << cut;
+        labelList cuts(1, cut);
+        writeCuts(Pout, cuts, loopWeights(cuts));
+
+        Pout<< " to path:";
+        writeCuts(Pout, truncVisited, loopWeights(truncVisited));
+        Pout<< endl;
 
         return false;
     }
@@ -755,6 +816,16 @@ bool Foam::cellCuts::walkCell
     label lastCut = -1;
     label beforeLastCut = -1;
 
+
+    if (debug & 2)
+    {
+        Pout<< "For cell:" << cellI << " walked across face " << faceI
+            << " from cut ";
+        labelList cuts(1, cut);
+        writeCuts(Pout, cuts, loopWeights(cuts));
+        Pout<< endl;
+    }
+
     bool validWalk = walkFace
     (
         cellI,
@@ -773,6 +844,14 @@ bool Foam::cellCuts::walkCell
         return false;
     }
 
+    if (debug & 2)
+    {
+        Pout<< "    to last cut ";
+        labelList cuts(1, lastCut);
+        writeCuts(Pout, cuts, loopWeights(cuts));
+        Pout<< endl;
+    }
+
     // Check if starting point reached.
     if (lastCut == startCut)
     {
@@ -784,9 +863,9 @@ bool Foam::cellCuts::walkCell
                 labelList truncVisited(visited);
                 truncVisited.setSize(nVisited);
 
-                Info<< "For cell " << cellI << " : found closed path:";
-                writeCuts(Info, truncVisited);
-                Info<< " closed by " << lastCut << endl;
+                Pout<< "For cell " << cellI << " : found closed path:";
+                writeCuts(Pout, truncVisited, loopWeights(truncVisited));
+                Pout<< " closed by " << lastCut << endl;
             }
 
             return true;
@@ -964,162 +1043,129 @@ void Foam::cellCuts::calcCellLoops(const labelList& cutCells)
     {
         label cellI = cutCells[i];
 
+        bool validLoop = false;
+
         // Quick rejection: has enough faces that are cut?
         if (nCutFaces[cellI] >= 3)
         {
             const labelList& cFaces = mesh().cells()[cellI];
 
-            // Determine the first cut face to start walking from.
-            label cutFaceI = -1;
-            label firstCut = -1;
+            if (debug & 2)
+            {
+                Pout<< "cell:" << cellI << " cut faces:" << endl;
+                forAll(cFaces, i)
+                {
+                    label faceI = cFaces[i];
+                    const labelList& fCuts = allFaceCuts[faceI];
 
+                    Pout<< "    face:" << faceI << " cuts:";
+                    writeCuts(Pout, fCuts, loopWeights(fCuts));
+                    Pout<< endl;
+                }
+            }
+
+            label nVisited = 0;
+
+            // Determine the first cut face to start walking from.
             forAll(cFaces, cFaceI)
             {
-                const labelList& fCuts = allFaceCuts[cFaces[cFaceI]];
+                label faceI = cFaces[cFaceI];
 
-                // Take first cut of multiple on face. Note that in calcFaceCuts
+                const labelList& fCuts = allFaceCuts[faceI];
+
+                // Take first or last cut of multiple on face.
+                // Note that in calcFaceCuts
                 // we have already made sure this is the start or end of a
                 // string of cuts.
                 if (fCuts.size() >= 2)
                 {
-                    cutFaceI = cFaces[cFaceI];
-                    firstCut = fCuts[0];
+                    // Try walking from start of fCuts.
+                    nVisited = 0;
 
-                    break;
-                }
-            }
-
-            if (cutFaceI != -1)
-            {
-                // Got possibly cut cell with a cutface and an initial cut
-                // on the face.
-
-                // Reset stack of visited cuts.
-                label nVisited = 0;
-
-                bool validLoop =
-                    walkCell
-                    (
-                        cellI,
-                        firstCut,
-                        cutFaceI,
-                        firstCut,
-
-                        nVisited,
-                        visited
-                    );
-
-                if (validLoop)
-                {
-                    // Copy nVisited elements out of visited (since visited is
-                    // never truncated for efficiency reasons)
-
-                    labelList& loop = cellLoops_[cellI];
-
-                    loop.setSize(nVisited);
-
-                    for (label i = 0; i < nVisited; i++)
+                    if (debug & 2)
                     {
-                        loop[i] = visited[i];
+                        Pout<< "cell:" << cellI
+                            << " start walk at face:" << faceI
+                            << " cut:";
+                        labelList cuts(1, fCuts[0]);
+                        writeCuts(Pout, cuts, loopWeights(cuts));
+                        Pout<< endl;
                     }
-                }
-                else
-                {
-                    // Invalid loop. Leave cellLoops_[cellI] zero size which
-                    // flags this.
+
+                    validLoop =
+                        walkCell
+                        (
+                            cellI,
+                            fCuts[0],
+                            faceI,
+                            fCuts[0],
+
+                            nVisited,
+                            visited
+                        );
+
+                    if (validLoop)
+                    {
+                        break;
+                    }
+
+                    // No need to try and walk from end of cuts since
+                    // all paths already tried by walkCell.
                 }
             }
-        }
-    }
-}
 
-
-// Count number of faces used by anchorPoints since the anchor points are
-// used (in meshCutter) to create a new cell which should have a minimum
-// of 4 faces (so three without the face created from the loop itself)
-bool Foam::cellCuts::checkFaces
-(
-    const label cellI,
-    const labelList& anchorPoints
-) const
-{
-    labelHashSet usedFaces(4*anchorPoints.size());
-
-    forAll(anchorPoints, i)
-    {
-        label pointI = anchorPoints[i];
-
-        const labelList& pFaces = mesh().pointFaces()[pointI];
-
-        forAll(pFaces, pFaceI)
-        {
-            if (meshTools::faceOnCell(mesh(), cellI, pFaces[pFaceI]))
+            if (validLoop)
             {
-                usedFaces.insert(pFaces[pFaceI]);
+                // Copy nVisited elements out of visited (since visited is
+                // never truncated for efficiency reasons)
+
+                labelList& loop = cellLoops_[cellI];
+
+                loop.setSize(nVisited);
+
+                for (label i = 0; i < nVisited; i++)
+                {
+                    loop[i] = visited[i];
+                }
+            }
+            else
+            {
+                // Invalid loop. Leave cellLoops_[cellI] zero size which
+                // flags this.
+                Pout<< "calcCellLoops(const labelList&) : did not find valid"
+                    << " loop for cell " << cellI << endl;
+                // Dump cell and cuts on cell.
+                writeUncutOBJ(".", cellI);
+
+                cellLoops_[cellI].setSize(0);
             }
         }
-    }
-
-    if (usedFaces.size() < 3)
-    {
-        return false;
-    }
-    else
-    {
-        return true;
-    }
-}
-
-
-// On cell get a point which is not part of the cell loop.
-Foam::label Foam::cellCuts::findWalkStart
-(
-    const labelList& loop,
-    const label cellI
-) const
-{
-    const labelList& cPoints = mesh().cellPoints()[cellI];
-
-    forAll(cPoints, i)
-    {
-        label pointI = cPoints[i];
-
-        if (findIndex(loop, vertToEVert(pointI)) == -1)
+        else
         {
-            return pointI;
+            //Pout<< "calcCellLoops(const labelList&) : did not find valid"
+            //    << " loop for cell " << cellI << " since not enough cut faces"
+            //    << endl;
+            cellLoops_[cellI].setSize(0);
         }
     }
-
-    FatalErrorIn("cellCuts::findWalkStart(const label cellI)")
-        << "Can not find point on cell " << cellI
-        << " which is not cut by loop " << loop << endl
-        << "The cut pattern is illegal" << abort(FatalError);
-
-    return -1;
 }
 
 
-// Walk edges of single cell from starting point and collects mesh vertices.
-// Does not cross loop (cutEdge or cutPoint)
+// Walk unset edges of single cell from starting point and marks visited
+// edges and vertices with status.
 void Foam::cellCuts::walkEdges
 (
     const label cellI,
-    const labelList& loop,
-
     const label pointI,
+    const label status,
 
-    DynamicList<label>& connectedPoints
+    Map<label>& edgeStatus,
+    Map<label>& pointStatus
 ) const
 {
-    if
-    (
-        findIndex(loop, vertToEVert(pointI)) == -1
-     && findPartIndex(connectedPoints, connectedPoints.size(), pointI) == -1
-    )
+    if (pointStatus.insert(pointI, status))
     {
-        // PointI not in loop and not yet visited.
-
-        connectedPoints.append(pointI);
+        // First visit to pointI
 
         const labelList& pEdges = mesh().pointEdges()[pointI];
 
@@ -1130,14 +1176,14 @@ void Foam::cellCuts::walkEdges
             if
             (
                 meshTools::edgeOnCell(mesh(), cellI, edgeI)
-             && findIndex(loop, edgeToEVert(edgeI)) == -1
+             && edgeStatus.insert(edgeI, status)
             )
             {
-                // edgeI not cut by loop so recurse.
+                // First visit to edgeI so recurse.
 
                 label v2 = mesh().edges()[edgeI].otherVertex(pointI);
 
-                walkEdges(cellI, loop, v2, connectedPoints);
+                walkEdges(cellI, v2, status, edgeStatus, pointStatus);
             }
         }
     }
@@ -1184,7 +1230,7 @@ bool Foam::cellCuts::loopAnchorConsistent
 ) const
 {
     // Create identity face for ease of calculation of normal etc.
-    face f(makeIdent(loopPts.size()));
+    face f(identity(loopPts.size()));
 
     vector normal = f.normal(loopPts);
     point ctr = f.centre(loopPts);
@@ -1211,48 +1257,354 @@ bool Foam::cellCuts::loopAnchorConsistent
 }
 
 
-void Foam::cellCuts::postCalcAnchorPoints()
+// Determines set of anchor points given a loop. The loop should split the
+// cell into (one or) two sets of vertices. The set of vertices that is
+// on the 'normal' side of the loop is the anchor set.
+// Returns true if valid set, false otherwise.
+bool Foam::cellCuts::calcAnchors
+(
+    const label cellI,
+    const labelList& loop,
+    const pointField& loopPts,
+
+    labelList& anchorPoints
+) const
 {
-    forAll(cellLoops_, cellI)
+    const edgeList& edges = mesh().edges();
+
+    const labelList& cPoints = mesh().cellPoints()[cellI];
+    const labelList& cEdges = mesh().cellEdges()[cellI];
+    const cell& cFaces = mesh().cells()[cellI];
+
+    // Points on loop
+
+    // Status of point:
+    // 0 - on loop
+    // 1 - point set 1
+    // 2 - point set 2
+    Map<label> pointStatus(2*cPoints.size());
+    Map<label> edgeStatus(2*cEdges.size());
+
+    // Mark loop vertices
+    forAll(loop, i)
     {
-        const labelList& loop = cellLoops_[cellI];
+        label cut = loop[i];
 
-        if (loop.size() > 0 && cellAnchorPoints_[cellI].size() == 0)
+        if (isEdge(cut))
         {
-            const labelList& cPoints = mesh().cellPoints()[cellI];
+            edgeStatus.insert(getEdge(cut), 0);
+        }
+        else
+        {
+            pointStatus.insert(getVertex(cut), 0);
+        }
+    }
+    // Since edges between two cut vertices have not been marked, mark them
+    // explicitly
+    forAll(cEdges, i)
+    {
+        label edgeI = cEdges[i];
+        const edge& e = edges[edgeI];
 
-            // Visit (and store in connectedPoints) all points reachable from
-            // a point not on the loop without crossing any point/edge in loops
-            DynamicList<label> connectedPoints(cPoints.size());
-            walkEdges(cellI, loop, findWalkStart(loop, cellI), connectedPoints);
-            connectedPoints.shrink();
+        if (pointStatus.found(e[0]) && pointStatus.found(e[1]))
+        {
+            edgeStatus.insert(edgeI, 0);
+        }
+    }
 
-            // Check if the anchorPoints have the correct orientation
-            bool loopOk =
-                loopAnchorConsistent
-                (
-                    cellI,
-                    loopPoints(cellI),
-                    connectedPoints
-                );
 
-            if (loopOk)
+    // Find uncut starting vertex
+    label uncutIndex = firstUnique(cPoints, pointStatus);
+
+    if (uncutIndex == -1)
+    {
+        WarningIn("Foam::cellCuts::calcAnchors")
+            << "Invalid loop " << loop << " for cell " << cellI << endl
+            << "Can not find point on cell which is not cut by loop."
+            << endl;
+
+        writeOBJ(".", cellI, loopPts, labelList(0));
+
+        return false;
+    }
+
+    // Walk unset vertices and edges and mark with 1 in pointStatus, edgeStatus
+    walkEdges(cellI, cPoints[uncutIndex], 1, edgeStatus, pointStatus);
+
+    // Find new uncut starting vertex
+    uncutIndex = firstUnique(cPoints, pointStatus);
+
+    if (uncutIndex == -1)
+    {
+        // All vertices either in loop or in anchor. So split is along single
+        // face.
+        WarningIn("Foam::cellCuts::calcAnchors")
+            << "Invalid loop " << loop << " for cell " << cellI << endl
+            << "All vertices of cell are either in loop or in anchor set"
+            << endl;
+
+        writeOBJ(".", cellI, loopPts, labelList(0));
+
+        return false;
+    }
+
+    // Walk unset vertices and edges and mark with 2. These are the
+    // pointset 2.
+    walkEdges(cellI, cPoints[uncutIndex], 2, edgeStatus, pointStatus);
+
+    // Collect both sets in lists.
+    DynamicList<label> connectedPoints(cPoints.size());
+    DynamicList<label> otherPoints(cPoints.size());
+
+    forAllConstIter(Map<label>, pointStatus, iter)
+    {
+        if (iter() == 1)
+        {
+            connectedPoints.append(iter.key());
+        }
+        else if (iter() == 2)
+        {
+            otherPoints.append(iter.key());
+        }
+    }
+    connectedPoints.shrink();
+    otherPoints.shrink();
+
+    // Check that all points have been used.
+    uncutIndex = firstUnique(cPoints, pointStatus);
+
+    if (uncutIndex != -1)
+    {
+        WarningIn("Foam::cellCuts::calcAnchors")
+            << "Invalid loop " << loop << " for cell " << cellI
+            << " since it splits the cell into more than two cells" << endl;
+
+        writeOBJ(".", cellI, loopPts, connectedPoints);
+
+        return false;
+    }
+
+
+    // Check that both parts (connectedPoints, otherPoints) have enough faces.
+    labelHashSet connectedFaces(2*cFaces.size());
+    labelHashSet otherFaces(2*cFaces.size());
+
+    forAllConstIter(Map<label>, pointStatus, iter)
+    {
+        label pointI = iter.key();
+
+        const labelList& pFaces = mesh().pointFaces()[pointI];
+
+        if (iter() == 1)
+        {
+            forAll(pFaces, pFaceI)
             {
-                cellAnchorPoints_[cellI].transfer(connectedPoints);
-                connectedPoints.clear();
+                if (meshTools::faceOnCell(mesh(), cellI, pFaces[pFaceI]))
+                {
+                    connectedFaces.insert(pFaces[pFaceI]);
+                }
             }
-            else
+        }
+        else if (iter() == 2)
+        {
+            forAll(pFaces, pFaceI)
             {
-                cellAnchorPoints_[cellI] =
-                    nonAnchorPoints
-                    (
-                        cPoints,
-                        connectedPoints,
-                        loop
-                    );
+                if (meshTools::faceOnCell(mesh(), cellI, pFaces[pFaceI]))
+                {
+                    otherFaces.insert(pFaces[pFaceI]);
+                }
             }
         }
     }
+
+    if (connectedFaces.size() < 3)
+    {
+        WarningIn("Foam::cellCuts::calcAnchors")
+            << "Invalid loop " << loop << " for cell " << cellI
+            << " since would have too few faces on one side." << nl
+            << "All faces:" << cFaces << endl;
+
+        writeOBJ(".", cellI, loopPts, connectedPoints);
+
+        return false;
+    }
+
+    if (otherFaces.size() < 3)
+    {
+        WarningIn("Foam::cellCuts::calcAnchors")
+            << "Invalid loop " << loop << " for cell " << cellI
+            << " since would have too few faces on one side." << nl
+            << "All faces:" << cFaces << endl;
+
+        writeOBJ(".", cellI, loopPts, otherPoints);
+
+        return false;
+    }
+
+
+    // Check that faces are split into two regions and not more.
+    // When walking across the face the only transition of pointStatus is
+    // from set1 to loop to set2 or back. Not allowed is from set1 to loop to
+    // set1.
+    {
+        forAll(cFaces, i)
+        {
+            label faceI = cFaces[i];
+
+            const face& f = mesh().faces()[faceI];
+
+            bool hasSet1 = false;
+            bool hasSet2 = false;
+
+            label prevStat = pointStatus[f[0]];
+
+            forAll(f, fp)
+            {
+                label v0 = f[fp];
+                label pStat = pointStatus[v0];
+
+                if (pStat == prevStat)
+                {
+                }
+                else if (pStat == 0)
+                {
+                    // Loop.
+                }
+                else if (pStat == 1)
+                {
+                    if (hasSet1)
+                    {
+                        // Second occurence of set1.
+                        WarningIn("Foam::cellCuts::calcAnchors")
+                            << "Invalid loop " << loop << " for cell " << cellI
+                            << " since face " << f << " would be split into"
+                            << " more than two faces" << endl;
+
+                        writeOBJ(".", cellI, loopPts, otherPoints);
+
+                        return false;
+                    }
+
+                    hasSet1 = true;
+                }
+                else if (pStat == 2)
+                {
+                    if (hasSet2)
+                    {
+                        // Second occurence of set1.
+                        WarningIn("Foam::cellCuts::calcAnchors")
+                            << "Invalid loop " << loop << " for cell " << cellI
+                            << " since face " << f << " would be split into"
+                            << " more than two faces" << endl;
+
+                        writeOBJ(".", cellI, loopPts, otherPoints);
+
+                        return false;
+                    }
+
+                    hasSet2 = true;
+                }
+                else
+                {
+                    FatalErrorIn("Foam::cellCuts::calcAnchors")
+                        << abort(FatalError);
+                }
+
+                prevStat = pStat;
+
+
+                label v1 = f.nextLabel(fp);
+                label edgeI = findEdge(faceI, v0, v1);
+
+                label eStat = edgeStatus[edgeI];
+
+                if (eStat == prevStat)
+                {
+                }
+                else if (eStat == 0)
+                {
+                    // Loop.
+                }
+                else if (eStat == 1)
+                {
+                    if (hasSet1)
+                    {
+                        // Second occurence of set1.
+                        WarningIn("Foam::cellCuts::calcAnchors")
+                            << "Invalid loop " << loop << " for cell " << cellI
+                            << " since face " << f << " would be split into"
+                            << " more than two faces" << endl;
+
+                        writeOBJ(".", cellI, loopPts, otherPoints);
+
+                        return false;
+                    }
+
+                    hasSet1 = true;
+                }
+                else if (eStat == 2)
+                {
+                    if (hasSet2)
+                    {
+                        // Second occurence of set1.
+                        WarningIn("Foam::cellCuts::calcAnchors")
+                            << "Invalid loop " << loop << " for cell " << cellI
+                            << " since face " << f << " would be split into"
+                            << " more than two faces" << endl;
+
+                        writeOBJ(".", cellI, loopPts, otherPoints);
+
+                        return false;
+                    }
+
+                    hasSet2 = true;
+                }
+                prevStat = eStat;
+            }
+        }        
+    }
+
+
+
+
+    // Check which one of point sets to use.
+    bool loopOk = loopAnchorConsistent(cellI, loopPts, connectedPoints);
+
+    //if (debug)
+    {
+        // Additional check: are non-anchor points on other side?
+        bool otherLoopOk = loopAnchorConsistent(cellI, loopPts, otherPoints);
+
+        if (loopOk == otherLoopOk)
+        {
+            // Both sets of points are supposedly on the same side as the
+            // loop normal. Oops.
+
+            WarningIn("Foam::cellCuts::calcAnchors")
+                << " For cell:" << cellI
+                << " achorpoints and nonanchorpoints are geometrically"
+                << " on same side!" << endl
+                << "cellPoints:" << cPoints << endl
+                << "loop:" << loop << endl
+                << "anchors:" << connectedPoints << endl
+                << "otherPoints:" << otherPoints << endl;
+
+            writeOBJ(".", cellI, loopPts, connectedPoints);
+        }
+    }
+
+    if (loopOk)
+    {
+        // connectedPoints on 'outside' of loop so these are anchor points
+        anchorPoints.transfer(connectedPoints);
+        connectedPoints.clear();
+    }
+    else
+    {
+        anchorPoints.transfer(otherPoints);
+        otherPoints.clear();
+    }
+    return true;
 }
 
 
@@ -1627,131 +1979,20 @@ bool Foam::cellCuts::validLoop
             << "Found loop on cell " << cellI << " with all points"
             << " on face " << faceContainingLoop << endl;
 
-        writeOBJ(".", cellI, loopPoints(loop, loopWeights), labelList(0));
+        //writeOBJ(".", cellI, loopPoints(loop, loopWeights), labelList(0));
 
         return false;
     }
-
-
-    // Final check: are more than 2 faces used in each of the two halves of the
-    // cell
 
     // Calculate anchor points
-
-    const labelList& cPoints = mesh().cellPoints()[cellI];
-
-    // Visit (and store in connectedPoints) all points reachable from
-    // a point not on the loop without crossing any point/edge in loops
-    DynamicList<label> connectedPoints(cPoints.size());
-    walkEdges(cellI, loop, findWalkStart(loop, cellI), connectedPoints);
-    connectedPoints.shrink();
-
-    // Determine all other non-loop points as well.
-    labelList otherPoints(nonAnchorPoints(cPoints, connectedPoints, loop));
-
-    // Points on loop
-    pointField loopPts(loopPoints(loop, loopWeights));
-
-
-    // Check that all cell points are either in loop, in anchor set or in rest.
-    {
-        label nLoopPoints = 0;
-
-        forAll(loop, i)
-        {
-            if (!isEdge(loop[i]))
-            {
-                nLoopPoints++;
-            }
-        }
-
-        if
-        (
-                nLoopPoints + connectedPoints.size() + otherPoints.size()
-             != cPoints.size()
-        )
-        {
-            writeOBJ(".", cellI, loopPts, connectedPoints);
-
-            FatalErrorIn("validLoop")
-                << "For cell:" << cellI
-                << " points should be in one of -loop -anchor -nonanchor"
-                << endl
-                << "cellPoints:" << cPoints << endl
-                << "loop:" << loop << endl
-                << "anchors:" << connectedPoints << endl
-                << "otherPoints:" << otherPoints << endl
-                << abort(FatalError);
-        }
-    }
-
-
-    // Check if faces split off will have enough vertices
-    if (!checkFaces(cellI, connectedPoints))
-    {
-        WarningIn("Foam::cellCuts::validLoop")
-            << "Invalid loop " << loop << " for cell " << cellI
-            << " since would have too few faces on one side." << nl
-            << "All faces:" << mesh().cells()[cellI] << endl;
-
-        writeOBJ(".", cellI, loopPts, connectedPoints);
-
-        return false;
-    }
-
-    if (!checkFaces(cellI, otherPoints))
-    {
-        WarningIn("Foam::cellCuts::validLoop")
-            << "Invalid loop " << loop << " for cell " << cellI
-            << " since would have too few faces on one side." << nl
-            << "All faces:" << mesh().cells()[cellI] << endl;
-
-        writeOBJ(".", cellI, loopPts, otherPoints);
-
-        return false;
-    }
-
-    // Check which one of point sets to use.
-    bool loopOk = loopAnchorConsistent(cellI, loopPts, connectedPoints);
-
-    //if (debug)
-    {
-        // Additional check: are non-anchor points on other side?
-        bool otherLoopOk = loopAnchorConsistent(cellI, loopPts, otherPoints);
-
-        if (loopOk == otherLoopOk)
-        {
-            // Both sets of points are supposedly on the same side as the
-            // loop normal. Oops.
-
-            WarningIn("Foam::cellCuts::validLoop")
-                << " For cell:" << cellI
-                << " achorpoints and nonanchorpoints are geometrically"
-                << " on same side!" << endl
-                << "cellPoints:" << cPoints << endl
-                << "loop:" << loop << endl
-                << "anchors:" << connectedPoints << endl
-                << "otherPoints:" << otherPoints << endl;
-                //<< abort(FatalError);
-
-            writeOBJ(".", cellI, loopPts, connectedPoints);
-        }
-    }
-
-
-    if (loopOk)
-    {
-        // connectedPoints on 'outside' of loop so these are anchor points
-        anchorPoints.transfer(connectedPoints);
-        connectedPoints.clear();
-    }
-    else
-    {
-        anchorPoints.transfer(otherPoints);
-    }
-
-    // All ok.
-    return true;
+    // Final success is determined by whether anchor points can be determined.
+    return calcAnchors
+    (
+        cellI,
+        loop,
+        loopPoints(loop, loopWeights),
+        anchorPoints
+    );
 }
 
 
@@ -1790,14 +2031,14 @@ void Foam::cellCuts::setFromCellLoops()
                 )
             )
             {
-                writeOBJ(".", cellI, loopPoints(cellI), anchorPoints);
+                //writeOBJ(".", cellI, loopPoints(cellI), anchorPoints);
 
                 //FatalErrorIn("cellCuts::setFromCellLoops()")
                 WarningIn("cellCuts::setFromCellLoops")
                     << "Illegal loop " << loop
                     << " when recreating cut-addressing"
-                    << " from existing cellLoops" << endl
-                    << "cellI:" << cellI << endl;
+                    << " from existing cellLoops for cell " << cellI
+                    << endl;
                     //<< abort(FatalError);
 
                 cellLoops_[cellI].setSize(0);
@@ -1809,12 +2050,7 @@ void Foam::cellCuts::setFromCellLoops()
                 cellAnchorPoints_[cellI].transfer(anchorPoints);
 
                 // Copy faceSplitCuts into overall faceSplit info.
-                for
-                (
-                    Map<edge>::const_iterator iter = faceSplitCuts.begin();
-                    iter != faceSplitCuts.end();
-                    ++iter
-                )
+                forAllConstIter(Map<edge>, faceSplitCuts, iter)
                 {
                     faceSplitCut_.insert(iter.key(), iter());
                 }
@@ -1904,8 +2140,6 @@ bool Foam::cellCuts::setFromCellLoop
         // Storage for points on one side of cell
         labelList anchorPoints;
 
-        pointField pointsOfLoop(loopPoints(loop, loopWeights));
-
         okLoop = 
             validLoop(cellI, loop, loopWeights, faceSplitCuts, anchorPoints);
 
@@ -1916,12 +2150,7 @@ bool Foam::cellCuts::setFromCellLoop
             cellAnchorPoints_[cellI].transfer(anchorPoints);
 
             // Copy split cuts
-            for
-            (
-                Map<edge>::const_iterator iter = faceSplitCuts.begin();
-                iter != faceSplitCuts.end();
-                ++iter
-            )
+            forAllConstIter(Map<edge>, faceSplitCuts, iter)
             {
                 faceSplitCut_.insert(iter.key(), iter());
             }
@@ -2075,7 +2304,7 @@ void Foam::cellCuts::setFromCellCutter
 
         fileName cutsFile("invalidLoopCells.obj");
 
-        Info<< "cellCuts : writing inValidLoops cells to " << cutsFile << endl;
+        Pout<< "cellCuts : writing inValidLoops cells to " << cutsFile << endl;
 
         OFstream cutsStream(cutsFile);
 
@@ -2090,7 +2319,7 @@ void Foam::cellCuts::setFromCellCutter
 
         fileName loopsFile("invalidLoops.obj");
 
-        Info<< "cellCuts : writing inValidLoops loops to " << loopsFile << endl;
+        Pout<< "cellCuts : writing inValidLoops loops to " << loopsFile << endl;
 
         OFstream loopsStream(loopsFile);
 
@@ -2187,7 +2416,7 @@ void Foam::cellCuts::setFromCellCutter
 
         fileName cutsFile("invalidLoopCells.obj");
 
-        Info<< "cellCuts : writing inValidLoops cells to " << cutsFile << endl;
+        Pout<< "cellCuts : writing inValidLoops cells to " << cutsFile << endl;
 
         OFstream cutsStream(cutsFile);
 
@@ -2202,7 +2431,7 @@ void Foam::cellCuts::setFromCellCutter
 
         fileName loopsFile("invalidLoops.obj");
 
-        Info<< "cellCuts : writing inValidLoops loops to " << loopsFile << endl;
+        Pout<< "cellCuts : writing inValidLoops loops to " << loopsFile << endl;
 
         OFstream loopsStream(loopsFile);
 
@@ -2225,11 +2454,26 @@ void Foam::cellCuts::setFromCellCutter
 void Foam::cellCuts::orientPlanesAndLoops()
 {
     // Determine anchorPoints if not yet done by validLoop.
-    postCalcAnchorPoints();
+    forAll(cellLoops_, cellI)
+    {
+        const labelList& loop = cellLoops_[cellI];
+
+        if (loop.size() > 0 && cellAnchorPoints_[cellI].size() == 0)
+        {
+            // Leave anchor points empty if illegal loop.
+            calcAnchors
+            (
+                cellI,
+                loop,
+                loopPoints(cellI),
+                cellAnchorPoints_[cellI]
+            );
+        }
+    }
 
     if (debug & 2)
     {
-        Info<< "cellAnchorPoints:" << endl;
+        Pout<< "cellAnchorPoints:" << endl;
     }
     forAll(cellAnchorPoints_, cellI)
     {
@@ -2244,7 +2488,7 @@ void Foam::cellCuts::orientPlanesAndLoops()
 
             if (debug & 2)
             {
-                Info<< "    cell:" << cellI << " anchored at "
+                Pout<< "    cell:" << cellI << " anchored at "
                     << cellAnchorPoints_[cellI] << endl;
             }
         }
@@ -2296,16 +2540,16 @@ void Foam::cellCuts::calcLoopsAndAddressing(const labelList& cutCells)
 
     if (debug & 2)
     {
-        Info<< "-- cellLoops --" << endl;
+        Pout<< "-- cellLoops --" << endl;
         forAll(cellLoops_, cellI)
         {
             const labelList& loop = cellLoops_[cellI];
 
             if (loop.size() > 0)
             {
-                Info<< "cell:" << cellI << "  ";
-                writeCuts(Info, loop);
-                Info<< endl;
+                Pout<< "cell:" << cellI << "  ";
+                writeCuts(Pout, loop, loopWeights(loop));
+                Pout<< endl;
             }
         }
     }
@@ -2369,7 +2613,8 @@ void Foam::cellCuts::check() const
              || (!isEdge(cut) && !pointIsCut_[getVertex(cut)])
             )
             {
-                writeCut(Info, cut);
+                labelList cuts(1, cut);
+                writeCuts(Pout, cuts, loopWeights(cuts));
 
                 FatalErrorIn("cellCuts::check()")
                     << "cell:" << cellI << " loop:"
@@ -2417,12 +2662,7 @@ void Foam::cellCuts::check() const
 
 
     // Check that cut faces have a neighbour that is cut.
-    for
-    (
-        Map<edge>::const_iterator iter = faceSplitCut_.begin();
-        iter != faceSplitCut_.end();
-        ++iter
-    )
+    forAllConstIter(Map<edge>, faceSplitCut_, iter)
     {
         label faceI = iter.key();
 
@@ -2462,12 +2702,6 @@ void Foam::cellCuts::check() const
 }
 
 
-void Foam::cellCuts::clearOut()
-{
-    deleteDemandDrivenData(faceCutsPtr_);
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from cells to cut and pattern of cuts
@@ -2492,7 +2726,7 @@ Foam::cellCuts::cellCuts
 {
     if (debug)
     {
-        Info<< "cellCuts : constructor from cut verts and edges" << endl;
+        Pout<< "cellCuts : constructor from cut verts and edges" << endl;
     }
 
     calcLoopsAndAddressing(cutCells);
@@ -2509,7 +2743,7 @@ Foam::cellCuts::cellCuts
 
     if (debug)
     {
-        Info<< "cellCuts : leaving constructor from cut verts and edges"
+        Pout<< "cellCuts : leaving constructor from cut verts and edges"
             << endl;
     }
 }
@@ -2537,16 +2771,10 @@ Foam::cellCuts::cellCuts
 {
     if (debug)
     {
-        Info<< "cellCuts : constructor from cellLoops" << endl;
+        Pout<< "cellCuts : constructor from cellLoops" << endl;
     }
 
-    labelList cutCells(mesh.nCells());
-
-    forAll(cutCells, cellI)
-    {
-        cutCells[cellI] = cellI;
-    }
-    calcLoopsAndAddressing(cutCells);
+    calcLoopsAndAddressing(identity(mesh.nCells()));
 
     // Calculate planes and flip cellLoops if nessecary
     orientPlanesAndLoops();
@@ -2560,7 +2788,7 @@ Foam::cellCuts::cellCuts
 
     if (debug)
     {
-        Info<< "cellCuts : leaving constructor from cellLoops" << endl;
+        Pout<< "cellCuts : leaving constructor from cellLoops" << endl;
     }
 }
 
@@ -2587,7 +2815,7 @@ Foam::cellCuts::cellCuts
 {
     if (debug)
     {
-        Info<< "cellCuts : constructor from cellLoops" << endl;
+        Pout<< "cellCuts : constructor from cellLoops" << endl;
     }
 
     // Update pointIsCut, edgeIsCut, faceSplitCut from cell loops.
@@ -2606,7 +2834,7 @@ Foam::cellCuts::cellCuts
 
     if (debug)
     {
-        Info<< "cellCuts : leaving constructor from cellLoops" << endl;
+        Pout<< "cellCuts : leaving constructor from cellLoops" << endl;
     }
 }
 
@@ -2631,7 +2859,7 @@ Foam::cellCuts::cellCuts
 {
     if (debug)
     {
-        Info<< "cellCuts : constructor from cellCutter" << endl;
+        Pout<< "cellCuts : constructor from cellCutter" << endl;
     }
 
     // Update pointIsCut, edgeIsCut, faceSplitCut from cell loops.
@@ -2650,7 +2878,7 @@ Foam::cellCuts::cellCuts
 
     if (debug)
     {
-        Info<< "cellCuts : leaving constructor from cellCutter" << endl;
+        Pout<< "cellCuts : leaving constructor from cellCutter" << endl;
     }
 }
 
@@ -2676,7 +2904,7 @@ Foam::cellCuts::cellCuts
 {
     if (debug)
     {
-        Info<< "cellCuts : constructor from cellCutter with prescribed plane"
+        Pout<< "cellCuts : constructor from cellCutter with prescribed plane"
             << endl;
     }
 
@@ -2696,7 +2924,7 @@ Foam::cellCuts::cellCuts
 
     if (debug)
     {
-        Info<< "cellCuts : leaving constructor from cellCutter with prescribed"
+        Pout<< "cellCuts : leaving constructor from cellCutter with prescribed"
             << " plane" << endl;
     }
 }
@@ -2727,8 +2955,8 @@ Foam::cellCuts::cellCuts
 {
     if (debug)
     {
-        Info<< "cellCuts : constructor from components" << endl;
-        Info<< "cellCuts : leaving constructor from components" << endl;
+        Pout<< "cellCuts : constructor from components" << endl;
+        Pout<< "cellCuts : leaving constructor from components" << endl;
     }
 }
 
@@ -2738,6 +2966,12 @@ Foam::cellCuts::cellCuts
 Foam::cellCuts::~cellCuts()
 {
     clearOut();
+}
+
+
+void Foam::cellCuts::clearOut()
+{
+    deleteDemandDrivenData(faceCutsPtr_);
 }
 
 

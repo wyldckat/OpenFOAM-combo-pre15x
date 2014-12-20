@@ -34,13 +34,11 @@
 
 # SETTINGS
 #~~~~~~~~~
-FOAM_VERSION=1.1
-GCC_VERSION=3.4.3
+FOAM_VERSION=1.3
+GCC_VERSION=4.1.0
 GZIP_VERSION=1.3.5
 GTAR_VERSION=1.13.25
-DX_VERSION=4.3.2
 JAVA_VERSION=1.4.2+
-ICOFOAM_VERSION=${FOAM_VERSION}
 
 #GLOBAL VARIABLES
 FATALERROR=0
@@ -623,6 +621,5 @@ if [ $CRITICALERROR -gt 0 ] || [ $FATALERROR -gt 0 ]; then
     echo "the installation guide for trouble shooting."
 fi
 echo ""
-#echo "THE END"
 
 #------------------------------------------------------------------------------

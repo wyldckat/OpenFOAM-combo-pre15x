@@ -375,7 +375,7 @@ public:
             }
 
 
-        // Inquirery
+        // Inquiry
 
             //- Return stream format of given format name
             static streamFormat format(const word&);

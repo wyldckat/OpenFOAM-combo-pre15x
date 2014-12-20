@@ -22,13 +22,9 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "MixedPointPatchField.H"
-#include "Map.H"
-#include "constraints.H"
 #include "PointPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -191,44 +187,6 @@ void MixedPointPatchField<PatchField, PointPatch, Type>::updateBoundaryField()
     tmp<Field<Type> > internalValues = this->patchInternalField();
 
     values = valueFraction_*refValue_ + (1.0 - valueFraction_)*internalValues;
-}
-
-
-// Set boundary condition to matrix
-template<template<class> class PatchField, class PointPatch, class Type>
-void MixedPointPatchField<PatchField, PointPatch, Type>::setBoundaryCondition
-(
-    Map<constraint<Type> > & fix
-) const
-{
-    const Field<Type>& values = *this;
-
-    // get addressing
-    const labelList& meshPoints = this->patch().meshPoints();
-
-    forAll (meshPoints, pointI)
-    {
-        const label curPoint = meshPoints[pointI];
-
-        // create a constraint
-        constraint<Type> bc
-        (
-            curPoint,
-            values[pointI],
-            pTraits<Type>::one*valueFraction_[pointI]
-        );
-
-        // If not set add it, otherwise combine with
-        // already existing value
-        if (!fix.found(curPoint))
-        {
-            fix.insert(curPoint, bc);
-        }
-        else
-        {
-            fix[curPoint].combine(bc);
-        }
-    }
 }
 
 

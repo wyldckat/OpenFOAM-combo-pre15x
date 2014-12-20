@@ -2,7 +2,7 @@ if (ign.ignited())
 {
     // progress variable
     // ~~~~~~~~~~~~~~~~~
-    volScalarField c = 1.0 - b;
+    volScalarField c = scalar(1) - b;
 
     // Unburnt gas density
     // ~~~~~~~~~~~~~~~~~~~
@@ -22,9 +22,9 @@ if (ign.ignited())
 
     mgb += dMgb;
 
-    surfaceVectorField Ahat = mesh.Sf()/mesh.magSf();
+    surfaceVectorField SfHat = mesh.Sf()/mesh.magSf();
     surfaceVectorField nfVec = fvc::interpolate(n);
-    nfVec += Ahat*(fvc::snGrad(b) - (Ahat & nfVec));
+    nfVec += SfHat*(fvc::snGrad(b) - (SfHat & nfVec));
     nfVec /= (mag(nfVec) + dMgb);
     surfaceScalarField nf = (mesh.Sf() & nfVec);
     n /= mgb;
@@ -102,7 +102,10 @@ if (ign.ignited())
 
     volScalarField sigmas =
         ((n & n)*fvc::div(U) - (n & fvc::grad(U) & n))/Xi
-      + ((n & n)*fvc::div(Su*n) - (n & fvc::grad(Su*n) & n))*(Xi + 1.0)/(2*Xi);
+      + (
+            (n & n)*fvc::div(Su*n)
+          - (n & fvc::grad(Su*n) & n)
+        )*(Xi + scalar(1))/(2*Xi);
 
 
     // Calculate the unstrained laminar flame speed
@@ -112,7 +115,7 @@ if (ign.ignited())
 
     // Calculate the laminar flame speed in equilibrium with the applied strain
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    volScalarField SuInf = Su0*max(1.0 - sigmas/sigmaExt, 0.01);
+    volScalarField SuInf = Su0*max(scalar(1) - sigmas/sigmaExt, scalar(0.01));
 
     if (SuModel == "unstrained")
     {
@@ -166,8 +169,9 @@ if (ign.ignited())
         // Simple algebraic model for Xi based on Gulders correlation
         // with a linear correction function to give a plausible profile for Xi
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        Xi == 1.0 +
-            (1.0 + (2*XiShapeCoef)*(0.5 - b))*XiCoef*sqrt(up/(Su + SuMin))*Reta;
+        Xi == scalar(1) +
+            (scalar(1) + (2*XiShapeCoef)*(scalar(0.5) - b))
+           *XiCoef*sqrt(up/(Su + SuMin))*Reta;
     }
     else if (XiModel == "transport")
     {
@@ -176,14 +180,17 @@ if (ign.ignited())
         // with a linear correction function to give a plausible profile for Xi
         // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-        volScalarField XiEqStar = 1.001 + XiCoef*sqrt(up/(Su + SuMin))*Reta;
+        volScalarField XiEqStar = 
+            scalar(1.001) + XiCoef*sqrt(up/(Su + SuMin))*Reta;
 
         volScalarField XiEq =
-            1.001 + (1.0 + (2*XiShapeCoef)*(0.5 - b))*(XiEqStar - 1.001);
+            scalar(1.001)
+          + (scalar(1) + (2*XiShapeCoef)*(scalar(0.5) - b))
+           *(XiEqStar - scalar(1.001));
 
         volScalarField Gstar = 0.28/tauEta;
-        volScalarField R = Gstar*XiEqStar/(XiEqStar - 1.0);
-        volScalarField G = R*(XiEq - 1.001)/XiEq;
+        volScalarField R = Gstar*XiEqStar/(XiEqStar - scalar(1));
+        volScalarField G = R*(XiEq - scalar(1.001))/XiEq;
 
         //R *= (Gstar + 2*mag(dev(symm(fvc::grad(U)))))/Gstar;
 
@@ -223,7 +230,7 @@ if (ign.ignited())
     }
 
     Info<< "Combustion progress = "
-        << 100*(1.0 - b)().weightedAverage(mesh.V()).value() << "%"
+        << 100*(scalar(1) - b)().weightedAverage(mesh.V()).value() << "%"
         << endl;
 
     St = Xi*Su;

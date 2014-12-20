@@ -28,7 +28,7 @@ Description
 
 #include "IOstreams.H"
 #include "pointHit.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -393,7 +393,7 @@ inline scalar triangle<Point, PointRef>::quality() const
     return
         mag()
       / (
-            physicalConstant::pi
+            mathematicalConstant::pi
           * Foam::sqr(circumRadius())
           * 0.413497
           + VSMALL

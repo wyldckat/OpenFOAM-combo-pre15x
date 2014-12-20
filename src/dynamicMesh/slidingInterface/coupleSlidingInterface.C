@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "slidingInterface.H"
@@ -35,6 +33,7 @@ Description
 #include "pointHit.H"
 #include "triPointRef.H"
 #include "plane.H"
+#include "polyTopoChanger.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -65,23 +64,24 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 {
     if (debug)
     {
-        Info<< "void slidingInterface::coupleInterface"
+        Pout<< "void slidingInterface::coupleInterface"
             << "(polyTopoChange& ref) : "
             << "Coupling sliding interface " << name() << endl;
     }
 
-    const pointField& points = mesh().allPoints();
-    const faceList& faces = mesh().faces();
+    const polyMesh& mesh = topoChanger().mesh();
 
-    const labelList& own = mesh().allOwner();
-    const labelList& nei = mesh().allNeighbour();
-    const faceZoneMesh& faceZones = mesh().faceZones();
+    const pointField& points = mesh.allPoints();
+    const faceList& faces = mesh.faces();
+
+    const labelList& own = mesh.allOwner();
+    const labelList& nei = mesh.allNeighbour();
+    const faceZoneMesh& faceZones = mesh.faceZones();
 
     const primitiveFacePatch& masterPatch =
         faceZones[masterFaceZoneID_.index()]();
 
-    const labelList& masterPatchAddr =
-        faceZones[masterFaceZoneID_.index()].addressing();
+    const labelList& masterPatchAddr = faceZones[masterFaceZoneID_.index()];
 
     const boolList& masterPatchFlip =
         faceZones[masterFaceZoneID_.index()].flipMap();
@@ -89,8 +89,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
     const primitiveFacePatch& slavePatch =
         faceZones[slaveFaceZoneID_.index()]();
 
-    const labelList& slavePatchAddr =
-        faceZones[slaveFaceZoneID_.index()].addressing();
+    const labelList& slavePatchAddr = faceZones[slaveFaceZoneID_.index()];
 
     const boolList& slavePatchFlip =
         faceZones[slaveFaceZoneID_.index()].flipMap();
@@ -157,8 +156,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
     {
         if (slavePointPointHits[pointI] >= 0)
         {
-// Info << "Inserting point merge pair: " << slaveMeshPoints[pointI] << " : "
-//<< masterMeshPoints[slavePointPointHits[pointI]] << endl;
+// Pout << "Inserting point merge pair: " << slaveMeshPoints[pointI] << " : " << masterMeshPoints[slavePointPointHits[pointI]] << endl;
             pointMergeMap.insert
             (
                 slaveMeshPoints[pointI],
@@ -226,11 +224,10 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
         }
     }
 
-//     Info << "used edges: " << endl;
+//     Pout << "used edges: " << endl;
 //     forAll (usedMasterEdges, edgeI)
 //     {
-//         Info << "edge: " << edgeI
-//              << " used: " << usedMasterEdges[edgeI].toc() << endl;
+//         Pout << "edge: " << edgeI << " used: " << usedMasterEdges[edgeI].toc() << endl;
 //     }
 
     // For every master and slave edge make a list of points to be added into
@@ -262,11 +259,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                         true                      // supports a cell
                     )
                 );
-//             Info << "Inserting merge pair off edge: "
-//             << slaveMeshPoints[pointI] << " " << newPoint
-//             << " cut point: " << edgeCutPoint << " orig: "
-//             << slaveLocalPoints[pointI] << " proj: " 
-//             << projectedSlavePoints[pointI] << endl;
+//             Pout << "Inserting merge pair off edge: " << slaveMeshPoints[pointI] << " " << newPoint << " cut point: " << edgeCutPoint << " orig: " << slaveLocalPoints[pointI] << " proj: " << projectedSlavePoints[pointI] << endl;
             // Add the new edge point into the merge map
             pointMergeMap.insert(slaveMeshPoints[pointI], newPoint);
 
@@ -284,15 +277,15 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
             if (debug)
             {
-                Info<< "e";
-//                 Info<< newPoint << " = " << edgeCutPoint << endl;
+                Pout<< "e";
+//                 Pout<< newPoint << " = " << edgeCutPoint << endl;
             }
         }
     }
 
     if (debug)
     {
-        Info<< endl;
+        Pout<< endl;
     }
 
     // Add all points from the slave patch that have hit a face
@@ -316,8 +309,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                         true                            // supports a cell
                     )
                 );
-//             Info << "Inserting merge pair off face: "
-//                  << slaveMeshPoints[pointI] << " " << newPoint << endl;
+//             Pout << "Inserting merge pair off face: " << slaveMeshPoints[pointI] << " " << newPoint << endl;
             // Add the new edge point into the merge map
             pointMergeMap.insert(slaveMeshPoints[pointI], newPoint);
 
@@ -330,7 +322,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
             if (debug)
             {
-                Info<< "f: " << newPoint << " = "
+                Pout<< "f: " << newPoint << " = "
                     << projectedSlavePoints[pointI] << endl;
             }
         }
@@ -379,7 +371,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
     // 
     if (debug)
     {
-        Info << "Processing slave edges " << endl;
+        Pout << "Processing slave edges " << endl;
     }
 
     if (!cutPointEdgePairMapPtr_)
@@ -416,8 +408,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
         )
         {
             labelHashSet& curUme = usedMasterEdges[edgeI];
-//             Info<< "Doing edge " << edgeI << " curEdge: " << curEdge
-//                 << " curUme: " << curUme << endl;
+//             Pout<< "Doing edge " << edgeI << " curEdge: " << curEdge << " curUme: " << curUme << endl;
             // Clear the maps
             curFaceMap.clear();
             addedFaces.clear();
@@ -426,13 +417,11 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             const label startFace =
                 slavePointFaceHits[curEdge.start()].hitObject();
             const label endFace = slavePointFaceHits[curEdge.end()].hitObject();
-//             Info << "startFace: " << slavePointFaceHits[curEdge.start()]
-//                  << " endFace: " << slavePointFaceHits[curEdge.end()]
-//                  << endl;
+//             Pout << "startFace: " << slavePointFaceHits[curEdge.start()] << " endFace: " << slavePointFaceHits[curEdge.end()] << endl;
             // Insert the start face into the list
             curFaceMap.insert(startFace);
             addedFaces.insert(startFace);
-//             Info << "curFaceMap: " << curFaceMap.toc() << endl;
+//             Pout << "curFaceMap: " << curFaceMap.toc() << endl;
             label nSweeps = 0;
             bool completed = false;
 
@@ -467,7 +456,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
                 if (debug)
                 {
-                    Info << ".";
+                    Pout << ".";
                 }
             }
 
@@ -475,7 +464,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             {
                 if (debug)
                 {
-                    Info << "x";
+                    Pout << "x";
                 }
 
                 // It is impossible to reach the end from the start, probably
@@ -517,7 +506,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
                     if (debug)
                     {
-                        Info << ".";
+                        Pout << ".";
                     }
                 }
             }
@@ -526,14 +515,14 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             {
                 if (debug)
                 {
-                    Info << "+ ";
+                    Pout << "+ ";
                 }
             }
             else
             {
                 if (debug)
                 {
-                    Info << "z ";
+                    Pout << "z ";
                 }
             }
 
@@ -546,10 +535,10 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             );
 
             const labelList curFaces = curFaceMap.toc();
-//             Info << "curFaces: " << curFaces << endl;
+//             Pout << "curFaces: " << curFaces << endl;
             forAll (curFaces, faceI)
             {
-//                 Info<< "face: " << curFaces[faceI] << " "
+//                 Pout<< "face: " << curFaces[faceI] << " "
 //                     << masterPatch[curFaces[faceI]] 
 //                     << " local: "
 //                     << masterPatch.localFaces()[curFaces[faceI]]
@@ -589,12 +578,11 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
             // Create the plane
             plane cutPlane(a, b, c);
-//             Info << "a: " << a << " b: " << b << " c: " << c
-//                  << " plane: " << cutPlane << endl;
+//             Pout << "a: " << a << " b: " << b << " c: " << c << " plane: " << cutPlane << endl;
 
             linePointRef curSlaveLine = curEdge.line(projectedSlavePoints);
             const scalar curSlaveLineMag = curSlaveLine.mag();
-//             Info << "curSlaveLine: " << curSlaveLine << endl;
+//             Pout << "curSlaveLine: " << curSlaveLine << endl;
             forAll (curMasterEdges, masterEdgeI)
             {
                 if (!curUme.found(curMasterEdges[masterEdgeI]))
@@ -602,13 +590,12 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                     // New edge
                     if (debug)
                     {
-                        Info << "n";
+                        Pout << "n";
                     }
 
                     const label cmeIndex = curMasterEdges[masterEdgeI];
                     const edge& cme = masterEdges[cmeIndex];
-//                     Info<< "Edge " << cmeIndex << " cme: " << cme
-//                         << " line: " << cme.line(masterLocalPoints) << endl;
+//                     Pout<< "Edge " << cmeIndex << " cme: " << cme << " line: " << cme.line(masterLocalPoints) << endl;
                     scalar cutOnMaster =
                         cutPlane.lineIntersect
                         (
@@ -645,9 +632,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                             // target edge length
                             scalar mergeTol =
                                 edgeCoPlanarTol_*mag(b - a);
-//                             Info << "cutOnMaster: " << cutOnMaster
-//                                  << " masterCutPoint: " << masterCutPoint
-//                                  << " slaveCutPoint: " << slaveCut.hitPoint() << " slaveCut.distance(): " << slaveCut.distance() << " slave length: " << mag(b - a) << " mergeTol: " << mergeTol << " 1: " << mag(b - a) << " 2: " << cme.line(masterLocalPoints).mag() << endl;
+//                             Pout << "cutOnMaster: " << cutOnMaster << " masterCutPoint: " << masterCutPoint << " slaveCutPoint: " << slaveCut.hitPoint() << " slaveCut.distance(): " << slaveCut.distance() << " slave length: " << mag(b - a) << " mergeTol: " << mergeTol << " 1: " << mag(b - a) << " 2: " << cme.line(masterLocalPoints).mag() << endl;
                             if
                             (
                                 cutOnSlave > edgeEndCutoffTol_
@@ -670,7 +655,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                                             true                      // active
                                         )
                                     );
-//                                 Info << "Inserting point: " << newPoint << " as edge to edge intersection.  Slave edge: " << edgeI << " " << curEdge << " master edge: " << cmeIndex << " " << cme << endl;
+//                                 Pout << "Inserting point: " << newPoint << " as edge to edge intersection.  Slave edge: " << edgeI << " " << curEdge << " master edge: " << cmeIndex << " " << cme << endl;
                                 pointsIntoSlaveEdges[edgeI].append(newPoint);
                                 pointsIntoMasterEdges[cmeIndex].append(newPoint);
 
@@ -703,7 +688,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
                                 if (debug)
                                 {
-                                    Info<< " " << newPoint << " = "
+                                    Pout<< " " << newPoint << " = "
                                         << masterCutPoint << " ";
                                 }
                             }
@@ -712,7 +697,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                                 if (debug)
                                 {
                                     // Intersection exists but it is too far
-                                    Info << "t";
+                                    Pout << "t";
                                 }
                             }
                         }
@@ -721,7 +706,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                             if (debug)
                             {
                                 // Missed slave edge
-                                Info << "x";
+                                Pout << "x";
                             }
                         }
                     }
@@ -730,7 +715,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                         if (debug)
                         {
                             // Missed master edge
-                            Info << "-";
+                            Pout << "-";
                         }
                     }
                 }
@@ -738,20 +723,20 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                 {
                     if (debug)
                     {
-                        Info << "u";
+                        Pout << "u";
                     }
                 }
             }
 
             if (debug)
             {
-                Info << endl;
+                Pout << endl;
             }
         } // End if both ends missing
     } // End for all slave edges
 
-//     Info << "pointsIntoMasterEdges: " << pointsIntoMasterEdges << endl;
-//     Info << "pointsIntoSlaveEdges: " << pointsIntoSlaveEdges << endl;
+//     Pout << "pointsIntoMasterEdges: " << pointsIntoMasterEdges << endl;
+//     Pout << "pointsIntoSlaveEdges: " << pointsIntoSlaveEdges << endl;
 
     // Re-pack the points into edges lists
     labelListList pime(pointsIntoMasterEdges.size());
@@ -801,7 +786,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
         const label curMaster = cutFaceMaster[faceI];
         const label curSlave = cutFaceSlave[faceI];
 
-//         Info << "Doing insertion of face " << faceI << ": ";
+//         Pout << "Doing insertion of face " << faceI << ": ";
 
         // Check if the face has changed topologically
         bool insertedFace = false;
@@ -812,7 +797,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             if (curCutFace == masterPatch[curMaster])
             {
                 // Face is equal to master.  Modify master face.
-//                 Info << "Face is equal to master and is ";
+//                 Pout << "Face is equal to master and is ";
 
                 // If the face has got both master and slave, it is an
                 // internal face; othewise it's a patch face in the
@@ -820,7 +805,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
                 if (curSlave >= 0)
                 {
-//                     Info << "internal" << endl;
+//                     Pout << "internal" << endl;
                     if (masterFc[curMaster] < slaveFc[curSlave])
                     {
                         // Cut face should point into slave.
@@ -840,8 +825,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                                 masterPatchFlip[curMaster]   // zone flip
                             )
                         );
-//                         Info << "modifying master face. Old master: "
-//                              << masterPatch[curMaster] << " new face: " << curCutFace.reverseFace() << " own: " << masterFc[curMaster] << " nei: " << slaveFc[curSlave] << endl;
+//                         Pout << "modifying master face. Old master: " << masterPatch[curMaster] << " new face: " << curCutFace.reverseFace() << " own: " << masterFc[curMaster] << " nei: " << slaveFc[curSlave] << endl;
                     }
                     else
                     {
@@ -869,7 +853,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                 }
                 else
                 {
-//                     Info << "master boundary" << endl;
+//                     Pout << "master boundary" << endl;
                     ref.setAction
                     (
                         polyModifyFace
@@ -910,11 +894,11 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             if (curCutFace == rsf)
             {
                 // Face is equal to slave.  Modify slave face.
-//                 Info << "Face is equal to slave and is ";
+//                 Pout << "Face is equal to slave and is ";
 
                 if (curMaster >= 0)
                 {
-//                     Info << "regular internal" << endl;
+//                     Pout << "regular internal" << endl;
                     if (masterFc[curMaster] < slaveFc[curSlave])
                     {
                         ref.setAction
@@ -937,7 +921,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                     {
                         // Cut face should point into master.
                         // Be careful about flips in zone!
-//                         Info << "flipped internal" << endl;
+//                         Pout << "flipped internal" << endl;
                         ref.setAction
                         (
                             polyModifyFace
@@ -960,7 +944,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                 }
                 else
                 {
-//                     Info << "slave boundary" << endl;
+//                     Pout << "slave boundary" << endl;
                     ref.setAction
                     (
                         polyModifyFace
@@ -995,7 +979,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
         if (!insertedFace)
         {
             // Face is different from both master and slave
-//             Info << "Face different from both master and slave" << endl;
+//             Pout << "Face different from both master and slave" << endl;
 
             if (curMaster >= 0)
             {
@@ -1004,7 +988,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                     // Add internal face
                     if (masterFc[curMaster] < slaveFc[curSlave])
                     {
-//                         Info << "Adding internal face " << curCutFace << " owner: " << masterFc[curMaster] << " slave: " << slaveFc[curSlave] << " master face: " << masterPatchAddr[curMaster] << endl;
+//                         Pout << "Adding internal face " << curCutFace << " owner: " << masterFc[curMaster] << " slave: " << slaveFc[curSlave] << " master face: " << masterPatchAddr[curMaster] << endl;
                         // Cut face should point into slave.
                         ref.setAction
                         (
@@ -1049,7 +1033,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                 }
                 else
                 {
-//                 Info << "Adding solo master face " << curCutFace << " owner: " << masterFc[curMaster] << " master face: " << masterPatchAddr[curMaster] << endl;
+//                 Pout << "Adding solo master face " << curCutFace << " owner: " << masterFc[curMaster] << " master face: " << masterPatchAddr[curMaster] << endl;
                     // Add master patch face
                     ref.setAction
                     (
@@ -1074,7 +1058,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             }
             else if (curSlave >= 0)
             {
-//                 Info << "Adding solo slave face " << curCutFace << " owner: " << slaveFc[curSlave] << " master face: " << slavePatchAddr[curSlave] << endl;
+//                 Pout << "Adding solo slave face " << curCutFace << " owner: " << slaveFc[curSlave] << " master face: " << slavePatchAddr[curSlave] << endl;
                 // Add slave patch face
                 ref.setAction
                 (
@@ -1110,8 +1094,8 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
     }
 
     // Move the orphaned faces into the face zone
-//     Info << "Orphaned master faces: " << orphanedMaster << endl;
-//     Info << "Orphaned slave faces: " << orphanedSlave << endl;
+//     Pout << "Orphaned master faces: " << orphanedMaster << endl;
+//     Pout << "Orphaned slave faces: " << orphanedSlave << endl;
 
     label nOrphanedMasters = 0;
 
@@ -1169,7 +1153,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
     if (debug)
     {
-        Info<< "Number of orphaned faces: "
+        Pout<< "Number of orphaned faces: "
             << "master = " << nOrphanedMasters << " out of "
             << orphanedMaster.size()
             << " slave = " << nOrphanedSlaves << " out of "
@@ -1196,7 +1180,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
     // Grab the list of faces in the layer
     const labelList& masterStickOuts = masterStickOutFaces();
 
-//     Info << "masterStickOuts: " << masterStickOuts << endl;
+//     Pout << "masterStickOuts: " << masterStickOuts << endl;
 
     // Re-create the master stick-out faces
     forAll (masterStickOuts, faceI)
@@ -1229,7 +1213,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
         oldFace.setSize(nOldFace);
 
-//         Info << "old rich master face: " << oldRichFace << " old face: " << oldFace << endl;
+//         Pout << "old rich master face: " << oldRichFace << " old face: " << oldFace << endl;
         DynamicList<label> newFaceLabels(2*oldFace.size());
 
         forAll (oldFace, pointI)
@@ -1271,7 +1255,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
                 if (mmpmIter != masterMeshPointMap.end())
                 {
-//                     Info << "found label pair " << oldFace[pointI] << " and " << nextLabel;
+//                     Pout << "found label pair " << oldFace[pointI] << " and " << nextLabel;
                     // Find the points on the edge between them
                     const label localNextLabel = mmpmIter();
 
@@ -1286,7 +1270,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                          == localNextLabel
                         )
                         {
-//                             Info << " found edge: " << curEdges[curEdgeI] << endl;
+//                             Pout << " found edge: " << curEdges[curEdgeI] << endl;
 
                             // Get points on current edge
                             const labelList& curPime = pime[curEdges[curEdgeI]];
@@ -1294,7 +1278,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                             if (curPime.size() > 0)
                             {
                                 changed = true;
-                                // Info << "curPime: " << curPime << endl;
+                                // Pout << "curPime: " << curPime << endl;
                                 // Insert the edge points into the face
                                 // in the correct order
                                 const point& startPoint =
@@ -1414,7 +1398,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             face newFace;
             newFace.transfer(newFaceLabels.shrink());
 
-//             Info << "Modifying master stick-out face " << curFaceID << " old face: " << oldFace << " new face: " << newFace << endl;
+//             Pout << "Modifying master stick-out face " << curFaceID << " old face: " << oldFace << " new face: " << newFace << endl;
 
             // Modify the face
             ref.setAction
@@ -1426,7 +1410,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                     own[curFaceID],         // owner
                     nei[curFaceID],         // neighbour
                     false,                  // face flip
-                    mesh().boundaryMesh().whichPatch(curFaceID), // patch for face
+                    mesh.boundaryMesh().whichPatch(curFaceID), // patch for face
                     false,                  // remove from zone
                     modifiedFaceZone,       // zone for face
                     modifiedFaceZoneFlip    // face flip in zone
@@ -1435,14 +1419,14 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
         }
     }
 
-//     Info << "Finished master side" << endl;
+//     Pout << "Finished master side" << endl;
 
     // Slave side
 
     // Grab the list of faces in the layer
     const labelList& slaveStickOuts = slaveStickOutFaces();
 
-//     Info << "slaveStickOuts: " << slaveStickOuts << endl;
+//     Pout << "slaveStickOuts: " << slaveStickOuts << endl;
 
     const Map<label>& rpm = retiredPointMap();
 
@@ -1496,7 +1480,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
         DynamicList<label> newFaceLabels(2*oldFace.size());
 
-//         Info << "old rich slave face: " << oldRichFace << " old face: " << oldFace << endl;
+//         Pout << "old rich slave face: " << oldRichFace << " old face: " << oldFace << endl;
         forAll (oldFace, pointI)
         {
             // Try to find the point in retired points
@@ -1571,7 +1555,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                          == localNextLabel
                         )
                         {
-//                             Info << " found edge: " << curEdges[curEdgeI] << endl;
+//                             Pout << " found edge: " << curEdges[curEdgeI] << endl;
 
                             // Get points on current edge
                             const labelList& curPise = pise[curEdges[curEdgeI]];
@@ -1579,7 +1563,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                             if (curPise.size() > 0)
                             {
                                 changed = true;
-//                                 Info << "curPise: " << curPise << endl;
+//                                 Pout << "curPise: " << curPise << endl;
                                 // Insert the edge points into the face
                                 // in the correct order
                                 const point& startPoint =
@@ -1699,7 +1683,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             face newFace;
             newFace.transfer(newFaceLabels.shrink());
 
-//             Info << "Modifying slave stick-out face " << curFaceID << " old face: " << oldFace << " new face: " << newFace << endl;
+//             Pout << "Modifying slave stick-out face " << curFaceID << " old face: " << oldFace << " new face: " << newFace << endl;
 
             // Modify the face
             ref.setAction
@@ -1711,7 +1695,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                     own[curFaceID],         // owner
                     nei[curFaceID],         // neighbour
                     false,                  // face flip
-                    mesh().boundaryMesh().whichPatch(curFaceID), // patch
+                    mesh.boundaryMesh().whichPatch(curFaceID), // patch for face
                     false,                  // remove from zone
                     modifiedFaceZone,       // zone for face
                     modifiedFaceZoneFlip    // face flip in zone
@@ -1756,7 +1740,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                     slaveMeshPoints[pointI],             // point ID
                     points[slaveMeshPoints[pointI]],     // point
                     false,                               // remove from zone
-                    mesh().pointZones().whichZone(slaveMeshPoints[pointI]),// zone
+                    mesh.pointZones().whichZone(slaveMeshPoints[pointI]),// zone
                     false                                // in a cell
                 )
             );
@@ -1776,7 +1760,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
                     slaveMeshPoints[pointI],             // point ID
                     points[slaveMeshPoints[pointI]],     // point
                     false,                               // remove from zone
-                    mesh().pointZones().whichZone(slaveMeshPoints[pointI]),//zn
+                    mesh.pointZones().whichZone(slaveMeshPoints[pointI]),// zone
                     true                                 // in a cell
                 )
             );
@@ -1785,7 +1769,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
     if (debug)
     {
-        Info << "Retired " << nRetiredPoints << " out of "
+        Pout << "Retired " << nRetiredPoints << " out of "
             << slaveMeshPoints.size() << " points." << endl;
     }
 
@@ -1801,7 +1785,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
     if (debug)
     {
-        Info<< "void slidingInterface::coupleInterface("
+        Pout<< "void slidingInterface::coupleInterface("
             << "polyTopoChange& ref) : "
             << "Finished coupling sliding interface " << name() << endl;
     }

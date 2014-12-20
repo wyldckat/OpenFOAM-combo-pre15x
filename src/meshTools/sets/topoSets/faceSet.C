@@ -29,6 +29,7 @@ License
 #include "polyMesh.H"
 #include "processorPolyPatch.H"
 #include "cyclicPolyPatch.H"
+//#include "directPolyTopoChange.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -99,7 +100,7 @@ faceSet::~faceSet()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::faceSet::sync(const polyMesh& mesh)
+void faceSet::sync(const polyMesh& mesh)
 {
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
@@ -205,19 +206,25 @@ void Foam::faceSet::sync(const polyMesh& mesh)
 }
 
 
-Foam::label Foam::faceSet::maxSize(const polyMesh& mesh) const
+label faceSet::maxSize(const polyMesh& mesh) const
 {
     return mesh.nFaces();
 }
 
 
-void Foam::faceSet::updateTopology(const mapPolyMesh& morphMap)
+void faceSet::updateMesh(const mapPolyMesh& morphMap)
 {
     updateLabels(morphMap.reverseFaceMap());
 }
 
 
-void Foam::faceSet::writeDebug
+//void faceSet::updateMesh(const directPolyTopoChange& meshMod)
+//{
+//    updateLabels(meshMod.faceMap());
+//}
+
+
+void faceSet::writeDebug
 (
     Ostream& os,
     const primitiveMesh& mesh,

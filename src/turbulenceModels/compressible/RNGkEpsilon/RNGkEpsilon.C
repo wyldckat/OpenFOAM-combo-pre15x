@@ -190,26 +190,27 @@ void RNGkEpsilon::correct()
     volScalarField eta = sqrt(mag(S2))*k_/epsilon_;
     volScalarField eta3 = eta*sqr(eta);
 
-    volScalarField R = ((eta*(-eta/eta0 + 1.0))/(beta*eta3 + 1.0));
+    volScalarField R = 
+        ((eta*(-eta/eta0 + scalar(1)))/(beta*eta3 + scalar(1)));
 
+#   include "wallFunctionsI.H"
 
     // Dissipation equation
-
-#   include "wallDissipationI.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(rho_, epsilon_)
       + fvm::div(phi_, epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
       ==
-        (C1 - R)*G*epsilon_/k_- fvm::SuSp((2.0/3.0*C1 + C3)*rho_*divU, epsilon_)
-      + boundarySource
-      - fvm::Sp(C2*rho_*epsilon_/k_ + boundaryCentral, epsilon_)
-    //+ 0.75*1.5*flameKproduction*epsilon_/k_
+        (C1 - R)*G*epsilon_/k_
+      - fvm::SuSp(((2.0/3.0)*C1 + C3)*rho_*divU, epsilon_)
+      - fvm::Sp(C2*rho_*epsilon_/k_, epsilon_)
     );
 
     epsEqn().relax();
+
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 
@@ -224,7 +225,6 @@ void RNGkEpsilon::correct()
       ==
         G - fvm::SuSp(2.0/3.0*rho_*divU, k_)
       - fvm::Sp(rho_*(epsilon_)/k_, k_)
-    //+ flameKproduction
     );
 
     kEqn().relax();
@@ -233,7 +233,7 @@ void RNGkEpsilon::correct()
 
 
     // Re-calculate viscosity
-    mut_ = rho_*Cmu*sqr(k_)/(epsilon_ + epsilonSmall_);
+    mut_ = rho_*Cmu*sqr(k_)/epsilon_;
 
 #   include "wallViscosityI.H"
 

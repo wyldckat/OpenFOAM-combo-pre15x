@@ -31,119 +31,135 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "boundaryMesh.H"
-#include "repatchPolyMesh.H"
+#include "polyMesh.H"
 #include "faceSet.H"
+#include "directPolyTopoChange.H"
+#include "polyModifyFace.H"
+#include "parallelInfo.H"
 
 using namespace Foam;
 
-void patchFaceSet
-(
-    repatchPolyMesh& mesh,
-    const boundaryMesh& bMesh,
-    const word& setName,
-    const labelList& nearest
-)
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Adds empty patch if not yet there. Returns patchID.
+label addPatch(polyMesh& mesh, const word& patchName)
 {
-    faceSet faceLabels(mesh, setName);
-    Info<< "Read " << faceLabels.size() << " faces to repatch ..." << endl;
+    label patchI = mesh.boundaryMesh().findPatchID(patchName);
 
-    // Add surface patches to end of normal patches. Make unique by prefixing
-    // surf_.
-
-    const PtrList<boundaryPatch>& bPatches = bMesh.patches();
-    const polyBoundaryMesh& patches = mesh.boundaryMesh();
-
-    List<polyPatch*> newPatchPtrList(patches.size() + bPatches.size());
-
-    // Copy old ones
-    forAll(patches, i)
+    if (patchI == -1)
     {
-        const polyPatch& pp = patches[i];
+        const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-        newPatchPtrList[i] = pp.clone
-        (
-            mesh.boundaryMesh(),
-            i,
-            pp.size(),
-            pp.start()
-        ).ptr();
-    }
+        List<polyPatch*> newPatches(patches.size() + 1);
 
-    // Store old size of patches (since mesh.changePatches changes size)
-    label nPatches = patches.size();
+        patchI = 0;
 
-    // Add boundary patches.
-    forAll(bPatches, i)
-    {
-        const boundaryPatch& bp = bPatches[i];
-
-        word newName = "surf_" + bp.name();
-
-        Info<< "Added surface patch " << newName << " at position "
-            << patches.size() + i << endl;
-
-        newPatchPtrList[nPatches + i] = polyPatch::New
-        (
-            bp.physicalType(),
-            newName,
-            0,                  // size
-            mesh.nFaces(),      // start
-            nPatches + i,
-            mesh.boundaryMesh()
-        ).ptr();
-    }
-
-    // Actually add new list of patches
-    mesh.changePatches(newPatchPtrList);
-
-
-    label nUnchanged = 0;
-
-    for
-    (
-        faceSet::const_iterator iter = faceLabels.begin();
-        iter != faceLabels.end();
-        ++iter
-    )
-    {
-        label faceI = iter.key();
-
-        if (faceI >= mesh.nInternalFaces() || faceI < mesh.nFaces())
+        // Copy all old patches
+        forAll(patches, i)
         {
-            label nearestSurfFaceI = nearest[faceI - mesh.nInternalFaces()];
+            const polyPatch& pp = patches[i];
 
-            if (nearestSurfFaceI == -1)
-            {
-                // Keep face as is
-                nUnchanged++;
-            }
-            else
-            {
-                label surfPatchI = bMesh.whichPatch(nearestSurfFaceI);
+            newPatches[patchI] =
+                pp.clone
+                (
+                    patches,
+                    patchI,
+                    pp.size(),
+                    pp.start()
+                ).ptr();
 
-                mesh.changePatchID(faceI, nPatches + surfPatchI);
-            }
+            patchI++;
         }
+
+        // Add zero-sized patch
+        newPatches[patchI] =
+            new polyPatch
+            (
+                patchName,
+                0,
+                mesh.nFaces(),
+                patchI,
+                patches
+            );
+
+        mesh.removeBoundary();
+        mesh.addPatches(newPatches);
+
+        Pout<< "Created patch " << patchName << " at " << patchI << endl;
     }
-
-
-    if (nUnchanged > 0)
+    else
     {
-        WarningIn
-        (
-            "void patchFaceSet"
-            "(repatchPolyMesh& mesh, const boundaryMesh& bMesh,"
-            "const word& setName, const labelList& nearest)"
-        )   << "There are " << nUnchanged << " faces in faceSet "
-            << faceLabels.name() << " that did not get repatched since they"
-            << " are too far away from the surface" << endl;
+        Pout<< "Reusing patch " << patchName << " at " << patchI << endl;
     }
 
-    mesh.repatch();
+    return patchI;
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Repatch single face. Return true if patch changed.
+bool repatchFace
+(
+    const polyMesh& mesh,
+    const boundaryMesh& bMesh,
+    const labelList& nearest,
+    const labelList& surfToMeshPatch,
+    const label faceI,
+    directPolyTopoChange& meshMod
+)
+{
+    bool changed = false;
+
+    label bFaceI = faceI - mesh.nInternalFaces();
+
+    if (nearest[bFaceI] != -1)
+    {
+        // Use boundary mesh one.
+        label bMeshPatchID = bMesh.whichPatch(nearest[bFaceI]);
+
+        label patchID = surfToMeshPatch[bMeshPatchID];
+
+        if (patchID != mesh.boundaryMesh().whichPatch(faceI))
+        {
+            label own = mesh.faceOwner()[faceI];
+
+            label zoneID = mesh.faceZones().whichZone(faceI);
+
+            bool zoneFlip = false;
+
+            if (zoneID >= 0)
+            {
+                const faceZone& fZone = mesh.faceZones()[zoneID];
+
+                zoneFlip = fZone.flipMap()[fZone.whichFace(faceI)];
+            }
+
+            meshMod.setAction
+            (
+                polyModifyFace
+                (
+                    mesh.faces()[faceI],// modified face
+                    faceI,              // label of face being modified
+                    own,                // owner
+                    -1,                 // neighbour
+                    false,              // face flip
+                    patchID,            // patch for face
+                    false,              // remove from zone
+                    zoneID,             // zone for face
+                    zoneFlip            // face flip in zone
+                )
+            );
+
+            changed = true;
+        }
+    }
+    else
+    {
+        changed = false;
+    }
+    return changed;
+}
+
+
 // Main program:
 
 int main(int argc, char *argv[])
@@ -151,22 +167,11 @@ int main(int argc, char *argv[])
     argList::noParallel();
     argList::validArgs.append("surface file");
     argList::validOptions.insert("faceSet", "faceSet name");
+    argList::validOptions.insert("tol", "fraction of mesh size");
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-
-    Info<< "Create repatchPolyMesh\n" << endl;
-
-    repatchPolyMesh mesh
-    (
-        IOobject
-        (
-            repatchPolyMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
-
+#   include "createPolyMesh.H"
 
     fileName surfName(args.args()[3]);
 
@@ -188,6 +193,22 @@ int main(int argc, char *argv[])
             << " triangle ..." << endl;
     }
 
+    scalar searchTol = 1E-3;
+
+    if (args.options().found("tol"))
+    {
+        searchTol =  readScalar(IStringStream(args.options()["tol"])());
+    }
+
+    // Get search box. Anything not within this box will not be considered.
+    const boundBox& meshBb = mesh.parallelData().bb();
+
+    const vector searchSpan(searchTol*(meshBb.max() - meshBb.min()));
+
+    Info<< "All boundary faces further away than " << searchTol
+        << " of mesh bounding box " << meshBb
+        << " will keep their patch label ..." << endl;
+
 
     Info<< "Before patching:" << nl
         << "    patch\tsize" << endl;
@@ -200,53 +221,105 @@ int main(int argc, char *argv[])
     Info<< endl;
 
 
+
     boundaryMesh bMesh;
 
+    // Load in the surface.
     bMesh.readTriSurface(surfName);
 
-    runTime++;
+    // Add all the boundaryMesh patches to the mesh.
+    const PtrList<boundaryPatch>& bPatches = bMesh.patches();
 
-    Info<< "Time now " << runTime.value() << endl;
+    // Map from surface patch ( = boundaryMesh patch) to polyMesh patch
+    labelList patchMap(bPatches.size());
+
+    forAll(bPatches, i)
+    {
+        patchMap[i] = addPatch(mesh, bPatches[i].name());
+    }
+
+    // Obtain nearest face in bMesh for each boundary face in mesh that
+    // is within search span.
+    // Note: should only determine for faceSet if working with that.
+    labelList nearest(bMesh.getNearest(mesh, searchSpan));
+
+    {
+        // Dump unmatched faces to faceSet for debugging.
+        faceSet unmatchedFaces(mesh, "unmatchedFaces", nearest.size()/100);
+
+        forAll(nearest, bFaceI)
+        {
+            if (nearest[bFaceI] == -1)
+            {
+                unmatchedFaces.insert(mesh.nInternalFaces() + bFaceI);
+            }
+        }
+
+        Pout<< "Writing all " << unmatchedFaces.size()
+            << " unmatched faces to faceSet "
+            << unmatchedFaces.name()
+            << endl;
+
+        unmatchedFaces.write();
+    }
+
+
+    directPolyTopoChange meshMod(mesh);
+
+    label nChanged = 0;
 
     if (readSet)
     {
-        // Obtain nearest face in bMesh for each boundary face in mesh that
-        // is within 'span' of face.
-        // Note: should only determine for subset.
-        labelList nearest(bMesh.getNearest(mesh, 10.0));
+        faceSet faceLabels(mesh, setName);
+        Info<< "Read " << faceLabels.size() << " faces to repatch ..." << endl;
 
-        patchFaceSet(mesh, bMesh, setName, nearest);
+        forAllConstIter(faceSet, faceLabels, iter)
+        {
+            label faceI = iter.key();
+
+            if (repatchFace(mesh, bMesh, nearest, patchMap, faceI, meshMod))
+            {
+                nChanged++;
+            }
+        }
     }
     else
     {
-        // Obtain nearest face in bMesh for each boundary face in mesh.
-        labelList nearest(bMesh.getNearest(mesh, GREAT));
+        forAll(nearest, bFaceI)
+        {
+            label faceI = mesh.nInternalFaces() + bFaceI;
 
-        // Update mesh with new patches
-        bMesh.patchify
-        (
-            nearest,                // nearest bMesh face
-            mesh.boundaryMesh(),    // original boundary faces
-            mesh
-        );
+            if (repatchFace(mesh, bMesh, nearest, patchMap, faceI, meshMod))
+            {
+                nChanged++;
+            }
+        }
     }
 
+    Pout<< "Changed " << nChanged << " boundary faces." << nl << endl;
 
-    Info<< "After patching:" << nl
-        << "    patch\tsize" << endl;
-
-    forAll(mesh.boundaryMesh(), patchI)
+    if (nChanged > 0)
     {
-        Info<< "    " << mesh.boundaryMesh()[patchI].name() << '\t'
-            << mesh.boundaryMesh()[patchI].size() << endl;
-    } 
-    Info<< endl;
+        meshMod.changeMesh(mesh);
+
+        Info<< "After patching:" << nl
+            << "    patch\tsize" << endl;
+
+        forAll(mesh.boundaryMesh(), patchI)
+        {
+            Info<< "    " << mesh.boundaryMesh()[patchI].name() << '\t'
+                << mesh.boundaryMesh()[patchI].size() << endl;
+        } 
+        Info<< endl;
 
 
-    // Write resulting mesh
+        runTime++;
 
-    mesh.write();
-    
+        // Write resulting mesh
+        Info << "Writing modified mesh to time " << runTime.value() << endl;
+        mesh.write();
+    }    
+
 
     Info<< "End\n" << endl;
 

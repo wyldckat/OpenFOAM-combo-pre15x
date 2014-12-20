@@ -28,6 +28,93 @@ Class
 Description
     Class containing mesh-to-mesh mapping information after a change
     in polyMesh topology.
+    General: 
+        - pointMap/faceMap/cellMap:
+        from current mesh back to previous mesh.
+        (so to 'pull' the information onto the current mesh)
+
+        - reversePointMap/faceMap/cellMap:
+        from previous mesh to current. (so to 'push' information)
+
+    In the topology change points/faces/cells
+    - can be unchanged. (faces might be renumbered though)
+    - can be removed.
+    - can be added from existing same 'master' entity 
+      (so point from point, face from face and cell from cell)
+    - can be inflated: face out of edge or point,
+        cell out of face, edge or point.
+    - can be appended: added 'out of nothing'.
+
+    All this information is nessecary to correctly map fields.
+
+    points
+    ------
+    unchanged:
+        pointMap[pointI] contains old point label
+        reversePointMap[oldPointI] contains new point label
+    removed:
+        reversePointMap[oldPointI] contains -1
+    added-from-same:
+        pointMap[pointI] contains the old master point label 
+    appended:
+        pointMap[pointI] contains -1
+
+
+    faces
+    -----
+    unchanged:
+        faceMap[faceI] contains old face label
+        reverseFaceMap[oldFaceI] contains new face label
+    removed:
+        reverseFaceMap[oldFaceI] contains -1
+    added-from-same:
+        faceMap[faceI] contains the old master face label 
+    inflated-from-edge:
+        faceMap[faceI] contains -1
+        facesFromEdges contains an entry with
+            - faceI
+            - list of faces(*) on old mesh that connected to the old edge
+    inflated-from-point:
+        faceMap[faceI] contains -1
+        facesFromPoints contains an entry with
+            - faceI
+            - list of faces(*) on old mesh that connected to the old point
+    appended:
+        faceMap[faceI] contains -1
+
+    *) if the newly inflated face is a boundary face the list of faces will
+       only be boundary faces; if the new face is an internal face they
+       will only be internal faces.
+
+
+    cells
+    -----
+    unchanged:
+        cellMap[cellI] contains old cell label
+        reverseCellMap[oldCellI] contains new cell label
+    removed:
+        reverseCellMap[oldCellI] contains -1
+    added-from-same:
+        cellMap[cellI] contains the old master cell label 
+    inflated-from-face:
+        cellMap[cellI] contains -1
+        cellsFromFaces contains an entry with
+            - cellI
+            - list of cells on old mesh that connected to the old face
+    inflated-from-edge:
+        cellMap[cellI] contains -1
+        cellsFromEdges contains an entry with
+            - cellI
+            - list of cells on old mesh that connected to the old edge
+    inflated-from-point:
+        cellMap[cellI] contains -1
+        cellsFromPoints contains an entry with
+            - cellI
+            - list of cells on old mesh that connected to the old point
+    appended:
+        cellMap[cellI] contains -1
+
+
 
 SourceFiles
     mapPolyMesh.C
@@ -373,6 +460,13 @@ public:
                 return preMotionPoints_;
             }
 
+            //- Has valid preMotionPoints?
+            bool hasMotionPoints() const
+            {
+                return preMotionPoints_.size() > 0;
+            }
+
+
             //- Return list of the old patch sizes
             const labelList& oldPatchSizes() const
             {
@@ -390,11 +484,6 @@ public:
             {
                 return oldPatchNMeshPoints_;
             }
-
-            //- Modify for reordered faces. Is very limited 'updateTopology';
-            //  only allows for reshuffling of faces inside of a patch.
-            //  Gets passed faceMap (old to new).
-            void reorderPatchFaces(const labelList&);
 };
 
 

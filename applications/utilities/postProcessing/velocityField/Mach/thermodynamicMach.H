@@ -37,7 +37,7 @@
                 (
                     "Ma",
                     runTime.timeName(),
-                    runTime
+                    mesh
                 ),
                 mag(U)/(sqrt(((Cv + R)/Cv)*R*T))
             );

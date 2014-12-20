@@ -1,5 +1,0 @@
-faceCollapser.C
-collapseFaces.C
-
-EXE = $(FOAM_APPBIN)/collapseFaces
-

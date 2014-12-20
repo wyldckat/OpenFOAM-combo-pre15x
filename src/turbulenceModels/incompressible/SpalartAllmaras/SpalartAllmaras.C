@@ -45,7 +45,6 @@ addToRunTimeSelectionTable(turbulenceModel, SpalartAllmaras, dictionary);
 tmp<volScalarField> SpalartAllmaras::fv1() const
 {
     volScalarField chi3 = pow3(nuTilda_/nu());
-
     return chi3/(chi3 + pow3(Cv1));
 }
 
@@ -53,13 +52,38 @@ tmp<volScalarField> SpalartAllmaras::fv1() const
 tmp<volScalarField> SpalartAllmaras::fv2() const
 {
     volScalarField chi = nuTilda_/nu();
-    return 1.0 - chi/(1.0 + chi*fv1());
+
+    //return 1.0 - chi/(1.0 + chi*fv1());
+    return pow(scalar(1) + chi/Cv2, -3);
+}
+
+
+tmp<volScalarField> SpalartAllmaras::fv3() const
+{
+    volScalarField chi = nuTilda_/nu();
+    volScalarField chiByCv2 = (1/Cv2)*chi;
+
+    return
+        (scalar(1) + chi*fv1())
+       *(1/Cv2)
+       *(3*(scalar(1) + chiByCv2) + sqr(chiByCv2))
+       /pow(scalar(1) + chiByCv2, 3);
 }
 
 
 tmp<volScalarField> SpalartAllmaras::fw(const volScalarField& Stilda) const
 {
-    volScalarField r = nuTilda_/(Stilda*sqr(kappa_*d_));
+    volScalarField r = min
+    (
+        nuTilda_
+       /(
+           max(Stilda, dimensionedScalar("SMALL", Stilda.dimensions(), SMALL))
+          *sqr(kappa_*d_)
+        ),
+        scalar(10.0)
+    );
+    r.boundaryField() == 0.0;
+
     volScalarField g = r + Cw2*(pow(r, 6) - r);
 
     return g*pow((1.0 + pow(Cw3, 6))/(pow(g, 6) + pow(Cw3, 6)), 1.0/6.0);
@@ -68,7 +92,6 @@ tmp<volScalarField> SpalartAllmaras::fw(const volScalarField& Stilda) const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// from components
 SpalartAllmaras::SpalartAllmaras
 (
     const volVectorField& U,
@@ -86,12 +109,26 @@ SpalartAllmaras::SpalartAllmaras
     Cw2(turbulenceModelCoeffs_.lookup("Cw2")),
     Cw3(turbulenceModelCoeffs_.lookup("Cw3")),
     Cv1(turbulenceModelCoeffs_.lookup("Cv1")),
+    Cv2(turbulenceModelCoeffs_.lookup("Cv2")),
 
     nuTilda_
     (
         IOobject
         (
             "nuTilda",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
+    ),
+
+    nut_
+    (
+        IOobject
+        (
+            "nut",
             runTime_.timeName(),
             mesh_,
             IOobject::MUST_READ,
@@ -120,8 +157,7 @@ tmp<volTensorField> SpalartAllmaras::R() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            ((2.0/3.0)*I)*k() - nut()*2*symm(fvc::grad(U_)),
-            nuTilda_.boundaryField().types()
+            ((2.0/3.0)*I)*k() - nut()*2*symm(fvc::grad(U_))
         )
     );
 }
@@ -151,6 +187,7 @@ bool SpalartAllmaras::read()
         turbulenceModelCoeffs_.lookup("Cw2") >> Cw2;
         turbulenceModelCoeffs_.lookup("Cw3") >> Cw3;
         turbulenceModelCoeffs_.lookup("Cv1") >> Cv1;
+        turbulenceModelCoeffs_.lookup("Cv2") >> Cv2;
 
         return true;
     }
@@ -178,13 +215,14 @@ void SpalartAllmaras::correct()
     }
 
     volScalarField Stilda =
-        ::sqrt(2.0)*mag(skew(fvc::grad(U_)))
-      + nuTilda_*fv2()/sqr(kappa_*d_);
+        fv3()*::sqrt(2.0)*mag(skew(fvc::grad(U_)))
+      + fv2()*nuTilda_/sqr(kappa_*d_);
 
     tmp<fvScalarMatrix> nuTildaEqn
     (
         fvm::ddt(nuTilda_)
       + fvm::div(phi_, nuTilda_)
+      - fvm::Sp(fvc::div(phi_), nuTilda_)
       - fvm::laplacian(DnuTildaEff(), nuTilda_)
       - alphaNut*Cb2*magSqr(fvc::grad(nuTilda_))
      ==
@@ -194,6 +232,10 @@ void SpalartAllmaras::correct()
     nuTildaEqn().relax();
     solve(nuTildaEqn);
     bound(nuTilda_, dimensionedScalar("0", nuTilda_.dimensions(), 0.0));
+    nuTilda_.correctBoundaryConditions();
+
+    nut_.internalField() = fv1()*nuTilda_.internalField();
+    nut_.correctBoundaryConditions();
 }
 
 

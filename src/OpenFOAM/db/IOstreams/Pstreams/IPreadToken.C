@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "IPstream.H"
@@ -135,10 +133,25 @@ Istream& IPstream::read(token& t)
             return *this;
         }
 
-        // Scalar
-        case token::SCALAR :
+        // floatScalar
+        case token::FLOAT_SCALAR :
         {
-            scalar s;
+            floatScalar s;
+            if (read(s))
+            {
+                t = s;
+            }
+            else
+            {
+                t.setBad();
+            }
+            return *this;
+        }
+
+        // doubleScalar
+        case token::DOUBLE_SCALAR :
+        {
+            doubleScalar s;
             if (read(s))
             {
                 t = s;

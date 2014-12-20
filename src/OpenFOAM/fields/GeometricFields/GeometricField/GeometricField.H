@@ -90,8 +90,11 @@ class GeometricField
 
 public:
 
-    typedef typename GeoMesh::Mesh Mesh;
-    typedef typename GeoMesh::BoundaryMesh BoundaryMesh;
+    // Public typedefs
+
+        typedef typename GeoMesh::Mesh Mesh;
+        typedef typename Mesh::BoundaryMesh BoundaryMesh;
+
 
     class GeometricBoundaryField
     :
@@ -242,8 +245,10 @@ public:
     //- Runtime type information
     TypeName("GeometricField");
 
-    //- Component type
-    typedef typename pTraits<Type>::cmptType cmptType;
+
+    // Public typedefs
+
+        typedef typename Field<Type>::cmptType cmptType;
 
 
     // Constructors

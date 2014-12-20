@@ -107,7 +107,6 @@ public:
         //- Enumeration defining the write options
         enum writeOption
         {
-            WRITE = 0,
             AUTO_WRITE = 0,
             NO_WRITE = 1
         };

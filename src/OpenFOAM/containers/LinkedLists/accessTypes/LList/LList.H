@@ -159,13 +159,13 @@ public:
         // Edit
 
             //- Add at head of list
-            void insert(T a)
+            void insert(const T& a)
             {
                 LListBase::insert(new link(a));
             }
 
             //- Add at tail of list
-            void append(T a)
+            void append(const T& a)
             {
                 LListBase::append(new link(a));
             }

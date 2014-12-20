@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Empty plane patch
-
 \*---------------------------------------------------------------------------*/
 
 #include "emptyPointPatch.H"
@@ -39,7 +36,6 @@ namespace Foam
 
 defineTypeNameAndDebug(emptyPointPatch, 0);
 
-// Add the patch constructor functions to the hash tables
 addToRunTimeSelectionTable
 (
     facePointPatch,

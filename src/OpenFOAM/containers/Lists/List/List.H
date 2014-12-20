@@ -84,7 +84,7 @@ public:
         explicit List(const label);
 
         //- Construct with given size and value for all elements.
-        List(const label, const T);
+        List(const label, const T&);
 
         //- Copy constructor.
         List(const List<T>&);
@@ -137,6 +137,9 @@ public:
 
             //- Reset size of List.
             void setSize(const label);
+
+            //- Reset size of List and value for new elements.
+            void setSize(const label, const T&);
 
             //- Clear the list, i.e. set size to zero.
             void clear();

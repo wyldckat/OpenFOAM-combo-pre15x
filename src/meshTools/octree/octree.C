@@ -127,15 +127,15 @@ octree<Type>::octree
     // Create initial level (0) of subLeaves
     if (debug & 1)
     {
-        Info<< "octree : --- Start of Level " << deepestLevel_
+        Pout<< "octree : --- Start of Level " << deepestLevel_
             << " ----" << endl;
     }
     topNode_->distribute(0, *this, shapes_, indices);
 
     if (debug & 1)
     {
-        printStats(Info);
-        Info<< "octree : --- End of Level " << deepestLevel_
+        printStats(Pout);
+        Pout<< "octree : --- End of Level " << deepestLevel_
             << " ----" << endl;
     }
 
@@ -167,7 +167,7 @@ octree<Type>::octree
         {
             if (debug & 1)
             {
-                Info<< "octree : exiting since maxNLevels "
+                Pout<< "octree : exiting since maxNLevels "
                     << maxNLevels << " reached" << endl;
             }
             break;
@@ -177,14 +177,14 @@ octree<Type>::octree
         {
             if (debug & 1)
             {
-                Info<< "octree : exiting since nLeaves does not change"
+                Pout<< "octree : exiting since nLeaves does not change"
                     << endl;
             }
             break;
         }
         if (debug & 1)
         {
-            Info<< "octree : --- Start of Level " << deepestLevel_
+            Pout<< "octree : --- Start of Level " << deepestLevel_
                 << " ----" << endl;
         }
 
@@ -200,9 +200,9 @@ octree<Type>::octree
 
         if (debug & 1)
         {
-            printStats(Info);
+            printStats(Pout);
 
-            Info<< "octree : --- End of Level " << deepestLevel_
+            Pout<< "octree : --- End of Level " << deepestLevel_
                 << " ----" << endl;
         }
 
@@ -212,7 +212,7 @@ octree<Type>::octree
 
     if (debug & 1)
     {
-        Info<< "octree : Constructed octree in = "
+        Pout<< "octree : Constructed octree in = "
         << timer.cpuTimeIncrement()
         << " s\n" << endl << endl;
     }
@@ -222,7 +222,7 @@ octree<Type>::octree
 
     if (debug & 1)
     {
-        Info<< "octree : Added node information to octree in  = "
+        Pout<< "octree : Added node information to octree in  = "
         << timer.cpuTimeIncrement()
         << " s\n" << endl << endl;
     }
@@ -283,7 +283,7 @@ label octree<Type>::findNearest
 
     if (debug & 4)
     {
-        Info<< "octree::findNearest : searching for nearest for "
+        Pout<< "octree::findNearest : searching for nearest for "
             << "sample:" << sample
             << "  tightest:" << tightest << endl;
     }
@@ -299,7 +299,7 @@ label octree<Type>::findNearest
 
     if (debug & 4)
     {
-        Info<< "octree::findNearest : found nearest for "
+        Pout<< "octree::findNearest : found nearest for "
             << "sample:" << sample << " with "
             << "  tightesti:" << tightesti
             << "  tightest:" << tightest
@@ -513,7 +513,7 @@ const treeLeaf<Type>* octree<Type>::findLeafLine
 
     if (debug & 2)
     {
-        Info<< "octree::findLeafLine : searching for shapes on line "
+        Pout<< "octree::findLeafLine : searching for shapes on line "
             << "start:" << start
             << "  end:" << end << endl;
     }
@@ -529,7 +529,7 @@ const treeLeaf<Type>* octree<Type>::findLeafLine
         {
             if (debug & 2)
             {
-                Info<< "octree::findLeafLine : start outside domain but does"
+                Pout<< "octree::findLeafLine : start outside domain but does"
                     << " not intersect : start:"
                     << start << endl;
             }
@@ -538,7 +538,7 @@ const treeLeaf<Type>* octree<Type>::findLeafLine
 
         if (debug & 2)
         {
-            Info<< "octree::findLeafLine : start propagated to inside"
+            Pout<< "octree::findLeafLine : start propagated to inside"
                    " domain : "
                 << leafIntPoint << endl;
         }
@@ -556,7 +556,7 @@ const treeLeaf<Type>* octree<Type>::findLeafLine
 
     if (debug & 2)
     {
-        Info<< "returning from octree::findLeafLine with "
+        Pout<< "returning from octree::findLeafLine with "
             << "leafIntersection:" << leafIntPoint
             << "  leafPtr:" << long(leafPtr) << endl;
     }

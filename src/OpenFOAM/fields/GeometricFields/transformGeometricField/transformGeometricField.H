@@ -36,6 +36,7 @@ SourceFiles
 #ifndef transformGeometricField_H
 #define transformGeometricField_H
 
+#include "transform.H"
 #include "GeometricField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

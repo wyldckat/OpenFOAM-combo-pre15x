@@ -30,8 +30,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "amgSymSolver.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -45,13 +43,10 @@ bool amgSymSolver::calcAgglomeration(const label fineLevelIndex)
 {
     // Algorithm:
     // 1) Create temporary cell-face addressing using a double-pass algorithm.
-    //    Other options here include a guessed number of neighbours ("do-if"
-    //    problem or singly-linked lists. If you are sure there is another
-    //    option which is faster and more memory-efficient than mine, plase
-    //    replace the cell-face search (currently it is two-pass)
+    //    to create the offset table.
     // 2) loop through all cells and for each cell find the best fit neighbour.
     //    If all neighbours are grouped, "group" the cell on its own.
-    // 4) If the number of coarse cells is grater than minimum, hook onto the
+    // 4) If the number of coarse cells is greater than minimum, hook onto the
     //    list and return true; otherwise return false
 
     // Get addressing
@@ -62,93 +57,103 @@ bool amgSymSolver::calcAgglomeration(const label fineLevelIndex)
     const unallocLabelList& upperAddr = fineMatrix.lduAddr().upperAddr();
     const unallocLabelList& lowerAddr = fineMatrix.lduAddr().lowerAddr();
 
-    // Get magnitudes of off-diagonal matrix coefficients
-    const scalarField magUpper = mag(fineMatrix.upper());
+    // Get off-diagonal matrix coefficients
+    const scalarField& upper = fineMatrix.upper();
 
     // For each cell calculate faces
-    labelListList cellFaces(nEqns);
+    labelList cellFaces(upperAddr.size() + lowerAddr.size());
+    labelList cellFaceOffsets(nEqns + 1);
 
     // memory management
     {
         labelList nNbrs(nEqns, 0);
 
-        forAll (upperAddr, faceI)
+        forAll (upperAddr, facei)
         {
-            nNbrs[upperAddr[faceI]]++;
+            nNbrs[upperAddr[facei]]++;
         }
 
-        forAll (lowerAddr, faceI)
+        forAll (lowerAddr, facei)
         {
-            nNbrs[lowerAddr[faceI]]++;
+            nNbrs[lowerAddr[facei]]++;
         }
 
-        forAll (cellFaces, cellI)
+        cellFaceOffsets[0] = 0;
+        forAll (nNbrs, celli)
         {
-            cellFaces[cellI].setSize(nNbrs[cellI]);
+            cellFaceOffsets[celli+1] = cellFaceOffsets[celli] + nNbrs[celli];
         }
 
         // reset the whole list to use as counter
         nNbrs = 0;
 
-        forAll (upperAddr, faceI)
+        forAll (upperAddr, facei)
         {
-            cellFaces[upperAddr[faceI]][nNbrs[upperAddr[faceI]]] = faceI;
+            cellFaces
+            [
+                cellFaceOffsets[upperAddr[facei]] + nNbrs[upperAddr[facei]]
+            ] = facei;
 
-            nNbrs[upperAddr[faceI]]++;
+            nNbrs[upperAddr[facei]]++;
         }
 
-        forAll (lowerAddr, faceI)
+        forAll (lowerAddr, facei)
         {
-            cellFaces[lowerAddr[faceI]][nNbrs[lowerAddr[faceI]]] = faceI;
+            cellFaces
+            [
+                cellFaceOffsets[lowerAddr[facei]] + nNbrs[lowerAddr[facei]]
+            ] = facei;
 
-            nNbrs[lowerAddr[faceI]]++;
+            nNbrs[lowerAddr[facei]]++;
         }
     }
 
 
     // go through the faces and create clusters
 
-    labelList coarseCellMap(nEqns, -1);
+    labelField* coarseCellMapPtr = new labelField(nEqns, -1);
+    labelField& coarseCellMap = *coarseCellMapPtr;
 
     label nCoarseCells = 0;
 
-    forAll (cellFaces, cellI)
+    for (label celli=0; celli<nEqns; celli++)
     {
-        if (coarseCellMap[cellI] < 0)
+        if (coarseCellMap[celli] < 0)
         {
-            // cell not merged. Find the best neighbour
-            const labelList& curFaces = cellFaces[cellI];
-
             label matchFaceNo = -1;
-
             scalar maxFaceCoeff = -GREAT;
 
             // check all faces to find ungrouped neighbour with largest face
             // coefficient
-            forAll (curFaces, curFaceI)
+            for
+            (
+                label faceOs=cellFaceOffsets[celli];
+                faceOs<cellFaceOffsets[celli+1];
+                faceOs++
+            )
             {
+                label facei = cellFaces[faceOs];
+
                 // I don't know whether the current cell is owner or neighbour.
                 // Therefore I'll check both sides
                 if
                 (
-                    coarseCellMap[upperAddr[curFaces[curFaceI]]] < 0
-                 && coarseCellMap[lowerAddr[curFaces[curFaceI]]] < 0
-                 && magUpper[curFaces[curFaceI]] > maxFaceCoeff
+                    coarseCellMap[upperAddr[facei]] < 0
+                 && coarseCellMap[lowerAddr[facei]] < 0
+                 && mag(upper[facei]) > maxFaceCoeff
                 )
                 {
                     // Match found. Pick up all the necessary data
-                    matchFaceNo = curFaceI;
-
-                    maxFaceCoeff = magUpper[curFaces[curFaceI]];
+                    matchFaceNo = facei;
+                    maxFaceCoeff = mag(upper[facei]);
                 }
             }
 
             if (matchFaceNo >= 0)
             {
                 // Make a new group
-                coarseCellMap[upperAddr[curFaces[matchFaceNo]]] = nCoarseCells;
-                coarseCellMap[lowerAddr[curFaces[matchFaceNo]]] = nCoarseCells;
-
+                coarseCellMap[upperAddr[matchFaceNo]] = nCoarseCells;
+                coarseCellMap[lowerAddr[matchFaceNo]] = nCoarseCells;
                 nCoarseCells++;
             }
             else
@@ -158,26 +163,30 @@ bool amgSymSolver::calcAgglomeration(const label fineLevelIndex)
                 label clusterMatchFaceNo = -1;
                 scalar clusterMaxFaceCoeff = -GREAT;
 
-                forAll (curFaces, curFaceI)
+                for
+                (
+                    label faceOs=cellFaceOffsets[celli];
+                    faceOs<cellFaceOffsets[celli+1];
+                    faceOs++
+                )
                 {
-                    if (magUpper[curFaces[curFaceI]] > maxFaceCoeff)
+                    label facei = cellFaces[faceOs];
+
+                    if (mag(upper[facei]) > clusterMaxFaceCoeff)
                     {
-                        clusterMatchFaceNo = curFaceI;
-                        clusterMaxFaceCoeff = magUpper[curFaces[curFaceI]];
+                        clusterMatchFaceNo = facei;
+                        clusterMaxFaceCoeff = mag(upper[facei]);
                     }
                 }
 
                 if (clusterMatchFaceNo >= 0)
                 {
                     // Add the cell to the best cluster
-                    coarseCellMap[cellI] =
-                        max
-                        (
-                            coarseCellMap
-                                [upperAddr[curFaces[clusterMatchFaceNo]]],
-                            coarseCellMap
-                                [lowerAddr[curFaces[clusterMatchFaceNo]]]
-                        );
+                    coarseCellMap[celli] = max
+                    (
+                        coarseCellMap[upperAddr[clusterMatchFaceNo]],
+                        coarseCellMap[lowerAddr[clusterMatchFaceNo]]
+                    );
                 }
             }
         }
@@ -188,9 +197,9 @@ bool amgSymSolver::calcAgglomeration(const label fineLevelIndex)
     // for easier substitutions, decrement nCoarseCells by one
     nCoarseCells--;
 
-    forAll (coarseCellMap, cellI)
+    forAll (coarseCellMap, celli)
     {
-        coarseCellMap[cellI] = nCoarseCells - coarseCellMap[cellI];
+        coarseCellMap[celli] = nCoarseCells - coarseCellMap[celli];
     }
 
     // The decision on parallel agglomeration needs to be made for the
@@ -208,7 +217,11 @@ bool amgSymSolver::calcAgglomeration(const label fineLevelIndex)
 
     if (moreAgglom)
     {
-        restrictAddressing_.hook(new labelField(coarseCellMap));
+        restrictAddressing_.hook(coarseCellMapPtr);
+    }
+    else
+    {
+        delete coarseCellMapPtr;
     }
 
     return moreAgglom;

@@ -2,6 +2,9 @@
     {
         volTensorField gradU = fvc::grad(U);
 
+        volTensorField sigma = rho*(2.0*mu*symm(gradU) + lambda*I*tr(gradU));
+
+        /*
         volTensorField sigma = rho*fvc::reconstruct
         (
             (2.0*mu + lambda)*fvc::snGrad(U)*mesh.magSf()
@@ -22,6 +25,7 @@
                 )
             )
         );
+        */
 
         if (thermalStress)
         {

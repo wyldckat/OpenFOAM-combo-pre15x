@@ -35,6 +35,7 @@ Description
 #include "scalar.H"
 #include "vector.H"
 #include "tensor.H"
+#include "sphericalTensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

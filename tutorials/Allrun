@@ -37,7 +37,7 @@ applications=\
     icoFoam \
     turbFoam \
     simpleFoam \
-    icoFoamAutoMotion \
+    icoDyMFoam \
     nonNewtonianIcoFoam \
     boundaryFoam \
     interFoam \
@@ -62,7 +62,6 @@ applications=\
     stressedFoam \
     contactStressFoam \
     stressFemFoam \
-    icoTopoFoam \
     XiFoam \
     Xoodles \
     dieselFoam \
@@ -106,7 +105,7 @@ touch testLoopReport
 for application in $applications
 do
     cd $application
-    Allrun
+    ./Allrun
 #    echo "$application application completed" >> ../testLoopReport
     for log in `find . -name "log.*" | xargs ls -rt`
     do

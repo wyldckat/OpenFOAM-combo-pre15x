@@ -168,7 +168,7 @@ void Foam::geomCellLooper::getBase(const vector& n, vector& e0, vector& e1)
 
     e1 = n ^ e0;
 
-    //Info<< "Coord system:" << endl
+    //Pout<< "Coord system:" << endl
     //    << "    n  : " << n << ' ' << mag(n) << endl
     //    << "    e0 : " << e0 << ' ' << mag(e0) << endl
     //    << "    e1 : " << e1 << ' ' << mag(e1) << endl
@@ -475,17 +475,17 @@ bool Foam::geomCellLooper::cut
 
     if (debug&2)
     {
-        Info<< "cell:" << cellI << endl;
+        Pout<< "cell:" << cellI << endl;
         forAll(loop, i)
         {
-            Info<< "At angle:" << sortedAngles[i] << endl
+            Pout<< "At angle:" << sortedAngles[i] << endl
                 << "    cut:";
 
-            writeCut(Info, loop[i]);
+            writeCut(Pout, loop[i], loopWeights[i]);
 
-            Info<< "  coord:" << coord(loop[i], loopWeights[i]);
+            Pout<< "  coord:" << coord(loop[i], loopWeights[i]);
 
-            Info<< endl;
+            Pout<< endl;
         }
     }
 

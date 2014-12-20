@@ -155,20 +155,20 @@ static bool hasTopoChange(const instantList& times)
     // Only set time; do not update mesh.
     runTime.setTime(times[lastIndex], lastIndex);
 
-    fileName cellsInst(runTime.findInstance(polyMesh::meshSubDir, "cells"));
+    fileName facesInst(runTime.findInstance(polyMesh::meshSubDir, "faces"));
 
     // See if cellInst is constant directory. Note extra .name() is for
     // parallel cases when runTime.constant is '../constant'
-    if (cellsInst != runTime.constant().name())
+    if (facesInst != runTime.constant().name())
     {
-        Info<< "Found cells file in " << cellsInst << " so case has "
+        Info<< "Found cells file in " << facesInst << " so case has "
             << "topological changes" << endl;
 
         return true;
     }
     else
     {
-        Info<< "Found cells file in " << cellsInst << " so case has "
+        Info<< "Found cells file in " << facesInst << " so case has "
             << "no topological changes" << endl;
 
         return false;

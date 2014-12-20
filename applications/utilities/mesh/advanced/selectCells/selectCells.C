@@ -39,7 +39,9 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "Time.H"
 #include "polyMesh.H"
+#include "IOdictionary.H"
 #include "twoDPointCorrector.H"
 #include "OFstream.H"
 #include "meshTools.H"
@@ -322,7 +324,7 @@ label selectOutsideCells
             // reached from outsidePoints
             if (allCellInfo[cellI].type() != MESH)
             {
-                cellType[cellI] == NONMESH;
+                cellType[cellI] = NONMESH;
                 nChanged++;
             }
         }

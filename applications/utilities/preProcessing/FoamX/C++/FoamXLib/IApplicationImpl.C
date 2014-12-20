@@ -869,7 +869,6 @@ void FoamX::IApplicationImpl::getPatchPhysicalType
 
     try
     {
-
         // See if we have this object cached
         if (!patchPhysicalTypeDescriptorMap_.found(patchPhysicalTypeName))
         {

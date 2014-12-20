@@ -36,6 +36,7 @@ SourceFiles
 #ifndef transformFieldField_H
 #define transformFieldField_H
 
+#include "transform.H"
 #include "tensorFieldField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

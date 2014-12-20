@@ -11,8 +11,8 @@ FoamFile
     version         2.0;
     format          ascii;
 
-    root            "/home/penfold/mattijs/foam/mattijs2.2/run/icoFoam";
-    case            "cavityTut";
+    root            "";
+    case            "";
     instance        "system";
     local           "";
 
@@ -22,35 +22,22 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
 defaultFieldValues
-{
-    U     (0 0 0);
-    gamma 0;
-}
+(
+    volScalarFieldValue gamma 0
+    volVectorFieldValue U (0 0 0)
+);
 
 regions
 (
     boxToCell
     {
-        box    (0 0 0) (0.02 0.02 0.01);
+        box (0 0 -1) (0.1461 0.292 1);
 
         fieldValues
-        {
-            U     (2 0 0);
-            gamma 1.0;
-        }
-    }
-
-    boxToCell
-    {
-        box    (0.02 0.02 0) (0.03 0.03 0.01);
-
-        fieldValues
-        {
-            U     (1 0 0);
-            gamma 1.0;
-        }
+        (
+            volScalarFieldValue gamma 1
+        );
     }
 );
 

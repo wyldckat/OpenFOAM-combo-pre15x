@@ -314,7 +314,7 @@ FoamX::ICaseServerImpl::ICaseServerImpl
     caseName_(caseName),
     hostContext_(hostName()),
     userContext_(userName()),
-    objectName_(hostContext_/userContext_/word(rootDir_)/caseName_),
+    objectName_(hostContext_/userContext_/string::validate<word>(rootDir_)/caseName_),
     caseDictName_(rootDir_/caseName_/"system/controlDict"),
     appName_(app),
     orb_(orb),
@@ -554,7 +554,7 @@ FoamX::ICaseServerImpl::ICaseServerImpl
         // Do not fail if context already exists.
         fxNameServer.createContext
         (
-            hostContext_/userContext_/word(rootDir_),
+            hostContext_/userContext_/string::validate<word>(rootDir_),
             false
         );
 
@@ -1845,7 +1845,7 @@ void FoamX::ICaseServerImpl::close()
         // Remove case context
         fxNameServer.removeContext
         (
-            hostContext_/userContext_/word(rootDir_)
+            hostContext_/userContext_/string::validate<word>(rootDir_)
         );
 
         // Remove user context

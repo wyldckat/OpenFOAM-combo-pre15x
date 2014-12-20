@@ -43,7 +43,7 @@ Description
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void domainDecomposition::decomposeMesh()
+void domainDecomposition::decomposeMesh(const bool filterEmptyPatches)
 {
     // Decide which cell goes to which processor
     distributeCells();
@@ -139,7 +139,7 @@ void domainDecomposition::decomposeMesh()
 
                 bool interProcBouFound = false;
 
-                // WARNING: Sinchronous SLList iterators
+                // WARNING: Synchronous SLList iterators
 
                 for
                 (
@@ -167,7 +167,7 @@ void domainDecomposition::decomposeMesh()
 
                         bool neighbourFound = false;
 
-                        // WARNING: Sinchronous SLList iterators
+                        // WARNING: Synchronous SLList iterators
 
                         for
                         (
@@ -316,7 +316,7 @@ void domainDecomposition::decomposeMesh()
 
                         bool interProcBouFound = false;
 
-                        // WARNING: Sinchronous SLList iterators
+                        // WARNING: Synchronous SLList iterators
 
                         for
                         (
@@ -347,7 +347,7 @@ void domainDecomposition::decomposeMesh()
 
                                 bool neighbourFound = false;
 
-                                // WARNING: Sinchronous SLList iterators
+                                // WARNING: Synchronous SLList iterators
 
                                 for
                                 (
@@ -633,7 +633,7 @@ void domainDecomposition::decomposeMesh()
 
         forAll (oldPatchSizes, patchI)
         {
-            if (oldPatchSizes[patchI] > 0)
+            if (!filterEmptyPatches || oldPatchSizes[patchI] > 0)
             {
                 curBoundaryAddressing[nPatches] = patchI;
 

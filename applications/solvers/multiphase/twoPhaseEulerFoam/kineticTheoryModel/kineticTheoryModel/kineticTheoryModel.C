@@ -167,13 +167,14 @@ void Foam::kineticTheoryModel::solve()
     // (the alpha and beta has been extracted from the drag function for
     // numerical reasons)
     volScalarField Ur = mag(Ua_ - Ub_);
-    volScalarField betaPrim = alpha_*(1.0 - alpha_)*draga_.K(Ur);
+    volScalarField betaPrim = alpha_*(scalar(1) - alpha_)*draga_.K(Ur);
         
     // Gidaspow, p.53 Table 3.4
     volScalarField gs0 = g0();
         
     // particle pressure - coefficient in front of Theta (Eq. 3.22, p. 45)
-    volScalarField PsCoeff = rhoa_*alpha_*(1.0 + 2.0*(1.0 + e_)*gs0*alpha_);
+    volScalarField PsCoeff =
+        rhoa_*alpha_*(scalar(1) + 2.0*(1.0 + e_)*gs0*alpha_);
         
     dimensionedScalar Tsmall
     (
@@ -211,8 +212,8 @@ void Foam::kineticTheoryModel::solve()
     // can become VERY large close to max packing hence quite a large
     // lower limit in the denominator
     volScalarField pf = 
-        Fr_*pow(max(alpha-alphaMinFriction_, 0.0), eta_)
-       /pow(max(alphaMax_-alpha, 5.0e-2), p_);
+        Fr_*pow(max(alpha-alphaMinFriction_, scalar(0)), eta_)
+       /pow(max(alphaMax_-alpha, scalar(5.0e-2)), p_);
         
     // add frictional stress for alpha > alphaMin
     PsCoeff += pf/(Theta_+Tsmall);
@@ -221,7 +222,7 @@ void Foam::kineticTheoryModel::solve()
     PsCoeff.max(-1.0e+10);
 
     // update particle pressure
-    pa_ = PsCoeff*Theta_ + pf;
+    pa_ = PsCoeff*Theta_;
         
     // frictional shear stress, Eq. 3.30, p. 52
     // (with a correcttion of dimension)
@@ -263,7 +264,7 @@ void Foam::kineticTheoryModel::solve()
         volScalarField K3 = 0.5*da_*rhoa_*
             (
                 (piSqrt/(3.0*(3.0-e_)))
-               *(1.0 + 0.4*(1.0 + e_)*(3.0*e_ - 1.0)*alpha*gs0)
+               *(scalar(1) + 0.4*(1.0 + e_)*(3.0*e_ - 1.0)*alpha*gs0)
               + 1.6*alpha*gs0*(1.0 + e_)/piSqrt
             );
             
@@ -282,7 +283,8 @@ void Foam::kineticTheoryModel::solve()
         volScalarField l2 = pow(t1, 2)*tr2D;
         volScalarField l3 = 4.0*K4*alpha*(2.0*K3*tr2D + K2*tr2D);
 
-        Theta_ =  pow((l1 + sqrt(l2 + l3))/(2.0*(alpha + 1.0e-4)*K4), 2.0);
+        Theta_ = 
+            pow((l1 + sqrt(l2 + l3))/(2.0*(alpha + scalar(1.0e-4))*K4), 2.0);
     }
 
     Theta_.max(1.0e-15);
@@ -317,7 +319,7 @@ Foam::tmp<Foam::volScalarField> Foam::kineticTheoryModel::g0()
     // this term is quite problematic...
     // we should handle alpha > alphaMax_ better using some linear
     // extrapolation instead of just clipping alpha
-    return (0.6/(1.0 - pow(alpha/alphaMax_, 1.0/3.0)));
+    return (0.6/(scalar(1) - pow(alpha/alphaMax_, 1.0/3.0)));
 }
 
 

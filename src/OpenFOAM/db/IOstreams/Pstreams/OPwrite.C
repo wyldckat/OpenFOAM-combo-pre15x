@@ -140,9 +140,19 @@ Ostream& OPstream::write(const label l)
 }
 
 
-Ostream& OPstream::write(const scalar s)
+Ostream& OPstream::write(const floatScalar s)
 {
-    write(char(token::SCALAR));
+    write(char(token::FLOAT_SCALAR));
+
+    writeToBuffer(s);
+
+    return *this;
+}
+
+
+Ostream& OPstream::write(const doubleScalar s)
+{
+    write(char(token::DOUBLE_SCALAR));
 
     writeToBuffer(s);
 

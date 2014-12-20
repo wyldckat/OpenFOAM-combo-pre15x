@@ -90,7 +90,7 @@ Foam::boolList Foam::cellClassification::markFaces
     {
         if (debug && (edgeI % 10000 == 0))
         {
-            Info<< "Intersecting mesh edge " << edgeI << " with surface"
+            Pout<< "Intersecting mesh edge " << edgeI << " with surface"
                 << endl;
         }
 
@@ -121,7 +121,7 @@ Foam::boolList Foam::cellClassification::markFaces
 
     if (debug)
     {
-        Info<< "Intersected edges of mesh with surface in = "
+        Pout<< "Intersected edges of mesh with surface in = "
             << timer.cpuTimeIncrement() << " s\n" << endl << endl;
     }
 
@@ -145,7 +145,7 @@ Foam::boolList Foam::cellClassification::markFaces
 
     if (debug)
     {
-        Info<< "Testing " << shapes.size() << " faces for piercing by surface"
+        Pout<< "Testing " << shapes.size() << " faces for piercing by surface"
             << endl;
     }
 
@@ -183,7 +183,7 @@ Foam::boolList Foam::cellClassification::markFaces
     {
         if (debug && (edgeI % 10000 == 0))
         {
-            Info<< "Intersecting surface edge " << edgeI
+            Pout<< "Intersecting surface edge " << edgeI
                 << " with mesh faces" << endl;
         }
         const edge& e = edges[edgeI];
@@ -232,10 +232,10 @@ Foam::boolList Foam::cellClassification::markFaces
 
     if (debug)
     {
-        Info<< "Detected an additional " << nAddFaces << " faces cut"
+        Pout<< "Detected an additional " << nAddFaces << " faces cut"
             << endl;
 
-        Info<< "Intersected edges of surface with mesh faces in = "
+        Pout<< "Intersected edges of surface with mesh faces in = "
             << timer.cpuTimeIncrement() << " s\n" << endl << endl;
     }
 
@@ -722,7 +722,7 @@ Foam::label Foam::cellClassification::fillHangingCells
         }
         nTotChanged += nChanged;
 
-        Info<< "removeHangingCells : changed " << nChanged
+        Pout<< "removeHangingCells : changed " << nChanged
             << " hanging cells" << endl;
 
         if (nChanged == 0)
@@ -791,7 +791,7 @@ Foam::label Foam::cellClassification::fillRegionEdges
 
         nTotChanged += nChanged;
 
-        Info<< "fillRegionEdges : changed " << nChanged
+        Pout<< "fillRegionEdges : changed " << nChanged
             << " cells using multiply connected edges" << endl;
 
         if (nChanged == 0)
@@ -868,7 +868,7 @@ Foam::label Foam::cellClassification::fillRegionPoints
 
         nTotChanged += nChanged;
 
-        Info<< "fillRegionPoints : changed " << nChanged
+        Pout<< "fillRegionPoints : changed " << nChanged
             << " cells using multiply connected points" << endl;
 
         if (nChanged == 0)

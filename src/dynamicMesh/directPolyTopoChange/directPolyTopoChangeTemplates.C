@@ -74,6 +74,28 @@ void Foam::directPolyTopoChange::reorder
 }
 
 
+template <class T>
+void Foam::directPolyTopoChange::renumberKey
+(
+    const labelList& oldToNew,
+    Map<T>& elems
+)
+{
+    Map<T> newElems(elems.size());
+
+    forAllConstIter(typename Map<T>, elems, iter)
+    {
+        label newElem = oldToNew[iter.key()];
+
+        if (newElem >= 0)
+        {
+            newElems.insert(newElem, iter());
+        }
+    }
+
+    elems.transfer(newElems);
+}
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 

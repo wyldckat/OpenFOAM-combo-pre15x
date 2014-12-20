@@ -51,6 +51,9 @@ int main(int argc, char *argv[])
 
     Info<< findIndex(list2, vector(3, 4, 5)) << endl;
 
+    list2.setSize(10, vector(1, 2, 3));
+    Info<< list2 << endl;
+
     return 0;
 }
 

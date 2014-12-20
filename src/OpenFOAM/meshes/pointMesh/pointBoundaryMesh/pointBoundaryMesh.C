@@ -24,8 +24,6 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "pointBoundaryMesh.H"
 #include "polyBoundaryMesh.H"
 #include "facePointPatch.H"

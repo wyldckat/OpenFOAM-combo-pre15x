@@ -121,9 +121,16 @@ Istream& ITstream::read(label&)
 }
 
 
-Istream& ITstream::read(scalar&)
+Istream& ITstream::read(floatScalar&)
 {
-    notImplemented("Istream& ITstream::read(scalar&)");
+    notImplemented("Istream& ITstream::read(floatScalar&)");
+    return *this;
+}
+
+
+Istream& ITstream::read(doubleScalar&)
+{
+    notImplemented("Istream& ITstream::read(doubleScalar&)");
     return *this;
 }
 

@@ -2,8 +2,8 @@ if (VdjModel == "general")
 {
     Vdj = V0*
     (
-        exp(-a*max(alpha - alphaMin, 0.0))
-      - exp(-a1*max(alpha - alphaMin, 0.0))
+        exp(-a*max(alpha - alphaMin, scalar(0)))
+      - exp(-a1*max(alpha - alphaMin, scalar(0)))
     );
 }
 else if (VdjModel == "simple")

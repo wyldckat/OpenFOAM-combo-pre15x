@@ -34,7 +34,10 @@ Description
 
 #include "interfaceProperties.H"
 #include "gammaContactAngleFvPatchScalarField.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
+#include "surfaceInterpolate.H"
+#include "fvcDiv.H"
+#include "fvcGrad.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -43,7 +46,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * //
 
-const scalar interfaceProperties::convertToRad = physicalConstant::pi/180.0;
+const scalar interfaceProperties::convertToRad = mathematicalConstant::pi/180.0;
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -66,56 +69,24 @@ void interfaceProperties::correctContactAngle
 
     forAll(boundary, patchi)
     {
-        if (typeid(gbf[patchi]) == typeid(gammaContactAngleFvPatchScalarField))
+        if (isA<gammaContactAngleFvPatchScalarField>(gbf[patchi]))
         {
             const gammaContactAngleFvPatchScalarField& gcap = 
                 refCast<const gammaContactAngleFvPatchScalarField>(gbf[patchi]);
 
-            vectorField& nHatPatch = nHatb[patchi];
+            fvPatchVectorField& nHatp = nHatb[patchi];
+            scalarField theta = 
+                convertToRad*gcap.theta(U_.boundaryField()[patchi], nHatp);
 
-            vectorField AfHatPatch =
-                mesh.Sf().boundaryField()[patchi]
-               /mesh.magSf().boundaryField()[patchi];
+            const vectorField& nf = boundary[patchi].nf();
 
-            scalar theta0 = convertToRad*gcap.theta0();
-            scalarField theta(boundary[patchi].size(), theta0);
+            // Reset nHatp to correspond to the contact angle
 
-            scalar uTheta = gcap.uTheta();
-
-            // Calculate the dynamic contact angle if required
-            if (uTheta > SMALL)
-            {
-                scalar thetaA = convertToRad*gcap.thetaA();
-                scalar thetaR = convertToRad*gcap.thetaR();
-
-                // Calculated the component of the velocity parallel to the wall
-                vectorField Uwall =
-                    U_.boundaryField()[patchi].patchInternalField()
-                  - U_.boundaryField()[patchi];
-                Uwall -= (AfHatPatch & Uwall)*AfHatPatch;
-
-                // Find the direction of the interface parallel to the wall
-                vectorField nWall =
-                    nHatPatch - (AfHatPatch & nHatPatch)*AfHatPatch;
-
-                // Normalise nWall
-                nWall /= (mag(nWall) + SMALL);
-
-                // Calculate Uwall resolved normal to the interface parallel to
-                // the interface
-                scalarField uwall = nWall & Uwall;
-
-                theta += (thetaA - thetaR)*tanh(uwall/uTheta);
-            }
-
-
-            // Reset nHatPatch to correspond to the contact angle
-
-            scalarField a12 = nHatPatch & AfHatPatch;
+            scalarField a12 = nHatp & nf;
 
             scalarField b1 = cos(theta);
 
-            scalarField b2(nHatPatch.size());
+            scalarField b2(nHatp.size());
 
             forAll(b2, facei)
             {
@@ -127,9 +98,9 @@ void interfaceProperties::correctContactAngle
             scalarField a = (b1 - a12*b2)/det;
             scalarField b = (b2 - a12*b1)/det;
 
-            nHatPatch = a*AfHatPatch + b*nHatPatch;
+            nHatp = a*nf + b*nHatp;
 
-            nHatPatch /= (mag(nHatPatch) + deltaN_.value());
+            nHatp /= (mag(nHatp) + deltaN_.value());
         }
     }
 }
@@ -152,16 +123,6 @@ void interfaceProperties::calculateK()
     // Face unit interface normal
     surfaceVectorField nHatfv = gradGammaf/(mag(gradGammaf) + deltaN_);
     correctContactAngle(nHatfv.boundaryField());
-
-    /*
-    dimensionedVector cen
-    (
-        "cen",
-        dimLength,
-        sum(mesh.V()*gamma_*mesh.C())/sum(mesh.V()*gamma_)
-    );
-    surfaceVectorField nHatfv = -(mesh.Cf() - cen)/mag(mesh.Cf() - cen);
-    */
 
     // Face unit interface normal flux
     nHatf_ = nHatfv & Sf;

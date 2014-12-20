@@ -33,9 +33,6 @@ SourceFiles
 
 \*---------------------------------------------------------------------------*/
 
-// This is here because otherwise wmkdep gets upset -- I don't know why!
-#include "tmp.H"
-
 #ifndef Field_H
 #define Field_H
 

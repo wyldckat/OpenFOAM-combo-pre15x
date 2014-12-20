@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.3                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -25,11 +25,8 @@ FoamFile
 defaultFieldValues
 (
     volVectorFieldValue U     (0 0 0)
-    volScalarFieldValue rho   1.0
     volScalarFieldValue T     348.43206
     volScalarFieldValue p     1.0e+5
-    volScalarFieldValue rhoE  0.0
-    volVectorFieldValue rhoU  (0 0 0)
 );
 
 regions
@@ -40,7 +37,6 @@ regions
 
         fieldValues
         (
-            volScalarFieldValue rho   0.125
             volScalarFieldValue T     278.74564
             volScalarFieldValue p     1.0e+4
         );

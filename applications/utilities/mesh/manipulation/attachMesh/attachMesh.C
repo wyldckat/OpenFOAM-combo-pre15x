@@ -31,8 +31,9 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "polyMesh.H"
 #include "Time.H"
-#include "attachPolyMesh.H"
+#include "attachPolyTopoChanger.H"
 
 using namespace Foam;
 
@@ -44,23 +45,14 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 
 #   include "createTime.H"
-
-    attachPolyMesh mesh
-    (
-        IOobject
-        (
-            attachPolyMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
+#   include "createPolyMesh.H"
 
     runTime++;
 
     Info<< "Time = " << runTime.timeName() << nl
         << "Attaching sliding interface" << endl;
 
-    mesh.attach();
+    attachPolyTopoChanger(mesh).attach();
 
     mesh.write();
 

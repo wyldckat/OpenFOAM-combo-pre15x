@@ -55,7 +55,7 @@ bool triSurface::stitchTriangles
     {
         if (verbose)
         {
-            Info<< "stitchTriangles : Renumbering all triangles" << endl;
+            Pout<< "stitchTriangles : Renumbering all triangles" << endl;
         }
 
         pointField& ps = const_cast<pointField&>(points());
@@ -80,7 +80,7 @@ bool triSurface::stitchTriangles
             }
             else if (verbose)
             {
-                Info<< "stitchTriangles : "
+                Pout<< "stitchTriangles : "
                     << "Removing triangle " << i << " with non-unique vertices."
                     << endl
                     << "    vertices   :" << newA << ' ' << newB << ' ' << newC
@@ -94,7 +94,7 @@ bool triSurface::stitchTriangles
         {
             if (verbose)
             {
-                Info<< "stitchTriangles : "
+                Pout<< "stitchTriangles : "
                     << "Removed " << size() - newTriangleI << " triangles" << endl;
             }
             setSize(newTriangleI);

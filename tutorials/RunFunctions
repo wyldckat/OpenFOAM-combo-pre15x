@@ -32,11 +32,12 @@
 
 runApplication ()
 {
-    if [ -f $2/log.$1 ] ; then
-        echo "$1 already run on $2: remove log file to run"
+    APP_RUN=$1; shift
+    if [ -f $1/log.$APP_RUN ] ; then
+        echo "$APP_RUN already run on $1: remove log file to run"
     else
-        echo "Running $1 on $2"
-        $1 . $2 > $2/log.$1 2>&1
+        echo "Running $APP_RUN on $1"
+        $APP_RUN . $* > $1/log.$APP_RUN 2>&1
     fi
 }
 

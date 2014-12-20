@@ -38,6 +38,7 @@ Description
 #define PstreamCombineReduceOps_H
 
 #include "Pstream.H"
+#include "ops.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -73,84 +74,6 @@ void combineReduce(T& Value, const CombineOp& cop)
         Pstream::combineScatter(Pstream::treeCommunication(), Value);
     }
 }
-
-
-template <class T>
-class plusEqOp
-{
-
-public:
-
-    void operator()(T& x, const T& y) const
-    {
-        x += y;
-    }
-};
-
-
-template <class T>
-class productEqOp
-{
-
-public:
-
-    void operator()(T& x, const T& y) const
-    {
-        x *= y;
-    }
-};
-
-
-template <class T>
-class maxEqOp
-{
-
-public:
-
-    void operator()(T& x, const T& y) const
-    {
-        x = max(x, y);
-    }
-};
-
-
-template <class T>
-class minEqOp
-{
-
-public:
-
-    void operator()(T& x, const T& y) const
-    {
-        x = min(x, y);
-    }
-};
-
-
-template <class T>
-class andEqOp
-{
-
-public:
-
-    void operator()(T& x, const T& y) const
-    {
-        x = (x && y);
-    }
-};
-
-
-template <class T>
-class orEqOp
-{
-
-public:
-
-    void operator()(T& x, const T& y) const
-    {
-        x  = (x || y);
-    }
-};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -1,3 +1,0 @@
-ideasToFoam.L
-
-EXE = $(FOAM_APPBIN)/ideasToFoam

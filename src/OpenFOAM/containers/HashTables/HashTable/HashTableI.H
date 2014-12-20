@@ -44,7 +44,7 @@ inline HashTable<T, Key, Hash>::hashedEntry::hashedEntry
 (
     const Key& key,
     hashedEntry* next,
-    T newEntry
+    const T& newEntry
 )
 :
     key_(key),

@@ -32,8 +32,9 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyTopoChange.H"
+#include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
-#include "morphMesh.H"
+#include "polyMesh.H"
 #include "cellCuts.H"
 #include "cellSet.H"
 #include "meshCutter.H"
@@ -52,20 +53,11 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createPolyMesh.H"
 
     word patchName(args.args()[3]);
 
     scalar weight(readScalar(IStringStream(args.args()[4])()));    
-
-    morphMesh mesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
 
 
     label patchID = mesh.boundaryMesh().findPatchID(patchName);
@@ -222,15 +214,15 @@ int main(int argc, char *argv[])
 
     runTime++;
 
-    mesh.setMorphTimeIndex(runTime.timeIndex());
+    autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh(mesh, meshMod);
 
-    mesh.updateTopology(meshMod);
-
-    // Move mesh (since morphing does not do this)
-    mesh.movePoints(mesh.morphMap().preMotionPoints());
+    if (morphMap().hasMotionPoints())
+    {
+        mesh.movePoints(morphMap().preMotionPoints());
+    }
 
     // Update stored labels on meshCutter.
-    cutter.updateTopology(mesh.morphMap());
+    cutter.updateMesh(morphMap());
 
     // Write resulting mesh
     Info << "Writing refined morphMesh to time " << runTime.value() << endl;

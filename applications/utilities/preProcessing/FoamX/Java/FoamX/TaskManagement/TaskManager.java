@@ -48,7 +48,7 @@ public class TaskManager
         statusBar_ = new TaskStatusBar();
         taskStack_ = new Stack();
 
-        defaultText_ = "OpenFoamX Version 1.2";
+        defaultText_ = "OpenFoamX Version 1.3";
 
         // Hide the progress bar initially.
         statusBar_.showProgress(false);

@@ -1,7 +1,6 @@
 EXE_INC = \
     -I../dieselEngineFoam \
-    -I$(LIB_SRC)/cfdTools/compressible \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/turbulenceModels \
     -I$(LIB_SRC)/lagrangian/basic/lnInclude \
     -I$(LIB_SRC)/lagrangian/dieselSpray/lnInclude \
@@ -19,7 +18,7 @@ EXE_INC = \
 EXE_LIBS = \
     -lcompressibleTurbulenceModels \
     -lcombustionThermophysicalModels \
-    -lcfdTools \
+    -lfiniteVolume \
     -llagrangian \
     -ldieselSpray \
     -lliquids \

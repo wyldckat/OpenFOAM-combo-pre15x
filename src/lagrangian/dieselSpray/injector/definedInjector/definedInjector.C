@@ -27,7 +27,7 @@ License
 #include "definedInjector.H"
 #include "addToRunTimeSelectionTable.H"
 #include "Random.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 namespace Foam
@@ -65,6 +65,8 @@ Foam::definedInjector::definedInjector
     X_(propsDict_.lookup("X")),
     massFlowRateProfile_(propsDict_.lookup("massFlowRateProfile")),
     velocityProfile_(propsDict_.lookup("velocityProfile")),
+    injectionPressureProfile_(massFlowRateProfile_),
+    CdProfile_(massFlowRateProfile_),
     averageParcelMass_(mass_/nParcels_),
     pressureIndependentVelocity_(true)
 {
@@ -72,7 +74,13 @@ Foam::definedInjector::definedInjector
     forAll(massFlowRateProfile_, i)
     {
         massFlowRateProfile_[i][0] = t.userTimeToTime(massFlowRateProfile_[i][0]);
+	// dummy
+	injectionPressureProfile_[i][0] = massFlowRateProfile_[i][0];
+	injectionPressureProfile_[i][1] = 0.0;
+	CdProfile_[i][0] = massFlowRateProfile_[i][0];
+	CdProfile_[i][1] = 1.0;
     }
+
     forAll(velocityProfile_, i)
     {
         velocityProfile_[i][0] = t.userTimeToTime(velocityProfile_[i][0]);
@@ -202,7 +210,7 @@ Foam::vector Foam::definedInjector::position
     {
         // otherwise, disc injection
         scalar iRadius = d_*rndGen.scalar01();
-        scalar iAngle = 2.0*physicalConstant::pi*rndGen.scalar01();
+        scalar iAngle = 2.0*mathematicalConstant::pi*rndGen.scalar01();
 
         return
         ( 
@@ -242,7 +250,7 @@ Foam::scalar Foam::definedInjector::mass
     // correct mass if calculation is 2D 
     if (twoD)
     {
-        mInj *= 0.5*angleOfWedge/physicalConstant::pi;
+        mInj *= 0.5*angleOfWedge/mathematicalConstant::pi;
     }
 
     return mInj;
@@ -323,7 +331,7 @@ void Foam::definedInjector::correctProfiles
     const scalar referencePressure
 )
 {
-    scalar A = 0.25*physicalConstant::pi*pow(d_, 2.0);
+    scalar A = 0.25*mathematicalConstant::pi*pow(d_, 2.0);
     scalar pDummy = 1.0e+5;
     scalar rho = fuel.rho(pDummy, T_, X_);
 

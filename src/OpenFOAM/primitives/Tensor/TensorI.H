@@ -22,11 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Templated 3D Tensor derived from VectorSpace adding construction from
-    9 components, element access using xx(), xy() etc. member functions and
-    the iner-product (dot-product) and outer-product (tensor-product) operators.
-
 \*---------------------------------------------------------------------------*/
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -324,32 +319,11 @@ operator*(const Vector<Cmpt>& v1, const Vector<Cmpt>& v2)
 }
 
 
-//- Return the diagonal of a tensor as a vector
-template <class Cmpt>
-inline Vector<Cmpt> diag(const Tensor<Cmpt>& t)
-{
-    return Vector<Cmpt>(t.xx(), t.yy(), t.zz());
-}
-
 //- Return the trace of a tensor
 template <class Cmpt>
 inline scalar tr(const Tensor<Cmpt>& t)
 {
     return t.xx() + t.yy() + t.zz();
-}
-
-//- Return the deviatoric part of a tensor
-template <class Cmpt>
-inline Tensor<Cmpt> dev(const Tensor<Cmpt>& t)
-{
-    return t - ((1.0/3.0)*tr(t))*Tensor<Cmpt>::I;
-}
-
-//- Return the deviatoric part of a tensor
-template <class Cmpt>
-inline Tensor<Cmpt> dev2(const Tensor<Cmpt>& t)
-{
-    return t - ((2.0/3.0)*tr(t))*Tensor<Cmpt>::I;
 }
 
 //- Return the symmetric part of a tensor
@@ -412,24 +386,6 @@ inline Tensor<Cmpt> cofactors(const Tensor<Cmpt>& t)
 template <class Cmpt>
 inline Tensor<Cmpt> inv(const Tensor<Cmpt>& t)
 {
-    /*
-    Tensor<Cmpt> t = s;
-
-    if (mag(t.xx()) < SMALL)
-    {
-        t += Tensor<Cmpt>(1,0,0,0,0,0,0,0,0);
-    }
-
-    if (mag(t.yy()) < SMALL)
-    {
-        t += Tensor<Cmpt>(0,0,0,0,1,0,0,0,0);
-    }
-
-    if (mag(t.zz()) < SMALL)
-    {
-        t += Tensor<Cmpt>(0,0,0,0,0,0,0,0,1);
-    }
-    */
     return Tensor<Cmpt>
     (
         t.yy()*t.zz() - t.zy()*t.yz(),

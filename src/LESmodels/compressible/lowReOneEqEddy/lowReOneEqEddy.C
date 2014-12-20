@@ -25,8 +25,6 @@ License
 Class
     lowReOneEqEddy
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "lowReOneEqEddy.H"
@@ -93,7 +91,7 @@ void lowReOneEqEddy::correct(const tmp<volTensorField>& tgradU)
     muSgs_ = ck_*rho()*sqrt(k_)*delta();
 
     // low Re no corrected eddy viscosity
-    muSgs_ -= (mu()/beta_)*(1.0 - exp(-beta_*muSgs_/mu()));
+    muSgs_ -= (mu()/beta_)*(scalar(1) - exp(-beta_*muSgs_/mu()));
 
     muSgs_.correctBoundaryConditions();
 }

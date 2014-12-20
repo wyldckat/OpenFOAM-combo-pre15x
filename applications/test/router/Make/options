@@ -1,2 +1,6 @@
 EXE_INC = \
-    -IGather
+    -IGather \
+    -I$(LIB_SRC)/finiteVolume/lnInclude
+
+EXE_LIBS = \
+    -lfiniteVolume

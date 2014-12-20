@@ -1,0 +1,2 @@
+cDBUG       = 
+cOPT        = -march=pentium4 -O3

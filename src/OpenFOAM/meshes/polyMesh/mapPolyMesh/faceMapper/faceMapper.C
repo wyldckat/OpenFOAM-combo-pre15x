@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "faceMapper.H"
@@ -77,8 +75,6 @@ void Foam::faceMapper::calcAddressing() const
             }
         }
 
-        Info<< "Direct mapping: number of inserted faces; "
-            << nInsertedFaces << endl;
         insertedFaces.setSize(nInsertedFaces);
     }
     else
@@ -148,8 +144,6 @@ void Foam::faceMapper::calcAddressing() const
             }
         }
 
-        Info<< "Interpolative mapping: number of inserted faces: "
-            << nInsertedFaces << endl;
         insertedFaces.setSize(nInsertedFaces);
     }
 }
@@ -167,10 +161,10 @@ void Foam::faceMapper::clearOut()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-Foam::faceMapper::faceMapper(const polyMesh& mesh)
+Foam::faceMapper::faceMapper(const mapPolyMesh& mpm)
 :
-    mesh_(mesh),
-    mpm_(mesh.morphMap()),
+    mesh_(mpm.mesh()),
+    mpm_(mpm),
     insertedFaces_(true),
     direct_(false),
     directAddrPtr_(NULL),
@@ -342,6 +336,30 @@ const Foam::labelList& Foam::faceMapper::insertedObjectLabels() const
     }
 
     return *insertedFaceLabelsPtr_;
+}
+
+
+const Foam::labelHashSet& Foam::faceMapper::flipFaceFlux() const
+{
+    return mpm_.flipFaceFlux();
+}
+
+
+Foam::label Foam::faceMapper::nOldInternalFaces() const
+{
+    return mpm_.nOldInternalFaces();
+}
+
+
+const Foam::labelList& Foam::faceMapper::oldPatchStarts() const
+{
+    return mpm_.oldPatchStarts();
+}
+
+
+const Foam::labelList& Foam::faceMapper::oldPatchSizes() const
+{
+    return mpm_.oldPatchSizes();
 }
 
 

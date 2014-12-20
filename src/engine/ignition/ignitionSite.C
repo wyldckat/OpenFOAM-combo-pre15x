@@ -81,7 +81,7 @@ void ignitionSite::findIgnitionCells(const fvMesh& mesh)
 
     if (cells_.size())
     {
-        Serr<< "Found ignition cells:" << endl << cells_ << endl;
+        Pout<< "Found ignition cells:" << endl << cells_ << endl;
     }
 }
 

@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "guldersLaminarFlameSpeed.H"
@@ -217,7 +215,7 @@ tmp<volScalarField> guldersLaminarFlameSpeed::operator()() const
             dimensionedScalar
             (
                 hhuCombustionThermo_.lookup("stoichiometricAirFuelMassRatio")
-            )*ft/(1.0 - ft)
+            )*ft/(scalar(1) - ft)
         );
     }
     else

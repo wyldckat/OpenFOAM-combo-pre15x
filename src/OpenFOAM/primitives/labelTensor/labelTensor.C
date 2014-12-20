@@ -28,7 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "labelTensor.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -63,9 +63,6 @@ const labelTensor labelTensor::one
     1, 1, 1,
     1, 1, 1
 );
-
-template<>
-const labelTensor labelTensor::I(Foam::labelI);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

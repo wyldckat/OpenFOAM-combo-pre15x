@@ -141,57 +141,6 @@ tmp<GeometricField<tensor, PatchField, GeoMesh> > operator*
 // * * * * * * * * * * * * * * * Global functions  * * * * * * * * * * * * * //
 
 template<template<class> class PatchField, class GeoMesh>
-void diag
-(
-    GeometricField<vector, PatchField, GeoMesh>& Diag,
-    const GeometricField<tensor, PatchField, GeoMesh>& gtf
-)
-{
-    diag(Diag.internalField(), gtf.internalField());
-    diag(Diag.boundaryField(), gtf.boundaryField());
-}
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<vector, PatchField, GeoMesh> > diag
-(
-    const GeometricField<tensor, PatchField, GeoMesh>& gtf
-)
-{
-    tmp<GeometricField<vector, PatchField, GeoMesh> > tDiag
-    (
-        new GeometricField<vector, PatchField, GeoMesh>
-        (
-            IOobject
-            (
-                "diag(" + gtf.name() + ')',
-                gtf.instance(),
-                gtf.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            gtf.mesh(),
-            gtf.dimensions()
-        )
-    );
-
-    diag(tDiag(), gtf);
-
-    return tDiag;
-}
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<vector, PatchField, GeoMesh> > diag
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >& tgtf
-)
-{
-    tmp<GeometricField<vector, PatchField, GeoMesh> > tDiag = diag(tgtf());
-    tgtf.clear();
-    return tDiag;
-}
-
-
-template<template<class> class PatchField, class GeoMesh>
 void tr
 (
     GeometricField<scalar, PatchField, GeoMesh>& Tr,

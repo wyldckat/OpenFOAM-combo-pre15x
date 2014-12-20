@@ -67,7 +67,7 @@ List<T>::List(const label s)
 
 // Construct with length and single value specified
 template<class T>
-List<T>::List(const label s, const T a)
+List<T>::List(const label s, const T& a)
 :
     UList<T>(NULL, s)
 {
@@ -107,7 +107,7 @@ List<T>::List(const List<T>& a)
 #       ifdef USEMEMCPY
         if (writeBinary(this->v_))
         {
-            memcpy(v_, a.v_, this->size_*sizeof(T));
+            memcpy(this->v_, a.v_, this->size_*sizeof(T));
         }
         else
 #       endif
@@ -143,7 +143,7 @@ List<T>::List(List<T>& a, bool reUse)
         this->v_ = new T[this->size_];
 
 #       ifdef USEMEMCPY
-        if (writeBinary(v))
+        if (writeBinary(this->v_))
         {
             memcpy(this->v_, a.v_, this->size_*sizeof(T));
         }
@@ -301,23 +301,6 @@ List<T>::~List()
 }
 
 
-// * * * * * * * * * * * * * * STL Member Functions  * * * * * * * * * * * * //
-
-// Transfer the contents of the argument List into this List
-// and anull the argument list
-template<class T>
-void List<T>::transfer(List<T>& a)
-{
-    if (this->size_) delete[] this->v_;
-
-    this->size_ = a.size_;
-    this->v_ = a.v_;
-
-    a.size_ = 0;
-    a.v_ = 0;
-}
-
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // Return a null List
@@ -375,13 +358,43 @@ void List<T>::setSize(const label newSize)
     }
 }
 
-        
+
+template<class T>
+void List<T>::setSize(const label newSize, const T& a)
+{
+    label oldSize = this->size_;
+    this->setSize(newSize);
+
+    if (newSize > oldSize)
+    {
+        register label i = newSize - oldSize;
+        register T* vv = &this->v_[newSize];
+        while (i--) *--vv = a;
+    }
+}
+
+
 template<class T>
 void List<T>::clear()
 {
     if (this->size_) delete[] this->v_;
     this->size_ = 0;
     this->v_ = 0;
+}
+
+
+// Transfer the contents of the argument List into this List
+// and anull the argument list
+template<class T>
+void List<T>::transfer(List<T>& a)
+{
+    if (this->size_) delete[] this->v_;
+
+    this->size_ = a.size_;
+    this->v_ = a.v_;
+
+    a.size_ = 0;
+    a.v_ = 0;
 }
 
 

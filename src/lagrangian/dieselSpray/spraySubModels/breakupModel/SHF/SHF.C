@@ -36,7 +36,7 @@ Description
 
 #include "SHF.H"
 #include "addToRunTimeSelectionTable.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -217,7 +217,7 @@ void SHF::breakupParcel
                 d = sqr(x)*d05;
                 y = rndGen_.scalar01();
 
-                scalar p = x/(2.0*sqrt(2.0*physicalConstant::pi)*sigma_)*exp(-0.5*sqr((x-mu_)/sigma_));                
+                scalar p = x/(2.0*sqrt(2.0*mathematicalConstant::pi)*sigma_)*exp(-0.5*sqr((x-mu_)/sigma_));                
 
                 if (y<p) 
                 {
@@ -248,7 +248,7 @@ void SHF::breakupParcel
                 d = sqr(x)*d05;
                 y = rndGen_.scalar01();
 
-                scalar p = x/(2.0*sqrt(2.0*physicalConstant::pi)*sigma_)*exp(-0.5*sqr((x-mu_)/sigma_));                
+                scalar p = x/(2.0*sqrt(2.0*mathematicalConstant::pi)*sigma_)*exp(-0.5*sqr((x-mu_)/sigma_));                
 
                 if (y<p) 
                 {

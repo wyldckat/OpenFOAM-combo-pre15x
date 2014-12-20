@@ -60,7 +60,7 @@
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        1.0 - alpha
+        scalar(1) - alpha
         //,alpha.boundaryField().types()
     );
 

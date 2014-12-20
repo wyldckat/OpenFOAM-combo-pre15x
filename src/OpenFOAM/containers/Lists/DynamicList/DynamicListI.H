@@ -47,6 +47,18 @@ inline Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::DynamicList
 {}
 
 
+//- Construct given size
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::DynamicList
+(
+    const UList<T>& s
+)
+:
+    List<T>(s),
+    nextFree_(s.size())
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
@@ -97,6 +109,21 @@ inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::append
 )
 {
     operator()(size()) = e;
+}
+
+
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline T Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::remove()
+{
+    if (nextFree_ == 0)
+    {
+        FatalErrorIn
+        (
+            "void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::remove()"
+        )   << "List is empty" << abort(FatalError);
+    }
+
+    return List<T>::operator[](--nextFree_);
 }
 
 

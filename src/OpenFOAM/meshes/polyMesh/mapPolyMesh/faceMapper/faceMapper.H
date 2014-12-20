@@ -39,6 +39,7 @@ SourceFiles
 #define faceMapper_H
 
 #include "morphFieldMapper.H"
+#include "labelHashSet.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -109,8 +110,8 @@ public:
 
     // Constructors
 
-        //- Construct from polyMesh
-        faceMapper(const polyMesh& mesh);
+        //- Construct from mapPolyMesh
+        faceMapper(const mapPolyMesh& mpm);
 
 
     // Destructor
@@ -144,14 +145,26 @@ public:
         //- Return interpolaion weights
         virtual const scalarListList& weights() const;
 
+        //- Return flux flip map
+        virtual const labelHashSet& flipFaceFlux() const;
+
+	//- Return number of old internalFaces
+        virtual label nOldInternalFaces() const;
+
+	//- Return old patch starts
+        virtual const labelList& oldPatchStarts() const;
+
+	//- Return old patch sizes
+        virtual const labelList& oldPatchSizes() const;
+
         //- Are there any inserted faces
-        bool insertedObjects() const
+        virtual bool insertedObjects() const
         {
             return insertedFaces_;
         }
 
         //- Return list of inserted faces
-        const labelList& insertedObjectLabels() const;
+        virtual const labelList& insertedObjectLabels() const;
 };
 
 

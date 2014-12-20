@@ -160,49 +160,6 @@ public:
 
             //- Add field to internal field
             virtual void addField(Field<Type>&) const;
-
-            //- Set boundary condition to matrix.  Used to save the processor
-            //  patch off-diagonal coefficients
-            virtual void setBoundaryCondition
-            (
-                Map<constraint<Type> > &
-            ) const;
-
-        // Matrix construction (completion) functionality
-
-            virtual void addDiag(scalarField&) const;
-            virtual void addSource(scalarField&) const;
-
-            //- Add upper/lower contributions
-            virtual void addUpperLower(scalarField&) const;
-
-            virtual void eliminateUpperLower(scalarField&) const;
-
-            //- Get the cut edge coefficients in Amul order
-            virtual tmp<scalarField> cutBouCoeffs(const lduMatrix&) const;
-
-            //- Get the cut edge coefficients in Tmul order
-            virtual tmp<scalarField> cutIntCoeffs(const lduMatrix&) const;
-
-
-        // Coupled interface functionality
-
-            //- Return neighbour colouring
-            virtual tmp<labelField> nbrColour
-            (
-                const labelField&
-            ) const;
-
-            //- Update result field based on interface functionality
-            virtual void updateInterfaceMatrix
-            (
-                const scalarField& psiInternal,
-                scalarField& result,
-                const lduMatrix& m,
-                const scalarField& coeffs,
-                const direction cmpt
-            ) const;
-
 };
 
 

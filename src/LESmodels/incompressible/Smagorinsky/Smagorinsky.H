@@ -103,6 +103,20 @@ public:
 
     // Member Functions
 
+        //- Return SGS kinetic energy
+        //  calculated from the given velocity gradient
+        tmp<volScalarField> k(const tmp<volTensorField>& gradU) const
+        {
+            return (2.0*ck_/ce_)*sqr(delta())*magSqr(dev(symm(gradU)));
+        }
+
+        //- Return SGS kinetic energy
+        tmp<volScalarField> k() const
+        {
+            return k(fvc::grad(U()));
+        }
+
+
         //- Correct Eddy-Viscosity and related properties
         virtual void correct(const tmp<volTensorField>& gradU);
 

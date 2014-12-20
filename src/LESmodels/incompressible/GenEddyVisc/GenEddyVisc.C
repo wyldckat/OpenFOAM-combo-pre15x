@@ -46,19 +46,6 @@ GenEddyVisc::GenEddyVisc
 
     ce_(LESmodelProperties().lookup("ce")),
 
-    k_
-    (
-        IOobject
-        (
-            "k",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh_
-    ),
-
     nuSgs_
     (
         IOobject
@@ -78,7 +65,7 @@ GenEddyVisc::GenEddyVisc
 
 tmp<volTensorField> GenEddyVisc::B() const
 {
-    return ((2.0/3.0)*I)*k_ - 2.0*nuSgs_*dev(symm(fvc::grad(U())));
+    return ((2.0/3.0)*I)*k() - 2.0*nuSgs_*dev(symm(fvc::grad(U())));
 }
 
 

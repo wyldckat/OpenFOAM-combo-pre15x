@@ -158,9 +158,6 @@ class cellCuts
             const label val
         );
 
-        //- Create labellist with elements set to their index
-        static labelList makeIdent(const label size);
-
         //- Create boolList with all labels specified set to true
         //  (and rest to false)
         static boolList expand(const label size, const labelList& labels);
@@ -174,8 +171,19 @@ class cellCuts
             const scalarField&
         );
 
+        //- Returns -1 or index of first element of lst that cannot be found
+        //  in map.
+        static label firstUnique
+        (
+            const labelList& lst,
+            const Map<label>&
+        );
 
     // Private Member Functions
+
+        //- Debugging: write cell's edges and any cut vertices and edges
+        //  (so no cell loop determined yet)
+        void writeUncutOBJ(const fileName&, const label cellI) const;
 
         //- Debugging: write cell's edges, loop and anchors to directory.
         void writeOBJ
@@ -309,17 +317,16 @@ class cellCuts
                 const labelList& anchorPoints
             ) const;
 
-            //- Find first point on cell not in loop.
-            label findWalkStart(const labelList& loop, const label cellI) const;
-
-            //- Walk edges of single cell from starting point and collects mesh
-            //  vertices. Does not cross loop (cutEdge or cutPoint)
+            //- Walk unset edges of single cell from starting point and
+            //  marks visited edges and vertices with status.
             void walkEdges
             (
                 const label cellI,
-                const labelList& loop,
                 const label pointI,
-                DynamicList<label>& connectedPoints
+                const label status,
+
+                Map<label>& edgeStatus,
+                Map<label>& pointStatus
             ) const;
 
             //- Check anchor points on 'outside' of loop
@@ -330,9 +337,17 @@ class cellCuts
                 const labelList& anchorPoints
             ) const;
 
-            //- Mark per cell all points on one side of a cellLoop (if not yet
-            //  done)
-            void postCalcAnchorPoints();
+            //- Determines set of anchor points given a loop. The loop should
+            //  split the cell into two. Returns true if a valid set of anchor
+            //  points determined, false otherwise.
+            bool calcAnchors
+            (
+                const label cellI,
+                const labelList& loop,
+                const pointField& loopPts,
+
+                labelList& anchorPoints
+            ) const;
 
             //- Returns coordinates of points on loop with explicitly provided
             //  weights.

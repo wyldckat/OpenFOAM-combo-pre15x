@@ -47,7 +47,7 @@ autoPtr<coordinateSystem> coordinateSystem::New
 {
     if (debug)
     {
-        Info<< "coordinateSystem::New(const word&, const word&, "
+        Pout<< "coordinateSystem::New(const word&, const word&, "
             << "const vector&, const vector&, const vector&) : "
                "constructing coordinateSystem"
             << endl;
@@ -83,7 +83,7 @@ autoPtr<coordinateSystem> coordinateSystem::New
 {
     if (debug)
     {
-        Info<< "coordinateSystem::New(const word&, const word&, "
+        Pout<< "coordinateSystem::New(const word&, const word&, "
             << "const vector&, const coordinateRotation&) : "
                "constructing coordinateSystem"
             << endl;
@@ -117,7 +117,7 @@ autoPtr<coordinateSystem> coordinateSystem::New
 {
     if (debug)
     {
-        Info<< "coordinateSystem::New(const word&, const dictionary&) : "
+        Pout<< "coordinateSystem::New(const word&, const dictionary&) : "
             << "constructing coordinateSystem"
             << endl;
     }

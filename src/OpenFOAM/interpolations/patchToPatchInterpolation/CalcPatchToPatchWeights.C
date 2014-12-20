@@ -81,7 +81,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcPointAddressing() const
 
         const face& hitFace = fromPatchFaces[proj[pointI].hitObject()];
 
-        point hitPoint;
+        point hitPoint = point::zero;
 
         if (proj[pointI].hit())
         {

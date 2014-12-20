@@ -440,11 +440,11 @@ returnType func(const tmp<FieldField<Field, Type> >& tf1)                     \
 template<template<class> class Field, class Type>
 Type max(const FieldField<Field, Type>& f)
 {
-    if (f.size())
-    {
-        label i = 0;
-        while(!f[i].size()) i++;
+    label i = 0;
+    while(i < f.size() && !f[i].size()) i++;
 
+    if (i < f.size())
+    {
         Type Max(max(f[i]));
 
         for (label j=i+1; j<f.size(); j++)
@@ -471,7 +471,10 @@ TMP_UNARY_FUNCTION(Type, max)
 template<template<class> class Field, class Type>
 Type min(const FieldField<Field, Type>& f)
 {
-    if (f.size())
+    label i = 0;
+    while(i < f.size() && !f[i].size()) i++;
+
+    if (i < f.size())
     {
         label i = 0;
         while(!f[i].size()) i++;

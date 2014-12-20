@@ -28,7 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "setUpdater.H"
-#include "polyMeshMorphEngine.H"
+#include "polyTopoChanger.H"
 #include "polyTopoChange.H"
 #include "addToRunTimeSelectionTable.H"
 #include "mapPolyMesh.H"
@@ -62,10 +62,10 @@ Foam::setUpdater::setUpdater
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyMesh& mesh
+    const polyTopoChanger& mme
 )
 :
-    polyMeshModifier(name, index, mesh, Switch(dict.lookup("active")))
+    polyMeshModifier(name, index, mme, Switch(dict.lookup("active")))
 {}
 
 
@@ -92,12 +92,12 @@ void Foam::setUpdater::modifyMotionPoints(pointField&) const
 {}
 
 
-void Foam::setUpdater::updateTopology(const mapPolyMesh& morphMap)
+void Foam::setUpdater::updateMesh(const mapPolyMesh& morphMap)
 {
     // Mesh has changed topologically. Update all sets.
     if (debug)
     {
-        Info<< "setUpdater::updateTopology(const mapPolyMesh& morphMap)"
+        Pout<< "setUpdater::updateMesh(const mapPolyMesh& morphMap)"
             << endl;
     }
 

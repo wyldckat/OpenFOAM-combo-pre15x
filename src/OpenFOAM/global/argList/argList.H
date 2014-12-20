@@ -39,6 +39,10 @@ Description
 #include "word.H"
 #include "fileName.H"
 #include "parRun.H"
+#include "sigFpe.H"
+#include "sigInt.H"
+#include "sigQuit.H"
+#include "sigSegv.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -61,6 +65,12 @@ class argList
         bool parRun_;
 
         ParRunControl parRunControl_;
+
+        // Signal handlers
+        sigFpe sigFpe_;
+        sigInt sigInt_;
+        sigQuit sigQuit_;
+        sigSegv sigSegv_;
 
 
     // Private member functions

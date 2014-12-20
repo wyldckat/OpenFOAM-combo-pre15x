@@ -42,6 +42,8 @@ SourceFiles
 #ifndef string_H
 #define string_H
 
+#include "char.H"
+
 #include <string>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -61,7 +63,14 @@ class string
     public std::string
 {
 
+protected:
+
+    // Protected member functions
+
 public:
+
+    //- Debug switch
+    static int debug;
 
     //- Null string
     static const string null;
@@ -112,8 +121,20 @@ public:
             //- Count and return the number of a given character in the string
             size_type count(const char) const;
 
+            //- Is this string type valid
+            template<class String>
+            static inline bool valid(const string&);
+
 
         // Edit
+
+            //- Strip invalid characters from the given string
+            template<class String>
+            static inline bool stripInvalid(string&);
+
+            //- Return a valid String from the given string
+            template<class String>
+            static inline String validate(const string&);
 
             //- Replace first occurence of sub-string oldStr with newStr
             //  starting at start

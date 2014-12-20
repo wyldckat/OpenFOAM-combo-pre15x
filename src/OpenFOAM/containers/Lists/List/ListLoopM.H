@@ -64,8 +64,8 @@ Description
 
 #define List_ELEM(f, fp, i)  (*--fp)
 
-#define List_ACCESS(type, f, fp)  register type* fp = (f).end()
-#define List_CONST_ACCESS(type, f, fp)  register const type* fp = (f).end()
+#define List_ACCESS(type, f, fp)  register type* restrict fp = (f).end()
+#define List_CONST_ACCESS(type, f, fp)  register const type* restrict fp = (f).end()
 
 #endif
 

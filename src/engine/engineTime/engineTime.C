@@ -27,7 +27,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "engineTime.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -121,7 +121,7 @@ bool engineTime::read()
 
 scalar engineTime::degToRad(const scalar deg) const
 {
-    return physicalConstant::pi*deg/180.0;
+    return mathematicalConstant::pi*deg/180.0;
 }
 
 

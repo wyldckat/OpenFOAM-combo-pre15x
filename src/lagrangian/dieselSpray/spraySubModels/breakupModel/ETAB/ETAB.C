@@ -42,7 +42,7 @@ Description
 
 #include "ETAB.H"
 #include "addToRunTimeSelectionTable.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -144,7 +144,7 @@ void ETAB::breakupParcel
             scalar quad = -y2/a;
             if (quad < 0)
             {
-                phi = 2*physicalConstant::pi - phit;
+                phi = 2*mathematicalConstant::pi - phit;
             }
             
             scalar tb = 0;
@@ -155,11 +155,11 @@ void ETAB::breakupParcel
                 
                 if (theta < phi)
                 {
-                    if (2*physicalConstant::pi-theta >= phi)
+                    if (2*mathematicalConstant::pi-theta >= phi)
                     {
                         theta = -theta;
                     }
-                    theta += 2*physicalConstant::pi;
+                    theta += 2*mathematicalConstant::pi;
                 }
                 tb = (theta-phi)*romega;
 

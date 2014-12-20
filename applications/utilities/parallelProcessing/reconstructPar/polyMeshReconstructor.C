@@ -65,7 +65,8 @@ void polyMeshReconstructor::reconstructPoints()
     IOobject points1Header
     (
         "points",
-        procMeshes_[0].time().timeName()/procMeshes_[0].name(),
+        procMeshes_[0].time().timeName(),
+        polyMesh::meshSubDir,
         procMeshes_[0],
         IOobject::MUST_READ,
         IOobject::NO_WRITE
@@ -89,8 +90,8 @@ void polyMeshReconstructor::reconstructPoints()
                 IOobject
                 (
                     "points",
-                    procMeshes_[procI].time().timeName()
-                        /procMeshes_[procI].name(),
+                    procMeshes_[procI].time().timeName(),
+                    polyMesh::meshSubDir,
                     procMeshes_[procI],
                     IOobject::MUST_READ,
                     IOobject::NO_WRITE

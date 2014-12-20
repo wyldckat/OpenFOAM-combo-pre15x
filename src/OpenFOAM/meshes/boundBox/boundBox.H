@@ -130,6 +130,19 @@ public:
             }
 
 
+            //- Contains a point?
+            bool contains(const point& pt) const
+            {
+                return
+                    pt.x() >= min().x()
+                 && pt.y() >= min().y()
+                 && pt.z() >= min().z()
+                 && pt.x() <= max().x()
+                 && pt.y() <= max().y()
+                 && pt.z() <= max().z();
+            }
+
+
     // Ostream operator
 
         friend Ostream& operator<<(Ostream& os, const boundBox& b);

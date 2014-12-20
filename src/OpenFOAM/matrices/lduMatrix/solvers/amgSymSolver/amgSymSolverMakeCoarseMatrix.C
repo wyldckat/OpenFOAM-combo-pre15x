@@ -27,11 +27,9 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "amgSymSolver.H"
 #include "amgCoupledInterface.H"
-#include "SLList.H"
+#include "DynamicList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -67,7 +65,6 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
     // Get restriction map for current level
     const labelField& restrictMap = restrictAddressing_[fineLevelIndex];
 
-#   ifdef FULLDEBUG
     if (restrictMap.size() != fineMatrix.lduAddr().size())
     {
         FatalErrorIn
@@ -78,86 +75,71 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
             << " nEqns: " << fineMatrix.lduAddr().size()
             << abort(FatalError);
     }
-#   endif
 
 
     // Count the number of coarse cells
     const label nCoarseEqns = max(restrictMap) + 1;
 
     // Storage for block neighbours and coefficients
-    List<SLList<label> > blockNbrs(nCoarseEqns);
-    List<SLList<scalar> > blockFaceCoeffs(nCoarseEqns);
+
+    // Guess initial maximum number of neighbours in block
+    label maxNnbrs = 10;
+
+    // Number of neighbours per block
+    labelList blockNnbrs(nCoarseEqns, 0);
+
+    // Setup initial packed storage for neighbours and coefficients
+    labelList blockNbrsData(maxNnbrs*nCoarseEqns);
+
+#   ifdef USEMEMCPY
+        scalarList blockCoeffsData(maxNnbrs*nCoarseEqns);
+#   else
+        scalarList blockCoeffsData(maxNnbrs*nCoarseEqns, 0.0);
+#   endif
 
     // Counter for coarse faces
     label nCoarseFaces = 0;
 
-    // Calculate the coarse diagonal. For each fine face inside of the
-    // coarse cell, add twice the fine face coefficient into the diagonal
+    // Coarse matrix diagonal
     scalarField coarseDiag(nCoarseEqns, 0.0);
 
     // Loop through all fine faces
-
-    forAll (upperAddr, fineFaceI)
+    forAll (upperAddr, fineFacei)
     {
-        if
-        (
-            restrictMap[upperAddr[fineFaceI]]
-         == restrictMap[lowerAddr[fineFaceI]]
-        )
+        label rmUpperAddr = restrictMap[upperAddr[fineFacei]];
+        label rmLowerAddr = restrictMap[lowerAddr[fineFacei]];
+
+        if (rmUpperAddr == rmLowerAddr)
         {
-            // face internal to cell. Add twice the face coefficient
-            // into the diagonal
-            coarseDiag[restrictMap[upperAddr[fineFaceI]]] +=
-                2.0*upper[fineFaceI];
+            // For each fine face inside of the coarse cell, add the fine face
+            // coefficient into the diagonal
+            // (this will be doubled before inclusion in the final matrix)
+            coarseDiag[rmUpperAddr] += upper[fineFacei];
         }
         else
         {
             // this face is a part of a coarse face
 
             // get coarse owner and neighbour
-            const label coarseOwner =
-                min
-                (
-                    restrictMap[upperAddr[fineFaceI]],
-                    restrictMap[lowerAddr[fineFaceI]]
-                );
+            const label coarseOwner = min(rmUpperAddr, rmLowerAddr);
 
-            const label coarseNeighbour =
-                max
-                (
-                    restrictMap[upperAddr[fineFaceI]],
-                    restrictMap[lowerAddr[fineFaceI]]
-                );
+            const label coarseNeighbour = max(rmUpperAddr, rmLowerAddr);
 
             // check the owner block to see if this face has already been found
-            SLList<label>& curBlockNbrs = blockNbrs[coarseOwner];
+            label* curBlockNbrs = &blockNbrsData[maxNnbrs*coarseOwner];
 
-            SLList<scalar>& curBlockFaceCoeffs = blockFaceCoeffs[coarseOwner];
+            scalar* curBlockFaceCoeffs = &blockCoeffsData[maxNnbrs*coarseOwner];
 
             bool nbrFound = false;
+            label& curBlockNnbrs = blockNnbrs[coarseOwner];
 
-            // Warning. Synchronous iterators
-            SLList<label>::iterator curBlockNbrsIter = curBlockNbrs.begin();
-
-            SLList<scalar>::iterator curBlockFaceCoeffsIter =
-                curBlockFaceCoeffs.begin();
-
-            for
-            (
-                ;
-
-                curBlockNbrsIter != curBlockNbrs.end(),
-                curBlockFaceCoeffsIter != curBlockFaceCoeffs.end();
-
-                ++curBlockNbrsIter,
-                ++curBlockFaceCoeffsIter
-            )
+            for (int i=0; i<curBlockNnbrs; i++)
             {
-                if (curBlockNbrsIter() == coarseNeighbour)
+                if (curBlockNbrs[i] == coarseNeighbour)
                 {
                     nbrFound = true;
 
-                    curBlockFaceCoeffsIter() += upper[fineFaceI];
+                    curBlockFaceCoeffs[i] += upper[fineFacei];
 
                     break;
                 }
@@ -165,9 +147,44 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
 
             if (!nbrFound)
             {
-                curBlockNbrs.append(coarseNeighbour);
+                if (curBlockNnbrs >= maxNnbrs)
+                {
+                    label oldMaxNnbrs = maxNnbrs;
+                    maxNnbrs *= 2;
 
-                curBlockFaceCoeffs.append(upper[fineFaceI]);
+                    blockNbrsData.setSize(maxNnbrs*nCoarseEqns);
+
+#                   ifdef USEMEMCPY
+                        blockCoeffsData.setSize(maxNnbrs*nCoarseEqns);
+#                   else
+                        blockCoeffsData.setSize(maxNnbrs*nCoarseEqns, 0.0);
+#                   endif
+
+                    forAllReverse(blockNnbrs, i)
+                    {
+                        label* oldBlockNbrs = &blockNbrsData[oldMaxNnbrs*i];
+                        label* newBlockNbrs = &blockNbrsData[maxNnbrs*i];
+
+                        scalar* oldBlockFaceCoeffs =
+                            &blockCoeffsData[oldMaxNnbrs*i];
+                        scalar* newBlockFaceCoeffs =
+                            &blockCoeffsData[maxNnbrs*i];
+
+                        for (int j=0; j<blockNnbrs[i]; j++)
+                        {
+                            newBlockNbrs[j] = oldBlockNbrs[j];
+                            newBlockFaceCoeffs[j] = oldBlockFaceCoeffs[j];
+                        }
+                    }
+
+                    curBlockNbrs = &blockNbrsData[maxNnbrs*coarseOwner];
+
+                    curBlockFaceCoeffs = &blockCoeffsData[maxNnbrs*coarseOwner];
+                }
+
+                curBlockNbrs[curBlockNnbrs] = coarseNeighbour;
+                curBlockFaceCoeffs[curBlockNnbrs] = upper[fineFacei];
+                curBlockNnbrs++;
 
                 // new coarse face created
                 nCoarseFaces++;
@@ -175,43 +192,40 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
         }
     } // end for all fine faces
 
-    // All coarse faces created. Make the coarse off-diagonal matrix
-    labelList coarseOwner(nCoarseFaces, -1);
-    labelList coarseNeighbour(nCoarseFaces, -1);
 
-    scalarField coarseUpper(nCoarseFaces, 0.0);
+    // All coarse faces created. Make the coarse off-diagonal matrix
+    labelList coarseOwner(nCoarseFaces);
+    labelList coarseNeighbour(nCoarseFaces);
+    scalarField coarseUpper(nCoarseFaces);
+
 
     // Reorganise the storage of the coefficients into owner-neighbour
     // addressing.
 
-    label coarseFaceI = 0;
+    label coarseFacei = 0;
 
-    forAll (blockNbrs, blockI)
+    forAll (blockNnbrs, blockI)
     {
-        SLList<label>::iterator curBlockNbrsIter = blockNbrs[blockI].begin();
+        label* curBlockNbrs = &blockNbrsData[maxNnbrs*blockI];
+        scalar* curBlockFaceCoeffs = &blockCoeffsData[maxNnbrs*blockI];
+        label curBlockNnbrs = blockNnbrs[blockI];
 
-        SLList<scalar>::iterator curBlockFaceCoeffsIter =
-            blockFaceCoeffs[blockI].begin();
-
-        for
-        (
-            ;
-
-            curBlockNbrsIter != blockNbrs[blockI].end(),
-            curBlockFaceCoeffsIter != blockFaceCoeffs[blockI].end();
-
-            ++curBlockNbrsIter,
-            ++curBlockFaceCoeffsIter
-        )
+        for (int i=0; i<curBlockNnbrs; i++)
         {
-            coarseOwner[coarseFaceI] = blockI;
-            coarseNeighbour[coarseFaceI] = curBlockNbrsIter();
+            coarseOwner[coarseFacei] = blockI;
+            coarseNeighbour[coarseFacei] = curBlockNbrs[i];
 
-            coarseUpper[coarseFaceI] = curBlockFaceCoeffsIter();
+            coarseUpper[coarseFacei] = curBlockFaceCoeffs[i];
 
-            coarseFaceI++;
+            coarseFacei++;
         }
     }
+
+    // Clear the temporary storage for the block data
+    blockNnbrs.setSize(0);
+    blockNbrsData.setSize(0);
+    blockCoeffsData.setSize(0);
+
 
     // Create coarse-level coupled interfaces
 
@@ -245,47 +259,44 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
         interfaceCoeffs_[fineLevelIndex];
 
     // Initialise transfer of colouring on the interface
-    forAll (fineInterfaces, intI)
+    forAll (fineInterfaces, inti)
     {
-        fineInterfaces[intI]->initNbrColour(restrictMap, true);
+        fineInterfaces[inti]->initNbrColour(restrictMap, true);
     }
 
     // Add the coarse level
-    forAll (fineInterfaces, intI)
+    forAll (fineInterfaces, inti)
     {
         // Coarse level interface
-        coarseInterfaces[intI] =
-            amgCoupledInterface::New(fineInterfaces[intI], intI).ptr();
+        coarseInterfaces[inti] =
+            amgCoupledInterface::New(fineInterfaces[inti], inti).ptr();
 
         // Get the local colour
-        const unallocLabelList& localAddr =
-            fineMatrix.lduAddr().patchAddr(intI);
+        const unallocLabelList& localAddr = 
+            fineMatrix.lduAddr().patchAddr(inti);
 
         labelField localColour(localAddr.size());
 
-        forAll (localColour, faceI)
+        forAll (localColour, facei)
         {
-            localColour[faceI] = restrictMap[localAddr[faceI]];
+            localColour[facei] = restrictMap[localAddr[facei]];
         }
 
         const amgCoupledInterface& amgInterface =
-            refCast<const amgCoupledInterface>(*coarseInterfaces[intI]);
+            refCast<const amgCoupledInterface>(*coarseInterfaces[inti]);
 
         // Coefficients and addressing
         coarseInterfaceCoeffs.hook
         (
-            new scalarField
+            amgInterface.coeffs
             (
-                amgInterface.coeffs
-                (
-                    localColour,
-                    fineInterfaces[intI]->nbrColour(restrictMap),
-                    fineInterfaceCoeffs[intI]
-                )()
-            )
+                localColour,
+                fineInterfaces[inti]->nbrColour(restrictMap),
+                fineInterfaceCoeffs[inti]
+            ).ptr()
         );
 
-        coarseInterfaceAddr[intI] = amgInterface.addressing();
+        coarseInterfaceAddr[inti] = amgInterface.addressing();
     }
         
     // Matrix restriction done!
@@ -314,14 +325,13 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
 
     // Insert coarse upper
     lduMatrix& coarseMatrix = matrixLevels_[fineLevelIndex];
+    coarseMatrix.upper().transfer(coarseUpper);
 
-    coarseMatrix.upper() = coarseUpper;
-
-    coarseMatrix.diag() =
-        coarseDiag
-      + restrictField(fineMatrix.diag(), fineLevelIndex);
+    // Double the diagonal
+    coarseDiag *= 2.0;
+    restrictField(coarseMatrix.diag(), fineMatrix.diag(), fineLevelIndex);
+    coarseMatrix.diag() += coarseDiag;
 }
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

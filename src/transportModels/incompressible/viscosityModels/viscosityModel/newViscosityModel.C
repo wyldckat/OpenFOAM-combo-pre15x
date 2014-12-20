@@ -40,6 +40,7 @@ namespace Foam
 
 autoPtr<viscosityModel> viscosityModel::New
 (
+    const word& name,
     const dictionary& viscosityProperties,
     const volVectorField& U,
     const surfaceScalarField& phi
@@ -66,7 +67,8 @@ autoPtr<viscosityModel> viscosityModel::New
             << exit(FatalError);
     }
 
-    return autoPtr<viscosityModel>(cstrIter()(viscosityProperties, U, phi));
+    return autoPtr<viscosityModel>
+        (cstrIter()(name, viscosityProperties, U, phi));
 }
 
 

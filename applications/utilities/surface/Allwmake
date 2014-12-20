@@ -15,6 +15,6 @@ wmake surfaceSmooth
 wmake surfaceSubset
 wmake surfaceToPatch
 wmake surfaceSplitNonManifolds
-wmake surfaceScale
+wmake surfaceTransformPoints
 wmake surfaceSplitByPatch
 wmake surfaceClean

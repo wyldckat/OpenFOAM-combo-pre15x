@@ -30,7 +30,6 @@ wmake fvc
 wmake getRoots
 wmake graph
 wmake graphXi
-wmake gzstream
 wmake io
 wmake liquid
 wmake exe maxMem

@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "polyPatch.H"
@@ -34,7 +32,7 @@ Description
 #include "SubField.H"
 #include "entry.H"
 #include "dictionary.H"
-#include "fvPatchFields.H"
+#include "pointPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -60,7 +58,7 @@ void polyPatch::movePoints(const pointField& p)
     primitivePatch::movePoints(p);
 }
 
-void polyPatch::updateTopology()
+void polyPatch::updateMesh()
 {
     deleteDemandDrivenData(mePtr_);
 }
@@ -218,21 +216,9 @@ polyPatch::~polyPatch()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-const polyBoundaryMesh& polyPatch::boundaryMesh() const
-{
-    return boundaryMesh_;
-}
-
-
-const pointField& polyPatch::allPoints() const
-{
-    return boundaryMesh_.mesh().allPoints();
-}
-
-
 bool polyPatch::constraintType(const word& pt)
 {
-    return fvPatchField<scalar>::patchConstructorTablePtr_->found(pt);
+    return pointPatchField<scalar>::PointPatchConstructorTablePtr_->found(pt);
 }
 
 
@@ -262,6 +248,18 @@ wordList polyPatch::constraintTypes()
 }
 
 
+const polyBoundaryMesh& polyPatch::boundaryMesh() const
+{
+    return boundaryMesh_;
+}
+
+
+const pointField& polyPatch::allPoints() const
+{
+    return boundaryMesh_.mesh().allPoints();
+}
+
+
 const vectorField::subField polyPatch::faceCentres() const
 {
     return patchSlice(boundaryMesh().mesh().faceCentres());
@@ -288,19 +286,6 @@ tmp<vectorField> polyPatch::faceCellCentres() const
     {
         cc[faceI] = gcc[cellLabels[faceI]];
     }
-
-    /* This should not be used because it's inconsistent with the
-    // mesh().cellCentres() used elsewhere
-    const pointField& points = allPoints();
-    const cellList& cells = boundaryMesh_.mesh().cells();
-    const faceList& faces = boundaryMesh_.mesh().faces();
-    const labelList::subList cellLabels = faceCells();
-
-    forAll (cellLabels, faceI)
-    {
-        cc[faceI] = cells[cellLabels[faceI]].centre(points, faces);
-    }
-    */
 
     return tcc;
 }
@@ -356,6 +341,22 @@ void polyPatch::writeDict(Ostream& os) const
     os  << "    nFaces " << this->size() << token::END_STATEMENT << nl
         << "    startFace " << start() << token::END_STATEMENT << nl
         << token::END_BLOCK << endl;
+}
+
+
+void polyPatch::initOrder(const primitivePatch&) const
+{}
+
+
+bool polyPatch::order
+(
+    const primitivePatch&,
+    labelList& faceMap,
+    labelList& rotation
+) const
+{
+    // Nothing changed.
+    return false;
 }
 
 

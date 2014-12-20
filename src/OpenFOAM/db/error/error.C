@@ -35,6 +35,12 @@ Class
 #include "Pstream.H"
 #include "OSspecific.H"
 
+#if defined(__GNUC__)
+#include "IStringStream.H"
+#include <execinfo.h>
+#include <demangle.h>
+#endif
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -50,11 +56,11 @@ error::error(const string& title)
     sourceFileLineNumber_(0),
     abort_(env("FOAM_ABORT")),
     throwExceptions_(false),
-    messageStreamPtr_(new OStringStream)
+    messageStreamPtr_(new OStringStream())
 {
     if (!messageStreamPtr_->good())
     {
-        Serr<< endl
+        Perr<< endl
             << "error::error(const string& title) : cannot open error stream"
             << endl;
         ::exit(1);
@@ -70,11 +76,11 @@ error::error(const dictionary& errDict)
     sourceFileLineNumber_(readLabel(errDict.lookup("sourceFileLineNumber"))),
     abort_(env("FOAM_ABORT")),
     throwExceptions_(false),
-    messageStreamPtr_(new OStringStream)
+    messageStreamPtr_(new OStringStream())
 {
     if (!messageStreamPtr_->good())
     {
-        Serr<< endl
+        Perr<< endl
             << "error::error(const dictionary& errDict) : "
                "cannot open error stream"
             << endl;
@@ -119,9 +125,10 @@ error::operator OSstream&()
 {
     if (!messageStreamPtr_->good())
     {
-        Serr<< endl
+        Perr<< endl
             << "error::operator OSstream&() : error stream has failed"
             << endl;
+        printStack(Perr);
         ::abort();
     }
 
@@ -153,6 +160,78 @@ string error::message() const
 }
 
 
+void error::printStack(Ostream& os)
+{
+#if defined(__GNUC__)
+
+    // Get raw stack symbols
+    void *array[100];
+    size_t size = backtrace(array, 100);
+    char **strings = backtrace_symbols(array, size);
+
+    // See if they contain function between () e.g. "(__libc_start_main+0xd0)"
+    // and see if cplus_demangle can make sense of part before +
+    for (size_t i = 0; i < size; i++)
+    {
+        string msg(strings[i]);
+
+        string::size_type bracketPos = msg.find('(');
+
+        if (bracketPos != string::size_type(string::npos))
+        {
+            string::size_type start = bracketPos+1;
+
+            string::size_type plusPos = msg.find('+', start);
+
+            if (plusPos != string::size_type(string::npos))
+            {
+                string cName(msg.substr(start, plusPos-start));
+
+                char* cplusNamePtr = cplus_demangle
+                (
+                    cName.c_str(),
+                    auto_demangling
+                );
+
+                if (cplusNamePtr)
+                {
+                    os<< cplusNamePtr << endl;
+                    free(cplusNamePtr);
+                }
+                else
+                {
+                    os<< cName.c_str() << endl;
+                }
+            }
+            else
+            {
+                string::size_type endBracketPos = msg.find(')', start);
+                
+                if (endBracketPos != string::size_type(string::npos))
+                {
+                    string fullName(msg.substr(start, endBracketPos-start));
+
+                    os<< fullName.c_str() << endl;
+                }
+                else
+                {
+                    // Print raw message
+                    os<< strings[i] << endl;
+                }
+            }
+        }
+        else
+        {
+            // Print raw message
+            os<< strings[i] << endl;
+        }
+    }
+    free(strings);
+
+#endif
+}
+
+
 void error::exit(const int errNo)
 {
     if (!throwExceptions_ && JobInfo::constructed)
@@ -163,14 +242,15 @@ void error::exit(const int errNo)
 
     if (abort_)
     {
-        Serr<< endl << *this << endl
+        Perr<< endl << *this << endl
             << "\nFOAM aborting (FOAM_ABORT set)\n" << endl;
+        printStack(Perr);
         ::abort();
     }
 
     if (Pstream::parRun())
     {
-        Serr<< endl << *this << endl
+        Perr<< endl << *this << endl
             << "\nFOAM parallel run exiting\n" << endl;
         Pstream::exit(errNo);
     }
@@ -182,7 +262,7 @@ void error::exit(const int errNo)
         }
         else
         {
-            Serr<< endl << *this << endl
+            Perr<< endl << *this << endl
                 << "\nFOAM exiting\n" << endl;
             ::exit(1);
         }
@@ -200,15 +280,17 @@ void error::abort()
 
     if (abort_)
     {
-        Serr<< endl << *this << endl
+        Perr<< endl << *this << endl
             << "\nFOAM aborting (FOAM_ABORT set)\n" << endl;
+        printStack(Perr);
         ::abort();
     }
 
     if (Pstream::parRun())
     {
-        Serr<< endl << *this << endl
+        Perr<< endl << *this << endl
             << "\nFOAM parallel run aborting\n" << endl;
+        printStack(Perr);
         Pstream::abort();
     }
     else
@@ -219,8 +301,9 @@ void error::abort()
         }
         else
         {
-            Serr<< endl << *this << endl
+            Perr<< endl << *this << endl
                 << "\nFOAM aborting\n" << endl;
+            printStack(Perr);
             ::abort();
         }
     }

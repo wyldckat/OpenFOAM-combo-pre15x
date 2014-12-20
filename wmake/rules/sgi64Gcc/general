@@ -4,7 +4,7 @@ CPP        = /usr/lib/acpp -undef -D$(WM_ARCH)
 RANLIB     = echo
 LD         = ld -$(ABI)
 
-GLIBS      = -lfpe -lm
+GLIBS      = -liberty -lfpe -lm
 
 include $(RULES)/X
 

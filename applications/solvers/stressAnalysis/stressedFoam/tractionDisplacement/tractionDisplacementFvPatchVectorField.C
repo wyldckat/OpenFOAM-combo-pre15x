@@ -111,17 +111,8 @@ void tractionDisplacementFvPatchVectorField::autoMap
 )
 {
     fixedGradientFvPatchVectorField::autoMap(m);
-
-    if (m.resizeOnly())
-    {
-        traction_.setSize(m.size());
-        pressure_.setSize(m.size());
-    }
-    else
-    {
-        traction_.autoMap(m);
-        pressure_.autoMap(m);
-    }
+    traction_.autoMap(m);
+    pressure_.autoMap(m);
 }
 
 

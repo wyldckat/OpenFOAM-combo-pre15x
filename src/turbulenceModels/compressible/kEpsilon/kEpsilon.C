@@ -181,23 +181,24 @@ void kEpsilon::correct()
     volScalarField G = 2*mut_*(tgradU() && dev(symm(tgradU())));
     tgradU.clear();
 
+#   include "wallFunctionsI.H"
+
     // Dissipation equation
-
-#   include "wallDissipationI.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(rho_, epsilon_)
       + fvm::div(phi_, epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
      ==
-        C1*G*epsilon_/k_ - fvm::SuSp((2.0/3.0*C1 + C3)*rho_*divU, epsilon_)
-      + boundarySource
-      - fvm::Sp(C2*rho_*epsilon_/k_ + boundaryCentral, epsilon_)
-    //+ 0.75*1.5*flameKproduction*epsilon_/k_
+        C1*G*epsilon_/k_
+      - fvm::SuSp(((2.0/3.0)*C1 + C3)*rho_*divU, epsilon_)
+      - fvm::Sp(C2*rho_*epsilon_/k_, epsilon_)
     );
 
     epsEqn().relax();
+
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 
@@ -212,7 +213,6 @@ void kEpsilon::correct()
      ==
         G - fvm::SuSp(2.0/3.0*rho_*divU, k_)
       - fvm::Sp(rho_*epsilon_/k_, k_)
-    //+ flameKproduction
     );
 
     kEqn().relax();
@@ -221,7 +221,7 @@ void kEpsilon::correct()
 
 
     // Re-calculate viscosity
-    mut_ = rho_*Cmu*sqr(k_)/(epsilon_ + epsilonSmall_);
+    mut_ = rho_*Cmu*sqr(k_)/epsilon_;
 
 #   include "wallViscosityI.H"
 

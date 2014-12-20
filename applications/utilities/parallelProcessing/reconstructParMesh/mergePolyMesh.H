@@ -130,17 +130,11 @@ public:
         //- Remove zones
         void removeZones()
         {
-            polyMesh::removePointZones();
-            polyMesh::removeFaceZones();
-            polyMesh::removeCellZones();
+            pointZones().setSize(0);
+            faceZones().setSize(0);;
+            cellZones().setSize(0);;
         }
- 
-        //- Remove mesh modifiers
-        void removeMeshModifiers()
-        {
-            polyMesh::removeMeshModifiers();
-        }
- 
+  
 
         //- Add a mesh
         void addMesh(const polyMesh& m);

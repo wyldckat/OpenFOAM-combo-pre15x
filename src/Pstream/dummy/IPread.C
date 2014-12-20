@@ -62,6 +62,29 @@ IPstream::IPstream
 }
 
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool IPstream::read
+(
+    const int fromProcNo,
+    char* buf,
+    const std::streamsize bufSize
+)
+{
+     notImplemented
+     (
+         "IPstream::read"
+         "("
+             "const int fromProcNo,"
+             "char* buf,"
+             "const label bufSize"
+         ")"
+     );
+
+     return false;
+}
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

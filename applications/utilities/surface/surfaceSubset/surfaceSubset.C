@@ -35,6 +35,9 @@ Description
 #include "Switch.H"
 #include "IOdictionary.H"
 #include "boundBox.H"
+#include "triSurfaceSearch.H"
+#include "octree.H"
+#include "octreeDataTriSurface.H"
 
 using namespace Foam;
 
@@ -57,12 +60,9 @@ int main(int argc, char *argv[])
     Info<< "Reading surface " << args.args()[2] << " ..." << endl;
     triSurface surf1(args.args()[2]);
 
-    Info<< "Original:" << endl
-        << "    triangles   :" << surf1.size() << endl
-        << "    edges       :" << surf1.nEdges() << endl
-        << "    vertices    :" << surf1.nPoints() << endl
-        << "    bounding box:" << boundBox(surf1.localPoints())
-        << endl << endl;
+    Info<< "Original:" << endl;
+    surf1.writeStats(Info);
+    Info<< endl;
 
 
     labelList markedPoints
@@ -93,8 +93,6 @@ int main(int argc, char *argv[])
             << "zone:" << markedZone
             << exit(FatalError);
     }
-            
-
 
     Switch addFaceNeighbours
     (
@@ -212,7 +210,95 @@ int main(int argc, char *argv[])
         }
     }
 
-    
+
+    //
+    // pick up faces on certain side of surface
+    //
+
+    if (meshSubsetDict.found("surface"))
+    {
+        const dictionary& surfDict = meshSubsetDict.subDict("surface");
+
+        fileName surfName(surfDict.lookup("name"));
+
+        Switch outside(surfDict.lookup("outside"));
+
+        if (outside)
+        {
+            Info<< "Selecting all triangles with centre on or outside surface "
+                << surfName << endl;
+        }
+        else
+        {
+            Info<< "Selecting all triangles with centre on or inside surface "
+                << surfName << endl;
+        }
+
+        triSurface selectSurf(surfName);
+        const pointField& selectNormals = selectSurf.faceNormals();
+
+        triSurfaceSearch selectQuery(selectSurf);
+
+        const treeBoundBox& bb = selectQuery.tree().octreeBb();
+        const vector searchSpan = 1E-6*(bb.max() - bb.min());
+        const scalar searchDimSqr = magSqr(searchSpan);
+
+        // Check if face is
+        // - on surface
+        // - on outside/inside
+        forAll(facesToSubset, faceI)
+        {
+            if (!facesToSubset[faceI])
+            {
+                const point fc(surf1[faceI].centre(surf1.points()));
+
+                pointIndexHit pHit = selectQuery.nearest(fc, searchSpan);
+
+                if
+                (
+                    pHit.hit()
+                 && magSqr(pHit.hitPoint() - fc) < searchDimSqr
+                 && (
+                        selectNormals[pHit.index()]
+                      & surf1.faceNormals()[faceI]
+                    )
+                  > 1-0.001
+                )
+                {
+                    // fc on surface. Consider to be inside.
+                    facesToSubset[faceI] = true;
+                }
+                else
+                {
+                    label volType = selectQuery.tree().getSampleType(fc);
+
+                    if
+                    (
+                        volType == octree<octreeDataTriSurface>::INSIDE
+                     && !outside
+                    )
+                    {
+                        facesToSubset[faceI] = true;
+                    }
+                    else if
+                    (
+                        volType == octree<octreeDataTriSurface>::OUTSIDE
+                     && outside
+                    )
+                    {
+                        facesToSubset[faceI] = true;
+                    }
+                    else if (volType == octree<octreeDataTriSurface>::MIXED)
+                    {
+                        //? is possible?
+                        facesToSubset[faceI] = true;
+                    }
+                }
+            }
+        }
+    }
+
+
     //
     // pick up specified "faces"
     //
@@ -277,18 +363,9 @@ int main(int argc, char *argv[])
         surf1.subsetMesh(facesToSubset, pointMap, faceMap)
     );
 
-    Info<< "Subset:" << endl
-        << "    triangles   :" << surf2.size() << endl
-        << "    edges       :" << surf2.nEdges() << endl
-        << "    vertices    :" << surf2.nPoints() << endl
-        << "    bounding box:" << boundBox(surf2.localPoints())
-        << endl << endl;
-
-//    // Give region numbers the original face number.
-//    forAll(surf2, faceI)
-//    {
-//        surf2[faceI].region() = faceMap[faceI];
-//    }
+    Info<< "Subset:" << endl;
+    surf2.writeStats(Info);
+    Info << endl;
 
     fileName outFileName(args.args()[3]);
 

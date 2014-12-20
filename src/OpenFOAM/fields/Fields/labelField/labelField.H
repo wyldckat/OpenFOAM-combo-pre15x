@@ -38,6 +38,7 @@ SourceFiles
 
 #include "Field.H"
 #include "label.H"
+#include "FieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,6 +48,10 @@ namespace Foam
 typedef Field<label> labelField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+BINARY_TYPE_OPERATOR_RR(label, label, label, +, add)
+BINARY_TYPE_OPERATOR_RR(label, label, label, -, subtract)
+
 
 template<>
 tmp<labelField> labelField::component(const direction) const;
@@ -63,10 +68,13 @@ template<>
 void labelField::replace(const direction, const UList<label>& lf);
 
 
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -26,6 +26,8 @@ License
 
 #include "mergePolyMesh.H"
 #include "Time.H"
+#include "polyTopoChanger.H"
+#include "mapPolyMesh.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -223,7 +225,7 @@ void Foam::mergePolyMesh::addMesh(const polyMesh& m)
 
     // Add cells
 
-    const cellList& c = m.allCells();
+    const cellList& c = m.cells();
     labelList renumberCells(c.size());
 
     const cellZoneMesh& cz = m.cellZones();
@@ -420,8 +422,7 @@ void Foam::mergePolyMesh::merge()
 
     }
 
-    setMorphTimeIndex(time().timeIndex());
-    updateTopology(meshMod_);
+    polyTopoChanger::changeMesh(*this, meshMod_);
 
     // Clear topo change for the next operation
     meshMod_.clear();

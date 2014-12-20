@@ -41,11 +41,11 @@ SourceFiles
 #ifndef cellZone_H
 #define cellZone_H
 
-#include "indirectCellList.H"
+#include "labelList.H"
 #include "typeInfo.H"
 #include "dictionary.H"
-#include "labelList.H"
 #include "cellZoneMeshFwd.H"
+#include "pointFieldFwd.H"
 #include "Map.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -65,7 +65,7 @@ Ostream& operator<<(Ostream&, const cellZone&);
 
 class cellZone
 :
-    public indirectCellList
+    public labelList
 {
     // Private data
 
@@ -88,9 +88,6 @@ class cellZone
 
         //- Disallow default bitwise copy construct
         cellZone(const cellZone&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const cellZone&);
 
         //- Return map of local cell indices
         const Map<label>& cellLookupMap() const;
@@ -147,9 +144,9 @@ public:
         cellZone
         (
             const cellZone& cz,
-            const cellZoneMesh& zm,
+            const labelList& addr,
             const label index,
-            const labelList& addr
+            const cellZoneMesh& zm
         );
 
         //- Construct and return a clone, resetting the zone mesh
@@ -157,7 +154,7 @@ public:
         {
             return autoPtr<cellZone>
             (
-                new cellZone(*this, zm, index(), addressing())
+                new cellZone(*this, *this, index(), zm)
             );
         }
 
@@ -165,14 +162,14 @@ public:
         //  and zone mesh
         virtual autoPtr<cellZone> clone
         (
-            const cellZoneMesh& zm,
+            const labelList& addr,
             const label index,
-            const labelList& addr
+            const cellZoneMesh& zm
         ) const
         {
             return autoPtr<cellZone>
             (
-                new cellZone(*this, zm, index, addr)
+                new cellZone(*this, addr, index, zm)
             );
         }
 
@@ -221,19 +218,24 @@ public:
         //- Clear addressing
         void clearAddressing();
 
-        //- Reset addressing
-        void resetAddressing(const labelList& addr);
-
         //- Correct patch after moving points
         virtual void movePoints(const pointField&)
         {}
-
 
         //- Write
         virtual void write(Ostream&) const;
 
         //- Write dictionary
         virtual void writeDict(Ostream&) const;
+
+
+    // Member Operators
+
+        //- Assign to zone clearing demand-driven data
+        void operator=(const cellZone&);
+
+        //- Assign addressing clearing demand-driven data
+        void operator=(const labelList&);
 
 
     // Ostream Operator

@@ -396,7 +396,9 @@ void Foam::enrichedPatch::calcEnrichedFaces
     {
         if (!checkSupport())
         {
-            Info << "Enriched patch support OK" << endl;
+            Info<< "Enriched patch support OK. Slave faces: "
+                << slavePatch_.size() << " Master faces: "
+                << masterPatch_.size() << endl;
         }
         else
         {

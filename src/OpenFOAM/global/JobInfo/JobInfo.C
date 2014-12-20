@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "JobInfo.H"
@@ -167,18 +165,7 @@ void JobInfo::abort()
 }
 
 
-void JobInfo::sigInt() const
-{
-    if (writeJobInfo && constructed && Pstream::master())
-    {
-        mv(runningJobPath_, finishedJobPath_);
-    }
-
-    constructed = false;
-}
-
-
-void JobInfo::sigQuit() const
+void JobInfo::signalEnd() const
 {
     if (writeJobInfo && constructed && Pstream::master())
     {

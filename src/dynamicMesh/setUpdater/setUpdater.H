@@ -80,7 +80,7 @@ public:
             const word& name,
             const dictionary& dict,
             const label index,
-            const polyMesh& mesh
+            const polyTopoChanger& mme
         );
 
 
@@ -102,7 +102,7 @@ public:
         virtual void modifyMotionPoints(pointField& motionPoints) const;
 
         //- Force recalculation of locally stored data on topological change
-        virtual void updateTopology(const mapPolyMesh&);
+        virtual void updateMesh(const mapPolyMesh&);
 
         //- Write
         virtual void write(Ostream&) const;

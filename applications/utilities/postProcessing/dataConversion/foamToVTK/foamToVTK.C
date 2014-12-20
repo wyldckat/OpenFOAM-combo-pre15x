@@ -33,11 +33,23 @@ Description
     - automatic decomposition of cells; polygons on boundary undecomposed since
       handled by vtk.
 
+
+    Current options:
+    -mesh           : different mesh name (instead of -region)
+    -fields         : selected fields only
+    -surfaceFields  : write surfaceScalarFields (e.g. phi)
+    -cellSet, -faceSet : set display
+    -ascii
+    -nearCellValue  : output cell value on patches instead of patch value itself
+    -noInternal     : do not generate file for mesh, only for patches
+    -noPointValues  : no pointFields
+    -allPatches     : combine all patches into one big file
+
     Note: mesh subset is handled by vtkMesh. Slight inconsistency in
     interpolation: on the internal field it interpolates the whole volfield
     to the whole-mesh pointField and then selects only those values it needs
-    for the subMesh (using the meshSubset cellMap(), pointMap() functions).
-    For the patches however it uses the meshSubset.interpolate function
+    for the subMesh (using the fvMeshSubset cellMap(), pointMap() functions).
+    For the patches however it uses the fvMeshSubset.interpolate function
     to directly interpolate the whole-mesh values onto the subset patch.
 
 \*---------------------------------------------------------------------------*/
@@ -51,7 +63,7 @@ Description
 #include "passiveParticle.H"
 #include "IOobject.H"
 #include "IOField.H"
-#include "meshSubset.H"
+#include "fvMeshSubset.H"
 #include "interpolateToCell.H"
 #include "faceZoneMesh.H"
 
@@ -65,6 +77,8 @@ Description
 #include "writeFaceSet.H"
 #include "writePatchGeom.H"
 #include "writeSurfFields.H"
+#include "writePatches.H"
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -89,7 +103,6 @@ void print(Ostream& os, const PtrList<GeoField>& flds)
 
 int main(int argc, char *argv[])
 {
-    argList::noParallel();
 #   include "addTimeOptions.H"
     argList::validOptions.insert("mesh", "mesh name");
     argList::validOptions.insert("fields", "fields");
@@ -100,6 +113,7 @@ int main(int argc, char *argv[])
     argList::validOptions.insert("nearCellValue","");
     argList::validOptions.insert("noInternal","");
     argList::validOptions.insert("noPointValues","");
+    argList::validOptions.insert("allPatches","");
 
 #   include "setRootCase.H"
 #   include "createTime.H"
@@ -134,8 +148,11 @@ int main(int argc, char *argv[])
             << "Outputting cell values only" << nl << endl;
     }
 
+    bool allPatches = args.options().found("allPatches");
+
+
     word cellSetName;
-    word vtkName;
+    string vtkName;
 
     if (args.options().found("cellSet"))
     {
@@ -159,7 +176,7 @@ int main(int argc, char *argv[])
         vtkName = runTime.caseName();
     }
 
-    word meshName = meshSubset::defaultRegion;
+    word meshName = fvMeshSubset::defaultRegion;
 
     // make a directory called VTK in the case
     fileName fvPath(runTime.path()/"VTK");
@@ -179,11 +196,11 @@ int main(int argc, char *argv[])
          || cellSetName.size() > 0
         )
         {
-            Info<< "Keeping old VTK files in " << fvPath << nl << endl;
+            Pout<< "Keeping old VTK files in " << fvPath << nl << endl;
         }
         else
         {
-            Info<< "Deleting old VTK files in " << fvPath << nl << endl;
+            Pout<< "Deleting old VTK files in " << fvPath << nl << endl;
 
             rmDir(fvPath);
         }
@@ -217,9 +234,9 @@ int main(int argc, char *argv[])
     {
         runTime.setTime(Times[i], i);
 
-        Info<< "Time " << Times[i].name() << endl;
+        Pout<< "Time " << Times[i].name() << endl;
 
-        // Check for new polyMesh/ and update mesh, meshSubset and cell
+        // Check for new polyMesh/ and update mesh, fvMeshSubset and cell
         // decomposition.
         polyMesh::readUpdateState meshState = vMesh.readUpdate();
 
@@ -231,7 +248,7 @@ int main(int argc, char *argv[])
          || meshState == polyMesh::TOPO_PATCH_CHANGE
         )
         {
-            Info<< "    Read new mesh" << nl << endl;
+            Pout<< "    Read new mesh" << nl << endl;
         }
 
 
@@ -252,7 +269,7 @@ int main(int argc, char *argv[])
               + ".vtk"
             );
 
-            Info<< "    FaceSet   : " << patchFileName << endl;
+            Pout<< "    FaceSet   : " << patchFileName << endl;
 
             writeFaceSet(binary, vMesh, set, patchFileName);
 
@@ -273,13 +290,13 @@ int main(int argc, char *argv[])
 
         PtrList<volScalarField> volScalarFields;
         readFields(vMesh, objects, selectedFields, volScalarFields);
-        Info<< "    volScalarFields   :";
-        print(Info, volScalarFields);
+        Pout<< "    volScalarFields   :";
+        print(Pout, volScalarFields);
 
         PtrList<volVectorField> volVectorFields;
         readFields(vMesh, objects, selectedFields, volVectorFields);
-        Info<< "    volVectorFields   :";
-        print(Info, volVectorFields);
+        Pout<< "    volVectorFields   :";
+        print(Pout, volVectorFields);
 
         PtrList<surfaceScalarField> surfScalarFields;
         PtrList<surfaceVectorField> surfVectorFields;
@@ -292,8 +309,8 @@ int main(int argc, char *argv[])
                 selectedFields,
                 surfScalarFields
             );
-            Info<< "    surfScalarFields  :";
-            print(Info, surfScalarFields);
+            Pout<< "    surfScalarFields  :";
+            print(Pout, surfScalarFields);
 
             readFields
             (
@@ -302,8 +319,8 @@ int main(int argc, char *argv[])
                 selectedFields,
                 surfVectorFields
             );
-            Info<< "    surfVectorFields  :";
-            print(Info, surfVectorFields);
+            Pout<< "    surfVectorFields  :";
+            print(Pout, surfVectorFields);
         }
 
         // Construct pointMesh only if nessecary since constructs edge
@@ -311,9 +328,9 @@ int main(int argc, char *argv[])
         autoPtr<pointMesh> pMeshPtr(NULL);
         if (noPointValues)
         {
-            Info<< "    pointScalarFields : switched off"
+            Pout<< "    pointScalarFields : switched off"
                 << " (\"-noPointValues\" option)\n";
-            Info<< "    pointVectorFields : switched off"
+            Pout<< "    pointVectorFields : switched off"
                 << " (\"-noPointValues\" option)\n";
         }
         else
@@ -326,15 +343,15 @@ int main(int argc, char *argv[])
         if (pMeshPtr.valid() && !vMesh.useSubMesh())
         {
             readFields(pMeshPtr(), objects, selectedFields, pointScalarFields);
-            Info<< "    pointScalarFields :";
-            print(Info, pointScalarFields);
+            Pout<< "    pointScalarFields :";
+            print(Pout, pointScalarFields);
 
             readFields(pMeshPtr(), objects, selectedFields, pointVectorFields);
-            Info<< "    pointVectorFields :";
-            print(Info, pointVectorFields);
+            Pout<< "    pointVectorFields :";
+            print(Pout, pointVectorFields);
         }
 
-        Info<< endl;
+        Pout<< endl;
 
         if (doWriteInternal)
         {
@@ -346,7 +363,7 @@ int main(int argc, char *argv[])
                 fvPath/vtkName + "_" + Foam::name(runTime.timeIndex()) + ".vtk"
             );
 
-            Info<< "    Internal  : " << vtkFileName << endl;
+            Pout<< "    Internal  : " << vtkFileName << endl;
 
             writeInternal
             (
@@ -375,8 +392,7 @@ int main(int argc, char *argv[])
             (
                 fvPath
                /"surfaceFields"
-               /"internalFaces"
-               + "_"
+               /"surfaceFields_"
                + name(runTime.timeIndex())
                + ".vtk"
             );
@@ -400,18 +416,42 @@ int main(int argc, char *argv[])
 
         const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-        forAll(patches, patchI)
+        if (allPatches)
         {
-            const polyPatch& pp = patches[patchI];
+            DynamicList<label> selectedPatches(patches.size());
 
-            mkDir(fvPath/pp.name());
+            Pout<< "Combining patches:" << endl;
+
+            forAll(patches, patchI)
+            {
+                const polyPatch& pp = patches[patchI];
+
+                if
+                (
+                    isType<emptyPolyPatch>(pp)
+                    || (Pstream::parRun() && isType<processorPolyPatch>(pp))
+                )
+                {
+                    Pout<< "    discarding empty/processor patch " << patchI
+                        << " " << pp.name() << endl;
+                }
+                else
+                {
+                    selectedPatches.append(patchI);
+                    Pout<< "    patch " << patchI << " " << pp.name() << endl;
+                }
+            }
+            selectedPatches.shrink();
+
+
+            mkDir(fvPath/"allPatches");
 
             fileName patchFileName;
 
             if (vMesh.useSubMesh())
             {
                 patchFileName =
-                    fvPath/pp.name()/cellSetName
+                    fvPath/"allPatches"/cellSetName
                   + "_"
                   + name(runTime.timeIndex())
                   + ".vtk";
@@ -419,28 +459,68 @@ int main(int argc, char *argv[])
             else
             {
                 patchFileName =
-                    fvPath/pp.name()/pp.name()
+                    fvPath/"allPatches"/"allPatches"
                   + "_"
                   + name(runTime.timeIndex())
                   + ".vtk";
             }
 
-            Info<< "    Patch     : " << patchFileName << endl;
+            Pout<< "    Combined patches     : " << patchFileName << endl;
 
-            writePatch
+            writePatches
             (
                 binary,
                 nearCellValue,
                 vMesh,
-                patchI,
+                selectedPatches,
                 patchFileName,
                 volScalarFields,
-                volVectorFields,
-                pointScalarFields,
-                pointVectorFields
+                volVectorFields
             );
         }
+        else
+        {
+            forAll(patches, patchI)
+            {
+                const polyPatch& pp = patches[patchI];
 
+                mkDir(fvPath/pp.name());
+
+                fileName patchFileName;
+
+                if (vMesh.useSubMesh())
+                {
+                    patchFileName =
+                        fvPath/pp.name()/cellSetName
+                      + "_"
+                      + name(runTime.timeIndex())
+                      + ".vtk";
+                }
+                else
+                {
+                    patchFileName =
+                        fvPath/pp.name()/pp.name()
+                      + "_"
+                      + name(runTime.timeIndex())
+                      + ".vtk";
+                }
+
+                Pout<< "    Patch     : " << patchFileName << endl;
+
+                writePatch
+                (
+                    binary,
+                    nearCellValue,
+                    vMesh,
+                    patchI,
+                    patchFileName,
+                    volScalarFields,
+                    volVectorFields,
+                    pointScalarFields,
+                    pointVectorFields
+                );
+            }
+        }
 
         //---------------------------------------------------------------------
         //
@@ -475,7 +555,7 @@ int main(int argc, char *argv[])
                   + ".vtk";
             }
 
-            Info<< "    FaceZone  : " << patchFileName << endl;
+            Pout<< "    FaceZone  : " << patchFileName << endl;
 
             std::ofstream pStream(patchFileName.c_str());
 
@@ -507,17 +587,9 @@ int main(int argc, char *argv[])
 
         IOobjectList sprayObjects(mesh, runTime.timeName(), "lagrangian");
 
-        wordList scalarNames(sprayObjects.names(scalarIOField::typeName));
-        wordList vectorNames(sprayObjects.names(vectorIOField::typeName));
-
-        if
-        (
-            !vMesh.useSubMesh()
-         && scalarNames.size() > 0
-         && vectorNames.size() > 0
-        )
+        if (!vMesh.useSubMesh() && sprayObjects.size())
         {
-            mkDir(fvPath / "lagrangian");
+            mkDir(fvPath/"lagrangian");
 
             fileName lagrFileName
             (
@@ -525,7 +597,10 @@ int main(int argc, char *argv[])
               + "_" + name(runTime.timeIndex()) + ".vtk"
             );
 
-            Info<< "    Lagrangian: " << lagrFileName << endl;
+            wordList scalarNames(sprayObjects.names(scalarIOField::typeName));
+            wordList vectorNames(sprayObjects.names(vectorIOField::typeName));
+
+            Pout<< "    Lagrangian: " << lagrFileName << endl;
             
             writeLagrangian
             (
@@ -538,7 +613,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    Info << "End\n" << endl;
+    Pout << "End\n" << endl;
 
     return 0;
 }

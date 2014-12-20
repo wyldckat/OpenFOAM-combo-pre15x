@@ -30,15 +30,12 @@ Description
     mesh.  The patch is identified by name and its index in the
     boundary mesh is updated if the mesh has changed.
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef polyPatchID_H
 #define polyPatchID_H
 
-#include "label.H"
-#include "word.H"
-#include "polyMesh.H"
+#include "polyBoundaryMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -79,9 +76,6 @@ public:
         {}
 
 
-    // Destructor - default
-
-
     // Member Functions
 
         // Access
@@ -104,6 +98,7 @@ public:
                 return index_ > -1;
             }
 
+
         // Edit
 
             //- Update
@@ -113,11 +108,7 @@ public:
             }
             
 
-    // Friend Functions
-
-    // Friend Operators
-
-    // IOstream Operators
+    // Ostream Operator
 
         friend Ostream& operator<<(Ostream& os, const polyPatchID& p)
         {

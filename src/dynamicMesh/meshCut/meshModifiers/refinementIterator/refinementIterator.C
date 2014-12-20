@@ -22,12 +22,11 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "refinementIterator.H"
-#include "morphMesh.H"
+#include "polyMesh.H"
+#include "polyTopoChanger.H"
 #include "Time.H"
 #include "refineCell.H"
 #include "undoableMeshCutter.H"
@@ -53,7 +52,7 @@ defineTypeNameAndDebug(refinementIterator, 0);
 // Construct from components
 Foam::refinementIterator::refinementIterator
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     undoableMeshCutter& meshRefiner,
     const cellLooper& cellWalker,
     const bool writeMesh
@@ -170,33 +169,24 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
         // Do all changes
         //
 
-
-        if (writeMesh_)
-        {
-            // Set current time index for morphing (used by polyMesh to known
-            // when to delete/create morphmap)
-            mesh_.setMorphTimeIndex(runTime.timeIndex());
-        }
-        else
-        {
-            // No runTime changes so forcibly clear time keeping in polyMesh
-            mesh_.resetMorph();
-        }
-
-        mesh_.updateTopology(meshMod);
+        autoPtr<mapPolyMesh> morphMap = 
+            polyTopoChanger::changeMesh(mesh_, meshMod);
 
         // Move mesh (since morphing does not do this)
-        mesh_.movePoints(mesh_.morphMap().preMotionPoints());
+        if (morphMap().hasMotionPoints())
+        {
+            mesh_.movePoints(morphMap().preMotionPoints());
+        }
 
         // Update stored refinement pattern
-        meshRefiner_.updateTopology(mesh_.morphMap());
+        meshRefiner_.updateMesh(morphMap());
 
         // Write resulting mesh
         if (writeMesh_)
         {
             if (debug)
             {
-                Pout<< "Writing refined morphMesh to time "
+                Pout<< "Writing refined polyMesh to time "
                     << runTime.timeName() << endl;
             }
 
@@ -207,19 +197,19 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
         // in meshCutter class.
         updateLabels
         (
-            mesh_.morphMap().reverseCellMap(),
+            morphMap->reverseCellMap(),
             currentRefCells
         );
 
         // Update addedCells for new cell numbers
         updateLabels
         (
-            mesh_.morphMap().reverseCellMap(),
+            morphMap->reverseCellMap(),
             addedCells
         );
 
         // Get all added cells from cellCutter (already in new numbering
-        // from meshRefiner.updateTopology call) and add to global list of added
+        // from meshRefiner.updateMesh call) and add to global list of added
         const Map<label>& addedNow = meshRefiner_.addedCells();
 
         for
@@ -246,7 +236,7 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
         // Update refCells for new cell numbers.
         updateLabels
         (
-            mesh_.morphMap().reverseCellMap(),
+            morphMap->reverseCellMap(),
             currentRefCells
         );
 

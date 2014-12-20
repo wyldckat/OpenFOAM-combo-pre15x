@@ -29,7 +29,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
 #include "dimensionSet.H"
 #include "IOstreams.H"
 

@@ -44,7 +44,7 @@ int main(int argc, char *argv[])
 {
     argList::noParallel();
     argList::validArgs.clear();
-    argList::validOptions.insert("noCleanup", "");
+    argList::validOptions.insert("cleanup", "");
     argList::validOptions.insert("group", "");
     argList::validArgs.append("input surface file");
     argList::validArgs.append("output surface file");
@@ -64,17 +64,20 @@ int main(int argc, char *argv[])
     Info << "Reading : " << inFileName << endl;
     triSurface surf(inFileName);
 
+    Info<< "Read surface:" << endl;
+    surf.writeStats(Info);
+    Info<< endl;
+    
 
-    if (args.options().found("noCleanup"))
-    {
-        Info << "Not cleaning up surface" << endl;
-    }
-    else
+    if (args.options().found("cleanup"))
     {
         Info << "Cleaning up surface" << endl;
         surf.cleanup(true);
-    }
 
+        Info<< "After cleaning up surface:" << endl;
+        surf.writeStats(Info);
+        Info<< endl;
+    }
 
     bool sortByRegion = args.options().found("group");
 

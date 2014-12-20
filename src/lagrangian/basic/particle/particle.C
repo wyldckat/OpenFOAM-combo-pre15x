@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "particle.H"
@@ -176,7 +174,8 @@ template<class particleType>
 label particle<particleType>::track
 (
     const vector& endPosition,
-    scalar& fraction
+    scalar& fraction,
+    const bool softAlgorithm
 )
 {
     scalar fractionLeft = 1.0;
@@ -184,17 +183,18 @@ label particle<particleType>::track
     scalar f = 0.0;
     bool onB = false;
     label facei = -1;
+
     // using the onBoundary() function in the while-statement
     // will not work for a particle traveling from boundary and away.
     while(!onB && (fractionLeft > SMALL))
     {
         f = fraction;
-        facei = trackToFace(endPosition, f);
+        facei = trackToFace(endPosition, f, softAlgorithm);
         fraction += fractionLeft*f;
         fractionLeft = 1.0 - fraction;
         if (facei > -1)
         {
-            if (!cloud_.softAlgorithm_)
+            if (!softAlgorithm)
             {
                 onB = onBoundary();
             }
@@ -209,7 +209,8 @@ template<class particleType>
 label particle<particleType>::trackToFace
 (
     const vector& endPosition,
-    scalar& fraction
+    scalar& fraction,
+    const bool softAlgorithm
 )
 {
     const polyMesh& mesh = cloud_.polyMesh_;
@@ -279,7 +280,7 @@ label particle<particleType>::trackToFace
             // soft-sphere particles can travel outside the domain
             // but we don't use lambda since this the particle
             // is going away from face
-            if (cloud_.softAlgorithm_)
+            if (softAlgorithm)
             {
                 fracOut = 1.0;
                 position_ = endPosition;
@@ -315,7 +316,7 @@ label particle<particleType>::trackToFace
             onBoundary_ = true;
 
             // soft-sphere algorithm ignores the boundary
-            if (cloud_.softAlgorithm_)
+            if (softAlgorithm)
             {
                 position_ = endPosition;
                 fracOut = 1.0;

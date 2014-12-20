@@ -83,6 +83,9 @@ public:
         //- Return labels of cell vertices
         labelList labels(const unallocFaceList&) const;
 
+        //- Return the cell vertices
+        pointField points(const unallocFaceList&, const pointField&) const;
+
         //- Return cell edges
         edgeList edges(const unallocFaceList&) const;
 

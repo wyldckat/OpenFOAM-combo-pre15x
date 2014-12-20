@@ -69,7 +69,7 @@
             mesh,
             IOobject::READ_IF_PRESENT
         ),
-        gamma*rho1 + (1.0 - gamma)*rho2,
+        gamma*rho1 + (scalar(1) - gamma)*rho2,
         gamma.boundaryField().types()
     );
     rho.oldTime();

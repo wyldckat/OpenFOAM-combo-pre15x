@@ -89,6 +89,19 @@ locDynOneEqEddy::locDynOneEqEddy
     LESmodel(typeName, U, phi, transport),
     GenEddyVisc(U, phi, transport),
 
+    k_
+    (
+        IOobject
+        (
+            "k",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
+    ),
+
     simpleFilter_(U.mesh()),
     filterPtr_(LESfilter::New(U.mesh(), LESmodelProperties())),
     filter_(filterPtr_())

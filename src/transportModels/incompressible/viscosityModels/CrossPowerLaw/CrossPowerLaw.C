@@ -55,7 +55,7 @@ addToRunTimeSelectionTable
 //- Calculate and return the laminar viscosity
 tmp<volScalarField> CrossPowerLaw::calcNu() const
 {
-    return (nu0_ - nuInf_)/(1.0 + pow(m_*strainRate(), n_)) + nuInf_;
+    return (nu0_ - nuInf_)/(scalar(1) + pow(m_*strainRate(), n_)) + nuInf_;
 }
 
 
@@ -63,12 +63,13 @@ tmp<volScalarField> CrossPowerLaw::calcNu() const
 
 CrossPowerLaw::CrossPowerLaw
 (
+    const word& name,
     const dictionary& viscosityProperties,
     const volVectorField& U,
     const surfaceScalarField& phi
 )
 :
-    viscosityModel(viscosityProperties, U, phi),
+    viscosityModel(name, viscosityProperties, U, phi),
     CrossPowerLawCoeffs_(viscosityProperties.subDict(typeName + "Coeffs")),
     nu0_(CrossPowerLawCoeffs_.lookup("nu0")),
     nuInf_(CrossPowerLawCoeffs_.lookup("nuInf")),
@@ -78,7 +79,7 @@ CrossPowerLaw::CrossPowerLaw
     (
         IOobject
         (
-            "nu",
+            name,
             U_.time().timeName(),
             U_.db(),
             IOobject::NO_READ,

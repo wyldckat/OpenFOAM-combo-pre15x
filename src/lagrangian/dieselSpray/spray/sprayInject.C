@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "spray.H"
@@ -34,7 +32,6 @@ Description
 #include "injectorModel.H"
 #include "interpolationCellPoint.H"
 #include "processorPolyPatch.H"
-#include "physicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -114,54 +111,58 @@ void spray::inject()
                 scalar ddev = breakup().yDot0();
 
                 label injectorCell = mesh_.findCell(injectionPosition);
-
+                
 #               include "findInjectorCell.H"
 
-                scalar liquidCore = 1.0;
+                if (injectorCell >= 0)
+		{
+                    scalar liquidCore = 1.0;
                 
-                // construct the parcel that is to be injected
-                parcel* pPtr = new parcel
-                (
-                    *this,
-                    injectionPosition,
-                    injectorCell,
-                    normal,
-                    diameter,
-                    it.T(toi),
-                    mp,
-                    deviation,
-                    ddev,
-                    0.0,
-                    0.0,
-                    0.0,
-                    liquidCore,
-                    scalar(i),
-                    U,
-                    vector::zero,
-                    it.X(),
-                    fuels_->components()
-                );
-                    
-                injectedLiquidKE_ +=
-                    0.5*pPtr->m()*pow(mag(U), 2.0);
-                    
-                scalar dt = time - toi;
-                pPtr->t0() = runTime_.deltaT().value() - dt;;
-                pPtr->tEnd() = dt;
-                
-                bool keepParcel = pPtr->move
-                (
-                    *this
-                );
+                    // construct the parcel that is to be injected
 
-                if (keepParcel)
-                {
-                    addParticle(pPtr);
-                }
-                else
-                {
-                    delete pPtr;
-                }
+                    parcel* pPtr = new parcel
+                    (
+                        *this,
+                        injectionPosition,
+                        injectorCell,
+                        normal,
+                        diameter,
+                        it.T(toi),
+                        mp,
+                        deviation,
+                        ddev,
+                        0.0,
+                        0.0,
+                        0.0,
+                        liquidCore,
+                        scalar(i),
+                        U,
+                        vector::zero,
+                        it.X(),
+                        fuels_->components()
+                    );
+
+                    injectedLiquidKE_ +=
+                        0.5*pPtr->m()*pow(mag(U), 2.0);
+                    
+                    scalar dt = time - toi;
+                    pPtr->t0() = runTime_.deltaT().value() - dt;;
+                    pPtr->tEnd() = dt;
+
+                    bool keepParcel = pPtr->move
+                    (
+                        *this
+                    );
+
+                    if (keepParcel)
+                    {
+                        addParticle(pPtr);
+                    }
+                    else
+                    {
+                        delete pPtr;
+                    }
+		}
             }
         }
     }

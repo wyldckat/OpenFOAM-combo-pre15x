@@ -98,6 +98,16 @@ public:
 
     // Member Functions
 
+        const word phase1Name() const
+        {
+            return phase1Name_;
+        }
+
+        const word phase2Name() const
+        {
+            return phase2Name_;
+        }
+
         //- Return const-access to phase1 viscosityModel
         const viscosityModel& nuModel1() const
         {

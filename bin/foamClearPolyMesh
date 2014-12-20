@@ -41,6 +41,6 @@ else
     echo "in polyMesh directory";
 fi
 
-rm -f pointFaces pointEdges pointCells faceEdges edges edgeFaces edgeCells cellEdges cellCells allOwner neighbour losort faceCentres faceAreas cellVolumes cellCentres
+rm -f pointFaces pointEdges pointCells faceEdges edges edgeFaces edgeCells cellEdges cellCells owner neighbour losort faceCentres faceAreas cellVolumes cellCentres
 
 #------------------------------------------------------------------------------

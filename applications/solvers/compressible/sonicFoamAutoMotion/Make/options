@@ -1,12 +1,7 @@
 EXE_INC = \
-    -I$(LIB_SRC)/cfdTools/compressible \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude \
-    -I$(LIB_SRC)/dynamicMesh/lnInclude \
-    -I$(LIB_SRC)/finiteElement/lnInclude \
-    $(WM_DECOMP_INC)
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/dynamicMesh/lnInclude
 
 EXE_LIBS = \
-    -lcfdTools \
-    -ldynamicMesh \
-    -lmeshTools \
-    $(WM_DECOMP_LIBS)
+    -lfiniteVolume \
+    -ldynamicMesh

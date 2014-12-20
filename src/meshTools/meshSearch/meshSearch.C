@@ -496,7 +496,7 @@ Foam::label Foam::meshSearch::findCell
 
     if (debug)
     {
-        Info<< "findCell : nearCellI:" << nearCellI
+        Pout<< "findCell : nearCellI:" << nearCellI
             << " ctr:" << mesh_.cellCentres()[nearCellI]
             << endl;
     }
@@ -524,7 +524,7 @@ Foam::label Foam::meshSearch::findCell
 
                 if (debug)
                 {
-                    Info<< "findCell : tracked from curPoint:" << curPoint
+                    Pout<< "findCell : tracked from curPoint:" << curPoint
                         << " nearCellI:" << nearCellI;
                 }
 
@@ -533,7 +533,7 @@ Foam::label Foam::meshSearch::findCell
 
                 if (debug)
                 {
-                    Info<< " to " << tracker.position()
+                    Pout<< " to " << tracker.position()
                         << " need:" << location
                         << " onB:" << tracker.onBoundary()
                         << " cell:" << tracker.cell()
@@ -564,16 +564,16 @@ Foam::label Foam::meshSearch::findCell
 
                 if (debug)
                 {
-                    Info<< "Searching for next boundary from curPoint:"
+                    Pout<< "Searching for next boundary from curPoint:"
                         << curPoint
                         << " to location:" << location  << endl;
                 }
                 pointIndexHit curHit = intersection(curPoint, location);
                 if (debug)
                 {
-                    Info<< "Returned from line search with ";
-                    curHit.write(Info);
-                    Info<< endl;
+                    Pout<< "Returned from line search with ";
+                    curHit.write(Pout);
+                    Pout<< endl;
                 }
 
                 if (!curHit.hit())

@@ -32,6 +32,7 @@ Description
 #include "edgeFields.H"
 #include "faPatchFields.H"
 #include "coupledFaPatchField.H"
+#include "transform.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

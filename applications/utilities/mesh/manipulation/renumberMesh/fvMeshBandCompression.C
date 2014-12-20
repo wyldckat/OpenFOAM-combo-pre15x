@@ -30,8 +30,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "fvMeshBandCompression.H"
 #include "bandCompression.H"
 #include "SLList.H"
@@ -56,8 +54,7 @@ fvMesh* fvMeshBandCompression::renumberedMesh() const
 {
     // Renumber the cell list
 
-    const cellList& oldCells = allCells();
-
+    const cellList& oldCells = cells();
     const labelList& oldOwner = faceOwner();
     const labelList& oldNeighbour = faceNeighbour();
 

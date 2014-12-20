@@ -2831,7 +2831,7 @@ Foam::fileName FoamX::ICaseBrowserImpl::caseServerKey
     const char* caseName
 )
 {
-    return hostName()/userName()/word(rootDir)/caseName;
+    return hostName()/userName()/fileName(rootDir)/caseName;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -2919,12 +2919,13 @@ CORBA::Boolean FoamX::ICaseBrowserImpl::getCasePostServerReference
     fileNameList serverKeys(nProcs);
 
     serverKeys[0] =
-        "FoamXCasePostServer"/userName()/word(rootDir)/caseName;
+        "FoamXCasePostServer"/userName()
+        /string::validate<word>(rootDir)/caseName;
 
     for(label procIndex = 1; procIndex < nProcs; procIndex++)
     {
         serverKeys[procIndex] =
-            "FoamXCasePostServer"/userName()/word(rootDir)
+            "FoamXCasePostServer"/userName()/string::validate<word>(rootDir)
           / word(caseName/("processor" + name(procIndex)));
     }
 

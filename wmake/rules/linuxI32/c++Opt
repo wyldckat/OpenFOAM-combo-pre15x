@@ -1,3 +1,2 @@
 c++DBUG     = 
-c++OPT      = -O3 -xN -tpp7 -ipo
-# (no -ipo on POV-ray or LAME due to linker errors)
+c++OPT      = -O3 -xP -no-prec-div

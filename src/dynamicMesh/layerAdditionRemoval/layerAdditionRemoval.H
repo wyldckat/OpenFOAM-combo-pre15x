@@ -47,8 +47,6 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
-
 /*---------------------------------------------------------------------------*\
                      Class layerAdditionRemoval Declaration
 \*---------------------------------------------------------------------------*/
@@ -149,7 +147,7 @@ public:
         (
             const word& name,
             const label index,
-            const polyMesh& mesh,
+            const polyTopoChanger& mme,
             const word& zoneName,
             const scalar minThickness,
             const scalar maxThickness
@@ -161,7 +159,7 @@ public:
             const word& name,
             const dictionary& dict,
             const label index,
-            const polyMesh& mesh
+            const polyTopoChanger& mme
         );
 
 
@@ -183,7 +181,7 @@ public:
         virtual void modifyMotionPoints(pointField& motionPoints) const;
 
         //- Force recalculation of locally stored data on topological change
-        virtual void updateTopology(const mapPolyMesh&);
+        virtual void updateMesh(const mapPolyMesh&);
 
 
         // Edit

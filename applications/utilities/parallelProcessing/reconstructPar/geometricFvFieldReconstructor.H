@@ -91,16 +91,16 @@ public:
         :
             public fvPatchFieldMapper
         {
-            labelList directAddressing_;
+            label size_;
 
         public:
 
             // Constructors
 
-                //- Construct given addressing
+                //- Construct given size
                 fvPatchFieldReconstructor(const label size)
                 :
-                    directAddressing_(size, 0)
+                    size_(size)
                 {}
 
 
@@ -108,12 +108,7 @@ public:
 
                 label size() const
                 {
-                    return directAddressing_.size();
-                }
-
-                virtual bool resizeOnly() const
-                {
-                    return false;
+                    return size_;
                 }
 
                 bool direct() const
@@ -123,7 +118,7 @@ public:
 
                 const unallocLabelList& directAddressing() const
                 {
-                    return directAddressing_;
+                    return unallocLabelList::null();
                 }
         };
 
@@ -173,7 +168,6 @@ public:
         (
             const IOobjectList& objects
         );
-
 };
 
 

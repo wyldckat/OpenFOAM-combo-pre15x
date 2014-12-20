@@ -39,7 +39,6 @@ SourceFiles
 
 #include "faDdtScheme.H"
 #include "faMatrices.H"
-#include "volFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

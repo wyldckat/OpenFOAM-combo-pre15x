@@ -41,7 +41,7 @@ License
 #include "symmetryPolyPatch.H"
 #include "wedgePolyPatch.H"
 
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -297,17 +297,17 @@ spray::spray
         axisOfWedgeNormal_ /= mag(axisOfWedgeNormal_);
 
         scalar arcCos = (v1 & v2)/mag(v1);
-        angleOfWedge_ = physicalConstant::pi - acos(arcCos);
+        angleOfWedge_ = mathematicalConstant::pi - acos(arcCos);
 
         Info<< "Calculated angle of wedge is "
-            << angleOfWedge_*180/physicalConstant::pi << " deg."
+            << angleOfWedge_*180/mathematicalConstant::pi << " deg."
             << endl;
     }
     else
     {
         if (symPlaneExist)
         {
-            angleOfWedge_ = physicalConstant::pi;
+            angleOfWedge_ = mathematicalConstant::pi;
             Info<< "Constructing 180 deg three dimensional spray injection."
                 << endl;
         }

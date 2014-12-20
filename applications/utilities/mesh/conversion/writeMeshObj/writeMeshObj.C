@@ -54,11 +54,11 @@ void writeOBJ(const point& pt, Ostream& os)
 }
 
 // All edges of mesh
-void writePoints(const primitiveMesh& mesh, const fileName& timeName)
+void writePoints(const polyMesh& mesh, const fileName& timeName)
 {
     label vertI = 0;
 
-    fileName pointFile("meshPoints_" + timeName + ".obj");
+    fileName pointFile(mesh.time().path()/"meshPoints_" + timeName + ".obj");
 
     Info << "Writing mesh points and edges to " << pointFile << endl;
 
@@ -83,12 +83,12 @@ void writePoints(const primitiveMesh& mesh, const fileName& timeName)
 // Edges for subset of cells
 void writePoints
 (
-    const primitiveMesh& mesh,
+    const polyMesh& mesh,
     const labelList& cellLabels,
     const fileName& timeName
 )
 {
-    fileName fName("meshPoints_" + timeName + ".obj");
+    fileName fName(mesh.time().path()/"meshPoints_" + timeName + ".obj");
 
     Info << "Writing mesh points and edges to " << fName << endl;
 
@@ -150,12 +150,16 @@ void writePoints
 // Edges of single cell
 void writePoints
 (
-    const primitiveMesh& mesh,
+    const polyMesh& mesh,
     const label cellI,
     const fileName& timeName
 )
 {
-    fileName fName("meshPoints_" + timeName + '_' + name(cellI) + ".obj");
+    fileName fName
+    (
+        mesh.time().path()
+      / "meshPoints_" + timeName + '_' + name(cellI) + ".obj"
+    );
 
     Info << "Writing mesh points and edges to " << fName << endl;
 
@@ -169,9 +173,13 @@ void writePoints
 
 
 // All face centres
-void writeFaceCentres(const primitiveMesh& mesh,const fileName& timeName)
+void writeFaceCentres(const polyMesh& mesh,const fileName& timeName)
 {
-    fileName faceFile("meshFaceCentres_" + timeName + ".obj");
+    fileName faceFile
+    (
+        mesh.time().path()
+      / "meshFaceCentres_" + timeName + ".obj"
+    );
 
     Info << "Writing mesh face centres to " << faceFile << endl;
 
@@ -184,9 +192,12 @@ void writeFaceCentres(const primitiveMesh& mesh,const fileName& timeName)
 }
 
 
-void writeCellCentres(const primitiveMesh& mesh, const fileName& timeName)
+void writeCellCentres(const polyMesh& mesh, const fileName& timeName)
 {
-    fileName cellFile("meshCellCentres_" + timeName + ".obj");
+    fileName cellFile
+    (
+        mesh.time().path()/"meshCellCentres_" + timeName + ".obj"
+    );
 
     Info << "Writing mesh cell centres to " << cellFile << endl;
 
@@ -201,15 +212,20 @@ void writeCellCentres(const primitiveMesh& mesh, const fileName& timeName)
 
 void writePatchCentres
 (
-    const polyBoundaryMesh& patches,
+    const polyMesh& mesh,
     const fileName& timeName
 )
 {
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
     forAll(patches, patchI)
     {
         const polyPatch& pp = patches[patchI];
 
-        fileName faceFile("patch_" + pp.name() + '_' + timeName + ".obj");
+        fileName faceFile
+        (
+            mesh.time().path()/"patch_" + pp.name() + '_' + timeName + ".obj"
+        );
 
         Info << "Writing patch face centres to " << faceFile << endl;
 
@@ -225,15 +241,21 @@ void writePatchCentres
 
 void writePatchFaces
 (
-    const polyBoundaryMesh& patches,
+    const polyMesh& mesh,
     const fileName& timeName
 )
 {
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
     forAll(patches, patchI)
     {
         const polyPatch& pp = patches[patchI];
 
-        fileName faceFile("patchFaces_" + pp.name() + '_' + timeName + ".obj");
+        fileName faceFile
+        (
+            mesh.time().path()
+          / "patchFaces_" + pp.name() + '_' + timeName + ".obj"
+        );
 
         Info << "Writing patch faces to " << faceFile << endl;
 
@@ -262,7 +284,7 @@ void writePatchFaces
 
 void writePointCells
 (
-    const primitiveMesh& mesh,
+    const polyMesh& mesh,
     const label pointI,
     const fileName& timeName
 )
@@ -282,7 +304,11 @@ void writePointCells
     }
 
 
-    fileName pFile("pointEdges_" + timeName + '_' + name(pointI) + ".obj");
+    fileName pFile
+    (
+        mesh.time().path()
+      / "pointEdges_" + timeName + '_' + name(pointI) + ".obj"
+    );
 
     Info << "Writing pointEdges to " << pFile << endl;
 
@@ -357,7 +383,7 @@ int main(int argc, char *argv[])
         {
             if (patchFaces)
             {
-                writePatchFaces(mesh.boundaryMesh(), runTime.timeName());
+                writePatchFaces(mesh, runTime.timeName());
 
             }
             else if (doCell)
@@ -381,7 +407,8 @@ int main(int argc, char *argv[])
 
                 fileName fName
                 (
-                    "meshPoints_"
+                    mesh.time().path()
+                  / "meshPoints_"
                   + runTime.timeName()
                   + '_'
                   + name(faceI)
@@ -419,7 +446,8 @@ int main(int argc, char *argv[])
 
                 fileName fName
                 (
-                    "meshPoints_"
+                    mesh.time().path()
+                  / "meshPoints_"
                   + runTime.timeName()
                   + '_'
                   + setName
@@ -450,7 +478,7 @@ int main(int argc, char *argv[])
                 writeCellCentres(mesh, runTime.timeName());
 
                 // Patch face centres
-                writePatchCentres(mesh.boundaryMesh(), runTime.timeName());
+                writePatchCentres(mesh, runTime.timeName());
             }
         }
         else

@@ -28,6 +28,7 @@ Description
 
 #include "cellShapeList.H"
 #include "IOstreams.H"
+#include "cell.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -99,6 +100,76 @@ inline pointField cellShape::points(const pointField& meshPoints) const
 inline const cellModel& cellShape::model() const
 {
     return *m;
+}
+
+
+// Mesh face labels of this cell (in order of model)
+inline labelList cellShape::meshFaces
+(
+    const faceList& allFaces,
+    const cell& cFaces
+) const
+{
+    // Faces in model order
+    faceList localFaces(faces());
+
+    // Do linear match (usually cell shape is low complexity)
+
+    labelList modelToMesh(localFaces.size(), -1);
+
+    forAll(localFaces, i)
+    {
+        const face& localF = localFaces[i];
+
+        forAll(cFaces, j)
+        {
+            label meshFaceI = cFaces[j];
+
+            if (allFaces[meshFaceI] == localF)
+            {
+                modelToMesh[i] = meshFaceI;
+
+                break;
+            }
+        }
+    }
+
+    return modelToMesh;
+}
+
+
+// Mesh edge labels of this cell (in order of model)
+inline labelList cellShape::meshEdges
+(
+    const edgeList& allEdges,
+    const labelList& cEdges
+) const
+{
+    // Edges in model order
+    edgeList localEdges(edges());
+
+    // Do linear match (usually cell shape is low complexity)
+
+    labelList modelToMesh(localEdges.size(), -1);
+
+    forAll(localEdges, i)
+    {
+        const edge& e = localEdges[i];
+
+        forAll(cEdges, j)
+        {
+            label edgeI = cEdges[j];
+
+            if (allEdges[edgeI] == e)
+            {
+                modelToMesh[i] = edgeI;
+
+                break;
+            }
+        }
+    }
+
+    return modelToMesh;
 }
 
 

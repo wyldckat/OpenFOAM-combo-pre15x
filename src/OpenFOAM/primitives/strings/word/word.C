@@ -31,7 +31,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "word.H"
-#include <iostream>
+#include "debug.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -40,106 +40,8 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-//- Null word
+int word::debug(debug::debugSwitch("word", 0));
 const word word::null;
-
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-void word::stripInvalid()
-{
-    /*
-    if (size() && !isalpha(operator[](0)))
-    {
-        cerr<< "--> FOAM Warning : "
-            "First character of word " << *this << " is not alpha"
-            << endl;
-    }
-    */
-
-    register size_type nValid=0;
-    iterator iter2 = begin();
-
-    for
-    (
-        iterator iter1 = begin();
-        iter1 != end();
-        iter1++
-    )
-    {
-        register char c = *iter1;
-
-        if (valid(c))
-        {
-            *iter2 = c;
-            ++iter2;
-            ++nValid;
-        }
-        else if (c == '/')
-        {
-            *iter2 = '|';
-            ++iter2;
-            ++nValid;
-        }
-    }
-
-    resize(nValid);
-}
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-word::word(const string& str)
-:
-    string(str)
-{
-    stripInvalid();
-}
-
-
-word::word(const std::string& stdStr)
-:
-    string(stdStr)
-{
-    stripInvalid();
-}
-
-
-word::word(const char* chars)
-:
-    string(chars)
-{
-    stripInvalid();
-}
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-void word::operator=(const word& q)
-{
-    string::operator=(q);
-}
-
-
-void word::operator=(const string& q)
-{
-    string::operator=(q);
-    stripInvalid();
-}
-
-
-void word::operator=(const std::string& q)
-{
-    string::operator=(q);
-    stripInvalid();
-}
-
-
-void word::operator=(const char* q)
-{
-    string::operator=(q);
-    stripInvalid();
-}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

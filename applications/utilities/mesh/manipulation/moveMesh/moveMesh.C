@@ -28,6 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "Time.H"
 #include "fvMesh.H"
 #include "motionSolver.H"
 
@@ -51,11 +52,11 @@ int main(int argc, char *argv[])
 
         mesh.movePoints(motionPtr->newPoints());
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n" << endl;
-
         runTime.write();
+
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

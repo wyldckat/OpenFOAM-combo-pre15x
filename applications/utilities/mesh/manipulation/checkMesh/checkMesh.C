@@ -47,7 +47,7 @@ Description
 #include "faceSet.H"
 #include "pointSet.H"
 #include "labelIOList.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "parallelInfo.H"
 
 #include "checkCoords.H"

@@ -1,19 +1,16 @@
 EXE_INC = \
     -Iaveraging \
     -I../interFoam \
+    -I../interFoam/interfaceProperties/lnInclude \
     -I../interFoam/incompressibleTwoPhaseMixture \
-    -I../interFoam/interfaceProperties \
-    -I$(LIB_SRC)/cfdTools/incompressible  \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/LESmodels \
     -I$(LIB_SRC)/LESmodels/LESdeltas/lnInclude \
     -I$(LIB_SRC)/transportModels
 
 EXE_LIBS = \
+    -linterfaceProperties \
     ../interFoam/Make/$(WM_OPTIONS)/twoPhaseMixture.o \
-    ../interFoam/Make/$(WM_OPTIONS)/interfaceProperties.o \
-    ../interFoam/Make/$(WM_OPTIONS)/gammaContactAngleFvPatchScalarField.o \
-    ../interFoam/Make/$(WM_OPTIONS)/gammaCompression.o \
     -lincompressibleTransportModels \
     -lincompressibleLESmodels \
-    -lcfdTools
+    -lfiniteVolume

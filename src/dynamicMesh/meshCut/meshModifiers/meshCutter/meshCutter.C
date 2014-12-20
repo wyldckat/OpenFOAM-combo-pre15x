@@ -29,12 +29,7 @@ Description
 #include "meshCutter.H"
 #include "polyMesh.H"
 #include "polyTopoChange.H"
-#include "polyAddCell.H"
-#include "polyAddFace.H"
-#include "polyAddPoint.H"
-#include "polyModifyFace.H"
 #include "cellCuts.H"
-#include "ListOps.H"
 #include "mapPolyMesh.H"
 #include "meshTools.H"
 
@@ -240,7 +235,7 @@ void Foam::meshCutter::addFace
         // Ordering ok.
         if (debug & 2)
         {
-            Info<< "Adding face " << newFace
+            Pout<< "Adding face " << newFace
                 << " with new owner:" << own
                 << " with new neighbour:" << nei
                 << " patchID:" << patchID
@@ -271,7 +266,7 @@ void Foam::meshCutter::addFace
         // Reverse owner/neighbour
         if (debug & 2)
         {
-            Info<< "Adding (reversed) face " << newFace.reverseFace()
+            Pout<< "Adding (reversed) face " << newFace.reverseFace()
                 << " with new owner:" << nei
                 << " with new neighbour:" << own
                 << " patchID:" << patchID
@@ -326,7 +321,7 @@ void Foam::meshCutter::modFace
     {
         if (debug & 2)
         {
-            Info<< "Modifying face " << faceI
+            Pout<< "Modifying face " << faceI
                 << " old vertices:" << mesh().faces()[faceI]
                 << " new vertices:" << newFace
                 << " new owner:" << own
@@ -640,7 +635,7 @@ void Foam::meshCutter::setRefinement
 
             if (debug & 2)
             {
-                Info<< "Added point " << addedPointI
+                Pout<< "Added point " << addedPointI
                     << " to vertex "
                     << masterPointI << " of edge " << edgeI
                     << " vertices " << e << endl;
@@ -674,7 +669,7 @@ void Foam::meshCutter::setRefinement
 
             if (debug & 2)
             {
-                Info<< "Added cell " << addedCells_[cellI] << " to cell "
+                Pout<< "Added cell " << addedCells_[cellI] << " to cell "
                     << cellI << endl;
             }
         }
@@ -722,13 +717,27 @@ void Foam::meshCutter::setRefinement
 
             if (debug & 2)
             {
-                Info<< "Added splitting face " << newFace << " index:"
+                // Gets edgeweights of loop
+                scalarField weights(loop.size());
+                forAll(loop, i)
+                {
+                    label cut = loop[i];
+
+                    weights[i] =
+                    (
+                        isEdge(cut)
+                      ? cuts.edgeWeight()[getEdge(cut)]
+                      : -GREAT
+                    );
+                }
+
+                Pout<< "Added splitting face " << newFace << " index:"
                     << addedFaceI
                     << " to owner " << cellI
                     << " neighbour " << addedCells_[cellI]
                     << " from Loop:";
-                writeCuts(Info, loop);
-                Info<< endl;
+                writeCuts(Pout, loop, weights);
+                Pout<< endl;
             }
         }
     }
@@ -800,7 +809,7 @@ void Foam::meshCutter::setRefinement
 
         if (debug & 2)
         {
-            Info<< "Split face " << mesh().faces()[faceI]
+            Pout<< "Split face " << mesh().faces()[faceI]
                 << " own:" << own << " nei:" << nei
                 << " into f0:" << f0
                 << " and f1:" << f1 << endl;
@@ -933,7 +942,7 @@ void Foam::meshCutter::setRefinement
 
                     if (debug & 2)
                     {
-                        Info<< "Added edge cuts to face " << faceI
+                        Pout<< "Added edge cuts to face " << faceI
                             << " f:" << mesh().faces()[faceI]
                             << " newFace:" << newFace << endl;
                     }
@@ -1005,7 +1014,7 @@ void Foam::meshCutter::setRefinement
 
     if (debug)
     {
-        Info<< "meshCutter:" << nl
+        Pout<< "meshCutter:" << nl
             << "    cells split:" << addedCells_.size() << nl
             << "    faces added:" << addedFaces_.size() << nl
             << "    points added on edges:" << addedPoints_.size() << nl
@@ -1014,131 +1023,136 @@ void Foam::meshCutter::setRefinement
 }
 
 
-void Foam::meshCutter::updateTopology(const mapPolyMesh& morphMap)
+void Foam::meshCutter::updateMesh(const mapPolyMesh& morphMap)
 {
     // Update stored labels for mesh change.
 
-    // Create copy since new label might (temporarily) clash with existing key.
-    Map<label> newAddedCells(addedCells_.size());
-
-    for
-    (
-        Map<label>::const_iterator iter = addedCells_.begin();
-        iter != addedCells_.end();
-        ++iter
-    )
     {
-        label cellI = iter.key();
+        // Create copy since new label might (temporarily) clash with existing
+        // key.
+        Map<label> newAddedCells(addedCells_.size());
 
-        label newCellI = morphMap.reverseCellMap()[cellI];
-
-        label addedCellI = iter();
-
-        label newAddedCellI = morphMap.reverseCellMap()[addedCellI];
-
-        if (newCellI != -1 && newAddedCellI != -1)
+        for
+        (
+            Map<label>::const_iterator iter = addedCells_.begin();
+            iter != addedCells_.end();
+            ++iter
+        )
         {
-            if
-            (
-                (debug & 2)
-             && (newCellI != cellI || newAddedCellI != addedCellI)
-            )
+            label cellI = iter.key();
+
+            label newCellI = morphMap.reverseCellMap()[cellI];
+
+            label addedCellI = iter();
+
+            label newAddedCellI = morphMap.reverseCellMap()[addedCellI];
+
+            if (newCellI != -1 && newAddedCellI != -1)
             {
-                Info<< "meshCutter::updateTopology :"
-                    << " updating addedCell for cell " << cellI
-                    << " from " << addedCellI
-                    << " to " << newAddedCellI << endl;
+                if
+                (
+                    (debug & 2)
+                 && (newCellI != cellI || newAddedCellI != addedCellI)
+                )
+                {
+                    Pout<< "meshCutter::updateMesh :"
+                        << " updating addedCell for cell " << cellI
+                        << " from " << addedCellI
+                        << " to " << newAddedCellI << endl;
+                }
+                newAddedCells.insert(newCellI, newAddedCellI);
             }
-            newAddedCells.insert(newCellI, newAddedCellI);
         }
+
+        // Copy
+        addedCells_.transfer(newAddedCells);
     }
 
-    // Copy
-    addedCells_ = newAddedCells;
-
-
-    Map<label> newAddedFaces(addedFaces_.size());
-
-    for
-    (
-        Map<label>::const_iterator iter = addedFaces_.begin();
-        iter != addedFaces_.end();
-        ++iter
-    )
     {
-        label cellI = iter.key();
+        Map<label> newAddedFaces(addedFaces_.size());
 
-        label newCellI = morphMap.reverseCellMap()[cellI];
-
-        label addedFaceI = iter();
-
-        label newAddedFaceI = morphMap.reverseFaceMap()[addedFaceI];
-
-        if ((newCellI != -1) && (newAddedFaceI != -1))
+        for
+        (
+            Map<label>::const_iterator iter = addedFaces_.begin();
+            iter != addedFaces_.end();
+            ++iter
+        )
         {
-            if
-            (
-                (debug & 2)
-             && (newCellI != cellI || newAddedFaceI != addedFaceI)
-            )
+            label cellI = iter.key();
+
+            label newCellI = morphMap.reverseCellMap()[cellI];
+
+            label addedFaceI = iter();
+
+            label newAddedFaceI = morphMap.reverseFaceMap()[addedFaceI];
+
+            if ((newCellI != -1) && (newAddedFaceI != -1))
             {
-                Info<< "meshCutter::updateTopology :"
-                    << " updating addedFace for cell " << cellI
-                    << " from " << addedFaceI
-                    << " to " << newAddedFaceI
-                    << endl;
+                if
+                (
+                    (debug & 2)
+                 && (newCellI != cellI || newAddedFaceI != addedFaceI)
+                )
+                {
+                    Pout<< "meshCutter::updateMesh :"
+                        << " updating addedFace for cell " << cellI
+                        << " from " << addedFaceI
+                        << " to " << newAddedFaceI
+                        << endl;
+                }
+                newAddedFaces.insert(newCellI, newAddedFaceI);
             }
-            newAddedFaces.insert(newCellI, newAddedFaceI);
         }
+
+        // Copy
+        addedFaces_.transfer(newAddedFaces);
     }
 
-    // Copy
-    addedFaces_ = newAddedFaces;
-
-
-    HashTable<label, edge, Hash<edge> > newAddedPoints(addedPoints_.size());
-
-    for
-    (
-        HashTable<label, edge, Hash<edge> >::const_iterator iter =
-            addedPoints_.begin();
-        iter != addedPoints_.end();
-        ++iter
-    )
     {
-        const edge& e = iter.key();
+        HashTable<label, edge, Hash<edge> > newAddedPoints(addedPoints_.size());
 
-        label newStart = morphMap.reversePointMap()[e.start()];
-
-        label newEnd = morphMap.reversePointMap()[e.end()];
-
-        label addedPointI = iter();
-
-        label newAddedPointI = morphMap.reversePointMap()[addedPointI];
-
-        if ((newStart != -1) && (newEnd != -1) && (newAddedPointI != -1))
+        for
+        (
+            HashTable<label, edge, Hash<edge> >::const_iterator iter =
+                addedPoints_.begin();
+            iter != addedPoints_.end();
+            ++iter
+        )
         {
-            edge newE = edge(newStart, newEnd);
+            const edge& e = iter.key();
 
-            if
-            (
-                (debug & 2)
-             && (e != newE || newAddedPointI != addedPointI)
-            )
-            {        
-                Info<< "meshCutter::updateTopology :"
-                    << " updating addedPoints for edge " << e
-                    << " from " << addedPointI
-                    << " to " << newAddedPointI
-                    << endl;
+            label newStart = morphMap.reversePointMap()[e.start()];
+
+            label newEnd = morphMap.reversePointMap()[e.end()];
+
+            label addedPointI = iter();
+
+            label newAddedPointI = morphMap.reversePointMap()[addedPointI];
+
+            if ((newStart != -1) && (newEnd != -1) && (newAddedPointI != -1))
+            {
+                edge newE = edge(newStart, newEnd);
+
+                if
+                (
+                    (debug & 2)
+                 && (e != newE || newAddedPointI != addedPointI)
+                )
+                {        
+                    Pout<< "meshCutter::updateMesh :"
+                        << " updating addedPoints for edge " << e
+                        << " from " << addedPointI
+                        << " to " << newAddedPointI
+                        << endl;
+                }
+
+                newAddedPoints.insert(newE, newAddedPointI);
             }
-
-            newAddedPoints.insert(newE, newAddedPointI);
         }
-    }
 
-    // Copy
-    addedPoints_ = newAddedPoints;
+        // Copy
+        addedPoints_.transfer(newAddedPoints);
+    }
 }
 
 

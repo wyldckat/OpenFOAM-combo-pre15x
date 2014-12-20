@@ -27,14 +27,15 @@ Description
     time directories. Each region is defined as a domain
     whose cells can all be reached by cell-face-cell walking.
     Uses meshWave.
+    Could work in parallel but never tested.
 
 \*---------------------------------------------------------------------------*/
 
+#include "SortableList.H"
 #include "argList.H"
 #include "polyMesh.H"
-#include "meshWave.H"
 #include "regionSplit.H"
-#include "meshSubset.H"
+#include "fvMeshSubset.H"
 
 using namespace Foam;
 
@@ -43,15 +44,20 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
+    argList::validOptions.insert("largestOnly", "");
+
 #   include "setRootCase.H"
 #   include "createTime.H"
 
+    bool largestOnly = args.options().found("largestOnly");
+
     Info<< "Create mesh\n" << endl;
-    meshSubset mesh
+
+    fvMeshSubset mesh
     (
         IOobject
         (
-            meshSubset::defaultRegion,
+            fvMeshSubset::defaultRegion,
             runTime.timeName(),
             runTime
         )
@@ -64,7 +70,7 @@ int main(int argc, char *argv[])
     // Determine connected regions
     regionSplit rs(mesh);
 
-    Info<< endl << "Number of regions:" << rs.nRegions() << endl;
+    Info<< endl << "Number of regions:" << rs.nRegions() << nl << endl;
 
     if (rs.nRegions() == 1)
     {
@@ -74,29 +80,42 @@ int main(int argc, char *argv[])
     {
         const labelList& region = rs.cellToRegion();
 
-        for(label regionI = 0; regionI < rs.nRegions(); regionI++)
+        SortableList<label> regionSizes(rs.nRegions(), 0);
+
+        forAll(region, cellI)
         {
-            Info<< "Region " << regionI << endl;
-            Info<< "-------- " << endl;
+            regionSizes[region[cellI]]++;
+        }
+        forAll(regionSizes, regionI)
+        {
+            reduce(regionSizes[regionI], sumOp<label>());
+        }
 
-            // Estimated size of hash
-            labelHashSet cellsToSubset(mesh.nCells()/rs.nRegions() + 1);
+        // So now all processors have same data. Sort in ascending order
+        // so largest is last. Walk through in reverse order so largest is
+        // first (cannot reverse list since would not reverse
+        // SortableList::indices)
 
-            // Insert selected cells
-            forAll(region, cellI)
-            {
-                if (region[cellI] == regionI)
-                {
-                    cellsToSubset.insert(cellI);
-                }
-            }
-            Info<< "Region " << regionI << " mesh has " << cellsToSubset.size()
+        regionSizes.sort();
+
+        label regionI = 0;
+
+        for (label i = rs.nRegions()-1; i >= 0; i--)
+        {
+            label oldRegionI = regionSizes.indices()[i];
+
+            Info<< "Region " << regionI << nl
+                << "-------- " << endl;
+
+            Info<< "Region " << regionI
+                << " mesh has " << regionSizes[i]
                 << " cells" << endl;
 
-            mesh.setLargeCellSubset(cellsToSubset);
+            // Subset. Create "oldInternalFaces" patch.
+            mesh.setLargeCellSubset(region, oldRegionI, -1);
  
             Info<< "Mesh subset in = "
-                << runTime.cpuTimeIncrement() << " s\n" << endl << endl;
+                << runTime.cpuTimeIncrement() << " s\n" << endl;
 
             runTime++;
 
@@ -106,6 +125,12 @@ int main(int argc, char *argv[])
             mesh.subMesh().write();
 
             Info<< endl;
+
+            if (largestOnly)
+            {
+                break;
+            }
+            regionI++;
         }
     }
 

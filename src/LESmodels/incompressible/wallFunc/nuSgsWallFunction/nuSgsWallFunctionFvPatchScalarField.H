@@ -70,14 +70,6 @@ public:
             const scalarField&
         );
 
-        //- Construct from patch, internal field and Istream
-        nuSgsWallFunctionFvPatchScalarField
-        (
-            const fvPatch&,
-            const scalarField&,
-            Istream&
-        );
-
         //- Construct from patch, internal field and dictionary
         nuSgsWallFunctionFvPatchScalarField
         (

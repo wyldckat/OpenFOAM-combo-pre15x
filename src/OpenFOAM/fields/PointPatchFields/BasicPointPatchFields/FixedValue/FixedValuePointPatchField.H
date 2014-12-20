@@ -140,13 +140,6 @@ public:
         {}
 
 
-        //- Set boundary condition to matrix
-        virtual void setBoundaryCondition
-        (
-            Map<constraint<Type> > &
-        ) const;
-
-
     // Member operators
 
         //- Disable assignment operators

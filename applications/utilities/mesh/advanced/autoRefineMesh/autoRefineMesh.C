@@ -29,7 +29,7 @@ Description
 
 #include "argList.H"
 #include "Time.H"
-#include "morphMesh.H"
+#include "polyMesh.H"
 #include "twoDPointCorrector.H"
 #include "OFstream.H"
 #include "multiDirRefinement.H"
@@ -46,6 +46,7 @@ Description
 #include "cellToCell.H"
 #include "surfaceSets.H"
 #include "polyTopoChange.H"
+#include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
 #include "labelIOList.H"
 #include "emptyPolyPatch.H"
@@ -188,7 +189,7 @@ scalar getEdgeStats(const primitiveMesh& mesh, const direction excludeCmpt)
 
 
 // Adds empty patch if not yet there. Returns patchID.
-label addPatch(morphMesh& mesh, const word& patchName)
+label addPatch(polyMesh& mesh, const word& patchName)
 {
     label patchI = mesh.boundaryMesh().findPatchID(patchName);
 
@@ -445,7 +446,7 @@ bool limitRefinementLevel
 // refLevel afterwards for added cells
 void doRefinement
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     const dictionary& refineDict,
     const labelHashSet& refCells,
     labelList& refLevel
@@ -496,7 +497,7 @@ void doRefinement
 // Subset mesh and update refLevel and cutCells
 void subsetMesh
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     const label writeMesh,
     const label patchI,                 // patchID for exposed faces
     const labelHashSet& cellsToRemove,
@@ -520,32 +521,18 @@ void subsetMesh
 
     const Time& runTime = mesh.time();
 
-    if (writeMesh)
+    autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh(mesh, meshMod);
+
+    if (morphMap().hasMotionPoints())
     {
-        const_cast<Time&>(runTime)++;
-
-        // Set current time index for morphing (used by polyMesh to known
-        // when to delete/create morphmap)
-        mesh.setMorphTimeIndex(runTime.timeIndex());
+        mesh.movePoints(morphMap().preMotionPoints());
     }
-    else
-    {
-        // No runTime changes so forcibly clear time keeping in polyMesh
-        mesh.resetMorph();
-    }
-
-    mesh.updateTopology(meshMod);
-
-    // Move mesh (since morphing does not do this)
-    const mapPolyMesh& morphMap = mesh.morphMap();
-
-    mesh.movePoints(morphMap.preMotionPoints());
 
     // Update topology on cellRemover
-    cellRemover.updateTopology(morphMap);
+    cellRemover.updateMesh(morphMap());
 
     // Update refLevel for removed cells.
-    const labelList& cellMap = morphMap.cellMap();
+    const labelList& cellMap = morphMap().cellMap();
 
     labelList newRefLevel(cellMap.size());
 
@@ -568,7 +555,7 @@ void subsetMesh
     }
 
     // Update cutCells for removed cells.
-    cutCells.updateTopology(morphMap);
+    cutCells.updateMesh(morphMap());
 }
     
 
@@ -649,17 +636,7 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-
-    Info<< "Create polyMesh for time = " << runTime.value() << nl << endl;
-    morphMesh mesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
+#   include "createPolyMesh.H"
 
     // If nessecary add oldInternalFaces patch
     label newPatchI = addPatch(mesh, "oldInternalFaces");
@@ -907,6 +884,13 @@ int main(int argc, char *argv[])
         Info<< "    Current cells           : " << mesh.nCells() << nl
             << "    Selected for refinement :" << cutCells.size() << nl
             << endl;
+
+        if (cutCells.size() == 0)
+        {
+            Info<< "Stopping refining since 0 cells selected to be refined ..."
+                << nl << endl;
+            break;
+        }
 
         if ((mesh.nCells() + 8*cutCells.size()) > cellLimit)
         {

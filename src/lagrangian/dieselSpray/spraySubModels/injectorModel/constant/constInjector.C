@@ -28,7 +28,7 @@ Description
 
 #include "constInjector.H"
 #include "addToRunTimeSelectionTable.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -153,11 +153,11 @@ vector constInjector::direction
                         v  (alpha)
         */
 
-    scalar angle = rndGen_.scalar01()*sprayAngle_[n]*physicalConstant::pi/360.0;
+    scalar angle = rndGen_.scalar01()*sprayAngle_[n]*mathematicalConstant::pi/360.0;
     scalar alpha = sin(angle);
     scalar dcorr = cos(angle);
 
-    scalar beta = 2.0*physicalConstant::pi*rndGen_.scalar01();
+    scalar beta = 2.0*mathematicalConstant::pi*rndGen_.scalar01();
 
     // randomly distributed vector normal to the injection vector
     vector normal = vector::zero;
@@ -167,7 +167,7 @@ vector constInjector::direction
         scalar reduce = 0.01;
         // correct beta if this is a 2D run
         // map it onto the 'angleOfWedge'
-        beta *= (1.0-2.0*reduce)*0.5*sm_.angleOfWedge()/physicalConstant::pi;
+        beta *= (1.0-2.0*reduce)*0.5*sm_.angleOfWedge()/mathematicalConstant::pi;
         beta += reduce*sm_.angleOfWedge();
 
         normal = alpha*

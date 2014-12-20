@@ -33,7 +33,7 @@ Description
 #ifndef scalarIOField_H
 #define scalarIOField_H
 
-#include "primitiveFields.H"
+#include "scalarField.H"
 #include "IOField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

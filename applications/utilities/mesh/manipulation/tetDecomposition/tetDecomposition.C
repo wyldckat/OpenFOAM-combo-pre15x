@@ -30,7 +30,7 @@ Description
 
 #include "argList.H"
 #include "Time.H"
-#include "fvMesh.H"
+#include "polyMesh.H"
 #include "tetPolyMesh.H"
 
 using namespace Foam;
@@ -44,11 +44,11 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "createTime.H"
 
-    fvMesh mesh
+    polyMesh mesh
     (
         IOobject
         (
-            fvMesh::defaultRegion,
+            polyMesh::defaultRegion,
             runTime.timeName(),
             runTime
         )

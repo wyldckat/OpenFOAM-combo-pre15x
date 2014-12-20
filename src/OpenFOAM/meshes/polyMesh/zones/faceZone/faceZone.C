@@ -75,7 +75,7 @@ void Foam::faceZone::calcFaceZonePatch() const
 
     const faceList& f = zoneMesh().mesh().allFaces();
 
-    const labelList& addr = addressing();
+    const labelList& addr = *this;
     const boolList& flip = flipMap();
 
     forAll (addr, faceI)
@@ -128,7 +128,7 @@ void Foam::faceZone::calcFaceLookupMap() const
             << abort(FatalError);
     }
 
-    const labelList& addr = addressing();
+    const labelList& addr = *this;
 
     faceLookupMapPtr_ = new Map<label>(2*addr.size());
     Map<label>& flm = *faceLookupMapPtr_;
@@ -172,7 +172,7 @@ void Foam::faceZone::calcCellLayers() const
         const labelList& own = zoneMesh().mesh().allOwner();
         const labelList& nei = zoneMesh().mesh().allNeighbour();
 
-        const labelList& mf = addressing();
+        const labelList& mf = *this;
 
         const boolList& faceFlip = flipMap();
 
@@ -204,11 +204,11 @@ void Foam::faceZone::calcCellLayers() const
 
 void Foam::faceZone::checkAddressing() const
 {
-    if (addressing_.size() != flipMap_.size())
+    if (size() != flipMap_.size())
     {
         FatalErrorIn("void Foam::faceZone::checkAddressing() const")
             << "Different sizes of the addressing and flipMap arrays.  "
-            << "Size of addressing: " << addressing_.size()
+            << "Size of addressing: " << size()
             << " size of flip map: " << flipMap_.size()
             << abort(FatalError);
     }
@@ -227,8 +227,8 @@ Foam::faceZone::faceZone
     const faceZoneMesh& zm
 )
 :
+    labelList(addr),
     name_(name),
-    addressing_(addr),
     flipMap_(fm),
     index_(index),
     zoneMesh_(zm),
@@ -251,8 +251,8 @@ Foam::faceZone::faceZone
     const faceZoneMesh& zm
 )
 :
+    labelList(dict.lookup("faceLabels")),
     name_(name),
-    addressing_(dict.lookup("faceLabels")),
     flipMap_(dict.lookup("flipMap")),
     index_(index),
     zoneMesh_(zm),
@@ -271,14 +271,14 @@ Foam::faceZone::faceZone
 Foam::faceZone::faceZone
 (
     const faceZone& fz,
-    const faceZoneMesh& zm,
-    const label index,
     const labelList& addr,
-    const boolList& fm
+    const boolList& fm,
+    const label index,
+    const faceZoneMesh& zm
 )
 :
+    labelList(addr),
     name_(fz.name()),
-    addressing_(addr),
     flipMap_(fm),
     index_(index),
     zoneMesh_(zm),
@@ -366,7 +366,7 @@ const Foam::labelList& Foam::faceZone::meshEdges() const
 
         const labelList& own = zoneMesh().mesh().faceOwner();
 
-        const labelList& faceLabels = addressing();
+        const labelList& faceLabels = *this;
 
         forAll (faceCells, faceI)
         {
@@ -408,24 +408,24 @@ void Foam::faceZone::resetAddressing
 )
 {
     clearAddressing();
-    addressing_ = addr;
+    labelList::operator=(addr);
     flipMap_ = flipMap;
 }
 
 
-void Foam::faceZone::updateTopology(const mapPolyMesh& mpm)
+void Foam::faceZone::updateMesh(const mapPolyMesh& mpm)
 {
     clearAddressing();
 
-    labelList newAddressing(addressing_.size());
+    labelList newAddressing(size());
     boolList newFlipMap(flipMap_.size());
     label nFaces = 0;
 
     const labelList& faceMap = mpm.reverseFaceMap();
 
-    forAll(addressing_, i)
+    forAll(*this, i)
     {
-        label faceI = addressing_[i];
+        label faceI = operator[](i);
 
         if (faceMap[faceI] != -1)
         {
@@ -438,7 +438,7 @@ void Foam::faceZone::updateTopology(const mapPolyMesh& mpm)
     newAddressing.setSize(nFaces);
     newFlipMap.setSize(nFaces);
 
-    addressing_.transfer(newAddressing);
+    transfer(newAddressing);
     flipMap_.transfer(newFlipMap);
 }
 
@@ -454,7 +454,7 @@ void Foam::faceZone::movePoints(const pointField& p)
 void Foam::faceZone::write(Ostream& os) const
 {
     os  << nl << name()
-        << nl << addressing()
+        << nl << static_cast<const labelList&>(*this)
         << nl << flipMap();
 }
 
@@ -464,14 +464,14 @@ void Foam::faceZone::writeDict(Ostream& os) const
     os  << nl << name() << nl << token::BEGIN_BLOCK << nl
         << "    type " << type() << token::END_STATEMENT << nl;
 
-    addressing().writeEntry("faceLabels", os);
+    writeEntry("faceLabels", os);
     flipMap().writeEntry("flipMap", os);
 
     os  << token::END_BLOCK << endl;
 }
 
 
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
 
 Foam::Ostream& Foam::operator<<(Ostream& os, const faceZone& p)
 {

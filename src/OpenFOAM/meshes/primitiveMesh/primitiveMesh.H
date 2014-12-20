@@ -382,6 +382,20 @@ public:
             const labelList& faceNeighbour
         );
 
+        //- Reset this primitiveMesh given a complete set of data and cells
+        void reset
+        (
+            const label nPoints,
+            const label nInternalFaces,
+            const label nFaces,
+            const label nCells,
+            const pointField& points,
+            const faceList& faces,
+            const labelList& faceOwner,
+            const labelList& faceNeighbour,
+            cellList& cells
+        );
+
 
         // Access
 
@@ -413,6 +427,17 @@ public:
 
                 //- Return mesh edges
                 const edgeList& edges() const;
+
+                //- Helper function to calculate cell-face addressing from
+                //  face-cell addressing. If nCells is not provided it will
+                //  scan for the maximum.
+                static void calcCells
+                (
+                    cellList&,
+                    const unallocLabelList& own,
+                    const unallocLabelList& nei,
+                    const label nCells = -1
+                );
 
 
             // Mesh motion
@@ -576,6 +601,7 @@ public:
                     labelHashSet* setPtr = NULL
                 ) const;
 
+
             //- Check mesh topology for correctness. Returns false for no error.
             bool checkTopology(const bool report = false) const;
 
@@ -623,6 +649,7 @@ public:
 
             //- Find cell enclosing this location (-1 if not in mesh)
             label findCell(const point& location) const;
+
 
         //  Storage management
 

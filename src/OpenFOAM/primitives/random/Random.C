@@ -151,6 +151,25 @@ tensor Random::tensor01()
 }
 
 
+sphericalTensor Random::sphericalTensor01()
+{
+    sphericalTensor rndTen;
+    rndTen.ii() = scalar01();
+
+    return rndTen;
+}
+
+
+label Random::integer(const label lower, const label upper)
+{
+#   ifdef USE_RANDOM
+        return lower + (random() % (upper+1-lower));
+#   else
+        return lower + (lrand48() % (upper+1-lower));
+#   endif
+}
+
+
 vector Random::position(const vector& start, const vector& end)
 {
     vector rndVec(start);
@@ -180,6 +199,12 @@ void Random::randomise(vector& v)
 void Random::randomise(tensor& t)
 {
     t = tensor01();
+}
+
+
+void Random::randomise(sphericalTensor& st)
+{
+    st = sphericalTensor01();
 }
 
 

@@ -300,7 +300,7 @@ public:
                 if (!correct2DPtr_)
                 {
                     FatalErrorIn("motionSmoother::correct2D()")
-                        << "No 2D motion. Check constant/motionProperties"
+                        << "No 2D motion. Check constant/dynamicMeshDict"
                         <<  " and empty 3D boundaries" << abort(FatalError);
                 }
                 return *correct2DPtr_;
@@ -331,7 +331,7 @@ public:
             );
 
             //- Update topology
-            void updateTopology();
+            void updateMesh();
 
             //- Check mesh with current settings. Collects incorrect faces
             //  in set. Returns true if one or more faces in error.

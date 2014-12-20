@@ -32,6 +32,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "primitiveMesh.H"
+//#include "IFstream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -145,7 +146,10 @@ void primitiveMesh::makeCellCentresAndVols
     }
 
     cellCtrs /= cellVols;
-    cellVols /= 3.0;
+    cellVols *= (1.0/3.0);
+
+    //vectorField p(IFstream("points")());
+    //cellCtrs = p;
 }
 
 

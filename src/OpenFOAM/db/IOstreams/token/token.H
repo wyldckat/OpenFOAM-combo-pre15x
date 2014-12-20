@@ -73,7 +73,8 @@ public:
         WORD,
         STRING,
         LABEL,
-        SCALAR,
+        FLOAT_SCALAR,
+        DOUBLE_SCALAR,
         COMPOUND,
 
         ERROR
@@ -245,7 +246,8 @@ private:
             word* wordTokenPtr_;
             string* stringTokenPtr_;
             label labelToken_;
-            scalar scalarToken_;
+            floatScalar floatScalarToken_;
+            doubleScalar doubleScalarToken_;
             mutable compound* compoundTokenPtr_;
         };
 
@@ -284,8 +286,11 @@ public:
         //- Construct label token
         inline token(const label, label lineNumber=0);
 
-        //- Construct scalar token
-        inline token(const scalar s, label lineNumber=0);
+        //- Construct floatScalar token
+        inline token(const floatScalar s, label lineNumber=0);
+
+        //- Construct doubleScalar token
+        inline token(const doubleScalar s, label lineNumber=0);
 
         //- Construct from Istream
         token(Istream&);
@@ -317,6 +322,12 @@ public:
 
             inline bool isLabel() const;
             inline label labelToken() const;
+
+            inline bool isFloatScalar() const;
+            inline floatScalar floatScalarToken() const;
+
+            inline bool isDoubleScalar() const;
+            inline doubleScalar doubleScalarToken() const;
 
             inline bool isScalar() const;
             inline scalar scalarToken() const;
@@ -363,7 +374,8 @@ public:
             inline void operator=(const string&);
 
             inline void operator=(const label);
-            inline void operator=(const scalar);
+            inline void operator=(const floatScalar);
+            inline void operator=(const doubleScalar);
 
             inline void operator=(compound*);
 
@@ -375,7 +387,8 @@ public:
             inline bool operator==(const word&) const;
             inline bool operator==(const string&) const;
             inline bool operator==(const label) const;
-            inline bool operator==(const scalar) const;
+            inline bool operator==(const floatScalar) const;
+            inline bool operator==(const doubleScalar) const;
 
 
         // Inequality
@@ -385,7 +398,8 @@ public:
             inline bool operator!=(const word&) const;
             inline bool operator!=(const string&) const;
             inline bool operator!=(const label) const;
-            inline bool operator!=(const scalar) const;
+            inline bool operator!=(const floatScalar) const;
+            inline bool operator!=(const doubleScalar) const;
 
 
     // IOstream operators

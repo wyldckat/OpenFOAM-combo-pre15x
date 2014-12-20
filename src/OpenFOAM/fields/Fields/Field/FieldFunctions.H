@@ -27,12 +27,14 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
+#include "scalarField.H"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-/* * * * * * * * * * * * * * * * Global functions  * * * * * * * * * * * * * */
+/* * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * */
 
 template<class Type>
 void component
@@ -128,35 +130,35 @@ template<class Type>
 tmp<Field<Type> > cmptMag(const tmp<Field<Type> >& tf);
 
 
-#define BINARY_FUNCTION(func)                                                 \
+#define BINARY_FUNCTION(Func)                                                 \
                                                                               \
 template<class Type>                                                          \
-void func(Field<Type>& f, const UList<Type>& f1, const UList<Type>& f2);      \
+void Func(Field<Type>& f, const UList<Type>& f1, const UList<Type>& f2);      \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > func(const UList<Type>& f1, const UList<Type>& f2);         \
+tmp<Field<Type> > Func(const UList<Type>& f1, const UList<Type>& f2);         \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > func(const UList<Type>& f1, const tmp<Field<Type> >& tf2);  \
+tmp<Field<Type> > Func(const UList<Type>& f1, const tmp<Field<Type> >& tf2);  \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > func(const tmp<Field<Type> >& tf1, const UList<Type>& f2);  \
+tmp<Field<Type> > Func(const tmp<Field<Type> >& tf1, const UList<Type>& f2);  \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > func                                                        \
+tmp<Field<Type> > Func                                                        \
 (                                                                             \
     const tmp<Field<Type> >& tf1,                                             \
     const tmp<Field<Type> >& tf2                                              \
 );                                                                            \
                                                                               \
 template<class Type>                                                          \
-void func(Field<Type>& f, const UList<Type>& f1, const Type& s);              \
+void Func(Field<Type>& f, const UList<Type>& f1, const Type& s);              \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > func(const UList<Type>& f1, const Type& s);                 \
+tmp<Field<Type> > Func(const UList<Type>& f1, const Type& s);                 \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > func(const tmp<Field<Type> >& tf1, const Type& s);
+tmp<Field<Type> > Func(const tmp<Field<Type> >& tf1, const Type& s);
 
 BINARY_FUNCTION(max)
 BINARY_FUNCTION(min)
@@ -165,10 +167,10 @@ BINARY_FUNCTION(scale)
 #undef BINARY_FUNCTION
 
 
-#define TMP_UNARY_FUNCTION(returnType, func)                                  \
+#define TMP_UNARY_FUNCTION(ReturnType, Func)                                  \
                                                                               \
 template<class Type>                                                          \
-returnType func(const tmp<Field<Type> >& tf1);
+ReturnType Func(const tmp<Field<Type> >& tf1);
 
 template<class Type>
 Type max(const UList<Type>& f);
@@ -205,11 +207,11 @@ Type average(const UList<Type>& f);
 TMP_UNARY_FUNCTION(Type, average)
 
 
-#define G_UNARY_FUNCTION(returnType, gFunc, func, rFunc)                      \
+#define G_UNARY_FUNCTION(ReturnType, gFunc, Func, rFunc)                      \
                                                                               \
 template<class Type>                                                          \
-returnType gFunc(const UList<Type>& f);                                       \
-TMP_UNARY_FUNCTION(returnType, gFunc)
+ReturnType gFunc(const UList<Type>& f);                                       \
+TMP_UNARY_FUNCTION(ReturnType, gFunc)
 
 G_UNARY_FUNCTION(Type, gMax, max, max)
 G_UNARY_FUNCTION(Type, gMin, min, min)
@@ -232,23 +234,23 @@ TMP_UNARY_FUNCTION(Type, gAverage)
 
 /* * * * * * * * * * * * * * * * Global operators  * * * * * * * * * * * * * */
 
-#define UNARY_OPERATOR(op, opFunc)                                            \
+#define UNARY_OPERATOR(Op, OpFunc)                                            \
                                                                               \
 template<class Type>                                                          \
-void opFunc                                                                   \
+void OpFunc                                                                   \
 (                                                                             \
     Field<Type>& f,                                                           \
     const UList<Type>& f1                                                     \
 );                                                                            \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const UList<Type>& f1                                                     \
 );                                                                            \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const tmp<Field<Type> >& tf1                                              \
 );
@@ -258,10 +260,10 @@ UNARY_OPERATOR(-, negate)
 #undef UNARY_OPERATOR
 
 
-#define BINARY_OPERATOR_FF(Type1, Type2, op, opFunc)                          \
+#define BINARY_OPERATOR_FF(Type1, Type2, Op, OpFunc)                          \
                                                                               \
 template<class Type>                                                          \
-void opFunc                                                                   \
+void OpFunc                                                                   \
 (                                                                             \
     Field<Type>& f,                                                           \
     const UList<Type1>& f1,                                                   \
@@ -269,94 +271,103 @@ void opFunc                                                                   \
 );                                                                            \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const UList<Type1>& f1,                                                   \
     const UList<Type2>& f2                                                    \
 );
 
 
-#define BINARY_OPERATOR_FTR(Type1, Type2, op, opFunc)                         \
+#define BINARY_OPERATOR_FR(Type1, Type2, Op, OpFunc)                          \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const UList<Type1>& f1,                                                   \
     const tmp<Field<Type2> >& tf2                                             \
 );
 
-#define BINARY_OPERATOR_FT(Type1, Type2, op, opFunc)                          \
+#define BINARY_OPERATOR_FT(Type1, Type2, Op, OpFunc)                          \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const UList<Type1>& f1,                                                   \
     const tmp<Field<Type2> >& tf2                                             \
 );
 
-#define BINARY_OPERATOR_TRF(Type1, Type2, op, opFunc)                         \
+#define BINARY_OPERATOR_RF(Type1, Type2, Op, OpFunc)                          \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const tmp<Field<Type1> >& tf1,                                            \
     const UList<Type2>& f2                                                    \
 );
 
-#define BINARY_OPERATOR_TF(Type1, Type2, op, opFunc)                          \
+#define BINARY_OPERATOR_TF(Type1, Type2, Op, OpFunc)                          \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const tmp<Field<Type1> >& tf1,                                            \
     const UList<Type2>& f2                                                    \
 );
 
-#define BINARY_OPERATOR_TRT(Type1, Type2, op, opFunc)                         \
+#define BINARY_OPERATOR_RT(Type1, Type2, Op, OpFunc)                          \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const tmp<Field<Type1> >& tf1,                                            \
     const tmp<Field<Type2> >& tf2                                             \
 );
 
-#define BINARY_OPERATOR_TTR(Type1, Type2, op, opFunc)                         \
+#define BINARY_OPERATOR_TR(Type1, Type2, Op, OpFunc)                          \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const tmp<Field<Type1> >& tf1,                                            \
     const tmp<Field<Type2> >& tf2                                             \
 );
 
-#define BINARY_OPERATOR_R(Type1, Type2, op, opFunc)                           \
-    BINARY_OPERATOR_FF(Type1, Type2, op, opFunc)                              \
-    BINARY_OPERATOR_FTR(Type1, Type2, op, opFunc)                             \
-    BINARY_OPERATOR_TRF(Type1, Type2, op, opFunc)                             \
-    BINARY_OPERATOR_TRT(Type1, Type2, op, opFunc)
+#define BINARY_OPERATOR_RR(Type1, Type2, Op, OpFunc)                          \
+    BINARY_OPERATOR_FF(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_FR(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_RF(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_RT(Type1, Type2, Op, OpFunc)
 
-BINARY_OPERATOR_R(Type, Type, +, add)
-BINARY_OPERATOR_R(Type, Type, -, subtract)
+#define BINARY_OPERATOR_RN(Type1, Type2, Op, OpFunc)                          \
+    BINARY_OPERATOR_FF(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_FT(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_RF(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_RT(Type1, Type2, Op, OpFunc)
 
-BINARY_OPERATOR_FF(scalar, Type, *, multiply)
-BINARY_OPERATOR_FTR(scalar, Type, *, multiply)
-BINARY_OPERATOR_TF(scalar, Type, *, multiply)
-BINARY_OPERATOR_TTR(scalar, Type, *, multiply)
+#define BINARY_OPERATOR_NR(Type1, Type2, Op, OpFunc)                          \
+    BINARY_OPERATOR_FF(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_FR(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_TF(Type1, Type2, Op, OpFunc)                              \
+    BINARY_OPERATOR_TR(Type1, Type2, Op, OpFunc)
 
-BINARY_OPERATOR_FF(Type, scalar, /, divide)
-BINARY_OPERATOR_FT(Type, scalar, /, divide)
-BINARY_OPERATOR_TRF(Type, scalar, /, divide)
-BINARY_OPERATOR_TRT(Type, scalar, /, divide)
+    //BINARY_OPERATOR_RR(Type, Type, +, add)
+    //BINARY_OPERATOR_RR(Type, Type, -, subtract)
+BINARY_OPERATOR_RN(Type, scalar, *, multiply)
+BINARY_OPERATOR_NR(scalar, Type, *, multiply)
+BINARY_OPERATOR_RN(Type, scalar, /, divide)
 
-#undef BINARY_OPERATOR_R
+#undef BINARY_OPERATOR_RR
+#undef BINARY_OPERATOR_RN
+#undef BINARY_OPERATOR_NR
 #undef BINARY_OPERATOR_FF
-#undef BINARY_OPERATOR_FTR
+#undef BINARY_OPERATOR_FR
 #undef BINARY_OPERATOR_TF
-#undef BINARY_OPERATOR_TTR
+#undef BINARY_OPERATOR_TR
 #undef BINARY_OPERATOR_FT
-#undef BINARY_OPERATOR_TRF
-#undef BINARY_OPERATOR_TRT
+#undef BINARY_OPERATOR_RF
+#undef BINARY_OPERATOR_RT
 
 
-#define BINARY_TYPE_OPERATOR_TF(TYPE, op, opFunc)                             \
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#define BINARY_TYPE_OPERATOR_SF(TYPE, Op, OpFunc)                             \
                                                                               \
 template<class Type>                                                          \
-void opFunc                                                                   \
+void OpFunc                                                                   \
 (                                                                             \
     Field<Type>& f,                                                           \
     const TYPE& s,                                                            \
@@ -364,24 +375,24 @@ void opFunc                                                                   \
 );                                                                            \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const TYPE& s,                                                            \
     const UList<Type>& f1                                                     \
 );                                                                            \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const TYPE& s,                                                            \
     const tmp<Field<Type> >& tf1                                              \
 );
 
 
-#define BINARY_TYPE_OPERATOR_FT(TYPE, op, opFunc)                             \
+#define BINARY_TYPE_OPERATOR_FS(TYPE, Op, OpFunc)                             \
                                                                               \
 template<class Type>                                                          \
-void opFunc                                                                   \
+void OpFunc                                                                   \
 (                                                                             \
     Field<Type>& f,                                                           \
     const UList<Type>& f1,                                                    \
@@ -389,39 +400,41 @@ void opFunc                                                                   \
 );                                                                            \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const UList<Type>& f1,                                                    \
     const TYPE& s                                                             \
 );                                                                            \
                                                                               \
 template<class Type>                                                          \
-tmp<Field<Type> > operator op                                                 \
+tmp<Field<Type> > operator Op                                                 \
 (                                                                             \
     const tmp<Field<Type> >& tf1,                                             \
     const TYPE& s                                                             \
 );
 
 
-#define BINARY_TYPE_OPERATOR(TYPE, op, opFunc)                                \
-    BINARY_TYPE_OPERATOR_TF(TYPE, op, opFunc)                                 \
-    BINARY_TYPE_OPERATOR_FT(TYPE, op, opFunc)
+#define BINARY_TYPE_OPERATOR(TYPE, Op, OpFunc)                                \
+    BINARY_TYPE_OPERATOR_SF(TYPE, Op, OpFunc)                                 \
+    BINARY_TYPE_OPERATOR_FS(TYPE, Op, OpFunc)
 
-BINARY_TYPE_OPERATOR(Type, +, add)
-BINARY_TYPE_OPERATOR(Type, -, subtract)
+    //BINARY_TYPE_OPERATOR(Type, +, add)
+    //BINARY_TYPE_OPERATOR(Type, -, subtract)
 
 BINARY_TYPE_OPERATOR(scalar, *, multiply)
-BINARY_TYPE_OPERATOR_FT(scalar, /, divide)
+BINARY_TYPE_OPERATOR_FS(scalar, /, divide)
 
 #undef BINARY_TYPE_OPERATOR
-#undef BINARY_TYPE_OPERATOR_TF
-#undef BINARY_TYPE_OPERATOR_FT
+#undef BINARY_TYPE_OPERATOR_SF
+#undef BINARY_TYPE_OPERATOR_FS
 
 
-#define PRODUCT_OPERATOR(product, op, opFunc)                                 \
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#define PRODUCT_OPERATOR(product, Op, OpFunc)                                 \
                                                                               \
 template<class Type1, class Type2>                                            \
-void opFunc                                                                   \
+void OpFunc                                                                   \
 (                                                                             \
     Field<typename product<Type1, Type2>::type>& f,                           \
     const UList<Type1>& f1,                                                   \
@@ -430,22 +443,22 @@ void opFunc                                                                   \
                                                                               \
 template<class Type1, class Type2>                                            \
 tmp<Field<typename product<Type1, Type2>::type> >                             \
-operator op(const UList<Type1>& f1, const UList<Type2>& f2);                  \
+operator Op(const UList<Type1>& f1, const UList<Type2>& f2);                  \
                                                                               \
 template<class Type1, class Type2>                                            \
 tmp<Field<typename product<Type1, Type2>::type> >                             \
-operator op(const UList<Type1>& f1, const tmp<Field<Type2> >& tf2);           \
+operator Op(const UList<Type1>& f1, const tmp<Field<Type2> >& tf2);           \
                                                                               \
 template<class Type1, class Type2>                                            \
 tmp<Field<typename product<Type1, Type2>::type> >                             \
-operator op(const tmp<Field<Type1> >& tf1, const UList<Type2>& f2);           \
+operator Op(const tmp<Field<Type1> >& tf1, const UList<Type2>& f2);           \
                                                                               \
 template<class Type1, class Type2>                                            \
 tmp<Field<typename product<Type1, Type2>::type> >                             \
-operator op(const tmp<Field<Type1> >& tf1, const tmp<Field<Type2> >& tf2);    \
+operator Op(const tmp<Field<Type1> >& tf1, const tmp<Field<Type2> >& tf2);    \
                                                                               \
 template<class Type, class Form, class Cmpt, int nCmpt>                       \
-void opFunc                                                                   \
+void OpFunc                                                                   \
 (                                                                             \
     Field<typename product<Type, Form>::type>& f,                             \
     const UList<Type>& f1,                                                    \
@@ -454,14 +467,14 @@ void opFunc                                                                   \
                                                                               \
 template<class Type, class Form, class Cmpt, int nCmpt>                       \
 tmp<Field<typename product<Type, Form>::type> >                               \
-operator op(const UList<Type>& f1, const VectorSpace<Form,Cmpt,nCmpt>& vs);   \
+operator Op(const UList<Type>& f1, const VectorSpace<Form,Cmpt,nCmpt>& vs);   \
                                                                               \
 template<class Type, class Form, class Cmpt, int nCmpt>                       \
 tmp<Field<typename product<Type, Form>::type> >                               \
-operator op(const tmp<Field<Type> >&tf1,const VectorSpace<Form,Cmpt,nCmpt>&vs);\
+operator Op(const tmp<Field<Type> >&tf1,const VectorSpace<Form,Cmpt,nCmpt>&vs);\
                                                                               \
 template<class Form, class Cmpt, int nCmpt, class Type>                       \
-void opFunc                                                                   \
+void OpFunc                                                                   \
 (                                                                             \
     Field<typename product<Form, Type>::type>& f,                             \
     const VectorSpace<Form,Cmpt,nCmpt>& vs,                                   \
@@ -470,11 +483,14 @@ void opFunc                                                                   \
                                                                               \
 template<class Form, class Cmpt, int nCmpt, class Type>                       \
 tmp<Field<typename product<Form, Type>::type> >                               \
-operator op(const VectorSpace<Form,Cmpt,nCmpt>& vs, const UList<Type>& f1);   \
+operator Op(const VectorSpace<Form,Cmpt,nCmpt>& vs, const UList<Type>& f1);   \
                                                                               \
 template<class Form, class Cmpt, int nCmpt, class Type>                       \
 tmp<Field<typename product<Form, Type>::type> >                               \
-operator op(const VectorSpace<Form,Cmpt,nCmpt>&vs,const tmp<Field<Type> >&tf1);
+operator Op(const VectorSpace<Form,Cmpt,nCmpt>&vs,const tmp<Field<Type> >&tf1);
+
+PRODUCT_OPERATOR(typeOfSum, +, add)
+PRODUCT_OPERATOR(typeOfSum, -, subtract)
 
 PRODUCT_OPERATOR(outerProduct, *, outer)
 PRODUCT_OPERATOR(crossProduct, ^, cross)

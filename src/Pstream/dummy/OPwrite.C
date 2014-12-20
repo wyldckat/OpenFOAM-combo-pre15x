@@ -43,6 +43,31 @@ OPstream::~OPstream()
 }
 
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool OPstream::write
+(
+    const int toProcNo,
+    const char* buf,
+    const std::streamsize bufSize,
+    const bool bufferedTransfer
+)
+{
+     notImplemented
+     (
+         "IPstream::write"
+         "("
+             "const int fromProcNo,"
+             "char* buf,"
+             "const label bufSize,"
+             "const bool bufferedTransfer"
+         ")"
+     );
+
+     return false;
+}
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

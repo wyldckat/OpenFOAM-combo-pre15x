@@ -30,7 +30,6 @@ License
 #include "PstreamCombineReduceOps.H"
 #include "processorPolyPatch.H"
 #include "demandDrivenData.H"
-#include "mapPolyMesh.H"
 #include "globalPoints.H"
 #include "labelIOList.H"
 #include "PackedList.H"
@@ -474,36 +473,7 @@ Foam::parallelInfo::parallelInfo(const polyMesh& mesh)
     sharedEdgeLabelsPtr_(NULL),
     sharedEdgeAddrPtr_(NULL)
 {
-    // Dummy map - not used.
-    mapPolyMesh dummyMap
-    (
-        mesh,
-        0,
-        0,
-        0,
-        labelList(0),
-        labelList(0),
-        List<objectMap>(0),
-        List<objectMap>(0),
-        labelList(0),
-        List<objectMap>(0),
-        List<objectMap>(0),
-        List<objectMap>(0),
-        labelList(0),
-        labelList(0),
-        labelList(0),
-        labelHashSet(0),
-        labelListList(0),
-        labelListList(0),
-        labelListList(0),
-        labelListList(0),
-        labelListList(0),
-        pointField(0),
-        labelList(1, 0),
-        labelList(0)
-    );
-
-    updateTopology(dummyMap);
+    updateMesh();
 }
 
 
@@ -567,7 +537,7 @@ const Foam::labelList& Foam::parallelInfo::sharedPointGlobalLabels() const
         IOobject addrHeader
         (
             "pointProcAddressing",
-            mesh_.cellsInstance()/mesh_.meshSubDir,
+            mesh_.facesInstance()/mesh_.meshSubDir,
             mesh_,
             IOobject::MUST_READ
         );
@@ -752,7 +722,7 @@ void Foam::parallelInfo::movePoints(const pointField& newPoints)
 
 
 // Update all data after morph
-void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
+void Foam::parallelInfo::updateMesh()
 {
     // Clear out old data
     clearOut();
@@ -1009,43 +979,43 @@ void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
 
         if (oldData.cyclicParallel() != cyclicParallel_)
         {
-            FatalErrorIn("parallelInfo::updateTopology(const mapPolyMesh& map)")
+            FatalErrorIn("parallelInfo::updateMesh()")
                 << "cyclicParallel : old:" << oldData.cyclicParallel()
                 << " new:" << cyclicParallel_ << abort(FatalError);
         }
         if (oldData.nTotalPoints() != nTotalPoints_)
         {
-            FatalErrorIn("parallelInfo::updateTopology(const mapPolyMesh& map)")
+            FatalErrorIn("parallelInfo::updateMesh()")
                 << "nTotalPoints : old:" << oldData.nTotalPoints()
                 << " new:" << nTotalPoints_ << abort(FatalError);
         }
         if (oldData.nTotalFaces() != nTotalFaces_)
         {
-            FatalErrorIn("parallelInfo::updateTopology(const mapPolyMesh& map)")
+            FatalErrorIn("parallelInfo::updateMesh()")
                 << "nTotalFaces : old:" << oldData.nTotalFaces()
                 << " new:" << nTotalFaces_ << abort(FatalError);
         }
         if (oldData.nTotalCells() != nTotalCells_)
         {
-            FatalErrorIn("parallelInfo::updateTopology(const mapPolyMesh& map)")
+            FatalErrorIn("parallelInfo::updateMesh()")
                 << "nTotalPoints : old:" << oldData.nTotalCells()
                 << " new:" << nTotalCells_ << abort(FatalError);
         }
         if (oldData.nGlobalPoints() != nGlobalPoints_)
         {
-            FatalErrorIn("parallelInfo::updateTopology(const mapPolyMesh& map)")
+            FatalErrorIn("parallelInfo::updateMesh()")
                 << "nGlobalPoints : old:" << oldData.nGlobalPoints()
                 << " new:" << nGlobalPoints_ << abort(FatalError);
         }
         if (oldData.sharedPointLabels() != sharedPointLabels_)
         {
-            FatalErrorIn("parallelInfo::updateTopology(const mapPolyMesh& map)")
+            FatalErrorIn("parallelInfo::updateMesh()")
                 << "sharedPointLabels : old:" << oldData.sharedPointLabels()
                 << " new:" << sharedPointLabels_ << abort(FatalError);
         }
         if (oldData.sharedPointAddr() != sharedPointAddr_)
         {
-            FatalErrorIn("parallelInfo::updateTopology(const mapPolyMesh& map)")
+            FatalErrorIn("parallelInfo::updateMesh()")
                 << "sharedPointAddr : old:" << oldData.sharedPointAddr()
                 << " new:" << sharedPointAddr_ << abort(FatalError);
         }
@@ -1063,7 +1033,7 @@ bool Foam::parallelInfo::write() const
         IOobject
         (
             "parallelData",
-            mesh_.cellsInstance(),
+            mesh_.facesInstance(),
             mesh_.meshSubDir,
             mesh_
         )

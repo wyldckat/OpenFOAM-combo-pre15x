@@ -46,7 +46,7 @@ singlePhaseTransportModel::singlePhaseTransportModel
 )
 :
     transportModel(U, phi),
-    viscosityModelPtr_(viscosityModel::New(*this, U, phi))
+    viscosityModelPtr_(viscosityModel::New("nu", *this, U, phi))
 {}
 
 

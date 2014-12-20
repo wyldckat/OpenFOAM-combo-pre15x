@@ -29,7 +29,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "arcEdge.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -80,7 +80,7 @@ cylindricalCS arcEdge::calcAngle()
 
     // find angles
     scalar tmp = (r3&r1)/(mag(r3)*mag(r1));
-    angle_ = acos(tmp)*180.0/physicalConstant::pi;
+    angle_ = acos(tmp)*180.0/mathematicalConstant::pi;
 
     // check if the vectors define an exterior or an interior arcEdge
     if (((r1  ^ r2)&(r1 ^ r3)) < 0.0) angle_ = 360 - angle_;
@@ -164,7 +164,7 @@ vector arcEdge::position(const scalar lambda) const
 //- Return the length of the curve
 scalar arcEdge::length() const
 {
-    return angle_*radius_*physicalConstant::pi/180.0;
+    return angle_*radius_*mathematicalConstant::pi/180.0;
 }
 
 

@@ -41,7 +41,7 @@ const volScalarField& T = thermo->T();
 volScalarField& h = thermo->h();
 
 
-#include "createPhi.H"
+#include "compressibleCreatePhi.H"
 
 volScalarField kappa
 (

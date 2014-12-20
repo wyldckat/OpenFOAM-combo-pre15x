@@ -43,46 +43,17 @@ int main(int argc, char *argv[])
 #   include "createTime.H"
 #   include "createMesh.H"
 
-    Info<< nl << "Reading field U" << endl;
-    volVectorField U
-    (
-        IOobject
-        (
-            "U",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );
+    volScalarField gradx4 =
+        fvc::grad(pow(mesh.C().component(vector::X), 4))().component(vector::X);
 
-    Info<< nl << "Starting calculations" << endl;
+    surfaceScalarField xf = mesh.Cf().component(vector::X);
+    surfaceScalarField xf4 = pow(xf, 4);
 
-    volScalarField nut
-    (
-        IOobject
-        (
-            "nut",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ
-        ),
-        mesh,
-        U.dimensions()*dimLength
-    );
-
-    volTensorField gradU = fvc::grad(U);
-
-    volScalarField S = dimensionedScalar(0.5)*mag(gradU + gradU.T());
-
-    dimensionedScalar Cs(0.1);
-
-    //volScalarField lSgs = Cs*pow(mesh.V(), 1.0/3.0);
-
-    //nut = sqr(lSgs)*S;
-
-    //nut.write();
+    for (int i=1; i<xf4.size()-1; i++)
+    {
+        scalar gradx4a = (xf4[i] - xf4[i-1])/(xf[i] - xf[i-1]);
+        Info<< (gradx4a - gradx4[i])/gradx4a << endl;
+    }
 
     Info<< "end" << endl;
 }

@@ -23,20 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    tractionPointPatchFields
+    tractionTetPointPatchFields
 
 Description
 
 SourceFiles
-    tractionPointPatchFields.C
+    tractionTetPointPatchFields.C
 
 \*---------------------------------------------------------------------------*/
 
-#ifndef tractionPointPatchFields_H
-#define tractionPointPatchFields_H
+#ifndef tractionTetPointPatchFields_H
+#define tractionTetPointPatchFields_H
 
 #include "tetPolyPatchField.H"
-#include "TractionPointPatchVectorField.H"
+#include "TractionTetPointPatchVectorField.H"
 
 #include "tetFemMatrix.H"
 
@@ -47,7 +47,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-typedef TractionPointPatchVectorField<tetPolyPatchField, tetPolyPatch>
+typedef TractionTetPointPatchVectorField<tetPolyPatchField, tetPolyPatch>
     tractionTetPolyPatchVectorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

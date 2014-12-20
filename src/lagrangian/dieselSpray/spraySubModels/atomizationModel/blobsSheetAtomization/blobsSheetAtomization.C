@@ -131,7 +131,7 @@ void blobsSheetAtomization::atomizeParcel
     
     scalar lBU = B_ * sqrt
     (
-        rhoFuel * sigma * p.d() * cos(angle_*physicalConstant::pi/360.0)
+        rhoFuel * sigma * p.d() * cos(angle_*mathematicalConstant::pi/360.0)
       / sqr(rhoAverage*U)  
     );    
 

@@ -151,6 +151,19 @@ tmp<Field<Type> > transform
 }
 
 
+template<class Type1, class Type2>
+tmp<Field<Type1> > transformFieldMask(const Field<Type2>& f)
+{
+    return f;
+}
+
+template<class Type1, class Type2>
+tmp<Field<Type1> > transformFieldMask(const tmp<Field<Type2> >& tf)
+{
+    return tmp<Field<Type1> >(tf.ptr());
+}
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

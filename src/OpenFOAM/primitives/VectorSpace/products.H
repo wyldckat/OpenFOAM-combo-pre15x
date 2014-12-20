@@ -33,6 +33,8 @@ Description
 #ifndef products_H
 #define products_H
 
+#include "pTraits.H"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -43,6 +45,15 @@ namespace Foam
 template<class Cmpt, int rank>
 class typeOfRank
 {};
+
+
+template<class arg1, class arg2>
+class typeOfSum
+{
+public:
+
+    typedef arg1 type;
+};
 
 
 template<class arg1, class arg2>

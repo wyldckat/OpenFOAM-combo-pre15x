@@ -10,10 +10,10 @@ tutorialPath=`dirname $0`/..
 runIdeasToFoam ()
 {
     if [ -f $1/log.ideasToFoam ] ; then
-        echo "ideasToFoam already run on $1: remove log file to run"
+        echo "ansysToFoam already run on $1: remove log file to run"
     else
-        echo "ideasToFoam: converting mesh $2"
-        ideasToFoam . $1 $2 -scale $3 > $1/log.ideasToFoam 2>&1
+        echo "ansysToFoam: converting mesh $2"
+        ansysToFoam . $1 $2 -scale $3 > $1/log.ansysToFoam 2>&1
     fi
 }
 

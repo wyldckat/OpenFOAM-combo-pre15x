@@ -123,6 +123,8 @@ class particle
             const scalar fraction
         );
 
+protected:
+
         //- Convert global addressing to the processor patch
         //  local equivalents
         void prepareForParallelTransfer
@@ -224,7 +226,8 @@ public:
             label track
             (
                 const vector& endPosition,
-                scalar& fraction
+                scalar& fraction,
+                const bool softAlgorithm = false
             );
 
             //- Track particle to a given position
@@ -237,8 +240,10 @@ public:
             label trackToFace
             (
                 const vector& endPosition,
-                scalar& fraction
+                scalar& fraction,
+                const bool softAlgorithm = false
             );
+
 
         // Particle operations
 

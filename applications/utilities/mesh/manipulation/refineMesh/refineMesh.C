@@ -32,8 +32,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "polyMesh.H"
 #include "Time.H"
-#include "morphMesh.H"
 #include "undoableMeshCutter.H"
 #include "hexCellLooper.H"
 #include "cellSet.H"
@@ -297,18 +297,7 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-
-    Info<< "Create polyMesh for time = " << runTime.timeName() << nl << endl;
-    morphMesh mesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
-
+#   include "createPolyMesh.H"
 
     printEdgeStats(mesh);
 

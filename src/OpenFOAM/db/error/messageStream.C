@@ -190,7 +190,14 @@ messageStream::operator OSstream&()
         {
             if (title().size())
             {
-                Sout<< title().c_str();
+                if (Pstream::parRun() && severity_ != INFO)
+                {
+                    Pout<< title().c_str();
+                }
+                else
+                {
+                    Sout<< title().c_str();
+                }
             }
         
             if (maxErrors_)
@@ -204,8 +211,15 @@ messageStream::operator OSstream&()
                         << abort(FatalError);
                 }
             }
-        
-            return Sout;
+
+            if (Pstream::parRun() && severity_ != INFO)
+            {
+                return Pout;
+            }
+            else
+            {
+                return Sout;
+            }
         }
     }
 

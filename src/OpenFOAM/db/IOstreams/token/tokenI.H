@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include <iostream>
@@ -98,8 +96,12 @@ inline token::token(const token& t)
             labelToken_ = t.labelToken_;
         break;
 
-        case SCALAR:
-            scalarToken_ = t.scalarToken_;
+        case FLOAT_SCALAR:
+            floatScalarToken_ = t.floatScalarToken_;
+        break;
+
+        case DOUBLE_SCALAR:
+            doubleScalarToken_ = t.doubleScalarToken_;
         break;
 
         case COMPOUND:
@@ -144,11 +146,19 @@ inline token::token(const label l, label lineNumber)
     lineNumber_(lineNumber)
 {}
 
-// Construct scalar token
-inline token::token(const scalar s, label lineNumber)
+// Construct floatScalar token
+inline token::token(const floatScalar s, label lineNumber)
 :
-    type_(SCALAR),
-    scalarToken_(s),
+    type_(FLOAT_SCALAR),
+    floatScalarToken_(s),
+    lineNumber_(lineNumber)
+{}
+
+// Construct doubleScalar token
+inline token::token(const doubleScalar s, label lineNumber)
+:
+    type_(DOUBLE_SCALAR),
+    doubleScalarToken_(s),
     lineNumber_(lineNumber)
 {}
 
@@ -256,16 +266,58 @@ inline label token::labelToken() const
     }
 }
 
+inline bool token::isFloatScalar() const
+{
+    return (type_ == FLOAT_SCALAR);
+}
+
+inline floatScalar token::floatScalarToken() const
+{
+    if (type_ == FLOAT_SCALAR)
+    {
+        return floatScalarToken_;
+    }
+    else
+    {
+        parseError("floatScalar");
+        return 0.0;
+    }
+}
+
+
+inline bool token::isDoubleScalar() const
+{
+    return (type_ == DOUBLE_SCALAR);
+}
+
+inline doubleScalar token::doubleScalarToken() const
+{
+    if (type_ == DOUBLE_SCALAR)
+    {
+        return doubleScalarToken_;
+    }
+    else
+    {
+        parseError("doubleScalar");
+        return 0.0;
+    }
+}
+
+
 inline bool token::isScalar() const
 {
-    return (type_ == SCALAR);
+    return (type_ == FLOAT_SCALAR || type_ == DOUBLE_SCALAR);
 }
 
 inline scalar token::scalarToken() const
 {
-    if (type_ == SCALAR)
+    if (type_ == FLOAT_SCALAR)
     {
-        return scalarToken_;
+        return floatScalarToken_;
+    }
+    else if (type_ == DOUBLE_SCALAR)
+    {
+        return doubleScalarToken_;
     }
     else
     {
@@ -276,7 +328,7 @@ inline scalar token::scalarToken() const
 
 inline bool token::isNumber() const
 {
-    return (type_ == LABEL || type_ == SCALAR);
+    return (type_ == LABEL || isScalar());
 }
 
 inline scalar token::number() const
@@ -285,9 +337,9 @@ inline scalar token::number() const
     {
         return labelToken_;
     }
-    else if (type_ == SCALAR)
+    else if (isScalar())
     {
-        return scalarToken_;
+        return scalarToken();
     }
     else
     {
@@ -361,8 +413,12 @@ inline void token::operator=(const token& t)
             labelToken_ = t.labelToken_;
         break;
 
-        case SCALAR:
-            scalarToken_ = t.scalarToken_;
+        case FLOAT_SCALAR:
+            floatScalarToken_ = t.floatScalarToken_;
+        break;
+
+        case DOUBLE_SCALAR:
+            doubleScalarToken_ = t.doubleScalarToken_;
         break;
 
         case COMPOUND:
@@ -415,11 +471,18 @@ inline void token::operator=(const label l)
     labelToken_ = l;
 }
 
-inline void token::operator=(const scalar s)
+inline void token::operator=(const floatScalar s)
 {
     clear();
-    type_ = SCALAR;
-    scalarToken_ = s;
+    type_ = FLOAT_SCALAR;
+    floatScalarToken_ = s;
+}
+
+inline void token::operator=(const doubleScalar s)
+{
+    clear();
+    type_ = DOUBLE_SCALAR;
+    doubleScalarToken_ = s;
 }
 
 inline void token::operator=(token::compound* cPtr)
@@ -454,8 +517,11 @@ inline bool token::operator==(const token& t) const
         case LABEL:
             return labelToken_ == t.labelToken_;
 
-        case SCALAR:
-            return equal(scalarToken_, t.scalarToken_);
+        case FLOAT_SCALAR:
+            return equal(floatScalarToken_, t.floatScalarToken_);
+
+        case DOUBLE_SCALAR:
+            return equal(doubleScalarToken_, t.doubleScalarToken_);
 
         case COMPOUND:
             return compoundTokenPtr_ == t.compoundTokenPtr_;
@@ -487,11 +553,15 @@ inline bool token::operator==(const label l) const
     return (type_ == LABEL && labelToken_ == l);
 }
 
-inline bool token::operator==(const scalar s) const
+inline bool token::operator==(const floatScalar s) const
 {
-    return (type_ == SCALAR && equal(scalarToken_, s));
+    return (type_ == FLOAT_SCALAR && equal(floatScalarToken_, s));
 }
 
+inline bool token::operator==(const doubleScalar s) const
+{
+    return (type_ == DOUBLE_SCALAR && equal(doubleScalarToken_, s));
+}
 
 inline bool token::operator!=(const token& t) const
 {
@@ -513,7 +583,12 @@ inline bool token::operator!=(const string& s) const
     return !operator==(s);
 }
 
-inline bool token::operator!=(const scalar s) const
+inline bool token::operator!=(const floatScalar s) const
+{
+    return !operator==(s);
+}
+
+inline bool token::operator!=(const doubleScalar s) const
 {
     return !operator==(s);
 }

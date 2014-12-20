@@ -52,6 +52,9 @@ SourceFiles
 namespace Foam
 {
 
+// Class forward declarations
+class cell;
+
 /*---------------------------------------------------------------------------*\
                            Class cellShape Declaration
 \*---------------------------------------------------------------------------*/
@@ -97,6 +100,14 @@ public:
 
         //- Model reference
         inline const cellModel& model() const;
+
+        //- Mesh face labels of this cell (in order of model)
+        inline labelList meshFaces(const faceList& allFaces, const cell&)
+         const;
+
+        //- Mesh edge labels of this cell (in order of model)
+        inline labelList meshEdges(const edgeList& allEdges, const labelList&)
+         const;
 
         //- Faces of this cell
         inline faceList faces() const;

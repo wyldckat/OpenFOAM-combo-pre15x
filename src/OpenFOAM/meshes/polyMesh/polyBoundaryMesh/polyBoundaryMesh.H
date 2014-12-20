@@ -49,7 +49,6 @@ typedef List<labelPair> labelPairList;
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 class polyMesh;
-class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
                       Class polyBoundaryMesh Declaration
@@ -64,10 +63,6 @@ class polyBoundaryMesh
 
         //- Reference to mesh
         const polyMesh& mesh_;
-
-        //- Whether extended (mostly parallel) addressing needs to be
-        //  calculated and maintained.
-        bool extendedAddressing_;
 
         //- Edges of neighbouring patches
         mutable List<labelPairList>* neighbourEdgesPtr_;
@@ -158,14 +153,11 @@ public:
         //- Check boundary definition
         bool checkDefinition(const bool report = false) const;
 
-        //- Check face order on all patches. Note: does parallel communication.
-        bool checkFaceOrder(const bool report = false) const;
-
         //- Correct polyBoundaryMesh after moving points
         void movePoints(const pointField&);
 
         //- Correct polyBoundaryMesh after topology update
-        void updateTopology();
+        void updateMesh();
 
         //- writeData member function required by regIOobject
         bool writeData(Ostream&) const;
@@ -177,17 +169,6 @@ public:
             IOstream::versionNumber ver,
             IOstream::compressionType cmp
         ) const;
-
-        //- Calculate extended addressing yes or no.
-        void setExtendedAddressing(const bool extended)
-        {
-            extendedAddressing_ = extended;
-        }
-
-        bool extendedAddressing() const
-        {
-            return extendedAddressing_;
-        }
 
 
     // Ostream operator

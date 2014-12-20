@@ -108,7 +108,7 @@ void Foam::cellToCell::applyToSet
 {
     if ((action == topoSetSource::ADD) || (action == topoSetSource::NEW))
     {
-        Info<< "    Adding all elements of cellSet " << setName_ << " ..."
+        Pout<< "    Adding all elements of cellSet " << setName_ << " ..."
             << endl;
 
         // Load the set
@@ -118,7 +118,7 @@ void Foam::cellToCell::applyToSet
     }
     else if (action == topoSetSource::DELETE)
     {
-        Info<< "    Removing all elements of cellSet " << setName_ << " ..."
+        Pout<< "    Removing all elements of cellSet " << setName_ << " ..."
             << endl;
 
         // Load the set

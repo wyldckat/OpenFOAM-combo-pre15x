@@ -176,6 +176,8 @@ Istream* IOobject::objectStream()
             instance() == db_.time().system()
          || instance() == db_.time().constant()
         )
+     && !db_.dbDir().size()
+     && !local().size()
      && file(rootPath()/caseName()/".."/instance()/db_.dbDir()/local()/name())
     )
     {

@@ -93,7 +93,8 @@ LienLeschzinerLowRe::LienLeschzinerLowRe
 
     nut_
     (
-        Cmu*(1.0-exp(-Am*yStar_))/(1.0-exp(-Aepsilon*yStar_) + SMALL)*sqr(k_)
+        Cmu*(scalar(1) - exp(-Am*yStar_))
+       /(scalar(1) - exp(-Aepsilon*yStar_) + SMALL)*sqr(k_)
        /(epsilon_ + epsilonSmall_)
     )
 {}
@@ -184,31 +185,34 @@ void LienLeschzinerLowRe::correct()
     volScalarField Rt = sqr(k_)/(nu()*epsilon_);
 
     volScalarField fMu =
-        (1.0 - exp(-Am*yStar_))/(1.0 - exp(-Aepsilon*yStar_) + SMALL);
+        (scalar(1) - exp(-Am*yStar_))
+       /(scalar(1) - exp(-Aepsilon*yStar_) + SMALL);
 
-    volScalarField f2 = 1.0 - 0.3*exp(-sqr(Rt));
+    volScalarField f2 = scalar(1) - 0.3*exp(-sqr(Rt));
 
     volScalarField G = Cmu*fMu*sqr(k_)/epsilon_*S2;
 
 
     // Dissipation equation
-
-#   include "LienLeschzinerLowReSetWallDissipation.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
       + fvm::div(phi_, epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
       ==
-        C1*G*epsilon_/k_ + boundarySource
+        C1*G*epsilon_/k_
         // E-term
-      + C2*f2*Cmu75*pow(k_, 0.5)/(kappa_*y_*(1.0 - exp(-Aepsilon*yStar_)))
+        + C2*f2*Cmu75*pow(k_, scalar(0.5))
+        /(kappa_*y_*(scalar(1) - exp(-Aepsilon*yStar_)))
        *exp(-Amu*sqr(yStar_))*epsilon_
-      - fvm::Sp(C2*f2*epsilon_/k_ + boundaryCentral, epsilon_)
+      - fvm::Sp(C2*f2*epsilon_/k_, epsilon_)
     );
 
     epsEqn().relax();
+
+#   include "LienLeschzinerLowReSetWallDissipation.H"
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 
@@ -231,7 +235,7 @@ void LienLeschzinerLowRe::correct()
 
 
     // Re-calculate viscosity
-    nut_ = Cmu*fMu*sqr(k_)/(epsilon_ + epsilonSmall_);
+    nut_ = Cmu*fMu*sqr(k_)/epsilon_;
 }
 
 

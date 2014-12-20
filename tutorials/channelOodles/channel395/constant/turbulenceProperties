@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.3                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -113,6 +113,7 @@ SpalartAllmarasCoeffs
     Cw2             Cw2 [0 0 0 0 0 0 0] 0.3;
     Cw3             Cw3 [0 0 0 0 0 0 0] 2;
     Cv1             Cv1 [0 0 0 0 0 0 0] 7.1;
+    Cv2             Cv2 [0 0 0 0 0 0 0] 5.0;
     CDES            CDES [0 0 0 0 0 0 0] 0.65;
     ck              ck [0 0 0 0 0 0 0] 0.07;
 }

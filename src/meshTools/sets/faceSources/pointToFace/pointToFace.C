@@ -100,12 +100,7 @@ void Foam::pointToFace::combine(topoSet& set, const bool add) const
         // Count number of points using face.
         Map<label> numPoints(loadedSet.size());
 
-        for
-        (
-            pointSet::const_iterator iter = loadedSet.begin();
-            iter != loadedSet.end();
-            ++iter
-        )
+        forAllConstIter(pointSet, loadedSet, iter)
         {
             label pointI = iter.key();
 
@@ -119,7 +114,7 @@ void Foam::pointToFace::combine(topoSet& set, const bool add) const
 
                 if (fndFace == numPoints.end())
                 {
-                    numPoints.insert(faceI, 0);
+                    numPoints.insert(faceI, 1);
                 }
                 else
                 {
@@ -127,6 +122,7 @@ void Foam::pointToFace::combine(topoSet& set, const bool add) const
                 }
             }
         }
+
 
         // Include faces that are referenced as many times as there are points
         // in face -> all points of face

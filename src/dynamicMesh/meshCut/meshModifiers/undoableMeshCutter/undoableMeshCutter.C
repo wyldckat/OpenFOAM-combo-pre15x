@@ -34,7 +34,7 @@ Description
 #include "cellCuts.H"
 #include "splitCell.H"
 #include "mapPolyMesh.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "meshTools.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -193,7 +193,7 @@ Foam::undoableMeshCutter::undoableMeshCutter
     faceRemover_
     (
         mesh,   
-        Foam::cos(30./180. * physicalConstant::pi)
+        Foam::cos(30./180. * mathematicalConstant::pi)
     )
 {}
 
@@ -330,15 +330,15 @@ void Foam::undoableMeshCutter::setRefinement
 }
 
 
-void Foam::undoableMeshCutter::updateTopology(const mapPolyMesh& morphMap)
+void Foam::undoableMeshCutter::updateMesh(const mapPolyMesh& morphMap)
 {
     // Update mesh cutter for new labels.
-    meshCutter::updateTopology(morphMap);
+    meshCutter::updateMesh(morphMap);
 
     // No need to update cell walker for new labels since does not store any.
 
     // Update faceRemover for new labels
-    faceRemover_.updateTopology(morphMap);
+    faceRemover_.updateMesh(morphMap);
 
     if (undoable_)
     {

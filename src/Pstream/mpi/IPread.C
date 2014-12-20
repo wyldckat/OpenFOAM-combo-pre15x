@@ -66,25 +66,48 @@ IPstream::IPstream
         buf_.setSize(messageSize);
     }
 
-    // Read message into buffer
+    if (!read(fromProcNo_, buf_.begin(), buf_.size()))
+    {
+        FatalErrorIn("IPstream::IPstream(const int fromProcNo)")
+            << "read failed";
+        abort();
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool IPstream::read
+(
+    const int fromProcNo,
+    char* buf,
+    const std::streamsize bufSize
+)
+{
+    MPI_Status status;
+    int messageSize;
 
     if
     (
         MPI_Recv
         (
-            buf_.begin(),
-            buf_.size(),
+            buf,
+            bufSize,
             MPI_PACKED,
-            procID(fromProcNo_),
+            procID(fromProcNo),
             msgType(),
             MPI_COMM_WORLD,
             &status
         )
     )
     {
-        FatalErrorIn("IPstream::IPstream(const int fromProcNo)")
-            << "MPI_Recv cannot receive incomming message";
-        abort();
+        FatalErrorIn
+        (
+            "IPstream::read"
+            "(const int fromProcNo, char* buf, std::streamsize bufSize)"
+        )   << "MPI_Recv cannot receive incomming message" << endl;
+
+        return false;
     }
 
 
@@ -92,14 +115,20 @@ IPstream::IPstream
 
     MPI_Get_count(&status, MPI_BYTE, &messageSize);
 
-    if (messageSize > buf_.size())
+    if (messageSize > bufSize)
     {
-        FatalErrorIn("IPstream::IPstream(const int fromProcNo)")
-            << "buffer (" << buf_.size()
+        FatalErrorIn
+        (
+            "IPstream::read"
+            "(const int fromProcNo, char* buf, std::streamsize bufSize)"
+        )   << "buffer (" << int(bufSize)
             << ") not large enough for incomming message ("
-            << messageSize<< ')';
-        abort();
+            << messageSize << ')' << endl;
+
+        return false;
     }
+
+    return true;
 }
 
 

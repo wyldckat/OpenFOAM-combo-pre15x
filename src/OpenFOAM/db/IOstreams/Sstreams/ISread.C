@@ -219,7 +219,15 @@ Istream& ISstream::read(label& l)
 }
 
 
-Istream& ISstream::read(scalar& s)
+Istream& ISstream::read(floatScalar& s)
+{
+    is_ >> s;
+    setState(is_.rdstate());
+    return *this;
+}
+
+
+Istream& ISstream::read(doubleScalar& s)
 {
     is_ >> s;
     setState(is_.rdstate());

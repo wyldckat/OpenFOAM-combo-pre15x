@@ -73,6 +73,7 @@ public:
         //- construct from components
         Newtonian
         (
+            const word& name,
             const dictionary& viscosityProperties,
             const volVectorField& U,
             const surfaceScalarField& phi

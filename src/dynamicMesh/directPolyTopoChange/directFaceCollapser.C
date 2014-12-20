@@ -100,6 +100,7 @@ void Foam::directFaceCollapser::filterFace
 {
     const face& f = mesh_.faces()[faceI];
     const labelList& fEdges = mesh_.faceEdges()[faceI];
+    const faceZoneMesh& faceZones = mesh_.faceZones();
 
     // Space for replaced vertices and split edges.
     DynamicList<label> newFace(10 * f.size());
@@ -147,7 +148,7 @@ void Foam::directFaceCollapser::filterFace
     }
     face newF(newFace.shrink());
 
-    //Info<< "Modifying face:" << faceI << " from " << f << " to " << newFace
+    //Pout<< "Modifying face:" << faceI << " from " << f << " to " << newFace
     //    << endl;
 
     if (newF != f)
@@ -163,6 +164,18 @@ void Foam::directFaceCollapser::filterFace
         else
         {
             patchI = mesh_.boundaryMesh().whichPatch(faceI);
+        }
+
+        // Get current zone info
+        label zoneID = faceZones.whichZone(faceI);
+
+        bool zoneFlip = false;
+
+        if (zoneID >= 0)
+        {
+            const faceZone& fZone = faceZones[zoneID];
+
+            zoneFlip = fZone.flipMap()[fZone.whichFace(faceI)];
         }
 
         //meshMod.setAction
@@ -186,7 +199,10 @@ void Foam::directFaceCollapser::filterFace
             faceI,                      // label of face being modified
             mesh_.faceOwner()[faceI],   // owner
             nei,                        // neighbour
-            patchI                      // patch for face
+            false,
+            patchI,                     // patch for face
+            zoneID,
+            zoneFlip
         );
     }
 }
@@ -215,6 +231,7 @@ void Foam::directFaceCollapser::setRefinement
     const edgeList& edges = mesh_.edges();
     const faceList& faces = mesh_.faces();
     const labelListList& edgeFaces = mesh_.edgeFaces();
+    const pointZoneMesh& pointZones = mesh_.pointZones();
 
 
     // From split edge to newly introduced point(s). Can be more than one per
@@ -239,7 +256,7 @@ void Foam::directFaceCollapser::setRefinement
         const label fpA = fpStart[i];
         const label fpB = fpEnd[i];
 
-        Info<< "Face:" << f << " collapsed to fp:" << fpA << ' '  << fpB
+        Pout<< "Face:" << f << " collapsed to fp:" << fpA << ' '  << fpB
             << " with points:" << points[f[fpA]] << ' ' << points[f[fpB]]
             << endl;
 
@@ -255,7 +272,14 @@ void Foam::directFaceCollapser::setRefinement
 
             // Responsability of caller to make sure polyModifyPoint is only
             // called once per point. (so max only one collapse face per edge)
-            meshMod.modifyPoint(f[fp], near.rawPoint());
+
+            meshMod.modifyPoint
+            (
+                f[fp],
+                near.rawPoint(),
+                pointZones.whichZone(f[fp]),
+                true
+            );
 
             dist[fp] = magSqr(near.rawPoint() - points[f[fpA]]);
         }
@@ -279,14 +303,14 @@ void Foam::directFaceCollapser::setRefinement
 
 
         // From fp to index in sort:
-        //Info<< "Face:" << f << " fpA:" << fpA << " fpB:" << fpB << nl;
+        //Pout<< "Face:" << f << " fpA:" << fpA << " fpB:" << fpB << nl;
 
         labelList sortedFp(f.size());
         forAll(dist.indices(), i)
         {
             label fp = dist.indices()[i];
 
-            //Info<< "   fp:" << fp << " distance:" << dist[i] << nl;
+            //Pout<< "   fp:" << fp << " distance:" << dist[i] << nl;
 
             sortedFp[fp] = i;
         }
@@ -363,14 +387,14 @@ void Foam::directFaceCollapser::setRefinement
         ++iter
     )
     {
-        Info<< "Split edge:" << iter.key()
+        Pout<< "Split edge:" << iter.key()
             << " verts:" << mesh_.edges()[iter.key()]
             << " in:" << nl;
         const labelList& edgePoints = iter();
 
         forAll(edgePoints, i)
         {
-            Info<< "    " << edgePoints[i] << nl;
+            Pout<< "    " << edgePoints[i] << nl;
         }
     }
 

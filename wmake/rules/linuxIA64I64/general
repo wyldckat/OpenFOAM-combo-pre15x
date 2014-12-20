@@ -4,6 +4,8 @@ ARFLAGS    = cr
 RANLIB     = ranlib
 LD         = ld
 
+GLIBS      = -liberty
+
 include $(RULES)/X
 
 include $(GENERAL_RULES)/sourceToDep

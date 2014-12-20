@@ -73,12 +73,6 @@ tmp<FieldField<Field, tensor> > operator*
 );
 
 template<template<class> class Field>
-void diag(FieldField<Field, vector>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, vector> > diag(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
 void tr(FieldField<Field, scalar>&, const FieldField<Field, tensor>&);
 
 template<template<class> class Field>

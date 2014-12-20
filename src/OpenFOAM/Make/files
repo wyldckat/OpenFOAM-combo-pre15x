@@ -1,403 +1,75 @@
-OSspecific                  = OSspecific/Unix
-
-global                      = global
-debug                       = $(global)/debug
-argList                     = $(global)/argList
-JobInfo                     = $(global)/JobInfo
-
-containers                  = containers
-db                          = db
-dimensionSet                = dimensionSet
-dimensionedTypes            = dimensionedTypes
-fields                      = fields
-matrices                    = matrices
-meshes                      = meshes
-finiteVolume                = finiteVolume
-primitives                  = primitives
-algorithms                  = algorithms
-
-HashTable                   = $(containers)/HashTables/HashTable
-SortableList                = $(containers)/Lists/SortableList
-PackedList                  = $(containers)/Lists/PackedList
-ListOps                     = $(containers)/Lists/ListOps
-
-bool                        = $(primitives)/bool
-char                        = $(primitives)/char
-int                         = $(primitives)/int
-uint                        = $(primitives)/uint
-long                        = $(primitives)/long
-label                       = $(primitives)/label
-strings                     = $(primitives)/strings
-direction                   = $(primitives)/direction
-scalar                      = $(primitives)/scalar
-Vector                      = $(primitives)/Vector
-labelVector                 = $(primitives)/labelVector
-vector                      = $(primitives)/vector
-labelTensor                 = $(primitives)/labelTensor
-tensor                      = $(primitives)/tensor
-complex                     = $(primitives)/complex
-complexVector               = $(primitives)/complexVector
-pTraits                     = $(primitives)/pTraits
-primitiveLists              = $(primitives)/Lists
-random                      = $(primitives)/random
-
-
-string                      = $(strings)/string
-word                        = $(strings)/word
-fileName                    = $(strings)/fileName
-
-SLListBase                  = $(containers)/LinkedLists/linkTypes/SLListBase
-DLListBase                  = $(containers)/LinkedLists/linkTypes/DLListBase
-
-NamedEnum                   = $(containers)/NamedEnum
-
-dimensionSet                = dimensionSet
-
-dimensionedTypes            = dimensionedTypes
-
-dimensionedScalar           = $(dimensionedTypes)/dimensionedScalar
-dimensionedTensor           = $(dimensionedTypes)/dimensionedTensor
-
-lduMatrix                   = $(matrices)/lduMatrix
-lduAddressing               = $(lduMatrix)/lduAddressing
-
-constraint                  = $(matrices)/constraint
-
-solution                    = $(matrices)/solution
-
-fvMatrices                  = $(matrices)/fvMatrices
-fvScalarMatrix              = $(fvMatrices)/fvScalarMatrix
-
-fv                          = $(finiteVolume)/fv
-fvc                         = $(finiteVolume)/fvc
-fvm                         = $(finiteVolume)/fvm
-fvSchemes                   = $(finiteVolume)/fvSchemes
-fvSolution                  = $(finiteVolume)/fvSolution
-ddtSchemes                  = $(finiteVolume)/ddtSchemes
-d2dt2Schemes                = $(finiteVolume)/d2dt2Schemes
-divSchemes                  = $(finiteVolume)/divSchemes
-gradSchemes                 = $(finiteVolume)/gradSchemes
-snGradSchemes               = $(finiteVolume)/snGradSchemes
-convectionSchemes           = $(finiteVolume)/convectionSchemes
-laplacianSchemes            = $(finiteVolume)/laplacianSchemes
-
-interpolations              = interpolations
-interpolation               = $(interpolations)/interpolation
-volPointInterpolation       = $(interpolations)/volPointInterpolation
-edgeCorrectedVolPointInterpolation = $(volPointInterpolation)/edgeCorrectedVolPointInterpolation
-surfaceInterpolation        = $(interpolations)/surfaceInterpolation
-primitivePatchInterpolation = $(interpolations)/primitivePatchInterpolation
-patchToPatchInterpolation   = $(interpolations)/patchToPatchInterpolation
-
-interpolationCell           = $(interpolation)/interpolationCell
-interpolationCellPoint      = $(interpolation)/interpolationCellPoint
-interpolationCellPointFace  = $(interpolation)/interpolationCellPointFace
-
-schemes                     = $(surfaceInterpolation)/schemes
-surfaceInterpolationScheme  = $(schemes)/surfaceInterpolationScheme
-
-limitedSchemes              = $(surfaceInterpolation)/limitedSchemes
-multivariateSchemes         = $(surfaceInterpolation)/multivariateSchemes
-
-ddtScheme                   = $(ddtSchemes)/ddtScheme
-steadyStateDdtScheme        = $(ddtSchemes)/steadyStateDdtScheme
-EulerDdtScheme              = $(ddtSchemes)/EulerDdtScheme
-CoEulerDdtScheme            = $(ddtSchemes)/CoEulerDdtScheme
-backwardDdtScheme           = $(ddtSchemes)/backwardDdtScheme
-boundedBackwardDdtScheme    = $(ddtSchemes)/boundedBackwardDdtScheme
-CrankNicholsonDdtScheme     = $(ddtSchemes)/CrankNicholsonDdtScheme
-
-d2dt2Scheme                 = $(d2dt2Schemes)/d2dt2Scheme
-steadyStateD2dt2Scheme      = $(d2dt2Schemes)/steadyStateD2dt2Scheme
-EulerD2dt2Scheme            = $(d2dt2Schemes)/EulerD2dt2Scheme
-
-divScheme                   = $(divSchemes)/divScheme
-gaussDivScheme              = $(divSchemes)/gaussDivScheme
-
-gradScheme                  = $(gradSchemes)/gradScheme
-gaussGrad                   = $(gradSchemes)/gaussGrad
-leastSquaresGrad            = $(gradSchemes)/leastSquaresGrad
-limitedGrad                 = $(gradSchemes)/limitedGrad
-fourthGrad                  = $(gradSchemes)/fourthGrad
-
-snGradScheme                = $(snGradSchemes)/snGradScheme
-correctedSnGrad             = $(snGradSchemes)/correctedSnGrad
-limitedSnGrad               = $(snGradSchemes)/limitedSnGrad
-boundedSnGrad               = $(snGradSchemes)/boundedSnGrad
-uncorrectedSnGrad           = $(snGradSchemes)/uncorrectedSnGrad
-fourthSnGrad                = $(snGradSchemes)/fourthSnGrad
-
-convectionScheme            = $(convectionSchemes)/convectionScheme
-gaussConvectionScheme       = $(convectionSchemes)/gaussConvectionScheme
-multivariateGaussConvectionScheme = $(convectionSchemes)/multivariateGaussConvectionScheme
-
-laplacianScheme             = $(laplacianSchemes)/laplacianScheme
-gaussLaplacianScheme        = $(laplacianSchemes)/gaussLaplacianScheme
-
-Fields                      = $(fields)/Fields
-FieldFields                 = $(fields)/FieldFields
-fvBoundaryFields            = $(fields)/fvBoundaryFields
-fvPatchFields               = $(fields)/fvPatchFields
-GeometricFields             = $(fields)/GeometricFields
-tmpField                    = $(fields)/tmpField
-cloud                       = $(fields)/cloud
-
-labelField                  = $(Fields)/labelField
-scalarField                 = $(Fields)/scalarField
-vectorField                 = $(Fields)/vectorField
-tensorField                 = $(Fields)/tensorField
-complexFields               = $(Fields)/complexFields
-
-pointPatchFields            = fields/pointPatchFields
-pointPatchField             = $(pointPatchFields)/pointPatchField
-basicPointPatchFields       = $(pointPatchFields)/basicPointPatchFields
-derivedPointPatchFields     = $(pointPatchFields)/derivedPointPatchFields
-calculatedPointPatchFields  = $(basicPointPatchFields)/calculated
-defaultPointPatchFields     = $(basicPointPatchFields)/default
-valueStoredPointPatchFields = $(basicPointPatchFields)/valueStored
-coupledPointPatchFields     = $(basicPointPatchFields)/coupled
-fixedValuePointPatchFields  = $(basicPointPatchFields)/fixedValue
-mixedPointPatchFields       = $(basicPointPatchFields)/mixed
-zeroGradientPointPatchFields= $(basicPointPatchFields)/zeroGradient
-basicSymmetryPointPatchFields= $(basicPointPatchFields)/basicSymmetry
-emptyPointPatchFields       = $(derivedPointPatchFields)/empty
-wedgePointPatchFields       = $(derivedPointPatchFields)/wedge
-symmetryPointPatchFields    = $(derivedPointPatchFields)/symmetry
-slipPointPatchFields        = $(derivedPointPatchFields)/slip
-processorPointPatchFields   = $(derivedPointPatchFields)/processor
-globalProcessorPointPatchFields= $(derivedPointPatchFields)/globalProcessor
-
-fvPatchField                = $(fvPatchFields)/fvPatchField
-basicFvPatchFields          = $(fvPatchFields)/basicFvPatchFields
-derivedFvPatchFields        = $(fvPatchFields)/derivedFvPatchFields
-
-emptyFvPatchFields          = $(basicFvPatchFields)/empty
-zeroGradientFvPatchFields   = $(basicFvPatchFields)/zeroGradient
-fixedValueFvPatchFields     = $(basicFvPatchFields)/fixedValue
-fixedGradientFvPatchFields  = $(basicFvPatchFields)/fixedGradient
-mixedFvPatchFields          = $(basicFvPatchFields)/mixed
-transformFvPatchFields      = $(basicFvPatchFields)/transform
-basicSymmetryFvPatchFields  = $(basicFvPatchFields)/basicSymmetry
-calculatedFvPatchFields     = $(basicFvPatchFields)/calculated
-defaultFvPatchFields        = $(basicFvPatchFields)/default
-slicedFvPatchFields         = $(basicFvPatchFields)/sliced
-coupledFvPatchFields        = $(basicFvPatchFields)/coupled
-
-symmetryFvPatchFields       = $(derivedFvPatchFields)/symmetry
-cyclicFvPatchFields         = $(derivedFvPatchFields)/cyclic
-processorFvPatchFields      = $(derivedFvPatchFields)/processor
-wedgeFvPatchFields          = $(derivedFvPatchFields)/wedge
-
-uniformFixedValueFvPatchFields = $(derivedFvPatchFields)/uniformFixedValue
-directionMixedFvPatchFields = $(derivedFvPatchFields)/directionMixed
-slipFvPatchFields           = $(derivedFvPatchFields)/slip
-partialSlipFvPatchFields    = $(derivedFvPatchFields)/partialSlip
-surfaceNormalFixedValue     = $(derivedFvPatchFields)/surfaceNormalFixedValue
-inletOutletFvPatchFields    = $(derivedFvPatchFields)/inletOutlet
-outletInletFvPatchFields    = $(derivedFvPatchFields)/outletInlet
-fluxCorrectedVelocity       = $(derivedFvPatchFields)/fluxCorrectedVelocity
-movingWallVelocity          = $(derivedFvPatchFields)/movingWallVelocity
-freestreamFvPatchFields    = $(derivedFvPatchFields)/freestream
-freestreamPressure          = $(derivedFvPatchFields)/freestreamPressure
-pressureInletVelocity       = $(derivedFvPatchFields)/pressureInletVelocity
-pressureInletUniformVelocity= $(derivedFvPatchFields)/pressureInletUniformVelocity
-pressureDirectedInletVelocity = $(derivedFvPatchFields)/pressureDirectedInletVelocity
-pressureInletOutletVelocity = $(derivedFvPatchFields)/pressureInletOutletVelocity
-pressureDirectedInletOutletVelocity = $(derivedFvPatchFields)/pressureDirectedInletOutletVelocity
-fixedFluxPressure           = $(derivedFvPatchFields)/fixedFluxPressure
-
-volFields                   = $(GeometricFields)/volFields
-surfaceFields               = $(GeometricFields)/surfaceFields
-pointFields                 = $(GeometricFields)/pointFields
-
-primitiveShapes             = $(meshes)/primitiveShapes
-meshShapes                  = $(meshes)/meshShapes
-geometricMesh               = $(meshes)/geometricMesh
-primitiveMesh               = $(meshes)/primitiveMesh
-polyMesh                    = $(meshes)/polyMesh
-fvMesh                      = $(meshes)/fvMesh
-pointMesh                   = $(meshes)/pointMesh
-boundBox                    = $(meshes)/boundBox
-bandCompression             = $(meshes)/bandCompression
-preservePatchTypes          = $(meshes)/preservePatchTypes
-meshTools                   = $(meshes)/meshTools
-
-point                       = $(primitiveShapes)/point
-line                        = $(primitiveShapes)/line
-plane                       = $(primitiveShapes)/plane
-triangle                    = $(primitiveShapes)/triangle
-pyramid                     = $(primitiveShapes)/pyramid
-tetrahedron                 = $(primitiveShapes)/tetrahedron
-
-patchIdentifier              = $(meshes)/patchIdentifier
-PrimitivePatch              = $(meshes)/PrimitivePatch
-primitivePatch              = $(meshes)/primitivePatch
-ProcessorTopology           = $(meshes)/ProcessorTopology
-
-edge                        = $(meshShapes)/edge
-face                        = $(meshShapes)/face
-cell                        = $(meshShapes)/cell
-tetCell                     = $(meshShapes)/tetCell
-
-cellModeller                = $(meshShapes)/cellModeller
-cellModel                   = $(meshShapes)/cellModel
-cellShape                   = $(meshShapes)/cellShape
-cellMatcher                 = $(meshShapes)/cellMatcher
-
-polyPatches                 = $(polyMesh)/polyPatches
-polyBoundaryMesh            = $(polyMesh)/polyBoundaryMesh
-zones                       = $(polyMesh)/zones
-parallelInfo                = $(polyMesh)/parallelInfo
-morphEngine                 = $(polyMesh)/morphEngine
-polyTopoChange              = $(morphEngine)/polyTopoChange
-topoAction                  = $(polyTopoChange)/topoAction
-addObject                   = $(topoAction)/addObject
-modifyObject                = $(topoAction)/modifyObject
-removeObject                = $(topoAction)/removeObject
-polyMeshModifier            = $(morphEngine)/polyMeshModifier
-polyMeshMorphEngine         = $(morphEngine)/polyMeshMorphEngine
-mapPolyMesh                 = $(polyMesh)/mapPolyMesh
-objectMap                   = $(mapPolyMesh)/objectMap
-pointMapper                 = $(mapPolyMesh)/pointMapper
-faceMapper                  = $(mapPolyMesh)/faceMapper
-cellMapper                  = $(mapPolyMesh)/cellMapper
-
-polyPatch                   = $(polyPatches)/polyPatch
-basicPolyPatches            = $(polyPatches)/basicPolyPatches
-derivedPolyPatches          = $(polyPatches)/derivedPolyPatches
-
-symmetryPolyPatch           = $(basicPolyPatches)/symmetryPolyPatch
-wedgePolyPatch              = $(basicPolyPatches)/wedgePolyPatch
-coupledPolyPatch            = $(basicPolyPatches)/coupledPolyPatch
-emptyPolyPatch              = $(basicPolyPatches)/emptyPolyPatch
-
-cyclicPolyPatch             = $(derivedPolyPatches)/cyclicPolyPatch
-processorPolyPatch          = $(derivedPolyPatches)/processorPolyPatch
-wallPolyPatch               = $(derivedPolyPatches)/wallPolyPatch
-
-cellZone                    = $(zones)/cellZone
-faceZone                    = $(zones)/faceZone
-pointZones                  = $(zones)/pointZones
-pointZone                   = $(pointZones)/pointZone
-
-pointBoundaryMesh           = $(pointMesh)/pointBoundaryMesh
-pointPatches                = $(pointMesh)/pointPatches
-pointPatch                  = $(pointPatches)/pointPatch
-facePointPatch              = $(pointPatches)/facePointPatch
-basicPointPatches           = $(pointPatches)/basicPointPatches
-derivedPointPatches         = $(pointPatches)/derivedPointPatches
-emptyPointPatch             = $(basicPointPatches)/emptyPointPatch
-symmetryPointPatch          = $(basicPointPatches)/symmetryPointPatch
-wedgePointPatch             = $(basicPointPatches)/wedgePointPatch
-cyclicPointPatch            = $(derivedPointPatches)/cyclicPointPatch
-processorPointPatch         = $(derivedPointPatches)/processorPointPatch
-globalProcessorPointPatch   = $(derivedPointPatches)/globalProcessorPointPatch
-wallPointPatch              = $(derivedPointPatches)/wallPointPatch
-
-fvPatches                   = $(fvMesh)/fvPatches
-fvBoundaryMesh              = $(fvMesh)/fvBoundaryMesh
-MapFvFields                 = $(fvMesh)/MapFvFields
-
-fvPatch                     = $(fvPatches)/fvPatch
-basicFvPatches              = $(fvPatches)/basicFvPatches
-derivedFvPatches            = $(fvPatches)/derivedFvPatches
-
-symmetryFvPatch             = $(basicFvPatches)/symmetryFvPatch
-wedgeFvPatch                = $(basicFvPatches)/wedgeFvPatch
-coupledFvPatch              = $(basicFvPatches)/coupledFvPatch
-emptyFvPatch                = $(basicFvPatches)/emptyFvPatch
-
-cyclicFvPatch               = $(derivedFvPatches)/cyclicFvPatch
-processorFvPatch            = $(derivedFvPatches)/processorFvPatch
-wallFvPatch                 = $(derivedFvPatches)/wallFvPatch
-
-error                       = $(db)/error
-
-Streams                     = $(db)/IOstreams
-IOstreams                   = $(Streams)/IOstreams
-token                       = $(Streams)/token
-Istream                     = $(Streams)/Istream
-Sstreams                    = $(Streams)/Sstreams
-zfstream                    = $(Streams)/zfstream
-Fstreams                    = $(Streams)/Fstreams
-Tstreams                    = $(Streams)/Tstreams
-StringStreams               = $(Streams)/StringStreams
-Pstreams                    = $(Streams)/Pstreams
-
-Time                        = $(db)/Time
-IOobject                    = $(db)/IOobject
-regIOobject                 = $(db)/regIOobject
-IOobjectList                = $(db)/IOobjectList
-objectRegistry              = $(db)/objectRegistry
-entry                       = $(dictionary)/entry
-primitiveEntry              = $(dictionary)/primitiveEntry
-dictionaryEntry             = $(dictionary)/dictionaryEntry
-dictionary                  = $(db)/dictionary
-IOdictionary                = $(db)/IOdictionary
-IOList                      = $(db)/IOList
-Switch                      = $(db)/Switch
-typeInfo                    = $(db)/typeInfo
-Handle                      = $(db)/Handle
-
-instant                     = $(Time)/instant
-
-clock                       = $(global)/clock
-cpuTime                     = $(OSspecific)/cpuTime
-
-pointTools                  = $(tools)/pointTools
-
-$(global)/global.C
-$(OSspecific)/sigfpe.C
-$(OSspecific)/sigInt.C
-$(OSspecific)/sigQuit.C
+OSspecific = OSspecific/Unix
+$(OSspecific)/signals/sigFpe.C
+$(OSspecific)/signals/sigSegv.C
+$(OSspecific)/signals/sigInt.C
+$(OSspecific)/signals/sigQuit.C
 $(OSspecific)/timer.C
 $(OSspecific)/fileStat.C
 $(OSspecific)/Unix.C
-$(argList)/argList.C
+$(OSspecific)/cpuTime/cpuTime.C
 
-$(bool)/bool.C
-$(bool)/boolIO.C
-$(char)/charIO.C
-$(int)/intIO.C
-$(uint)/uintIO.C
-$(long)/longIO.C
-$(label)/label.C
-$(scalar)/scalar.C
-$(labelVector)/labelVector.C
-$(vector)/vector.C
-$(labelTensor)/labelTensor.C
-$(tensor)/tensor.C
-$(complex)/complex.C
-$(complexVector)/complexVector.C
-$(string)/string.C
-$(string)/stringIO.C
-$(word)/word.C
-$(word)/wordIO.C
-$(fileName)/fileName.C
-$(fileName)/fileNameIO.C
+global/global.C
+global/dimensionedConstants/dimensionedConstants.C
+global/argList/argList.C
+global/clock/clock.C
 
-$(HashTable)/HashTableName.C
-$(SortableList)/ParSortableListName.C
-$(PackedList)/PackedListName.C
-$(ListOps)/ListOps.C
+primitives/bool/bool.C
+primitives/bool/boolIO.C
+primitives/char/charIO.C
+primitives/int/intIO.C
+primitives/uint/uintIO.C
+primitives/long/longIO.C
+primitives/label/label.C
+primitives/Scalar/doubleScalar/doubleScalar.C
+primitives/Scalar/floatScalar/floatScalar.C
+primitives/Scalar/scalar/scalar.C
+primitives/labelVector/labelVector.C
+primitives/vector/vector.C
+primitives/labelTensor/labelTensor.C
+primitives/tensor/tensor.C
+primitives/diagTensor/diagTensor.C
+primitives/sphericalTensor/sphericalTensor.C
+primitives/complex/complex.C
+primitives/complexVector/complexVector.C
 
+strings = primitives/strings
+$(strings)/string/string.C
+$(strings)/string/stringIO.C
+$(strings)/word/word.C
+$(strings)/word/wordIO.C
+$(strings)/fileName/fileName.C
+$(strings)/fileName/fileNameIO.C
+
+primitives/random/Random.C
+
+containers/HashTables/HashTable/HashTableName.C
+containers/HashTables/StaticHashTable/StaticHashTableName.C
+containers/Lists/SortableList/ParSortableListName.C
+containers/Lists/PackedList/PackedListName.C
+containers/Lists/ListOps/ListOps.C
+containers/LinkedLists/linkTypes/SLListBase/SLListBase.C
+containers/LinkedLists/linkTypes/DLListBase/DLListBase.C
+
+primitiveLists = primitives/Lists
 $(primitiveLists)/boolList.C
 $(primitiveLists)/labelIOList.C
 $(primitiveLists)/scalarList.C
 $(primitiveLists)/vectorList.C
 $(primitiveLists)/tensorList.C
+$(primitiveLists)/sphericalTensorList.C
 
-$(clock)/clock.C
-$(cpuTime)/cpuTime.C
-$(SLListBase)/SLListBase.C
-$(DLListBase)/DLListBase.C
-$(token)/tokenIO.C
+Streams = db/IOstreams
+$(Streams)/token/tokenIO.C
+
+IOstreams = $(Streams)/IOstreams
 $(IOstreams)/IOstream.C
 $(IOstreams)/versionNumber.C
 $(IOstreams)/Istream.C
 $(IOstreams)/IOprint.C
 $(IOstreams)/IOcheck.C
 $(IOstreams)/Ostream.C
+
+Sstreams = $(Streams)/Sstreams
 $(Sstreams)/ISread.C
 $(Sstreams)/ISnextValid.C
 $(Sstreams)/ISreadToken.C
@@ -406,13 +78,22 @@ $(Sstreams)/OSwrite.C
 $(Sstreams)/Sprint.C
 $(Sstreams)/prefixOSstream/prefixOSwrite.C
 $(Sstreams)/prefixOSstream/prefixOSprint.C
-$(zfstream)/zfstream.C
+
+gzstream = $(Streams)/gzstream
+$(gzstream)/gzstream.C
+
+Fstreams = $(Streams)/Fstreams
 $(Fstreams)/IFstream.C
 $(Fstreams)/OFstream.C
+
+Tstreams = $(Streams)/Tstreams
 $(Tstreams)/ITread.C
 $(Tstreams)/Tprint.C
+
+StringStreams = $(Streams)/StringStreams
 $(StringStreams)/StringStreamPrint.C
 
+Pstreams = $(Streams)/Pstreams
 $(Pstreams)/Pstream.C
 $(Pstreams)/PstreamCommsStruct.C
 $(Pstreams)/IPread.C
@@ -420,28 +101,48 @@ $(Pstreams)/OPwrite.C
 $(Pstreams)/Pprint.C
 $(Pstreams)/IPreadToken.C
 
-$(entry)/entry.C
-$(entry)/entryIO.C
-$(primitiveEntry)/primitiveEntry.C
-$(primitiveEntry)/primitiveEntryIO.C
-$(dictionaryEntry)/dictionaryEntry.C
-$(dictionaryEntry)/dictionaryEntryIO.C
+dictionary = db/dictionary
 $(dictionary)/dictionary.C
 $(dictionary)/dictionaryIO.C
+
+entry = $(dictionary)/entry
+$(entry)/entry.C
+$(entry)/entryIO.C
+
+primitiveEntry = $(dictionary)/primitiveEntry
+$(primitiveEntry)/primitiveEntry.C
+$(primitiveEntry)/primitiveEntryIO.C
+
+dictionaryEntry = $(dictionary)/dictionaryEntry
+$(dictionaryEntry)/dictionaryEntry.C
+$(dictionaryEntry)/dictionaryEntryIO.C
+
+IOdictionary = db/IOdictionary
 $(IOdictionary)/IOdictionary.C
 $(IOdictionary)/IOdictionaryIO.C
+
+IOobject = db/IOobject
 $(IOobject)/IOobject.C
 $(IOobject)/IOobjectIO.C
 $(IOobject)/IOobjectReadHeader.C
 $(IOobject)/IOobjectWriteHeader.C
+
+regIOobject = db/regIOobject
 $(regIOobject)/regIOobject.C
 $(regIOobject)/regIOobjectRead.C
 $(regIOobject)/regIOobjectWrite.C
+
+IOobjectList = db/IOobjectList
 $(IOobjectList)/IOobjectList.C
+
+objectRegistry = db/objectRegistry
 $(objectRegistry)/objectRegistry.C
+
+Switch = db/Switch
 $(Switch)/Switch.C
 $(Switch)/SwitchIO.C
-$(instant)/instant.C
+
+Time = db/Time
 $(Time)/TimePaths.C
 $(Time)/TimeState.C
 $(Time)/Time.C
@@ -449,114 +150,148 @@ $(Time)/TimeIO.C
 $(Time)/findTimes.C
 $(Time)/subCycleTime.C
 $(Time)/findInstance.C
-$(dimensionSet)/dimensionSet.C
-$(dimensionSet)/dimensionSetIO.C
-$(dimensionSet)/dimensionSets.C
-$(dimensionedScalar)/dimensionedScalar.C
-$(dimensionedTensor)/dimensionedTensor.C
 
-$(solution)/solution.C
+$(Time)/instant/instant.C
 
+dimensionSet/dimensionSet.C
+dimensionSet/dimensionSetIO.C
+dimensionSet/dimensionSets.C
+dimensionedTypes/dimensionedScalar/dimensionedScalar.C
+dimensionedTypes/dimensionedTensor/dimensionedTensor.C
+
+matrices/solution/solution.C
+
+lduMatrix = matrices/lduMatrix
+$(lduMatrix)/lduMatrix/lduMatrix.C
+$(lduMatrix)/lduMatrix/lduMatrixOperations.C
+$(lduMatrix)/lduMatrix/lduMatrixATmul.C
+$(lduMatrix)/lduMatrix/lduMatrixTests.C
+$(lduMatrix)/lduMatrix/lduMatrixUpdateCoupledInterfaces.C
+$(lduMatrix)/lduMatrix/lduMatrixSolver.C
+
+$(lduMatrix)/solvers/diagonalSolver/diagonalSolver.C
+$(lduMatrix)/solvers/ICCG/DCG.C
+$(lduMatrix)/solvers/ICCG/ICCG.C
+$(lduMatrix)/solvers/BICCG/BDCG.C
+$(lduMatrix)/solvers/BICCG/BICCG.C
+$(lduMatrix)/solvers/GaussSeidel/GaussSeidel.C
+$(lduMatrix)/solvers/GaussSeidel/GaussSeidelSmooth.C
+
+lduAddressing = $(lduMatrix)/lduAddressing
 $(lduAddressing)/lduAddressing.C
 $(lduAddressing)/lduCoupledInterface.C
 $(lduAddressing)/processorLduCoupledInterface.C
 $(lduAddressing)/cyclicLduCoupledInterface.C
-$(lduAddressing)/fastLduTriLookup.C
 
-$(lduMatrix)/lduMatrix.C
-$(lduMatrix)/operations.C
-$(lduMatrix)/ATmul.C
-$(lduMatrix)/tests.C
-$(lduMatrix)/updateCoupledInterfaces.C
-$(lduMatrix)/lduMatrixSolver.C
-$(lduMatrix)/smoother.C
-
-$(lduMatrix)/solvers/diagonalSolver.C
-$(lduMatrix)/solvers/DCG.C
-$(lduMatrix)/solvers/BDCG.C
-$(lduMatrix)/solvers/ICCG.C
-$(lduMatrix)/solvers/BICCG.C
-
-GaussSeidel                     = $(lduMatrix)/solvers/GaussSeidel
-$(GaussSeidel)/GaussSeidel.C
-
-amgSymSolver                    = $(lduMatrix)/solvers/amgSymSolver
-amgInterfaces                   = $(amgSymSolver)/interfaces
-amgCoupledInterface             = $(amgInterfaces)/amgCoupledInterface
-amgProcessorInterface           = $(amgInterfaces)/processorAmgCoupledInterface
-amgCyclicInterface              = $(amgInterfaces)/cyclicAmgCoupledInterface
-
-$(amgCoupledInterface)/amgCoupledInterface.C
-$(amgCoupledInterface)/newAmgCoupledInterface.C
-$(amgProcessorInterface)/processorAmgCoupledInterface.C
-$(amgCyclicInterface)/cyclicAmgCoupledInterface.C
-
+amgSymSolver = $(lduMatrix)/solvers/amgSymSolver
 $(amgSymSolver)/amgSymSolver.C
 $(amgSymSolver)/amgSymSolverCalcAgglomeration.C
 $(amgSymSolver)/amgSymSolverMakeCoarseMatrix.C
 $(amgSymSolver)/amgSymSolverOperations.C
 $(amgSymSolver)/amgSymSolverSolve.C
 
-$(constraint)/scalarConstraint.C
+amgInterfaces = $(amgSymSolver)/interfaces
+amgCoupledInterface = $(amgInterfaces)/amgCoupledInterface
+$(amgCoupledInterface)/amgCoupledInterface.C
+$(amgCoupledInterface)/newAmgCoupledInterface.C
 
-$(plane)/plane.C
-$(triangle)/intersection.C
+amgProcessorInterface = $(amgInterfaces)/processorAmgCoupledInterface
+$(amgProcessorInterface)/processorAmgCoupledInterface.C
 
-$(edge)/edgeIOList.C
+amgCyclicInterface = $(amgInterfaces)/cyclicAmgCoupledInterface
+$(amgCyclicInterface)/cyclicAmgCoupledInterface.C
+
+primitiveShapes = meshes/primitiveShapes
+
+$(primitiveShapes)/plane/plane.C
+$(primitiveShapes)/triangle/intersection.C
+
+meshShapes = meshes/meshShapes
+$(meshShapes)/edge/edgeIOList.C
+
+face = $(meshShapes)/face
 $(face)/face.C
 $(face)/faceIntersection.C
 $(face)/faceContactSphere.C
 $(face)/faceAreaInContact.C
 $(face)/faceIOList.C
+
+cell = $(meshShapes)/cell
 $(cell)/cell.C
 $(cell)/oppositeCellFace.C
 $(cell)/cellIOList.C
+
+tetCell = $(meshShapes)/tetCell
 $(tetCell)/tetCell.C
 
+cellModeller = $(meshShapes)/cellModeller
 $(cellModeller)/cellModeller.C
 $(cellModeller)/cellModellerIO.C
+
+cellModel = $(meshShapes)/cellModel
 $(cellModel)/cellModel.C
 $(cellModel)/cellModelIO.C
+
+cellShape = $(meshShapes)/cellShape
 $(cellShape)/cellShape.C
 $(cellShape)/cellShapeEqual.C
 $(cellShape)/cellShapeIO.C
 $(cellShape)/cellShapeIOList.C
 
-$(patchIdentifier)/patchIdentifier.C
+meshes/patchIdentifier/patchIdentifier.C
 
-$(polyPatch)/polyPatch.C
-$(polyPatch)/newPolyPatch.C
-$(symmetryPolyPatch)/symmetryPolyPatch.C
-$(wedgePolyPatch)/wedgePolyPatch.C
-$(coupledPolyPatch)/coupledPolyPatch.C
-$(coupledPolyPatch)/coupledPolyPatchMorph.C
-$(cyclicPolyPatch)/cyclicPolyPatch.C
-$(cyclicPolyPatch)/cyclicPolyPatchMorph.C
-$(wallPolyPatch)/wallPolyPatch.C
-$(emptyPolyPatch)/emptyPolyPatch.C
-$(processorPolyPatch)/processorPolyPatch.C
-$(processorPolyPatch)/processorPolyPatchMorph.C
+polyMesh = meshes/polyMesh
 
+polyPatches = $(polyMesh)/polyPatches
+$(polyPatches)/polyPatch/polyPatch.C
+$(polyPatches)/polyPatch/newPolyPatch.C
+
+basicPolyPatches = $(polyPatches)/basicPolyPatches
+$(basicPolyPatches)/emptyPolyPatch/emptyPolyPatch.C
+$(basicPolyPatches)/symmetryPolyPatch/symmetryPolyPatch.C
+$(basicPolyPatches)/wedgePolyPatch/wedgePolyPatch.C
+$(basicPolyPatches)/coupledPolyPatch/coupledPolyPatch.C
+
+derivedPolyPatches = $(polyPatches)/derivedPolyPatches
+$(derivedPolyPatches)/wallPolyPatch/wallPolyPatch.C
+$(derivedPolyPatches)/processorPolyPatch/processorPolyPatch.C
+$(derivedPolyPatches)/cyclicPolyPatch/cyclicPolyPatch.C
+
+polyBoundaryMesh = $(polyMesh)/polyBoundaryMesh
 $(polyBoundaryMesh)/polyBoundaryMesh.C
 $(polyBoundaryMesh)/polyBoundaryMeshEntries.C
 
-$(ProcessorTopology)/commSchedule.C
+meshes/ProcessorTopology/commSchedule.C
+
+parallelInfo = $(polyMesh)/parallelInfo
 $(parallelInfo)/parallelInfo.C
 $(parallelInfo)/globalPoints.C
 
+$(polyMesh)/syncTools/syncTools.C
+
+zones = $(polyMesh)/zones
+
+cellZone = $(zones)/cellZone
 $(cellZone)/cellZone.C
 $(cellZone)/newCellZone.C
+
+faceZone = $(zones)/faceZone
 $(faceZone)/faceZone.C
 $(faceZone)/newFaceZone.C
+
+pointZones = $(zones)/pointZones
+pointZone = $(pointZones)/pointZone
 $(pointZone)/pointZone.C
 $(pointZone)/newPointZone.C
 
-$(polyTopoChange)/polyTopoChange.C
-$(topoAction)/topoActions.C
-$(polyMeshModifier)/polyMeshModifier.C
-$(polyMeshModifier)/newPolyMeshModifier.C
-$(polyMeshMorphEngine)/polyMeshMorphEngine.C
+$(polyMesh)/polyMesh.C
+$(polyMesh)/polyMeshFromShapeMesh.C
+$(polyMesh)/polyMeshIO.C
+$(polyMesh)/polyMeshClear.C
+$(polyMesh)/polyMeshCalcFaceCells.C
+$(polyMesh)/polyMeshUpdate.C
 
+primitiveMesh = meshes/primitiveMesh
 $(primitiveMesh)/primitiveMesh.C
 $(primitiveMesh)/primitiveMeshCellCells.C
 $(primitiveMesh)/primitiveMeshCellCentresAndVols.C
@@ -577,21 +312,11 @@ $(primitiveMesh)/primitiveMeshPointPoints.C
 $(primitiveMesh)/primitiveMeshCellPoints.C
 $(primitiveMesh)/primitiveMeshCalcCellShapes.C
 
+primitivePatch = meshes/primitivePatch
 $(primitivePatch)/patchZones.C
 $(primitivePatch)/walkPatch.C
 
-$(polyMesh)/polyMesh.C
-$(polyMesh)/polyMeshIO.C
-$(polyMesh)/createPolyMesh.C
-$(polyMesh)/clearPolyMesh.C
-$(polyMesh)/polyShapeMeshTools.C
-$(polyMesh)/calcPolyMeshFaceCells.C
-$(polyMesh)/polyMeshCorrectFaceDirections.C
-$(polyMesh)/polyMeshPurgePolygons.C
-$(polyMesh)/zipUpCells.C
-$(polyMesh)/polyMeshMorph.C
-$(polyMesh)/polyMeshUpdateTopology.C
-
+cellMatcher = $(meshShapes)/cellMatcher
 $(cellMatcher)/cellMatcher.C
 $(cellMatcher)/hexMatcher.C
 $(cellMatcher)/wedgeMatcher.C
@@ -601,223 +326,98 @@ $(cellMatcher)/tetWedgeMatcher.C
 $(cellMatcher)/tetMatcher.C
 $(cellMatcher)/degenerateMatcher.C
 
+mapPolyMesh = $(polyMesh)/mapPolyMesh
 $(mapPolyMesh)/mapPolyMesh.C
-$(pointMapper)/pointMapper.C
-$(faceMapper)/faceMapper.C
-$(cellMapper)/cellMapper.C
+$(mapPolyMesh)/pointMapper/pointMapper.C
+$(mapPolyMesh)/faceMapper/faceMapper.C
+$(mapPolyMesh)/cellMapper/cellMapper.C
 
+PrimitivePatch = meshes/PrimitivePatch
 $(PrimitivePatch)/PrimitivePatchName.C
 
-$(pointPatch)/pointPatch.C
-$(facePointPatch)/facePointPatch.C
-$(facePointPatch)/newFacePointPatch.C
-$(emptyPointPatch)/emptyPointPatch.C
-$(symmetryPointPatch)/symmetryPointPatch.C
-$(wedgePointPatch)/wedgePointPatch.C
-$(cyclicPointPatch)/cyclicPointPatch.C
-$(processorPointPatch)/processorPointPatch.C
-$(globalProcessorPointPatch)/globalProcessorPointPatch.C
-$(wallPointPatch)/wallPointPatch.C
-$(pointBoundaryMesh)/pointBoundaryMesh.C
+pointMesh = meshes/pointMesh
 $(pointMesh)/pointMesh.C
 
-$(fvPatch)/fvPatch.C
-$(fvPatch)/newFvPatch.C
-$(fvBoundaryMesh)/fvBoundaryMesh.C
-$(fvMesh)/makeFvMeshData.C
-$(fvMesh)/fvMesh.C
-$(MapFvFields)/fvPatchMapper.C
-$(MapFvFields)/fvSurfaceMapper.C
+pointPatches = $(pointMesh)/pointPatches
+$(pointPatches)/pointPatch/pointPatch.C
+$(pointPatches)/facePointPatch/facePointPatch.C
+$(pointPatches)/facePointPatch/newFacePointPatch.C
 
-$(symmetryFvPatch)/symmetryFvPatch.C
-$(wedgeFvPatch)/wedgeFvPatch.C
-$(coupledFvPatch)/coupledFvPatch.C
-$(cyclicFvPatch)/cyclicFvPatch.C
-$(emptyFvPatch)/emptyFvPatch.C
-$(processorFvPatch)/processorFvPatch.C
+basicPointPatches = $(pointPatches)/basicPointPatches
+$(basicPointPatches)/emptyPointPatch/emptyPointPatch.C
+$(basicPointPatches)/symmetryPointPatch/symmetryPointPatch.C
+$(basicPointPatches)/wedgePointPatch/wedgePointPatch.C
 
-$(wallFvPatch)/wallFvPatch.C
+derivedPointPatches = $(pointPatches)/derivedPointPatches
+$(derivedPointPatches)/cyclicPointPatch/cyclicPointPatch.C
+$(derivedPointPatches)/processorPointPatch/processorPointPatch.C
+$(derivedPointPatches)/globalProcessorPointPatch/globalProcessorPointPatch.C
+$(derivedPointPatches)/wallPointPatch/wallPointPatch.C
 
-$(boundBox)/boundBox.C
+pointBoundaryMesh = $(pointMesh)/pointBoundaryMesh
+$(pointBoundaryMesh)/pointBoundaryMesh.C
 
+meshes/boundBox/boundBox.C
+
+meshTools = meshes/meshTools
 $(meshTools)/matchPoints.C
 $(meshTools)/mergePoints.C
 
-$(labelField)/labelField.C
-$(scalarField)/scalarField.C
-$(tensorField)/tensorField.C
-$(complexFields)/complexFields.C
-$(cloud)/cloud.C
+Fields = fields/Fields
+$(Fields)/labelField/labelField.C
+$(Fields)/scalarField/scalarField.C
+$(Fields)/tensorField/tensorField.C
+$(Fields)/diagTensorField/diagTensorField.C
+$(Fields)/sphericalTensorField/sphericalTensorField.C
+$(Fields)/complexFields/complexFields.C
 
-$(labelField)/labelIOField.C
-$(scalarField)/scalarIOField.C
-$(vectorField)/vectorIOField.C
-$(tensorField)/tensorIOField.C
+fields/cloud/cloud.C
 
+$(Fields)/labelField/labelIOField.C
+$(Fields)/scalarField/scalarIOField.C
+$(Fields)/vectorField/vectorIOField.C
+$(Fields)/tensorField/tensorIOField.C
+$(Fields)/diagTensorField/diagTensorIOField.C
+$(Fields)/sphericalTensorField/sphericalTensorIOField.C
 
-$(pointPatchField)/pointPatchFields.C
+pointPatchFields = fields/pointPatchFields
+$(pointPatchFields)/pointPatchField/pointPatchFields.C
 
-$(calculatedPointPatchFields)/calculatedPointPatchFields.C
-$(defaultPointPatchFields)/defaultPointPatchFields.C
-$(valueStoredPointPatchFields)/valueStoredPointPatchFields.C
-$(fixedValuePointPatchFields)/fixedValuePointPatchFields.C
-$(zeroGradientPointPatchFields)/zeroGradientPointPatchFields.C
-$(mixedPointPatchFields)/mixedPointPatchFields.C
+basicPointPatchFields = $(pointPatchFields)/basicPointPatchFields
+$(basicPointPatchFields)/calculated/calculatedPointPatchFields.C
+$(basicPointPatchFields)/default/defaultPointPatchFields.C
+$(basicPointPatchFields)/valueStored/valueStoredPointPatchFields.C
+$(basicPointPatchFields)/fixedValue/fixedValuePointPatchFields.C
+$(basicPointPatchFields)/zeroGradient/zeroGradientPointPatchFields.C
+$(basicPointPatchFields)/mixed/mixedPointPatchFields.C
 
-$(emptyPointPatchFields)/emptyPointPatchFields.C
-$(wedgePointPatchFields)/wedgePointPatchFields.C
-$(slipPointPatchFields)/slipPointPatchFields.C
-$(symmetryPointPatchFields)/symmetryPointPatchFields.C
-$(processorPointPatchFields)/processorPointPatchFields.C
-$(globalProcessorPointPatchFields)/globalProcessorPointPatchFields.C
+derivedPointPatchFields = $(pointPatchFields)/derivedPointPatchFields
+$(derivedPointPatchFields)/empty/emptyPointPatchFields.C
+$(derivedPointPatchFields)/cyclic/cyclicPointPatchFields.C
+$(derivedPointPatchFields)/wedge/wedgePointPatchFields.C
+$(derivedPointPatchFields)/slip/slipPointPatchFields.C
+$(derivedPointPatchFields)/symmetry/symmetryPointPatchFields.C
+$(derivedPointPatchFields)/processor/processorPointPatchFields.C
+$(derivedPointPatchFields)/globalProcessor/globalProcessorPointPatchFields.C
 
-$(fvPatchField)/fvPatchFields.C
+fields/GeometricFields/pointFields/pointFields.C
 
-$(emptyFvPatchFields)/emptyFvPatchFields.C
-$(zeroGradientFvPatchFields)/zeroGradientFvPatchFields.C
-$(fixedValueFvPatchFields)/fixedValueFvPatchFields.C
-$(fixedGradientFvPatchFields)/fixedGradientFvPatchFields.C
-$(mixedFvPatchFields)/mixedFvPatchFields.C
-$(transformFvPatchFields)/transformFvPatchFields.C
-$(transformFvPatchFields)/transformFvPatchScalarField.C
-$(basicSymmetryFvPatchFields)/basicSymmetryFvPatchFields.C
-$(basicSymmetryFvPatchFields)/basicSymmetryFvPatchScalarField.C
-$(calculatedFvPatchFields)/calculatedFvPatchFields.C
-$(defaultFvPatchFields)/defaultFvPatchFields.C
-$(slicedFvPatchFields)/slicedFvPatchFields.C
-$(coupledFvPatchFields)/coupledFvPatchFields.C
-$(processorFvPatchFields)/processorFvPatchFields.C
-$(processorFvPatchFields)/processorFvPatchScalarField.C
+meshes/bandCompression/bandCompression.C
+meshes/preservePatchTypes/preservePatchTypes.C
 
-$(symmetryFvPatchFields)/symmetryFvPatchFields.C
-$(cyclicFvPatchFields)/cyclicFvPatchFields.C
-$(wedgeFvPatchFields)/wedgeFvPatchFields.C
-$(wedgeFvPatchFields)/wedgeFvPatchScalarField.C
+interpolations = interpolations
+interpolation = $(interpolations)/interpolation
+$(interpolations)/patchToPatchInterpolation/PatchToPatchInterpolationName.C
 
-$(uniformFixedValueFvPatchFields)/uniformFixedValueFvPatchFields.C
-$(directionMixedFvPatchFields)/directionMixedFvPatchFields.C
-$(slipFvPatchFields)/slipFvPatchFields.C
-$(partialSlipFvPatchFields)/partialSlipFvPatchFields.C
-$(surfaceNormalFixedValue)/surfaceNormalFixedValueFvPatchVectorField.C
-$(inletOutletFvPatchFields)/inletOutletFvPatchFields.C
-$(outletInletFvPatchFields)/outletInletFvPatchFields.C
-$(fixedFluxPressure)/fixedFluxPressureFvPatchScalarField.C
+algorithms/meshWave/meshWaveName.C
 
-$(fluxCorrectedVelocity)/fluxCorrectedVelocityFvPatchVectorField.C
-$(movingWallVelocity)/movingWallVelocityFvPatchVectorField.C
-$(freestreamFvPatchFields)/freestreamFvPatchFields.C
-$(freestreamPressure)/freestreamPressureFvPatchScalarField.C
-$(pressureInletVelocity)/pressureInletVelocityFvPatchVectorField.C
-$(pressureInletUniformVelocity)/pressureInletUniformVelocityFvPatchVectorField.C
-$(pressureDirectedInletVelocity)/pressureDirectedInletVelocityFvPatchVectorField.C
-$(pressureInletOutletVelocity)/pressureInletOutletVelocityFvPatchVectorField.C
-$(pressureDirectedInletOutletVelocity)/pressureDirectedInletOutletVelocityFvPatchVectorField.C
+graph/curve/curve.C
+graph/graph.C
 
-$(volFields)/volFields.C
-$(surfaceFields)/surfaceFields.C
-$(pointFields)/pointFields.C
-
-$(fvSchemes)/fvSchemes.C
-
-$(fvMatrices)/fvMatrices.C
-$(fvScalarMatrix)/fvScalarMatrix.C
-
-$(interpolation)/interpolation/interpolations.C
-$(interpolationCell)/makeInterpolationCell.C
-$(interpolationCellPoint)/cellPointWeight/cellPointWeight.C
-$(interpolationCellPoint)/makeInterpolationCellPoint.C
-$(interpolationCellPointFace)/makeInterpolationCellPointFace.C
-
-$(volPointInterpolation)/volPointInterpolation.C
-$(edgeCorrectedVolPointInterpolation)/edgeCorrectedVolPointInterpolation.C
-
-$(surfaceInterpolation)/surfaceInterpolation/surfaceInterpolation.C
-$(surfaceInterpolation)/surfaceInterpolationScheme/surfaceInterpolationSchemes.C
-
-$(schemes)/linear/linear.C
-$(schemes)/midPoint/midPoint.C
-$(schemes)/downwind/downwind.C
-$(schemes)/weighted/weighted.C
-$(schemes)/cubicCorrection/cubicCorrection.C
-$(schemes)/skewLinear/skewCorrectionVectors.C
-$(schemes)/skewLinear/skewLinear.C
-$(schemes)/inverseLinear/inverseLinear.C
-$(schemes)/harmonic/harmonic.C
-$(schemes)/localBlended/localBlended.C
-
-$(limitedSchemes)/limitedSurfaceInterpolationScheme/limitedSurfaceInterpolationSchemes.C
-
-$(limitedSchemes)/upwind/upwind.C
-$(limitedSchemes)/blended/blended.C
-$(limitedSchemes)/Gamma/Gamma.C
-$(limitedSchemes)/SFCD/SFCD.C
-$(limitedSchemes)/vanLeer/vanLeer.C
-$(limitedSchemes)/limitedLinear/limitedLinear.C
-$(limitedSchemes)/limitedCubic/limitedCubic.C
-$(limitedSchemes)/SuperBee/SuperBee.C
-$(limitedSchemes)/cubic/cubic.C
-$(limitedSchemes)/linearUpwind/linearUpwind.C
-$(limitedSchemes)/QUICK/QUICK.C
-$(limitedSchemes)/MUSCL/MUSCL.C
-$(limitedSchemes)/UMIST/UMIST.C
-$(limitedSchemes)/Phi/Phi.C
-
-$(multivariateSchemes)/multivariateSurfaceInterpolationScheme/multivariateSurfaceInterpolationSchemes.C
-$(multivariateSchemes)/multivariateSelectionScheme/multivariateSelectionSchemes.C
-$(multivariateSchemes)/upwind/multivariateUpwind.C
-$(multivariateSchemes)/Gamma/multivariateGamma.C
-$(multivariateSchemes)/vanLeer/multivariateVanLeer.C
-$(multivariateSchemes)/SuperBee/multivariateSuperBee.C
-$(multivariateSchemes)/MUSCL/multivariateMUSCL.C
-$(multivariateSchemes)/limitedLinear/multivariateLimitedLinear.C
-$(multivariateSchemes)/limitedCubic/multivariateLimitedCubic.C
-
-$(bandCompression)/bandCompression.C
-$(preservePatchTypes)/preservePatchTypes.C
-
-$(fv)/fv.C
-
-$(ddtScheme)/ddtSchemes.C
-$(steadyStateDdtScheme)/steadyStateDdtSchemes.C
-$(EulerDdtScheme)/EulerDdtSchemes.C
-$(CoEulerDdtScheme)/CoEulerDdtSchemes.C
-$(backwardDdtScheme)/backwardDdtSchemes.C
-$(boundedBackwardDdtScheme)/boundedBackwardDdtScheme.C
-$(boundedBackwardDdtScheme)/boundedBackwardDdtSchemes.C
-$(CrankNicholsonDdtScheme)/CrankNicholsonDdtSchemes.C
-
-$(d2dt2Scheme)/d2dt2Schemes.C
-$(steadyStateD2dt2Scheme)/steadyStateD2dt2Schemes.C
-$(EulerD2dt2Scheme)/EulerD2dt2Schemes.C
-
-$(divScheme)/divSchemes.C
-$(gaussDivScheme)/gaussDivSchemes.C
-
-$(gradScheme)/gradSchemes.C
-$(gaussGrad)/gaussGrads.C
-$(leastSquaresGrad)/leastSquaresVectors.C
-$(leastSquaresGrad)/leastSquaresGrads.C
-$(limitedGrad)/limitedGrads.C
-$(fourthGrad)/fourthGrads.C
-
-$(snGradScheme)/snGradSchemes.C
-$(correctedSnGrad)/correctedSnGrads.C
-$(limitedSnGrad)/limitedSnGrads.C
-$(boundedSnGrad)/boundedSnGrads.C
-$(uncorrectedSnGrad)/uncorrectedSnGrads.C
-$(fourthSnGrad)/fourthSnGrads.C
-
-$(convectionScheme)/convectionSchemes.C
-$(gaussConvectionScheme)/gaussConvectionSchemes.C
-$(multivariateGaussConvectionScheme)/multivariateGaussConvectionSchemes.C
-
-$(laplacianScheme)/laplacianSchemes.C
-$(gaussLaplacianScheme)/gaussLaplacianSchemes.C
-
-$(patchToPatchInterpolation)/PatchToPatchInterpolationName.C
-
-$(random)/Random.C
-
-$(algorithms)/meshWave/meshWaveName.C
+writers = graph/writers
+$(writers)/rawGraph/rawGraph.C
+$(writers)/gnuplotGraph/gnuplotGraph.C
+$(writers)/xmgrGraph/xmgrGraph.C
+$(writers)/jplotGraph/jplotGraph.C
 
 LIB = $(FOAM_LIBBIN)/libOpenFOAM

@@ -154,7 +154,7 @@ bool domainDecomposition::writeDecomposition()
         // Create processor cells
         const labelList& curCellLabels = procCellAddressing_[procI];
 
-        const cellList& meshCells = allCells();
+        const cellList& meshCells = cells();
 
         cellList procCells(curCellLabels.size());
 
@@ -431,10 +431,10 @@ bool domainDecomposition::writeDecomposition()
                 procFaceZones[zoneI] =
                     fz[createdFaceZones[zoneI]].clone
                     (
-                        procMesh.faceZones(),
-                        zoneI,
                         zoneFaces[zoneI],
-                        zoneFaceFlips[zoneI]
+                        zoneFaceFlips[zoneI],
+                        zoneI,
+                        procMesh.faceZones()
                     ).ptr();
             }
         }
@@ -500,9 +500,9 @@ bool domainDecomposition::writeDecomposition()
                 procCellZones[zoneI] =
                     cz[createdCellZones[zoneI]].clone
                     (
-                        procMesh.cellZones(),
+                        zoneCells[zoneI],
                         zoneI,
-                        zoneCells[zoneI]
+                        procMesh.cellZones()
                     ).ptr();
             }
         }
@@ -510,35 +510,6 @@ bool domainDecomposition::writeDecomposition()
 
         // Hook the zones onto the mesh
         procMesh.addZones(procPointZones, procFaceZones, procCellZones);
-
-        // Set parallel info
-        // Find the globally shared points
-        labelList localSharedPoints(globallySharedPoints_.size());
-        labelList localSharedPointAddr(globallySharedPoints_.size());
-        labelList localSharedPointGlobalLabels(globallySharedPoints_.size());
-        label nLocShP = 0;
-
-        forAll (curPointLabels, pointI)
-        {
-            Map<label>::iterator pIter =
-                sharedPointLookup.find(curPointLabels[pointI]);
-
-            if (pIter != sharedPointLookup.end())
-            {
-                // Global point found. Add it to the list
-                // and grab the addressing
-                localSharedPoints[nLocShP] = pointI;
-                localSharedPointAddr[nLocShP] = pIter();
-                localSharedPointGlobalLabels[nLocShP] = curPointLabels[pointI];
-
-                nLocShP++;
-            }
-        }
-
-        // Reset the size of the gathered lists
-        localSharedPoints.setSize(nLocShP);
-        localSharedPointAddr.setSize(nLocShP);
-        localSharedPointGlobalLabels.setSize(nLocShP);
 
         // Set the precision of the points data to 10
         IOstream::defaultPrecision(10);
@@ -549,25 +520,6 @@ bool domainDecomposition::writeDecomposition()
             << "Processor " << procI << nl
             << "    Number of cells = " << procMesh.nCells()
             << endl;
-
-        {
-            // Temorarily write out the parallelInfo class for debugging
-            parallelInfo parInfo
-            (
-                procMesh,
-                true,
-                cyclicParallel_,
-                nPoints(),
-                nFaces(),
-                nCells(),
-                globallySharedPoints_.size(),
-                localSharedPoints,
-                localSharedPointAddr,
-                localSharedPointGlobalLabels
-            );
-
-            parInfo.write();
-        }
 
         label nBoundaryFaces = 0;
 

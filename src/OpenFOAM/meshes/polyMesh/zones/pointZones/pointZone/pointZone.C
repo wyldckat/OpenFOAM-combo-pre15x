@@ -74,7 +74,7 @@ void Foam::pointZone::calcPointLookupMap() const
             << abort(FatalError);
     }
 
-    const labelList& addr = addressing();
+    const labelList& addr = *this;
 
     pointLookupMapPtr_ = new Map<label>(2*addr.size());
     Map<label>& plm = *pointLookupMapPtr_;
@@ -104,7 +104,7 @@ Foam::pointZone::pointZone
     const pointZoneMesh& zm
 )
 :
-    indirectPointList(zm.mesh().allPoints(), addr),
+    labelList(addr),
     name_(name),
     index_(index),
     zoneMesh_(zm),
@@ -121,11 +121,7 @@ Foam::pointZone::pointZone
     const pointZoneMesh& zm
 )
 :
-    indirectPointList
-    (
-        zm.mesh().allPoints(),
-        dict.lookup("pointLabels")
-    ),
+    labelList(dict.lookup("pointLabels")),
     name_(name),
     index_(index),
     zoneMesh_(zm),
@@ -138,12 +134,12 @@ Foam::pointZone::pointZone
 Foam::pointZone::pointZone
 (
     const pointZone& pz,
-    const pointZoneMesh& zm,
+    const labelList& addr,
     const label index,
-    const labelList& addr
+    const pointZoneMesh& zm
 )
 :
-    indirectPointList(zm.mesh().allPoints(), addr),
+    labelList(addr),
     name_(pz.name()),
     index_(index),
     zoneMesh_(zm),
@@ -190,17 +186,10 @@ void Foam::pointZone::clearAddressing()
 }
 
 
-void Foam::pointZone::resetAddressing(const labelList& addr)
-{
-    clearAddressing();
-    indirectPointList::resetAddressing(addr);
-}
-
-
 void Foam::pointZone::write(Ostream& os) const
 {
     os  << nl << name()
-        << nl << addressing();
+        << nl << static_cast<const labelList&>(*this);
 }
 
 
@@ -209,13 +198,29 @@ void Foam::pointZone::writeDict(Ostream& os) const
     os  << nl << name() << nl << token::BEGIN_BLOCK << nl
         << "    type " << type() << token::END_STATEMENT << nl;
 
-    addressing().writeEntry("pointLabels", os);
+    writeEntry("pointLabels", os);
 
     os  << token::END_BLOCK << endl;
 }
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+void Foam::pointZone::operator=(const pointZone& cz)
+{
+    clearAddressing();
+    labelList::operator=(cz);
+}
+
+
+void Foam::pointZone::operator=(const labelList& addr)
+{
+    clearAddressing();
+    labelList::operator=(addr);
+}
+
+
+// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
 
 Foam::Ostream& Foam::operator<<(Ostream& os, const pointZone& p)
 {

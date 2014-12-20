@@ -22,9 +22,8 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
+
 #include <unistd.h>
 
 // Foam header files.
@@ -38,11 +37,8 @@ Description
 #include "instantList.H"
 #include "IOPtrList.H"
 #include "OSspecific.H"
+#include "polyMesh.H"
 #include "Time.H"
-#include "volFields.H"
-#include "surfaceFields.H"
-#include "pointFields.H"
-#include "repatchPolyMesh.H"
 
 // FoamX header files.
 #include "IPatchToolServerImpl.H"
@@ -379,18 +375,25 @@ void FoamX::IPatchToolServerImpl::write()
     try
     {
         // Read original mesh
-        repatchPolyMesh mesh
+        polyMesh mesh
         (
             IOobject
             (
-                repatchPolyMesh::defaultRegion,
+                polyMesh::defaultRegion,
                 db_.constant(),
                 db_
             )
         );
 
         // Obtain nearest face in bMesh for each boundary face in mesh
-        labelList nearest(bMesh_.getNearest(mesh));
+        labelList nearest
+        (
+            bMesh_.getNearest
+            (
+                mesh,
+                vector(GREAT, GREAT, GREAT)
+            )
+        );
 
         db_++;
 

@@ -1,81 +1,16 @@
-addPatchCellLayer                    = addPatchCellLayer
+addPatchCellLayer/addPatchCellLayer.C
 
-attachDetach                         = attachDetach
+attachDetach/attachDetach.C
+attachDetach/attachInterface.C
+attachDetach/detachInterface.C
+attachDetach/attachDetachPointMatchMap.C
 
-layerAdditionRemoval                 = layerAdditionRemoval
+layerAdditionRemoval/layerAdditionRemoval.C
+layerAdditionRemoval/setLayerPairing.C
+layerAdditionRemoval/addCellLayer.C
+layerAdditionRemoval/removeCellLayer.C
 
-slidingInterface                     = slidingInterface
-enrichedPatch                        = $(slidingInterface)/enrichedPatch
-
-directPolyTopoChange                 = directPolyTopoChange
-
-boundaryMesh                         = boundaryMesh
-boundaryPatch                        = boundaryPatch
-setUpdater                           = setUpdater
-
-meshCut                              = meshCut
-cellCuts                             = $(meshCut)/cellCuts
-cellLooper                           = $(meshCut)/cellLooper
-directions                           = $(meshCut)/directions
-edgeVertex                           = $(meshCut)/edgeVertex
-hashEdge                             = $(meshCut)/hashEdge
-meshModifiers                        = $(meshCut)/meshModifiers
-morphFvMesh                          = $(meshCut)/morphFvMesh
-morphMesh                            = $(meshCut)/morphMesh
-refineCell                           = $(meshCut)/refineCell
-splitCell                            = $(meshCut)/splitCell
-wallLayerCells                       = $(meshCut)/wallLayerCells
-wallNormalInfo                       = $(wallLayerCells)/wallNormalInfo
-
-meshCutter                           = $(meshModifiers)/meshCutter
-meshCutAndRemove                     = $(meshModifiers)/meshCutAndRemove
-removeFaces                          = $(meshModifiers)/removeFaces
-removeCells                          = $(meshModifiers)/removeCells
-undoableMeshCutter                   = $(meshModifiers)/undoableMeshCutter
-refinementIterator                   = $(meshModifiers)/refinementIterator
-multiDirRefinement                   = $(meshModifiers)/multiDirRefinement
-hexRef8                              = $(meshModifiers)/hexRef8
-boundaryCutter                       = $(meshModifiers)/boundaryCutter
-
-directionInfo                        = $(directions)/directionInfo
-
-attachPolyMesh                       = attachPolyMesh
-repatchPolyMesh                      = repatchPolyMesh
-
-motionSolvers                        = motionSolvers
-motionSolver                         = $(motionSolvers)/motionSolver
-laplace                              = $(motionSolver)/laplace
-pseudoSolid                          = $(motionSolver)/pseudoSolid
-cellQuality                          = $(motionSolvers)/cellQuality
-motionDiffs                          = $(motionSolvers)/motionDiffs
-motionDiff                           = $(motionDiffs)/motionDiff
-constant                             = $(motionDiffs)/constant
-deformationEnergy                    = $(motionDiffs)/deformationEnergy
-distortionEnergy                     = $(motionDiffs)/distortionEnergy
-linear                               = $(motionDiffs)/linear
-quadratic                            = $(motionDiffs)/quadratic
-exponential                          = $(motionDiffs)/exponential
-patchEnhanced                        = $(motionDiffs)/patchEnhanced
-file                                 = $(motionDiffs)/file
-
-tools                                = tools
-twoDPointCorrector                   = $(tools)/twoDPointCorrector
-
-motionSmoother                      =  motionSmoother
-
-
-$(addPatchCellLayer)/addPatchCellLayer.C
-
-$(attachDetach)/attachDetach.C
-$(attachDetach)/attachInterface.C
-$(attachDetach)/detachInterface.C
-$(attachDetach)/attachDetachPointMatchMap.C
-
-$(layerAdditionRemoval)/layerAdditionRemoval.C
-$(layerAdditionRemoval)/setLayerPairing.C
-$(layerAdditionRemoval)/addCellLayer.C
-$(layerAdditionRemoval)/removeCellLayer.C
-
+enrichedPatch = slidingInterface/enrichedPatch
 $(enrichedPatch)/enrichedPatch.C
 $(enrichedPatch)/enrichedPatchPointMap.C
 $(enrichedPatch)/enrichedPatchFaces.C
@@ -83,74 +18,66 @@ $(enrichedPatch)/enrichedPatchPointPoints.C
 $(enrichedPatch)/enrichedPatchCutFaces.C
 $(enrichedPatch)/enrichedPatchMasterPoints.C
 
-$(directPolyTopoChange)/directPolyTopoChange.C
-$(directPolyTopoChange)/directPolyTopoChangeCouples.C
+polyTopoChange/polyTopoChange/polyTopoChange.C
+polyTopoChange/polyTopoChange/topoAction/topoActions.C
 
-$(directPolyTopoChange)/directEdgeCollapser.C
-$(directPolyTopoChange)/directFaceCollapser.C
+polyMeshModifier = polyTopoChange/polyMeshModifier
+$(polyMeshModifier)/polyMeshModifier.C
+$(polyMeshModifier)/newPolyMeshModifier.C
 
-$(slidingInterface)/slidingInterface.C
-$(slidingInterface)/slidingInterfaceProjectPoints.C
-$(slidingInterface)/coupleSlidingInterface.C
-$(slidingInterface)/slidingInterfaceAttachedAddressing.C
-$(slidingInterface)/slidingInterfaceClearCouple.C
-$(slidingInterface)/decoupleSlidingInterface.C
+polyTopoChange/polyTopoChanger/polyTopoChanger.C
+polyTopoChange/polyTopoChanger/polyTopoChangerChangeMesh.C
+
+directPolyTopoChange/directPolyTopoChange.C
+directPolyTopoChange/directEdgeCollapser.C
+directPolyTopoChange/directFaceCollapser.C
+directPolyTopoChange/directCutAndRemove.C
+directPolyTopoChange/directRemoveCells.C
+directPolyTopoChange/directRemoveFaces.C
+
+slidingInterface/slidingInterface.C
+slidingInterface/slidingInterfaceProjectPoints.C
+slidingInterface/coupleSlidingInterface.C
+slidingInterface/slidingInterfaceAttachedAddressing.C
+slidingInterface/slidingInterfaceClearCouple.C
+slidingInterface/decoupleSlidingInterface.C
 
 perfectInterface/perfectInterface.C
 
-$(boundaryMesh)/boundaryMesh.C
-$(boundaryPatch)/boundaryPatch.C
-$(boundaryMesh)/octreeDataFaceList.C
-$(setUpdater)/setUpdater.C
+boundaryMesh/boundaryMesh.C
+boundaryPatch/boundaryPatch.C
+boundaryMesh/octreeDataFaceList.C
+setUpdater/setUpdater.C
 
-$(morphMesh)/morphMesh.C
-$(removeFaces)/removeFaces.C
-$(removeCells)/removeCells.C
-$(boundaryCutter)/boundaryCutter.C
-$(cellCuts)/cellCuts.C
+meshModifiers = meshCut/meshModifiers
+$(meshModifiers)/removeFaces/removeFaces.C
+$(meshModifiers)/removeCells/removeCells.C
+$(meshModifiers)/boundaryCutter/boundaryCutter.C
+$(meshModifiers)/meshCutter/meshCutter.C
+$(meshModifiers)/meshCutAndRemove/meshCutAndRemove.C
+$(meshModifiers)/undoableMeshCutter/undoableMeshCutter.C
+$(meshModifiers)/refinementIterator/refinementIterator.C
+$(meshModifiers)/multiDirRefinement/multiDirRefinement.C
+$(meshModifiers)/hexRef8/hexRef8.C
 
-$(meshCutter)/meshCutter.C
-$(meshCutAndRemove)/meshCutAndRemove.C
-$(morphFvMesh)/morphFvMesh.C
-$(cellLooper)/cellLooper.C
-$(cellLooper)/topoCellLooper.C
-$(cellLooper)/geomCellLooper.C
-$(cellLooper)/hexCellLooper.C
-$(directions)/directions.C
-$(directionInfo)/directionInfo.C
-$(undoableMeshCutter)/undoableMeshCutter.C
-$(refinementIterator)/refinementIterator.C
-$(multiDirRefinement)/multiDirRefinement.C
-$(hexRef8)/hexRef8.C
-$(edgeVertex)/edgeVertex.C
-$(splitCell)/splitCell.C
-$(refineCell)/refineCell.C
-$(wallLayerCells)/wallLayerCells.C
-$(wallNormalInfo)/wallNormalInfo.C
+meshCut/cellLooper/cellLooper.C
+meshCut/cellLooper/topoCellLooper.C
+meshCut/cellLooper/geomCellLooper.C
+meshCut/cellLooper/hexCellLooper.C
+meshCut/directions/directions.C
+meshCut/directions/directionInfo/directionInfo.C
+meshCut/edgeVertex/edgeVertex.C
+meshCut/cellCuts/cellCuts.C
+meshCut/splitCell/splitCell.C
+meshCut/refineCell/refineCell.C
+meshCut/wallLayerCells/wallLayerCells.C
+meshCut/wallLayerCells/wallNormalInfo/wallNormalInfo.C
 
-$(attachPolyMesh)/attachPolyMesh.C
+polyTopoChange/attachPolyTopoChanger/attachPolyTopoChanger.C
+polyTopoChange/repatchPolyTopoChanger/repatchPolyTopoChanger.C
 
-$(repatchPolyMesh)/repatchPolyMesh.C
+motionSmoother/motionSmoother.C
 
-$(twoDPointCorrector)/twoDPointCorrector.C
-
-$(motionSolver)/motionSolver.C
-$(laplace)/laplaceMotionSolver.C
-$(pseudoSolid)/pseudoSolidMotionSolver.C
-
-$(cellQuality)/cellQuality.C
-
-$(motionDiff)/motionDiff.C
-
-$(constant)/constDiff.C
-$(deformationEnergy)/deformationEnergyDiff.C
-$(distortionEnergy)/distortionEnergyDiff.C
-$(linear)/linearDiff.C
-$(quadratic)/quadraticDiff.C
-$(exponential)/exponentialDiff.C
-$(patchEnhanced)/patchEnhancedDiff.C
-$(file)/fileDiff.C
-
-$(motionSmoother)/motionSmoother.C
+motionSolver/motionSolver.H
 
 LIB = $(FOAM_LIBBIN)/libdynamicMesh

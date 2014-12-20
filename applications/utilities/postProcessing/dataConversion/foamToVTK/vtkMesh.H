@@ -37,7 +37,7 @@ SourceFiles
 #ifndef vtkMesh_H
 #define vtkMesh_H
 
-#include "meshSubset.H"
+#include "fvMeshSubset.H"
 #include "vtkTopo.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -54,7 +54,7 @@ class Time;
 
 class vtkMesh
 :
-    public meshSubset
+    public fvMeshSubset
 {
     // Private data
 
@@ -171,7 +171,7 @@ public:
 
 
             //- Map volume field (does in fact do very little interpolation;
-            //  just copied from meshSubset)
+            //  just copied from fvMeshSubset)
             template<class Type>
             tmp<GeometricField<Type, fvPatchField, volMesh> > interpolate
             (
@@ -185,7 +185,7 @@ public:
                 else
                 {
                     tmp<GeometricField<Type, fvPatchField, volMesh> > subFld =
-                        meshSubset::interpolate(fld);
+                        fvMeshSubset::interpolate(fld);
 
                     subFld().rename(fld.name());
 

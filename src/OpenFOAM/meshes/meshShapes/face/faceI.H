@@ -77,7 +77,6 @@ inline face::face(Istream& is)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return the points associated with this face
 inline pointField face::points(const pointField& meshPoints) const
 {
     // There are as many points as there labels for them

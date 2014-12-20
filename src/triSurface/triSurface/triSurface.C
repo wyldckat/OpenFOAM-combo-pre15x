@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "triSurface.H"
@@ -74,7 +72,7 @@ fileName triSurface::triSurfInstance(const Time& d)
             {
                 if (debug)
                 {
-                    Info<< " triSurface::triSurfInstance(const Time& d)"
+                    Pout<< " triSurface::triSurfInstance(const Time& d)"
                         << "reading " << foamName
                         << " from " << ts[j].name()/typeName
                         << endl;
@@ -87,7 +85,7 @@ fileName triSurface::triSurfInstance(const Time& d)
 
     if (debug)
     {
-        Info<< " triSurface::triSurfInstance(const Time& d)"
+        Pout<< " triSurface::triSurfInstance(const Time& d)"
             << "reading " << foamName
             << " from constant/" << endl;
     }
@@ -159,7 +157,7 @@ List<labelledTri> triSurface::convertToTri
 void triSurface::printTriangle
 (
     Ostream& os,
-    const Foam::string& pre,
+    const string& pre,
     const labelledTri& f,
     const pointField& points
 )
@@ -175,7 +173,7 @@ void triSurface::printTriangle
 
 
 // Remove non-triangles, double triangles.
-void triSurface::checkTriangles(bool verbose)
+void triSurface::checkTriangles(const bool verbose)
 {
     // Simple check on indices ok.
     const label maxPointI = points().size() - 1;
@@ -309,7 +307,7 @@ void triSurface::checkTriangles(bool verbose)
 
 
 // Check/fix edges with more than two triangles
-void triSurface::checkEdges(bool verbose)
+void triSurface::checkEdges(const bool verbose)
 {
     const labelListList& eFaces = edgeFaces();
 
@@ -338,7 +336,7 @@ void triSurface::checkEdges(bool verbose)
 
 
 // Check normals and orientation
-boolList triSurface::checkOrientation(bool verbose)
+boolList triSurface::checkOrientation(const bool verbose)
 {
     const edgeList& es = edges();
     const labelListList& faceEs = faceEdges();
@@ -646,26 +644,23 @@ surfacePatchList triSurface::calcPatches(labelList& faceMap) const
 
     // Compact regions
 
-    // Get first and last region
-    label minRegion = 0;
+    // Get last region
     label maxRegion = 0;
 
     if (faceMap.size() > 0)
     {
-        minRegion = operator[](faceMap[0]).region();
         maxRegion = operator[](faceMap[faceMap.size() - 1]).region();
     }
 
-    // Shift all regions down by minRegion
-    surfacePatchList newPatches(maxRegion - minRegion + 1);
-
+    // Get new region list
+    surfacePatchList newPatches(maxRegion + 1);
 
     // Fill patch sizes
     forAll(*this, faceI)
     {
         label region = operator[](faceI).region();
 
-        newPatches[region - minRegion].size()++;
+        newPatches[region].size()++;
     }
 
 
@@ -676,7 +671,7 @@ surfacePatchList triSurface::calcPatches(labelList& faceMap) const
     {
         surfacePatch& newPatch = newPatches[newPatchI];
 
-        label oldPatchI = newPatchI + minRegion;
+        label oldPatchI = newPatchI;
 
         // start of patch
         newPatch.start() = startFaceI;
@@ -727,80 +722,6 @@ void triSurface::setDefaultPatches()
         patches_[patchI].name() = newPatches[patchI].name();
         patches_[patchI].geometricType() = newPatches[patchI].geometricType();
     }
-}
-
-
-// Gets labels of changed faces and propagates them to the edges. Returns
-// labels of edges changed.
-labelList triSurface::faceToEdge
-(
-    const boolList& regionEdge,
-    const label region,
-    const labelList& changedFaces,
-    labelList& edgeRegion
-) const
-{
-    labelList changedEdges(nEdges(), -1);
-    label changedI = 0;
-
-    forAll(changedFaces, i)
-    {
-        label faceI = changedFaces[i];
-
-        const labelList& fEdges = faceEdges()[faceI];
-
-        forAll(fEdges, fEdgeI)
-        {
-            label edgeI = fEdges[fEdgeI];
-
-            if (!regionEdge[edgeI] && (edgeRegion[edgeI] == -1))
-            {
-                edgeRegion[edgeI] = region;
-
-                changedEdges[changedI++] = edgeI;
-            }
-        }
-    }
-
-    changedEdges.setSize(changedI);
-
-    return changedEdges;
-}
-
-
-// Reverse of faceToEdge: gets edges and returns faces
-labelList triSurface::edgeToFace
-(
-    const label region,
-    const labelList& changedEdges,
-    labelList& faceRegion
-) const
-{
-    labelList changedFaces(size(), -1);
-    label changedI = 0;
-
-    forAll(changedEdges, i)
-    {
-        label edgeI = changedEdges[i];
-
-        const labelList& eFaces = edgeFaces()[edgeI];
-
-        forAll(eFaces, eFaceI)
-        {
-            label faceI = eFaces[eFaceI];
-
-            if (faceRegion[faceI] == -1)
-            {
-                faceRegion[faceI] = region;
-
-                changedFaces[changedI++] = faceI;
-            }
-        }
-    }
-
-    changedFaces.setSize(changedI);
-
-    return changedFaces;
 }
 
 
@@ -998,6 +919,7 @@ const labelList& triSurface::edgeOwner() const
     return *edgeOwnerPtr_;
 }
 
+
 //- Move points
 void triSurface::movePoints(const pointField& newPoints)
 {
@@ -1013,7 +935,7 @@ void triSurface::movePoints(const pointField& newPoints)
 
 
 // Remove non-triangles, double triangles.
-void triSurface::cleanup(bool verbose)
+void triSurface::cleanup(const bool verbose)
 {
     // Merge points (already done for STL, TRI)
     stitchTriangles(pointField(points()), SMALL, verbose);
@@ -1027,59 +949,72 @@ void triSurface::cleanup(bool verbose)
 }
 
 
-// Finds area, starting at faceI, delimited by borderEdge
+// Finds area, starting at faceI, delimited by borderEdge. Marks all visited
+// faces (from face-edge-face walk) with currentZone.
 void triSurface::markZone
 (
     const boolList& borderEdge,
-    label faceI,
-    label currentZone,
+    const label faceI,
+    const label currentZone,
     labelList& faceZone
 ) const
 {
     // List of faces whose faceZone has been set.
     labelList changedFaces(1, faceI);
-    // List of edges whose faceZone has been set.
-    labelList changedEdges;
-
-    // Zones on all edges.
-    labelList edgeZone(nEdges(), -1);
 
     while(true)
     {
-        changedEdges =
-            faceToEdge
-            (
-                borderEdge,
-                currentZone,
-                changedFaces,
-                edgeZone
-            );
+        // Pick up neighbours of changedFaces
+        DynamicList<label> newChangedFaces(2*changedFaces.size());
 
-        if (debug)
+        forAll(changedFaces, i)
         {
-            Info<< "From changedFaces:" << changedFaces.size()
-                << " to changedEdges:" << changedEdges.size()
-                << endl;
+            label faceI = changedFaces[i];
+
+            const labelList& fEdges = faceEdges()[faceI];
+
+            forAll(fEdges, i)
+            {
+                label edgeI = fEdges[i];
+
+                if (!borderEdge[edgeI])
+                {
+                    const labelList& eFaces = edgeFaces()[edgeI];
+
+                    forAll(eFaces, j)
+                    {
+                        label nbrFaceI = eFaces[j];
+
+                        if (faceZone[nbrFaceI] == -1)
+                        {
+                            faceZone[nbrFaceI] = currentZone;
+                            newChangedFaces.append(nbrFaceI);
+                        }
+                        else if (faceZone[nbrFaceI] != currentZone)
+                        {
+                            FatalErrorIn
+                            (
+                                "triSurface::markZone(const boolList&,"
+                                "const label, const label, labelList&) const"
+                            )
+                                << "Zones " << faceZone[nbrFaceI]
+                                << " at face " << nbrFaceI
+                                << " connects to zone " << currentZone
+                                << " at face " << faceI
+                                << abort(FatalError);
+                        }
+                    }
+                }
+            }
         }
 
-        if (changedEdges.size() == 0)
+        if (newChangedFaces.size() == 0)
         {
             break;
         }
 
-        changedFaces = edgeToFace(currentZone, changedEdges, faceZone);
-
-        if (debug)
-        {
-            Info<< "From changedEdges:" << changedEdges.size()
-                << " to changedFaces:" << changedFaces.size()
-                << endl;
-        }
-
-        if (changedFaces.size() == 0)
-        {
-            break;
-        }
+        changedFaces.transfer(newChangedFaces.shrink());
+        newChangedFaces.clear();
     }
 }
 
@@ -1093,10 +1028,7 @@ label triSurface::markZones
 ) const
 {
     faceZone.setSize(size());
-    forAll(faceZone, faceI)
-    {
-        faceZone[faceI] = -1;
-    }
+    faceZone = -1;
 
     if (borderEdge.size() != nEdges())
     {
@@ -1113,21 +1045,20 @@ label triSurface::markZones
 
     label zoneI = 0;
 
+    label startFaceI = 0;
+
     for(;;zoneI++)
     {
         // Find first non-coloured face
-        label startFaceI = -1;
-
-        forAll(faceZone, faceI)
+        for (; startFaceI < size(); startFaceI++)
         {
-            if (faceZone[faceI] == -1)
+            if (faceZone[startFaceI] == -1)
             {
-                startFaceI = faceI;
                 break;
             }
         }
 
-        if (startFaceI == -1)
+        if (startFaceI >= size())
         {
             break;
         }

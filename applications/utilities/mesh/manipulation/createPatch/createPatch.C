@@ -29,16 +29,14 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "polyMesh.H"
 #include "Time.H"
-#include "cyclicPolyPatch.H"
-#include "processorPolyPatch.H"
 #include "SortableList.H"
-#include "ListOps.H"
-#include "repatchPolyMesh.H"
 #include "OFstream.H"
 #include "meshTools.H"
 #include "faceSet.H"
 #include "IOPtrList.H"
+#include "repatchPolyTopoChanger.H"
 
 using namespace Foam;
 
@@ -74,22 +72,7 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-
-    //
-    // Read control dictionary
-    //
-
-    Info<< "Create repatchPolyMesh for time = " << runTime.value() << nl
-        << endl;
-    repatchPolyMesh mesh
-    (
-        IOobject
-        (
-            repatchPolyMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
+#   include "createPolyMesh.H"
 
 
     Info<< "Reading createPatchDict\n" << endl;
@@ -112,8 +95,8 @@ int main(int argc, char *argv[])
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
-    // New patches.
-    List<polyPatch*> newPatches(patches.size() + patchSources.size());
+    // Old and new patches.
+    DynamicList<polyPatch*> allPatches(patches.size() + patchSources.size());
 
     // Copy old patches.
     forAll(patches, patchI)
@@ -123,21 +106,43 @@ int main(int argc, char *argv[])
         Info<< "Copying patch " << pp.name() << " at position "
             << patchI << endl;
 
-        newPatches[patchI] =
+        allPatches.append
+        (
             pp.clone
             (
                 patches,
                 patchI,
                 pp.size(),
                 pp.start()
-            ).ptr();
+            ).ptr()
+        );
     }
 
 
-    // Add new patches constructed according to dictionary.
+    // For every boundary face the old patch.
+    labelList oldPatchID(mesh.nFaces()-mesh.nInternalFaces());
 
-    // For every boundary face the new patch (or -1 if nothing changed).
-    labelList newPatchID(mesh.nInternalFaces(), -1);
+    forAll(patches, patchI)
+    {
+        const polyPatch& pp = patches[patchI];
+
+        label bFaceI = pp.start() - mesh.nInternalFaces();
+
+        forAll(pp, i)
+        {
+            oldPatchID[bFaceI++] = patchI;
+        }
+    }
+
+    // For every boundary face the new patch (or rather the index into
+    // allPatches)
+    labelList allPatchID(oldPatchID);
+
+
+    //
+    // Add new patches constructed according to dictionary.
+    //
+
 
     forAll(patchSources, addedI)
     {
@@ -145,33 +150,33 @@ int main(int argc, char *argv[])
 
         word patchName(dict.lookup("name"));
 
-        if (patches.findPatchID(patchName) != -1)
-        {
-            FatalErrorIn(args.executable())
-                << "Patch " << patchName << " already exists in mesh" << endl
-                << "Existing patches are " << patches.names()
-                << exit(FatalError);
-        }
+        label destPatchI = patches.findPatchID(patchName);
 
         word patchType(dict.lookup("type"));
 
-        word sourceType(dict.lookup("constructFrom"));
+        if (destPatchI == -1)
+        {
+            destPatchI = allPatches.size();
 
-        Info<< "Adding new patch " << patchName << " of type " << patchType
-            << " as patch " << patches.size()+addedI << endl;
+            Info<< "Adding new patch " << patchName << " of type " << patchType
+                << " as patch " << destPatchI << endl;
 
-        // Add an empty patch.
-        newPatches[patches.size()+addedI] =
-            polyPatch::New
+            // Add an empty patch.
+            allPatches.append
             (
-                patchType,
-                patchName,
-                0,
-                mesh.nFaces(),
-                patches.size()+addedI,
-                patches
-            ).ptr();
+                polyPatch::New
+                (
+                    patchType,
+                    patchName,
+                    0,
+                    mesh.nFaces(),
+                    destPatchI,
+                    patches
+                ).ptr()
+            );
+        }
 
+        word sourceType(dict.lookup("constructFrom"));
 
         if (sourceType == "patches")
         {
@@ -185,23 +190,13 @@ int main(int argc, char *argv[])
                 const polyPatch& pp = patches[patchI];
 
                 Info<< "Moving faces from patch " << pp.name()
-                    << " to patch " << patches.size()+addedI << endl;
+                    << " to patch " << destPatchI << endl;
 
                 forAll(pp, i)
                 {
                     label faceI = pp.start() + i;
 
-                    if (newPatchID[faceI - mesh.nInternalFaces()] != -1)
-                    {
-                        FatalErrorIn(args.executable())
-                            << "Face " << faceI << " on new patch " << patchName
-                            << " has already been marked for repatching to"
-                            << " patch "
-                            << newPatchID[faceI - mesh.nInternalFaces()]
-                            << exit(FatalError);
-                    }
-                    newPatchID[faceI - mesh.nInternalFaces()] =
-                        patches.size()+addedI;
+                    allPatchID[faceI - mesh.nInternalFaces()] = destPatchI;
                 }
             }
         }
@@ -233,17 +228,20 @@ int main(int argc, char *argv[])
                         << " faces." << exit(FatalError);
                 }
 
-                if (newPatchID[faceI - mesh.nInternalFaces()] != -1)
+                if
+                (
+                    allPatchID[faceI - mesh.nInternalFaces()]
+                 != oldPatchID[faceI - mesh.nInternalFaces()]
+                )
                 {
                     FatalErrorIn(args.executable())
                         << "Face " << faceI << " on new patch " << patchName
                         << " has already been marked for repatching to"
                         << " patch "
-                        << newPatchID[faceI - mesh.nInternalFaces()]
+                        << allPatchID[faceI - mesh.nInternalFaces()]
                         << exit(FatalError);
                 }
-                newPatchID[faceI - mesh.nInternalFaces()] =
-                    patches.size()+addedI;
+                allPatchID[faceI - mesh.nInternalFaces()] = destPatchI;
             }
         }
         else
@@ -254,19 +252,98 @@ int main(int argc, char *argv[])
         }
     }
 
-    // Change patch ids
-    forAll(newPatchID, i)
+    allPatches.shrink();
+
+    Pout<< endl;
+
+    // Count sizes
+    labelList patchSizes(allPatches.size(), 0);
+
+    forAll(allPatchID, i)
     {
-        if (newPatchID[i] != -1)
+        patchSizes[allPatchID[i]]++;
+    }
+     
+
+    // Create compacted patches.
+
+    labelList compactPatchMap(allPatches.size(), -1);
+
+    List<polyPatch*> compactPatches(allPatches.size());
+
+    // Copy old and new patches.
+
+    label compactPatchI = 0;
+
+    label meshFaceI = mesh.nInternalFaces();
+
+    forAll(allPatches, patchI)
+    {
+        const polyPatch& pp = *allPatches[patchI];
+
+        if (patchSizes[patchI] == 0)
+        {
+            Pout<< "Removing empty patch " << pp.name() << endl;
+        }
+        else
+        {
+            compactPatchMap[patchI] = compactPatchI;
+
+            compactPatches[compactPatchI] =
+                pp.clone
+                (
+                    patches,
+                    compactPatchI,
+                    pp.size(),
+                    meshFaceI
+                ).ptr();
+
+            meshFaceI += pp.size();
+
+            compactPatchI++;
+        }
+
+        delete allPatches[patchI];
+    }
+    compactPatches.setSize(compactPatchI);
+
+
+    Pout<< "Compacted patches:" << nl;
+
+    forAll(compactPatches, i)
+    {
+        const polyPatch& pp = *compactPatches[i];
+
+        Pout<< "    " << pp.name()
+            << '\t' << "size:" << pp.size()
+            << '\t' << "start:" << pp.start()
+            << endl;
+    }
+
+
+
+    // Now we have all information. Start changing the mesh.
+
+    repatchPolyTopoChanger repatcher(mesh);
+
+
+    // Add new list of patches
+    repatcher.changePatches(compactPatches);
+
+    // Change patch ids
+    forAll(allPatchID, i)
+    {
+        label compactedPatchI = compactPatchMap[allPatchID[i]];
+
+        if (compactedPatchI != oldPatchID[i])
         {
             label faceI = i + mesh.nInternalFaces();
 
-            mesh.changePatchID(faceI, newPatchID[i]);
+            repatcher.changePatchID(faceI, compactedPatchI);
         }
     }
 
-    // Add new list of patches
-    mesh.changePatches(newPatches);
+
 
     // Set the precision of the points data to 10
     IOstream::defaultPrecision(10);
@@ -274,9 +351,10 @@ int main(int argc, char *argv[])
     runTime++;
 
     // Do all topology changes in one go
-    mesh.repatch();
+    repatcher.repatch();
 
     // Write resulting mesh
+    Info<< "Writing repatched mesh to " << runTime.timeName() << endl;
     mesh.write();
 
     Info<< "End\n" << endl;

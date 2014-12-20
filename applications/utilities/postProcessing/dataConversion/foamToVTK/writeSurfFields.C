@@ -22,14 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "writeSurfFields.H"
 #include "OFstream.H"
 #include "floatScalar.H"
 #include "writeFuns.H"
+#include "emptyFvPatchFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,7 +51,7 @@ void writeSurfFields
     std::ofstream str(fileName.c_str());
 
     str << "# vtk DataFile Version 2.0" << std::endl
-        << "internalFaces" << std::endl;
+        << "surfaceFields" << std::endl;
 
     if (binary)
     {
@@ -66,18 +65,18 @@ void writeSurfFields
 
     const pointField& fc = mesh.faceCentres();
 
-    str << "POINTS " << mesh.nInternalFaces() << " float" << std::endl;
+    str << "POINTS " << mesh.nFaces() << " float" << std::endl;
 
-    DynamicList<floatScalar> pField(3*mesh.nInternalFaces());
+    DynamicList<floatScalar> pField(3*mesh.nFaces());
 
-    for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
+    for (label faceI = 0; faceI < mesh.nFaces(); faceI++)
     {
         writeFuns::insert(fc[faceI], pField);   
     }
 
     writeFuns::write(str, binary, pField);
 
-    str << "POINT_DATA " << mesh.nInternalFaces() << std::endl
+    str << "POINT_DATA " << mesh.nFaces() << std::endl
         << "FIELD attributes "
         << surfScalarFields.size() + surfVectorFields.size()
         << std::endl;
@@ -88,15 +87,38 @@ void writeSurfFields
         const surfaceScalarField& ssf = surfScalarFields[fieldI];
 
         str << ssf.name() << " 3 "
-            << mesh.nInternalFaces() << " float" << std::endl;
+            << mesh.nFaces() << " float" << std::endl;
 
-        DynamicList<floatScalar> fField(3*mesh.nInternalFaces());
+        DynamicList<floatScalar> fField(3*mesh.nFaces());
 
         for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
         {
             vector v(ssf[faceI]*mesh.Sf()[faceI]/mesh.magSf()[faceI]);
 
             writeFuns::insert(v, fField);
+        }
+
+        forAll(ssf.boundaryField(), patchI)
+        {
+            const fvPatchScalarField& pf = ssf.boundaryField()[patchI];
+
+            const fvPatch& pp = mesh.boundary()[patchI];
+
+            if (isA<emptyFvPatchScalarField>(pf))
+            {
+                // Note: loop over polypatch size, not fvpatch size.
+                forAll(pp.patch(), i)
+                {
+                    writeFuns::insert(vector::zero, fField);
+                }
+            }
+            else
+            {
+                forAll(pf, i)
+                {
+                    writeFuns::insert(pf[i]*pp.nf()[i], fField);
+                }
+            }
         }
 
         writeFuns::write(str, binary, fField);
@@ -107,13 +129,36 @@ void writeSurfFields
         const surfaceVectorField& svf = surfVectorFields[fieldI];
 
         str << svf.name() << " 3 "
-            << mesh.nInternalFaces() << " float" << std::endl;
+            << mesh.nFaces() << " float" << std::endl;
 
-        DynamicList<floatScalar> fField(3*mesh.nInternalFaces());
+        DynamicList<floatScalar> fField(3*mesh.nFaces());
 
         for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
         {
             writeFuns::insert(svf[faceI], fField);
+        }
+
+        forAll(svf.boundaryField(), patchI)
+        {
+            const fvPatchVectorField& pf = svf.boundaryField()[patchI];
+
+            const fvPatch& pp = mesh.boundary()[patchI];
+
+            if (isA<emptyFvPatchVectorField>(pf))
+            {
+                // Note: loop over polypatch size, not fvpatch size.
+                forAll(pp.patch(), i)
+                {
+                    writeFuns::insert(vector::zero, fField);
+                }
+            }
+            else
+            {
+                forAll(pf, i)
+                {
+                    writeFuns::insert(pf[i], fField);
+                }
+            }
         }
 
         writeFuns::write(str, binary, fField);

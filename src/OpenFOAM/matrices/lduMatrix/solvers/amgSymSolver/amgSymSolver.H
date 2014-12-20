@@ -158,17 +158,27 @@ class amgSymSolver
         void makeCoarseMatrix(const label fineLevelIndex);
 
         //- Restrict cell field
-        scalarField restrictField
+        void restrictField
         (
+            scalarField& result,
             const scalarField& f,
             const label fineLevelIndex
         ) const;
 
         //- Prolong cell field
-        scalarField prolongField
+        void prolongField
         (
+            scalarField& result,
             const scalarField& f,
             const label coarseLevelIndex
+        ) const;
+
+        //- Return the scaling factor
+        scalar scalingFactor
+        (
+            const scalarField& coarseField,
+            const scalarField& coarseSource,
+            const scalarField& ACf
         ) const;
 
 

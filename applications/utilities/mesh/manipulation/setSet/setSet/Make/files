@@ -1,7 +1,8 @@
 writePointSet.C
 floatScalar.C
 writeFuns.C
-writeFaceSet.C
+writePatch.C
+fieldToCell.C
 setSet.C
 
 EXE = $(FOAM_APPBIN)/setSet

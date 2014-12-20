@@ -1,3 +1,0 @@
-icoFoamAutoMotion.C  
-
-EXE = $(FOAM_APPBIN)/icoFoamAutoMotion

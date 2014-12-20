@@ -119,34 +119,6 @@ case $OS in
             RESULT="Ping_not_installed_in_usual_path"
         fi
         ;;
-#    OSF*) 
-#        if [ -x '/usr/sbin/ping' ] ; then
-#            PINGTEST=`ping -t 3 -c 1 $1 2>&1`
-#            if [ -n "`echo $PINGTEST | grep 'received'`" ] ; then
-#                RESULT="Successful"
-#            elif [ -n "`echo $PINGTEST | grep 'unknown host'`" ] ; then
-#                RESULT="Unknown_host"
-#            else
-#                RESULT="Networking_not_set" 
-#            fi
-#        else
-#           RESULT="Ping_not_installed_in_usual_path"
-#        fi
-#       ;;
-#    AIX*)
-#        if [ -x '/etc/ping' ] ; then
-#            PINGTEST=`ping -w 3 -c 1 $1 2>&1`
-#            if [ -n "`echo $PINGTEST | grep '1 packets received'`" ] ; then
-#                RESULT="Successful"
-#            elif [ -n "`echo $PINGTEST | grep 'NOT FOUND'`" ] ; then
-#                RESULT="Unknown_host"
-#            else
-#                RESULT="Networking_not_set"
-#           fi
-#       else
-#           RESULT="Ping_not_installed_in_usual_path"
-#        fi
-#        ;;
     *) 
         if [ -x '/bin/ping' ] ; then
             PINGTEST=`/bin/ping -w 3 -c 1 $1 2>&1`

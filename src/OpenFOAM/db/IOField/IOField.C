@@ -53,11 +53,11 @@ template<class Type>
 IOField<Type>::IOField
 (
     const IOobject& io,
-    const Field<Type>& f
+    const label size
 )
 :
     regIOobject(io),
-    Field<Type>(f)
+    Field<Type>(size)
 {}
 
 
@@ -65,12 +65,18 @@ template<class Type>
 IOField<Type>::IOField
 (
     const IOobject& io,
-    const label size
+    const Field<Type>& f
 )
 :
     regIOobject(io),
-    Field<Type>(size)
-{}
+    Field<Type>(f)
+{
+    if (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+    {
+        readStream(typeName) >> *this;
+        close();
+    }
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

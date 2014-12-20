@@ -112,7 +112,10 @@ LienCubicKELowRe::LienCubicKELowRe
     nut_
     (
         Cmu*
-        (1.0-exp(-Am*yStar))/(1.0-exp(-Aepsilon*yStar) + SMALL)
+        (
+            scalar(1) - exp(-Am*yStar))
+           /(scalar(1) - exp(-Aepsilon*yStar) + SMALL
+        )
         *sqr(k_)/(epsilon_ + epsilonSmall_)
         // cubic term C5, implicit part
       + max
@@ -243,33 +246,34 @@ void LienCubicKELowRe::correct()
     volScalarField Rt = sqr(k_)/(nu()*epsilon_);
 
     volScalarField fMu =
-        (1.0 - exp(-Am*yStar))/(1.0 - exp(-Aepsilon*yStar) + SMALL);
+        (scalar(1) - exp(-Am*yStar))
+       /(scalar(1) - exp(-Aepsilon*yStar) + SMALL);
 
-    volScalarField f2 = 1.0 - 0.3*exp(-sqr(Rt));
+    volScalarField f2 = scalar(1) - 0.3*exp(-sqr(Rt));
 
     volScalarField G =
         Cmu*fMu*sqr(k_)/epsilon_*S2 - (nonlinearStress && gradU);
 
-
     // Dissipation equation
-
-#   include "LienCubicKELowReSetWallDissipation.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
       + fvm::div(phi_, epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
       ==
-        C1*G*epsilon_/k_ + boundarySource
+        C1*G*epsilon_/k_
         // E-term
-      + C2*f2*pow(Cmu, 0.75)*pow(k_, 0.5)
-       /(kappa_*y_*(1.0 - exp(-Aepsilon*yStar)))
+      + C2*f2*pow(Cmu, 0.75)*pow(k_, scalar(0.5))
+       /(kappa_*y_*(scalar(1) - exp(-Aepsilon*yStar)))
        *exp(-Amu*sqr(yStar))*epsilon_
-      - fvm::Sp(C2*f2*epsilon_/k_ + boundaryCentral, epsilon_)
+      - fvm::Sp(C2*f2*epsilon_/k_, epsilon_)
     );
 
     epsEqn().relax();
+
+#   include "LienCubicKELowReSetWallDissipation.H"
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 

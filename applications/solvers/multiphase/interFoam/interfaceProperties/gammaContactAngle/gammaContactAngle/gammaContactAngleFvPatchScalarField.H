@@ -1,0 +1,117 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Class
+    gammaContactAngleFvPatchScalarField
+
+Description
+    Abstract base class for gammaContactAngle boundary conditions.
+    Derived classes must implement the theta() fuction which returns the
+    wall contact angle field.
+
+SourceFiles
+    gammaContactAngleFvPatchScalarField.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef gammaContactAngleFvPatchScalarField_H
+#define gammaContactAngleFvPatchScalarField_H
+
+#include "zeroGradientFvPatchFields.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class gammaContactAngleFvPatch Declaration
+\*---------------------------------------------------------------------------*/
+
+class gammaContactAngleFvPatchScalarField
+:
+    public zeroGradientFvPatchScalarField
+{
+
+public:
+
+    //- Runtime type information
+    TypeName("gammaContactAngle");
+
+
+    // Constructors
+
+        //- Construct from patch and internal field
+        gammaContactAngleFvPatchScalarField
+        (
+            const fvPatch&,
+            const scalarField&
+        );
+
+        //- Construct from patch, internal field and dictionary
+        gammaContactAngleFvPatchScalarField
+        (
+            const fvPatch&,
+            const scalarField&,
+            const dictionary&
+        );
+
+        //- Construct by mapping given gammaContactAngleFvPatchScalarField
+        //  onto a new patch
+        gammaContactAngleFvPatchScalarField
+        (
+            const gammaContactAngleFvPatchScalarField&,
+            const fvPatch&,
+            const scalarField&,
+            const fvPatchFieldMapper&
+        );
+
+        //- Construct as copy setting internal field reference
+        gammaContactAngleFvPatchScalarField
+        (
+            const gammaContactAngleFvPatchScalarField&,
+            const scalarField&
+        );
+
+
+    // Member functions
+
+        //- Return the contact angle
+        virtual tmp<scalarField> theta
+        (
+            const fvPatchVectorField& Up,
+            const fvPatchVectorField& nHat
+        ) const = 0;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

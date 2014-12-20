@@ -48,12 +48,9 @@ SourceFiles
 #ifndef meshWave_H
 #define meshWave_H
 
-#include "label.H"
 #include "boolList.H"
 #include "labelList.H"
-#include "scalarField.H"
-#include "volFields.H"
-#include "tensor.H"
+#include "primitiveFieldsFwd.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -62,6 +59,7 @@ namespace Foam
 
 // Class forward declarations
 class polyMesh;
+class polyPatch;
 
 /*---------------------------------------------------------------------------*\
                         Class meshWaveName Declaration

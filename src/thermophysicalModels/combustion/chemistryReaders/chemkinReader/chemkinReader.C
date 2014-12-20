@@ -117,8 +117,8 @@ Foam::scalar Foam::chemkinReader::molecularWeight
 
     forAll (specieComposition, i)
     {
-        const word& elementName = specieComposition[i].elementName;
         label nAtoms = specieComposition[i].nAtoms;
+        const word& elementName = specieComposition[i].elementName;
 
         if (isotopeAtomicWts_.found(elementName))
         {
@@ -132,7 +132,8 @@ Foam::scalar Foam::chemkinReader::molecularWeight
         {
             FatalErrorIn("chemkinReader::lex()")
                 << "Unknown element " << elementName
-                << " on line " << lineNo_-1
+                << " on line " << lineNo_-1 << nl
+                << "    specieComposition: " << specieComposition
                 << exit(FatalError);
         }
     }

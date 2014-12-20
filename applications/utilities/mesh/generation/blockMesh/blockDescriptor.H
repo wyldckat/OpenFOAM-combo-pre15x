@@ -82,6 +82,8 @@ class blockDescriptor
         //- expansion ratios in all directions
         scalarList expand_;
 
+        //- name of the zone (empty string if none)
+        word zoneName_;
 
     // Private member functions
 
@@ -94,14 +96,15 @@ public:
 
     // Constructors
 
-        //- Construct from components
+        //- Construct from components. Optional cellSet/zone name.
         blockDescriptor
         (
             const cellShape&,
             const pointField& blockMeshPoints,
             const curvedEdgeList& edges,
             const Vector<label>& n,
-            const scalarList& expand
+            const scalarList& expand,
+            const word& zoneName = ""
         );
 
         //- Construct from Istream
@@ -134,6 +137,7 @@ public:
 
         const Vector<label>& n() const;
 
+        const word& zoneName() const;
 
     // Member Operators
 

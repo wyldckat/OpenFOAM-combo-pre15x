@@ -1,2 +1,2 @@
 c++DBUG       = 
-c++OPT        = -O3 -ffast-math -fno-schedule-insns
+c++OPT        = -O3 -fno-schedule-insns

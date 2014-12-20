@@ -47,7 +47,8 @@ void PrimitivePatch<Face, FaceList, PointField>::calcLocalPointOrder() const
 
     if (debug)
     {
-        Info<< "PrimitivePatch<Face, FaceList, PointField>::calcLocalPointOrder() : "
+        Pout<< "PrimitivePatch<Face, FaceList, PointField>::"
+            << "calcLocalPointOrder() : "
             << "calculating local point order"
             << endl;
     }
@@ -56,8 +57,10 @@ void PrimitivePatch<Face, FaceList, PointField>::calcLocalPointOrder() const
     {
         // it is considered an error to attempt to recalculate
         // if already allocated
-        FatalErrorIn("PrimitivePatch<Face, FaceList, PointField>::calcLocalPointOrder()")
-            << "local point order already calculated"
+        FatalErrorIn
+        (
+            "PrimitivePatch<Face, FaceList, PointField>::calcLocalPointOrder()"
+        )   << "local point order already calculated"
             << abort(FatalError);
     }
 
@@ -91,7 +94,7 @@ void PrimitivePatch<Face, FaceList, PointField>::calcLocalPointOrder() const
                 {
                     visitedFace[curFace] = true;
 
-                    const labelList curPoints = lf[curFace];
+                    const labelList& curPoints = lf[curFace];
 
                     // mark points
                     forAll (curPoints, pointI)
@@ -123,7 +126,8 @@ void PrimitivePatch<Face, FaceList, PointField>::calcLocalPointOrder() const
 
     if (debug)
     {
-        Info<< "PrimitivePatch<Face, FaceList, PointField>::calcLocalPointOrder() "
+        Pout<< "PrimitivePatch<Face, FaceList, PointField>::"
+            << "calcLocalPointOrder() "
             << "finished calculating local point order"
             << endl;
     }

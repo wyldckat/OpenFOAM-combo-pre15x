@@ -22,18 +22,17 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "cyclicLduCoupledInterface.H"
-
-using namespace Foam;
+#include "diagTensorField.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(cyclicLduCoupledInterface, 0);
-
+namespace Foam
+{
+    defineTypeNameAndDebug(cyclicLduCoupledInterface, 0);
+}
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -67,5 +66,6 @@ void Foam::cyclicLduCoupledInterface::transformCyclicCoupleField
         }
     }
 }
+
 
 // ************************************************************************* //

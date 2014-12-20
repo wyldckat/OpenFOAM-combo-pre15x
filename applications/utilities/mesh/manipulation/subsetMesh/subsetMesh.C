@@ -33,8 +33,8 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
+#include "fvMeshSubset.H"
 #include "argList.H"
-#include "meshSubset.H"
 #include "cellSet.H"
 #include "IOobjectList.H"
 #include "volFields.H"
@@ -45,9 +45,9 @@ using namespace Foam;
 
 
 template<class Type>
-void subsetFields
+void subsetVolFields
 (
-    const meshSubset& mesh,
+    const fvMeshSubset& mesh,
     const wordList& fieldNames,
     PtrList<GeometricField<Type, fvPatchField, volMesh> >& subFields
 )
@@ -59,6 +59,38 @@ void subsetFields
         Info<< "Subsetting field " << fieldName << endl;
 
         GeometricField<Type, fvPatchField, volMesh> volField    
+        (
+            IOobject
+            (
+                fieldName,
+                mesh.time().timeName(),
+                mesh,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh
+        );
+
+        subFields.hook(mesh.interpolate(volField));
+    }
+}
+
+
+template<class Type>
+void subsetSurfaceFields
+(
+    const fvMeshSubset& mesh,
+    const wordList& fieldNames,
+    PtrList<GeometricField<Type, fvPatchField, surfaceMesh> >& subFields
+)
+{
+    forAll(fieldNames, i)
+    {
+        const word& fieldName = fieldNames[i];
+
+        Info<< "Subsetting field " << fieldName << endl;
+
+        GeometricField<Type, fvPatchField, surfaceMesh> volField    
         (
             IOobject
             (
@@ -94,11 +126,11 @@ int main(int argc, char *argv[])
     Info<< "Reading mesh for time = " << runTime.value() << endl;
 
     Info<< "Create mesh\n" << endl;
-    meshSubset mesh
+    fvMeshSubset mesh
     (
         IOobject
         (
-            meshSubset::defaultRegion,
+            fvMeshSubset::defaultRegion,
             runTime.timeName(),
             runTime
         )
@@ -136,22 +168,38 @@ int main(int argc, char *argv[])
 
     IOobjectList objects(mesh, runTime.timeName());
 
-    // Read fields and subset.
+    // Read vol fields and subset.
 
     wordList scalarNames(objects.names(volScalarField::typeName));
     PtrList<volScalarField> scalarFlds(scalarNames.size());
 
-    subsetFields(mesh, scalarNames, scalarFlds);
+    subsetVolFields(mesh, scalarNames, scalarFlds);
 
     wordList vectorNames(objects.names(volVectorField::typeName));
     PtrList<volVectorField> vectorFlds(vectorNames.size());
 
-    subsetFields(mesh, vectorNames, vectorFlds);
+    subsetVolFields(mesh, vectorNames, vectorFlds);
 
     wordList tensorNames(objects.names(volTensorField::typeName));
     PtrList<volTensorField> tensorFlds(tensorNames.size());
 
-    subsetFields(mesh, tensorNames, tensorFlds);
+    subsetVolFields(mesh, tensorNames, tensorFlds);
+
+    // Read surface fields and subset.
+
+    wordList surfScalarNames(objects.names(surfaceScalarField::typeName));
+    PtrList<surfaceScalarField> surfScalarFlds(surfScalarNames.size());
+    subsetSurfaceFields(mesh, surfScalarNames, surfScalarFlds);
+
+    wordList surfVectorNames(objects.names(surfaceVectorField::typeName));
+    PtrList<surfaceVectorField> surfVectorFlds(surfVectorNames.size());
+    subsetSurfaceFields(mesh, surfVectorNames, surfVectorFlds);
+
+    wordList surfTensorNames(objects.names(surfaceTensorField::typeName));
+    PtrList<surfaceTensorField> surfTensorFlds(surfTensorNames.size());
+    subsetSurfaceFields(mesh, surfTensorNames, surfTensorFlds);
+
+
 
     runTime++;
 
@@ -177,6 +225,26 @@ int main(int argc, char *argv[])
         tensorFlds[i].rename(tensorNames[i]);
 
         tensorFlds[i].write();
+    }
+
+    // Surface ones.
+    forAll(surfScalarFlds, i)
+    {
+        surfScalarFlds[i].rename(surfScalarNames[i]);
+
+        surfScalarFlds[i].write();
+    }
+    forAll(surfVectorFlds, i)
+    {
+        surfVectorFlds[i].rename(surfVectorNames[i]);
+
+        surfVectorFlds[i].write();
+    }
+    forAll(surfTensorNames, i)
+    {
+        surfTensorFlds[i].rename(surfTensorNames[i]);
+
+        surfTensorFlds[i].write();
     }
 
     Info << nl << "End" << endl;

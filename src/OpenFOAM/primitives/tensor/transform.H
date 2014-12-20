@@ -75,6 +75,31 @@ inline Tensor<Cmpt> transform(const tensor& tt, const Tensor<Cmpt>& t)
 }
 
 
+template<class Cmpt>
+inline SphericalTensor<Cmpt> transform
+(
+    const tensor& tt,
+    const SphericalTensor<Cmpt>& st
+)
+{
+    return st;
+}
+
+
+template<class Type1, class Type2>
+inline Type1 transformMask(const Type2& t)
+{
+    return t;
+}
+
+
+template<>
+inline SphericalTensor<scalar> transformMask(const tensor& t)
+{
+    return SphericalTensor<scalar>::one;
+}
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

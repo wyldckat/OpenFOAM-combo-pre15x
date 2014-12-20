@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
     
 \*---------------------------------------------------------------------------*/
 
@@ -213,9 +211,9 @@ boundedBackwardFaDdtScheme::facDdt
           + dimensionedScalar("small", vf.dimensions(), SMALL)
         );
 
-    areaScalarField limiter = pos(phict) - pos(phict - 1.0);
+    areaScalarField limiter = pos(phict) - pos(phict - scalar(1));
 
-    areaScalarField coefft   = 1.0 + limiter*deltaT/(deltaT + deltaT0);
+    areaScalarField coefft   = scalar(1) + limiter*deltaT/(deltaT + deltaT0);
     areaScalarField coefft00 = limiter*sqr(deltaT)/(deltaT0*(deltaT + deltaT0));
     areaScalarField coefft0  = coefft + coefft00;
 
@@ -309,9 +307,9 @@ boundedBackwardFaDdtScheme::facDdt0
           + dimensionedScalar("small", vf.dimensions(), SMALL)
         );
 
-    areaScalarField limiter = pos(phict) - pos(phict - 1.0);
+    areaScalarField limiter = pos(phict) - pos(phict - scalar(1));
 
-    areaScalarField coefft   = 1.0 + limiter*deltaT/(deltaT + deltaT0);
+    areaScalarField coefft   = scalar(1) + limiter*deltaT/(deltaT + deltaT0);
     areaScalarField coefft00 = limiter*sqr(deltaT)/(deltaT0*(deltaT + deltaT0));
     areaScalarField coefft0  = coefft + coefft00;
 
@@ -471,9 +469,9 @@ boundedBackwardFaDdtScheme::facDdt
           + dimensionedScalar("small", vf.dimensions(), SMALL)
         );
 
-    areaScalarField limiter = pos(phict) - pos(phict - 1.0);
+    areaScalarField limiter = pos(phict) - pos(phict - scalar(1));
 
-    areaScalarField coefft   = 1.0 + limiter*deltaT/(deltaT + deltaT0);
+    areaScalarField coefft   = scalar(1) + limiter*deltaT/(deltaT + deltaT0);
     areaScalarField coefft00 = limiter*sqr(deltaT)/(deltaT0*(deltaT + deltaT0));
     areaScalarField coefft0  = coefft + coefft00;
 
@@ -567,9 +565,9 @@ boundedBackwardFaDdtScheme::facDdt0
           + dimensionedScalar("small", vf.dimensions(), SMALL)
         );
 
-    areaScalarField limiter = pos(phict) - pos(phict - 1.0);
+    areaScalarField limiter = pos(phict) - pos(phict - scalar(1));
 
-    areaScalarField coefft   = 1.0 + limiter*deltaT/(deltaT + deltaT0);
+    areaScalarField coefft   = scalar(1) + limiter*deltaT/(deltaT + deltaT0);
     areaScalarField coefft00 = limiter*sqr(deltaT)/(deltaT0*(deltaT + deltaT0));
     areaScalarField coefft0  = coefft + coefft00;
 
@@ -661,9 +659,9 @@ boundedBackwardFaDdtScheme::facDdt
           + dimensionedScalar("small", rho.dimensions()*vf.dimensions(), SMALL)
         );
 
-    areaScalarField limiter = pos(phict) - pos(phict - 1.0);
+    areaScalarField limiter = pos(phict) - pos(phict - scalar(1));
 
-    areaScalarField coefft   = 1.0 + limiter*deltaT/(deltaT + deltaT0);
+    areaScalarField coefft   = scalar(1) + limiter*deltaT/(deltaT + deltaT0);
     areaScalarField coefft00 = limiter*sqr(deltaT)/(deltaT0*(deltaT + deltaT0));
     areaScalarField coefft0  = coefft + coefft00;
 
@@ -761,9 +759,9 @@ boundedBackwardFaDdtScheme::facDdt0
           + dimensionedScalar("small", rho.dimensions()*vf.dimensions(), SMALL)
         );
 
-    areaScalarField limiter = pos(phict) - pos(phict - 1.0);
+    areaScalarField limiter = pos(phict) - pos(phict - scalar(1));
 
-    areaScalarField coefft   = 1.0 + limiter*deltaT/(deltaT + deltaT0);
+    areaScalarField coefft   = scalar(1) + limiter*deltaT/(deltaT + deltaT0);
     areaScalarField coefft00 = limiter*sqr(deltaT)/(deltaT0*(deltaT + deltaT0));
     areaScalarField coefft0  = coefft + coefft00;
 

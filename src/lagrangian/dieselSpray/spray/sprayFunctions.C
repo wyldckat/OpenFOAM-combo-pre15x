@@ -22,12 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "spray.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,7 +46,6 @@ scalar spray::injectedMass
         sum += injectors_[i].properties()->injectedMass(t);
     }
 
-    reduce(sum, sumOp<scalar>());
     return sum;
 }
 
@@ -61,7 +58,6 @@ scalar spray::totalMassToInject() const
         sum += injectors_[i].properties()->mass();
     }
 
-    reduce(sum, sumOp<scalar>());
     return sum;
 }
 
@@ -108,7 +104,7 @@ scalar spray::liquidMass() const
 
     if (twoD())
     {
-        sum *= 2.0*physicalConstant::pi/angleOfWedge();
+        sum *= 2.0*mathematicalConstant::pi/angleOfWedge();
     }
 
     reduce(sum, sumOp<scalar>());
@@ -145,7 +141,7 @@ scalar spray::liquidEnthalpy() const
 
     if (twoD())
     {
-        sum *= 2.0*physicalConstant::pi/angleOfWedge();
+        sum *= 2.0*mathematicalConstant::pi/angleOfWedge();
     }
 
     reduce(sum, sumOp<scalar>());
@@ -187,7 +183,7 @@ scalar spray::liquidTotalEnthalpy() const
 
     if (twoD())
     {
-        sum *= 2.0*physicalConstant::pi/angleOfWedge();
+        sum *= 2.0*mathematicalConstant::pi/angleOfWedge();
     }
 
     reduce(sum, sumOp<scalar>());
@@ -212,7 +208,7 @@ scalar spray::liquidKineticEnergy() const
 
     if (twoD())
     {
-        sum *= 2.0*physicalConstant::pi/angleOfWedge();
+        sum *= 2.0*mathematicalConstant::pi/angleOfWedge();
     }
 
     reduce(sum, sumOp<scalar>());
@@ -305,7 +301,10 @@ scalar spray::liquidPenetration
             }
         }
 
+	reduce(mTot, sumOp<scalar>());
+
         scalar mLimit = prc*mTot;
+	scalar mOff = (1.0 - prc)*mTot;
 
         // 'prc' is large enough that the parcel most far
         // away will be used, no need to loop...
@@ -315,13 +314,13 @@ scalar spray::liquidPenetration
         }
         else
         {
-            scalar mCum = 0.0;
-            label i = -1;
+            scalar mOffSum = 0.0;
+            label i = Np;
 
-            while (mCum < mLimit)
+            while ((mOffSum < mOff) && (i>=0))
             {
-                i++;
-                mCum += m[i];
+                i--;
+                mOffSum += m[i];
             }
             d = dist[i];
         }
@@ -336,6 +335,7 @@ scalar spray::liquidPenetration
         }
     }
 
+    reduce(d, maxOp<scalar>());
     return d;
 }
 
@@ -343,10 +343,10 @@ scalar spray::liquidPenetration
 
 scalar spray::smd() const
 {
+    scalar numerator = 0.0, denominator = 0.0;
 
     if (size() != 0)
     {
-        scalar numerator = 0.0, denominator = 0.0;
         for
         (
             spray::const_iterator elmnt = begin();
@@ -363,7 +363,8 @@ scalar spray::smd() const
             numerator += tmp*elmnt().d();
             denominator += tmp;
         }
-
+	reduce(numerator, sumOp<scalar>());
+	reduce(denominator, sumOp<scalar>());
         return numerator/denominator;
     }
     else
@@ -388,6 +389,7 @@ scalar spray::maxD() const
             maxD = max(maxD, elmnt().d());
         }
 
+	reduce(maxD, maxOp<scalar>());
         return maxD;
     }
     else

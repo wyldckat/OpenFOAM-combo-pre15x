@@ -10,12 +10,12 @@ scalar dist = mag(p);
 
 scalar vAlign = vRel & (p/dist);
 
-if (vAlign > 0) {
-
+if (vAlign > 0)
+{
     scalar sumD = p1().d() + p2().d();
 
-    if (vAlign*dt > dist - 0.5*sumD) {
-
+    if (vAlign*dt > dist - 0.5*sumD)
+    {
         scalar v1Mag = mag(v1);
         scalar v2Mag = mag(v2);
         vector nv1 = v1/v1Mag;
@@ -29,7 +29,9 @@ if (vAlign > 0) {
 
         scalar alpha = 1.0e+20;
         scalar beta = 1.0e+20;
-        if (mag(det) > 1.0e-4) {
+
+        if (mag(det) > 1.0e-4)
+        {
             beta = -(v2p - v1v2*v1p)/det;
             alpha = v1p + v1v2*beta;
         }
@@ -40,13 +42,14 @@ if (vAlign > 0) {
         // is collision possible within this timestep
         if ((alpha>0) && (alpha<1.0) && (beta>0) && (beta<1.0)) 
         {
-            
-            vector p1c = p1().position() + alpha*nv1;
-            vector p2c = p2().position() + beta*nv2;
+            vector p1c = p1().position() + alpha*v1*dt;
+            vector p2c = p2().position() + beta*v2*dt;
 
             scalar closestDist = mag(p1c-p2c);
 
-            scalar collProb = pow(0.5*sumD/max(0.5*sumD, closestDist), cSpace_)*exp(-cTime_*mag(alpha-beta));
+            scalar collProb = 
+                pow(0.5*sumD/max(0.5*sumD, closestDist), cSpace_)
+               *exp(-cTime_*mag(alpha-beta));
 
             scalar xx = rndGen_.scalar01();
 
@@ -56,7 +59,8 @@ if (vAlign > 0) {
             scalar dMin = pMin().d();
             scalar dMax = pMax().d();
 
-            if (dMin > dMax) {
+            if (dMin > dMax)
+            {
                 dMin = pMax().d();
                 dMax = pMin().d();
                 pMin = p2;
@@ -73,8 +77,8 @@ if (vAlign > 0) {
             scalar mdMin = mMin/nMin;
 
             // collision occur
-            if ((xx < collProb) && (mMin > VSMALL) && (mMax > VSMALL)) {
-
+            if ((xx < collProb) && (mMin > VSMALL) && (mMax > VSMALL))
+            {
                 scalar mTot = mMax + mMin;
 
                 scalar gamma = dMax/max(dMin, 1.0e-12);
@@ -86,14 +90,17 @@ if (vAlign > 0) {
                 // use mass-averaged temperature to calculate We number
                 scalar averageTemp = (pMax().T()*mMax + pMin().T()*mMin)/mTot;
                 // and mass averaged mole fractions ...
-                scalarField Xav((pMax().m()*pMax().X()+pMin().m()*pMin().X())/(pMax().m() + pMin().m()));
+                scalarField 
+                    Xav((pMax().m()*pMax().X()+pMin().m()*pMin().X())
+                   /(pMax().m() + pMin().m()));
 
                 scalar sigma = spray_.fuels().sigma(pc, averageTemp, Xav);
                 sigma = max(1.0e-6, sigma);
                 scalar rho = spray_.fuels().rho(pc, averageTemp, Xav);
 
                 scalar dMean = sqrt(dMin*dMax);
-                scalar WeColl = max(1.0e-12, 0.5*rho*magVRel*magVRel*dMean/sigma);
+                scalar WeColl = 
+                    max(1.0e-12, 0.5*rho*magVRel*magVRel*dMean/sigma);
 
                 // coalescence only possible when parcels are close enoug
 
@@ -102,8 +109,8 @@ if (vAlign > 0) {
                 scalar prob = rndGen_.scalar01();
 
                 // Coalescence
-                if ( prob < coalesceProb && coalescence_) {
-
+                if ( prob < coalesceProb && coalescence_) 
+                {
                     // How 'many' of the droplets coalesce
                     scalar nProb = prob*nMin/nMax;
 
@@ -115,11 +122,19 @@ if (vAlign > 0) {
                     scalar newMaxMass = mMax + (mMin - newMinMass);
                     pMax().m() = newMaxMass;
 
-                    pMax().T() = (averageTemp*mTot - newMinMass*pMin().T())/newMaxMass;
+                    pMax().T() = 
+                        (averageTemp*mTot - newMinMass*pMin().T())/newMaxMass;
                     rhoMax = spray_.fuels().rho(pc, pMax().T(), pMax().X());
 
-                    pMax().d() = pow(6.0*newMaxMass/(rhoMax*physicalConstant::pi*nMax), 1.0/3.0);
-                    pMax().U() = (momMax + (1.0-newMinMass/mMin)*momMin)/newMaxMass;
+                    pMax().d() = 
+                        pow
+                        (
+                            6.0*newMaxMass/(rhoMax*mathematicalConstant::pi*nMax),
+                            1.0/3.0
+                        );
+
+                    pMax().U() = 
+                        (momMax + (1.0-newMinMass/mMin)*momMin)/newMaxMass;
 
                     // update the liquid molar fractions
                     scalarField Ymin = spray_.fuels().Y(pMin().X());
@@ -132,14 +147,15 @@ if (vAlign > 0) {
                     }
                     forAll(Ynew, i)
                     {
-                        pMax().X()[i] = Ynew[i]/(spray_.fuels().properties()[i].W()*Wlinv);
+                        pMax().X()[i] = 
+                            Ynew[i]/(spray_.fuels().properties()[i].W()*Wlinv);
                     }
 
 
                 }
                 // Grazing collision (no coalescence)
-                else {
-
+                else
+                {
                     scalar gf = sqrt(prob) - sqrt(coalesceProb);
                     scalar denom = 1.0 - sqrt(coalesceProb);
                     if (denom < 1.0e-5) {
@@ -165,11 +181,13 @@ if (vAlign > 0) {
                     vector v1p = (mr + m2*gf*vRel)/(m1+m2);
                     vector v2p = (mr - m1*gf*vRel)/(m1+m2);
 
-                    if (n1 < n2) {
+                    if (n1 < n2)
+                    {
                         p1().U() = v1p;
                         p2().U() = (n1*v2p + (n2-n1)*v2)/n2;
                     }
-                    else {
+                    else
+                    {
                         p1().U() = (n2*v1p + (n1-n2)*v1)/n1;
                         p2().U() = v2p;
                     }
@@ -179,5 +197,7 @@ if (vAlign > 0) {
             } // if - collision
 
         } // if - possible collision (alpha, beta) in timeinterval
+
     } // if - travelled distance is larger distance between parcels
+
 } // if - parcel travel towards eachother

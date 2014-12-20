@@ -29,8 +29,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "dimensionSet.H"
 #include "dimensionedScalar.H"
 

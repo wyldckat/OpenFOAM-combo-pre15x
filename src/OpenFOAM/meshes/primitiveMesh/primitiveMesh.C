@@ -170,6 +170,35 @@ void primitiveMesh::reset
 }
 
 
+void primitiveMesh::reset
+(
+    const label nPoints,
+    const label nInternalFaces,
+    const label nFaces,
+    const label nCells,
+    const pointField& p,
+    const faceList& f,
+    const labelList& own,
+    const labelList& nei,
+    cellList& c
+)
+{
+    reset
+    (
+        nPoints,
+        nInternalFaces,
+        nFaces,
+        nCells,
+        p,
+        f,
+        own,
+        nei
+    );
+
+    cfPtr_ = new cellList(c, true);
+}
+
+
 const pointField& primitiveMesh::points() const
 {
     if (clearedPrimitives_)

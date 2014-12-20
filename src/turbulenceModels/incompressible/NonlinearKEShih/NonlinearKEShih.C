@@ -196,21 +196,23 @@ void NonlinearKEShih::correct()
         Cmu*sqr(k_)/epsilon_*S2
       - (nonlinearStress && gradU);
 
+#   include "nonLinearWallFunctionsI.H"
+
     // Dissipation equation
-
-#   include "wallNonlinearDissipationI.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
       + fvm::div(phi_, epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
       ==
-        C1*G*epsilon_/k_ + boundarySource
-      - fvm::Sp(C2*epsilon_/k_ + boundaryCentral, epsilon_)
+        C1*G*epsilon_/k_
+      - fvm::Sp(C2*epsilon_/k_, epsilon_)
     );
 
     epsEqn().relax();
+
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 
@@ -239,7 +241,7 @@ void NonlinearKEShih::correct()
     Cmu = 2.0/(3.0*(A1 + eta + alphaKsi*ksi));
     fEta = A2 + pow(eta, 3.0);
 
-    nut_ = Cmu*sqr(k_)/(epsilon_ + epsilonSmall_);
+    nut_ = Cmu*sqr(k_)/epsilon_;
 
 #   include "wallNonlinearViscosityI.H"
 

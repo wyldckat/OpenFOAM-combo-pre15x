@@ -22,12 +22,9 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "Cloud.H"
-#include "surfaceFields.H"
 #include "processorPolyPatch.H"
 #include "parallelInfo.H"
 #include "PstreamCombineReduceOps.H"
@@ -45,8 +42,7 @@ template<class particleType>
 Cloud<particleType>::Cloud
 (
     const polyMesh& pMesh,
-    const IDLList<particleType>& particles,
-    const bool softAlgorithm
+    const IDLList<particleType>& particles
 )
 :
     cloud(pMesh),
@@ -57,8 +53,7 @@ Cloud<particleType>::Cloud
     cellFaces_(pMesh.cells()),
     allFaceCentres_(pMesh.faceCentres()),
     owner_(pMesh.faceOwner()),
-    neighbour_(pMesh.faceNeighbour()),
-    softAlgorithm_(softAlgorithm)
+    neighbour_(pMesh.faceNeighbour())
 {}
 
 
@@ -74,7 +69,7 @@ void Cloud<particleType>::addParticle(particleType* pPtr)
 template<class particleType>
 void Cloud<particleType>::deleteParticle(particleType& p)
 {
-    delete(remove(&p));
+    delete(this->remove(&p));
 }
 
 
@@ -136,7 +131,8 @@ void Cloud<particleType>::track(TrackingData& td)
                 // if it hasn't it must have hit a processor boundary 
                 if (Pstream::parRun() && (p.tEnd() > SMALL))
                 {
-                    // for parallell transfers the cell-index is actually the patch face index
+                    // For parallel transfers the cell-index
+                    // is actually the patch face index
                     label facei = p.cell();
 
                     if (facei >= 0)
@@ -149,7 +145,7 @@ void Cloud<particleType>::track(TrackingData& td)
                         label n = processorPatchIndices[patchi];
 
                         p.prepareForParallelTransfer(patchi, facei);
-                        transferList[n].append(remove(&p));
+                        transferList[n].append(this->remove(&p));
                     }
                     else
                     {

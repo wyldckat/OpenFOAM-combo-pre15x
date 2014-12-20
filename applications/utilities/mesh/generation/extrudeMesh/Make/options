@@ -1,5 +1,4 @@
 EXE_INC = \
-    -g \
     -I$(FOAM_SRC)/meshTools/lnInclude \
     -IextrudedMesh
 

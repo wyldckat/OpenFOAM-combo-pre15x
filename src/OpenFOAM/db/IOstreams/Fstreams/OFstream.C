@@ -26,7 +26,7 @@ License
 
 #include "OFstream.H"
 #include "OSspecific.H"
-#include "zfstream.H"
+#include "gzstream.h"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -66,8 +66,7 @@ OFstreamAllocator::OFstreamAllocator
             rm(pathname);
         }
 
-        gzofstream* gzofPtr = new gzofstream((pathname + ".gz").c_str());
-        gzofPtr->buffer_.setcompressionlevel(Z_BEST_SPEED);
+        ogzstream* gzofPtr = new ogzstream((pathname + ".gz").c_str());
         ofPtr_ = gzofPtr;
     }
     else

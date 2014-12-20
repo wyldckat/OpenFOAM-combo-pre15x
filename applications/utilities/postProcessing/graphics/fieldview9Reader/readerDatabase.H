@@ -38,6 +38,7 @@ SourceFiles
 #define readerDatabase_H
 
 #include "wordList.H"
+#include "Time.H"
 #include "polyMesh.H"
 #include "label.H"
 
@@ -48,7 +49,7 @@ namespace Foam
 
 // Class forward declarations
 class fvMesh;
-class meshSubset;
+class fvMeshSubset;
 class Time;
 class fileName;
 class instant;
@@ -73,7 +74,7 @@ class readerDatabase
         Time* runTimePtr_;
 
         //- Cached mesh, guaranteed uptodate with runTime.
-        meshSubset* meshPtr_;
+        fvMeshSubset* meshPtr_;
 
         //- Empty string or name of current set.
         word setName_;
@@ -142,7 +143,7 @@ public:
 
             //- Create database (if nessecary).
             //  Returns true if new Time created, false if old one reused.
-            //  Optional meshSubset using setName.
+            //  Optional fvMeshSubset using setName.
             bool setRunTime
             (
                 const fileName& rootDir,

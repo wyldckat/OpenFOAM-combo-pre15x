@@ -60,8 +60,6 @@ namespace Foam
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 class polyBoundaryMesh;
-class polyTopoChange;
-class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
                            Class polyPatch Declaration
@@ -123,7 +121,7 @@ protected:
         {}
 
         //- Update of the patch topology
-        virtual void updateTopology();
+        virtual void updateMesh();
 
 
 public:
@@ -286,17 +284,17 @@ public:
         //- Return boundaryMesh reference
         const polyBoundaryMesh& boundaryMesh() const;
 
-        //- Return true if the given type is a constraint type
-        static bool constraintType(const word& pt);
-
-        //- Return a list of all the constraint patch types
-        static wordList constraintTypes();
-
         //- Return true if this patch field is coupled
         virtual bool coupled() const
         {
             return false;
         }
+
+        //- Return true if the given type is a constraint type
+        static bool constraintType(const word& pt);
+
+        //- Return a list of all the constraint patch types
+        static wordList constraintTypes();
 
         //- Slice list to patch
         template<class T>
@@ -344,34 +342,6 @@ public:
             void clearAddressing();
 
 
-        // Morphing support (for coupled patches)
-
-            //- Initialize ordering (on new mesh)
-            //  Gets -changes (in old mesh ordering)
-            //  -map from old to new mesh
-            virtual void initOrder
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&
-            ) const
-            {}
-
-            //- Return new ordering. Ordering is -faceMap: for every face index
-            //  the new face -rotation:for every new face the clockwise shift
-            //  of the original face. Return false if nothing changes (faceMap
-            //  is identity, rotation is 0)
-            virtual bool order
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&,
-                labelList& faceMap,
-                labelList& rotation
-            ) const
-            {
-                return false;
-            }
-
-
         // Other patch operations
 
             //- Return label of face in patch from global face label
@@ -379,6 +349,23 @@ public:
             {
                 return l - start_;
             }
+
+
+        //- Initialize ordering for primitivePatch. Does not
+        //  refer to *this (except for name() and type() etc.)
+        virtual void initOrder(const primitivePatch&) const;
+
+        //- Return new ordering for primitivePatch.
+        //  Ordering is -faceMap: for every face
+        //  index of the new face -rotation:for every new face the clockwise
+        //  shift of the original face. Return false if nothing changes
+        //  (faceMap is identity, rotation is 0), true otherwise.
+        virtual bool order
+        (
+            const primitivePatch&,
+            labelList& faceMap,
+            labelList& rotation
+        ) const;
 
 
     // Member operators

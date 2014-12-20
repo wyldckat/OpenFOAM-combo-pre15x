@@ -41,10 +41,9 @@ SourceFiles
 #ifndef pointZone_H
 #define pointZone_H
 
-#include "indirectPointList.H"
+#include "labelList.H"
 #include "typeInfo.H"
 #include "dictionary.H"
-#include "labelList.H"
 #include "pointZoneMeshFwd.H"
 #include "Map.H"
 #include "pointField.H"
@@ -66,7 +65,7 @@ Ostream& operator<<(Ostream&, const pointZone&);
 
 class pointZone
 :
-    public indirectPointList
+    public labelList
 {
     // Private data
 
@@ -90,9 +89,6 @@ class pointZone
 
         //- Disallow default bitwise copy construct
         pointZone(const pointZone&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const pointZone&);
 
         //- Return map of local point indices
         const Map<label>& pointLookupMap() const;
@@ -149,9 +145,9 @@ public:
         pointZone
         (
             const pointZone& pz,
-            const pointZoneMesh& zm,
+            const labelList& addr,
             const label index,
-            const labelList& addr
+            const pointZoneMesh& zm
         );
 
         //- Construct and return a clone, resetting the zone mesh
@@ -159,7 +155,7 @@ public:
         {
             return autoPtr<pointZone>
             (
-                new pointZone(*this, zm, index(), addressing())
+                new pointZone(*this, *this, index(), zm)
             );
         }
 
@@ -174,7 +170,7 @@ public:
         {
             return autoPtr<pointZone>
             (
-                new pointZone(*this, zm, index, addr)
+                new pointZone(*this, addr, index, zm)
             );
         }
 
@@ -223,9 +219,6 @@ public:
         //- Clear addressing
         void clearAddressing();
 
-        //- Reset addressing
-        void resetAddressing(const labelList& addr);
-
         //- Correct patch after moving points
         virtual void movePoints(const pointField&)
         {}
@@ -235,6 +228,15 @@ public:
 
         //- Write dictionary
         virtual void writeDict(Ostream&) const;
+
+
+    // Member Operators
+
+        //- Assign to zone clearing demand-driven data
+        void operator=(const pointZone&);
+
+        //- Assign addressing clearing demand-driven data
+        void operator=(const labelList&);
 
 
     // Ostream Operator

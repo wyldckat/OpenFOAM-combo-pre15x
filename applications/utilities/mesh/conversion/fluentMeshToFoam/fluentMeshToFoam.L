@@ -104,7 +104,7 @@ extern "C" int yywrap()
 
 %}
 
-one_space                  [ \t\f\015]
+one_space                  [ \t\f\r]
 space                      {one_space}*
 some_space                 {one_space}+
 cspace                     ","{space}

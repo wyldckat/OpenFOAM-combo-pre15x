@@ -73,8 +73,10 @@ class SpalartAllmaras
         dimensionedScalar Cw2;
         dimensionedScalar Cw3;
         dimensionedScalar Cv1;
+        dimensionedScalar Cv2;
 
         volScalarField nuTilda_;
+        volScalarField nut_;
 
         wallDist d_;
 
@@ -83,6 +85,7 @@ class SpalartAllmaras
 
         tmp<volScalarField> fv1() const;
         tmp<volScalarField> fv2() const;
+        tmp<volScalarField> fv3() const;
         tmp<volScalarField> fw(const volScalarField& Stilda) const;
 
 
@@ -113,7 +116,7 @@ public:
 
         tmp<volScalarField> nut() const
         {
-            return fv1()*nuTilda_;
+            return nut_;
         }
 
         //- Return the effective diffusivity for nuTilda
@@ -127,14 +130,38 @@ public:
 
         tmp<volScalarField> k() const
         {
-            notImplemented("SpalartAllmaras::k() const");
-            return volScalarField::null();
+            return tmp<volScalarField> 
+            (
+                new volScalarField
+                (
+                    IOobject
+                    (
+                        "k",
+                        runTime_.timeName(),
+                        mesh_
+                    ),
+                    mesh_,
+                    dimensionedScalar("0", dimensionSet(0, 2, -2, 0, 0), 0)
+                )
+            );
         }
 
         tmp<volScalarField> epsilon() const
         {
-            notImplemented("SpalartAllmaras::epsilon() const");
-            return volScalarField::null();
+            return tmp<volScalarField> 
+            (
+                new volScalarField
+                (
+                    IOobject
+                    (
+                        "epslion",
+                        runTime_.timeName(),
+                        mesh_
+                    ),
+                    mesh_,
+                    dimensionedScalar("0", dimensionSet(0, 2, -3, 0, 0), 0)
+                )
+            );
         }
 
         tmp<volTensorField> R() const;

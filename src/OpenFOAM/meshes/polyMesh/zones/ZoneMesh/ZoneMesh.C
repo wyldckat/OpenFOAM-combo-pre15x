@@ -65,7 +65,7 @@ void ZoneMesh<ZoneType>::calcZoneMap() const
         // object index and the result is the zone index
         forAll (*this, zoneI)
         {
-            const labelList& zoneObjects = this->operator[](zoneI).addressing();
+            const labelList& zoneObjects = this->operator[](zoneI);
 
             forAll (zoneObjects, objI)
             {

@@ -58,10 +58,13 @@ class word
     // Private member functions
 
         //- Strip invalid characters from this word
-        void stripInvalid();
+        inline void stripInvalid();
 
 
 public:
+
+    //- Debug switch
+    static int debug;
 
     //- Null word
     static const word null;
@@ -76,13 +79,13 @@ public:
         inline word(const word& w);
 
         //- Construct as copy of character array
-        word(const char*);
+        inline word(const char*);
 
         //- Construct as copy of string
-        word(const string&);
+        inline word(const string&);
 
         //- Construct as copy of std::string
-        word(const std::string&);
+        inline word(const std::string&);
 
         //- Construct from Istream
         word(Istream& is);
@@ -98,10 +101,10 @@ public:
 
         // Assignment
 
-            void operator=(const word&);
-            void operator=(const string&);
-            void operator=(const std::string&);
-            void operator=(const char*);
+            inline void operator=(const word&);
+            inline void operator=(const string&);
+            inline void operator=(const std::string&);
+            inline void operator=(const char*);
 
 
     // Friend Operators

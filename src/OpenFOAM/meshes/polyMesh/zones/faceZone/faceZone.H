@@ -27,7 +27,6 @@ Class
 
 Description
     A subset of mesh faces organised as a primitive patch.
-    The labels of faces in the zone can be obtained from the addressing() list.
     For quick check whether a face belongs to the zone use the lookup mechanism
     in faceZoneMesh, where all the zoned faces are registered with their zone
     number.
@@ -67,14 +66,13 @@ Ostream& operator<<(Ostream&, const faceZone&);
 \*---------------------------------------------------------------------------*/
 
 class faceZone
+:
+    public labelList
 {
     // Private data
 
         //- Name of zone
         word name_;
-
-        //- Face labels
-        labelList addressing_;
 
         //- Flip map for all faces in the zone.  Set to true if the
         //  face needs to be flipped to achieve the correct orientation.
@@ -178,10 +176,10 @@ public:
         faceZone
         (
             const faceZone& fz,
-            const faceZoneMesh& zm,
-            const label index,
             const labelList& addr,
-            const boolList& fm
+            const boolList& fm,
+            const label index,
+            const faceZoneMesh& zm
         );
 
         //- Construct and return a clone, resetting the zone mesh
@@ -189,7 +187,7 @@ public:
         {
             return autoPtr<faceZone>
             (
-                new faceZone(*this, zm, index(), addressing(), flipMap())
+                new faceZone(*this, *this, flipMap(), index(), zm)
             );
         }
 
@@ -197,15 +195,15 @@ public:
         //  and zone mesh
         virtual autoPtr<faceZone> clone
         (
-            const faceZoneMesh& zm,
-            const label index,
             const labelList& addr,
-            const boolList& fm
+            const boolList& fm,
+            const label index,
+            const faceZoneMesh& zm
         ) const
         {
             return autoPtr<faceZone>
             (
-                new faceZone(*this, zm, index, addr, fm)
+                new faceZone(*this, addr, fm, index, zm)
             );
         }
 
@@ -234,18 +232,6 @@ public:
         const word& name() const
         {
             return name_;
-        }
-
-        //- Return size
-        label size() const
-        {
-            return addressing().size();
-        }
-
-        //- Return addressing
-        const labelList& addressing() const
-        {
-            return addressing_;
         }
 
         //- Return face flip map
@@ -295,7 +281,7 @@ public:
         virtual void movePoints(const pointField&);
 
         //- Update for changes in topology
-        void updateTopology(const mapPolyMesh& mpm);
+        void updateMesh(const mapPolyMesh& mpm);
 
         //- Write
         virtual void write(Ostream&) const;

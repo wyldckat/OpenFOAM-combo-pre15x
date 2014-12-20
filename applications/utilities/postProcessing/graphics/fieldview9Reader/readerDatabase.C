@@ -27,7 +27,7 @@ License
 #include "readerDatabase.H"
 #include "demandDrivenData.H"
 #include "fvMesh.H"
-#include "meshSubset.H"
+#include "fvMeshSubset.H"
 #include "Time.H"
 #include "fileName.H"
 #include "instant.H"
@@ -134,7 +134,7 @@ Foam::readerDatabase::~readerDatabase()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::Time& Foam::readerDatabase::runTime() const
+const Foam::Time& Foam::readerDatabase::runTime() const
 {
     if (!runTimePtr_)
     {
@@ -261,7 +261,7 @@ void Foam::readerDatabase::loadMesh()
 
     Info<< "Loading new mesh" << endl;
 
-    meshPtr_ = new meshSubset
+    meshPtr_ = new fvMeshSubset
     (
         *runTimePtr_,
         IOobject::MUST_READ,
@@ -274,7 +274,7 @@ void Foam::readerDatabase::loadMesh()
     {
         Info<< "Subsetting mesh based on cellSet " << setName_ << endl;
 
-        meshSubset& mesh = *meshPtr_;
+        fvMeshSubset& mesh = *meshPtr_;
 
         cellSet currentSet(mesh, setName_);
 
@@ -303,7 +303,7 @@ Foam::polyMesh::readUpdateState Foam::readerDatabase::setTime
         {
             Info<< "Subsetting mesh based on " << setName_ << endl;        
 
-            meshSubset& mesh = *meshPtr_;
+            fvMeshSubset& mesh = *meshPtr_;
 
             cellSet currentSet(mesh, setName_);
 

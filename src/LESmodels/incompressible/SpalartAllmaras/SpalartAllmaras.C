@@ -45,22 +45,46 @@ addToRunTimeSelectionTable(LESmodel, SpalartAllmaras, dictionary);
 
 tmp<volScalarField> SpalartAllmaras::fv1() const
 {
-    volScalarField chi3 = pow(nuTilda_/nu(), 3);
-
-    return chi3/(chi3 + pow(Cv1_, 3));
+    volScalarField chi3 = pow3(nuTilda_/nu());
+    return chi3/(chi3 + pow3(Cv1_));
 }
 
 
 tmp<volScalarField> SpalartAllmaras::fv2() const
 {
     volScalarField chi = nuTilda_/nu();
-    return 1.0 - chi/(1.0 + chi*fv1());
+
+    //return 1.0 - chi/(1.0 + chi*fv1());
+    return pow(scalar(1) + chi/Cv2_, -3);
+}
+
+
+tmp<volScalarField> SpalartAllmaras::fv3() const
+{
+    volScalarField chi = nuTilda_/nu();
+    volScalarField chiByCv2 = (1/Cv2_)*chi;
+
+    return
+        (scalar(1) + chi*fv1())
+       *(1/Cv2_)
+       *(3*(scalar(1) + chiByCv2) + sqr(chiByCv2))
+       /pow(scalar(1) + chiByCv2, 3);
 }
 
 
 tmp<volScalarField> SpalartAllmaras::fw(const volScalarField& Stilda) const
 {
-    volScalarField r = nuTilda_/(Stilda*sqr(kappa_*dTilda_));
+    volScalarField r = min
+    (
+        nuTilda_
+       /(
+           max(Stilda, dimensionedScalar("SMALL", Stilda.dimensions(), SMALL))
+          *sqr(kappa_*dTilda_)
+        ),
+        scalar(10.0)
+    );
+    r.boundaryField() == 0.0;
+
     volScalarField g = r + Cw2_*(pow(r, 6) - r);
 
     return g*pow((1.0 + pow(Cw3_, 6))/(pow(g, 6) + pow(Cw3_, 6)), 1.0/6.0);
@@ -69,7 +93,6 @@ tmp<volScalarField> SpalartAllmaras::fw(const volScalarField& Stilda) const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// from components
 SpalartAllmaras::SpalartAllmaras
 (
     const volVectorField& U,
@@ -83,6 +106,7 @@ SpalartAllmaras::SpalartAllmaras
     Cb1_(LESmodelProperties().lookup("Cb1")),
     Cb2_(LESmodelProperties().lookup("Cb2")),
     Cv1_(LESmodelProperties().lookup("Cv1")),
+    Cv2_(LESmodelProperties().lookup("Cv2")),
     CDES_(LESmodelProperties().lookup("CDES")),
     ck_(LESmodelProperties().lookup("ck")),
     kappa_(lookup("kappa")),
@@ -102,7 +126,9 @@ SpalartAllmaras::SpalartAllmaras
         ),
         mesh_
     ),
+
     dTilda_(min(CDES_*delta(), wallDist(mesh_).y())),
+
     nuSgs_
     (
         IOobject
@@ -115,9 +141,7 @@ SpalartAllmaras::SpalartAllmaras
         ),
         mesh_
     )
-{
-    nuSgs_ = mag(nuSgs_); 
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -132,7 +156,7 @@ void SpalartAllmaras::correct(const tmp<volTensorField>& gradU)
     }
 
     volScalarField Stilda =
-        ::sqrt(2.0)*mag(skew(gradU)) + nuTilda_*fv2()/sqr(kappa_*dTilda_);
+        fv3()*::sqrt(2.0)*mag(skew(gradU)) + fv2()*nuTilda_/sqr(kappa_*dTilda_);
 
     solve
     (
@@ -151,8 +175,8 @@ void SpalartAllmaras::correct(const tmp<volTensorField>& gradU)
     );
 
     bound(nuTilda_, dimensionedScalar("zero", nuTilda_.dimensions(), 0.0));
-
     nuTilda_.correctBoundaryConditions();
+
     nuSgs_.internalField() = fv1()*nuTilda_.internalField();
     nuSgs_.correctBoundaryConditions();
 }
@@ -191,6 +215,7 @@ bool SpalartAllmaras::read()
         LESmodelProperties().lookup("Cw2") >> Cw2_;
         LESmodelProperties().lookup("Cw3") >> Cw3_;
         LESmodelProperties().lookup("Cv1") >> Cv1_;
+        LESmodelProperties().lookup("Cv2") >> Cv2_;
         LESmodelProperties().lookup("CDES") >> CDES_;
         LESmodelProperties().lookup("ck") >> ck_;
         lookup("kappa") >> kappa_;

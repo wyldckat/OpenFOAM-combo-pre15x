@@ -29,15 +29,15 @@
         (
               fvm::ddt(beta)
             + fvm::div(phi, beta, scheme)
-            + fvm::div(-fvc::flux(phir, 1.0 - beta, scheme), beta, scheme)
+            + fvm::div(-fvc::flux(phir, scalar(1) - beta, scheme), beta, scheme)
         );
         betaEqn.relax();
         betaEqn.solve();
 
-        alpha = 0.5*(1.0 + sqr(1.0 - beta) - sqr(1.0 - alpha));
+        alpha = 0.5*(scalar(1) + sqr(scalar(1) - beta) - sqr(scalar(1) - alpha));
         */
 
-        beta = 1.0 - alpha;
+        beta = scalar(1) - alpha;
     }
 
     Info<< "Dispersed phase volume fraction = "

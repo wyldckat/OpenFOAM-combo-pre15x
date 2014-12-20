@@ -34,12 +34,13 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyTopoChange.H"
-#include "morphMesh.H"
+#include "polyTopoChanger.H"
+#include "polyMesh.H"
 #include "mapPolyMesh.H"
 #include "Map.H"
 #include "ListOps.H"
 #include "primitiveFacePatch.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 using namespace Foam;
 
@@ -47,7 +48,7 @@ using namespace Foam;
 
 // Sin of angle between two consecutive edges on a face. If sin(angle) larger
 // than this the face will be considered concave.
-const scalar concaveSin = 30*physicalConstant::pi/180.0;
+const scalar concaveSin = 30*mathematicalConstant::pi/180.0;
 
 
 // Test face for (almost) convexeness. Allows certain convexity before
@@ -158,7 +159,7 @@ void regionFaces
 // can be merged.
 label mergeCellFaces
 (
-    const morphMesh& mesh,
+    const polyMesh& mesh,
     const scalar minCos,
     const bool allowConcaveFaces,
     const label patchI,
@@ -250,7 +251,7 @@ label mergeCellFaces
             {
                 WarningIn
                 (
-                    "label mergeCellFaces(const morphMesh& mesh, "
+                    "label mergeCellFaces(const polyMesh& mesh, "
                     "const scalar minCos, const bool allowConcaveFaces,"
                     "const label patchI, const label cellI, "
                     "const labelList& meshFaces, polyTopoChange& meshMod)"
@@ -283,7 +284,7 @@ label mergeCellFaces
                 // Region is not convex or has hole. Don't merge.
                 WarningIn
                 (
-                    "label mergeCellFaces(const morphMesh& mesh, "
+                    "label mergeCellFaces(const polyMesh& mesh, "
                     "const scalar minCos, const bool allowConcaveFaces,"
                     "const label patchI, const label cellI, "
                     "const labelList& meshFaces, polyTopoChange& meshMod)"
@@ -367,7 +368,7 @@ label mergeCellFaces
 
 
 // Remove points not used by any face.
-label removeHangingPoints(morphMesh& mesh)
+label removeHangingPoints(polyMesh& mesh)
 {
     // Topology changes container
     polyTopoChange meshMod(mesh);
@@ -398,12 +399,16 @@ label removeHangingPoints(morphMesh& mesh)
     {
         Info<< "Morphing to remove unused points ..." << endl;
 
-        mesh.resetMorph();
+        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
+        (
+            mesh,
+            meshMod
+        );
 
-        mesh.updateTopology(meshMod);
-
-        // Move mesh (since morphing does not do this)
-        mesh.movePoints(mesh.morphMap().preMotionPoints());
+        if (morphMap().hasMotionPoints())
+        {
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
     }
     else
     {
@@ -415,7 +420,7 @@ label removeHangingPoints(morphMesh& mesh)
 
 
 // Remove points on straight edges. Works on all edges, not just boundary ones.
-label mergeEdges(morphMesh& mesh, const scalar minCos)
+label mergeEdges(polyMesh& mesh, const scalar minCos)
 {
     const labelListList& pointEdges = mesh.pointEdges();
     const pointField& points = mesh.points();
@@ -581,12 +586,16 @@ label mergeEdges(morphMesh& mesh, const scalar minCos)
     {
         Info<< "Morphing to remove straight edge points ..." << endl;
 
-        mesh.resetMorph();
+        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
+        (
+            mesh,
+            meshMod
+        );
 
-        mesh.updateTopology(meshMod);
-
-        // Move mesh (since morphing does not do this)
-        mesh.movePoints(mesh.morphMap().preMotionPoints());
+        if (morphMap().hasMotionPoints())
+        {
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
     }
     else
     {
@@ -599,7 +608,7 @@ label mergeEdges(morphMesh& mesh, const scalar minCos)
 
 label mergePatchFaces
 (
-    morphMesh& mesh,
+    polyMesh& mesh,
     const scalar minCos,
     const bool allowConcaveFaces
 )
@@ -679,12 +688,16 @@ label mergePatchFaces
         // Do all changes
         Info<< "Morphing to merge faces ..." << endl;
 
-        mesh.resetMorph();
+        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
+        (
+            mesh,
+            meshMod
+        );
 
-        mesh.updateTopology(meshMod);
-
-        // Move mesh (since morphing does not do this)
-        mesh.movePoints(mesh.morphMap().preMotionPoints());
+        if (morphMap().hasMotionPoints())
+        {
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
     }
     else
     {
@@ -705,10 +718,11 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createPolyMesh.H"
 
     scalar featureAngle(readScalar(IStringStream(args.args()[3])()));
 
-    scalar minCos = Foam::cos(featureAngle * physicalConstant::pi/180.0);
+    scalar minCos = Foam::cos(featureAngle * mathematicalConstant::pi/180.0);
 
     bool allowConcaveFaces = args.options().found("allowConcaveFaces");
 
@@ -731,18 +745,6 @@ int main(int argc, char *argv[])
             << endl;
     }
 
-
-
-    Info<< "Create morphMesh for time = " << runTime.value() << nl << endl;
-    morphMesh mesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
 
     runTime++;
 

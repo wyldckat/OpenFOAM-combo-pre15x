@@ -2,7 +2,7 @@
 
 cWARN        = 
 
-cc          = icc -gcc-version=330
+cc          = icc -gcc-version=400
 
 include $(RULES)/c$(WM_COMPILE_OPTION)
 
@@ -12,5 +12,5 @@ ctoo        = $(cc) $(cFLAGS) -c $$SOURCE -o $@
 
 LINK_LIBS   = $(cDBUG) -L$(IA32ROOT)/lib
 
-LINKLIBSO   = $(cc) -i_dynamic
-LINKEXE     = $(cc) -Xlinker -z -Xlinker nodefs
+LINKLIBSO   = $(cc) $(cFLAGS) -shared
+LINKEXE     = $(cc) $(cFLAGS)

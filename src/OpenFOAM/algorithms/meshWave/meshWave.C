@@ -533,7 +533,7 @@ void Foam::meshWave<Type>::handleProcPatches()
     {
         const polyPatch& patch = mesh_.boundaryMesh()[patchI];
 
-        if (Pstream::parRun() && (patch.type() == processorPolyPatch::typeName))
+        if (Pstream::parRun() && isA<processorPolyPatch>(patch))
         {
             // Allocate buffers
             label nSendFaces;
@@ -587,7 +587,7 @@ void Foam::meshWave<Type>::handleProcPatches()
     {
         const polyPatch& patch = mesh_.boundaryMesh()[patchI];
 
-        if (Pstream::parRun() && (patch.type() == processorPolyPatch::typeName))
+        if (Pstream::parRun() && isA<processorPolyPatch>(patch))
         {
             const processorPolyPatch& procPatch =
                 refCast<const processorPolyPatch>(patch);
@@ -657,7 +657,7 @@ void Foam::meshWave<Type>::handleCyclicPatches()
     {
         const polyPatch& patch = mesh_.boundaryMesh()[patchI];
 
-        if (patch.type() == cyclicPolyPatch::typeName)
+        if (isA<cyclicPolyPatch>(patch))
         {
             label halfSize = patch.size()/2;
 
@@ -828,7 +828,7 @@ Foam::meshWave<Type>::meshWave
     nUnvisitedCells_(mesh_.nCells()),
     nUnvisitedFaces_(mesh_.nFaces()),
     iter_(0),
-    procLabel_('[' + word(name(Pstream::myProcNo())) + "]-")
+    procLabel_('[' + name(Pstream::myProcNo()) + "]-")
 {
     // Copy initial changed faces data
     setFaceInfo(changedFaces, changedFacesInfo);
@@ -880,7 +880,7 @@ Foam::meshWave<Type>::meshWave
     nUnvisitedCells_(mesh_.nCells()),
     nUnvisitedFaces_(mesh_.nFaces()),
     iter_(0),
-    procLabel_('[' + word(name(Pstream::myProcNo())) + "]-")
+    procLabel_('[' + name(Pstream::myProcNo()) + "]-")
 {
     // Copy initial changed faces data
     setFaceInfo(changedFaces, changedFacesInfo);
@@ -1144,7 +1144,7 @@ Foam::label Foam::meshWave<Type>::iterate(const label maxIter)
             break;
         }
 
-        iter_++;
+        ++iter_;
     }
 
     return nUnvisitedCells_;

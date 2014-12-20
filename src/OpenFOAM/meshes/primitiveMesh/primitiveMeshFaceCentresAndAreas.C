@@ -102,8 +102,8 @@ void primitiveMesh::makeFaceCentresAndAreas
             scalar sumA = 0.0;
             vector sumAc = vector::zero;
 
-            point fCentre = vector::zero;
-            for (label pi = 0; pi < nPoints; pi++)
+            point fCentre = p[f[0]];
+            for (label pi = 1; pi < nPoints; pi++)
             {
                 fCentre += p[f[pi]];
             }
@@ -114,17 +114,17 @@ void primitiveMesh::makeFaceCentresAndAreas
             {
                 const point& nextPoint = p[f[(pi + 1) % nPoints]];
 
-                vector c = (1.0/3.0)*(p[f[pi]] + nextPoint + fCentre);
-                vector n = 0.5*((nextPoint - p[f[pi]])^(fCentre - p[f[pi]]));
-                scalar a = mag(n) + VSMALL;
+                vector c = p[f[pi]] + nextPoint + fCentre;
+                vector n = (nextPoint - p[f[pi]])^(fCentre - p[f[pi]]);
+                scalar a = mag(n);
 
                 sumN += n;
                 sumA += a;
                 sumAc += a*c;
             }
 
-            fCtrs[facei] = sumAc/sumA;
-            fAreas[facei] = sumN;
+            fCtrs[facei] = (1.0/3.0)*sumAc/(sumA + VSMALL);
+            fAreas[facei] = 0.5*sumN;
         }
     }
 }

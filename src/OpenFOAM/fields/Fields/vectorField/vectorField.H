@@ -31,7 +31,6 @@ Description
 SourceFiles
     vectorField.C
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef vectorField_H
@@ -45,7 +44,11 @@ SourceFiles
 namespace Foam
 {
 
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 typedef Field<vector> vectorField;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
 

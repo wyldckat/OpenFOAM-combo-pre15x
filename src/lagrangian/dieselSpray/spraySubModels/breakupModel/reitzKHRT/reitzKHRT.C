@@ -28,7 +28,7 @@ Description
 
 #include "reitzKHRT.H"
 #include "addToRunTimeSelectionTable.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -156,7 +156,7 @@ void reitzKHRT::breakupParcel
     );
 
     // the wavelength of the fastest growing Raleigh-Taylor frequency
-    scalar lambdaRT = 2.0*physicalConstant::pi*cRT_/(KRT + VSMALL);
+    scalar lambdaRT = 2.0*mathematicalConstant::pi*cRT_/(KRT + VSMALL);
 
     // if lambdaRT < diameter, then RT waves are growing on the surface
     // and we start to keep track of how long they have been growing
@@ -191,7 +191,7 @@ void reitzKHRT::breakupParcel
             p.d() = (fraction*dc + p.d())/(1.0 + fraction);
 
             scalar dc3 = pow(dc, 3.0);
-            scalar ms = rhoLiquid*Np*dc3*physicalConstant::pi/6.0;
+            scalar ms = rhoLiquid*Np*dc3*mathematicalConstant::pi/6.0;
             p.ms() += ms;
 
             label nParcels = spray_.injectors()[injector].properties()->nParcelsToInject

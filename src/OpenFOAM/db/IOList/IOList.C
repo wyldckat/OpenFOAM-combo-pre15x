@@ -67,7 +67,13 @@ IOList<T>::IOList(const IOobject& io, const List<T>& list)
 :
     regIOobject(io),
     List<T>(list)
-{}
+{
+    if (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+    {
+        readStream(typeName) >> *this;
+        close();
+    }
+}
 
 
 template<class T>

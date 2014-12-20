@@ -36,7 +36,7 @@ SourceFiles
 #ifndef removeFaces_H
 #define removeFaces_H
 
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "labelList.H"
 #include "Map.H"
 #include "labelHashSet.H"
@@ -226,7 +226,7 @@ public:
         removeFaces
         (
             const polyMesh& mesh,
-            const scalar minCos = Foam::cos(10.0/180.0 * physicalConstant::pi)
+            const scalar minCos = Foam::cos(10.0/180.0 * mathematicalConstant::pi)
         );
 
 
@@ -268,7 +268,7 @@ public:
             ) const;
 
             //- Force recalculation of locally stored data on topological change
-            void updateTopology(const mapPolyMesh&)
+            void updateMesh(const mapPolyMesh&)
             {}
 };
 

@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "directions.H"
@@ -34,6 +32,7 @@ Description
 #include "OFstream.H"
 #include "meshTools.H"
 #include "hexMatcher.H"
+#include "Switch.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -84,7 +83,7 @@ void Foam::directions::writeOBJ
     const vectorField& dirs
 )
 {
-    Info<< "Writing cell info to " << fName << " as vectors at the cellCentres"
+    Pout<< "Writing cell info to " << fName << " as vectors at the cellCentres"
         << endl << endl;
 
     OFstream xDirStream(fName);
@@ -123,7 +122,7 @@ void Foam::directions::check2D
         if (mag(correct2DPtr->planeNormal() & vec) > 1E-6)
         {
             FatalErrorIn("check2D") << "Specified vector " << vec
-                << "is not normal to plane defined in motionProperties."
+                << "is not normal to plane defined in dynamicMeshDict."
                 << endl
                 << "Either make case 3D or adjust vector."
                 << exit(FatalError);
@@ -255,7 +254,7 @@ Foam::vectorField Foam::directions::propagateDirection
         }
     }
 
-    Info<< "Calculated local coords for " << defaultDir
+    Pout<< "Calculated local coords for " << defaultDir
         << endl
         << "    Geometric cut cells   : " << nGeom << endl
         << "    Topological cut cells : " << nTopo << endl
@@ -320,7 +319,7 @@ Foam::directions::directions
         vector normal = tan1 ^ tan2;
         normal /= mag(normal);
 
-        Info<< "Global Coordinate system:" << endl
+        Pout<< "Global Coordinate system:" << endl
             << "     normal : " << normal << endl
             << "     tan1   : " << tan1 << endl
             << "     tan2   : " << tan2

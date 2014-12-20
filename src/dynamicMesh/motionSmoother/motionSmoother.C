@@ -282,7 +282,7 @@ Foam::motionSmoother::motionSmoother
     (
         IOobject
         (
-            "motionProperties",
+            "dynamicMeshDict",
             mesh_.time().constant(),
             mesh_,
             IOobject::MUST_READ,
@@ -592,11 +592,11 @@ bool Foam::motionSmoother::scaleMesh
 }
 
 
-void Foam::motionSmoother::updateTopology()
+void Foam::motionSmoother::updateMesh()
 {
     if (correct2DPtr_)
     {
-        correct2DPtr_->updateTopology();
+        correct2DPtr_->updateMesh();
     }    
 }
 

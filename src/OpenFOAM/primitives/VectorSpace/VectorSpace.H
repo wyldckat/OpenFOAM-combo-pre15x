@@ -104,6 +104,9 @@ public:
         //- Construct from Istream
         VectorSpace(Istream&);
 
+        //- Construct as copy
+        inline VectorSpace(const VectorSpace<Form, Cmpt, nCmpt>&);
+
 
     // Member Functions
 
@@ -119,6 +122,7 @@ public:
         inline const Cmpt& operator[](const direction) const;
         inline Cmpt& operator[](const direction);
 
+        inline void operator=(const VectorSpace<Form, Cmpt, nCmpt>&);
         inline void operator+=(const VectorSpace<Form, Cmpt, nCmpt>&);
         inline void operator-=(const VectorSpace<Form, Cmpt, nCmpt>&);
 

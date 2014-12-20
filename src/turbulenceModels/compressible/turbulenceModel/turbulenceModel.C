@@ -75,9 +75,15 @@ turbulenceModel::turbulenceModel
     turbulence_(lookup("turbulence")),
     turbulenceModelCoeffs_(subDict(type + "Coeffs")),
 
-    kappa_(subDict("wallFunctionCoeffs").lookup("kappa")),
-    E_(subDict("wallFunctionCoeffs").lookup("E")),
-    yPlusLam_(yPlusLam(kappa_.value(), E_.value())),
+    kappa_
+    (
+        dimensionedScalar(subDict("wallFunctionCoeffs").lookup("kappa")).value()
+    ),
+    E_
+    (
+        dimensionedScalar(subDict("wallFunctionCoeffs").lookup("E")).value()
+    ),
+    yPlusLam_(yPlusLam(kappa_, E_)),
 
     k0_("k0", dimVelocity*dimVelocity, SMALL),
     epsilon0_("epsilon", k0_.dimensions()/dimTime, SMALL),
@@ -152,9 +158,17 @@ bool turbulenceModel::read()
         lookup("turbulence") >> turbulence_;
         turbulenceModelCoeffs_ = subDict(type() + "Coeffs");
 
-        subDict("wallFunctionCoeffs").lookup("kappa") >> kappa_;
-        subDict("wallFunctionCoeffs").lookup("E") >> E_;
-        yPlusLam_ = yPlusLam(kappa_.value(), E_.value());
+        kappa_ = dimensionedScalar
+        (
+            subDict("wallFunctionCoeffs").lookup("kappa")
+        ).value();
+
+        E_ = dimensionedScalar
+        (
+            subDict("wallFunctionCoeffs").lookup("E")
+        ).value();
+
+        yPlusLam_ = yPlusLam(kappa_, E_);
 
         if (found("k0"))
         {

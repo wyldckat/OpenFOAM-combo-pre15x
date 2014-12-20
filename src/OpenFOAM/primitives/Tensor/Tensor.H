@@ -75,7 +75,6 @@ public:
         static const Tensor one;
         static const Tensor I;
 
-
     //- Component labeling enumeration
     enum components { XX, XY, XZ, YX, YY, YZ, ZX, ZY, ZZ };
 

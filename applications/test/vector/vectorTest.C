@@ -18,5 +18,16 @@ int main()
 
     Info<< (dSmall - d) << endl;
 
+    d *= 4.0;
+
+    Info<< d << endl;
+
+    Info<< d + d << endl;
+
+    Info<< magSqr(d) << endl;
+
+    vector d2(0.5, 0.51, -0.5);
+    Info<< cmptMax(d2) << " " << cmptSum(d2) << " " << cmptMag(d2) << endl;
+    Info<< min(d, d2) << endl;
     return 0;
 }

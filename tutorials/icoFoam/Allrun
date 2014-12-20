@@ -87,8 +87,11 @@ do
     then
         cp -r $case/0 $case/0.5
         runMapFields cavity $case
-        sed -f resetFixedWallsScr $case/0.5/U > $case/0.5/U.temp
-        mv $case/0.5/U.temp $case/0.5/U
+        if [ ".`grep nonuniform $case/0.5/U`" != "." ]
+        then
+            sed -f resetFixedWallsScr $case/0.5/U > $case/0.5/U.temp
+            mv $case/0.5/U.temp $case/0.5/U
+        fi
     fi
 #
     previousCase="$case"

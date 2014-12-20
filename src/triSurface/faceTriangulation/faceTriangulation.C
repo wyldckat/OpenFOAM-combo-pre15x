@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "faceTriangulation.H"
@@ -33,13 +31,6 @@ Description
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 const Foam::scalar Foam::faceTriangulation::edgeRelTol = 1E-6;
-
-
-// Next vertex on face
-Foam::label Foam::faceTriangulation::nexti(const label size, label i)
-{
-    return (i + 1) % size;
-}
 
 
 //- Edge to the right of face vertex i
@@ -69,13 +60,13 @@ Foam::tmp<Foam::vectorField> Foam::faceTriangulation::calcEdges
 
     forAll(f, i)
     {
-        label ni = nexti(f.size(), i);
+        label ni = f.fcIndex(i);
 
         point thisPt = points[f[i]];
         point nextPt = points[f[ni]];
 
         vector vec(nextPt - thisPt);
-        vec /= mag(vec);
+        vec /= mag(vec) + VSMALL;
 
         edges[i] = vec;
     }
@@ -128,14 +119,6 @@ Foam::pointHit Foam::faceTriangulation::rayEdgeIntersect
 {
     // Start off from miss
     pointHit result(p1);
-
-    if (mag(mag(rayDir) - 1) > edgeRelTol)
-    {
-        FatalErrorIn("rayEdgeIntersect")
-            << "Ray vector " << rayDir << " mag " << mag(rayDir)
-            << " not normalized to within " << edgeRelTol
-            << abort(FatalError);
-    }
 
     // Construct plane normal to rayDir and intersect
     const vector y = normal ^ rayDir;
@@ -207,7 +190,7 @@ void Foam::faceTriangulation::findDiagonal
     const face& f,
     const vectorField& edges,
     const vector& normal,
-    const label& startIndex,
+    const label startIndex,
     label& index1,
     label& index2
 )
@@ -216,7 +199,7 @@ void Foam::faceTriangulation::findDiagonal
 
     // Calculate angle at startIndex
     const vector& rightE = edges[right(f.size(), startIndex)];
-    const vector& leftE = -edges[left(f.size(), startIndex)];
+    const vector leftE = -edges[left(f.size(), startIndex)];
 
     // Construct ray which bisects angle
     scalar cosHalfAngle = GREAT;
@@ -236,7 +219,7 @@ void Foam::faceTriangulation::findDiagonal
     // Check all edges (apart from rightE and leftE) for nearest intersection
     //
 
-    label faceVertI = nexti(f.size(), startIndex);
+    label faceVertI = f.fcIndex(startIndex);
 
     pointHit minInter(false, vector::zero, GREAT, true);
     label minIndex = -1;
@@ -248,56 +231,59 @@ void Foam::faceTriangulation::findDiagonal
         pointHit inter = 
             rayEdgeIntersect
             (
-                normal, 
+                normal,
                 startPt,
                 rayDir,
                 points[f[faceVertI]],
-                points[f[nexti(f.size(), faceVertI)]],
+                points[f[f.fcIndex(faceVertI)]],
                 posOnEdge
             );
 
-        if (inter.hit())
+        if (inter.hit() && inter.distance() < minInter.distance())
         {
-            if (inter.distance() < minInter.distance())
-            {
-                minInter = inter;
-                minIndex = faceVertI;
-                minPosOnEdge = posOnEdge;
-            }
+            minInter = inter;
+            minIndex = faceVertI;
+            minPosOnEdge = posOnEdge;
         }
 
-        faceVertI = nexti(f.size(), faceVertI);
+        faceVertI = f.fcIndex(faceVertI);
     }
 
 
     if (minIndex == -1)
     {
-        WarningIn("faceTriangulation::findDiagonal")
-            << "Could not find intersection starting from " << f[startIndex]
-            << " for face " << f << endl;
+        //WarningIn("faceTriangulation::findDiagonal")
+        //    << "Could not find intersection starting from " << f[startIndex]
+        //    << " for face " << f << endl;
 
         index1 = -1;
         index2 = -1;
-        return;
-        
+        return;   
     }
 
-    label leftIndex = minIndex;
-    label rightIndex = nexti(f.size(), minIndex);
+    const label leftIndex = minIndex;
+    const label rightIndex = f.fcIndex(minIndex);
 
     // Now ray intersects edge from leftIndex to rightIndex.
-    // Check for intersection being one of the edge points.
+    // Check for intersection being one of the edge points. Make sure never
+    // to return two consecutive points.
 
-    if (mag(minPosOnEdge) < edgeRelTol)
+    if (mag(minPosOnEdge) < edgeRelTol && f.fcIndex(startIndex) != leftIndex)
     {
         index1 = startIndex;
         index2 = leftIndex;
+
         return;
     }
-    if (mag(minPosOnEdge - 1) < edgeRelTol)
+    if
+    (
+        mag(minPosOnEdge - 1) < edgeRelTol
+     && f.fcIndex(rightIndex) != startIndex
+    )
     {
         index1 = startIndex;
         index2 = rightIndex;
+
         return;
     }
 
@@ -305,14 +291,14 @@ void Foam::faceTriangulation::findDiagonal
     // angle to bisection. Visibility checking by checking if inside triangle
     // formed by startIndex, leftIndex, rightIndex
 
-    const point leftPt = points[f[leftIndex]];
-    const point rightPt = points[f[rightIndex]];
+    const point& leftPt = points[f[leftIndex]];
+    const point& rightPt = points[f[rightIndex]];
 
     minIndex = -1;
     scalar maxCos = -GREAT;
 
     // all vertices except for startIndex and ones to left and right of it.
-    faceVertI = nexti(f.size(), nexti(f.size(), startIndex));
+    faceVertI = f.fcIndex(f.fcIndex(startIndex));
     for(label i = 0; i < f.size() - 3; i++)
     {
         const point& pt = points[f[faceVertI]];
@@ -336,14 +322,24 @@ void Foam::faceTriangulation::findDiagonal
                 minIndex = faceVertI;
             }
         }
-        faceVertI = nexti(f.size(), faceVertI);
+        faceVertI = f.fcIndex(faceVertI);
     }
 
     if (minIndex == -1)
     {
-        // no vertex found. Return intersected edge itself.
-        index1 = leftIndex;
-        index2 = rightIndex;
+        // no vertex found. Return startIndex and one of the intersected edge
+        // endpoints.
+        index1 = startIndex;
+
+        if (f.fcIndex(startIndex) != leftIndex)
+        {
+            index2 = leftIndex;
+        }
+        else
+        {
+            index2 = rightIndex;
+        }
+
         return;
     }
 
@@ -367,10 +363,10 @@ Foam::label Foam::faceTriangulation::findStart
     scalar minCos = GREAT;
     label minIndex = -1;
 
-    forAll(f, faceVertI)
+    forAll(f, fp)
     {
-        const vector& rightEdge = edges[right(size, faceVertI)];
-        const vector& leftEdge = -edges[left(size, faceVertI)];
+        const vector& rightEdge = edges[right(size, fp)];
+        const vector leftEdge = -edges[left(size, fp)];
 
         if (((rightEdge ^ leftEdge) & normal) < SMALL)
         {
@@ -378,7 +374,7 @@ Foam::label Foam::faceTriangulation::findStart
             if (cos < minCos)
             {
                 minCos = cos;
-                minIndex = faceVertI;
+                minIndex = fp;
             }
         }
     }
@@ -388,24 +384,18 @@ Foam::label Foam::faceTriangulation::findStart
         // No concave angle found. Get flattest convex angle
         minCos = GREAT;
 
-        forAll(f, faceVertI)
+        forAll(f, fp)
         {
-            const vector& rightEdge = edges[right(size, faceVertI)];
-            const vector& leftEdge = -edges[left(size, faceVertI)];
+            const vector& rightEdge = edges[right(size, fp)];
+            const vector leftEdge = -edges[left(size, fp)];
 
             scalar cos = rightEdge & leftEdge;
             if (cos < minCos)
             {
                 minCos = cos;
-                minIndex = faceVertI;
+                minIndex = fp;
             }
         }
-        //Pout<< "    Minimum convex:" << f[minIndex] << endl;
-    }
-    else
-    {
-        //Pout<< "    Minimum concave:" << f[minIndex] << " cos:" << minCos
-        //    << endl;
     }
 
     return minIndex;
@@ -418,6 +408,7 @@ Foam::label Foam::faceTriangulation::findStart
 // polygons.
 bool Foam::faceTriangulation::split
 (
+    const bool fallBack,
     const pointField& points,
     const face& f,
     const vector& normal,
@@ -430,7 +421,8 @@ bool Foam::faceTriangulation::split
     {
         WarningIn
         (
-            "split(const pointField&, const face&, const vector&, label&)"
+            "split(const bool, const pointField&, const face&"
+            ", const vector&, label&)"
         )   << "Illegal face:" << f
             << " with points " << IndirectList<point>(points, f)
             << endl;
@@ -481,19 +473,70 @@ bool Foam::faceTriangulation::split
             }
 
             // Try splitting from next startingIndex.
-            startIndex = nexti(f.size(), startIndex);
+            startIndex = f.fcIndex(startIndex);
         }
 
         if (index1 == -1 || index2 == -1)
         {
-            WarningIn
-            (
-                "split(const pointField&, const face&, const vector&, label&)"
-            )   << "Cannot find valid diagonal on face " << f
-                << " with points " << IndirectList<point>(points, f)
-                << endl;
+            if (fallBack)
+            {
+                // Do naive triangulation. Find smallest angle to start
+                // triangulating from.
+                label maxIndex = -1;
+                scalar maxCos = -GREAT;
 
-            return false;
+                forAll(f, fp)
+                {
+                    const vector& rightEdge = edges[right(size, fp)];
+                    const vector leftEdge = -edges[left(size, fp)];
+
+                    scalar cos = rightEdge & leftEdge;
+                    if (cos > maxCos)
+                    {
+                        maxCos = cos;
+                        maxIndex = fp;
+                    }
+                }
+
+                WarningIn
+                (
+                    "split(const bool, const pointField&, const face&"
+                    ", const vector&, label&)"
+                )   << "Cannot find valid diagonal on face " << f
+                    << " with points " << IndirectList<point>(points, f) << nl
+                    << "Returning naive triangulation starting from "
+                    << f[maxIndex] << " which might not be correct for a"
+                    << " concave or warped face" << endl;
+
+
+                label fp = f.fcIndex(maxIndex);
+
+                for (label i = 0; i < size-2; i++)
+                {
+                    label nextFp = f.fcIndex(fp);
+
+                    triFace& tri = operator[](triI++);
+                    tri[0] = f[maxIndex];
+                    tri[1] = f[fp];
+                    tri[2] = f[nextFp];
+
+                    fp = nextFp;
+                }
+
+                return true;
+            }
+            else
+            {
+                WarningIn
+                (
+                    "split(const bool, const pointField&, const face&"
+                    ", const vector&, label&)"
+                )   << "Cannot find valid diagonal on face " << f
+                    << " with points " << IndirectList<point>(points, f) << nl
+                    << "Returning empty triFaceList" << endl;
+
+                return false;
+            }
         }
 
 
@@ -516,6 +559,19 @@ bool Foam::faceTriangulation::split
         label nPoints1 = diff + 1;
         label nPoints2 = size - diff + 1;
 
+        if (nPoints1 == size || nPoints2 == size)
+        {
+            FatalErrorIn
+            (
+                "split(const bool, const pointField&, const face&"
+                ", const vector&, label&)"
+            )   << "Illegal split of face:" << f
+                << " with points " << IndirectList<point>(points, f)
+                << " at indices " << index1 << " and " << index2
+                << abort(FatalError);
+        }
+
+
         // Collect face1 points
         face face1(nPoints1);
 
@@ -523,7 +579,7 @@ bool Foam::faceTriangulation::split
         for (int i = 0; i < nPoints1; i++)
         {
             face1[i] = f[faceVertI];
-            faceVertI = nexti(size, faceVertI);
+            faceVertI = f.fcIndex(faceVertI);
         }
 
         // Collect face2 points
@@ -533,13 +589,22 @@ bool Foam::faceTriangulation::split
         for (int i = 0; i < nPoints2; i++)
         {
             face2[i] = f[faceVertI];
-            faceVertI = nexti(size, faceVertI);
+            faceVertI = f.fcIndex(faceVertI);
         }
 
         // Decompose the split faces
-        return
-            split(points, face1, normal, triI)
-         && split(points, face2, normal, triI);
+        //Pout<< "Split face:" << f << " into " << face1 << " and " << face2
+        //    << endl;
+        //string oldPrefix(Pout.prefix());
+        //Pout.prefix() = "  " + oldPrefix;
+
+        bool splitOk =
+            split(fallBack, points, face1, normal, triI)
+         && split(fallBack, points, face2, normal, triI);
+
+        //Pout.prefix() = oldPrefix;
+
+        return splitOk;
     }
 }
 
@@ -557,7 +622,8 @@ Foam::faceTriangulation::faceTriangulation()
 Foam::faceTriangulation::faceTriangulation
 (
     const pointField& points,
-    const face& f
+    const face& f,
+    const bool fallBack
 )
 :
     triFaceList(f.size()-2)
@@ -567,7 +633,7 @@ Foam::faceTriangulation::faceTriangulation
 
     label triI = 0;
 
-    bool valid = split(points, f, avgNormal, triI);
+    bool valid = split(fallBack, points, f, avgNormal, triI);
 
     if (!valid)
     {
@@ -581,14 +647,15 @@ Foam::faceTriangulation::faceTriangulation
 (
     const pointField& points,
     const face& f,
-    const vector& n
+    const vector& n,
+    const bool fallBack
 )
 :
     triFaceList(f.size()-2)
 {
     label triI = 0;
 
-    bool valid = split(points, f, n, triI);
+    bool valid = split(fallBack, points, f, n, triI);
 
     if (!valid)
     {

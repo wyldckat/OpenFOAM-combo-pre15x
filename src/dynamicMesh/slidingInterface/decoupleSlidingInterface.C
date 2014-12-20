@@ -22,14 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "slidingInterface.H"
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
+#include "polyTopoChanger.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -40,7 +39,7 @@ void Foam::slidingInterface::decoupleInterface
 {
     if (debug)
     {
-        Info<< "void slidingInterface::decoupleInterface("
+        Pout<< "void slidingInterface::decoupleInterface("
             << "polyTopoChange& ref) const : "
             << "Decoupling sliding interface " << name() << endl;
     }
@@ -49,7 +48,7 @@ void Foam::slidingInterface::decoupleInterface
     {
         if (debug)
         {
-            Info<< "void slidingInterface::decoupleInterface("
+            Pout<< "void slidingInterface::decoupleInterface("
                 << "polyTopoChange& ref) const : "
                 << "Interface already decoupled." << endl;
         }
@@ -60,22 +59,23 @@ void Foam::slidingInterface::decoupleInterface
     // Clear previous couple
     clearCouple(ref);
 
-    const faceList& faces = mesh().allFaces();
-    const cellList& cells = mesh().cells();
+    const polyMesh& mesh = topoChanger().mesh();
+    const faceList& faces = mesh.allFaces();
+    const cellList& cells = mesh.cells();
 
-    const labelList& own = mesh().allOwner();
-    const labelList& nei = mesh().allNeighbour();
+    const labelList& own = mesh.allOwner();
+    const labelList& nei = mesh.allNeighbour();
 
     // Master side
 
     const primitiveFacePatch& masterPatch =
-        mesh().faceZones()[masterFaceZoneID_.index()]();
+        mesh.faceZones()[masterFaceZoneID_.index()]();
 
     const labelList& masterPatchAddr =
-        mesh().faceZones()[masterFaceZoneID_.index()].addressing();
+        mesh.faceZones()[masterFaceZoneID_.index()];
 
     const boolList& masterPatchFlip =
-        mesh().faceZones()[masterFaceZoneID_.index()].flipMap();
+        mesh.faceZones()[masterFaceZoneID_.index()].flipMap();
 
     const labelList& masterFc = masterFaceCells();
 
@@ -106,19 +106,19 @@ void Foam::slidingInterface::decoupleInterface
                 false                            // zone flip.  Face corrected
             )
         );
-//         Info << "Modifying master patch face no " << masterPatchAddr[faceI] << " face: " << faces[masterPatchAddr[faceI]] << " old owner: " << own[masterPatchAddr[faceI]] << " new owner: " << masterFc[faceI] << endl;
+//         Pout << "Modifying master patch face no " << masterPatchAddr[faceI] << " face: " << faces[masterPatchAddr[faceI]] << " old owner: " << own[masterPatchAddr[faceI]] << " new owner: " << masterFc[faceI] << endl;
     }
 
     // Slave side
 
     const primitiveFacePatch& slavePatch =
-        mesh().faceZones()[slaveFaceZoneID_.index()]();
+        mesh.faceZones()[slaveFaceZoneID_.index()]();
 
     const labelList& slavePatchAddr =
-        mesh().faceZones()[slaveFaceZoneID_.index()].addressing();
+        mesh.faceZones()[slaveFaceZoneID_.index()];
 
     const boolList& slavePatchFlip =
-        mesh().faceZones()[slaveFaceZoneID_.index()].flipMap();
+        mesh.faceZones()[slaveFaceZoneID_.index()].flipMap();
 
     const labelList& slaveFc = slaveFaceCells();
 
@@ -144,7 +144,7 @@ void Foam::slidingInterface::decoupleInterface
             if (rpmIter != rpm.end())
             {
                 // Master of retired point; grab its original
-//                 Info << "Reinstating retired point: " << newFace[pointI] << " with old: " << rpm.find(newFace[pointI])() << endl;
+//                 Pout << "Reinstating retired point: " << newFace[pointI] << " with old: " << rpm.find(newFace[pointI])() << endl;
                 newFace[pointI] = rpmIter();
             }
         }
@@ -215,23 +215,22 @@ void Foam::slidingInterface::decoupleInterface
             }
 
             // Get face zone and its flip
-            label modifiedFaceZone = mesh().faceZones().whichZone(curFaceID);
+            label modifiedFaceZone = mesh.faceZones().whichZone(curFaceID);
             bool modifiedFaceZoneFlip = false;
 
             if (modifiedFaceZone >= 0)
             {
                 modifiedFaceZoneFlip =
-                    mesh().faceZones()[modifiedFaceZone].flipMap()
+                    mesh.faceZones()[modifiedFaceZone].flipMap()
                     [
-                        mesh().faceZones()[modifiedFaceZone]
-                            .whichFace(curFaceID)
+                        mesh.faceZones()[modifiedFaceZone].whichFace(curFaceID)
                     ];
             }
 
             face newFace;
             newFace.transfer(newFaceLabels.shrink());
 
-//             Info << "Modifying master stick-out face " << curFaceID << " old face: " << oldFace << " new face: " << newFace << endl;
+//             Pout << "Modifying master stick-out face " << curFaceID << " old face: " << oldFace << " new face: " << newFace << endl;
 
             // Modify the face
             ref.setAction
@@ -243,7 +242,7 @@ void Foam::slidingInterface::decoupleInterface
                     own[curFaceID],         // owner
                     nei[curFaceID],         // neighbour
                     false,                  // face flip
-                    mesh().boundaryMesh().whichPatch(curFaceID), // patch
+                    mesh.boundaryMesh().whichPatch(curFaceID), // patch for face
                     false,                  // remove from zone
                     modifiedFaceZone,       // zone for face
                     modifiedFaceZoneFlip    // face flip in zone
@@ -269,7 +268,7 @@ void Foam::slidingInterface::decoupleInterface
             // if it has been removed; if not add it
             if
             (
-                mesh().faceZones().whichZone(curFaces[faceI])
+                mesh.faceZones().whichZone(curFaces[faceI])
              != slaveFaceZoneID_.index()
              && !removedFaces.found(curFaces[faceI])
 
@@ -305,7 +304,7 @@ void Foam::slidingInterface::decoupleInterface
             {
                 // Master of retired point; grab its original
                 changed = true;
-//                 Info << "Reinstating retired point: " << oldFace[pointI] << " with old: " << rpm.find(oldFace[pointI])() << endl;
+//                 Pout << "Reinstating retired point: " << oldFace[pointI] << " with old: " << rpm.find(oldFace[pointI])() << endl;
                 newFaceLabels.append(rpm.find(oldFace[pointI])());
             }
             else if (removedPoints.found(oldFace[pointI]))
@@ -339,23 +338,22 @@ void Foam::slidingInterface::decoupleInterface
             }
 
             // Get face zone and its flip
-            label modifiedFaceZone = mesh().faceZones().whichZone(curFaceID);
+            label modifiedFaceZone = mesh.faceZones().whichZone(curFaceID);
             bool modifiedFaceZoneFlip = false;
 
             if (modifiedFaceZone >= 0)
             {
                 modifiedFaceZoneFlip =
-                    mesh().faceZones()[modifiedFaceZone].flipMap()
+                    mesh.faceZones()[modifiedFaceZone].flipMap()
                     [
-                        mesh().faceZones()[modifiedFaceZone]
-                            .whichFace(curFaceID)
+                        mesh.faceZones()[modifiedFaceZone].whichFace(curFaceID)
                     ];
             }
 
             face newFace;
             newFace.transfer(newFaceLabels.shrink());
 
-//             Info << "Modifying slave stick-out face " << curFaceID << " old face: " << oldFace << " new face: " << newFace << endl;
+//             Pout << "Modifying slave stick-out face " << curFaceID << " old face: " << oldFace << " new face: " << newFace << endl;
 
             // Modify the face
             ref.setAction
@@ -367,7 +365,7 @@ void Foam::slidingInterface::decoupleInterface
                     own[curFaceID],         // owner
                     nei[curFaceID],         // neighbour
                     false,                  // face flip
-                    mesh().boundaryMesh().whichPatch(curFaceID), // patch
+                    mesh.boundaryMesh().whichPatch(curFaceID), // patch for face
                     false,                  // remove from zone
                     modifiedFaceZone,       // zone for face
                     modifiedFaceZoneFlip    // face flip in zone
@@ -377,10 +375,10 @@ void Foam::slidingInterface::decoupleInterface
     }
 
     // Bring all slave patch points back to life
-    const pointField& points = mesh().allPoints();
+    const pointField& points = mesh.allPoints();
 
     const labelList& slaveMeshPoints =
-        mesh().faceZones()[slaveFaceZoneID_.index()]().meshPoints();
+        mesh.faceZones()[slaveFaceZoneID_.index()]().meshPoints();
 
     forAll (slaveMeshPoints, pointI)
     {
@@ -391,7 +389,7 @@ void Foam::slidingInterface::decoupleInterface
                 slaveMeshPoints[pointI],             // point ID
                 points[slaveMeshPoints[pointI]],     // point
                 false,                               // remove from zone
-                mesh().pointZones().whichZone(slaveMeshPoints[pointI]), // zone
+                mesh.pointZones().whichZone(slaveMeshPoints[pointI]), // zone
                 true                                // in a cell
             )
         );
@@ -405,7 +403,7 @@ void Foam::slidingInterface::decoupleInterface
 
     if (debug)
     {
-        Info<< "void slidingInterface::coupleInterface("
+        Pout<< "void slidingInterface::coupleInterface("
             << "polyTopoChange& ref) const : "
             << "Finished decoupling sliding interface " << name() << endl;
     }

@@ -34,7 +34,7 @@ Description
 #include "Kmesh.H"
 #include "primitiveFields.H"
 #include "Ek.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,7 +58,7 @@ turbGen::turbGen(const Kmesh& k, const scalar EA, const scalar K0)
 // generate and return a velocity field
 vectorField turbGen::U()
 {
-    scalar pi2=2*physicalConstant::pi;
+    scalar pi2=2*mathematicalConstant::pi;
 
     vectorField s(K.size());
     scalarField rndPhases(K.size());

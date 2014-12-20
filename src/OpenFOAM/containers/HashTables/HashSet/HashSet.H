@@ -30,9 +30,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-// This is here because otherwise wmkdep gets upset -- I don't know why!
-#include "UList.H"
-
 #ifndef HashSet_H
 #define HashSet_H
 

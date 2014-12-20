@@ -23,9 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
-    volField
-
-Description
+    volFieldTest
 
 \*---------------------------------------------------------------------------*/
 
@@ -72,7 +70,29 @@ int main(int argc, char *argv[])
         mesh
     );
 
-    Info<< transform(dimensionedTensor("I", dimless, 0.1*I), U) << endl;
+#   include "createPhi.H"
+
+    //Info<< transform(dimensionedTensor("I", dimless, 0.1*I), U) << endl;
+
+
+    GeometricField<sphericalTensor, fvPatchField, volMesh> st
+    (
+        IOobject
+        (
+            "st",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE
+        ),
+        mesh,
+        dimensioned<sphericalTensor>("st", dimless, sphericalTensor::I),
+        zeroGradientFvPatchSphericalTensorField::typeName
+    );
+
+    //Info<< fvc::div(st) << endl;
+
+    solve(fvm::ddt(st) + fvm::div(phi, st) - fvm::laplacian(st));
 
     return(0);
 }

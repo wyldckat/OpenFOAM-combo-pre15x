@@ -218,7 +218,11 @@ tmp<volScalarField> guldersEGR::operator()() const
             dimensionedScalar
             (
                 hhuCombustionThermo_.lookup("stoichiometricAirFuelMassRatio")
-            )/(1.0/hhuCombustionThermo_.composition().Y("ft") - 1.0),
+            )/
+            (
+                scalar(1)/hhuCombustionThermo_.composition().Y("ft")
+              - scalar(1)
+            ),
             hhuCombustionThermo_.composition().Y("egr")
         );
     }

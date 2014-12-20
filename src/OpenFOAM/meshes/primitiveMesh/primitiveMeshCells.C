@@ -33,6 +33,75 @@ namespace Foam
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+void primitiveMesh::calcCells
+(
+    cellList& cellFaceAddr,
+    const unallocLabelList& own,
+    const unallocLabelList& nei,
+    const label inNCells
+)
+{
+    label nCells = inNCells;
+
+    if (nCells == -1)
+    {
+        nCells = labelMin;
+
+        forAll(own, faceI)
+        {
+            nCells = max(nCells, own[faceI]);
+        }
+        nCells++;
+    }
+
+    // 1. Count number of faces per cell
+
+    labelList ncf(nCells, 0);
+
+    forAll (own, faceI)
+    {
+        ncf[own[faceI]]++;
+    }
+
+    forAll (nei, faceI)
+    {
+        if (nei[faceI] >= 0)
+        {
+            ncf[nei[faceI]]++;
+        }
+    }
+
+    // Create the storage
+    cellFaceAddr.setSize(ncf.size());
+
+
+    // 2. Size and fill cellFaceAddr
+
+    forAll (cellFaceAddr, cellI)
+    {
+        cellFaceAddr[cellI].setSize(ncf[cellI]);
+    }
+    ncf = 0;
+
+    forAll (own, faceI)
+    {
+        label cellI = own[faceI];
+
+        cellFaceAddr[cellI][ncf[cellI]++] = faceI;
+    }
+
+    forAll (nei, faceI)
+    {
+        label cellI = nei[faceI];
+
+        if (cellI >= 0)
+        {
+            cellFaceAddr[cellI][ncf[cellI]++] = faceI;
+        }
+    }
+}
+
+
 void primitiveMesh::calcCells() const
 {
     // Loop through faceCells and mark up neighbours
@@ -53,49 +122,17 @@ void primitiveMesh::calcCells() const
     }
     else
     {
-        // 1. Count number of faces per cell
-
-        labelList ncf(nCells(), 0);
-
-        const labelList& own = faceOwner();
-        const labelList& nei = faceNeighbour();
-
-        forAll (own, faceI)
-        {
-            ncf[own[faceI]]++;
-        }
-
-        forAll (nei, faceI)
-        {
-            ncf[nei[faceI]]++;
-        }
-
         // Create the storage
-        cfPtr_ = new cellList(ncf.size());
+        cfPtr_ = new cellList(nCells());
         cellList& cellFaceAddr = *cfPtr_;
 
-
-        // 2. Size and fill cellFaceAddr
-
-        forAll (cellFaceAddr, cellI)
-        {
-            cellFaceAddr[cellI].setSize(ncf[cellI]);
-        }
-        ncf = 0;
-
-        forAll (own, faceI)
-        {
-            label cellI = own[faceI];
-
-            cellFaceAddr[cellI][ncf[cellI]++] = faceI;
-        }
-
-        forAll (nei, faceI)
-        {
-            label cellI = nei[faceI];
-
-            cellFaceAddr[cellI][ncf[cellI]++] = faceI;
-        }
+        calcCells
+        (
+            cellFaceAddr,
+            faceOwner(),
+            faceNeighbour(),
+            nCells()
+        );
     }
 }
 

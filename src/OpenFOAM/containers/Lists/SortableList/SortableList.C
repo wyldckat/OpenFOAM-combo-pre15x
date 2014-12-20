@@ -93,6 +93,21 @@ SortableList<Type>::SortableList(const label size)
 }
 
 
+// Construct given size and initial value. Sort later on.
+template <class Type>
+SortableList<Type>::SortableList(const label size, const Type& val)
+:
+    List<Type>(size, val),
+    indices_(size)
+{
+    // Fill indices
+    forAll(indices_, elemI)
+    {
+        indices_[elemI] = elemI;
+    }
+}
+
+
 // Construct as copy.
 template <class Type>
 SortableList<Type>::SortableList(const SortableList<Type>& lst)

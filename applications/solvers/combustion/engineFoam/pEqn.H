@@ -50,7 +50,7 @@ else
 }
 
 #include "rhoEqn.H"
-#include "continuityErrs.H"
+#include "compressibleContinuityErrs.H"
 
 U -= rUA*fvc::grad(p);
 U.correctBoundaryConditions();

@@ -67,10 +67,7 @@ class coupledPolyPatch
 
     // Private static data
 
-        //- Whether to use geometric or topological matching
-        static bool geometricMatch_;
-
-        //- Relative tolerance (for geometric matching only). Is factor of
+        //- Relative tolerance (for geometric matching). Is factor of
         //  maximum edge length per face.
         static scalar matchTol_;
 
@@ -142,13 +139,6 @@ protected:
             const label faceI
         );
 
-        //- Get unmodified faces (in old mesh face labels)
-        static boolList getUnmodifiedFaces
-        (
-            const polyTopoChange&,
-            const mapPolyMesh&
-        );
-
         //- Calculate typical tolerance per face. Is currently max distance
         //  from face centre to any of the face vertices.
         static scalarField calcFaceTol
@@ -160,13 +150,13 @@ protected:
 
         //- Get the number of vertices face f needs to be rotated such that
         //  its f[0] point aligns with given anchor (within tol).
-        label getRotation
+        static label getRotation
         (
             const pointField& points,
             const face& f,
             const point& anchor,
             const scalar tol
-        ) const;
+        );
 
 
 public:
@@ -288,20 +278,21 @@ public:
             }
 
 
-        // Morph
+        //- Initialize ordering for primitivePatch. Does not
+        //  refer to *this (except for name() and type() etc.)
+        virtual void initOrder(const primitivePatch&) const = 0;
 
-            //- Set type of matching (geometric or topological)
-            //  geometric: does not handle cyclics.
-            //  topological: needs at least one unmodified face per
-            //  connected area.
-            static void setGeometricMatch(const bool geometricMatch);
-
-            static bool geometricMatch();
-
-            //- For geometric matching: relative tolerance
-            static void setGeometricMatchTol(const scalar matchTol);
-
-            static scalar geometricMatchTol();
+        //- Return new ordering for primitivePatch.
+        //  Ordering is -faceMap: for every face
+        //  index of the new face -rotation:for every new face the clockwise
+        //  shift of the original face. Return false if nothing changes
+        //  (faceMap is identity, rotation is 0), true otherwise.
+        virtual bool order
+        (
+            const primitivePatch&,
+            labelList& faceMap,
+            labelList& rotation
+        ) const = 0;
 };
 
 

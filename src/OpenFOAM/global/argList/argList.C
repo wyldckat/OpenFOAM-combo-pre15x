@@ -207,7 +207,7 @@ argList::argList(int& argc, char**& argv)
 
             if (rootIndex && caseIndex)
             {
-                rootPath_ = fileName(args_[rootIndex]).expand();;
+                rootPath_ = fileName(args_[rootIndex]).expand();
                 globalCase_ = args_[caseIndex];
                 case_ = globalCase_;
 
@@ -272,7 +272,7 @@ argList::argList(int& argc, char**& argv)
                 slave++
             )
             {
-                if (rootIndex && caseIndex && roots.size())
+                if (rootIndex && roots.size())
                 {
                     args_[rootIndex] =  roots[slave-1];
                 }
@@ -281,7 +281,7 @@ argList::argList(int& argc, char**& argv)
                 toSlave << args_ << options_;
             }
 
-            if (rootIndex && caseIndex && roots.size())
+            if (rootIndex && roots.size())
             {
                 args_[rootIndex] = rootPath_;
             }
@@ -387,6 +387,13 @@ argList::argList(int& argc, char**& argv)
     // Set the root and case as environment variables
     setEnv("FOAM_ROOT", rootPath_, true);
     setEnv("FOAM_CASE", globalCase_, true);
+
+    // Switch on signal trapping. We have to wait until after Pstream::init
+    // since this sets up its own ones.
+    sigFpe_.set();
+    sigInt_.set();
+    sigQuit_.set();
+    sigSegv_.set();
 }
 
 

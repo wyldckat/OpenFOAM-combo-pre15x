@@ -175,10 +175,11 @@ public:
         label cutPairToEdge(const label cut0, const label cut1) const;
 
         //- Write cut description to Ostream
-        Ostream& writeCut(Ostream& os, const label cut) const;
+        Ostream& writeCut(Ostream& os, const label cut, const scalar) const;
 
         //- Write cut descriptions to Ostream
-        Ostream& writeCuts(Ostream& os, const labelList& cuts) const;
+        Ostream& writeCuts(Ostream& os, const labelList&, const scalarField&)
+         const;
 };
 
 

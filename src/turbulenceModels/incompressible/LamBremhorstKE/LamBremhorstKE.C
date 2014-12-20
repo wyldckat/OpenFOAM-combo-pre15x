@@ -88,8 +88,8 @@ LamBremhorstKE::LamBremhorstKE
 
     fMu_
     (
-        sqr(1.0 - exp(-0.0165*(sqrt(k_)*y_/nu())))
-       *(1.0 + 20.5/(Rt_ + SMALL))
+        sqr(scalar(1) - exp(-0.0165*(sqrt(k_)*y_/nu())))
+       *(scalar(1) + 20.5/(Rt_ + SMALL))
     ),
 
     nut_(Cmu*fMu_*sqr(k_)/(epsilon_ + epsilonSmall_))
@@ -170,10 +170,11 @@ void LamBremhorstKE::correct()
     Rt_ = sqr(k_)/(nu()*epsilon_);
     volScalarField Ry = sqrt(k_)*y_/nu();
 
-    fMu_ = sqr(1.0 - exp(-0.0165*Ry))*(1.0 + 20.5/(Rt_ + SMALL));
+    fMu_ = sqr(scalar(1) - exp(-0.0165*Ry))
+        *(scalar(1) + 20.5/(Rt_ + SMALL));
 
-    volScalarField f1 = 1.0 + pow(0.05/(fMu_ + SMALL), 3);
-    volScalarField f2 = (1.0 - exp(-sqr(Rt_)));
+    volScalarField f1 = scalar(1) + pow(0.05/(fMu_ + SMALL), 3);
+    volScalarField f2 = scalar(1) - exp(-sqr(Rt_));
 
 
     // Dissipation equation
@@ -210,7 +211,7 @@ void LamBremhorstKE::correct()
 
 
     // Re-calculate viscosity
-    nut_ = Cmu*fMu_*sqr(k_)/(epsilon_ + epsilonSmall_);
+    nut_ = Cmu*fMu_*sqr(k_)/epsilon_;
 }
 
 

@@ -90,26 +90,6 @@ tmp<GeometricField<tensor, PatchField, GeoMesh> > operator*
 // * * * * * * * * * * * * * * * Global functions  * * * * * * * * * * * * * //
 
 template<template<class> class PatchField, class GeoMesh>
-void diag
-(
-    GeometricField<vector, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<vector, PatchField, GeoMesh> > diag
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<vector, PatchField, GeoMesh> > diag
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
 void tr
 (
     GeometricField<scalar, PatchField, GeoMesh>&,

@@ -1,6 +1,4 @@
 EXE_INC = \
-	-Wno-deprecated \
-    -I$(LIB_SRC)/cfdTools/compressible \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude
+    -I$(LIB_SRC)/finiteVolume/lnInclude
 
-EXE_LIBS = 
+EXE_LIBS = -lfiniteVolume

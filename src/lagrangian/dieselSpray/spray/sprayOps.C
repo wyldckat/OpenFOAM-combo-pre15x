@@ -33,7 +33,7 @@ Description
 #include "dispersionModel.H"
 #include "interpolationCellPoint.H"
 #include "processorPolyPatch.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

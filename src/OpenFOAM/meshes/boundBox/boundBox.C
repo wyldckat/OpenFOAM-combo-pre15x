@@ -27,7 +27,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
 #include "boundBox.H"
 #include "PstreamReduceOps.H"
 

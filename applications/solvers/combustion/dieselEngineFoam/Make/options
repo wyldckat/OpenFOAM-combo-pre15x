@@ -1,7 +1,6 @@
 EXE_INC = \
     -I../engineFoam \
-    -I$(LIB_SRC)/cfdTools/compressible \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/turbulenceModels \
     -I$(LIB_SRC)/lagrangian/basic/lnInclude \
     -I$(LIB_SRC)/lagrangian/dieselSpray/lnInclude \
@@ -15,19 +14,13 @@ EXE_INC = \
     -I$(LIB_SRC)/../applications/solvers/combustion/XiFoam \
     -I$(LIB_SRC)/thermophysicalModels/chemistryModel/lnInclude \
     -I$(LIB_SRC)/ODE/lnInclude \
-    -I$(LIB_SRC)/engine/lnInclude \
-    -I$(LIB_SRC)/dynamicMesh/lnInclude \
-    -I$(LIB_SRC)/finiteElement/lnInclude \
-    $(WM_DECOMP_INC)
+    -I$(LIB_SRC)/engine/lnInclude
 
 EXE_LIBS = \
     -lengine \
-    -ldynamicMesh \
-    -lmeshTools \
-    $(WM_DECOMP_LIBS) \
     -lcompressibleTurbulenceModels \
     -lcombustionThermophysicalModels \
-    -lcfdTools \
+    -lfiniteVolume \
     -llagrangian \
     -ldieselSpray \
     -lliquids \

@@ -97,6 +97,7 @@ public:
             const label index
         );
 
+
     // Member Functions
 
         // Access
@@ -141,6 +142,7 @@ public:
                 const scalarField& coeffs,
                 const direction cmpt
             ) const;
+
 
         //- Cyclic coupled interface functions
 

@@ -28,12 +28,17 @@ Class
 Description
     Cyclic plane patch.
 
-    Note: morph patch face ordering comes geometric or topological.
-    Geometric: -halves should be flat planes. -no rotation in patch plane
-    allowed.
-    Topological: needs unmodified faces on both sides to correspond. Also
-    needs at least one per connected patch area (so all patch faces can be
-    visited from an unmodified face)
+    Note: morph patch face ordering uses geometric matching so with the
+    following restrictions:
+        -halves should be flat planes.
+        -no rotation in patch plane
+
+    Uses a featureCos to find the two halves (or should be fully
+    disconnected). Uses coupledPolyPatch::calcFaceTol to calculate
+    tolerance per face which might need tweaking.
+
+    Switch on 'cyclicPolyPatch' debug flag to write .obj files to show
+    the matching.
 
 SourceFiles
     cyclicPolyPatch.C
@@ -48,14 +53,13 @@ SourceFiles
 #include "SubField.H"
 #include "FixedList.H"
 #include "edgeList.H"
+#include "transform.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-class polyTopoChange;
-class mapPolyMesh;
 class patchZones;
 
 /*---------------------------------------------------------------------------*\
@@ -91,38 +95,6 @@ class cyclicPolyPatch
         void calcTransforms();
 
 
-        // Morphing helper functions
-
-            //- Get pairs of unmodified faces (on current mesh)
-            bool getUnmodifiedFacePairs
-            (
-                const polyTopoChange& ref,
-                const mapPolyMesh& map,
-                List<FixedList<label, 2> >&
-            ) const;
-
-            //- Do ordering using geometric matching
-            bool geometricOrder
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&,
-                const patchZones&,
-                const pointField& normals,
-                labelList&,
-                labelList&
-            ) const;
-
-            //- Do ordering using topological matching
-            bool topologicalOrder
-            (
-                const polyTopoChange& ref,
-                const mapPolyMesh& map,
-                const patchZones& ppZones,
-                labelList& faceMap,
-                labelList& rotation
-            ) const;
-
-
 protected:
 
     // Protected Member functions
@@ -143,7 +115,7 @@ protected:
         virtual void initUpdateTopology();
 
         //- Update of the patch topology
-        virtual void updateTopology();
+        virtual void updateMesh();
 
 public:
 
@@ -300,28 +272,22 @@ public:
             }
         }
 
-        // Morph
 
-            //- Initialize ordering (on new mesh)
-            //  Gets -changes (in old mesh ordering)
-            //  -map from old to new mesh
-            virtual void initOrder
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&
-            ) const;
+        //- Initialize ordering for primitivePatch. Does not
+        //  refer to *this (except for name() and type() etc.)
+        virtual void initOrder(const primitivePatch&) const;
 
-            //- Morph:Return new ordering. Ordering is -faceMap: for every face
-            //  index of the new face -rotation:for every new face the clockwise
-            //  shift of the original face. Return false if nothing changes
-            //  (faceMap is identity, rotation is 0), true otherwise.
-            virtual bool order
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&,
-                labelList& faceMap,
-                labelList& rotation
-            ) const;
+        //- Return new ordering for primitivePatch.
+        //  Ordering is -faceMap: for every face
+        //  index of the new face -rotation:for every new face the clockwise
+        //  shift of the original face. Return false if nothing changes
+        //  (faceMap is identity, rotation is 0), true otherwise.
+        virtual bool order
+        (
+            const primitivePatch&,
+            labelList& faceMap,
+            labelList& rotation
+        ) const;
 };
 
 

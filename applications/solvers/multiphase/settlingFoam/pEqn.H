@@ -18,10 +18,8 @@ for(int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
         fvm::laplacian(rUAf, p) == fvc::ddt(rho) + fvc::div(phi)
     );
 
-    fvScalarMatrix::reference pRef =
-        pEqn.setReference(pRefCell, pRefValue);
+    pEqn.setReference(pRefCell, pRefValue);
     pEqn.solve();
-    pEqn.unsetReference(pRef);
 
     if (nonOrth == nNonOrthCorr)
     {
@@ -30,7 +28,7 @@ for(int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
 }
 
 #include "rhoEqn.H"
-#include "continuityErrs.H"
+#include "compressibleContinuityErrs.H"
 
 U += rUA*fvc::reconstruct((phi - phiU)/rUAf);
 U.correctBoundaryConditions();

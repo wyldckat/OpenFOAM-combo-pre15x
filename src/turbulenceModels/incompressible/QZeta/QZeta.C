@@ -47,11 +47,13 @@ tmp<volScalarField> QZeta::fMu() const
 
     if (Anisotropic)
     {
-        return exp((-2.5 + Rt/20.0)/pow(1.0 + Rt/130.0, 3.0));
+        return exp((-scalar(2.5) + Rt/20.0)/pow(scalar(1) + Rt/130.0, 3.0));
     }
     else
     {
-        return exp(-6.0/sqr(1.0 + Rt/50.0))*(1.0 + 3.0*exp(-Rt/10.0));
+        return 
+            exp(-6.0/sqr(scalar(1) + Rt/50.0))
+           *(scalar(1) + 3.0*exp(-Rt/10.0));
     }
 }
 
@@ -59,7 +61,7 @@ tmp<volScalarField> QZeta::fMu() const
 tmp<volScalarField> QZeta::f2() const
 {
     volScalarField Rt = q_*k_/(2.0*nu()*zeta_);
-    return 1.0 - 0.3*exp(-sqr(Rt));
+    return scalar(1) - 0.3*exp(-sqr(Rt));
 }
 
 
@@ -251,7 +253,7 @@ void QZeta::correct()
 
 
     // Re-calculate viscosity
-    nut_ = Cmu*fMu()*sqr(k_)/(epsilon_ + epsilonSmall_);
+    nut_ = Cmu*fMu()*sqr(k_)/epsilon_;
 }
 
 

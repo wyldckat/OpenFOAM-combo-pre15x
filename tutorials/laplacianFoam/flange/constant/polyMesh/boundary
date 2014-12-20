@@ -1,61 +1,60 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.3                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FoamX Mesh Description File
 
 FoamFile
 {
-    version         2.0;
-    format          ascii;
+    version 2.0;
+    format ascii;
 
-    root            "";
-    case            "";
-    instance        "";
-    local           "";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.3/tutorials/laplacianFoam";
+    case "flange";
+    instance ""constant"";
+    local "polyMesh";
 
-    class           polyBoundaryMesh;
-    object          boundary;
+    class polyBoundaryMesh;
+    object boundary;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 4
 (
-	patch1
-    {
-        type            patch;
-        physicalType    adiabatic;
-        startFace       15316;
-        nFaces          2440;
-    }
+patch1
+{
+    type patch;
+    physicalType adiabatic;
+    nFaces 2440;
+    startFace 15316;
+}
 
-    patch2
-    {
-        type            patch;
-        physicalType    fixedTemp;
-        startFace       17756;
-        nFaces          348;
-    }
+patch2
+{
+    type patch;
+    physicalType fixedTemp;
+    nFaces 348;
+    startFace 17756;
+}
 
-    patch3
-    {
-        type            patch;
-        physicalType    adiabatic;
-        startFace       18104;
-        nFaces          96;
-    }
+patch3
+{
+    type patch;
+    physicalType adiabatic;
+    nFaces 96;
+    startFace 18104;
+}
 
-    patch4
-    {
-        type            patch;
-        physicalType    fixedTemp;
-        startFace       18200;
-        nFaces          384;
-    }
+patch4
+{
+    type patch;
+    physicalType fixedTemp;
+    nFaces 384;
+    startFace 18200;
+}
 )
 
 // ************************************************************************* //

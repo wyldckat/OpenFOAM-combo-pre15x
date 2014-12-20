@@ -22,13 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "slidingInterface.H"
 #include "polyMesh.H"
 #include "mapPolyMesh.H"
+#include "polyTopoChanger.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -36,7 +35,7 @@ void Foam::slidingInterface::calcAttachedAddressing() const
 {
     if (debug)
     {
-        Info<< "void Foam::slidingInterface::calcAttachedAddressing() const "
+        Pout<< "void Foam::slidingInterface::calcAttachedAddressing() const "
             << " for object " << name() << " : "
             << "Calculating zone face-cell addressing."
             << endl;
@@ -47,9 +46,11 @@ void Foam::slidingInterface::calcAttachedAddressing() const
         // Clear existing addressing
         clearAttachedAddressing();
 
-        const labelList& own = mesh().allOwner();
-        const labelList& nei = mesh().allNeighbour();
-        const faceZoneMesh& faceZones = mesh().faceZones();
+        const polyMesh& mesh = topoChanger().mesh();
+
+        const labelList& own = mesh.allOwner();
+        const labelList& nei = mesh.allNeighbour();
+        const faceZoneMesh& faceZones = mesh.faceZones();
 
         // Master side
 
@@ -57,7 +58,7 @@ void Foam::slidingInterface::calcAttachedAddressing() const
             faceZones[masterFaceZoneID_.index()]();
 
         const labelList& masterPatchFaces =
-            faceZones[masterFaceZoneID_.index()].addressing();
+            faceZones[masterFaceZoneID_.index()];
 
         const boolList& masterFlip =
             faceZones[masterFaceZoneID_.index()].flipMap();
@@ -83,7 +84,7 @@ void Foam::slidingInterface::calcAttachedAddressing() const
             faceZones[slaveFaceZoneID_.index()]();
 
         const labelList& slavePatchFaces =
-            faceZones[slaveFaceZoneID_.index()].addressing();
+            faceZones[slaveFaceZoneID_.index()];
 
         const boolList& slaveFlip =
             faceZones[slaveFaceZoneID_.index()].flipMap();
@@ -112,7 +113,7 @@ void Foam::slidingInterface::calcAttachedAddressing() const
                 {
                     if (mfc[faceI] < 0)
                     {
-                        Info << "No cell next to master patch face " << faceI
+                        Pout << "No cell next to master patch face " << faceI
                             << ".  Global face no: " << mfc[faceI]
                             << " own: " << own[masterPatchFaces[faceI]]
                             << " nei: " << nei[masterPatchFaces[faceI]]
@@ -124,7 +125,7 @@ void Foam::slidingInterface::calcAttachedAddressing() const
                 {
                     if (sfc[faceI] < 0)
                     {
-                        Info << "No cell next to slave patch face " << faceI
+                        Pout << "No cell next to slave patch face " << faceI
                             << ".  Global face no: " << sfc[faceI]
                             << " own: " << own[slavePatchFaces[faceI]]
                             << " nei: " << nei[slavePatchFaces[faceI]]
@@ -143,7 +144,7 @@ void Foam::slidingInterface::calcAttachedAddressing() const
         }
 
         // Calculate stick-out faces
-        const labelListList& pointFaces = mesh().pointFaces();
+        const labelListList& pointFaces = mesh.pointFaces();
 
         // Master side
         labelHashSet masterStickOutFaceMap
@@ -232,7 +233,7 @@ void Foam::slidingInterface::calcAttachedAddressing() const
 
     if (debug)
     {
-        Info<< "void Foam::slidingInterface::calcAttachedAddressing() const "
+        Pout<< "void Foam::slidingInterface::calcAttachedAddressing() const "
             << " for object " << name() << " : "
             << "Finished calculating zone face-cell addressing."
             << endl;
@@ -320,7 +321,7 @@ void Foam::slidingInterface::renumberAttachedAddressing
     {
         newMsof[faceI] = reverseFaceMap[msof[faceI]];
     }
-//     Info << "newMsof: " << newMsof << endl;
+//     Pout << "newMsof: " << newMsof << endl;
     // Slave side
     const labelList& ssof = slaveStickOutFaces();
 
@@ -331,7 +332,7 @@ void Foam::slidingInterface::renumberAttachedAddressing
     {
         newSsof[faceI] = reverseFaceMap[ssof[faceI]];
     }
-//     Info << "newSsof: " << newSsof << endl;
+//     Pout << "newSsof: " << newSsof << endl;
     if (debug)
     {
         // Check if all the mapped cells are live

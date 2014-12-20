@@ -22,11 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "cell.H"
 #include "pyramidPointFaceRef.H"
@@ -99,6 +95,25 @@ labelList cell::labels(const unallocFaceList& f) const
 
     // reset the size of the list
     p.setSize(maxVert);
+
+    return p;
+}
+
+
+pointField cell::points
+(
+    const unallocFaceList& f,
+    const pointField& meshPoints
+) const
+{
+    labelList pointLabels = labels(f);
+
+    pointField p(pointLabels.size());
+
+    forAll(p, i)
+    {
+        p[i] = meshPoints[pointLabels[i]];
+    }
 
     return p;
 }

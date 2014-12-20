@@ -247,6 +247,16 @@ void PtrList<T>::clear()
 }
 
 
+// Transfer the contents of the argument List into this List
+// and anull the argument list
+template<class T>
+void PtrList<T>::transfer(PtrList<T>& a)
+{
+    ptrs_.transfer(a.ptrs_);
+    a.nextFree_ = 0;
+}
+
+
 template<class T>
 void PtrList<T>::reorder(const UList<label>& oldToNew)
 {

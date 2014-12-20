@@ -60,6 +60,12 @@ Ostream& operator<<
     Ostream&,
     const DynamicList<T, SizeInc, SizeMult, SizeDiv>&
 );
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+Istream& operator>>
+(
+    Istream&,
+    DynamicList<T, SizeInc, SizeMult, SizeDiv>&
+);
 
 
 /*---------------------------------------------------------------------------*\
@@ -86,6 +92,12 @@ public:
 
         //- Construct given size
         explicit inline DynamicList(const label);
+
+        //- Construct from UList. nextFree_ set to size().
+        explicit inline DynamicList(const UList<T>&);
+
+        //- Construct from Istream. nextFree_ set to size().
+        explicit DynamicList(Istream&);
 
 
     // Member Functions
@@ -115,6 +127,9 @@ public:
         //- Append an element at the end of the list
         inline void append(const T& e);
 
+        //- Return and remove the top element
+        inline T remove();
+
         //- Return non-const access to an element,
         //  resizing the list if necessary
         inline T& operator()(const label);
@@ -123,13 +138,20 @@ public:
         inline void operator=(const T&);
 
 
-    // Ostream operator
+    // IOstream operators
 
         // Write DynamicList to Ostream.
         friend Ostream& operator<< <T, SizeInc, SizeMult, SizeDiv>
         (
             Ostream&,
             const DynamicList<T, SizeInc, SizeMult, SizeDiv>&
+        );
+
+        //- Read from Istream, discarding contents of existing DynamicList.
+        friend Istream& operator>> <T, SizeInc, SizeMult, SizeDiv>
+        (
+            Istream&,
+            DynamicList<T, SizeInc, SizeMult, SizeDiv>&
         );
 };
 

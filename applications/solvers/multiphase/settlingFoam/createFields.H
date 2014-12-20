@@ -111,7 +111,7 @@
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        (1.0 - alpha)*rhoc + alpha*rhod
+        (scalar(1) - alpha)*rhoc + alpha*rhod
     );
 
     volScalarField Alpha
@@ -128,7 +128,7 @@
         alpha.boundaryField().types()
     );
 
-#   include "createPhi.H"
+#   include "compressibleCreatePhi.H"
 
 
     label pRefCell = 0;

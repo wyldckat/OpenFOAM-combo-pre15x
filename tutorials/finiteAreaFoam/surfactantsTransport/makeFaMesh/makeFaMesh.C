@@ -292,7 +292,12 @@ int main(int argc, char *argv[])
 
     // Writing faMesh
     Info << "Write finite area mesh ... ";
-    areaMesh.write();
+    areaMesh.write
+    (
+        runTime.writeFormat(),
+        runTime.writeVersion(),
+        runTime.writeCompression()
+    );
 
     Info << "Done" << endl;
 

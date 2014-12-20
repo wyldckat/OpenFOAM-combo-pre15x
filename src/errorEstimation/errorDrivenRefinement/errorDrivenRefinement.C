@@ -28,7 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "errorDrivenRefinement.H"
-#include "polyMeshMorphEngine.H"
+#include "polyTopoChanger.H"
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
@@ -67,11 +67,11 @@ Foam::errorDrivenRefinement::errorDrivenRefinement
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyMeshMorphEngine& mme
+    const polyTopoChanger& mme
 )
 :
     polyMeshModifier(name, index, mme, false),
-    refinementEngine_(morphEngine().mesh(), true),
+    refinementEngine_(topoChanger().mesh(), true),
     errorField_(dict.lookup("errorField"))
 {}
 
@@ -87,7 +87,7 @@ Foam::errorDrivenRefinement::~errorDrivenRefinement()
 
 bool Foam::errorDrivenRefinement::changeTopology() const
 {
-    const Time& runTime = morphEngine().mesh().time();
+    const Time& runTime = topoChanger().mesh().time();
 
     if (runTime.foundObject<volVectorField>(errorField_))
     {
@@ -124,7 +124,7 @@ void Foam::errorDrivenRefinement::setRefinement(polyTopoChange& ref) const
             << endl;
     }
 
-    const polyMesh& mesh = morphEngine().mesh();
+    const polyMesh& mesh = topoChanger().mesh();
 
     const Time& runTime = mesh.time();
 
@@ -246,15 +246,15 @@ void Foam::errorDrivenRefinement::modifyMotionPoints
 }
 
 
-void Foam::errorDrivenRefinement::updateTopology(const mapPolyMesh& morphMap)
+void Foam::errorDrivenRefinement::updateMesh(const mapPolyMesh& morphMap)
 {
     // Mesh has changed topologically. Update local topological data
     if (debug)
     {
-        Info<< "errorDrivenRefinement::updateTopology"
+        Info<< "errorDrivenRefinement::updateMesh"
             << "(const mapPolyMesh& morphMap)" << endl;
     }
-    refinementEngine_.updateTopology(morphMap);
+    refinementEngine_.updateMesh(morphMap);
 }
 
 

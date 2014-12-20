@@ -61,6 +61,7 @@ protected:
 
     // Protected data
 
+        word name_;
         dictionary viscosityProperties_;
 
         const volVectorField& U_;
@@ -90,11 +91,12 @@ public:
             viscosityModel,
             dictionary,
             (
+                const word& name,
                 const dictionary& viscosityProperties,
                 const volVectorField& U,
                 const surfaceScalarField& phi
             ),
-            (viscosityProperties, U, phi)
+            (name, viscosityProperties, U, phi)
         );
 
 
@@ -103,6 +105,7 @@ public:
         //- Return a reference to the selected viscosity model
         static autoPtr<viscosityModel> New
         (
+            const word& name,
             const dictionary& viscosityProperties,
             const volVectorField& U,
             const surfaceScalarField& phi
@@ -114,6 +117,7 @@ public:
         //- Construct from components
         viscosityModel
         (
+            const word& name,
             const dictionary& viscosityProperties,
             const volVectorField& U,
             const surfaceScalarField& phi

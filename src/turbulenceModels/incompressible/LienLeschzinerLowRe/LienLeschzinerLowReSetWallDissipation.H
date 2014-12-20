@@ -1,39 +1,29 @@
 // Set the dissipation in the near-wall cell to the value prescribed by the
 // Lien-Leschziner low-Re model with Wolfstein length-scale prescription
 
-    volScalarField boundaryCentral
-    (
-        IOobject
-        (
-            "boundaryCentral",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("zero", dimless/dimTime, 0.0)
-    );
-
-    volScalarField boundarySource
-    (
-        IOobject
-        (
-            "boundarySource",
-            runTime_.timeName(),
-            mesh_,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        mesh_,
-        dimensionedScalar("zero", epsilon_.dimensions()/dimTime, 0.0)
-    );
-
 {
+    labelList cellBoundaryFaceCount(epsilon_.size(), 0);
+
     //- use constant Cmu for epsilon in the near-wall cell
     scalar Cmu75 = pow(Cmu.value(), 0.75);
 
     const fvPatchList& patches = mesh_.boundary();
+
+    //- Initialise the near-wall epsilon field to zero
+    forAll(patches, patchi)
+    {
+        const fvPatch& curPatch = patches[patchi];
+
+        if (isType<wallFvPatch>(curPatch))
+        {
+            forAll(curPatch, facei)
+            {
+                label faceCelli = curPatch.faceCells()[facei];
+
+                epsilon_[faceCelli] = 0.0;
+            }
+        }
+    }
 
     forAll(patches, patchi)
     {
@@ -45,12 +35,15 @@
             {
                 label faceCelli = curPatch.faceCells()[facei];
 
-                boundaryCentral[faceCelli] += 1.0;
-                boundarySource[faceCelli] +=
-                    1.0e+10
-                    *Cmu75*pow(k_[faceCelli], 1.5)
+                // For corner cells (with two boundary or more faces),
+                // epsilon in the near-wall cell are calculated as an average
+
+                cellBoundaryFaceCount[faceCelli]++;
+
+                epsilon_[faceCelli] +=
+                     Cmu75*pow(k_[faceCelli], 1.5)
                     /(
-                         kappa_.value()*y_[faceCelli]
+                         kappa_*y_[faceCelli]
                          *(1.0 - exp(-Aepsilon.value()*yStar_[faceCelli]))
                      )
                     *exp(-Amu.value()*sqr(yStar_[faceCelli]));
@@ -61,15 +54,18 @@
 
     // perform the averaging
 
-    scalarField& bcInt = boundaryCentral.internalField();
-
-    forAll (bcInt, celli)
+    forAll(patches, patchi)
     {
-        if (boundaryCentral[celli] > 0.0)
-        {
-            boundarySource[celli] /= boundaryCentral[celli];
+        const fvPatch& curPatch = patches[patchi];
 
-            boundaryCentral[celli] = 1.0e+10;
+        if (isType<wallFvPatch>(curPatch))
+        {
+            forAll(curPatch, facei)
+            {
+                label faceCelli = curPatch.faceCells()[facei];
+
+                epsilon_[faceCelli] /= cellBoundaryFaceCount[faceCelli];
+            }
         }
     }
 }

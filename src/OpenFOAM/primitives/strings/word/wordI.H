@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include <cctype>
@@ -33,6 +31,24 @@ Description
 namespace Foam
 {
 
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+inline void word::stripInvalid()
+{
+    if (debug && string::stripInvalid<word>(*this))
+    {
+        std::cerr
+            << "word::stripInvalid() called for string "
+            << this->c_str() << std::endl;
+
+        if (debug > 1)
+        {
+            std::abort();
+        }
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 inline word::word(const word& w)
@@ -40,10 +56,35 @@ inline word::word(const word& w)
     string(w)
 {}
 
+
 inline word::word()
 :
     string()
 {}
+
+
+inline word::word(const string& str)
+:
+    string(str)
+{
+    stripInvalid();
+}
+
+
+inline word::word(const std::string& stdStr)
+:
+    string(stdStr)
+{
+    stripInvalid();
+}
+
+
+inline word::word(const char* chars)
+:
+    string(chars)
+{
+    stripInvalid();
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -52,13 +93,42 @@ inline bool word::valid(char c)
 {
     return
     (
-        !isspace(c)
+          !isspace(c)
      && c != '"'
      && c != '/'
      && c != ';'
      && c != '{'
      && c != '}'
     );
+}
+
+
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+inline void word::operator=(const word& q)
+{
+    string::operator=(q);
+}
+
+
+inline void word::operator=(const string& q)
+{
+    string::operator=(q);
+    stripInvalid();
+}
+
+
+inline void word::operator=(const std::string& q)
+{
+    string::operator=(q);
+    stripInvalid();
+}
+
+
+inline void word::operator=(const char* q)
+{
+    string::operator=(q);
+    stripInvalid();
 }
 
 

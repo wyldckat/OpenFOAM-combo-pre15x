@@ -60,6 +60,7 @@ class SpalartAllmaras
         dimensionedScalar Cb1_;
         dimensionedScalar Cb2_;
         dimensionedScalar Cv1_;
+        dimensionedScalar Cv2_;
         dimensionedScalar CDES_;
         dimensionedScalar ck_;
         dimensionedScalar kappa_;
@@ -72,6 +73,7 @@ class SpalartAllmaras
 
         tmp<volScalarField> fv1() const;
         tmp<volScalarField> fv2() const;
+        tmp<volScalarField> fv3() const;
         tmp<volScalarField> fw(const volScalarField& Stilda) const;
 
         // Disallow default bitwise copy construct and assignment

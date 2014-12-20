@@ -54,8 +54,8 @@ class PrandtlDelta
     // Private data
 
         autoPtr<LESdelta> geometricDelta_;
-        dimensionedScalar kappa_;
-        dimensionedScalar Cdelta_;
+        scalar kappa_;
+        scalar Cdelta_;
 
 
     // Private Member Functions

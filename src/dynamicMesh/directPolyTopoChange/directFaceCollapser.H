@@ -67,6 +67,7 @@ namespace Foam
 // Class forward declarations
 class polyMesh;
 class directPolyTopoChange;
+class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
                            Class directFaceCollapser Declaration
@@ -143,6 +144,12 @@ public:
                 const labelList& fpB,
                 directPolyTopoChange&
             ) const;
+
+            //- Update stored quantities for new mesh labels.
+            void updateMesh(const mapPolyMesh&)
+            {
+                notImplemented("updateMesh(const mapPolyMesh&)");
+            }
 };
 
 

@@ -111,10 +111,8 @@ int main(int argc, char *argv[])
                         fvm::laplacian(rUA, p) == fvc::div(phi)
                     );
 
-                    fvScalarMatrix::reference pRef =
-                        pEqn.setReference(pRefCell, pRefValue);
+                    pEqn.setReference(pRefCell, pRefValue);
                     pEqn.solve();
-                    pEqn.unsetReference(pRef);
 
                     if (nonOrth == nNonOrthCorr)
                     {

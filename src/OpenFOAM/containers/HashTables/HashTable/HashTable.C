@@ -112,7 +112,7 @@ bool HashTable<T, Key, Hash>::found(const Key& key) const
 {
     if (tableSize_)
     {
-        label ii = hash_(key, tableSize_);
+        label ii = Hash()(key, tableSize_);
 
         for (hashedEntry* n=table_[ii]; n; n=n->next_)
         {
@@ -140,7 +140,7 @@ typename HashTable<T, Key, Hash>::iterator HashTable<T, Key, Hash>::find
 {
     if (tableSize_)
     {
-        label ii = hash_(key, tableSize_);
+        label ii = Hash()(key, tableSize_);
         hashedEntry* prev = 0;
 
         for (hashedEntry* n=table_[ii]; n; n=n->next_)
@@ -170,7 +170,7 @@ typename HashTable<T, Key, Hash>::const_iterator HashTable<T, Key, Hash>::find
 {
     if (tableSize_)
     {
-        label ii = hash_(key, tableSize_);
+        label ii = Hash()(key, tableSize_);
         hashedEntry* prev = 0;
 
         for (hashedEntry* n=table_[ii]; n; n=n->next_)
@@ -210,14 +210,14 @@ List<Key> HashTable<T, Key, Hash>::toc() const
 
 
 template<class T, class Key, class Hash>
-bool HashTable<T, Key, Hash>::insert(const Key& key, T newEntry)
+bool HashTable<T, Key, Hash>::insert(const Key& key, const T& newEntry)
 {
     if (tableSize_ == 0)
     {
         resize(2);
     }
 
-    label ii = hash_(key, tableSize_);
+    label ii = Hash()(key, tableSize_);
 
     for (hashedEntry* n=table_[ii]; n; n=n->next_)
     {
@@ -390,8 +390,6 @@ void HashTable<T, Key, Hash>::transfer(HashTable<T, Key, Hash>& ht)
 
     nElmts_ = ht.nElmts_;
     ht.nElmts_ = 0;
-
-    hash_ = ht.hash_;
 }
 
 

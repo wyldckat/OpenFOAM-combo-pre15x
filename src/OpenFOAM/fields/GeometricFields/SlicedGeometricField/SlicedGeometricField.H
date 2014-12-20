@@ -68,7 +68,7 @@ class SlicedGeometricField
 public:
 
     typedef typename GeoMesh::Mesh Mesh;
-    typedef typename GeoMesh::BoundaryMesh BoundaryMesh;
+    typedef typename Mesh::BoundaryMesh BoundaryMesh;
 
 
 private:

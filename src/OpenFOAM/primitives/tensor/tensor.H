@@ -60,7 +60,6 @@ vector eigenValues(const tensor& t);
 tensor eigenVectors(const tensor& t);
 tensor hinv(const tensor& t);
 
-
 //- Allow binary writing for arrays of tensors
 inline bool writeBinary(const tensor*)
 {
@@ -74,7 +73,7 @@ inline bool writeBinary(const tensor*)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#include "transform.H"
+#include "sphericalTensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Class used to create tmp types : tmp<field>.
-
 \*---------------------------------------------------------------------------*/
 
 #include "error.H"
@@ -108,6 +105,13 @@ inline bool tmp<T>::isTmp() const
 }
 
 
+template<class T>
+inline bool tmp<T>::valid() const
+{
+    return (!isTmp_ || (isTmp_ && ptr_));
+}
+
+
 // Return tmp pointer for reuse
 template<class T>
 inline T* tmp<T>::ptr() const
@@ -141,15 +145,8 @@ inline T* tmp<T>::ptr() const
 template<class T>
 inline void tmp<T>::clear()
 {
-    if (isTmp_ && ptr_)
+    if (isTmp_ && ptr_) // && ptr_->okToDelete())
     {
-        if (!ptr_->okToDelete())
-        {
-            FatalErrorIn("tmp<T>::clear()")
-                << "attempt to clear a copy of a temporary"
-                << abort(FatalError);
-        }
-
         delete ptr_;
         ptr_ = NULL;
     }

@@ -2,7 +2,7 @@
 
 currDir=`pwd`
 application=`basename $currDir`
-case="bubbleColumn bed"
+cases="bubbleColumn bed"
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/RunFunctions

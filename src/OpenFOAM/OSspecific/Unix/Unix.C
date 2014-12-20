@@ -170,7 +170,15 @@ bool Foam::chDir(const fileName& dir)
 
 fileName Foam::dotFoam(const fileName& name)
 {
-    fileName dotDir = fileName(".OpenFOAM-") + FOAMversion;
+    fileName dotDir;
+    if (env("FOAM_DOT_DIR"))
+    {
+        dotDir = fileName(getEnv("FOAM_DOT_DIR"));
+    }
+    else
+    {
+        dotDir = fileName(".OpenFOAM-") + FOAMversion;
+    }
 
     fileName localDotFoamFileName = home()/dotDir/name;
 

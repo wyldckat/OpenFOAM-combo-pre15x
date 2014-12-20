@@ -136,8 +136,8 @@ public:
             return nProcs_;
         }
 
-        //- Decompose mesh
-        void decomposeMesh();
+        //- Decompose mesh. Optionally remove zero-sized patches.
+        void decomposeMesh(const bool filterEmptyPatches);
 
         //- Write decomposition
         bool writeDecomposition();

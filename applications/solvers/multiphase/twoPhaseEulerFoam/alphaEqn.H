@@ -35,7 +35,7 @@
         alphaEqn.relax();
         alphaEqn.solve();
 
-        beta = 1.0 - alpha;
+        beta = scalar(1) - alpha;
 
         Info<< "Dispersed phase volume fraction = "
             << alpha.weightedAverage(mesh.V()).value()

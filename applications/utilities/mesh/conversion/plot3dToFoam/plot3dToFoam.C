@@ -116,10 +116,11 @@ int main(int argc, char *argv[])
 
     forAll (blocks, blockI)
     {
-        Info << "block " << blockI << " is a ";
+        Info << "block " << blockI << ":" << nl;
         blocks[blockI].readPoints(readBlank, plot3dFile);
         sumPoints += blocks[blockI].nBlockPoints();
         nMeshCells += blocks[blockI].nBlockCells();
+        Info<< nl;
     }
 
     pointField points(sumPoints);
@@ -182,7 +183,8 @@ int main(int argc, char *argv[])
                     ];
             }
 
-            cellShapes[nCreatedCells] = cellShape(hex, cellPoints);
+            // Do automatic collapse from hex.
+            cellShapes[nCreatedCells] = cellShape(hex, cellPoints, true);
 
             nCreatedCells++;
         }

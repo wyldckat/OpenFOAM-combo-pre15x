@@ -28,11 +28,11 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "layerAdditionRemoval.H"
-#include "polyMeshMorphEngine.H"
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
 #include "oppositeFace.H"
+#include "polyTopoChanger.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -53,22 +53,25 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
     //     as necessary.  Once the face is adjusted, record the
     //     addressing between the master and slave vertex layer.
 
-    const labelList& mc =
-        mesh().faceZones()[faceZoneID_.index()].masterCells();
-    const labelList& mf =
-        mesh().faceZones()[faceZoneID_.index()].addressing();
-    const boolList& mfFlip =
-        mesh().faceZones()[faceZoneID_.index()].flipMap();
+    const polyMesh& mesh = topoChanger().mesh();
 
-    const faceList& faces = mesh().faces();
-    const cellList& cells = mesh().cells();
+    const labelList& mc =
+        mesh.faceZones()[faceZoneID_.index()].masterCells();
+
+    const labelList& mf = mesh.faceZones()[faceZoneID_.index()];
+
+    const boolList& mfFlip =
+        mesh.faceZones()[faceZoneID_.index()].flipMap();
+
+    const faceList& faces = mesh.faces();
+    const cellList& cells = mesh.cells();
 
     // Grab the local faces from the master zone
     const faceList& mlf =
-        mesh().faceZones()[faceZoneID_.index()]().localFaces();
+        mesh.faceZones()[faceZoneID_.index()]().localFaces();
 
     const labelList& meshPoints =
-        mesh().faceZones()[faceZoneID_.index()]().meshPoints();
+        mesh.faceZones()[faceZoneID_.index()]().meshPoints();
 
     // Create a list of points to collapse for every point of
     // the master patch
@@ -86,8 +89,8 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
 
     facesPairingPtr_ = new labelList(mf.size(), -1);
     labelList& ftc = *facesPairingPtr_;
-//     Info << "meshPoints: " << meshPoints << nl
-//          << "localPoints: " << mesh().faceZones()[faceZoneID_.index()]().localPoints() << endl;
+//     Pout << "meshPoints: " << meshPoints << nl
+//          << "localPoints: " << mesh.faceZones()[faceZoneID_.index()]().localPoints() << endl;
 
     // For all faces, create the mapping
     label nPointErrors = 0;
@@ -115,8 +118,8 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
             continue;
         }
 
-// Info<< "curMasterFace: " << faces[mf[faceI]] << nl
-//     << "cell shape: " << mesh().cellShapes()[mc[faceI]] << nl
+// Pout<< "curMasterFace: " << faces[mf[faceI]] << nl
+//     << "cell shape: " << mesh.cellShapes()[mc[faceI]] << nl
 //     << "curLocalFace: " << curLocalFace << nl
 //     << "lidFace: " << lidFace
 //     << " master index: " << lidFace.masterIndex()
@@ -141,7 +144,7 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
                 if (ptc[clp] != lidFace[pointI])
                 {
                     nPointErrors++;
-//                     Info<< "Topological error in cell layer pairing.  "
+//                     Pout<< "Topological error in cell layer pairing.  "
 //                         << "This mesh is either topologically incorrect "
 //                         << "or the master afce layer is not defined "
 //                         << "consistently.  Please check the "
@@ -151,7 +154,7 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
                 }
             }
         }
-//         Info << "ptc: " << ptc << endl;
+//         Pout << "ptc: " << ptc << endl;
     }
 
     if (nPointErrors > 0 || nFaceErrors > 0)
@@ -206,14 +209,14 @@ void Foam::layerAdditionRemoval::modifyMotionPoints
 {
     if (debug)
     {
-        Info<< "void layerAdditionRemoval::modifyMotionPoints(" 
+        Pout<< "void layerAdditionRemoval::modifyMotionPoints(" 
             << "pointField& motionPoints) const for object "
             << name() << " : ";
     }
 
     if (debug)
     {
-        Info << "No motion point adjustment" << endl;
+        Pout << "No motion point adjustment" << endl;
     }
 }
 

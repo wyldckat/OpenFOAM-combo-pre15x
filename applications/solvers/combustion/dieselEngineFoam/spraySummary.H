@@ -19,7 +19,7 @@
 
         if (dieselSpray.twoD())
         {
-            gasMass *= 2.0*physicalConstant::pi/dieselSpray.angleOfWedge();
+            gasMass *= 2.0*mathematicalConstant::pi/dieselSpray.angleOfWedge();
         }
 
         reduce(gasMass, sumOp<scalar>());

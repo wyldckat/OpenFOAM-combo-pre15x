@@ -49,6 +49,7 @@ typedef Field<label> labelField;
 typedef Field<scalar> scalarField;
 typedef Field<vector> vectorField;
 typedef Field<tensor> tensorField;
+typedef Field<sphericalTensor> sphericalTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

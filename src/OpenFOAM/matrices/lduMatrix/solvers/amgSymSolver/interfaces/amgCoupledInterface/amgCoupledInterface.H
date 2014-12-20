@@ -66,6 +66,7 @@ class amgCoupledInterface
         //- Dummy addressing array
         labelField addr_;
 
+
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -122,12 +123,6 @@ public:
 
         // Access
 
-            //- Return true if this patch field is coupled
-            virtual bool coupled() const
-            {
-                return false;
-            }
-
             //- Return interface index
             label index() const
             {
@@ -140,6 +135,7 @@ public:
                 const labelField&
             ) const
             {
+                // Dummy return for uncoupled patches
                 return tmp<labelField>(new labelField(0));
             }
 
@@ -161,31 +157,6 @@ public:
                 // Return dummy (zero-sized) addressing
                 return addr_;
             }
-
-
-        // Interface matrix update
-
-            //- Initialise neighbour matrix update
-            virtual void initInterfaceUpdate
-            (
-                const scalarField&,
-                scalarField&,
-                const lduMatrix&,
-                const scalarField& ,
-                const direction
-            ) const
-            {}
-
-            //- Update result field based on interface functionality
-            virtual void updateInterfaceMatrix
-            (
-                const scalarField&,
-                scalarField&,
-                const lduMatrix&,
-                const scalarField&,
-                const direction
-            ) const
-            {}
 };
 
 

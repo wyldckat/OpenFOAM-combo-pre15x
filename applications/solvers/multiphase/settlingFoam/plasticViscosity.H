@@ -9,7 +9,7 @@ volScalarField plasticViscosity
     (
          plasticViscosityCoeff*
          (
-             pow(10.0, plasticViscosityExponent*alpha + SMALL) - 1.0
+             pow(10.0, plasticViscosityExponent*alpha + SMALL) - scalar(1)
          )
     );
 }

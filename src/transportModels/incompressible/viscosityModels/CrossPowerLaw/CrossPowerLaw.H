@@ -83,6 +83,7 @@ public:
         //- Construct from components
         CrossPowerLaw
         (
+            const word& name,
             const dictionary& viscosityProperties,
             const volVectorField& U,
             const surfaceScalarField& phi

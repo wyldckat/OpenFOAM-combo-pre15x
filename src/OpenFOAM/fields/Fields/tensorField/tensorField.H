@@ -39,6 +39,7 @@ SourceFiles
 #include "scalarField.H"
 #include "vectorField.H"
 #include "tensor.H"
+#include "FieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,56 +50,28 @@ typedef Field<tensor> tensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void hdual(vectorField&, const UList<tensor>&);
-tmp<vectorField> operator*(const tmp<tensorField>&);
+UNARY_FUNCTION_N(scalar, tensor, tr)
+UNARY_FUNCTION_R(tensor, tensor, dev)
+UNARY_FUNCTION_R(tensor, tensor, dev2)
+UNARY_FUNCTION_N(scalar, tensor, det)
+UNARY_FUNCTION_R(tensor, tensor, inv)
+UNARY_FUNCTION_R(tensor, tensor, hinv)
+UNARY_FUNCTION_R(tensor, tensor, symm)
+UNARY_FUNCTION_R(tensor, tensor, skew)
+UNARY_FUNCTION_N(vector, tensor, eigenValues)
+UNARY_FUNCTION_R(tensor, tensor, eigenVectors)
 
-void hdual(tensorField&, const UList<vector>&);
-tmp<tensorField> operator*(const tmp<vectorField>&);
-
-void diag(vectorField&, const UList<tensor>&);
-tmp<vectorField> diag(const tmp<tensorField>&);
-
-void tr(scalarField&, const UList<tensor>&);
-tmp<scalarField> tr(const tmp<tensorField>&);
-
-void dev(Field<tensor>&, const UList<tensor>&);
-tmp<tensorField> dev(const UList<tensor>&);
-tmp<tensorField> dev(const tmp<tensorField>&);
-
-void dev2(Field<tensor>&, const UList<tensor>&);
-tmp<tensorField> dev2(const UList<tensor>&);
-tmp<tensorField> dev2(const tmp<tensorField>&);
-
-void det(scalarField&, const UList<tensor>&);
-tmp<scalarField> det(const tmp<tensorField>&);
-
-void inv(Field<tensor>&, const UList<tensor>&);
-tmp<tensorField> inv(const UList<tensor>&);
-tmp<tensorField> inv(const tmp<tensorField>&);
-
-void hinv(Field<tensor>&, const UList<tensor>&);
-tmp<tensorField> hinv(const UList<tensor>&);
-tmp<tensorField> hinv(const tmp<tensorField>&);
-
-void symm(Field<tensor>&, const UList<tensor>&);
-tmp<tensorField> symm(const UList<tensor>&);
-tmp<tensorField> symm(const tmp<tensorField>&);
-
-void skew(Field<tensor>&, const UList<tensor>&);
-tmp<tensorField> skew(const UList<tensor>&);
-tmp<tensorField> skew(const tmp<tensorField>&);
-
-void eigenValues(vectorField&, const UList<tensor>&);
-tmp<vectorField> eigenValues(const tmp<tensorField>&);
-
-void eigenVectors(Field<tensor>&, const UList<tensor>&);
-tmp<tensorField> eigenVectors(const UList<tensor>&);
-tmp<tensorField> eigenVectors(const tmp<tensorField>&);
+UNARY_OPERATOR_N(vector, tensor, *, hdual)
+UNARY_OPERATOR_N(tensor, vector, *, hdual)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -41,7 +41,7 @@ SIMPLE
 
 relaxationFactors
 {
-    p               0.3;
+    pd              0.3;
     U               0.5;
     h               0.5;
     k               0.5;

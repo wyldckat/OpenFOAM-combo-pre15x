@@ -42,17 +42,13 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "polyMesh.H"
 #include "Time.H"
 #include "polyTopoChange.H"
-#include "morphMesh.H"
 #include "mapPolyMesh.H"
 #include "faceSet.H"
-#include "Map.H"
-#include "ListOps.H"
-#include "meshTools.H"
 #include "attachDetach.H"
-#include "attachPolyMesh.H"
-#include "IndirectList.H"
+#include "attachPolyTopoChanger.H"
 #include "regionSide.H"
 
 using namespace Foam;
@@ -125,23 +121,14 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createPolyMesh.H"
 
     word setName(args.args()[3]);
     word masterPatch(args.args()[4]);
     word slavePatch(args.args()[5]);
 
-    attachPolyMesh pMesh
-    (
-        IOobject
-        (
-            attachPolyMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
-
     // List of faces to split
-    faceSet facesSet(pMesh, setName);
+    faceSet facesSet(mesh, setName);
 
     Info<< "Read " << facesSet.size() << " faces to split" << endl << endl;
 
@@ -152,7 +139,7 @@ int main(int argc, char *argv[])
 
     forAll(faces, i)
     {
-        if (!pMesh.isInternalFace(faces[i]))
+        if (!mesh.isInternalFace(faces[i]))
         {
             FatalErrorIn(args.executable())
             << "Face " << faces[i] << " in faceSet " << setName
@@ -163,8 +150,8 @@ int main(int argc, char *argv[])
 
 
     // Check for empty master and slave patches
-    checkPatch(pMesh.boundaryMesh(), masterPatch);
-    checkPatch(pMesh.boundaryMesh(), slavePatch);
+    checkPatch(mesh.boundaryMesh(), masterPatch);
+    checkPatch(mesh.boundaryMesh(), slavePatch);
 
 
     //
@@ -172,10 +159,10 @@ int main(int argc, char *argv[])
     // set of edges on side of this region. Use PrimitivePatch to find these.
     //
 
-    IndirectList<face> zoneFaces(pMesh.faces(), faces);
+    IndirectList<face> zoneFaces(mesh.faces(), faces);
 
     // Addressing on faces only in mesh vertices.
-    facePatch fPatch(zoneFaces(), pMesh.points());
+    facePatch fPatch(zoneFaces(), mesh.points());
 
     const labelList& meshPoints = fPatch.meshPoints();
 
@@ -194,7 +181,7 @@ int main(int argc, char *argv[])
             label edgeI =
                 findEdge
                 (
-                    pMesh,
+                    mesh,
                     meshPoints[e.start()],
                     meshPoints[e.end()]
                 );
@@ -208,10 +195,10 @@ int main(int argc, char *argv[])
 
     regionSide regionInfo
     (
-        pMesh,
+        mesh,
         facesSet,
         fenceEdges,
-        pMesh.faceOwner()[startFaceI],
+        mesh.faceOwner()[startFaceI],
         startFaceI
     );
 
@@ -236,41 +223,40 @@ int main(int argc, char *argv[])
             faces,
             zoneFlip,
             0,
-            pMesh.faceZones()
+            mesh.faceZones()
         );
 
     Info << "Adding point and face zones" << endl;
-    pMesh.addZones(pz, fz, cz);
+    mesh.addZones(pz, fz, cz);
 
-
-    List<polyMeshModifier*> tm(1);
+    attachPolyTopoChanger splitter(mesh);
+    splitter.setSize(1);
 
     // Add the sliding interface mesh modifier to start working at current
     // time
-    tm[0] =
+    splitter.hook
+    (
         new attachDetach
         (
             "Splitter",
             0,
-            pMesh,
+            splitter,
             "membraneFaces",
             masterPatch,
             slavePatch,
             scalarField(1, runTime.value())
-        );
+        )
+    );
 
     Info<< nl << "Constructed topologyModifier:" << endl;
-    tm[0]->writeDict(Info);
-
-    Info<< nl << "Adding topology modifiers" << endl;
-    pMesh.addTopologyModifiers(tm);
+    splitter[0].writeDict(Info);
 
     runTime++;
 
-    pMesh.attach();
+    splitter.attach();
 
     Info << nl << "Writing polyMesh" << endl;
-    if (!pMesh.write())
+    if (!mesh.write())
     {
         FatalErrorIn(args.executable())
             << "Failed writing polyMesh."

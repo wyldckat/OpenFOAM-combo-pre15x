@@ -34,7 +34,7 @@ Description
     Undo list: contains a refinement tree (of type splitCell; cell labels are
     of no consequence) and a list of visible splitCells, i.e. the top of the
     tree (where the cell labels are valid). Now every cell added gets put on
-    the tree and every updateTopology action updates the labels of visible
+    the tree and every updateMesh action updates the labels of visible
     splitcells.
 
     We can now ask this structure for a list of visible split cells or the list
@@ -180,7 +180,7 @@ public:
 
             //- Update stored refinement pattern for changes to mesh. Only
             //  call if undoable set.
-            void updateTopology(const mapPolyMesh& morphMap);
+            void updateMesh(const mapPolyMesh& morphMap);
 
             //- Calculate split faces from current liveCells. Only
             //  call if undoable set.

@@ -26,7 +26,7 @@ License
 
 #include "face.H"
 #include "triPointRef.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -101,13 +101,13 @@ label face::mostConcaveAngle
         if ((edgeNormal & n) > 0)
         {
             // Concave angle.
-            angle = physicalConstant::pi + edgeAngle;
+            angle = mathematicalConstant::pi + edgeAngle;
         }
         else
         {
             // Convex angle. Note '-' to take into account that rightEdge
             // and leftEdge are head-to-tail connected.
-            angle = physicalConstant::pi - edgeAngle;
+            angle = mathematicalConstant::pi - edgeAngle;
         }
 
         if (angle > maxAngle)
@@ -216,7 +216,7 @@ void face::split
         label index = fcIndex(fcIndex(startIndex));
 
         label minIndex = index;
-        scalar minDiff = Foam::physicalConstant::pi;
+        scalar minDiff = Foam::mathematicalConstant::pi;
 
         for(label i = 0; i < size() - 3; i++)
         {

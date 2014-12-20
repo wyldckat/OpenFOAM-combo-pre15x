@@ -1,4 +1,4 @@
+cellSplitter.C
 modifyMesh.C
-boundaryCutter.C
 
 EXE = $(FOAM_APPBIN)/modifyMesh

@@ -49,7 +49,7 @@ setenv FOAM_JOB_DIR $WM_PROJECT_INST_DIR/jobControl
 
 setenv WM_DIR $WM_PROJECT_DIR/wmake
 setenv WM_LINK_LANGUAGE c++
-setenv WM_OPTIONS $WM_ARCH$WM_COMPILER$WM_COMPILE_OPTION
+setenv WM_OPTIONS $WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
 
 set SHELL_VAR=$SHELL
 setenv WM_SHELL $SHELL_VAR:t
@@ -94,13 +94,13 @@ set WM_COMPILER_LIB=
 
 if ($WM_COMPILER == "Gcc" || $machineTest == "Linux" && $?WM_COMPILER) then
     setenv WM_COMPILER_DIR $WM_PROJECT_INST_DIR/$WM_ARCH/gcc-3.4.3$WM_COMPILER_ARCH
-    set WM_COMPILER_BIN="$WM_COMPILER_DIR/bin $WM_COMPILER_DIR/../gdb-6.3/bin"
+    set WM_COMPILER_BIN="$WM_COMPILER_DIR/bin $WM_COMPILER_DIR/../gdb-6.4/bin"
     set WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 endif
 
 if ($WM_COMPILER == "Gcc4" ) then
-    setenv WM_COMPILER_DIR $WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.0.1$WM_COMPILER_ARCH
-    set WM_COMPILER_BIN="$WM_COMPILER_DIR/bin $WM_COMPILER_DIR/../gdb-6.3/bin"
+    setenv WM_COMPILER_DIR $WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.1.0$WM_COMPILER_ARCH
+    set WM_COMPILER_BIN="$WM_COMPILER_DIR/bin $WM_COMPILER_DIR/../gdb-6.4/bin"
     set WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 endif
 
@@ -141,18 +141,6 @@ else if ($machineTest == SunOS) then
 else if ($machineTest == IRIX || $machineTest == IRIX64) then
 
     setenv JAVA_HOME $WM_PROJECT_INST_DIR/$WM_ARCH/j2re1.4.1
-
-# IBM RS6000 workstation
-# ~~~~~~~~~~~~~~~~~~~~~~
-else if ($machineTest == AIX) then
-
-    setenv JAVA_HOME /usr/java14/jre
-
-# HP workstation
-# ~~~~~~~~~~~~~~
-else if ($machineTest == HP-UX) then
-
-    setenv JAVA_HOME /opt/java1.4
 
 # An unsupported operating system
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -202,8 +190,7 @@ if ($WM_MPLIB == MPICH) then
     AddLib $MPICH_ARCH_PATH/lib
     AddPath $MPICH_ARCH_PATH/bin
 
-    setenv FOAM_MPI_LIBBIN=$FOAM_LIBBIN/mpich-$MPICH_VERSION
-    AddLib $FOAM_MPI_LIBBIN
+    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/mpich-$MPICH_VERSION
 
 else if ($WM_MPLIB == LAM) then
 
@@ -215,20 +202,28 @@ else if ($WM_MPLIB == LAM) then
     AddPath $LAM_ARCH_PATH/bin
 
     setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/lam-$LAM_VERSION
-    AddLib $FOAM_MPI_LIBBIN
+
+else if ($WM_MPLIB == OPENMPI) then
+
+    setenv OPENMPI_VERSION 1.0.2a7
+    setenv OPENMPI_HOME $FOAM_SRC/openmpi-$OPENMPI_VERSION
+    setenv OPENMPI_ARCH_PATH $OPENMPI_HOME/platforms/$WM_OPTIONS
+
+    AddLib $OPENMPI_ARCH_PATH/lib
+    AddPath $OPENMPI_ARCH_PATH/bin
+
+    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/openmpi-$OPENMPI_VERSION
 
 else
-    AddLib $FOAM_LIBBIN/dummy
+    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/dummy
 endif
+
+AddLib $FOAM_MPI_LIBBIN
+
 
 # Set the MPI buffer size (used by all platforms except SGI MPI)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 setenv MPI_BUFFER_SIZE 20000000
 
-
-# Source setup files for optional packages 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SOURCE $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/ensightFoam/cshrc
-SOURCE $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/paraview/cshrc
 
 # -----------------------------------------------------------------------------

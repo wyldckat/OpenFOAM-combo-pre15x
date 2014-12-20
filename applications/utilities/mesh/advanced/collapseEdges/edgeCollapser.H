@@ -149,6 +149,7 @@ public:
 
             //- Play commands into polyTopoChange to create mesh.
             void setRefinement(polyTopoChange&) const;
+
 };
 
 

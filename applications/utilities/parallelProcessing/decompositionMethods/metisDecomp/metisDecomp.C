@@ -28,6 +28,8 @@ Description
 
 #include "metisDecomp.H"
 #include "addToRunTimeSelectionTable.H"
+#include "floatScalar.H"
+#include "IFstream.H"
 
 extern "C"
 {
@@ -66,7 +68,6 @@ Foam::metisDecomp::metisDecomp
 
 Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
 {
-    label numCells = points.size();
 
     //
     // Make Metis CSR (Compressed Storage Format) storage
@@ -74,38 +75,61 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
     //   xadj(celli) : start of information in adjncy for celli
     //
 
-    labelList xadj(numCells+1);
+    labelList xadj(mesh_.nCells()+1);
 
     labelList adjncy(2*mesh_.nInternalFaces());
 
+    // Fill in xadj
+
     label freeAdj = 0;
 
-    const labelListList& cellsList = mesh_.cellCells();
-
-    forAll(cellsList, celli)
+    for (label cellI = 0; cellI < mesh_.nCells(); cellI++)
     {
-        xadj[celli] = freeAdj;
+        xadj[cellI] = freeAdj;
 
-        const labelList& neighbours = cellsList[celli];
+        const labelList& cFaces = mesh_.cells()[cellI];
 
-        forAll(neighbours, neighbouri)
+        forAll(cFaces, i)
         {
-            adjncy[freeAdj++] = neighbours[neighbouri];
+            label faceI = cFaces[i];
+
+            if (mesh_.isInternalFace(faceI))
+            {
+                freeAdj++;
+            }
         }
     }
-    xadj[numCells] = freeAdj;
+    xadj[mesh_.nCells()] = freeAdj;
 
-    // no weight info provided
-    int wgtFlag = 0;
+
+    // Fill in adjncy
+
+    labelList nFacesPerCell(mesh_.nCells(), 0);
+
+    for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+    {
+        label own = mesh_.faceOwner()[faceI];
+        label nei = mesh_.faceNeighbour()[faceI];
+
+        adjncy[xadj[own] + nFacesPerCell[own]++] = nei;
+        adjncy[xadj[nei] + nFacesPerCell[nei]++] = own;
+    }
+
 
     // C style numbering
     int numFlag = 0;
 
     // decomposition options. 0 = use defaults
-    int options[5] = {0};  
+    labelList options(5, 0);
 
     // processor weights. Use even weighting
-    scalarField processorWeights(nProcessors_, 1.0/nProcessors_);
+    Field<floatScalar> processorWeights(nProcessors_, 1.0/nProcessors_);
+
+    // cell weights (so on the vertices of the dual)
+    labelList cellWeights;
+
+    // face weights (so on the edges of the dual)
+    labelList faceWeights;
 
     Info<< endl;
 
@@ -119,15 +143,100 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
 
         if (metisDecompCoeffs.found("processorWeights"))
         {
-            processorWeights = 
-                scalarField(metisDecompCoeffs.lookup("processorWeights"));
+            metisDecompCoeffs.lookup("processorWeights") >> processorWeights;
+
+            if (processorWeights.size() != nProcessors_)
+            {
+                FatalErrorIn("metisDecomp::decompose(const pointField&)")
+                    << "Number of processor weights "
+                    << processorWeights.size()
+                    << " does not equal number of domains " << nProcessors_
+                    << exit(FatalError);
+            }
+        }
+
+        if (metisDecompCoeffs.found("cellWeightsFile"))
+        {
+            Info<< "metisDecomp : Using cell-based weights." << endl;
+
+            fileName cellWeightsFile
+            (
+                metisDecompCoeffs.lookup("cellWeightsFile")
+            );
+
+            IFstream decompStream(cellWeightsFile);
+
+            if (!decompStream)
+            {
+                FatalIOErrorIn("manualDecomp::decompose()", decompStream)
+                    << "Cannot read cell weights data file "
+                    << cellWeightsFile << "." << endl
+                    << exit(FatalIOError);
+            }
+
+            decompStream >> cellWeights;
+
+            if (cellWeights.size() != mesh_.nCells())
+            {
+                FatalErrorIn("metisDecomp::decompose(const pointField&)")
+                    << "Number of cell weights " << cellWeights.size()
+                    << " does not equal number of cells " << mesh_.nCells()
+                    << exit(FatalError);
+            }
+        }
+
+        if (metisDecompCoeffs.found("faceWeightsFile"))
+        {
+            Info<< "metisDecomp : Using face-based weights." << endl;
+
+            fileName faceWeightsFile
+            (
+                metisDecompCoeffs.lookup("faceWeightsFile")
+            );
+
+            IFstream decompStream(faceWeightsFile);
+
+            if (!decompStream)
+            {
+                FatalIOErrorIn("manualDecomp::decompose()", decompStream)
+                    << "Cannot read face weights data file "
+                    << faceWeightsFile << "." << endl
+                    << exit(FatalIOError);
+            }
+
+            labelList weights(decompStream);
+
+            if (weights.size() != mesh_.nInternalFaces())
+            {
+                FatalErrorIn("metisDecomp::decompose(const pointField&)")
+                    << "Number of face weights " << weights.size()
+                    << " does not equal number of internal faces "
+                    << mesh_.nInternalFaces()
+                    << exit(FatalError);
+            }
+
+            // Assume symmetric weights. Keep same ordering as adjncy.
+            faceWeights.setSize(2*mesh_.nInternalFaces());
+
+            labelList nFacesPerCell(mesh_.nCells(), 0);
+
+            for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
+            {
+                label w = weights[faceI];
+
+                label own = mesh_.faceOwner()[faceI];
+                label nei = mesh_.faceNeighbour()[faceI];
+
+                faceWeights[xadj[own] + nFacesPerCell[own]++] = w;
+                faceWeights[xadj[nei] + nFacesPerCell[nei]++] = w;
+            }
         }
 
         if (metisDecompCoeffs.found("options"))
         {
-            scalarField decompOptions(metisDecompCoeffs.lookup("options"));
+            metisDecompCoeffs.lookup("options") >> options;
 
-            if (decompOptions.size() != 5)
+            if (options.size() != 5)
             {
                 FatalErrorIn("metisDecomp::decompose()")
                     << "Number of options in metisCoeffs in dictionary : "
@@ -136,50 +245,54 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
                     << abort(FatalError);
             }
 
-            Info<< "Using Metis options     " << decompOptions
+            Info<< "Using Metis options     " << options
                 << endl << endl;
-
-            // convert decompOptions to int
-            for (int i=0; i<5; i++)
-            {
-                options[i] = int(decompOptions[i]);
-            }
         }
     }
 
     processorWeights /= sum(processorWeights);
 
-    // convert processorWeights to float
-    float *weights = new float[nProcessors_];
-    for (int i=0; i<nProcessors_; i++)
-    {
-        weights[i] = processorWeights[i];
-    }
 
+    int numCells = mesh_.nCells();
 
     // output: cell -> processor addressing
-    labelList finalDecomp(numCells);
+    labelList finalDecomp(mesh_.nCells());
 
     // output: number of cut edges
     int edgeCut = 0;
 
+    // Vertex weight info
+    int wgtFlag = 0;
+    label* vwgtPtr = NULL;
+    label* adjwgtPtr = NULL;
+
+    if (cellWeights.size() > 0)
+    {
+        vwgtPtr = cellWeights.begin();
+        wgtFlag += 2;       // Weights on vertices
+    }
+    if (faceWeights.size() > 0)
+    {
+        adjwgtPtr = faceWeights.begin();
+        wgtFlag += 1;       // Weights on edges
+    }
+
+        
     METIS_WPartGraphKway
     (
         &numCells,         // num vertices in graph
         xadj.begin(),      // indexing into adjncy
         adjncy.begin(),    // neighbour info
-        NULL,              // no vertexweights
-        NULL,              // no edgeweights
+        vwgtPtr,           // vertexweights
+        adjwgtPtr,         // no edgeweights
         &wgtFlag,
         &numFlag,
         &nProcessors_,
-        weights,
-        options,
+        processorWeights.begin(),
+        options.begin(),
         &edgeCut,
         finalDecomp.begin()
     );
-
-    delete[] weights;
 
     return finalDecomp;
 }

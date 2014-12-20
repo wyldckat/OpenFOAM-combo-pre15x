@@ -3,4 +3,4 @@ collapseEdge.C
 
 surfaceClean.C
 
-EXE = $(FOAM_USER_APPBIN)/surfaceClean
+EXE = $(FOAM_APPBIN)/surfaceClean

@@ -35,7 +35,7 @@
 #     state is one of 'RUNN' 'SUSP' 'OTHR',
 #     command is the argv[0]
 #
-#     Tested on Linux,OSF1,IRIX,SunOS,HP-UX
+#     Tested on Linux,IRIX,SunOS
 #
 #-------------------------------------------------------------------------------
 
@@ -97,24 +97,9 @@ case $ARCH in
     echo '($3 == "R") || ($3 == "S") || ($3 == "D") {print $1 " RUNN // " $4; next}' >> $AWKFILE
     echo '{print $1 " OTHR // " $4}' >> $AWKFILE
     ;;
-  AIX*)
-    echo '($3 == "T") {print $1 " SUSP // " $4; next}' >> $AWKFILE
-    echo '($3 == "A") {print $1 " RUNN // " $4; next}' >> $AWKFILE
-    echo '{print $1 " OTHR // " $4}' >> $AWKFILE
-    ;;
-  OSF1*)
-    echo '($3 == "T") {print $1 " SUSP // " $4; next}' >> $AWKFILE
-    echo '($3 == "R") || ($3 == "S") || ($3 == "I") {print $1 " RUNN // " $4; next}' >> $AWKFILE
-    echo '{print $1 " OTHR // " $4}' >> $AWKFILE
-    ;;
   SunOS*)
     echo '($3 == "T") {print $1 " SUSP // " $4; next}' >> $AWKFILE
     echo '($3 == "O") || ($3 == "S") || ($3 == "R") {print $1 " RUNN // " $4; next}' >> $AWKFILE
-    echo '{print $1 " OTHR // " $4}' >> $AWKFILE
-    ;;
-  HP-UX*)
-    echo '($3 == "T") {print $1 " SUSP // " $4; next}' >> $AWKFILE
-    echo '($3 == "S") || ($3 == "W") || ($3 == "R") {print $1 " RUNN // " $4; next}' >> $AWKFILE
     echo '{print $1 " OTHR // " $4}' >> $AWKFILE
     ;;
   *)

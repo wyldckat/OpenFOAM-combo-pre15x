@@ -103,7 +103,7 @@ class HashTable
                 (
                     const Key& key,
                     hashedEntry* next,
-                    T newEntry
+                    const T& newEntry
                 );
 
                 //- Dissallow construction as copy
@@ -121,9 +121,6 @@ class HashTable
 
         //- The current number of elements in table
         label nElmts_;
-
-        //- Hashing function class
-        Hash hash_;
 
 
 public:
@@ -212,7 +209,7 @@ public:
         // Edit
 
             //- Insert a new hashedEntry
-            bool insert(const Key& key, T newElmt);
+            bool insert(const Key& key, const T& newElmt);
 
             //- Erase an hashedEntry specified by given iterator
             bool erase(const iterator& it);

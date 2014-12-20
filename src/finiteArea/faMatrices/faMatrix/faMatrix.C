@@ -408,7 +408,7 @@ bool faMatrix<Type>::needReference()
 
 // Set reference level for solution
 template<class Type>
-autoPtr<constraint<Type> > faMatrix<Type>::setReference
+void faMatrix<Type>::setReference
 (
     const label cell,
     const Type& value
@@ -418,34 +418,8 @@ autoPtr<constraint<Type> > faMatrix<Type>::setReference
     {
         if (Pstream::master())
         {
-            //source()[cell] += diag()[cell]*value;
-            //diag()[cell] += diag()[cell];
-
-            autoPtr<constraint<Type> > refPtr
-            (
-                new constraint<Type>(*this, cell, value)
-            );
-
-            refPtr->eliminateEquation(*this);
-            refPtr->setSource(*this);
-
-            return refPtr;
-        }
-    }
-
-    return autoPtr<constraint<Type> >(NULL);
-}
-
-
-// Set reference level for solution
-template<class Type>
-void faMatrix<Type>::unsetReference(const autoPtr<constraint<Type> >& ref)
-{
-    if (needReference())
-    {
-        if (Pstream::master())
-        {
-            ref->reconstructMatrix(*this);
+            source()[cell] += diag()[cell]*value;
+            diag()[cell] += diag()[cell];
         }
     }
 }

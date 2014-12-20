@@ -116,8 +116,11 @@ public:
             //- Write label
             virtual Ostream& write(const label) = 0;
 
-            //- Write scalar
-            virtual Ostream& write(const scalar) = 0;
+            //- Write floatScalar
+            virtual Ostream& write(const floatScalar) = 0;
+
+            //- Write doubleScalar
+            virtual Ostream& write(const doubleScalar) = 0;
 
             //- Write binary block
             virtual Ostream& write(const char*, std::streamsize) = 0;

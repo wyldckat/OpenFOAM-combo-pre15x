@@ -22,13 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
 #include "fvMesh.H"
 #include "volFields.H"
+#include "surfaceFields.H"
 
 using namespace Foam;
 
@@ -55,6 +54,10 @@ int main(int argc, char *argv[])
 
     Info<< mesh.C() << endl;
     Info<< mesh.V() << endl;
+
+    surfaceVectorField Cf = mesh.Cf();
+
+    Info<< Cf << endl;
 
     Info << "End\n" << endl;
 

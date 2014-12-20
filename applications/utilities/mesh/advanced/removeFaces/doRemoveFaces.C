@@ -34,8 +34,9 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyTopoChange.H"
+#include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
-#include "morphMesh.H"
+#include "polyMesh.H"
 #include "faceSet.H"
 #include "removeFaces.H"
 #include "ListOps.H"
@@ -157,19 +158,9 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createPolyMesh.H"
 
     word setName(args.args()[3]);
-
-    Info<< "Create polyMesh for time = " << runTime.value() << nl << endl;
-    morphMesh mesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
 
     // Read faces
     faceSet candidateSet(mesh, setName);
@@ -245,12 +236,12 @@ int main(int argc, char *argv[])
 
     runTime++;
 
-    mesh.setMorphTimeIndex(runTime.timeIndex());
+    autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh(mesh, meshMod);
 
-    mesh.updateTopology(meshMod);
-
-    // Move mesh (since morphing does not do this)
-    mesh.movePoints(mesh.morphMap().preMotionPoints());
+    if (morphMap().hasMotionPoints())
+    {
+        mesh.movePoints(morphMap().preMotionPoints());
+    }
 
     // Write resulting mesh
     Info << "Writing morphed mesh to time " << runTime.value() << endl;

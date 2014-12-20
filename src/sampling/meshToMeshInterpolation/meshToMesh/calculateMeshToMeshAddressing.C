@@ -160,48 +160,59 @@ void meshToMesh::calcAddressing()
                 fromMeshPatches_.find(patchMap_.find(toPatch.name())())()
             ];
 
-            treeBoundBox wallBb(fromPatch.localPoints());
-            scalar typDim = 
-                wallBb.avgDim()/(2.0*sqrt(fromPatch.size()));
-
-            treeBoundBox shiftedBb
-            (
-                wallBb.min(),
-                wallBb.max() + vector(typDim, typDim, typDim)
-            );
-
-            // Wrap data for octree into container
-            octreeDataFace shapes(fromPatch);
-
-            octree<octreeDataFace> oc
-            (
-                shiftedBb,  // overall search domain
-                shapes,     // all information needed to do checks on cells
-                1,          // min levels
-                20.0,       // maximum ratio of cubes v.s. cells
-                2.0
-            );
-
-
-            const vectorField::subField centresToBoundary = 
-                toPatch.faceCentres();
-
-            boundaryAddressing_[patchi].setSize(toPatch.size());
-
-            treeBoundBox tightest;
-            scalar tightestDist;
-
-            forAll(toPatch, toi)
+            if (fromPatch.size() == 0)
             {
-                tightest = wallBb;                  // starting search bb
-                tightestDist = Foam::GREAT;        // starting max distance
+                WarningIn("meshToMesh::calcAddressing()")
+                    << "Source patch " << fromPatch.name()
+                    << " has no faces. Not performing mapping for it."
+                    << endl;
+                boundaryAddressing_[patchi] = -1;
+            }
+            else
+            {
+                treeBoundBox wallBb(fromPatch.localPoints());
+                scalar typDim = 
+                    wallBb.avgDim()/(2.0*sqrt(scalar(fromPatch.size())));
 
-                boundaryAddressing_[patchi][toi] = oc.findNearest
+                treeBoundBox shiftedBb
                 (
-                    centresToBoundary[toi],
-                    tightest,
-                    tightestDist
+                    wallBb.min(),
+                    wallBb.max() + vector(typDim, typDim, typDim)
                 );
+
+                // Wrap data for octree into container
+                octreeDataFace shapes(fromPatch);
+
+                octree<octreeDataFace> oc
+                (
+                    shiftedBb,  // overall search domain
+                    shapes,     // all information needed to do checks on cells
+                    1,          // min levels
+                    20.0,       // maximum ratio of cubes v.s. cells
+                    2.0
+                );
+
+
+                const vectorField::subField centresToBoundary = 
+                    toPatch.faceCentres();
+
+                boundaryAddressing_[patchi].setSize(toPatch.size());
+
+                treeBoundBox tightest;
+                scalar tightestDist;
+
+                forAll(toPatch, toi)
+                {
+                    tightest = wallBb;                  // starting search bb
+                    tightestDist = Foam::GREAT;        // starting max distance
+
+                    boundaryAddressing_[patchi][toi] = oc.findNearest
+                    (
+                        centresToBoundary[toi],
+                        tightest,
+                        tightestDist
+                    );
+                }
             }
         }
     }

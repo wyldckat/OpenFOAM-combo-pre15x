@@ -30,7 +30,7 @@ Description
 #include "cellFeatures.H"
 #include "polyMesh.H"
 #include "cellModeller.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "DynamicList.H"
 #include "plane.H"
 #include "ListOps.H"
@@ -77,7 +77,7 @@ bool Foam::hexCellLooper::walkHex
     {
         if (debug & 2)
         {
-            Info<< "    walkHex : inserting cut onto edge:" << edgeI
+            Pout<< "    walkHex : inserting cut onto edge:" << edgeI
                 << " vertices:" << mesh().edges()[edgeI] << endl;
         }
 
@@ -103,10 +103,10 @@ bool Foam::hexCellLooper::walkHex
     // Checks.
     if (cutI > 4)
     {
-        Info<< "hexCellLooper::walkHex" << "Problem : cell:" << cellI
+        Pout<< "hexCellLooper::walkHex" << "Problem : cell:" << cellI
             << " collected loop:";
-        writeCuts(Info, loop);
-        Info<< "loopWeights:" << loopWeights << endl;
+        writeCuts(Pout, loop, loopWeights);
+        Pout<< "loopWeights:" << loopWeights << endl;
 
         return false;
     }
@@ -232,7 +232,7 @@ bool Foam::hexCellLooper::cut
 
             fileName cutsFile("hexCellLooper_" + name(cellI) + ".obj");
 
-            Info<< "hexCellLooper : writing cell to " << cutsFile << endl;
+            Pout<< "hexCellLooper : writing cell to " << cutsFile << endl;
 
             OFstream cutsStream(cutsFile);
 

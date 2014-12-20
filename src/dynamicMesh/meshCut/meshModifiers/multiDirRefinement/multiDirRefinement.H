@@ -113,7 +113,7 @@ class multiDirRefinement
         //- Refine cells (hex only) in all 3 directions.
         void refineHex8
         (
-            morphMesh& mesh,
+            polyMesh& mesh,
             const labelList& hexCells,
             const bool writeMesh
         );
@@ -121,7 +121,7 @@ class multiDirRefinement
         //- Refine cells in cellLabels_ in directions mentioned.
         void refineAllDirs
         (
-            morphMesh& mesh,
+            polyMesh& mesh,
             List<vectorField>& cellDirections,
             const cellLooper& cellWalker,
             undoableMeshCutter& cutter,
@@ -131,7 +131,7 @@ class multiDirRefinement
         //- Refine based on dictionary. Calls refineAllDirs.
         void refineFromDict
         (
-            morphMesh& mesh,
+            polyMesh& mesh,
             List<vectorField>& cellDirections,
             const dictionary& dict,
             const bool writeMesh
@@ -158,7 +158,7 @@ public:
         //  writeMesh = true)
         multiDirRefinement
         (
-            morphMesh& mesh,
+            polyMesh& mesh,
             const labelList& cellLabels,    // cells to refine
             const dictionary& dict
         );
@@ -166,7 +166,7 @@ public:
         //- Explicitly provided directions to split in.
         multiDirRefinement
         (
-            morphMesh& mesh,
+            polyMesh& mesh,
             const labelList& cellLabels,    // cells to refine
             const List<vectorField>&,       // Explicitly provided directions
             const dictionary& dict
@@ -175,7 +175,7 @@ public:
         //- Construct from components. Only this one would allow undo actions.
         multiDirRefinement
         (
-            morphMesh& mesh,
+            polyMesh& mesh,
             undoableMeshCutter& cutter,     // actual mesh modifier
             const cellLooper& cellCutter,   // how to cut a single cell with
                                             // a plane
@@ -192,7 +192,6 @@ public:
         {
             return addedCells_;
         }
-
 };
 
 

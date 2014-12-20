@@ -26,6 +26,7 @@
         ),
         mesh
     );
+    T.correctBoundaryConditions();
 
     volScalarField psi
     (
@@ -41,7 +42,7 @@
     );
     psi.oldTime();
 
-    Info<< "Reading field rho\n" << endl;
+#   include "rhoBoundaryTypes.H"
     volScalarField rho
     (
         IOobject
@@ -49,13 +50,12 @@
             "rho",
             runTime.timeName(),
             mesh,
-            IOobject::MUST_READ,
+            IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        mesh 
+        p*psi,
+        rhoBoundaryTypes
     );
-
-    rho == p*psi;
 
     Info<< "Reading field U\n" << endl;
     volVectorField U
@@ -71,6 +71,7 @@
         mesh
     );
 
+#   include "rhoUboundaryTypes.H"
     volVectorField rhoU
     (
         IOobject
@@ -78,14 +79,14 @@
             "rhoU",
             runTime.timeName(),
             mesh,
-            IOobject::MUST_READ,
+            IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        mesh
+        rho*U,
+        rhoUboundaryTypes
     );
 
-    rhoU == rho*U;
-
+#   include "rhoEboundaryTypes.H"
     volScalarField rhoE
     (
         IOobject
@@ -93,15 +94,14 @@
             "rhoE",
             runTime.timeName(),
             mesh,
-            IOobject::MUST_READ,
+            IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        mesh
+        rho*Cv*T + 0.5*rho*magSqr(rhoU/rho),
+        rhoEboundaryTypes
     );
 
-    rhoE == rho*Cv*T + 0.5*rho*magSqr(rhoU/rho);
-
-#   include "createPhi.H"
+#   include "compressibleCreatePhi.H"
     phi.oldTime();
 
     surfaceScalarField phiv
@@ -112,6 +112,6 @@
             runTime.timeName(),
             mesh
         ),
-        phi/fvc::interpolate(rho),
+        phi/linearInterpolate(rho),
         phi.boundaryField().types()
     );

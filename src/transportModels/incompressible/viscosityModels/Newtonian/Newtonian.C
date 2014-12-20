@@ -48,18 +48,19 @@ addToRunTimeSelectionTable(viscosityModel, Newtonian, dictionary);
 
 Newtonian::Newtonian
 (
+    const word& name,
     const dictionary& viscosityProperties,
     const volVectorField& U,
     const surfaceScalarField& phi
 )
 :
-    viscosityModel(viscosityProperties, U, phi),
+    viscosityModel(name, viscosityProperties, U, phi),
     nu0_(viscosityProperties_.lookup("nu")),
     nu_
     (
         IOobject
         (
-            "nu",
+            name,
             U_.time().timeName(),
             U_.db(),
             IOobject::NO_READ,

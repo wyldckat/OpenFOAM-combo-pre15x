@@ -113,19 +113,19 @@ public:
         );
 
         //- Return contact fraction for patch
-        scalarField touchFraction() const
+        const scalarField& touchFraction() const
         {
             return touchFraction_;
         }
 
         //- Return slave patch displacement
-        vectorField slaveDisplacement() const
+        const vectorField& slaveDisplacement() const
         {
             return slaveDisplacement_;
         }
 
         //- Return slave patch pressure
-        scalarField slavePressure
+        tmp<scalarField> slavePressure
         (
             const scalarField& traction
         ) const;

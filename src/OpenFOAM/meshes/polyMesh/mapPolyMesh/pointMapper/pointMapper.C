@@ -81,10 +81,10 @@ void Foam::pointMapper::clearOut()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-Foam::pointMapper::pointMapper(const polyMesh& mesh)
+Foam::pointMapper::pointMapper(const mapPolyMesh& mpm)
 :
-    mesh_(mesh),
-    mpm_(mesh.morphMap()),
+    mesh_(mpm.mesh()),
+    mpm_(mpm),
     insertedPoints_(true),
     directAddrPtr_(NULL),
     insertedPointLabelsPtr_(NULL)

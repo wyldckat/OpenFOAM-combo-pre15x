@@ -53,7 +53,7 @@ namespace Foam
 {
 
 // Class forward declarations
-class morphMesh;
+class polyMesh;
 class refineCell;
 class undoableMeshCutter;
 class cellLooper;
@@ -69,7 +69,7 @@ class refinementIterator
     // Private data
 
         //- Reference to mesh
-        morphMesh& mesh_;
+        polyMesh& mesh_;
 
         //- Reference to refinementEngine
         undoableMeshCutter& meshRefiner_;
@@ -94,7 +94,7 @@ public:
         //  meshes.
         refinementIterator
         (
-            morphMesh& mesh,
+            polyMesh& mesh,
             undoableMeshCutter& meshRefiner,
             const cellLooper& cellWalker,
             const bool writeMesh = false

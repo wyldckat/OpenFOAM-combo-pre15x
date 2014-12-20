@@ -72,7 +72,7 @@ geometricTetPointFieldDecomposer::decomposeField
         {
             patchFields.hook
             (
-                new ProcessorPointPatchField
+                new ProcessorTetPointPatchField
                 <tetPolyPatchField, tetPolyPatch, processorTetPolyPatch, Type>
                 (
                     processorMesh_.boundary()[patchI],
@@ -86,7 +86,7 @@ geometricTetPointFieldDecomposer::decomposeField
     // all processors
     patchFields.hook
     (
-        new GlobalProcessorPointPatchField
+        new GlobalProcessorTetPointPatchField
         <tetPolyPatchField, tetPolyPatch, globalProcessorTetPolyPatch, Type>
         (
             processorMesh_.boundary().globalPointPatch(),

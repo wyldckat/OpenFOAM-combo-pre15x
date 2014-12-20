@@ -29,7 +29,7 @@ Description
     Output inter-processor communications stream.
 
 SourceFiles
-    OPstream.C
+    OPstreamI.H
     OPwrite.C
 
 \*---------------------------------------------------------------------------*/
@@ -97,7 +97,7 @@ public:
 
     // Member functions
 
-        // Inquirery
+        // Inquiry
 
             //- Return flags of output stream
             ios_base::fmtflags flags() const
@@ -107,6 +107,15 @@ public:
 
 
         // Write functions
+
+            //- Write given buffer to given processor
+            static bool write
+            (
+                const int toProcNo,
+                const char* buf,
+                const std::streamsize bufSize,
+                const bool bufferedTransfer = true
+            );
 
             //- Write next token to stream
             Ostream& write(const token&);
@@ -126,8 +135,11 @@ public:
             //- Write label
             Ostream& write(const label);
 
-            //- Write scalar
-            Ostream& write(const scalar);
+            //- Write floatScalar
+            Ostream& write(const floatScalar);
+
+            //- Write doubleScalar
+            Ostream& write(const doubleScalar);
 
             //- Write binary block
             Ostream& write(const char*, std::streamsize);

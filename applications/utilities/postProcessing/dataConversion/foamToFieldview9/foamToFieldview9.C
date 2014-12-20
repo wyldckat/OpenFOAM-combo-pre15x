@@ -31,7 +31,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
-#include "GeometricField.H"
+#include "volFields.H"
+#include "surfaceFields.H"
 #include "pointFields.H"
 #include "volPointInterpolation.H"
 #include "wallFvPatch.H"

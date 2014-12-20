@@ -1,18 +1,22 @@
 {
+    word gammarScheme("div(phirb,gamma)");
+
     surfaceScalarField phic = mag(phi/mesh.magSf());
     phic = min(interface.cGamma()*phic, max(phic));
     surfaceScalarField phir = phic*interface.nHatf();
 
     for (int gCorr=0; gCorr<nGammaCorr; gCorr++)
     {
-        word gammarScheme("div(phirb,gamma)");
-        surfaceScalarField phirb = -fvc::flux(-phir, 1.0 - gamma, gammarScheme);
-
         fvScalarMatrix gammaEqn
         (
             fvm::ddt(gamma)
           + fvm::div(phi, gamma)
-          + fvm::div(phirb, gamma, gammarScheme)
+          + fvm::div
+            (
+                -fvc::flux(-phir, scalar(1) - gamma, gammarScheme),
+                gamma,
+                gammarScheme
+            )
         );
 
         gammaEqn.solve();

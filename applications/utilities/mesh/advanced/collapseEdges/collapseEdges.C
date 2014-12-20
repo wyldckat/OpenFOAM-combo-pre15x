@@ -44,9 +44,10 @@ Description
 #include "Time.H"
 #include "edgeCollapser.H"
 #include "polyTopoChange.H"
-#include "morphMesh.H"
+#include "polyTopoChanger.H"
+#include "polyMesh.H"
 #include "mapPolyMesh.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "PackedList.H"
 #include "SortableList.H"
 
@@ -460,29 +461,18 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createPolyMesh.H"
 
     scalar minLen(readScalar(IStringStream(args.args()[3])()));
     scalar angle(readScalar(IStringStream(args.args()[4])()));
 
-    scalar maxCos = Foam::cos(angle*180/physicalConstant::pi);
+    scalar maxCos = Foam::cos(angle*180/mathematicalConstant::pi);
 
     Info<< "Merging:" << nl
         << "    edges with length less than " << minLen << " meters" << nl
         << "    edges split by a point with edges in line to within " << angle
         << " degrees" << nl
         << endl;
-
-
-    Info<< "Create polyMesh for time = " << runTime.value() << nl << endl;
-    morphMesh mesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
 
 
     bool meshChanged = false;
@@ -567,7 +557,6 @@ int main(int argc, char *argv[])
         // Insert mesh refinement into polyTopoChange.
         collapser.setRefinement(meshMod);
 
-
         label nRemoved =
             meshMod.removedFaces().size()
           - meshMod.modifiedFaces().size();
@@ -588,16 +577,22 @@ int main(int argc, char *argv[])
             break;
         }
 
-
         // Do all changes
         Info<< "Morphing ..." << endl;
 
-        mesh.resetMorph();
+        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
+        (
+            mesh,
+            meshMod
+        );
 
-        mesh.updateTopology(meshMod);
+        if (morphMap().hasMotionPoints())
+        {
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
 
-        // Move mesh (since morphing does not do this)
-        mesh.movePoints(mesh.morphMap().preMotionPoints());
+        //Not implemented yet.
+        //collapser.updateMesh(morphMap());
 
         meshChanged = true;
     }

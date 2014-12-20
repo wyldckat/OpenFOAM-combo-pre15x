@@ -50,6 +50,9 @@ namespace debug
     dictionary& controlDict();
 
 
+    dictionary& switchSet(const char* switchSetName, dictionary* switchSetPtr);
+
+
     dictionary& debugSwitches();
 
     int debugSwitch

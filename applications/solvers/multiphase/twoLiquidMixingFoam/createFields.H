@@ -50,7 +50,7 @@
     dimensionedScalar Dab(twoPhaseProperties.lookup("Dab"));
 
     // Need to store rho for ddt(rho, U)
-    volScalarField rho("rho", gamma*rho1 + (1.0 - gamma)*rho2);
+    volScalarField rho("rho", gamma*rho1 + (scalar(1) - gamma)*rho2);
     rho.oldTime();
 
 

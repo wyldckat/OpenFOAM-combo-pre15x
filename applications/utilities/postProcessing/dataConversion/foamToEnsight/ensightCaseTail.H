@@ -21,16 +21,11 @@ if (Pstream::master())
 
     for (int n=startTime; n<endTime; n++)
     {
-        ensightCaseFile << setw(12) << Times[n].value() + Tcorr;
+        ensightCaseFile << setw(12) << Times[n].value() + Tcorr << " ";
 
         if (++count % 6 == 0)
         {
             ensightCaseFile << nl;
         }
-    }
-
-    if ( (count % 6 != 0) || (count==0) )
-    {
-        ensightCaseFile << nl;
     }
 }

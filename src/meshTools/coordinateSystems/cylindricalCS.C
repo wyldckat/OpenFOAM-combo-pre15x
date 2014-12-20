@@ -89,7 +89,7 @@ cylindricalCS::cylindricalCS
 // Convert from local coordinate system to the global Cartesian system
 vector cylindricalCS::toGlobal(const vector& localV) const
 {
-    scalar theta = localV.y()*physicalConstant::pi/180.0;
+    scalar theta = localV.y()*mathematicalConstant::pi/180.0;
 
     return cartesianCS::toGlobal
     (
@@ -103,7 +103,7 @@ tmp<vectorField> cylindricalCS::toGlobal
     const vectorField& localV
 ) const
 {
-    scalarField theta = localV.component(vector::Y)*physicalConstant::pi/180.0;
+    scalarField theta = localV.component(vector::Y)*mathematicalConstant::pi/180.0;
 
     vectorField lc(localV.size());
     lc.replace(vector::X, localV.component(vector::X)*cos(theta));
@@ -123,7 +123,7 @@ vector cylindricalCS::toLocal(const vector& globalV) const
         vector
         (
             sqrt(sqr(lc.x()) + sqr(lc.y())),
-            atan2(lc.y(),lc.x())*180.0/physicalConstant::pi,
+            atan2(lc.y(),lc.x())*180.0/mathematicalConstant::pi,
             lc.z()
         );
 }
@@ -149,7 +149,7 @@ tmp<vectorField> cylindricalCS::toLocal
     (
         vector::Y,
         atan2(lc.component(vector::Y), lc.component(vector::X))*
-        180.0/physicalConstant::pi
+        180.0/mathematicalConstant::pi
     );
 
     result.replace(vector::Z, lc.component(vector::Z));

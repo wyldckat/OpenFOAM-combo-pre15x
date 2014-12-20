@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Generic Geometric Type field class
-
 \*---------------------------------------------------------------------------*/
 
 #include "GeometricField.H"
@@ -70,8 +67,22 @@ bool GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
     {
         if (headerOk())
         {
-            GeometricField<Type, PatchField, GeoMesh> gfRead(*this, mesh_);
-            operator==(gfRead);
+            boundaryField_.transfer(readField()());
+            close();
+
+            // Check compatibility between field and mesh
+
+            if (this->size() != GeoMesh::size(mesh_))
+            {
+                FatalIOErrorIn
+                (
+                    "GeometricField<Type, PatchField, GeoMesh>::"
+                    "readIfPresent()",
+                    readStream(typeName)
+                )   << "   number of field elements = " << this->size()
+                    << " number of mesh elements = " << GeoMesh::size(mesh_)
+                    << exit(FatalIOError);
+            }
 
             readOldTimeIfPresent();
 
@@ -770,9 +781,7 @@ GeometricField<Type, PatchField, GeoMesh>::oldTime() const
             (
                 name() + "_0",
                 time().timeName(),
-                db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
+                db()
             ),
             *this
         );
@@ -971,17 +980,15 @@ GeometricField<Type, PatchField, GeoMesh>::T() const
             (
                 name() + ".T()",
                 instance(),
-                db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
+                db()
             ),
             mesh(),
             dimensions()
         )
     );
 
-    ::Foam::T(result().internalField(), internalField());
-    ::Foam::T(result().boundaryField(), boundaryField());
+    Foam::T(result().internalField(), internalField());
+    Foam::T(result().boundaryField(), boundaryField());
 
     return result;
 }
@@ -1008,19 +1015,17 @@ GeometricField<Type, PatchField, GeoMesh>::component
         (
             IOobject
             (
-                name() + ".component(" + ::Foam::name(d) + ')',
+                name() + ".component(" + Foam::name(d) + ')',
                 instance(),
-                db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
+                db()
             ),
             mesh(),
             dimensions()
         )
     );
 
-    ::Foam::component(Component().internalField(), internalField(), d);
-    ::Foam::component(Component().boundaryField(), boundaryField(), d);
+    Foam::component(Component().internalField(), internalField(), d);
+    Foam::component(Component().boundaryField(), boundaryField(), d);
 
     return Component;
 }
@@ -1049,8 +1054,8 @@ void GeometricField<Type, PatchField, GeoMesh>::max
     const dimensioned<Type>& dt
 )
 {
-    ::Foam::max(internalField(), internalField(), dt.value());
-    ::Foam::max(boundaryField(), boundaryField(), dt.value());
+    Foam::max(internalField(), internalField(), dt.value());
+    Foam::max(boundaryField(), boundaryField(), dt.value());
 }
 
 
@@ -1060,8 +1065,8 @@ void GeometricField<Type, PatchField, GeoMesh>::min
     const dimensioned<Type>& dt
 )
 {
-    ::Foam::min(internalField(), internalField(), dt.value());
-    ::Foam::min(boundaryField(), boundaryField(), dt.value());
+    Foam::min(internalField(), internalField(), dt.value());
+    Foam::min(boundaryField(), boundaryField(), dt.value());
 }
 
 
@@ -1130,7 +1135,6 @@ void GeometricField<Type, PatchField, GeoMesh>::operator=
 
     // This is dodgy stuff, don't try it at home.
     internalField().transfer(const_cast<Field<Type>&>(gf.internalField()));
-
     boundaryField() = gf.boundaryField();
 
     // Correct time index
@@ -1208,7 +1212,7 @@ void GeometricField<Type, PatchField, GeoMesh>::operator op                   \
     boundaryField() op gf.boundaryField();                                    \
                                                                               \
     /* Correct time index */                                                  \
-    timeIndex_ = time().timeIndex();                                         \
+    timeIndex_ = time().timeIndex();                                          \
 }                                                                             \
                                                                               \
 template<class Type, template<class> class PatchField, class GeoMesh>         \
@@ -1232,7 +1236,7 @@ void GeometricField<Type, PatchField, GeoMesh>::operator op                   \
     boundaryField() op dt.value();                                            \
                                                                               \
     /* Correct time index */                                                  \
-    timeIndex_ = time().timeIndex();                                         \
+    timeIndex_ = time().timeIndex();                                          \
 }
 
 COMPUTED_ASSIGNMENT(Type, +=)
@@ -1282,6 +1286,10 @@ Ostream& operator<<
     return os;
 }
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#undef checkField
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

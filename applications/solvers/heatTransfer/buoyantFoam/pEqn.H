@@ -36,7 +36,7 @@ p = pd + rho*gh + pRef;
 dpdt = fvc::ddt(p);
 
 #include "rhoEqn.H"
-#include "continuityErrs.H"
+#include "compressibleContinuityErrs.H"
 
 U -= rUA*(fvc::grad(pd) + fvc::grad(rho)*gh);
 U.correctBoundaryConditions();

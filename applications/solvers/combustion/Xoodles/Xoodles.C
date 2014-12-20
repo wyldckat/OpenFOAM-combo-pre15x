@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     {
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
-#       include "CourantNo.H"
+#       include "compressibleCourantNo.H"
 
 #       include "rhoEqn.H"
 
@@ -117,9 +117,9 @@ int main(int argc, char *argv[])
 
         rho = thermo->rho();
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

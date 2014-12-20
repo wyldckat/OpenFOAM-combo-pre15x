@@ -38,6 +38,7 @@ SourceFiles
 
 #include "Field.H"
 #include "scalar.H"
+#include "FieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,7 +52,6 @@ typedef Field<scalar> scalarField;
 template<>
 tmp<scalarField> scalarField::component(const direction) const;
 
-template<>
 void component
 (
     scalarField& sf,
@@ -62,89 +62,80 @@ void component
 template<>
 void scalarField::replace(const direction, const UList<scalar>& sf);
 
+
 void stabilise(scalarField& Res, const UList<scalar>& sf, const scalar s);
 tmp<scalarField> stabilise(const UList<scalar>&, const scalar s);
 tmp<scalarField> stabilise(const tmp<scalarField>&, const scalar s);
 
-void divide(scalarField&, const scalar, const UList<scalar>&);
-tmp<scalarField> operator/(const scalar, const UList<scalar>&);
-tmp<scalarField> operator/(const scalar, const tmp<scalarField>&);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+BINARY_TYPE_OPERATOR_RR(scalar, scalar, scalar, +, add)
+BINARY_TYPE_OPERATOR_RR(scalar, scalar, scalar, -, subtract)
+
+BINARY_OPERATOR_RR(scalar, scalar, scalar, *, multiply)
+BINARY_OPERATOR_RR(scalar, scalar, scalar, /, divide)
+
+BINARY_TYPE_OPERATOR_SF(scalar, scalar, scalar, /, divide)
+BINARY_TYPE_OPERATOR_SR(scalar, scalar, scalar, /, divide)
+
+BINARY_FUNCTION_RR(scalar, scalar, scalar, pow)
+BINARY_TYPE_FUNCTION_RR(scalar, scalar, scalar, pow)
+
+BINARY_FUNCTION_RR(scalar, scalar, scalar, atan2)
+BINARY_TYPE_FUNCTION_RR(scalar, scalar, scalar, atan2)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void pow(scalarField&, const UList<scalar>&, const UList<scalar>&);
-tmp<scalarField> pow(const UList<scalar>&, const UList<scalar>&);
-tmp<scalarField> pow(const tmp<scalarField>&, const UList<scalar>&);
-tmp<scalarField> pow(const UList<scalar>&, const tmp<scalarField>&);
-tmp<scalarField> pow(const tmp<scalarField>&, const tmp<scalarField>&);
-
-void pow(scalarField&, const UList<scalar>&, const scalar&);
-tmp<scalarField> pow(const UList<scalar>&, const scalar&);
-tmp<scalarField> pow(const tmp<scalarField>&, const scalar&);
-
-void pow(scalarField&, const scalar&, const UList<scalar>&);
-tmp<scalarField> pow(const scalar&, const UList<scalar>&);
-tmp<scalarField> pow(const scalar&, const tmp<scalarField>&);
-
-void atan2(scalarField&, const UList<scalar>&, const UList<scalar>&);
-tmp<scalarField> atan2(const UList<scalar>&, const UList<scalar>&);
-tmp<scalarField> atan2(const tmp<scalarField>&, const UList<scalar>&);
-tmp<scalarField> atan2(const UList<scalar>&, const tmp<scalarField>&);
-tmp<scalarField> atan2(const tmp<scalarField>&, const tmp<scalarField>&);
-
-
-#define transFunc(func)                                \
-void func(scalarField& Res, const UList<scalar>& sf);  \
-tmp<scalarField> func(const UList<scalar>&);           \
-tmp<scalarField> func(const tmp<scalarField>&);
-
-transFunc(pow3)
-transFunc(pow4)
-transFunc(sqrt)
-transFunc(sign)
-transFunc(pos)
-transFunc(neg)
-transFunc(exp)
-transFunc(log)
-transFunc(log10)
-transFunc(sin)
-transFunc(cos)
-transFunc(tan)
-transFunc(asin)
-transFunc(acos)
-transFunc(atan)
-transFunc(sinh)
-transFunc(cosh)
-transFunc(tanh)
-transFunc(asinh)
-transFunc(acosh)
-transFunc(atanh)
-transFunc(erf)
-transFunc(erfc)
-transFunc(lgamma)
-transFunc(j0)
-transFunc(j1)
-transFunc(y0)
-transFunc(y1)
-
-#undef transFunc
+UNARY_FUNCTION_R(scalar, scalar, pow3)
+UNARY_FUNCTION_R(scalar, scalar, pow4)
+UNARY_FUNCTION_R(scalar, scalar, sqrt)
+UNARY_FUNCTION_R(scalar, scalar, sign)
+UNARY_FUNCTION_R(scalar, scalar, pos)
+UNARY_FUNCTION_R(scalar, scalar, neg)
+UNARY_FUNCTION_R(scalar, scalar, exp)
+UNARY_FUNCTION_R(scalar, scalar, log)
+UNARY_FUNCTION_R(scalar, scalar, log10)
+UNARY_FUNCTION_R(scalar, scalar, sin)
+UNARY_FUNCTION_R(scalar, scalar, cos)
+UNARY_FUNCTION_R(scalar, scalar, tan)
+UNARY_FUNCTION_R(scalar, scalar, asin)
+UNARY_FUNCTION_R(scalar, scalar, acos)
+UNARY_FUNCTION_R(scalar, scalar, atan)
+UNARY_FUNCTION_R(scalar, scalar, sinh)
+UNARY_FUNCTION_R(scalar, scalar, cosh)
+UNARY_FUNCTION_R(scalar, scalar, tanh)
+UNARY_FUNCTION_R(scalar, scalar, asinh)
+UNARY_FUNCTION_R(scalar, scalar, acosh)
+UNARY_FUNCTION_R(scalar, scalar, atanh)
+UNARY_FUNCTION_R(scalar, scalar, erf)
+UNARY_FUNCTION_R(scalar, scalar, erfc)
+UNARY_FUNCTION_R(scalar, scalar, lgamma)
+UNARY_FUNCTION_R(scalar, scalar, j0)
+UNARY_FUNCTION_R(scalar, scalar, j1)
+UNARY_FUNCTION_R(scalar, scalar, y0)
+UNARY_FUNCTION_R(scalar, scalar, y1)
 
 
-#define transFunc(func)                                             \
+#define BesselFunc(func)                                            \
 void func(scalarField& Res, const int n, const UList<scalar>& sf);  \
 tmp<scalarField> func(const int n, const UList<scalar>&);           \
 tmp<scalarField> func(const int n, const tmp<scalarField>&);
 
-transFunc(jn)
-transFunc(yn)
+BesselFunc(jn)
+BesselFunc(yn)
 
-#undef transFunc
+#undef BesselFunc
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

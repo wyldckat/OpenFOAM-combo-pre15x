@@ -100,8 +100,8 @@ public:
 
     // Constructors
 
-        //- Construct from polyMesh
-        pointMapper(const polyMesh& mesh);
+        //- Construct from mapPolyMesh
+        pointMapper(const mapPolyMesh& mpm);
 
 
     // Destructor

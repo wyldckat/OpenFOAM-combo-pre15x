@@ -1,5 +1,0 @@
-liftDrag  =  liftDrag
-
-$(liftDrag)/liftDrag.C
-
-LIB = $(FOAM_LIBBIN)/libincompressiblePostProcessing

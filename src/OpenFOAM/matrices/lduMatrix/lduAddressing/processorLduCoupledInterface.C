@@ -22,15 +22,17 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "processorLduCoupledInterface.H"
+#include "diagTensorField.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(Foam::processorLduCoupledInterface, 0);
+namespace Foam
+{
+    defineTypeNameAndDebug(processorLduCoupledInterface, 0);
+}
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
@@ -59,5 +61,6 @@ void Foam::processorLduCoupledInterface::transformProcCoupleField
         }
     }
 }
+
 
 // ************************************************************************* //

@@ -77,6 +77,8 @@ class hexBlock
         //- Vertex addressing inside the block
         inline label vtxLabel(label i, label j, label k) const;
 
+        //- Calculate handedness of block
+        void setHandedness();
 
 public:
 

@@ -33,6 +33,7 @@ Description
 
 #include "fileName.H"
 #include "wordList.H"
+#include "debug.H"
 #include "OSspecific.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -42,62 +43,11 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-//- Null fileName
+int fileName::debug(debug::debugSwitch("fileName", 0));
 const fileName fileName::null;
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-void fileName::stripInvalid()
-{
-    register size_type nValid=0;
-    iterator iter2 = begin();
-
-    for
-    (
-        iterator iter1 = begin();
-        iter1 != end();
-        iter1++
-    )
-    {
-        register char c = *iter1;
-
-        if (valid(c))
-        {
-            *iter2 = c;
-            ++iter2;
-            ++nValid;
-        }
-    }
-
-    resize(nValid);
-}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-fileName::fileName(const string& str)
-:
-    string(str)
-{
-    stripInvalid();
-}
-
-
-fileName::fileName(const std::string& stdStr)
-:
-    string(stdStr)
-{
-    stripInvalid();
-}
-
-
-fileName::fileName(const char* chars)
-:
-    string(chars)
-{
-    stripInvalid();
-}
-
 
 fileName::fileName(const wordList& wrdList)
 {

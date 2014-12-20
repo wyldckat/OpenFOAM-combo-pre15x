@@ -98,6 +98,8 @@ lduMatrix::solverPerformance faMatrix<scalar>::solve(Istream& solverControls)
         solverControls
     )->solve();
 
+    solverPerf.print();
+
     diag() = saveDiag;
 
     psi_.correctBoundaryConditions();

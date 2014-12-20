@@ -30,15 +30,9 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "engineTime.H"
 #include "fvCFD.H"
-#include "tetFem.H"
-#include "SubField.H"
-#include "symmetryFvPatch.H"
-#include "wedgeFvPatch.H"
-#include "emptyFvPatch.H"
-#include "fixedValueTetPolyPatchFields.H"
-#include "slipTetPolyPatchFields.H"
+#include "engineTime.H"
+#include "engineMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,8 +41,7 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 
 #   include "createEngineTime.H"
-#   include "createMeshNoClear.H"
-#   include "createEngineMovingMesh.H"
+#   include "createEngineMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,13 +51,13 @@ int main(int argc, char *argv[])
     {
         Info<< "Time = " << runTime.theta() << " CA-deg\n" << endl;
 
-#       include "movePiston.H"
+        mesh.move();
 
         runTime.write();
  
-        Info<< "\nExecutionTime = "
-             << runTime.elapsedCpuTime()
-             << " s\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "\n end\n";

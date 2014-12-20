@@ -1,7 +1,4 @@
 incompressibleTwoPhaseMixture/twoPhaseMixture.C
-interfaceProperties/interfaceProperties.C
-interfaceProperties/gammaContactAngle/gammaContactAngleFvPatchScalarField.C
-interfaceProperties/gammaCompression/gammaCompression.C
 interFoam.C
 
 EXE = $(FOAM_APPBIN)/interFoam

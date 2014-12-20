@@ -64,11 +64,11 @@ public:
         //- Less function class used by the sort function
         class less
         {
-            const List<Type>& values_;
+            const UList<Type>& values_;
 
         public:
 
-            less(const List<Type>& values)
+            less(const UList<Type>& values)
             :
                 values_(values)
             {}
@@ -92,6 +92,9 @@ public:
 
         //- Construct given size. Sort later on.
         SortableList(const label size);
+
+        //- Construct given size and initial value. Sort later on.
+        SortableList(const label size, const Type&);
 
         //- Construct as copy.
         SortableList(const SortableList<Type>&);

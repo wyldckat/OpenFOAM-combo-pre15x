@@ -43,13 +43,15 @@ addToRunTimeSelectionTable(turbulenceModel, LaunderSharmaKE, dictionary);
 
 tmp<volScalarField> LaunderSharmaKE::fMu() const
 {
-    return exp(-3.4/sqr(1.0 + sqr(k_)/(nu()*epsilonTilda_)/50.0));
+    return exp(-3.4/sqr(scalar(1) + sqr(k_)/(nu()*epsilonTilda_)/50.0));
 }
 
 
 tmp<volScalarField> LaunderSharmaKE::f2() const
 {
-    return 1.0 - 0.3*exp(-min(sqr(sqr(k_)/(nu()*epsilonTilda_)), 50.0));
+    return
+        scalar(1)
+      - 0.3*exp(-min(sqr(sqr(k_)/(nu()*epsilonTilda_)), scalar(50.0)));
 }
 
 
@@ -205,7 +207,7 @@ void LaunderSharmaKE::correct()
 
 
     // Re-calculate viscosity
-    nut_ = Cmu*fMu()*sqr(k_)/(epsilonTilda_ + epsilonSmall_);
+    nut_ = Cmu*fMu()*sqr(k_)/epsilonTilda_;
 }
 
 

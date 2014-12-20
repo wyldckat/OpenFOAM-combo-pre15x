@@ -1,0 +1,2 @@
+c++DBUG     = 
+c++OPT      = -march=pentium4 -O3

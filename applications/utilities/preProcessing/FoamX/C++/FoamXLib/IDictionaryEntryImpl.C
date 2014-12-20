@@ -215,8 +215,8 @@ void FoamX::IDictionaryEntryImpl::setValue
         {
             if (FoamXTypes::isNumber(typeDescriptor_->type()))
             {
-                newValue > *typeDescriptor_->maxValue();
-                newValue < *typeDescriptor_->minValue();
+                //***HGWnewValue > *typeDescriptor_->maxValue();
+                //***HGWnewValue < *typeDescriptor_->minValue();
             }
 
             // Set the value of the any object.

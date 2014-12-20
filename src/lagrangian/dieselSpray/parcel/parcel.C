@@ -214,7 +214,7 @@ bool parcel::move(spray& sDB)
         {
             scalar fraction = t0()/dt;
             vector toPos = position() + U()*deltaT;
-            facei = trackToFace(toPos, fraction);
+            facei = trackToFace(toPos, fraction, false);
 
             if (onBoundary()) // hit face
             {
@@ -232,7 +232,7 @@ bool parcel::move(spray& sDB)
                 const vector& C = mesh.cellCentres()[celli];
                 nIter = 0;
                 vector toC = position() + 1.0e-6*(C - position());;
-                facei = trackToFace(toC, fraction);
+                facei = trackToFace(toC, fraction, false);
                 /*
                 Info << "facei = " << facei << ", position() = " << position() 
                     << ", U = " << U()

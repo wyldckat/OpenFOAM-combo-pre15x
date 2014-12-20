@@ -53,7 +53,6 @@ namespace Foam
 class Time;
 class polyMesh;
 class primitiveMesh;
-class repatchPolyMesh;
 
 /*---------------------------------------------------------------------------*\
                            Class boundaryMesh Declaration
@@ -277,12 +276,12 @@ public:
             void writeTriSurface(const fileName&) const;
 
             //- Get bMesh index of nearest face for every boundary face in
-            //  pMesh. Gets passed span of initial search box. If not found
+            //  pMesh. Gets passed initial search box. If not found
             //  returns -1 for the face.
             labelList getNearest
             (
                 const primitiveMesh& pMesh,
-                const scalar searchSpan = GREAT
+                const vector& searchSpan
             ) const;
 
             //- Take over patches onto polyMesh from nearest face in *this
@@ -297,7 +296,7 @@ public:
             (
                 const labelList& nearest,
                 const polyBoundaryMesh& oldPatches,
-                repatchPolyMesh& newMesh
+                polyMesh& newMesh
             ) const;
 
         // Patches
@@ -307,6 +306,9 @@ public:
 
             //- Get index of patch by name
             label findPatchID(const word& patchName) const;
+
+            //- Get names of patches
+            wordList patchNames() const;
 
             //- Add to back of patch list.
             void addPatch(const word& patchName);

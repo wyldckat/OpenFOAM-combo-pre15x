@@ -1,8 +1,9 @@
 wmake libso dummy
 
-if [ "$WM_MPLIB" = "MPICH" -o "$WM_MPLIB" = "LAM" ]
+if [ "$WM_MPLIB" = "MPICH" -o "$WM_MPLIB" = "LAM" -o "$WM_MPLIB" = "OPENMPI"  -o "$WM_MPLIB" = "MPI" ]
 then
 
+export WM_OPTIONS=${WM_OPTIONS}$WM_MPLIB
 wmake libso mpi
 
 fi

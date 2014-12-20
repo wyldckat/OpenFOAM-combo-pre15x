@@ -76,7 +76,7 @@ void Foam::cellZone::calcCellLookupMap() const
             << abort(FatalError);
     }
 
-    const labelList& addr = addressing();
+    const labelList& addr = *this;
 
     cellLookupMapPtr_ = new Map<label>(2*addr.size());
     Map<label>& clm = *cellLookupMapPtr_;
@@ -106,7 +106,7 @@ Foam::cellZone::cellZone
     const cellZoneMesh& zm
 )
 :
-    indirectCellList(zm.mesh().allCells(), addr),
+    labelList(addr),
     name_(name),
     index_(index),
     zoneMesh_(zm),
@@ -123,11 +123,7 @@ Foam::cellZone::cellZone
     const cellZoneMesh& zm
 )
 :
-    indirectCellList
-    (
-        zm.mesh().allCells(),
-        dict.lookup("cellLabels")
-    ),
+    labelList(dict.lookup("cellLabels")),
     name_(name),
     index_(index),
     zoneMesh_(zm),
@@ -140,12 +136,12 @@ Foam::cellZone::cellZone
 Foam::cellZone::cellZone
 (
     const cellZone& cz,
-    const cellZoneMesh& zm,
-            const label index,
-    const labelList& addr
+    const labelList& addr,
+    const label index,
+    const cellZoneMesh& zm
 )
 :
-    indirectCellList(zm.mesh().allCells(), addr),
+    labelList(addr),
     name_(cz.name()),
     index_(index),
     zoneMesh_(zm),
@@ -192,17 +188,10 @@ void Foam::cellZone::clearAddressing()
 }
 
 
-void Foam::cellZone::resetAddressing(const labelList& addr)
-{
-    clearAddressing();
-    indirectCellList::resetAddressing(addr);
-}
-
-
 void Foam::cellZone::write(Ostream& os) const
 {
     os  << nl << name()
-        << nl << addressing();
+        << nl << static_cast<const labelList&>(*this);
 }
 
 
@@ -211,13 +200,29 @@ void Foam::cellZone::writeDict(Ostream& os) const
     os  << nl << name() << nl << token::BEGIN_BLOCK << nl
         << "    type " << type() << token::END_STATEMENT << nl;
 
-    addressing().writeEntry("cellLabels", os);
+    writeEntry("cellLabels", os);
 
     os  << token::END_BLOCK << endl;
 }
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+void Foam::cellZone::operator=(const cellZone& cz)
+{
+    clearAddressing();
+    labelList::operator=(cz);
+}
+
+
+void Foam::cellZone::operator=(const labelList& addr)
+{
+    clearAddressing();
+    labelList::operator=(addr);
+}
+
+
+// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
 
 Foam::Ostream& Foam::operator<<(Ostream& os, const cellZone& p)
 {

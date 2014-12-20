@@ -101,7 +101,7 @@ public:
 
     // Member functions
 
-        // Inquirery
+        // Inquiry
 
             //- Return the name of the stream
             const fileName& name() const
@@ -151,8 +151,11 @@ public:
             //- Read a label
             Istream& read(label&);
 
-            //- Read a scalar
-            Istream& read(scalar&);
+            //- Read a floatScalar
+            Istream& read(floatScalar&);
+
+            //- Read a doubleScalar
+            Istream& read(doubleScalar&);
 
             //- Read binary block
             Istream& read(char*, std::streamsize);

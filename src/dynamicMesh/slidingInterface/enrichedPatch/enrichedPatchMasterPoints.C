@@ -62,7 +62,7 @@ void Foam::enrichedPatch::calcMasterPointFaces() const
     forAll (masterPatch_, faceI)
     {
         const face& curFace = ef[faceI + slavePatch_.size()];
-//         Info << "Cur face in pfAddr: " << curFace << endl;
+//         Pout << "Cur face in pfAddr: " << curFace << endl;
         forAll (curFace, pointI)
         {
             Map<DynamicList<label> >::iterator mpfIter =
@@ -142,7 +142,7 @@ void Foam::enrichedPatch::calcMasterPointFaces() const
 
         masterPointFaceAddr.insert(mpfToc[mpfTocI], l);
     }
-//     Info << "masterPointFaceAddr: " << masterPointFaceAddr << endl;
+//     Pout << "masterPointFaceAddr: " << masterPointFaceAddr << endl;
 }
 
 

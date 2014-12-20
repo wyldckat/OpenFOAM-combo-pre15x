@@ -109,8 +109,8 @@ public:
 
     // Constructors
 
-        //- Construct from polyMesh
-        cellMapper(const polyMesh& mesh);
+        //- Construct from mapPolyMesh
+        cellMapper(const mapPolyMesh& mpm);
 
 
     // Destructor

@@ -123,6 +123,22 @@ wordList blockMesh::patchPhysicalTypes() const
 }
 
 
+label blockMesh::numZonedBlocks() const
+{
+    label num = 0;
+
+    forAll(*this, blockI)
+    {
+        if (operator[](blockI).blockDef().zoneName().size() > 0)
+        {
+            num++;
+        }
+    }
+
+    return num;
+}
+
+
 void blockMesh::writeTopology(Ostream& os) const
 {
     const pointField& pts = topology().points();

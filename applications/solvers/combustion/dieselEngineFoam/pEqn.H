@@ -54,7 +54,7 @@ else
 }
 
 #include "rhoEqn.H"
-#include "continuityErrs.H"
+#include "compressibleContinuityErrs.H"
 
 U -= fvc::grad(p)/A;
 U.correctBoundaryConditions();

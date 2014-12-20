@@ -8,7 +8,7 @@ EXE_LIBS = \
     -lcompressibleLESmodels \
     -lfoamUtil \
     -lbasicThermophysicalModels \
-    -lcfdTools \
+    -lfiniteVolume \
     -lcombustionThermophysicalModels \
     -lcompressibleTurbulenceModels \
     -ldieselSpray \

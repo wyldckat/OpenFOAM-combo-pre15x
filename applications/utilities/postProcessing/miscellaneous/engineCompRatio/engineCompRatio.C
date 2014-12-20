@@ -32,15 +32,9 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "engineTime.H"
 #include "fvCFD.H"
-#include "tetFem.H"
-#include "fixedValueTetPolyPatchFields.H"
-#include "slipTetPolyPatchFields.H"
-#include "symmetryFvPatch.H"
-#include "wedgeFvPatch.H"
-#include "emptyFvPatch.H"
-#include "SubField.H"
+#include "engineTime.H"
+#include "engineMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,8 +43,7 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createEngineTime.H"
-#   include "createMeshNoClear.H"
-#   include "createEngineMovingMesh.H"
+#   include "createEngineMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -76,7 +69,7 @@ int main(int argc, char *argv[])
             runTime.setDeltaT(t0);
             runTime++;
             Info << "CA = " << ca << endl;
-#           include "movePiston.H"
+            mesh.move();
         }
     }
 
@@ -89,7 +82,7 @@ int main(int argc, char *argv[])
         runTime.setDeltaT(t1);
         runTime++;
         Info << "CA = " << runTime.theta() << endl;
-#       include "movePiston.H"
+        mesh.move();
     }
 
     scalar Vmin = sum(mesh.V());

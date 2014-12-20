@@ -83,7 +83,7 @@ extern "C" int yywrap()
 
 %}
 
-one_space             [ \t\f\015]
+one_space             [ \t\f\r]
 space                 {one_space}*
 some_space            {one_space}+
 cspace                ","{space}
@@ -477,7 +477,7 @@ mtype                 {space}"MTYPE:"{space}
 
 <cellStreamTitle>{spaceNl}{word}{spaceNl} {
 
-        word streamName(YYText());
+        word streamName(Foam::string::validate<word>(YYText()));
 
         BEGIN(cellStreamFlags);
     }

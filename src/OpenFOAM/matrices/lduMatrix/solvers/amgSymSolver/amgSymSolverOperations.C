@@ -27,8 +27,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "amgSymSolver.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -39,8 +37,9 @@ namespace Foam
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // restrict the fine mesh field to coarse mesh
-scalarField amgSymSolver::restrictField
+void amgSymSolver::restrictField
 (
+    scalarField& result,
     const scalarField& fineField,
     const label fineLevelIndex
 ) const
@@ -63,21 +62,18 @@ scalarField amgSymSolver::restrictField
             << abort(FatalError);
     }
 
-    // Dimension the result; the addressing and matrices indices are shifted
-    // by one because of separate fine matrix. 
-    scalarField result(addrLevels_[fineLevelIndex].size(), 0.0);
+    result = 0.0;
 
-    forAll (fineField, cellI)
+    forAll (fineField, i)
     {
-        result[fineToCoarse[cellI]] += fineField[cellI];
+        result[fineToCoarse[i]] += fineField[i];
     }
-
-    return result;
 }
 
 
-scalarField amgSymSolver::prolongField
+void amgSymSolver::prolongField
 (
+    scalarField& result,
     const scalarField& f,
     const label coarseLevelIndex
 ) const
@@ -87,18 +83,32 @@ scalarField amgSymSolver::prolongField
     // Get addressing
     const labelField& fineToCoarse = restrictAddressing_[coarseLevelIndex];
 
-    // Dimension the result; the addressing and matrices indices are shifted
-    // by one because of separate fine matrix. 
-    // Note. Setting to -GREAT is for debigging only; the initial value
-    // can be removed
-    scalarField result(fineToCoarse.size(), -GREAT);
-
-    forAll (fineToCoarse, cellI)
+    forAll(fineToCoarse, i)
     {
-        result[cellI] = f[fineToCoarse[cellI]];
+        result[i] = f[fineToCoarse[i]];
+    }
+}
+
+
+scalar amgSymSolver::scalingFactor
+(
+    const scalarField& field,
+    const scalarField& source,
+    const scalarField& A
+) const
+{
+    scalar scalingFactorNum = 0.0;
+    scalar scalingFactorDenom = 0.0;
+
+    forAll(field, i)
+    {
+        scalingFactorNum += source[i]*field[i];
+        scalingFactorDenom += A[i]*field[i];
     }
 
-    return result;
+    vector scalingVector(scalingFactorNum, scalingFactorDenom, 0);
+    reduce(scalingVector, sumOp<vector>());    
+    return scalingVector[0]/stabilise(scalingVector[1], VSMALL);
 }
 
 

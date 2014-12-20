@@ -131,12 +131,6 @@ public:
         //- Update the patch field
         virtual void updateBoundaryField();
 
-        //- Set boundary condition to matrix
-        virtual void setBoundaryCondition
-        (
-            Map<constraint<Type> > &
-        ) const;
-
 
         //- Write
         virtual void write(Ostream&) const;

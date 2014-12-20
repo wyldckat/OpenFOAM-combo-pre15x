@@ -26,21 +26,17 @@ Class
     polyMesh
 
 Description
-    Moving poly mesh with topological changes.
-    Supports general polyhedral cells.
+    Mesh consisting of general polyhedral cells.
 
 SourceFiles
     polyMesh.C
-    polyMeshIO.C
-    calcPolyMeshFaceCells.C
-    clearPolyMesh.C
-    createPolyMesh.C
+    polyMeshCalcFaceCells.C
+    polyMeshClear.C
     polyMeshCorrectFaceDirections.C
-    polyMeshMorph.C
+    polyMeshCreate.C
+    polyMeshIO.C
     polyMeshPurgePolygons.C
-    polyMeshUpdateTopology.C
-    polyShapeMeshTools.C
-    zipUpCells.C
+    polyMeshShapeMeshTools.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -55,20 +51,19 @@ SourceFiles
 #include "cellShapeList.H"
 #include "pointIOField.H"
 #include "faceIOList.H"
-#include "cellIOList.H"
+#include "labelIOList.H"
 #include "polyBoundaryMesh.H"
 #include "pointZoneMesh.H"
 #include "faceZoneMesh.H"
 #include "cellZoneMesh.H"
-#include "polyMeshMorphEngine.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-class mapPolyMesh;
 class parallelInfo;
+class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
                           Class polyMesh Declaration
@@ -109,64 +104,42 @@ private:
             //- Faces
             faceIOList faces_;
 
-            //- Cells
-            cellIOList cells_;
+            //- Face owner
+            labelIOList allOwner_;
+
+            //- Face neighbour
+            labelIOList allNeighbour_;
 
             //- Boundary mesh
             mutable polyBoundaryMesh boundary_;
 
 
-            // Zoning information
+        // Zoning information
 
-                //- Point zones
-                pointZoneMesh pointZones_;
+            //- Point zones
+            pointZoneMesh pointZones_;
 
-                //- Face zones
-                faceZoneMesh faceZones_;
+            //- Face zones
+            faceZoneMesh faceZones_;
 
-                //- Cell zones
-                cellZoneMesh cellZones_;
-
-
-            //- Parallel info
-            mutable parallelInfo* parallelDataPtr_;
-
-            //- Topology morphing engine
-            mutable polyMeshMorphEngine* morphEnginePtr_;
+            //- Cell zones
+            cellZoneMesh cellZones_;
 
 
-        // Minimal derived data
-
-            //- Face owner
-            mutable labelList* allOwnerPtr_;
-
-            //- Face neighbour
-            mutable labelList* allNeighbourPtr_;
+        //- Parallel info
+        mutable parallelInfo* parallelDataPtr_;
 
 
-        // Other mesh related data
+        // Mesh motion related data
 
-            // Mesh motion
+            //- Is the mesh moving
+            bool moving_;
 
-                //- Is the mesh moving
-                bool moving_;
+            //- Current time index for mesh motion
+            mutable label curMotionTimeIndex_;
 
-                //- Current time index for mesh motion
-                mutable label curMotionTimeIndex_;
-
-                //- Old points (for the last mesh motion)
-                mutable pointField* oldPointsPtr_;
-
-            // Topological change
-
-                //- Is the mesh morphing topology
-                mutable bool morphing_;
-
-                //- Current time index for mesh motion
-                mutable label curMorphTimeIndex_;
-
-                //- Topology morphing map for current topological change
-                mutable mapPolyMesh* morphMap_;
+            //- Old points (for the last mesh motion)
+            mutable pointField* oldPointsPtr_;
 
 
     // Private member functions
@@ -177,17 +150,15 @@ private:
         //- Disallow default bitwise assignment
         void operator=(const polyMesh&);
 
-        // Private member functions to calculate demand driven data
+        //- Initialise the polyMesh from the primitive data
+        void initMesh();
 
-            //- Calculate cell-face addressing
-            void calcFaceCells() const;
+        //- Initialise the polyMesh from the given set of cells
+        void initMesh(cellList& c);
 
-            //- Clear cell-face addressing
-            void clearFaceCells() const;
-
-            //- Calculate the cell shapes from the primitive
-            //  polyhedral information
-            void calcCellShapes() const;
+        //- Calculate the cell shapes from the primitive
+        //  polyhedral information
+        void calcCellShapes() const;
 
 
         // Helper functions for constructor from cell shapes
@@ -203,31 +174,10 @@ private:
             ) const;
 
 
-        // Topology changes
-
-            //- Change topology of the mesh given a topological change
-            void morph(const polyTopoChange&);
-
-            //- Rotate a face nShift positions in anticlockwise direction
-            static face rotateFace(const face& f, const label nShift);
-
-            //- Do everything nessecary to reorder faces on coupled patches
-            //  consistently. Return true if anything changed. Updates
-            //  all topological data and morphMap.
-            bool reorderCoupledPatches
-            (
-                const polyTopoChange& ref,
-                mapPolyMesh& morphMap
-            );
-
-
 public:
 
     //- Runtime type information
     TypeName("polyMesh");
-
-    //- Additional topology morph debug switch
-    static int morphDebug;
 
     //- Return the default region name
     static word defaultRegion;
@@ -286,10 +236,11 @@ public:
             //  on points
             const fileName& pointsInstance() const;
 
-            //- Return the current instance directory for cells
-            //  Used in the consruction of tolpological mesh data dependent
-            //  on cells
-            const fileName& cellsInstance() const;
+            //- Return the current instance directory for faces
+            const fileName& facesInstance() const;
+
+            //- Set the instance for mesh files
+            void setInstance(const fileName&);
 
 
         // Access
@@ -300,9 +251,6 @@ public:
             //- Return raw faces
             const faceList& allFaces() const;
 
-            //- Return raw cells
-            const cellList& allCells() const;
-
             //- Return old mesh motion points
             const pointField& oldAllPoints() const;
 
@@ -311,7 +259,6 @@ public:
 
             //- Return face neighbour
             const labelList& allNeighbour() const;
-
 
             //- Return boundary mesh
             const polyBoundaryMesh& boundaryMesh() const
@@ -337,32 +284,9 @@ public:
                 return cellZones_;
             }
 
+
             //- Return parallel info
             const parallelInfo& parallelData() const;
-
-            //- Return morph engine
-            const polyMeshMorphEngine& morphEngine() const;
-
-
-        // Constructor helper functions
-
-            //- Add boundary patches
-            void addPatches(const List<polyPatch*>&);
-
-            //- Add mesh zones
-            void addZones
-            (
-                const List<pointZone*>& pz,
-                const List<faceZone*>& fz,
-                const List<cellZone*>& cz
-            );
-
-            //- Add mesh modifiers to the morph engine
-            void addTopologyModifiers(const List<polyMeshModifier*>& tm);
-
-            //- Update the mesh based on the mesh files saved in
-            //  time directories
-            virtual readUpdateState readUpdate();
 
 
         // Mesh motion
@@ -382,84 +306,64 @@ public:
 
         // Topological change
 
-            //- Is mesh morphing topology
-            bool morphing() const;
+            //- Return non-const access to the pointZones
+            pointZoneMesh& pointZones()
+            {
+                return pointZones_;
+            }
 
-            //- Update mesh topology using the morph engine
-            virtual void updateTopology();
+            //- Return non-const access to the faceZones
+            faceZoneMesh& faceZones()
+            {
+                return faceZones_;
+            }
 
-            //- Return morph mapping data
-            const mapPolyMesh& morphMap() const;
+            //- Return non-const access to the cellZones
+            cellZoneMesh& cellZones()
+            {
+                return cellZones_;
+            }
 
-            //- Reset morphing
-            void resetMorph() const;
+            //- Add boundary patches
+            void addPatches(const List<polyPatch*>&);
 
-            //- Return true if given face label is active in the mesh
-            bool isActiveFace(const label faceIndex) const;
+            //- Add mesh zones
+            void addZones
+            (
+                const List<pointZone*>& pz,
+                const List<faceZone*>& fz,
+                const List<cellZone*>& cz
+            );
 
+            //- Update the mesh based on the mesh files saved in
+            //  time directories
+            virtual readUpdateState readUpdate();
 
-            // Special mesh functionality
-
-                //- Purge polygonal face descriptions from extra points.
-                //  keeping the points in point zones
-                void purgePolygons();
-
-                //- Correct face directions
-                void correctFaceDirections();
-
-                //- Zip up cells.  This function modifies the list of faces
-                // such that all the cells are topologically closed.
-                // Note that, while this operation is perfectly
-                // sensible for correct meshes, it may lead to
-                // arbitryary errors if the mesh is originally broken.
-                // Use with care.  
-                void zipUpCells();
-
-
-        // Special mesh operations
-
-            //- Update mesh topology using explicitly provided mesh changes.
-            //  This is incompatible with morphEngine/meshModifiers mechanism
-            //  and this function will FatalError if there is a morphEngine.
-            //  This function is only to be used if you cannot do your changes
-            //  through meshModifiers.
-            virtual void updateTopology(const polyTopoChange& ref);
-
-            //- Reset morph time index
-            bool setMorphTimeIndex(const label newTimeIndex) const;
+            //- Update the mesh corresponding to given map
+            virtual void updateMesh(const mapPolyMesh& mpm);
 
             //- Remove boundary patches
             void removeBoundary();
 
-            //- Remove point zones
-            void removePointZones();
-
-            //- Remove face zones
-            void removeFaceZones();
-
-            //- Remove cell zones
-            void removeCellZones();
-
-            //- Remove mesh modifiers
-            void removeMeshModifiers();
-
-            //- Set the instance for mesh files
-            void setInstance(const fileName&);
-
-            //- In-place modifation of primitive data. Use addPatches to
-            //  add boundary afterwards.
-            void reset
+            //- Reset mesh primitive data. Assumes all patch info correct
+            //  (so does e.g. parallel communication). If not use
+            //  validBoundary=false
+            //  (still assumes patchStarts[0] = nInternalFaces and last
+            //  patch ends at nActiveFaces) and change patches with addPatches.
+            void resetPrimitives
             (
-                const pointField& points,
-                const faceList& faces,
-                const cellList& cells
+                const label nUsedFaces,
+                const pointField& allPoints,
+                const faceList& allFaces,
+                const labelList& allOwner,
+                const labelList& allNeighbour,
+                const labelList& patchSizes,
+                const labelList& patchStarts,
+                const bool validBoundary = true
             );
 
 
         //  Storage management
-
-            //- Print a list of all the currently allocated mesh data
-            void printAllocated() const;
 
             //- Clear geometry
             void clearGeom();

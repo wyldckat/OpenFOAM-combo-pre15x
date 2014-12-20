@@ -1,6 +1,6 @@
 {
     surfaceScalarField alphaf = fvc::interpolate(alpha);
-    surfaceScalarField betaf = 1.0 - alphaf;
+    surfaceScalarField betaf = scalar(1) - alphaf;
 
     volScalarField rUaA = 1.0/UaEqn.A();
     volScalarField rUbA = 1.0/UbEqn.A();
@@ -44,9 +44,8 @@
             fvm::laplacian(Dp, p) == fvc::div(phi)
         );
 
-        fvScalarMatrix::reference pRef = pEqn.setReference(pRefCell, pRefValue);
+        pEqn.setReference(pRefCell, pRefValue);
         pEqn.solve();
-        pEqn.unsetReference(pRef);
 
         if (nonOrth == nNonOrthCorr)
         {

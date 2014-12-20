@@ -28,7 +28,7 @@ Description
 
 #include "pressureSwirlInjector.H"
 #include "addToRunTimeSelectionTable.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -126,7 +126,7 @@ scalar pressureSwirlInjector::d0
     scalar c = rndGen_.scalar01();
     angle_ = coneAngle_[n]  + 2.0 * coneInterval_[n] * (0.5 - c) ;
 
-    angle_ *= physicalConstant::pi/360.0;
+    angle_ *= mathematicalConstant::pi/360.0;
 
     scalar injectedMassFlow = it.massFlowRate(t);
     
@@ -141,7 +141,7 @@ scalar pressureSwirlInjector::d0
 
     u_ = v * cosAngle;
     
-    scalar A = injectedMassFlow/(physicalConstant::pi*rhoFuel*u_);
+    scalar A = injectedMassFlow/(mathematicalConstant::pi*rhoFuel*u_);
 
     return (injectorDiameter-sqrt(pow(injectorDiameter,2)-4.0*A))/2.0;
 }
@@ -156,7 +156,7 @@ vector pressureSwirlInjector::direction
 
     scalar alpha = sin(angle_);
     scalar dcorr = cos(angle_);
-    scalar beta = 2.0*physicalConstant::pi*rndGen_.scalar01();
+    scalar beta = 2.0*mathematicalConstant::pi*rndGen_.scalar01();
 
     // randomly distributed vector normal to the injection vector
     vector normal = vector::zero;
@@ -167,7 +167,7 @@ vector pressureSwirlInjector::direction
         // correct beta if this is a 2D run
         // map it onto the 'angleOfWedge'
 
-        beta *= (1.0-2.0*reduce)*sm_.angleOfWedge()/(2.0*physicalConstant::pi);
+        beta *= (1.0-2.0*reduce)*sm_.angleOfWedge()/(2.0*mathematicalConstant::pi);
         beta += reduce*sm_.angleOfWedge();
         normal = alpha*
         (
@@ -236,7 +236,7 @@ scalar pressureSwirlInjector::kv
 
     scalar coneAngle = coneAngle_[inj];
 
-    coneAngle *= physicalConstant::pi/360.0;
+    coneAngle *= mathematicalConstant::pi/360.0;
 
     scalar cosAngle = cos(coneAngle);
     scalar Tav = it.integrateTable(it.T())/(it.teoi()-it.tsoi());
@@ -251,7 +251,7 @@ scalar pressureSwirlInjector::kv
         *
         sqrt(rhoFuel/2.0/dPressure)
         /
-        (physicalConstant::pi*pow(injectorDiameter, 2.0)*rhoFuel*cosAngle)
+        (mathematicalConstant::pi*pow(injectorDiameter, 2.0)*rhoFuel*cosAngle)
     );
 
     return min(1.0, kv);   

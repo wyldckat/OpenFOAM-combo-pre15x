@@ -146,6 +146,9 @@ public:
 
             wordList patchPhysicalTypes() const;
 
+            //- Number of blocks with specified zones
+            label numZonedBlocks() const;
+
 
         // Write
 

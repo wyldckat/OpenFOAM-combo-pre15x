@@ -32,6 +32,7 @@ Description
 #include "processorAmgCoupledInterface.H"
 #include "addToRunTimeSelectionTable.H"
 #include "lduMatrix.H"
+#include "demandDrivenData.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -50,37 +51,6 @@ addToRunTimeSelectionTable
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-// Raw field sending and receiving
-template<class Type>
-void processorAmgCoupledInterface::send
-(
-    const tmp<Field<Type> >& tf,
-    const bool bufferedTransfer
-) const
-{
-    OPstream toNeighbProc
-    (
-        neighbProcNo(),
-        size()*sizeof(Type),
-        bufferedTransfer
-    );
-    toNeighbProc << tf();
-    tf.clear();
-}
-
-
-template<class Type>
-tmp<Field<Type> > processorAmgCoupledInterface::receive() const
-{
-    IPstream fromNeighbProc
-    (
-        neighbProcNo(),
-        size()*sizeof(Type)
-    );
-    return tmp<Field<Type> >(new Field<Type>(fromNeighbProc));
-}
-
 
 template<class Type>
 tmp<Field<Type> > processorAmgCoupledInterface::patchInternalField
@@ -119,7 +89,6 @@ const labelField& processorAmgCoupledInterface::addressing() const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 processorAmgCoupledInterface::processorAmgCoupledInterface
 (
     const lduCoupledInterface* fineInterfacePtr,
@@ -149,6 +118,14 @@ processorAmgCoupledInterface::processorAmgCoupledInterface
     rank_ = p.rank();
 
     // Size remains unknown until the addressing is calculated
+}
+
+
+// * * * * * * * * * * * * * * * * Desstructor * * * * * * * * * * * * * * * //
+
+processorAmgCoupledInterface::~processorAmgCoupledInterface()
+{
+    deleteDemandDrivenData(addrPtr_);
 }
 
 
@@ -372,7 +349,7 @@ tmp<labelField> processorAmgCoupledInterface::nbrColour
     const labelField& cField
 ) const
 {
-    return receive<label>();
+    return receive<label>(this->size());
 }
 
 
@@ -387,7 +364,7 @@ void processorAmgCoupledInterface::initInterfaceMatrixUpdate
     const bool bufferedTransfer
 ) const
 {
-    send(patchInternalField(psiInternal), bufferedTransfer);
+    compressedSend(patchInternalField(psiInternal), bufferedTransfer);
 }
 
 
@@ -402,7 +379,7 @@ void processorAmgCoupledInterface::updateInterfaceMatrix
     const direction cmpt
 ) const
 {
-    scalarField pnf(receive<scalar>());
+    scalarField pnf(compressedReceive<scalar>(coeffs.size()));
     transformProcCoupleField(pnf, cmpt);
 
     const unallocLabelList& addr = addressing();

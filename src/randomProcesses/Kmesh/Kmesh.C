@@ -29,7 +29,7 @@ Description
 #include "Kmesh.H"
 #include "polyMesh.H"
 #include "volFields.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,7 +56,7 @@ Kmesh::Kmesh(const fvMesh& mesh)
     vectorField(mesh.V().size()),
     NN(vector::dim)
 {
-    const scalar pi = physicalConstant::pi;
+    const scalar pi = mathematicalConstant::pi;
     const scalar twoPi = 2.0*pi;
 
     boundBox box = mesh.bounds();

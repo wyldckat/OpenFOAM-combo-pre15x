@@ -25,6 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "geometricFvFieldReconstructor.H"
+#include "Time.H"
 #include "PtrList.H"
 #include "fvPatchFields.H"
 #include "emptyFvPatch.H"
@@ -163,13 +164,9 @@ geometricFvFieldReconstructor::reconstructFvVolumeField
                             patchFields.set(curBPatch) =
                                 fvPatchField<Type>::New
                                 (
-                                    procField.boundaryField()[patchI],
+                                    mesh_.boundary()[curBPatch].type(),
                                     mesh_.boundary()[curBPatch],
-                                    internalField,
-                                    fvPatchFieldReconstructor
-                                    (
-                                        mesh_.boundary()[curBPatch].size()
-                                    )
+                                    internalField
                                 ).ptr();
                         }
 
@@ -370,13 +367,9 @@ geometricFvFieldReconstructor::reconstructFvSurfaceField
                                 patchFields.set(curBPatch) =
                                     fvPatchField<Type>::New
                                     (
-                                        procField.boundaryField()[patchI],
+                                        mesh_.boundary()[curBPatch].type(),
                                         mesh_.boundary()[curBPatch],
-                                        internalField,
-                                        fvPatchFieldReconstructor
-                                        (
-                                            mesh_.boundary()[curBPatch].size()
-                                        )
+                                        internalField
                                     ).ptr();
                             }
 

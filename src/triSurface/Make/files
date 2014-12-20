@@ -1,88 +1,39 @@
-orientedSurface                       = orientedSurface
+triSurfaceTools                       = triSurface/triSurfaceTools
+geometricSurfacePatch                 = triSurface/geometricSurfacePatch
+faceTriangulation/faceTriangulation.C
+meshTriangulation/meshTriangulation.C
 
-booleanOps                            = booleanOps
-booleanSurface                        = $(booleanOps)/booleanSurface
-intersectedSurface                    = $(booleanOps)/intersectedSurface
-surfaceIntersection                   = $(booleanOps)/surfaceIntersection
+triSurface/triSurface.C
+triSurface/triSurfaceAddressing.C
+triSurface/stitchTriangles.C
 
-faceTriangulation                     = faceTriangulation
-meshTriangulation                     = meshTriangulation
+interfaces = triSurface/interfaces
+$(interfaces)/STL/writeSTL.C
+$(interfaces)/STL/readSTL.C
+$(interfaces)/STL/readSTLASCII.L
+$(interfaces)/STL/readSTLBINARY.C
+$(interfaces)/GTS/writeGTS.C
+$(interfaces)/GTS/readGTS.C
+$(interfaces)/OBJ/readOBJ.C
+$(interfaces)/OBJ/writeOBJ.C
+$(interfaces)/SMESH/writeSMESH.C
+$(interfaces)/OFF/readOFF.C
+$(interfaces)/OFF/writeOFF.C
+$(interfaces)/TRI/writeTRI.C
+$(interfaces)/TRI/readTRI.C
+$(interfaces)/DX/writeDX.C
+$(interfaces)/AC3D/readAC.C
+$(interfaces)/AC3D/writeAC.C
+$(interfaces)/VTK/writeVTK.C
 
-triSurface                            = triSurface
-octreeData                            = $(triSurface)/octreeData
-triSurfaceTools                       = $(triSurface)/triSurfaceTools
-geometricSurfacePatch                 = $(triSurface)/geometricSurfacePatch
-surfacePatch                          = $(triSurface)/surfacePatch
-triSurfaceSearch                      = $(triSurface)/triSurfaceSearch
+triSurface/triSurfaceTools/triSurfaceTools.C
 
-interfaces                            = $(triSurface)/interfaces
-DX                                    = $(interfaces)/DX
-GTS                                   = $(interfaces)/GTS
-OBJ                                   = $(interfaces)/OBJ
-SMESH                                 = $(interfaces)/SMESH
-OFF                                   = $(interfaces)/OFF
-STL                                   = $(interfaces)/STL
-TRI                                   = $(interfaces)/TRI
-AC3D                                  = $(interfaces)/AC3D
-VTK                                   = $(interfaces)/VTK
+triSurface/geometricSurfacePatch/geometricSurfacePatch.C
+triSurface/surfacePatch/surfacePatch.C
+triSurface/surfacePatch/surfacePatchIOList.C
 
-tools                                 = tools
-hashSignedLabel                       = $(tools)/hashSignedLabel
-labelPair                             = $(tools)/labelPair
-labelledTri                           = $(tools)/labelledTri
-features                              = $(tools)/features
+tools/labelledTri/sortLabelledTri.C
 
-triangleFuncs                         = $(tools)/triangleFuncs
-
-
-$(orientedSurface)/orientedSurface.C
-
-$(surfaceIntersection)/surfaceIntersection.C
-$(surfaceIntersection)/surfaceIntersectionFuncs.C
-$(surfaceIntersection)/edgeIntersections.C
-$(booleanSurface)/booleanSurface.C
-$(intersectedSurface)/intersectedSurface.C
-$(intersectedSurface)/edgeSurface.C
-
-$(faceTriangulation)/faceTriangulation.C
-$(meshTriangulation)/meshTriangulation.C
-
-$(triSurface)/triSurface.C
-$(triSurfaceSearch)/triSurfaceSearch.C
-$(triSurface)/triSurfaceAddressing.C
-$(triSurface)/stitchTriangles.C
-
-$(STL)/writeSTL.C
-$(STL)/readSTL.C
-$(STL)/readSTLASCII.L
-$(STL)/readSTLBINARY.C
-$(GTS)/writeGTS.C
-$(GTS)/readGTS.C
-$(OBJ)/readOBJ.C
-$(OBJ)/writeOBJ.C
-$(SMESH)/writeSMESH.C
-$(OFF)/readOFF.C
-$(OFF)/writeOFF.C
-$(TRI)/writeTRI.C
-$(TRI)/readTRI.C
-$(DX)/writeDX.C
-$(AC3D)/readAC.C
-$(AC3D)/writeAC.C
-$(VTK)/writeVTK.C
-
-$(octreeData)/octreeDataTriSurface.C
-$(octreeData)/octreeDataTriSurfaceTreeLeaf.C
-
-$(triSurfaceTools)/triSurfaceTools.C
-
-$(geometricSurfacePatch)/geometricSurfacePatch.C
-$(surfacePatch)/surfacePatch.C
-$(surfacePatch)/surfacePatchIOList.C
-
-$(triangleFuncs)/triangleFuncs.C
-
-$(labelledTri)/sortLabelledTri.C
-
-$(features)/features.C
+triSurfaceFields/triSurfaceFields.C
 
 LIB = $(FOAM_LIBBIN)/libtriSurface

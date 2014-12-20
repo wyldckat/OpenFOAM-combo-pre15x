@@ -27,7 +27,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "ComponentMixedPointPatchVectorField.H"
-#include "constraints.H"
 #include "PointPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -221,52 +220,6 @@ void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::evaluate()
       + scale(internalValues, vector::one - valueFraction_);
 
     this->setInInternalField(iF, values);
-}
-
-
-// Set boundary condition to matrix
-template
-<
-    template<class> class PatchField,
-    class PointPatch
->
-void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::
-setBoundaryCondition
-(
-    Map<constraint<vector> > & fix
-) const
-{
-    // get addressing
-    const labelList& meshPoints = this->patch().meshPoints();
-
-    // The boundary nod eequation expects a list of valueFractions
-    // associated with each component.  In order to enforce
-    // consistency, the valueFraction is stored as a vector.
-
-    forAll (meshPoints, pointI)
-    {
-        const label curPoint = meshPoints[pointI];
-
-        // create a constraint
-        constraint<vector> bc =
-            constraint<vector>
-            (
-                curPoint,
-                refValue_[pointI],
-                cmptMag(valueFraction_[pointI])
-            );
-
-        // If pointer is not set, add it, otherwise combine with
-        // already existing value
-        if (!fix.found(curPoint))
-        {
-            fix.insert(curPoint, bc);
-        }
-        else
-        {
-            fix[curPoint].combine(bc);
-        }
-    }
 }
 
 

@@ -16,8 +16,8 @@ wmake splitMesh
 wmake renumberMesh
 wmake tetDecomposition
 wmake moveMesh
+wmake moveDynamicMesh
 wmake moveEngineMesh
-wmake moveTopoMesh
 wmake splitMeshRegions
 wmake insideCells
 wmake couplePatches

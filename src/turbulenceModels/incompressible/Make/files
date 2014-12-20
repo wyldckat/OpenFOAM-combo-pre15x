@@ -15,4 +15,7 @@ LaunderGibsonRSTM/LaunderGibsonRSTM.C
 SpalartAllmaras/SpalartAllmaras.C
 realizableKE/realizableKE.C
 
+wallFunctions/nutWallFunction/nutWallFunctionFvPatchScalarField.C
+wallFunctions/nutWallFunction/nutStandardWallFunctionFvPatchScalarField.C
+
 LIB = $(FOAM_LIBBIN)/libincompressibleTurbulenceModels

@@ -61,7 +61,6 @@ SourceFiles
 #include "boolList.H"
 #include "labelList.H"
 #include "scalarField.H"
-#include "volFields.H"
 #include "pointFields.H"
 #include "tensor.H"
 #include "primitivePatch.H"

@@ -61,11 +61,12 @@ tmp<volScalarField> realizableKE::rCmu
 
     tS.clear();
 
-    volScalarField phis = (1.0/3.0)*acos(min(max(sqrt(6.0)*W, -1.0), 1.0));
+    volScalarField phis = 
+        (1.0/3.0)*acos(min(max(sqrt(6.0)*W, -scalar(1)), scalar(1)));
     volScalarField As = sqrt(6.0)*cos(phis);
     volScalarField Us = sqrt(S2/2.0 + magSqr(skew(gradU)));
 
-    return 1.0/(A0 + As*Us*k_/epsilon_);
+    return 1.0/(A0 + As*Us*k_/(epsilon_ + epsilonSmall_));
 }
 
 
@@ -126,6 +127,8 @@ realizableKE::realizableKE
 
     nut_(rCmu(fvc::grad(U_))*sqr(k_)/(epsilon_ + epsilonSmall_))
 {
+    bound(k_, k0_);
+    bound(epsilon_, epsilon0_);
 #   include "wallViscosityI.H"
 }
 
@@ -198,39 +201,43 @@ void realizableKE::correct()
     volScalarField magS = sqrt(S2);
     
     volScalarField eta = magS*k_/epsilon_;
-    volScalarField C1 = max(eta/(5.0 + eta), 0.43);
+    volScalarField C1 = max(eta/(scalar(5) + eta), scalar(0.43));
     
     volScalarField G = nut_*S2;
-       
+
+#   include "wallFunctionsI.H"
+
+
     // Dissipation equation
-
-#   include "wallDissipationI.H"
-
     tmp<fvScalarMatrix> epsEqn
     (
         fvm::ddt(epsilon_)
       + fvm::div(phi_, epsilon_)
+      - fvm::Sp(fvc::div(phi_), epsilon_)
       - fvm::laplacian(DepsilonEff(), epsilon_)
      ==
-        C1*magS*epsilon_ + boundarySource
+        C1*magS*epsilon_
       - fvm::Sp
         (
-            C2*epsilon_/(k_ + sqrt(nu()*epsilon_)) + boundaryCentral,
+            C2*epsilon_/(k_ + sqrt(nu()*epsilon_)),
             epsilon_
         )
     );
 
     epsEqn().relax();
+
+#   include "wallDissipationI.H"
+
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
 
 
     // Turbulent kinetic energy equation
-
     tmp<fvScalarMatrix> kEqn
     (
         fvm::ddt(k_)
       + fvm::div(phi_, k_)
+      - fvm::Sp(fvc::div(phi_), k_)
       - fvm::laplacian(DkEff(), k_)
      ==
         G - fvm::Sp(epsilon_/k_, k_)
@@ -239,9 +246,10 @@ void realizableKE::correct()
     kEqn().relax();
     solve(kEqn);
     bound(k_, k0_);
+
     
     // Re-calculate viscosity
-    nut_ = rCmu(gradU, S2, magS)*sqr(k_)/(epsilon_ + epsilonSmall_);
+    nut_ = rCmu(gradU, S2, magS)*sqr(k_)/epsilon_;
 
 #   include "wallViscosityI.H"
 

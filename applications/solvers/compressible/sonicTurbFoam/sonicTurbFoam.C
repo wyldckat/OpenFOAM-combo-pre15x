@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
 #       include "readPISOControls.H"
-#       include "CourantNo.H"
+#       include "compressibleCourantNo.H"
 
 #       include "rhoEqn.H"
 
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
                 }
             }
 
-#           include "continuityErrs.H"
+#           include "compressibleContinuityErrs.H"
 
             U -= rUA*fvc::grad(p);
             U.correctBoundaryConditions();
@@ -117,9 +117,9 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

@@ -200,8 +200,9 @@ Foam::Time::Time
         if (mag(startTime_ - sumStartTime/Pstream::nProcs()) > SMALL)
         {
             FatalErrorIn("Time::Time(const word&, const fileName&)")
-                << "Start time is not the same for all processors"
-                << exit(FatalError); 
+                << "Start time is not the same for all processors" << nl
+                << "processor " << Pstream::myProcNo() << " has startTime "
+                << startTime_ << exit(FatalError); 
         }
     }
 

@@ -258,7 +258,7 @@ int main(int argc, char *argv[])
                         (
                             "rho",
                             runTime.timeName(),
-                            runTime
+                            mesh
                         ),
                         thermo->rho()
                     );

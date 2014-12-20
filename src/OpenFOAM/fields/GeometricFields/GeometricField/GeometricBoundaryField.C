@@ -24,10 +24,8 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-#include "fvMesh.H"
 #include "emptyPolyPatch.H"
 #include "parallelInfo.H"
-#include "processorFvPatchField.H"
 #include "commSchedule.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -356,13 +354,10 @@ writeEntry(const word& keyword, Ostream& os) const
 
     forAll(*this, patchi)
     {
-        //if (bmesh_[patchi].type() != emptyPolyPatch::typeName)
-        //{
-            os  << indent << this->operator[](patchi).patch().name() << nl
-                << indent << token::BEGIN_BLOCK << nl
-                << incrIndent << this->operator[](patchi) << decrIndent
-                << indent << token::END_BLOCK << endl;
-        //}
+        os  << indent << this->operator[](patchi).patch().name() << nl
+            << indent << token::BEGIN_BLOCK << nl
+            << incrIndent << this->operator[](patchi) << decrIndent
+            << indent << token::END_BLOCK << endl;
     }
 
     os  << decrIndent << token::END_BLOCK << endl;

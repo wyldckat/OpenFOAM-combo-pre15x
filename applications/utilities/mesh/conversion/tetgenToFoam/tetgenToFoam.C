@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
             // Store point and node number.
             if
             (
-                 (startAt1 && nodeI != pointI)
+                 (!startAt1 && nodeI != pointI)
               || (startAt1 && nodeI-1 != pointI)
             )
             {

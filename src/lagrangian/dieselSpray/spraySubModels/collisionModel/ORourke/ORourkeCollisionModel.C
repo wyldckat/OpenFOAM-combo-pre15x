@@ -78,6 +78,11 @@ ORourkeCollisionModel::~ORourkeCollisionModel()
 void ORourkeCollisionModel::collideParcels(const scalar dt) const
 {
 
+    if (spray_.size() < 2)
+    {
+        return;
+    }
+
     spray::iterator secondParcel = spray_.begin();
     ++secondParcel;
     spray::iterator p1 = secondParcel;

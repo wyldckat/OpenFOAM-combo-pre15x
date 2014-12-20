@@ -144,14 +144,15 @@ void IOerror::exit(const int)
 
     if (abort_)
     {
-        Serr<< endl << *this << endl
+        Perr<< endl << *this << endl
             << "\nFOAM aborting (FOAM_ABORT set)\n" << endl;
+        printStack(Perr);
         ::abort();
     }
 
     if (Pstream::parRun())
     {
-        Serr<< endl << *this << endl
+        Perr<< endl << *this << endl
             << "\nFOAM parallel run exiting\n" << endl;
         Pstream::exit(1);
     }
@@ -163,7 +164,7 @@ void IOerror::exit(const int)
         }
         else
         {
-            Serr<< endl << *this << endl
+            Perr<< endl << *this << endl
                 << "\nFOAM exiting\n" << endl;
             ::exit(1);
         }
@@ -181,15 +182,17 @@ void IOerror::abort()
 
     if (abort_)
     {
-        Serr<< endl << *this << endl
+        Perr<< endl << *this << endl
             << "\nFOAM aborting (FOAM_ABORT set)\n" << endl;
+        printStack(Perr);
         ::abort();
     }
 
     if (Pstream::parRun())
     {
-        Serr<< endl << *this << endl
+        Perr<< endl << *this << endl
             << "\nFOAM parallel run aborting\n" << endl;
+        printStack(Perr);
         Pstream::abort();
     }
     else
@@ -200,8 +203,9 @@ void IOerror::abort()
         }
         else
         {
-            Serr<< endl << *this << endl
+            Perr<< endl << *this << endl
                 << "\nFOAM aborting\n" << endl;
+            printStack(Perr);
             ::abort();
         }
     }

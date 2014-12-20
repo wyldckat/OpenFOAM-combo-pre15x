@@ -29,6 +29,8 @@ Description
 
 #include "amgSymSolver.H"
 #include "ICCG.H"
+#include "GaussSeidel.H"
+#include "SubField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,16 +44,13 @@ lduMatrix::solverPerformance amgSymSolver::solve()
     // If no levels are created, bail out by calling ICCG
     if (matrixLevels_.size() < 1)
     {
-#       ifdef FULLDEBUG
-        if (lduMatrix::debug >= 2)
+        if (debug >= 2)
         {
-        Info
-            << "lduMatrix::solverPerformance amgSymSolver::solve : "
-            << "No coarse levels. Matrix too small for AMG; "
-            << "Reverting to CG."
-            << endl;
+            Pout<< "lduMatrix::solverPerformance amgSymSolver::solve : "
+                << "No coarse levels. Matrix too small for AMG; "
+                << "Reverting to CG."
+                << endl;
         }
-#       endif
 
         return ICCG
         (
@@ -68,11 +67,12 @@ lduMatrix::solverPerformance amgSymSolver::solve()
         ).solve();
     }
 
+
     // Setup class containing solver performance data
     lduMatrix::solverPerformance solverPerf(typeName, fieldName_);
 
     // Calculate reference value of psi
-    scalar psiRef = average(psi_);
+    scalar psiRef = gAverage(psi_);
 
     // Calculate A.psi and A.psiRef
     scalarField Apsi(psi_.size());
@@ -87,21 +87,22 @@ lduMatrix::solverPerformance amgSymSolver::solve()
         interfaces_,
         cmpt_
     );
+        
+    // Calculate normalisation factor
+    scalar normFactor =
+        gSum(mag(Apsi - ApsiRef) + mag(source_ - ApsiRef))
+      + lduMatrix::small_;
 
     // Calculate initial residual field
     scalarField fineResidual(source_ - Apsi);
 
-    // Calculate normalisation factor
-    scalar normFactor =
-        gSum(mag(Apsi - ApsiRef) + mag(source_ - ApsiRef)) + lduMatrix::small_;
-
     // Calculate residual magnitude
-    solverPerf.initialResidual() = gSum(mag(fineResidual))/normFactor;
+    solverPerf.initialResidual() = gSumMag(fineResidual)/normFactor;
     solverPerf.finalResidual() = solverPerf.initialResidual();
 
-    if (lduMatrix::debug >= 2)
+    if (debug >= 2)
     {
-        Info<< "   Normalisation factor = " << normFactor << endl;
+        Pout<< "   Normalisation factor = " << normFactor << endl;
     }
 
 
@@ -130,50 +131,43 @@ lduMatrix::solverPerformance amgSymSolver::solve()
 
         const label topLevel = matrixLevels_.size() - 1;
 
-#       ifdef FULLDEBUG
-        if (lduMatrix::debug >= 3)
+        if (debug >= 3)
         {
-            Info<< "preparatory operations " << cpu_.cpuTimeIncrement() << endl;
+            Pout<< "preparatory operations " << cpu_.cpuTimeIncrement() << endl;
         }
-#       endif
 
         do
         {
             if (matrixLevels_.size() > 0)
             {
                 // Restrict residual for the next level up
-                coarseSources[0] = restrictField(fineResidual, 0);
+                restrictField(coarseSources[0], fineResidual, 0);
 
                 // Solver V-cycle
 
                 // Residual restriction (going to coarser levels)
                 for (label levelI = 0; levelI < topLevel; levelI++)
                 {
-                    // Clean up the field
-                    coarseFields[levelI] = 0;
-
                     // Residual is equal to source
-                    coarseSources[levelI + 1] = restrictField
+                    restrictField
                     (
+                        coarseSources[levelI + 1],
                         coarseSources[levelI],
                         levelI + 1
                     );
                 }
 
                 // Top level
-#               ifdef FULLDEBUG
-                if (lduMatrix::debug >= 3)
+
+                if (debug >= 3)
                 {
-                    Info << "restriction " << cpu_.cpuTimeIncrement() << endl;
+                    Pout<< "restriction " << cpu_.cpuTimeIncrement() << endl;
                 }
-#               endif
 
                 // clean up the field
                 coarseFields[topLevel] = 0;
 
-                matrixLevels_[topLevel].quietOperation() = true;
-
-                ICCG
+                lduMatrix::solverPerformance coarseSolverPerf = ICCG
                 (
                     "topLevelCorr",
                     coarseFields[topLevel],
@@ -183,15 +177,16 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                     interfaceCoeffs_[topLevel],
                     interfaceLevels_[topLevel],
                     cmpt_,
-                    1e-12
+                    tolerance_,
+                    relTol_
                 ).solve();
 
-#               ifdef FULLDEBUG
-                if (lduMatrix::debug >= 2)
+                if (debug >= 2)
                 {
-                    Info << "Scaling factors: ";
+                    coarseSolverPerf.print();
+
+                    Pout<< "Scaling factors: ";
                 }
-#               endif
 
                 // Post-smoothing (going to finer levels)
                 for (label levelI = topLevel - 1; levelI >= 0; levelI--)
@@ -199,57 +194,61 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                     // Note:
                     // This form of scaling assumes there is no pre-smoothing
                     // For full form see scaling for the finest mesh
-                    // 
 
-                    coarseFields[levelI] = prolongField
+                    prolongField
                     (
+                        coarseFields[levelI],
                         coarseFields[levelI + 1],
                         levelI + 1
                     );
-                    
-#                   ifdef FULLDEBUG
-                    if (lduMatrix::debug >= 3)
+
+                    if (debug >= 3)
                     {
-                        Info << "prolongation " << cpu_.cpuTimeIncrement()
+                        Pout<< "prolongation " << cpu_.cpuTimeIncrement()
                             << endl;
                     }
-#                   endif
 
                     // Calculate scaling factor
-                    scalarField ACf(coarseFields[levelI].size());
+                    scalarField::subField ACf
+                    (
+                        Apsi,
+                        coarseFields[levelI].size()
+                    );
+
                     matrixLevels_[levelI].Amul
                     (
-                        ACf,
+                        reinterpret_cast<scalarField&>(ACf),
                         coarseFields[levelI],
                         interfaceCoeffs_[levelI],
                         interfaceLevels_[levelI],
                         cmpt_
                     );
 
-                    scalar scalingFactor =
-                        gSum(coarseSources[levelI]*coarseFields[levelI])
-                       /stabilise(gSum(coarseFields[levelI]*ACf), VSMALL);
-
-#                   ifdef FULLDEBUG
-                    if (lduMatrix::debug >= 2)
-                    {
-                        Info << scalingFactor << " ";
-                    }
-#                   endif
-
-                    coarseFields[levelI] *= scalingFactor;
-
-#                   ifdef FULLDEBUG
-                    if (lduMatrix::debug >= 3)
-                    {
-                        Info << "scaling " << cpu_.cpuTimeIncrement() << endl;
-                    }
-#                   endif
-
-                    // Smooth the solution
-                    matrixLevels_[levelI].smooth
+                    scalar sf = scalingFactor
                     (
                         coarseFields[levelI],
+                        coarseSources[levelI],
+                        ACf
+                    );
+
+                    if (debug >= 2)
+                    {
+                        Pout<< sf << " ";
+                    }
+
+                    coarseFields[levelI] *= sf;
+
+                    if (debug >= 3)
+                    {
+                        Pout<< "scaling " << cpu_.cpuTimeIncrement() << endl;
+                    }
+
+                    // Smooth the solution
+                    GaussSeidel::smooth
+                    (
+                        fieldName_,
+                        coarseFields[levelI],
+                        matrixLevels_[levelI],
                         coarseSources[levelI],
                         interfaceCoeffs_[levelI],
                         interfaceLevels_[levelI],
@@ -257,61 +256,61 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                         nPostSweeps_
                     );
 
-#                   ifdef FULLDEBUG
-                    if (lduMatrix::debug >= 3)
+                    if (debug >= 3)
                     {
-                        Info << "smoothing " << cpu_.cpuTimeIncrement() << endl;
+                        Pout<< "smoothing " << cpu_.cpuTimeIncrement() << endl;
                     }
-#                   endif
                 }
 
                 // Prolong the finest level correction
-                scalarField fineCorrection = prolongField(coarseFields[0], 0);
+                scalarField& fineCorrection = ApsiRef;
+                prolongField(fineCorrection, coarseFields[0], 0);
 
-#               ifdef FULLDEBUG
-                if (lduMatrix::debug >= 3)
+                if (debug >= 3)
                 {
-                    Info << "finest prolongation " << cpu_.cpuTimeIncrement()
+                    Pout<< "finest prolongation " << cpu_.cpuTimeIncrement()
                         << endl;
                 }
-#               endif
 
                 // Calculate fine scaling factor
-                scalarField AFine(psi_.size());
                 matrix_.Amul
                 (
-                    AFine,
+                    Apsi,
                     fineCorrection,
                     coupleBouCoeffs_,
                     interfaces_,
                     cmpt_
                 );
 
-                scalar fineScalingFactor =
-                    gSum(fineResidual*fineCorrection)
-                   /stabilise(gSum(fineCorrection*AFine), VSMALL);
+                scalar fsf = scalingFactor
+                (
+                    fineCorrection,
+                    fineResidual,
+                    Apsi
+                );
 
-#               ifdef FULLDEBUG
-                if (lduMatrix::debug >= 2)
+                if (debug >= 2)
                 {
-                    Info << fineScalingFactor << " ";
+                    Pout<< fsf << " ";
                 }
-#               endif
 
-                psi_ += fineScalingFactor*fineCorrection;
+                forAll(psi_, i)
+                {
+                    psi_[i] += fsf*fineCorrection[i];
+                }
             }
 
-#           ifdef FULLDEBUG
-            if (lduMatrix::debug >= 3)
+            if (debug >= 3)
             {
-                Info << "finest scaling " << cpu_.cpuTimeIncrement() << endl;
+                Pout<< "finest scaling " << cpu_.cpuTimeIncrement() << endl;
             }
-#           endif
 
             // smooth fine matrix
-            matrix_.smooth
+            GaussSeidel::smooth
             (
+                fieldName_,
                 psi_,
+                matrix_,
                 source_,
                 coupleBouCoeffs_,
                 interfaces_,
@@ -319,38 +318,27 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                 nBottomSweeps_
             );
 
-#           ifdef FULLDEBUG
-            if (lduMatrix::debug >= 3)
+            if (debug >= 3)
             {
-                Info << "finest smoothing " << cpu_.cpuTimeIncrement() << endl;
+                Pout<< "finest smoothing " << cpu_.cpuTimeIncrement() << endl;
             }
-#           endif
 
             // Calculate fine residual
-            fineResidual = matrix_.residual
-            (
-                psi_,
-                source_,
-                coupleBouCoeffs_,
-                interfaces_,
-                cmpt_
-            );
+            matrix_.Amul(Apsi, psi_, coupleBouCoeffs_, interfaces_, cmpt_);
+            fineResidual = source_;
+            fineResidual -= Apsi;
 
-            solverPerf.finalResidual() = gSum(mag(fineResidual))/normFactor;
+            solverPerf.finalResidual() = gSumMag(fineResidual)/normFactor;
 
-#           ifdef FULLDEBUG
-            if (lduMatrix::debug >= 3)
+            if (debug >= 3)
             {
-                Info << "finest residual " << cpu_.cpuTimeIncrement() << endl;
+                Pout<< "finest residual " << cpu_.cpuTimeIncrement() << endl;
             }
-#           endif
         } while
         (
             solverPerf.nIterations()++ < maxCycles_
          && !(solverPerf.checkConvergence(tolerance_, relTol_))
         );
-
-        solverPerf.print();
     }
 
     return solverPerf;

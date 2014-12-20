@@ -9,7 +9,7 @@
     gammaEqn.solve();
 
     rhoPhi = gammaEqn.flux()*(rho1 - rho2) + phi*rho2;
-    rho = gamma*rho1 + (1.0 - gamma)*rho2;
+    rho = gamma*rho1 + (scalar(1) - gamma)*rho2;
 
     Info<< "Phase 1 volume fraction = "
         << gamma.weightedAverage(mesh.V()).value()

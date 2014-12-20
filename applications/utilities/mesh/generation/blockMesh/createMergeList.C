@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "blockMesh.H"
@@ -43,7 +41,8 @@ labelList blockMesh::createMergeList()
 
     blockMesh& blocks = *this;
 
-    const cellList& blockCells = topology().allCells();
+    const pointField& blockPoints = topology().points();
+    const cellList& blockCells = topology().cells();
     const faceList& blockFaces = topology().allFaces();
     const labelList& faceOwnerBlocks = topology().faceOwner();
 
@@ -95,9 +94,13 @@ labelList blockMesh::createMergeList()
         // point to point distance on the block face.
         // At the same time merge collated points on the block's faces
         // (removes boundary poles etc.)
+        // Collated points detected by initally taking a constant factor of
+        // the size of the block.
 
-        // This is an N^2 algorithm, sorry but I cannot quickly come up
-        // with something better.
+        boundBox bb(blockCells[blockPlabel].points(blockFaces, blockPoints));
+        const scalar mergeSqrDist = SMALL*magSqr(bb.max() - bb.min());
+
+        // This is an N^2 algorithm
 
         scalar sqrMergeTol = GREAT;
 
@@ -120,7 +123,7 @@ labelList blockMesh::createMergeList()
                             [blockPfaceFacePointLabel2]]
                         );
 
-                        if (magSqrDist < VSMALL)
+                        if (magSqrDist < mergeSqrDist)
                         {
                             label PpointLabel =
                                 blockPfaceFacePoints[blockPfaceFacePointLabel]

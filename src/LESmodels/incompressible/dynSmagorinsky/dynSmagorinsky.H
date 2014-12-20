@@ -84,6 +84,8 @@ class dynSmagorinsky
 {
     // Private data
 
+        volScalarField k_;
+
         autoPtr<LESfilter> filterPtr_;
         LESfilter& filter_;
 
@@ -121,6 +123,12 @@ public:
 
 
     // Member Functions
+
+        //- Return SGS kinetic energy
+        tmp<volScalarField> k() const
+        {
+            return k_;
+        }
 
         //- Correct Eddy-Viscosity and related properties
         void correct(const tmp<volTensorField>& gradU);

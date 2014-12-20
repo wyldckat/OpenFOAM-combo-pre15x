@@ -40,7 +40,7 @@ SourceFiles
 #include "tetPolyMesh.H"
 #include "tetPointMesh.H"
 #include "tetPolyPatch.H"
-#include "PointPatchFieldMapperPatchRef.H"
+#include "TetPointPatchFieldMapperPatchRef.H"
 #include "tetPolyPatchField.H"
 #include "GeometricField.H"
 
@@ -61,7 +61,7 @@ public:
         //- Patch field decomposer class
         class tetPolyPatchFieldDecomposer
         :
-            public PointPatchFieldMapperPatchRef<tetPolyPatch>
+            public TetPointPatchFieldMapperPatchRef<tetPolyPatch>
         {
             // Private data
 
@@ -102,7 +102,7 @@ public:
                     const labelList& directAddr
                 )
                 :
-                    PointPatchFieldMapperPatchRef<tetPolyPatch>
+                    TetPointPatchFieldMapperPatchRef<tetPolyPatch>
                     (
                         sourcePatch,
                         targetPatch

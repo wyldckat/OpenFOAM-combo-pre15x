@@ -4,7 +4,11 @@ fvVectorMatrix UEqn
 (
     fvm::ddt(rho, U)
   + fvm::div(phi, U)
-  + fvc::div((Alpha/(1.001 - Alpha))*(sqr(rhoc)/rho)*Vdj*Vdj, "div(phiVdj,Vdj)")
+  + fvc::div
+    (
+        (Alpha/(scalar(1.001) - Alpha))*(sqr(rhoc)/rho)*Vdj*Vdj,
+        "div(phiVdj,Vdj)"
+    )
   - fvm::laplacian(mu, U, "laplacian(muEff,U)")
 );
 

@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
-
 \*---------------------------------------------------------------------------*/
 
 #include "PrandtlDelta.H"
@@ -60,8 +57,12 @@ PrandtlDelta::PrandtlDelta(const fvMesh& mesh, const dictionary& dd)
 :
     LESdelta(mesh),
     geometricDelta_(LESdelta::New(mesh, dd.subDict(type() + "Coeffs"))),
-    kappa_(dd.lookup("kappa")),
-    Cdelta_(dd.subDict(type() + "Coeffs").lookup("Cdelta"))
+    kappa_(dimensionedScalar(dd.lookup("kappa")).value()),
+    Cdelta_
+    (
+        dimensionedScalar(dd.subDict(type() + "Coeffs").lookup("Cdelta"))
+       .value()
+    )
 {
     calcDelta();
 }
@@ -74,8 +75,8 @@ void PrandtlDelta::read(const dictionary& d)
     const dictionary& dd(d.subDict(type() + "Coeffs"));
 
     geometricDelta_().read(dd);
-    d.lookup("kappa") >> kappa_;
-    dd.lookup("Cdelta") >> Cdelta_;
+    kappa_ = dimensionedScalar(d.lookup("kappa")).value();
+    Cdelta_ = dimensionedScalar(dd.lookup("Cdelta")).value();
     calcDelta();
 }
 

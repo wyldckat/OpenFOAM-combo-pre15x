@@ -2,10 +2,10 @@
     volScalarField magUr = mag(Ur);
 
     volScalarField CdaMagUr =
-        (24.0*nub/da)*(1.0 + 0.15*pow(da*magUr/nub, 0.687));
+        (24.0*nub/da)*(scalar(1) + 0.15*pow(da*magUr/nub, 0.687));
 
     volScalarField CdbMagUr =
-        (24.0*nua/db)*(1.0 + 0.15*pow(db*magUr/nua, 0.687));
+        (24.0*nua/db)*(scalar(1) + 0.15*pow(db*magUr/nua, 0.687));
 
     volScalarField dragCoef
     (

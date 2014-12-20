@@ -25,20 +25,22 @@ License
 Description
     Utility to reorder cyclic and processor patches.
 
-    Uses dummy morph to sort things out. Note that only geometricMatch will
-    work since topological match would require an unchanged face which
-    we have no information about.
+    Uses dummy morph to sort things out.
+
+    Is bit of hack since polyMesh constructor already checks for coupled
+    face areas so might bomb out. You might need to compile in a local
+    processorPolyPatch that gives a warning instead to make this utility
+    complete.
 
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "polyMesh.H"
 #include "Time.H"
-#include "morphMesh.H"
-#include "polyTopoChange.H"
+#include "directPolyTopoChange.H"
 #include "mapPolyMesh.H"
 #include "OFstream.H"
 #include "coupledPolyPatch.H"
-#include "processorPolyPatch.H"
 #include "PstreamReduceOps.H"
 
 using namespace Foam;
@@ -51,28 +53,13 @@ int main(int argc, char *argv[])
 {
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createPolyMesh.H"
 
     Info<< "Using geometry to calculate face correspondence across"
         << " coupled boundaries (processor, cyclic)" << nl
         << "This will only work for cyclics if they are parallel or"
         << " their rotation is defined across the origin" << nl
         << endl;
-
-    coupledPolyPatch::setGeometricMatch(true);
-
-
-    Info<< "Create morphMesh for time = " << runTime.value() << nl << endl;
-
-    morphMesh mesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
-
 
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
@@ -95,27 +82,31 @@ int main(int argc, char *argv[])
     {
         Info<< "Mesh has coupled patches ..." << nl << endl;
 
-        Info<< "Testing for correct face ordering ..." << endl;
-        bool wrongOrder = mesh.boundaryMesh().checkFaceOrder(true);
+        // Dummy topo changes container
+        directPolyTopoChange meshMod(mesh);
 
-        if (wrongOrder)
+        // Do all changes
+        Info<< "Doing dummy mesh morph to correct face ordering ..."
+            << endl;
+
+        runTime++;
+
+        faceList oldFaces(mesh.faces());
+
+        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh);
+
+        // Move mesh (since morphing does not do this)
+        if (morphMap().hasMotionPoints())
         {
-            // Dummy topo changes container
-            polyTopoChange meshMod(mesh);
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
 
-            // Do all changes
-            Info<< "Doing dummy mesh morph to correct face ordering ..."
-                << endl;
+        bool meshChanged = (mesh.faces() != oldFaces);
 
-            runTime++;
+        reduce(meshChanged, orOp<label>());
 
-            mesh.setMorphTimeIndex(runTime.timeIndex());
-
-            mesh.updateTopology(meshMod);
-
-            // Move mesh (since morphing does not do this)
-            mesh.movePoints(mesh.morphMap().preMotionPoints());
-
+        if (meshChanged)
+        {
             // Set the precision of the points data to 10
             IOstream::defaultPrecision(10);
 
@@ -126,8 +117,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            Info<< "Coupled patch face ordering ok. Nothing changed ..." << nl
-                << endl;
+            Info << "Mesh ordering ok. Nothing changed." << endl;
         }
     }
     else

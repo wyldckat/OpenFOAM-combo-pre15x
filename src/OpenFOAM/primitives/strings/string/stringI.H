@@ -22,9 +22,9 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
+
+#include <iostream>
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -62,6 +62,69 @@ inline string::string(const char c)
 :
     std::string(1, c)
 {}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class String>
+inline bool string::valid(const string& s)
+{
+    bool iv = false;
+
+    for (const_iterator iter = s.begin(); iter != s.end(); iter++)
+    {
+        if (!String::valid(*iter))
+        {
+            iv = true;
+            break;
+        }
+    }
+
+    return !iv;
+}
+
+
+template<class String>
+inline bool string::stripInvalid(string& s)
+{
+    if (!valid<String>(s))
+    {
+        register size_type nValid=0;
+        iterator iter2 = s.begin();
+
+        for
+        (
+            const_iterator iter1 = iter2;
+            iter1 != const_cast<const string&>(s).end();
+            iter1++
+        )
+        {
+            register char c = *iter1;
+
+            if (String::valid(c))
+            {
+                *iter2 = c;
+                ++iter2;
+                ++nValid;
+            }
+        }
+    
+        s.resize(nValid);
+
+        return true;
+    }
+
+    return false;
+}
+
+
+template<class String>
+inline String string::validate(const string& s)
+{
+    string ss = s;
+    stripInvalid<String>(ss);
+    return ss;
+}
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //

@@ -33,6 +33,7 @@ Description
 #define PstreamReduceOps_H
 
 #include "Pstream.H"
+#include "ops.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -72,84 +73,6 @@ void reduce
         reduce(Pstream::treeCommunication(), Value, bop);
     }
 }    
-
-
-template <class T>
-class sumOp
-{
-
-public:
-
-    T operator()(const T& x, const T& y) const
-    {
-        return x + y;
-    }
-};
-
-
-template <class T>
-class productOp
-{
-
-public:
-
-    T operator()(const T& x, const T& y) const
-    {
-        return x * y;
-    }
-};
-
-
-template <class T>
-class maxOp
-{
-
-public:
-
-    T operator()(const T& x, const T& y) const
-    {
-        return max(x, y);
-    }
-};
-
-
-template <class T>
-class minOp
-{
-
-public:
-
-    T operator()(const T& x, const T& y) const
-    {
-        return min(x, y);
-    }
-};
-
-
-template <class T>
-class andOp
-{
-
-public:
-
-    T operator()(const T& x, const T& y) const
-    {
-        return x && y;
-    }
-};
-
-
-template <class T>
-class orOp
-{
-
-public:
-
-    T operator()(const T& x, const T& y) const
-    {
-        return x || y;
-    }
-};
 
 
 // Insist there is a specialisation for the reduction of a scalar

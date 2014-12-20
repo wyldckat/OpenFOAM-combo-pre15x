@@ -57,10 +57,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "polyTopoChange.H"
-#include "morphFvMesh.H"
+#include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
-#include "Map.H"
 #include "ListOps.H"
 #include "IndirectList.H"
 #include "slidingInterface.H"
@@ -213,7 +211,8 @@ int main(int argc, char *argv[])
         isf[i] = masterPatch.start() + i;
     }
 
-    List<polyMeshModifier*> tm(1);
+    polyTopoChanger stitcher(mesh);
+    stitcher.setSize(1);
 
     DynamicList<pointZone*> pz;
     DynamicList<faceZone*> fz;
@@ -240,16 +239,18 @@ int main(int argc, char *argv[])
         mesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
 
         // Add the perfect interface mesh modifier
-        tm[0] =
+        stitcher.hook
+        (
             new perfectInterface
             (
                 "couple",
                 0,
-                mesh,
+                stitcher,
                 cutZoneName,
                 masterPatchName,
                 slavePatchName
-            );
+            )
+        );
     }
     else
     {
@@ -322,12 +323,13 @@ int main(int argc, char *argv[])
         mesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
 
         // Add the sliding interface mesh modifier
-        tm[0] =
+        stitcher.hook
+        (
             new slidingInterface
             (
                 "couple",
                 0,
-                mesh,
+                stitcher,
                 mergePatchName + "MasterZone",
                 mergePatchName + "SlaveZone",
                 mergePatchName + "CutPointZone",
@@ -335,16 +337,9 @@ int main(int argc, char *argv[])
                 masterPatchName,
                 slavePatchName,
                 tom                   // integral or partial
-            );
+            )
+        );
     }
-
-
-    Info << "Adding topology modifiers" << endl;
-    mesh.addTopologyModifiers(tm);
-
-    //// Write for debugging purposes
-    //Info<< "Writing polyMesh/meshModifiers file (for debugging)" << endl;
-    //mesh.morphEngine().write();
 
 
     // Search for list of objects for this time
@@ -374,11 +369,10 @@ int main(int argc, char *argv[])
 
     runTime++;
 
-
     // Execute all polyMeshModifiers
-    mesh.updateTopology();
+    autoPtr<mapPolyMesh> morphMap = stitcher.changeMesh();
 
-    mesh.movePoints(mesh.morphMap().preMotionPoints());
+    mesh.movePoints(morphMap->preMotionPoints());
 
     // Write mesh
     Info << nl << "Writing polyMesh to time " << runTime.timeName() << endl;

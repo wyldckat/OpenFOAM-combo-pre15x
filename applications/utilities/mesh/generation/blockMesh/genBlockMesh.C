@@ -32,9 +32,10 @@ Description
 #include "IOPtrList.H"
 
 #include "blockMesh.H"
-#include "attachPolyMesh.H"
+#include "attachPolyTopoChanger.H"
 #include "preservePatchTypes.H"
 #include "emptyPolyPatch.H"
+#include "cellSet.H"
 
 #include "argList.H"
 #include "OSspecific.H"
@@ -151,7 +152,7 @@ int main(int argc, char *argv[])
         patchPhysicalTypes
     );
 
-    attachPolyMesh pMesh
+    polyMesh mesh
     (
         IOobject
         (
@@ -167,6 +168,7 @@ int main(int argc, char *argv[])
         defaultFacesType,
         patchPhysicalTypes
     );
+
 
     // Read in a list of dictionaries for the merge patch pairs
     if (meshDescription.found("mergePatchPairs"))
@@ -194,21 +196,20 @@ int main(int argc, char *argv[])
                   + name(pairI)
                 );
 
-                pz[pairI] =
-                    new pointZone
-                    (
-                        mergeName + "CutPointZone",
-                        labelList(0),
-                        0,
-                        pMesh.pointZones()
-                    );
+                pz[pairI] = new pointZone
+                (
+                    mergeName + "CutPointZone",
+                    labelList(0),
+                    0,
+                    mesh.pointZones()
+                );
 
                 // Master patch
                 const word masterPatchName(mergePatchPairs[pairI].first());
                 const polyPatch& masterPatch =
-                    pMesh.boundaryMesh()
+                    mesh.boundaryMesh()
                     [
-                        pMesh.boundaryMesh().findPatchID(masterPatchName)
+                        mesh.boundaryMesh().findPatchID(masterPatchName)
                     ];
 
                 labelList isf(masterPatch.size());
@@ -218,22 +219,21 @@ int main(int argc, char *argv[])
                     isf[i] = masterPatch.start() + i;
                 }
 
-                fz[3*pairI] =
-                    new faceZone
-                    (
-                        mergeName + "MasterZone",
-                        isf,
-                        boolList(masterPatch.size(), false),
-                        0,
-                        pMesh.faceZones()
-                    );
+                fz[3*pairI] = new faceZone
+                (
+                    mergeName + "MasterZone",
+                    isf,
+                    boolList(masterPatch.size(), false),
+                    0,
+                    mesh.faceZones()
+                );
 
                 // Slave patch
                 const word slavePatchName(mergePatchPairs[pairI].second());
                 const polyPatch& slavePatch =
-                    pMesh.boundaryMesh()
+                    mesh.boundaryMesh()
                     [
-                        pMesh.boundaryMesh().findPatchID(slavePatchName)
+                        mesh.boundaryMesh().findPatchID(slavePatchName)
                     ];
 
                 labelList osf(slavePatch.size());
@@ -243,32 +243,33 @@ int main(int argc, char *argv[])
                     osf[i] = slavePatch.start() + i;
                 }
 
-                fz[3*pairI + 1] =
-                    new faceZone
-                    (
-                        mergeName + "SlaveZone",
-                        osf,
-                        boolList(slavePatch.size(), false),
-                        1,
-                        pMesh.faceZones()
-                    );
+                fz[3*pairI + 1] = new faceZone
+                (
+                    mergeName + "SlaveZone",
+                    osf,
+                    boolList(slavePatch.size(), false),
+                    1,
+                    mesh.faceZones()
+                );
 
                 // Add empty zone for cut faces
-                fz[3*pairI + 2] =
-                    new faceZone
-                    (
-                        mergeName + "CutFaceZone",
-                        labelList(0),
-                        boolList(0, false),
-                        2,
-                        pMesh.faceZones()
-                    );
+                fz[3*pairI + 2] = new faceZone
+                (
+                    mergeName + "CutFaceZone",
+                    labelList(0),
+                    boolList(0, false),
+                    2,
+                    mesh.faceZones()
+                );
             }  // end of all merge pairs
 
             Info << "Adding point and face zones" << endl;
-            pMesh.addZones(pz, fz, cz);
+            mesh.addZones(pz, fz, cz);
 
-            List<polyMeshModifier*> tm(mergePatchPairs.size());
+
+            Info << "Creating attachPolyTopoChanger" << endl;
+            attachPolyTopoChanger polyMeshAttacher(mesh);
+            polyMeshAttacher.setSize(mergePatchPairs.size());
 
             forAll (mergePatchPairs, pairI)
             {
@@ -280,12 +281,13 @@ int main(int argc, char *argv[])
                 );
 
                 // Add the sliding interface mesh modifier
-                tm[pairI] =
+                polyMeshAttacher.hook
+                (
                     new slidingInterface
                     (
                         "couple" + name(pairI),
                         pairI,
-                        pMesh,
+                        polyMeshAttacher,
                         mergeName + "MasterZone",
                         mergeName + "SlaveZone",
                         mergeName + "CutPointZone",
@@ -294,13 +296,11 @@ int main(int argc, char *argv[])
                         mergePatchPairs[pairI].second(),
                         slidingInterface::INTEGRAL, // always integral
                         intersection::VISIBLE
-                    );
+                    )
+                );
             }
 
-            Info << "Adding topology modifiers" << endl;
-            pMesh.addTopologyModifiers(tm);
-
-            pMesh.attach();
+            polyMeshAttacher.attach(true);
         }
     }
     else
@@ -308,11 +308,98 @@ int main(int argc, char *argv[])
         Info<< nl << "There are no merge patch pairs edges" << endl;
     }
 
+
+    // Set any cellZones (note: cell labelling unaffected by above
+    // mergePatchPairs)
+
+    label nZones = blocks.numZonedBlocks();
+
+    if (nZones > 0)
+    {
+        Info<< nl << "Adding cell zones" << endl;
+
+        // Map from zoneName to cellZone index
+        HashTable<label> zoneMap(nZones);
+
+        // Cells per zone.
+        List<DynamicList<label> > zoneCells(nZones);
+
+        // Running cell counter
+        label cellI = 0;
+
+        // Largest zone so far
+        label freeZoneI = 0;
+
+        forAll(blocks, blockI)
+        {
+            const block& b = blocks[blockI];
+            const labelListList& blockCells = b.cells();
+            const word& zoneName = b.blockDef().zoneName();
+
+            if (zoneName.size() > 0)
+            {
+                HashTable<label>::const_iterator iter = zoneMap.find(zoneName);
+
+                label zoneI;
+
+                if (iter == zoneMap.end())
+                {
+                    zoneI = freeZoneI++;
+
+                    Info<< "    " << zoneI << '\t' << zoneName << endl;
+
+                    zoneMap.insert(zoneName, zoneI);
+                }
+                else
+                {
+                    zoneI = iter();
+                }
+
+                forAll(blockCells, i)
+                {
+                    zoneCells[zoneI].append(cellI++);
+                }
+            }
+            else
+            {
+                cellI += b.cells().size();
+            }
+        }
+
+
+        List<cellZone*> cz(zoneMap.size());
+
+        Info<< nl << "Writing cell zones as cellSets" << endl;
+
+        forAllConstIter(HashTable<label>, zoneMap, iter)
+        {
+            label zoneI = iter();
+
+            cz[zoneI]= new cellZone
+            (
+                iter.key(),
+                zoneCells[zoneI].shrink(),
+                zoneI,
+                mesh.cellZones()
+            );
+
+            // Write as cellSet for ease of processing
+            cellSet cset(mesh, iter.key(), zoneCells[zoneI].shrink());
+            cset.write();
+        }
+
+        mesh.pointZones().setSize(0);
+        mesh.faceZones().setSize(0);
+        mesh.cellZones().setSize(0);
+        mesh.addZones(List<pointZone*>(0), List<faceZone*>(0), cz);
+    }
+
     // Set the precision of the points data to 10
     IOstream::defaultPrecision(10);
 
     Info << nl << "Writing polyMesh" << endl;
-    if (!pMesh.write())
+    mesh.removeFiles(mesh.instance());
+    if (!mesh.write())
     {
         FatalErrorIn(args.executable())
             << "Failed writing polyMesh."

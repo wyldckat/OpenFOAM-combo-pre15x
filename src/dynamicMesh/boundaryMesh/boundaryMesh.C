@@ -22,20 +22,18 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "boundaryMesh.H"
 #include "Time.H"
 #include "polyMesh.H"
+#include "repatchPolyTopoChanger.H"
 #include "faceList.H"
 #include "octree.H"
 #include "octreeDataFaceList.H"
 #include "triSurface.H"
 #include "SortableList.H"
 #include "OFstream.H"
-#include "repatchPolyMesh.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -270,6 +268,18 @@ Foam::label Foam::boundaryMesh::findPatchID
 }
 
 
+Foam::wordList Foam::boundaryMesh::patchNames() const
+{
+    wordList names(patches_.size());
+
+    forAll(patches_, patchI)
+    {
+        names[patchI] = patches_[patchI].name();
+    }
+    return names;
+}
+
+
 Foam::label Foam::boundaryMesh::whichPatch
 (
     const polyPatchList& patches,
@@ -395,7 +405,7 @@ void Foam::boundaryMesh::markZone
 
         if (debug)
         {
-            Info<< "From changedFaces:" << changedFaces.size()
+            Pout<< "From changedFaces:" << changedFaces.size()
                 << " to changedEdges:" << changedEdges.size()
                 << endl;
         }
@@ -409,7 +419,7 @@ void Foam::boundaryMesh::markZone
 
         if (debug)
         {
-            Info<< "From changedEdges:" << changedEdges.size()
+            Pout<< "From changedEdges:" << changedEdges.size()
                 << " to changedFaces:" << changedFaces.size()
                 << endl;
         }
@@ -506,13 +516,13 @@ void Foam::boundaryMesh::read(const polyMesh& mesh)
 
     if (debug)
     {
-        Info<< "read : patches now:" << endl;
+        Pout<< "read : patches now:" << endl;
 
         forAll(patches_, patchI)
         {
             const boundaryPatch& bp = patches_[patchI];
 
-            Info<< "    name  : " << bp.name() << endl
+            Pout<< "    name  : " << bp.name() << endl
                 << "    size  : " << bp.size() << endl
                 << "    start : " << bp.start() << endl
                 << "    type  : " << bp.physicalType() << endl
@@ -541,7 +551,7 @@ void Foam::boundaryMesh::read(const polyMesh& mesh)
     {
         const bMesh& msh = *meshPtr_;
 
-        Info<< "** Start of Faces **" << endl;
+        Pout<< "** Start of Faces **" << endl;
 
         forAll(msh, faceI)
         {
@@ -555,24 +565,24 @@ void Foam::boundaryMesh::read(const polyMesh& mesh)
             }
             ctr /= f.size();
 
-            Info<< "    " << faceI
+            Pout<< "    " << faceI
                 << " ctr:" << ctr
                 << " verts:" << f
                 << endl;
         }
 
-        Info<< "** End of Faces **" << endl;
+        Pout<< "** End of Faces **" << endl;
 
-        Info<< "** Start of Points **" << endl;
+        Pout<< "** Start of Points **" << endl;
 
         forAll(msh.points(), pointI)
         {
-            Info<< "    " << pointI
+            Pout<< "    " << pointI
                 << " coord:" << msh.points()[pointI]
                 << endl;
         }
 
-        Info<< "** End of Points **" << endl;
+        Pout<< "** End of Points **" << endl;
     }
 
     // Clear edge storage
@@ -691,7 +701,7 @@ void Foam::boundaryMesh::readTriSurface(const fileName& fName)
     label surfRegion = regions[0];
     label foamRegion = regionToBoundaryPatch[surfRegion];
 
-    Info<< "Surface region " << surfRegion << " becomes boundary patch "
+    Pout<< "Surface region " << surfRegion << " becomes boundary patch "
         << foamRegion << " with name " << patches_[foamRegion].name() << endl;
 
 
@@ -715,7 +725,7 @@ void Foam::boundaryMesh::readTriSurface(const fileName& fName)
             surfRegion = tri.region();
             foamRegion = regionToBoundaryPatch[surfRegion];
 
-            Info<< "Surface region " << surfRegion << " becomes boundary patch "
+            Pout<< "Surface region " << surfRegion << " becomes boundary patch "
                 << foamRegion << " with name " << patches_[foamRegion].name()
                 << endl;
 
@@ -848,7 +858,7 @@ void Foam::boundaryMesh::writeTriSurface(const fileName& fName) const
 Foam::labelList Foam::boundaryMesh::getNearest
 (
     const primitiveMesh& pMesh,
-    const scalar searchSpan
+    const vector& searchSpan
 ) const
 {
 
@@ -877,15 +887,11 @@ Foam::labelList Foam::boundaryMesh::getNearest
 
     if (debug)
     {
-        Info<< "getNearest :"
+        Pout<< "getNearest :"
             << " rightBin:" << rightFaces.size()
             << " leftBin:" << leftFaces.size()
             << endl;
     }
-
-
-    octreeDataFaceList leftShapes(mesh(), leftFaces);
-    octreeDataFaceList rightShapes(mesh(), rightFaces);
 
 
     // Overall bb
@@ -906,12 +912,34 @@ Foam::labelList Foam::boundaryMesh::getNearest
     bbMax.z() += 2*tol;
 
     // Create the octrees
-    octree<octreeDataFaceList> leftTree(overallBb, leftShapes, 1, 20, 10);
-    octree<octreeDataFaceList> rightTree(overallBb, rightShapes, 1, 20, 10);
+    octree<octreeDataFaceList> leftTree
+    (
+        overallBb,
+        octreeDataFaceList
+        (
+            mesh(),
+            leftFaces
+        ),
+        1,
+        20,
+        10
+    );
+    octree<octreeDataFaceList> rightTree
+    (
+        overallBb,
+        octreeDataFaceList
+        (
+            mesh(),
+            rightFaces
+        ),
+        1,
+        20,
+        10
+    );
 
     if (debug)
     {
-        Info<< "getNearest : built trees" << endl;
+        Pout<< "getNearest : built trees" << endl;
     }
 
 
@@ -926,6 +954,8 @@ Foam::labelList Foam::boundaryMesh::getNearest
 
     treeBoundBox tightest;
 
+    const scalar searchDim = mag(searchSpan);
+
     forAll(nearestBFaceI, patchFaceI)
     {
         label meshFaceI = pMesh.nInternalFaces() + patchFaceI;
@@ -934,7 +964,7 @@ Foam::labelList Foam::boundaryMesh::getNearest
 
         if (debug && (patchFaceI % 1000) == 0)
         {
-            Info<< "getNearest : patchFace:" << patchFaceI
+            Pout<< "getNearest : patchFace:" << patchFaceI
                 << " meshFaceI:" << meshFaceI << " ctr:" << ctr << endl;
         }
 
@@ -952,21 +982,17 @@ Foam::labelList Foam::boundaryMesh::getNearest
             typDim = max(typDim, mag(pMesh.points()[f[fp]] - ctr));
         }
 
-        scalar searchDim = searchSpan * typDim;
-        const vector searchSpanVector(searchSpan, searchSpan, searchSpan);
-
-
         // Search right tree
-        tightest.min() = ctr - searchSpanVector;
-        tightest.max() = ctr + searchSpanVector;
+        tightest.min() = ctr - searchSpan;
+        tightest.max() = ctr + searchSpan;
         scalar rightDist = searchDim;
         label rightI = rightTree.findNearest(ctr, tightest, rightDist);
 
 
         // Search left tree. Note: could start from rightDist bounding box
         // instead of starting from top.
-        tightest.min() = ctr - searchSpanVector;
-        tightest.max() = ctr + searchSpanVector;
+        tightest.min() = ctr - searchSpan;
+        tightest.max() = ctr + searchSpan;
         scalar leftDist = searchDim;
         label leftI = leftTree.findNearest(ctr, tightest, leftDist);
 
@@ -1066,7 +1092,7 @@ void Foam::boundaryMesh::patchify
 (
     const labelList& nearest,
     const polyBoundaryMesh& oldPatches,
-    repatchPolyMesh& newMesh
+    polyMesh& newMesh
 ) const
 {
 
@@ -1137,7 +1163,7 @@ void Foam::boundaryMesh::patchify
             // Newly created patch. Gets all or zero faces.
             if (debug)
             {
-                Info<< "patchify : Creating new polyPatch:" << bp.name()
+                Pout<< "patchify : Creating new polyPatch:" << bp.name()
                     << " type:" << bp.physicalType() << endl;
             }
 
@@ -1163,7 +1189,7 @@ void Foam::boundaryMesh::patchify
 
             if (debug)
             {
-                Info<< "patchify : Cloning existing polyPatch:"
+                Pout<< "patchify : Cloning existing polyPatch:"
                     << oldPatch.name() << endl;
             }
 
@@ -1185,7 +1211,7 @@ void Foam::boundaryMesh::patchify
 
     if (debug)
     {
-        Info<< "Patchify : new polyPatch list:" << endl;
+        Pout<< "Patchify : new polyPatch list:" << endl;
 
         forAll(newPatchPtrList, patchI)
         {
@@ -1193,7 +1219,7 @@ void Foam::boundaryMesh::patchify
 
             if (debug)
             {
-                Info<< "polyPatch:" << newPatch.name() << endl
+                Pout<< "polyPatch:" << newPatch.name() << endl
                     << "    type :" << newPatch.typeName << endl
                     << "    size :" << newPatch.size() << endl
                     << "    start:" << newPatch.start() << endl
@@ -1203,7 +1229,8 @@ void Foam::boundaryMesh::patchify
     }
 
     // Actually add new list of patches
-    newMesh.changePatches(newPatchPtrList);
+    repatchPolyTopoChanger polyMeshRepatcher(newMesh);
+    polyMeshRepatcher.changePatches(newPatchPtrList);
 
 
     // Pass2:
@@ -1259,11 +1286,11 @@ void Foam::boundaryMesh::patchify
 
             forAll(pFaces, pFaceI)
             {
-                newMesh.changePatchID(pFaces[pFaceI], newPatchI);
+                polyMeshRepatcher.changePatchID(pFaces[pFaceI], newPatchI);
             }
         }
 
-        newMesh.repatch();
+        polyMeshRepatcher.repatch();
     }
 }
 
@@ -1544,13 +1571,13 @@ void Foam::boundaryMesh::addPatch(const word& patchName)
 
     if (debug)
     {
-        Info<< "addPatch : patches now:" << endl;
+        Pout<< "addPatch : patches now:" << endl;
 
         forAll(patches_, patchI)
         {
             const boundaryPatch& bp = patches_[patchI];
 
-            Info<< "    name  : " << bp.name() << endl
+            Pout<< "    name  : " << bp.name() << endl
                 << "    size  : " << bp.size() << endl
                 << "    start : " << bp.start() << endl
                 << "    type  : " << bp.physicalType() << endl
@@ -1599,13 +1626,13 @@ void Foam::boundaryMesh::deletePatch(const word& patchName)
 
     if (debug)
     {
-        Info<< "deletePatch : patches now:" << endl;
+        Pout<< "deletePatch : patches now:" << endl;
 
         forAll(patches_, patchI)
         {
             const boundaryPatch& bp = patches_[patchI];
 
-            Info<< "    name  : " << bp.name() << endl
+            Pout<< "    name  : " << bp.name() << endl
                 << "    size  : " << bp.size() << endl
                 << "    start : " << bp.start() << endl
                 << "    type  : " << bp.physicalType() << endl
@@ -1733,13 +1760,13 @@ void Foam::boundaryMesh::changeFaces
 
     if (debug)
     {
-        Info<< "changeFaces : patches now:" << endl;
+        Pout<< "changeFaces : patches now:" << endl;
 
         forAll(patches_, patchI)
         {
             const boundaryPatch& bp = patches_[patchI];
 
-            Info<< "    name  : " << bp.name() << endl
+            Pout<< "    name  : " << bp.name() << endl
                 << "    size  : " << bp.size() << endl
                 << "    start : " << bp.start() << endl
                 << "    type  : " << bp.physicalType() << endl

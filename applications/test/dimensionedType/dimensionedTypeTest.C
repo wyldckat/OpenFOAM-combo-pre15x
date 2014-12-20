@@ -34,9 +34,13 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-    dimensionedTensor dt("0", dimless, tensor(0, 1, 2, 3, 4, 5, 6, 7, 8));
+    dimensionedTensor dt("dt", dimless, tensor(0, 1, 2, 3, 4, 5, 6, 7, 8));
 
     Info<< dt.component(tensor::XX) << endl;
+
+    dimensionedScalar ds("ds", dimless, 1.0);
+
+    Info<< ds*dt << " " << dt*ds << endl;
 
     Info << "End\n" << endl;
 

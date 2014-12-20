@@ -32,7 +32,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "movingFvMesh.H"
+#include "dynamicFvMesh.H"
 
 #include "subCycle.H"
 #include "interfaceProperties.H"
@@ -45,7 +45,7 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-#   include "createMovingMesh.H"
+#   include "createDynamicFvMesh.H"
 #   include "readEnvironmentalProperties.H"
 #   include "readPISOControls.H"
 #   include "initContinuityErrs.H"
@@ -70,7 +70,7 @@ int main(int argc, char *argv[])
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
         phi += fvc::meshPhi(rho, U);
-        mesh.move();
+        mesh.update();
         phi -= fvc::meshPhi(rho, U);
 
         twoPhaseProperties.correct();
@@ -89,9 +89,9 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

@@ -127,8 +127,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLineOctant
 
     if (debug & 2)
     {
-        space(Info, 2*level);
-        Info<< "findLeafLineOctant : bb:" << this->bb()
+        space(Pout, 2*level);
+        Pout<< "findLeafLineOctant : bb:" << this->bb()
             << "  start:" << start
             << "  end:" << end
             << "  mid:" << mid()
@@ -157,8 +157,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLineOctant
 
                 if (debug & 2)
                 {
-                    space(Info, 2*level);
-                    Info<< "findLeafLineOctant : bb:" << this->bb()
+                    space(Pout, 2*level);
+                    Pout<< "findLeafLineOctant : bb:" << this->bb()
                         << " returning from sub treeNode"
                         << " with start:" << start << "  subLeaf:"
                         << long(subLeafPtr) << endl;
@@ -204,8 +204,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLineOctant
 
                 if (debug & 2)
                 {
-                    space(Info, 2*level);
-                    Info<< "findLeafLineOctant : returning from intersecting"
+                    space(Pout, 2*level);
+                    Pout<< "findLeafLineOctant : returning from intersecting"
                         << " treeLeaf " << subLeafPtr->bb()
                         << " with start:" << start << "  subLeaf:"
                         << long(subLeafPtr) << endl;
@@ -232,8 +232,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLineOctant
         {
             if (debug & 2)
             {
-                space(Info, 2*level);
-                Info<< "findLeafLineOctant : Empty node. Octant:" << octant
+                space(Pout, 2*level);
+                Pout<< "findLeafLineOctant : Empty node. Octant:" << octant
                     << "  start:" << start
                     << "  bb:" << this->bb()
                     << "  emptyBb:" << emptyBb << endl;
@@ -262,8 +262,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLineOctant
 
             if (debug & 2)
             {
-                space(Info, 2*level);
-                Info<< "findLeafLineOctant : returning from intersecting with"
+                space(Pout, 2*level);
+                Pout<< "findLeafLineOctant : returning from intersecting with"
                     << " empty " << emptyBb
                     << " with start:" << start << "  subLeaf:" << 0 << endl;
             }
@@ -356,8 +356,8 @@ void treeNode<Type>::distribute
 {
     if (debug & 1)
     {
-        space(Info, level);
-        Info<< "treeNode::distributing " << indices.size() << endl;
+        space(Pout, level);
+        Pout<< "treeNode::distributing " << indices.size() << endl;
     }
 
     // Create subLeaves if nessecary
@@ -365,7 +365,7 @@ void treeNode<Type>::distribute
     {
         if (subNodes()[octant])
         {
-            printNode(Info, level);
+            printNode(Pout, level);
             FatalErrorIn
             (
                 "treeNode<Type>::distribute(const label, octree<Type>&, "
@@ -401,10 +401,10 @@ void treeNode<Type>::distribute
             {
                 if (debug == 1)
                 {
-                    space(Info, level);
-                    Info<< "inserting " << shapei;
-                    shapes.write(Info, shapei);
-                    Info<< " into " << leafPtr->bb() << endl;
+                    space(Pout, level);
+                    Pout<< "inserting " << shapei;
+                    shapes.write(Pout, shapei);
+                    Pout<< " into " << leafPtr->bb() << endl;
                 }
                 leafPtr->insert(shapei);
                 top.setEntries(top.nEntries() + 1);
@@ -433,8 +433,8 @@ void treeNode<Type>::distribute
 
     if (debug & 1)
     {
-        space(Info, level);
-        Info<< "end of treeNode::distribute" << endl;
+        space(Pout, level);
+        Pout<< "end of treeNode::distribute" << endl;
     }
 }
 
@@ -451,8 +451,8 @@ void treeNode<Type>::redistribute
 {
     if (debug & 1)
     {
-        space(Info, level);
-        Info<< "treeNode::redistribute with level:" << level
+        space(Pout, level);
+        Pout<< "treeNode::redistribute with level:" << level
             << "  refineLevel:" << refineLevel << endl;
     }
 
@@ -481,8 +481,8 @@ void treeNode<Type>::redistribute
         // Reached correct (should also be deepest) level of treeNode
         if (debug & 1)
         {
-            space(Info, level);
-            Info<< "treeNode::redistribute : now at correct level" << endl;
+            space(Pout, level);
+            Pout<< "treeNode::redistribute : now at correct level" << endl;
         }
 
         // handle redistribution of sub leaves
@@ -516,7 +516,7 @@ void treeNode<Type>::redistribute
                         // so delete no longer used subPtr and update info
                         if (debug & 1)
                         {
-                            Info<< "deleting "
+                            Pout<< "deleting "
                                 << top.nEntries() - leafPtr->size()
                                 << " entries" << endl;
                         }
@@ -533,15 +533,15 @@ void treeNode<Type>::redistribute
         }
         if (debug & 1)
         {
-            space(Info, level);
-            Info<< "end of treeNode::redistribute for correct level" << endl;
+            space(Pout, level);
+            Pout<< "end of treeNode::redistribute for correct level" << endl;
         }
     }
 
     if (debug & 1)
     {
-        space(Info, level);
-        Info<< "return from treeNode::redistribute with bb:" << this->bb()
+        space(Pout, level);
+        Pout<< "return from treeNode::redistribute with bb:" << this->bb()
             << endl;
     }
 }
@@ -558,8 +558,8 @@ label treeNode<Type>::setSubNodeType
 {
     if (debug & 4)
     {
-        space(Info, level);
-        Info<< "treeNode::setSubNodeType with level:" << level
+        space(Pout, level);
+        Pout<< "treeNode::setSubNodeType with level:" << level
             << "   bb:" << this->bb() << endl;
     }
 
@@ -601,8 +601,8 @@ label treeNode<Type>::setSubNodeType
 
         if (debug & 4)
         {
-            space(Info, level);
-            Info<< "treeNode::setSubNodeType : setting octant with bb:"
+            space(Pout, level);
+            Pout<< "treeNode::setSubNodeType : setting octant with bb:"
                 << this->bb().subBbox(mid(), octant)
                 << "  to type:" << octree<Type>::volType(subType) << endl;
         }
@@ -622,8 +622,8 @@ label treeNode<Type>::setSubNodeType
 
     if (debug & 4)
     {
-        space(Info, level);
-        Info<< "return from treeNode::setSubNodeType with type:"
+        space(Pout, level);
+        Pout<< "return from treeNode::setSubNodeType with type:"
             << octree<Type>::volType(myType)
             << "  bb:" << this->bb() << endl;
     }
@@ -644,8 +644,8 @@ label treeNode<Type>::getSampleType
 {
     if (debug & 4)
     {
-        space(Info, level);
-        Info<< "treeNode::getSampleType with level:" << level
+        space(Pout, level);
+        Pout<< "treeNode::getSampleType with level:" << level
             << " bb:" << this->bb() << "  sample:" << sample << endl;
     }
 
@@ -712,8 +712,8 @@ label treeNode<Type>::getSampleType
 
     if (debug & 4)
     {
-        space(Info, level);
-        Info<< "return from treeNode::getSampleType with type:"
+        space(Pout, level);
+        Pout<< "return from treeNode::getSampleType with type:"
             << octree<Type>::volType(type)
             << "  bb:" << this->bb()
             << "  sample:" << sample << endl;
@@ -849,7 +849,7 @@ bool treeNode<Type>::findNearest
 
     if (debug & 8)
     {
-        Info<< "In findNearest with sample:" << sample << " cube:"
+        Pout<< "In findNearest with sample:" << sample << " cube:"
             << this->bb() << " tightest:" << tightest << endl;
     }
 
@@ -922,7 +922,7 @@ bool treeNode<Type>::findNearest
 
     if (debug & 8)
     {
-        Info<< "Exiting findNearest for sample:" << sample << " cube:"
+        Pout<< "Exiting findNearest for sample:" << sample << " cube:"
             << this->bb() << " tightesti:" << tightesti << endl;
     }
 
@@ -1096,8 +1096,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLine
 {
     if (debug & 2)
     {
-        space(Info, 2*level);
-        Info<< "findLeafLine : bb:" << this->bb() << "  mid:" << mid()
+        space(Pout, 2*level);
+        Pout<< "findLeafLine : bb:" << this->bb() << "  mid:" << mid()
             << "  start:" << start << endl;
     }
 
@@ -1117,8 +1117,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLine
         {
             if (debug & 2)
             {
-                space(Info, 2*level);
-                Info<< "findLeafLine : Start not inside bb " << this->bb()
+                space(Pout, 2*level);
+                Pout<< "findLeafLine : Start not inside bb " << this->bb()
                     << ". Returning with start:" << start << "  subLeaf:"
                     << 0 << endl;
             }
@@ -1130,8 +1130,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLine
         {
             if (debug & 2)
             {
-                space(Info, 2*level);
-                Info<< "findLeafLine : start equals end"
+                space(Pout, 2*level);
+                Pout<< "findLeafLine : start equals end"
                     << ". Returning with start:" << start << "  subLeaf:"
                     << 0 << endl;
             }
@@ -1164,8 +1164,8 @@ const treeLeaf<Type>* treeNode<Type>::findLeafLine
             // Found treeLeaf -> return
             if (debug & 2)
             {
-                space(Info, 2*level);
-                Info<< "findLeafLine : Found treeLeaf"
+                space(Pout, 2*level);
+                Pout<< "findLeafLine : Found treeLeaf"
                         << ". Returning with start:" << start << "  subLeaf:"
                         << long(leafPtr) << endl;
             }

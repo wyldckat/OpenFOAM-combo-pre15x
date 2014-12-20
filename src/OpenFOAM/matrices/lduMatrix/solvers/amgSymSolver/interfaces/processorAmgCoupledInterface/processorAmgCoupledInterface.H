@@ -81,14 +81,6 @@ class processorAmgCoupledInterface
         //- Disallow default bitwise assignment
         void operator=(const processorAmgCoupledInterface&);
 
-        //- Raw field send function
-        template<class Type>
-        void send(const tmp<Field<Type> >&, const bool bufferedTransfer) const;
-
-        //- Raw field receive function
-        template<class Type>
-        tmp<Field<Type> > receive() const;
-
         //- Assemble a patch internal field
         template<class Type>
         tmp<Field<Type> > patchInternalField(const Field<Type>& iF) const;
@@ -107,6 +99,12 @@ public:
             const lduCoupledInterface* fineInterfacePtr,
             const label index
         );
+
+
+    // Destructor
+
+        virtual ~processorAmgCoupledInterface();
+
 
     // Member Functions
 

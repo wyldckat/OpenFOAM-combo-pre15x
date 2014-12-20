@@ -31,6 +31,24 @@ Description
 namespace Foam
 {
 
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+inline void fileName::stripInvalid()
+{
+    if (debug && string::stripInvalid<fileName>(*this))
+    {
+        std::cerr
+            << "fileName::stripInvalid() called for string "
+            << this->c_str() << std::endl;
+
+        if (debug > 1)
+        {
+            std::abort();
+        }
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 inline fileName::fileName()
@@ -47,6 +65,30 @@ inline fileName::fileName(const word& w)
 :
     string(w)
 {}
+
+
+inline fileName::fileName(const string& str)
+:
+    string(str)
+{
+    stripInvalid();
+}
+
+
+inline fileName::fileName(const std::string& stdStr)
+:
+    string(stdStr)
+{
+    stripInvalid();
+}
+
+
+inline fileName::fileName(const char* chars)
+:
+    string(chars)
+{
+    stripInvalid();
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //

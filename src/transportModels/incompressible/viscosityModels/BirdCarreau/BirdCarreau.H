@@ -84,6 +84,7 @@ public:
         //- construct from components
         BirdCarreau
         (
+            const word& name,
             const dictionary& viscosityProperties,
             const volVectorField& U,
             const surfaceScalarField& phi

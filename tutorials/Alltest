@@ -154,7 +154,7 @@ fi
 ./Allrun
 
 sed -e :a -e '/\\$/N; s/\\\n//; ta' Allrun > temp
-APPLICATIONS=`grep "applications=" temp | sed 's/applications=\"\([A-za-z \t]*\)\"/\1/g'`
+APPLICATIONS=`grep "applications=" temp | sed 's/applications=\"\([A-Za-z \t]*\)\"/\1/g'`
 
 rm $SCHEMES_FILE > /dev/null 2>&1
 for APP in $APPLICATIONS

@@ -1,9 +1,8 @@
 .SUFFIXES: .C .cxx .cc .cpp
 
-c++WARN     = -w1 -wd654
-# -Werror 
+c++WARN     = -wd654 -vec-report0
 
-CC          = icc
+CC          = icc -gcc-version=400
 
 include $(RULES)/c++$(WM_COMPILE_OPTION)
 

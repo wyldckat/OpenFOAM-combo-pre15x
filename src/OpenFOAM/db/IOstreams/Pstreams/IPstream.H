@@ -92,7 +92,7 @@ public:
 
     // Member functions
 
-        // Inquirery
+        // Inquiry
 
             //- Return flags of output stream
             ios_base::fmtflags flags() const
@@ -102,6 +102,14 @@ public:
 
 
         // Read functions
+
+            //- Read into given buffer from given processor
+            static bool read
+            (
+                const int fromProcNo,
+                char* buf,
+                const std::streamsize bufSize
+            );
 
             //- Return next token from stream
             Istream& read(token&);
@@ -118,8 +126,11 @@ public:
             //- Read a label
             Istream& read(label&);
 
-            //- Read a scalar
-            Istream& read(scalar&);
+            //- Read a floatScalar
+            Istream& read(floatScalar&);
+
+            //- Read a doubleScalar
+            Istream& read(doubleScalar&);
 
             //- Read binary block
             Istream& read(char*, std::streamsize);

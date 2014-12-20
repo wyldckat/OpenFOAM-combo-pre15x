@@ -96,8 +96,8 @@ treeLeaf<Type>* treeLeaf<Type>::redistribute
 {
     if (debug & 1)
     {
-        space(Info, level);
-        Info<< "treeLeaf::redistribute with bb:" << this->bb() << endl;
+        space(Pout, level);
+        Pout<< "treeLeaf::redistribute with bb:" << this->bb() << endl;
     }
 
     if (size_ <= top.maxLeafRatio())
@@ -105,8 +105,8 @@ treeLeaf<Type>* treeLeaf<Type>::redistribute
         // leaf small enough
         if (debug & 1)
         {
-            space(Info, level);
-            Info<< "end of treeLeaf::redistribute : small enough" << endl;
+            space(Pout, level);
+            Pout<< "end of treeLeaf::redistribute : small enough" << endl;
         }
         return this;
     }
@@ -127,8 +127,8 @@ treeLeaf<Type>* treeLeaf<Type>::redistribute
 
         if (debug & 1)
         {
-            space(Info, level);
-            Info<< "end of treeLeaf::redistribute : done creating node"
+            space(Pout, level);
+            Pout<< "end of treeLeaf::redistribute : done creating node"
                 << this->bb() << endl;
         }
 
@@ -235,8 +235,8 @@ bool treeLeaf<Type>::findNearest
         {
             if (debug & 8)
             {
-                //space(Info, level);
-                Info<< "treeLeaf<Type>::findNearest : sample:" << sample
+                //space(Pout, level);
+                Pout<< "treeLeaf<Type>::findNearest : sample:" << sample
                     << "  shape:" << indices_[i] << " overlaps:" << tightest
                     << endl;
             }
@@ -260,8 +260,8 @@ bool treeLeaf<Type>::findNearest
 
                 if (debug & 8)
                 {
-                    //space(Info, level);
-                    Info<< "treeLeaf<Type>::findNearest : Found nearer : shape:"
+                    //space(Pout, level);
+                    Pout<< "treeLeaf<Type>::findNearest : Found nearer : shape:"
                         << tightesti << "  distance:" << tightestDist
                         << " to sample:" << sample << endl;
                 }
@@ -273,8 +273,8 @@ bool treeLeaf<Type>::findNearest
     {
         if (debug & 8)
         {
-            //space(Info, level);
-            Info<< "treeLeaf<Type>::findNearest : sample:" << sample
+            //space(Pout, level);
+            Pout<< "treeLeaf<Type>::findNearest : sample:" << sample
                 << "  new nearer:" << tightestDist
                 << endl;
         }

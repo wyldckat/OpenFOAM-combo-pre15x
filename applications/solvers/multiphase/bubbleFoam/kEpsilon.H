@@ -9,27 +9,28 @@ if(turbulence)
     volScalarField G = 2*nutb*(tgradUb() && dev(symm(tgradUb())));
     tgradUb.clear();
 
-// Dissipation equation
+#   include "wallFunctions.H"
 
-#   include "wallDissipation.H"
-
+    // Dissipation equation
     fvScalarMatrix epsEqn
     (
         fvm::ddt(beta, epsilon)
       + fvm::div(phib, epsilon)
       - fvm::laplacian(alphaEps*nuEffb, epsilon)
       ==
-         C1*beta*G*epsilon/k + beta*boundarySource
-       - fvm::Sp(C2*beta*epsilon/k + beta*boundaryCentral, epsilon)
+         C1*beta*G*epsilon/k
+       - fvm::Sp(C2*beta*epsilon/k, epsilon)
     );
+
+#   include "wallDissipation.H"
+
     epsEqn.relax();
     epsEqn.solve();
 
     epsilon.max(dimensionedScalar("zero", epsilon.dimensions(), 1.0e-15));
 
 
-// Turbulent kinetic energy equation
-
+    // Turbulent kinetic energy equation
     fvScalarMatrix kEqn
     (
         fvm::ddt(beta, k)

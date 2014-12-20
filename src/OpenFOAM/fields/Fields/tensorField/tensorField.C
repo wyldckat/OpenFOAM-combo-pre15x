@@ -28,110 +28,19 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "tensorField.H"
-#include "FieldM.H"
+#include "FieldFunctionsM.C"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-// * * * * * * * * * * * * * * * global operators  * * * * * * * * * * * * * //
-
-void hdual(vectorField& vf, const UList<tensor>& tf)
-{
-    TFOR_ALL_F_OP_OP_F(vector, vf, =, *, tensor, tf)
-}
-
-tmp<vectorField> operator*(const tmp<tensorField>& tf)
-{
-    tmp<vectorField> hDual(new vectorField(tf().size()));
-    hdual(hDual(), tf);
-    tf.clear();
-    return hDual;
-}
-
-
-void hdual(tensorField& vf, const UList<vector>& tf)
-{
-    TFOR_ALL_F_OP_OP_F(tensor, vf, =, *, vector, tf)
-}
-
-tmp<tensorField> operator*(const tmp<vectorField>& tf)
-{
-    tmp<tensorField> hDual(new tensorField(tf().size()));
-    hdual(hDual(), tf);
-    tf.clear();
-    return hDual;
-}
-
-
 // * * * * * * * * * * * * * * * global functions  * * * * * * * * * * * * * //
 
-#define tensorFunc(func)                                                      \
-void func(Field<tensor>& tf, const UList<tensor>& tf1)                        \
-{                                                                             \
-    TFOR_ALL_F_OP_FUNC_F(tensor, tf, =, func, tensor, tf1)                    \
-}                                                                             \
-                                                                              \
-tmp<tensorField> func(const UList<tensor>& tf)                                \
-{                                                                             \
-    tmp<tensorField> result(new tensorField(tf.size()));                      \
-    func(result(), tf);                                                       \
-    return result;                                                            \
-}                                                                             \
-                                                                              \
-tmp<tensorField> func(const tmp<tensorField>& tf)                             \
-{                                                                             \
-    tmp<tensorField> result(tf.ptr());                                        \
-    func(result(), result());                                                 \
-    return result;                                                            \
-}
-
-
-void diag(vectorField& vf, const UList<tensor>& tf)
-{
-    TFOR_ALL_F_OP_FUNC_F(vector, vf, =, diag, tensor, tf)
-}
-
-tmp<vectorField> diag(const tmp<tensorField>& tf)
-{
-    tmp<vectorField> result(new vectorField(tf().size()));
-    diag(result(), tf);
-    tf.clear();
-    return result;
-}
-
-
-void tr(scalarField& sf, const UList<tensor>& tf)
-{
-    TFOR_ALL_F_OP_FUNC_F(scalar, sf, =, tr, tensor, tf)
-}
-
-tmp<scalarField> tr(const tmp<tensorField>& tf)
-{
-    tmp<scalarField> result(new scalarField(tf().size()));
-    tr(result(), tf);
-    tf.clear();
-    return result;
-}
-
-
-tensorFunc(dev)
-tensorFunc(dev2)
-
-void det(scalarField& sf, const UList<tensor>& tf)
-{
-    TFOR_ALL_F_OP_FUNC_F(scalar, sf, =, det, tensor, tf)
-}
-
-tmp<scalarField> det(const tmp<tensorField>& tf)
-{
-    tmp<scalarField> result(new scalarField(tf().size()));
-    det(result(), tf);
-    tf.clear();
-    return result;
-}
-
+UNARY_FUNCTION_N(scalar, tensor, tr)
+UNARY_FUNCTION_R(tensor, tensor, dev)
+UNARY_FUNCTION_R(tensor, tensor, dev2)
+UNARY_FUNCTION_N(scalar, tensor, det)
 
 void inv(Field<tensor>& tf, const UList<tensor>& tf1)
 {
@@ -190,30 +99,25 @@ tmp<tensorField> inv(const tmp<tensorField>& tf)
 }
 
 
-tensorFunc(hinv)
-tensorFunc(symm)
-tensorFunc(skew)
-
-void eigenValues(vectorField& vf, const UList<tensor>& tf)
-{
-    TFOR_ALL_F_OP_FUNC_F(vector, vf, =, eigenValues, tensor, tf)
-}
-
-tmp<vectorField> eigenValues(const tmp<tensorField>& tf)
-{
-    tmp<vectorField> result(new vectorField(tf().size()));
-    eigenValues(result(), tf);
-    tf.clear();
-    return result;
-}
+UNARY_FUNCTION_R(tensor, tensor, hinv)
+UNARY_FUNCTION_R(tensor, tensor, symm)
+UNARY_FUNCTION_R(tensor, tensor, skew)
+UNARY_FUNCTION_N(vector, tensor, eigenValues)
+UNARY_FUNCTION_R(tensor, tensor, eigenVectors)
 
 
-tensorFunc(eigenVectors)
+// * * * * * * * * * * * * * * * global operators  * * * * * * * * * * * * * //
 
-#undef tensorFunc
+UNARY_OPERATOR_N(vector, tensor, *, hdual)
+UNARY_OPERATOR_N(tensor, vector, *, hdual)
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 // ************************************************************************* //

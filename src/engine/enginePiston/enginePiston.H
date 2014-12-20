@@ -36,7 +36,6 @@ SourceFiles
 #define enginePiston_H
 
 #include "polyPatchID.H"
-#include "ZoneIDs.H"
 #include "coordinateSystem.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

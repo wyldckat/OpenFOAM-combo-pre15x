@@ -40,7 +40,7 @@ HashTable<const Type*> objectRegistry::lookupClass() const
 
     for (const_iterator iter = begin(); iter != end(); ++iter)
     {
-        if (iter()->type() == Type::typeName)
+        if (isA<Type>(*iter()))
         {
             objectsOfClass.insert
             (

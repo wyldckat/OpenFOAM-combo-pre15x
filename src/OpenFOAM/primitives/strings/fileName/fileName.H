@@ -59,11 +59,10 @@ class fileName
 :
     public string
 {
-
     // Private member functions
 
-        //- Strip invalid characters from this fileName
-        void stripInvalid();
+        //- Strip invalid characters from this word
+        inline void stripInvalid();
 
 
 public:
@@ -76,6 +75,9 @@ public:
         DIRECTORY,
         LINK
     };
+
+    //- Debug switch
+    static int debug;
 
     //- Null fileName
     static const fileName null;
@@ -93,13 +95,13 @@ public:
         inline fileName(const word& w);
 
         //- Construct as copy of string
-        fileName(const string& s);
+        inline fileName(const string& s);
 
         //- Construct as copy of std::string
-        fileName(const std::string& s);
+        inline fileName(const std::string& s);
 
         //- Construct as copy of character array
-        fileName(const char*);
+        inline fileName(const char*);
 
         //- Construct by concatonating elements of wordList separated by '/'
         explicit fileName(const wordList&);

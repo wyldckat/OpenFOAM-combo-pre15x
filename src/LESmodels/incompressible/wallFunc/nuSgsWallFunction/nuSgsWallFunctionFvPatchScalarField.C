@@ -65,17 +65,6 @@ nuSgsWallFunctionFvPatchScalarField::nuSgsWallFunctionFvPatchScalarField
 (
     const fvPatch& p,
     const scalarField& iF,
-    Istream& is
-)
-:
-    fixedValueFvPatchScalarField(p, iF, is)
-{}
-
-
-nuSgsWallFunctionFvPatchScalarField::nuSgsWallFunctionFvPatchScalarField
-(
-    const fvPatch& p,
-    const scalarField& iF,
     const dictionary& dict
 )
 :
@@ -110,7 +99,7 @@ void nuSgsWallFunctionFvPatchScalarField::evaluate()
     const scalarField& ry = patch().deltaCoeffs();
 
     const fvPatchVectorField& U = lookupPatchField<volVectorField, vector>("U");
-    vectorField Up = U.patchInternalField();
+    scalarField magUp = mag(U.patchInternalField() - U);
 
     const scalarField& nuw = lookupPatchField<volScalarField, scalar>("nu");
     scalarField& nuSgsw = *this;
@@ -120,18 +109,18 @@ void nuSgsWallFunctionFvPatchScalarField::evaluate()
 
     forAll(nuSgsw, facei)
     {
-        scalar magUpara = mag(Up[facei]);
+        scalar magUpara = magUp[facei];
 
         scalar utau = sqrt((nuSgsw[facei] + nuw[facei])*magFaceGradU[facei]);
                 
-        if(utau > 0)
+        if(utau > VSMALL)
         {
             int iter = 0;
             scalar err = GREAT;
 
             do
             {
-                scalar kUu = kappa*magUpara/utau;
+                scalar kUu = min(kappa*magUpara/utau, 100);
                 scalar fkUu = exp(kUu) - 1 - kUu*(1 + 0.5*kUu);
 
                 scalar f =
@@ -148,9 +137,10 @@ void nuSgsWallFunctionFvPatchScalarField::evaluate()
                 err = mag((utau - utauNew)/utau);
                 utau = utauNew;
 
-            } while (utau > 0 && err > 0.01 && ++iter < 10);
+            } while (utau > VSMALL && err > 0.01 && ++iter < 10);
 
-            nuSgsw[facei] = sqr(max(utau, 0))/magFaceGradU[facei] - nuw[facei];
+            nuSgsw[facei] = 
+                max(sqr(max(utau, 0))/magFaceGradU[facei] - nuw[facei], 0.0);
         }
         else
         {

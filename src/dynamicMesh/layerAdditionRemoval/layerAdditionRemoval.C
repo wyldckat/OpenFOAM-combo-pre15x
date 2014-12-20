@@ -28,7 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "layerAdditionRemoval.H"
-#include "polyMeshMorphEngine.H"
+#include "polyTopoChanger.H"
 #include "polyMesh.H"
 #include "Time.H"
 #include "primitiveMesh.H"
@@ -63,7 +63,7 @@ void Foam::layerAdditionRemoval::checkDefinition()
         (
             "void Foam::layerAdditionRemoval::checkDefinition()"
         )   << "Master face zone named " << faceZoneID_.name()
-            << "cannot be found."
+            << " cannot be found."
             << abort(FatalError);
     }
 
@@ -80,7 +80,7 @@ void Foam::layerAdditionRemoval::checkDefinition()
             << abort(FatalError);
     }
 
-    if (mesh().faceZones()[faceZoneID_.index()].size() == 0)
+    if (topoChanger().mesh().faceZones()[faceZoneID_.index()].size() == 0)
     {
         FatalErrorIn
         (
@@ -92,7 +92,7 @@ void Foam::layerAdditionRemoval::checkDefinition()
 
     if (debug)
     {
-        Info<< "Cell layer addition/removal object " << name() << " :" << nl
+        Pout<< "Cell layer addition/removal object " << name() << " :" << nl
             << "    faceZoneID: " << faceZoneID_ << endl;
     }
 }
@@ -128,14 +128,14 @@ Foam::layerAdditionRemoval::layerAdditionRemoval
 (
     const word& name,
     const label index,
-    const polyMesh& mesh,
+    const polyTopoChanger& mme,
     const word& zoneName,
     const scalar minThickness,
     const scalar maxThickness
 )
 :
-    polyMeshModifier(name, index, mesh, true),
-    faceZoneID_(zoneName, mesh.faceZones()),
+    polyMeshModifier(name, index, mme, true),
+    faceZoneID_(zoneName, mme.mesh().faceZones()),
     minLayerThickness_(minThickness),
     maxLayerThickness_(maxThickness),
     oldLayerThickness_(-1.0),
@@ -154,11 +154,11 @@ Foam::layerAdditionRemoval::layerAdditionRemoval
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyMesh& mesh
+    const polyTopoChanger& mme
 )
 :
-    polyMeshModifier(name, index, mesh, Switch(dict.lookup("active"))),
-    faceZoneID_(dict.lookup("faceZoneName"), mesh.faceZones()),
+    polyMeshModifier(name, index, mme, Switch(dict.lookup("active"))),
+    faceZoneID_(dict.lookup("faceZoneName"), mme.mesh().faceZones()),
     minLayerThickness_(readScalar(dict.lookup("minLayerThickness"))),
     maxLayerThickness_(readScalar(dict.lookup("maxLayerThickness"))),
     oldLayerThickness_(readOldThickness(dict)),
@@ -198,14 +198,13 @@ bool Foam::layerAdditionRemoval::changeTopology() const
     //     When the min thickness falls below the threshold, trigger removal.
 
     const labelList& mc =
-        mesh().faceZones()[faceZoneID_.index()].masterCells();
+        topoChanger().mesh().faceZones()[faceZoneID_.index()].masterCells();
 
-    const labelList& mf =
-        mesh().faceZones()[faceZoneID_.index()].addressing();
+    const labelList& mf = topoChanger().mesh().faceZones()[faceZoneID_.index()];
 
 
-    const scalarField& V = mesh().cellVolumes();
-    const vectorField& S = mesh().faceAreas();
+    const scalarField& V = topoChanger().mesh().cellVolumes();
+    const vectorField& S = topoChanger().mesh().faceAreas();
 
     if (min(V) < -VSMALL)
     {
@@ -233,7 +232,7 @@ bool Foam::layerAdditionRemoval::changeTopology() const
 
     if (debug)
     {
-        Info<< "bool layerAdditionRemoval::changeTopology() const "
+        Pout<< "bool layerAdditionRemoval::changeTopology() const "
             << " for object " << name() << " : " << nl
             << "Layer thickness: min: " << minDelta
             << " max: " << maxDelta << " avg: " << avgDelta
@@ -250,7 +249,7 @@ bool Foam::layerAdditionRemoval::changeTopology() const
     {
         if (debug)
         {
-            Info << "First step. No addition/removal" << endl;
+            Pout << "First step. No addition/removal" << endl;
         }
 
         // No topological changes allowed before first mesh motion
@@ -277,12 +276,12 @@ bool Foam::layerAdditionRemoval::changeTopology() const
 
                     if (debug)
                     {
-                        Info<< "bool layerAdditionRemoval::changeTopology() "
+                        Pout<< "bool layerAdditionRemoval::changeTopology() "
                             << " const for object " << name() << " : "
                             << "Triggering layer removal" << endl;
                     }
 
-                    triggerRemoval_ = mesh().time().timeIndex();
+                    triggerRemoval_ = topoChanger().mesh().time().timeIndex();
 
                     // Old thickness looses meaning.
                     // Set it up to indicate layer removal
@@ -309,12 +308,12 @@ bool Foam::layerAdditionRemoval::changeTopology() const
         {
             if (debug)
             {
-                Info<< "bool layerAdditionRemoval::changeTopology() const "
+                Pout<< "bool layerAdditionRemoval::changeTopology() const "
                     << " for object " << name() << " : "
                     << "Triggering layer addition" << endl;
             }
 
-            triggerAddition_ = mesh().time().timeIndex();
+            triggerAddition_ = topoChanger().mesh().time().timeIndex();
 
             // Old thickness looses meaning.
             // Set it up to indicate layer removal
@@ -337,14 +336,14 @@ void Foam::layerAdditionRemoval::setRefinement(polyTopoChange& ref) const
     // Insert the layer addition/removal instructions
     // into the topological change
 
-    if (triggerRemoval_ == mesh().time().timeIndex())
+    if (triggerRemoval_ == topoChanger().mesh().time().timeIndex())
     {
         removeCellLayer(ref);
 
         // Clear addressing.  This also resets the addition/removal data
         if (debug)
         {
-            Info<< "layerAdditionRemoval::setRefinement(polyTopoChange& ref) "
+            Pout<< "layerAdditionRemoval::setRefinement(polyTopoChange& ref) "
                 << " for object " << name() << " : "
                 << "Clearing addressing after layer removal. " << endl;
         }
@@ -353,14 +352,14 @@ void Foam::layerAdditionRemoval::setRefinement(polyTopoChange& ref) const
         clearAddressing();
     }
 
-    if (triggerAddition_ == mesh().time().timeIndex())
+    if (triggerAddition_ == topoChanger().mesh().time().timeIndex())
     {
         addCellLayer(ref);
 
         // Clear addressing.  This also resets the addition/removal data
         if (debug)
         {
-            Info<< "layerAdditionRemoval::setRefinement(polyTopoChange& ref) "
+            Pout<< "layerAdditionRemoval::setRefinement(polyTopoChange& ref) "
                 << " for object " << name() << " : "
                 << "Clearing addressing after layer addition. " << endl;
         }
@@ -371,26 +370,26 @@ void Foam::layerAdditionRemoval::setRefinement(polyTopoChange& ref) const
 }
 
 
-void Foam::layerAdditionRemoval::updateTopology(const mapPolyMesh&)
+void Foam::layerAdditionRemoval::updateMesh(const mapPolyMesh&)
 {
     if (debug)
     {
-        Info<< "layerAdditionRemoval::updateTopology(const mapPolyMesh&) "
+        Pout<< "layerAdditionRemoval::updateMesh(const mapPolyMesh&) "
             << " for object " << name() << " : "
             << "Clearing addressing on external request. ";
 
         if (pointsPairingPtr_ || facesPairingPtr_)
         {
-            Info << "Pointers set." << endl;
+            Pout << "Pointers set." << endl;
         }
         else
         {
-            Info << "Pointers not set." << endl;
+            Pout << "Pointers not set." << endl;
         }
     }
 
     // Mesh has changed topologically.  Update local topological data
-    faceZoneID_.update(mesh().faceZones());
+    faceZoneID_.update(topoChanger().mesh().faceZones());
 
     clearAddressing();
 }

@@ -83,7 +83,7 @@ public:
             void setRefinement(const labelList&, polyTopoChange&) const;
 
             //- Force recalculation of locally stored data on topological change
-            void updateTopology(const mapPolyMesh&)
+            void updateMesh(const mapPolyMesh&)
             {}
 
 };

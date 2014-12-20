@@ -27,7 +27,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
 #include "dimensionedScalar.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -76,7 +75,7 @@ dimensionedScalar pow
 {
     return dimensionedScalar
     (
-        "pow(" + ds.name() + ", " + expt.name() + ')',
+        "pow(" + ds.name() + ',' + expt.name() + ')',
         pow(ds.dimensions(), expt),
         ::pow(ds.value(), expt.value())
     );
@@ -199,7 +198,7 @@ dimensionedScalar func(const int n, const dimensionedScalar& ds)           \
                                                                            \
     return dimensionedScalar                                               \
     (                                                                      \
-        #func "(" + name(n) + ", " + ds.name() + ')',                      \
+        #func "(" + name(n) + ',' + ds.name() + ')',                      \
         dimless,                                                           \
         ::func(n, ds.value())                                              \
     );                                                                     \

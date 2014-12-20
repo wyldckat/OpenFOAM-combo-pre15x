@@ -1,4 +1,6 @@
 EXE_INC = \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude
+    -I$(LIB_SRC)/finiteVolume/lnInclude
 
-EXE_LIBS = -lfoamUtil
+EXE_LIBS = \
+    -lfiniteVolume \
+    -lfoamUtil

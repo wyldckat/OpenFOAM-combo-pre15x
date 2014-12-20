@@ -56,9 +56,9 @@ class vanDriestDelta
     // Private data
 
         autoPtr<LESdelta> geometricDelta_;
-        dimensionedScalar kappa_;
-        dimensionedScalar Aplus_;
-        dimensionedScalar Cdelta_;
+        scalar kappa_;
+        scalar Aplus_;
+        scalar Cdelta_;
 
 
     // Private Member Functions

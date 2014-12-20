@@ -47,7 +47,7 @@ SourceFiles
 #include "vectorField.H"
 #include "tmp.H"
 #include "coordinateRotation.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

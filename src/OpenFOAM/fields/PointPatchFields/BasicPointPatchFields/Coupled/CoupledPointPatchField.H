@@ -105,49 +105,6 @@ public:
 
             //- Add field to internal field
             virtual void addField(Field<Type>&) const = 0;
-
-
-        // Matrix construction (completion) functionality
-
-            //- Add diagonal/source contributions
-            virtual void addDiag(scalarField&) const = 0;
-            virtual void addSource(scalarField&) const = 0;
-
-            //- Add upper/lower contributions
-            virtual void addUpperLower(scalarField&) const = 0;
-
-            virtual void eliminateUpperLower(scalarField&) const = 0;
-
-            //- Get the cut edge coefficients in Amul order
-            virtual tmp<scalarField> cutBouCoeffs(const lduMatrix&) const = 0;
-
-            //- Get the cut edge coefficients in Tmul order
-            virtual tmp<scalarField> cutIntCoeffs(const lduMatrix&) const = 0;
-
-
-        // Coupled interface functionality
-
-            //- Initialise neighbour matrix update
-            virtual void initInterfaceMatrixUpdate
-            (
-                const scalarField&,
-                scalarField&,
-                const lduMatrix&,
-                const scalarField&,
-                const direction,
-                const bool
-            ) const
-            {}
-
-            //- Update result field based on interface functionality
-            virtual void updateInterfaceMatrix
-            (
-                const scalarField&,
-                scalarField&,
-                const lduMatrix&,
-                const scalarField&,
-                const direction
-            ) const = 0;
 };
 
 

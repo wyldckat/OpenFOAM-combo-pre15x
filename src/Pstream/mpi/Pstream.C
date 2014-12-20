@@ -37,6 +37,12 @@ Class
 
 #include <mpi.h>
 
+#if defined(SP)
+#   define MPI_SCALAR MPI_FLOAT
+#elif defined(DP)
+#   define MPI_SCALAR MPI_DOUBLE
+#endif
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -171,7 +177,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                     (
                         &value,
                         1,
-                        MPI_DOUBLE,
+                        MPI_SCALAR,
                         Pstream::procID(slave),
                         Pstream::msgType(),
                         MPI_COMM_WORLD,
@@ -197,7 +203,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                 (
                     &Value,
                     1,
-                    MPI_DOUBLE,
+                    MPI_SCALAR,
                     Pstream::procID(Pstream::masterNo()),
                     Pstream::msgType(),
                     MPI_COMM_WORLD
@@ -228,7 +234,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                     (
                         &Value,
                         1,
-                        MPI_DOUBLE,
+                        MPI_SCALAR,
                         Pstream::procID(slave),
                         Pstream::msgType(),
                         MPI_COMM_WORLD
@@ -251,7 +257,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                 (
                     &Value,
                     1,
-                    MPI_DOUBLE,
+                    MPI_SCALAR,
                     Pstream::procID(Pstream::masterNo()),
                     Pstream::msgType(),
                     MPI_COMM_WORLD,
@@ -269,10 +275,11 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
     }
     else
     {
-        //scalar sum;
-        //MPI_Allreduce(&Value, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
-        //Value = sum;
+        scalar sum;
+        MPI_Allreduce(&Value, &sum, 1, MPI_SCALAR, MPI_SUM, MPI_COMM_WORLD);
+        Value = sum;
 
+        /*
         MPI_Status status;
 
         int myProcNo = Pstream::myProcNo();
@@ -304,7 +311,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                     (
                         &value,
                         1,
-                        MPI_DOUBLE,
+                        MPI_SCALAR,
                         Pstream::procID(childProcId),
                         Pstream::msgType(),
                         MPI_COMM_WORLD,
@@ -340,7 +347,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                 (
                     &Value,
                     1,
-                    MPI_DOUBLE,
+                    MPI_SCALAR,
                     Pstream::procID(parentId),
                     Pstream::msgType(),
                     MPI_COMM_WORLD
@@ -360,7 +367,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                 (
                     &Value,
                     1,
-                    MPI_DOUBLE,
+                    MPI_SCALAR,
                     Pstream::procID(parentId),
                     Pstream::msgType(),
                     MPI_COMM_WORLD,
@@ -396,7 +403,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                     (
                         &Value,
                         1,
-                        MPI_DOUBLE,
+                        MPI_SCALAR,
                         Pstream::procID(childProcId),
                         Pstream::msgType(),
                         MPI_COMM_WORLD
@@ -415,6 +422,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
             thisLevelOffset >>= 1;
             childLevelOffset = thisLevelOffset/2;
         }
+        */
     }
 }
 

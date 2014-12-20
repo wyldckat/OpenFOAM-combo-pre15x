@@ -28,7 +28,6 @@ License
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "mapPolyMesh.H"
-#include "polyTopoChange.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -66,7 +65,6 @@ polyBoundaryMesh::polyBoundaryMesh
     polyPatchList(),
     regIOobject(io),
     mesh_(mesh),
-    extendedAddressing_(false),
     neighbourEdgesPtr_(NULL)
 {
     if (readOpt() == IOobject::MUST_READ)
@@ -116,7 +114,6 @@ polyBoundaryMesh::polyBoundaryMesh
     polyPatchList(size),
     regIOobject(io),
     mesh_(pm),
-    extendedAddressing_(false),
     neighbourEdgesPtr_(NULL)
 {}
 
@@ -470,102 +467,6 @@ bool polyBoundaryMesh::checkDefinition(const bool report) const
 }
 
 
-bool polyBoundaryMesh::checkFaceOrder(const bool report) const
-{
-    // Create dummy topology change.
-    polyTopoChange noChange(mesh_);
-
-    // Create map from mesh to itself
-
-    const polyBoundaryMesh& patches = *this;
-
-    labelList oldPatchStarts(patches.size());
-    forAll(oldPatchStarts, patchI)
-    {
-        oldPatchStarts[patchI] = patches[patchI].start();
-    }
-
-    // Map from mesh to itself.
-    // Note: a few arguments are not set since they are not used in initOrder.
-    // Just lazy ;-)
-    mapPolyMesh identiMap
-    (
-        mesh_,                  // polyMesh
-        mesh_.nPoints(),        // nOldPoints
-        mesh_.nFaces(),         // nOldFaces
-        mesh_.nCells(),         // nOldCells
-        ident(mesh_.nPoints()), // pointMap
-        ident(mesh_.nFaces()),  // faceMap
-        List<objectMap>(),      // facesFromPoints
-        List<objectMap>(),      // facesFromEdges
-        ident(mesh_.nCells()),  // cellMap
-        List<objectMap>(),      // cellsFromPoints
-        List<objectMap>(),      // cellsFromEdges
-        List<objectMap>(),      // cellsFromFaces
-        ident(mesh_.nPoints()), // reversePointMap
-        ident(mesh_.nFaces()),  // reverseFaceMap
-        ident(mesh_.nCells()),  // reverseCellMap
-        labelHashSet(),         // flipFaceFlux
-        labelListList(),        // patchPointMap, NOT SET
-        labelListList(),        // pointZoneMap, NOT SET
-        labelListList(),        // faceZonePointMap, NOT SET
-        labelListList(),        // faceZoneFaceMap, NOT SET
-        labelListList(),        // cellZoneMap, NOT SET
-        mesh_.allPoints(),      // preMotionPoints
-        oldPatchStarts,         // oldPatchStarts
-        labelList()             // oldPatchNMeshPoints, NOT SET
-    );
-    
-    bool boundaryError = false;
-
-    forAll(patches, patchI)
-    {
-        patches[patchI].initOrder(noChange, identiMap);
-    }
-    
-    forAll(patches, patchI)
-    {
-        labelList pfMap;
-        labelList pfRot;
-
-        if (patches[patchI].order(noChange, identiMap, pfMap, pfRot))
-        {
-            boundaryError = true;
-
-            Pout<< "bool polyBoundaryMesh::checkFaceOrder("
-                << "const bool report) const : "
-                << "Problem with coupled boundary patch " << patchI
-                << " named " << patches[patchI].name()
-                << " of type " <<  patches[patchI].type()
-                << ".\nThe patch faces are not ordered such that the faces"
-                << " on the two sides are numbered identically"
-                << "." << nl << endl;
-        }
-    }
-
-    reduce(boundaryError, orOp<bool>());
-
-    if (boundaryError)
-    {
-        SeriousErrorIn
-        (
-            "bool polyBoundaryMesh::checkFaceOrder("
-            "const bool report) const"
-        )   << "This mesh is not valid: coupled face ordering not consistent."
-            << endl;
-    }
-    else
-    {
-        if (debug || report)
-        {
-            Pout<< "Patch face ordering OK." << endl;
-        }
-    }
-
-    return boundaryError;
-}
-
-
 // Correct polyBoundaryMesh after moving points
 void polyBoundaryMesh::movePoints(const pointField& p)
 {
@@ -584,7 +485,7 @@ void polyBoundaryMesh::movePoints(const pointField& p)
 
 
 // Correct polyBoundaryMesh after topology update
-void polyBoundaryMesh::updateTopology()
+void polyBoundaryMesh::updateMesh()
 {
     deleteDemandDrivenData(neighbourEdgesPtr_);
 
@@ -597,7 +498,7 @@ void polyBoundaryMesh::updateTopology()
 
     forAll(patches, patchi)
     {
-        patches[patchi].updateTopology();
+        patches[patchi].updateMesh();
     }
 }
 

@@ -69,7 +69,7 @@ Foam::mirrorFvMesh::mirrorFvMesh(const IOobject& io)
 
     const pointField& oldPoints = allPoints();
     const faceList& oldFaces = allFaces();
-    const cellList& oldCells = allCells();
+    const cellList& oldCells = cells();
     const label nOldInternalFaces = nInternalFaces();
     const polyPatchList& oldPatches = boundaryMesh();
 

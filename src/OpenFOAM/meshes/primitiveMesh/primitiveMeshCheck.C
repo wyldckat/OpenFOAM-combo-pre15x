@@ -27,7 +27,7 @@ License
 #include "primitiveMesh.H"
 #include "pyramidPointFaceRef.H"
 #include "cell.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "boolList.H"
 #include "labelHashSet.H"
 #include "ListOps.H"
@@ -485,7 +485,7 @@ bool primitiveMesh::checkFaceDotProduct
 
     // Severe nonorthogonality threshold
     const scalar severeNonorthogonalityThreshold =
-        ::cos(orthWarn_/180.0*physicalConstant::pi);
+        ::cos(orthWarn_/180.0*mathematicalConstant::pi);
 
     scalar minDDotS = GREAT;
 
@@ -513,7 +513,7 @@ bool primitiveMesh::checkFaceDotProduct
                         << " between cells " << own[faceI]
                         << " and " << nei[faceI]
                         << ": Angle = "
-                        << ::acos(dDotS)/physicalConstant::pi*180.0
+                        << ::acos(dDotS)/mathematicalConstant::pi*180.0
                         << " deg." << endl;
                 }
 
@@ -533,7 +533,7 @@ bool primitiveMesh::checkFaceDotProduct
                     "(const bool report, labelHashSet* setPtr) const"
                 )   << "Severe non-orthogonality detected for face " << faceI
                     << " between cells " << own[faceI] << " and " << nei[faceI]
-                    << ": Angle = " << ::acos(dDotS)/physicalConstant::pi*180.0
+                    << ": Angle = " << ::acos(dDotS)/mathematicalConstant::pi*180.0
                     << " deg." << endl;
 
                 errorNonOrth++;
@@ -578,9 +578,9 @@ bool primitiveMesh::checkFaceDotProduct
         if (neiSize > 0)
         {
             Info<< "Mesh non-orthogonality Max: "
-                << ::acos(minDDotS)/physicalConstant::pi*180.0
+                << ::acos(minDDotS)/mathematicalConstant::pi*180.0
                 << " average: " <<
-                   ::acos(sumDDotS/neiSize)/physicalConstant::pi*180.0
+                   ::acos(sumDDotS/neiSize)/mathematicalConstant::pi*180.0
                 << endl;
         }
     }
@@ -967,7 +967,7 @@ bool primitiveMesh::checkFaceAngles
             << abort(FatalError);
     }
 
-    const scalar maxSin = Foam::sin(maxDeg/180.0*physicalConstant::pi);
+    const scalar maxSin = Foam::sin(maxDeg/180.0*mathematicalConstant::pi);
 
     const pointField& p = points();
     const faceList& fcs = faces();
@@ -1046,7 +1046,7 @@ bool primitiveMesh::checkFaceAngles
         {
             scalar maxConcaveDegr =
                 Foam::asin(Foam::min(1.0, maxEdgeSin))
-             * 180.0/physicalConstant::pi;
+             * 180.0/mathematicalConstant::pi;
 
             Info<< "There are " << nConcave
                 << " faces with concave angles between consecutive"
@@ -1170,10 +1170,13 @@ bool primitiveMesh::checkFaceFlatness
     reduce(nSummed, sumOp<label>());
     reduce(sumFlatness, sumOp<scalar>());
 
-    if (report && nWarped > 0)
+    if (report)
     {
-        Info<< "Face flatness (1 = flat, 0 = butterfly) : average = "
-            << sumFlatness / nSummed << "  min = " << minFlatness << endl;
+        if (nSummed > 0)
+        {
+            Info<< "Face flatness (1 = flat, 0 = butterfly) : average = "
+                << sumFlatness / nSummed << "  min = " << minFlatness << endl;
+        }
 
         if (nWarped> 0)
         {
@@ -1950,8 +1953,8 @@ bool primitiveMesh::checkFaceFaces
 // Checks cells with 1 or less internal faces. Give numerical problems.
 bool primitiveMesh::checkFloatingCells
 (
-    const bool,    // report,
-    labelHashSet*  // setPtr
+    const bool report,    // report,
+    labelHashSet* setPtr  // setPtr
 ) const
 {
     /*
@@ -1962,19 +1965,20 @@ bool primitiveMesh::checkFloatingCells
             << "checking floating cells" << endl;
     }
 
+    const cellList& c = cells();
+    
     label nErrorCells = 0;
 
-    // When to warn. Number of neighbouring cells at which cells give problems.
-    // Not sure whether cell with 2 neigbouring cells might also give problems.
-    // Depends probably on whether a reliable gradient can be constructed from
-    // the faces.
-    const label minInternalFaces = 1;
-
-    const cellList& c = cells();
+    scalar minDet = GREAT;
+    scalar sumDet = 0;
+    label nSummed = 0;
 
     forAll (c, cellI)
     {
         const labelList& curFaces = c[cellI];
+
+        // Calculate local normalization factor
+        scalar avgArea = 0;
 
         label nInternalFaces = 0;
 
@@ -1982,11 +1986,13 @@ bool primitiveMesh::checkFloatingCells
         {
             if (isInternalFace(curFaces[i]))
             {
+                avgArea += mag(faceAreas()[curFaces[i]]);
+
                 nInternalFaces++;
             }
         }
 
-        if (nInternalFaces <= minInternalFaces)
+        if (nInternalFaces == 0)
         {
             if (debug || report)
             {
@@ -2002,21 +2008,81 @@ bool primitiveMesh::checkFloatingCells
 
             nErrorCells++;
         }
+        else
+        {
+            avgArea /= nInternalFaces;
+
+            tensor areaTensor(tensor::zero);
+
+            forAll(curFaces, i)
+            {
+                if (isInternalFace(curFaces[i]))
+                {
+                    areaTensor += sqr(faceAreas()[curFaces[i]]/avgArea);
+                }
+            }
+
+            scalar determinant = mag(det(areaTensor));
+
+            minDet = min(determinant, minDet);
+            sumDet += determinant;
+            nSummed++;
+
+            if (determinant < 1E-3)
+            {
+                Pout<< "cell:" << cellI << " det:" << determinant
+                    << " avgArea:" << avgArea << endl;
+
+                forAll(curFaces, i)
+                {
+                    Pout<< "    face:" << curFaces[i]
+                        << " norm.area:" << faceAreas()[curFaces[i]]/avgArea
+                        << endl;
+                }
+
+                if (setPtr)
+                {
+                    setPtr->insert(cellI);
+                }
+
+                nErrorCells++;
+            }
+        }
     }
 
     reduce(nErrorCells, sumOp<label>());
+    reduce(minDet, minOp<scalar>());
+    reduce(sumDet, sumOp<scalar>());
+    reduce(nSummed, sumOp<label>());
+
+    if (debug || report)
+    {
+        if (nSummed > 0)
+        {
+            Info<< "Cell determinant (wellposedness) : minimum: " << minDet
+                << " average: " << sumDet/nSummed
+                << endl;
+        }
+    }
 
     if (nErrorCells > 0)
     {
-        SeriousErrorIn
+        WarningIn
         (
             "bool primitiveMesh::checkFloatingCells(const bool"
             ", labelHashSet*) const"
-        )   << nErrorCells << " cells which are connected to <= "
-            << minInternalFaces << " other cells found"
+        )   << nErrorCells << " cells which have a small cell determinant"
+            << " found." << endl
+            << "    This cell determinant is a measure for how well a gradient"
+            << " can be determined." << endl
+            << "    The cells with a low value might"
+            << " give numerical problems in a 3D geometry if" << endl
+            << "    they are inside"
+            << " the domain or if they are used with non-fixed value boundary"
+            << endl << "    conditions"
             << endl;
 
-        return true;
+        return false;
     }
     else
     {

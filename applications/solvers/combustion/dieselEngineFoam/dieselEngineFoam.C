@@ -30,21 +30,15 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "engineTime.H"
 #include "fvCFD.H"
-#include "tetFem.H"
+#include "engineTime.H"
+#include "engineMesh.H"
 #include "hCombustionThermo.H"
 #include "compressible/turbulenceModel/turbulenceModel.H"
 #include "spray.H"
 #include "chemistryModel.H"
 #include "chemistrySolver.H"
-
 #include "multivariateScheme.H"
-#include "fixedValueTetPolyPatchFields.H"
-#include "slipTetPolyPatchFields.H"
-#include "symmetryFvPatch.H"
-#include "wedgeFvPatch.H"
-#include "emptyFvPatch.H"
 #include "Switch.H"
 #include "OFstream.H"
 
@@ -54,13 +48,12 @@ int main(int argc, char *argv[])
 {
 #   include "setRootCase.H"
 #   include "createEngineTime.H"
-#   include "createMesh.H"
+#   include "createEngineMesh.H"
 #   include "createFields.H"
 #   include "readEnvironmentalProperties.H"
 #   include "readCombustionProperties.H"
 #   include "createSpray.H"
 #   include "initContinuityErrs.H"
-#   include "createEngineMovingMesh.H"
 #   include "readEngineTimeControls.H"
 #   include "setInitialDeltaT.H"
 #   include "startSummary.H"
@@ -73,14 +66,14 @@ int main(int argc, char *argv[])
     {
 #       include "readPISOControls.H"
 #       include "readEngineTimeControls.H"
-#       include "CourantNo.H"
+#       include "compressibleCourantNo.H"
 #       include "setDeltaT.H"
 
         runTime++;
 
         Info<< "Crank angle = " << runTime.theta() << " CA-deg" << endl;
 
-#       include "movePiston.H"
+        mesh.move();
 
         dieselSpray.evolve();
 
@@ -126,9 +119,9 @@ int main(int argc, char *argv[])
 
         runTime.write();
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

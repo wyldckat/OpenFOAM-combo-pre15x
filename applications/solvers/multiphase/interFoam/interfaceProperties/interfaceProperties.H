@@ -39,7 +39,8 @@ SourceFiles
 #define interfaceProperties_H
 
 #include "IOdictionary.H"
-#include "fvCFD.H"
+#include "volFields.H"
+#include "surfaceFields.H"
 #include "fvPatchFieldFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

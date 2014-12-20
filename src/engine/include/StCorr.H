@@ -3,24 +3,76 @@
     if (ign.igniting())
     {
         // Calculate volume of ignition kernel
-        dimensionedScalar Vk = gSum(c*mesh.V());
+        dimensionedScalar Vk("Vk", dimVolume, gSum(c*mesh.V()));
+        dimensionedScalar Ak("Ak", dimArea, 0.0);
 
         if (Vk.value() > SMALL)
         {
             // Calculate kernel area from it's volume
+            // and the dimensionality of the case
 
-            // assuming it is part-spherical
-            scalar sphereFraction = 1.0;
-            dimensionedScalar Ak = 
-                sphereFraction*4.0*physicalConstant::pi
-               *pow(3.0*Vk/(sphereFraction*4.0*physicalConstant::pi),2.0/3.0);
+            switch(mesh.nD())
+            {
+                case 3:
+                {
+                    // Assume it is part-spherical
+                    scalar sphereFraction
+                    (
+                        readScalar
+                        (
+                            combustionProperties.lookup
+                            (
+                                "ignitionSphereFraction"
+                            )
+                        )
+                    );
 
-            // assuming it is part-circular
-            //dimensionedScalar thickness("l", dimLength, 0.1);
-            //scalar circleFraction = 0.5;
-            //dimensionedScalar Ak = 
-            //    circleFraction*physicalConstant::pi*thickness
-            //   *sqrt(4.0*Vk/(circleFraction*thickness*physicalConstant::pi));
+                    Ak = sphereFraction*4.0*mathematicalConstant::pi
+                       *pow
+                        (
+                            3.0*Vk
+                           /(sphereFraction*4.0*mathematicalConstant::pi),
+                            2.0/3.0
+                        );
+                }
+                break;
+            
+                case 2:
+                {
+                    // Assume it is part-circular
+                    dimensionedScalar thickness
+                    (
+                        combustionProperties.lookup("ignitionThickness")
+                    );
+
+                    scalar circleFraction
+                    (
+                        readScalar
+                        (
+                            combustionProperties.lookup
+                            (
+                                "ignitionCircleFraction"
+                            )
+                        )
+                    );
+
+                    Ak = circleFraction*mathematicalConstant::pi*thickness
+                       *sqrt
+                        (
+                            4.0*Vk
+                           /(circleFraction*thickness*mathematicalConstant::pi)
+                        );
+                }
+                break;
+
+                case 1:
+                    // Assume it is plane or two planes
+                    Ak = dimensionedScalar
+                    (
+                        combustionProperties.lookup("ignitionKernelArea")
+                    );
+                break;
+            }
 
             // Calculate kernel area from b field consistent with the
             // discretisation of the b equation.

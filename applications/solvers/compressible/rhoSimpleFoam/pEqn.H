@@ -11,9 +11,8 @@ for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
         fvm::laplacian(rho/AU, p) == fvc::div(phi)
     );
 
-    fvScalarMatrix::reference pRef = pEqn.setReference(pRefCell, pRefValue);
+    pEqn.setReference(pRefCell, pRefValue);
     pEqn.solve();
-    pEqn.unsetReference(pRef);
 
     if (nonOrth == nNonOrthCorr)
     {

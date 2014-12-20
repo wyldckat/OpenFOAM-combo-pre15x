@@ -1,6 +1,8 @@
 CPP        = /lib/cpp -D$(WM_ARCH)
 LD         = ld -melf_i386
 
+GLIBS      = -liberty
+
 include $(RULES)/X
 
 include $(GENERAL_RULES)/sourceToDep

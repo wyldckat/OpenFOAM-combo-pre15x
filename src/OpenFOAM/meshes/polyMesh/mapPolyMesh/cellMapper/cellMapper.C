@@ -175,10 +175,10 @@ void Foam::cellMapper::clearOut()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-Foam::cellMapper::cellMapper(const polyMesh& mesh)
+Foam::cellMapper::cellMapper(const mapPolyMesh& mpm)
 :
-    mesh_(mesh),
-    mpm_(mesh.morphMap()),
+    mesh_(mpm.mesh()),
+    mpm_(mpm),
     insertedCells_(true),
     direct_(false),
     directAddrPtr_(NULL),

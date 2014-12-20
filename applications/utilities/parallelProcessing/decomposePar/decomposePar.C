@@ -37,8 +37,9 @@ Description
 #include "domainDecomposition.H"
 #include "labelIOList.H"
 
-#include "tetPointFields.H"
 #include "geometricFvFieldDecomposer.H"
+
+#include "tetPointFields.H"
 #include "geometricTetPointFieldDecomposer.H"
 
 #include "tensorIOField.H"
@@ -51,12 +52,15 @@ int main(int argc, char *argv[])
     argList::noParallel();
     argList::validOptions.insert("fields", "");
     argList::validOptions.insert("cellDist", "");
+    argList::validOptions.insert("filterPatches", "");
 
 #   include "setRootCase.H"
 
     bool decomposeFieldsOnly(args.options().found("fields"));
 
-    bool writecellDist(args.options().found("cellDist"));
+    bool writeCellDist(args.options().found("cellDist"));
+
+    bool filterPatches(args.options().found("filterPatches"));
 
 #   include "createTime.H"
 
@@ -86,18 +90,18 @@ int main(int argc, char *argv[])
                 << exit(FatalError);
         }
 
-        mesh.decomposeMesh();
+        mesh.decomposeMesh(filterPatches);
 
         mesh.writeDecomposition();
 
-        if (writecellDist)
+        if (writeCellDist)
         {
             // Write the decomposition as labelList for use with 'manual'
             // decomposition method.
             OFstream str
             (
                 runTime.path()
-              / mesh.cellsInstance()
+              / mesh.facesInstance()
               / polyMesh::defaultRegion
               / "cellDecomposition"
             );
@@ -105,7 +109,7 @@ int main(int argc, char *argv[])
             str << mesh.cellToProc();
 
             Info<< nl << "Written decomposition to "
-                <<  mesh.cellsInstance()
+                <<  mesh.facesInstance()
                   / polyMesh::defaultRegion
                   / "cellDecomposition"
                 << nl << endl;
@@ -460,7 +464,6 @@ int main(int argc, char *argv[])
     {
         delete tetMeshPtr;
     }
-
 
     Info<< "\nEnd.\n" << endl;
 

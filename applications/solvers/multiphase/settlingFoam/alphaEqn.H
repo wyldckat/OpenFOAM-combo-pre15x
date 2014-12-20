@@ -26,6 +26,6 @@
     Alpha.min(1.0);
     Alpha.max(0.0);
 
-    rho == rhoc/(1.0 + (rhoc/rhod - 1.0)*Alpha);
+    rho == rhoc/(scalar(1) + (rhoc/rhod - 1.0)*Alpha);
     alpha == rho*Alpha/rhod;
 }

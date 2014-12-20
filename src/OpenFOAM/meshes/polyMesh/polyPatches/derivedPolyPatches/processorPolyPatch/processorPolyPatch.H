@@ -92,43 +92,6 @@ class processorPolyPatch
         static scalar matchTol_;
 
 
-    // Private member functions
-
-        // Morphing helper functions
-
-            //- Do sending for geometric matching
-            void sendGeometricOrder
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&
-            ) const;
-
-            //- Do ordering for geometric matching
-            bool geometricOrder
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&,
-                labelList&,
-                labelList&
-            ) const;
-
-            //- Do sending for topological matching
-            void sendTopologicalOrder
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&
-            ) const;
-
-            //- Do ordering for topological matching
-            bool topologicalOrder
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&,
-                labelList&,
-                labelList&
-            ) const;
-
-
 protected:
 
     // Protected Member functions
@@ -149,7 +112,8 @@ protected:
         virtual void initUpdateTopology();
 
         //- Update of the patch topology
-        virtual void updateTopology();
+        virtual void updateMesh();
+
 
 public:
 
@@ -306,28 +270,21 @@ public:
         const labelList& neighbEdges() const;
 
 
-        // Morph
+        //- Initialize ordering for primitivePatch. Does not
+        //  refer to *this (except for name() and type() etc.)
+        virtual void initOrder(const primitivePatch&) const;
 
-            //- Initialize ordering (on new mesh)
-            //  Gets -changes (in old mesh ordering)
-            //  -map from old to new mesh
-            virtual void initOrder
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&
-            ) const;
-
-            //- Morph:Return new ordering. Ordering is -faceMap: for every face
-            //  index of the new face -rotation:for every new face the clockwise
-            //  shift of the original face. Return false if nothing changes
-            //  (faceMap is identity, rotation is 0), true otherwise.
-            virtual bool order
-            (
-                const polyTopoChange&,
-                const mapPolyMesh&,
-                labelList& faceMap,
-                labelList& rotation
-            ) const;
+        //- Return new ordering for primitivePatch.
+        //  Ordering is -faceMap: for every face
+        //  index of the new face -rotation:for every new face the clockwise
+        //  shift of the original face. Return false if nothing changes
+        //  (faceMap is identity, rotation is 0), true otherwise.
+        virtual bool order
+        (
+            const primitivePatch&,
+            labelList& faceMap,
+            labelList& rotation
+        ) const;
 
 
         //- Write

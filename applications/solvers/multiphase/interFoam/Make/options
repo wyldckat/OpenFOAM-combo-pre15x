@@ -1,13 +1,12 @@
 EXE_INC = \
     -IincompressibleTwoPhaseMixture \
-    -IinterfaceProperties \
-    -IinterfaceProperties/gammaContactAngle \
-    -I$(LIB_SRC)/cfdTools/incompressible \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude \
+    -IinterfaceProperties/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/transportModels \
-    -I$(LIB_SRC)/movingFvMesh/lnInclude
+    -I$(LIB_SRC)/dynamicFvMesh/lnInclude
 
 EXE_LIBS = \
-    -lcfdTools \
+    -linterfaceProperties \
+    -lfiniteVolume \
     -lincompressibleTransportModels \
-    -lmovingFvMesh
+    -ldynamicFvMesh

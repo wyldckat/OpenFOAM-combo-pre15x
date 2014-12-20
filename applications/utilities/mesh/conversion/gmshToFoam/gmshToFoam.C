@@ -33,15 +33,26 @@ Description
     in the manual. Use the -autoInvert to invert based on the geometry.
     Not very well tested.
 
+    Note: The code now uses the element (cell,face) physical region id number
+    to create cell zones and faces zones (similar to
+    fluentMeshWithInternalFaces).
+
+    A use of the cell zone information, is for field initialization with the
+    "setFields" utility. see the classes:  topoSetSource, zoneToCell.  
+
+    2)  The addition of the flag "-verbose" to control the
+    amount of screen output
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
+#include "polyMesh.H"
 #include "Time.H"
 #include "polyMesh.H"
 #include "IFstream.H"
-#include "wallPolyPatch.H"
 #include "cellModeller.H"
-#include "repatchPolyMesh.H"
+#include "repatchPolyTopoChanger.H"
+#include "cellSet.H"
+#include "faceSet.H"
 
 using namespace Foam;
 
@@ -72,7 +83,7 @@ void renumber
 // Find face in pp which uses all vertices in meshF (in mesh point labels)
 label findFace(const primitivePatch& pp, const labelList& meshF)
 {
-    const Map<label> meshPointMap = pp.meshPointMap();
+    const Map<label>& meshPointMap = pp.meshPointMap();
 
     // meshF[0] in pp labels.
     if (!meshPointMap.found(meshF[0]))
@@ -110,10 +121,37 @@ label findFace(const primitivePatch& pp, const labelList& meshF)
         }
     }
 
-    Warning << "Could not match gmsh face " << meshF
-        << " to any of the outside mesh faces that share the same zeroth point:"
-        << IndirectList<face>(pp, pFaces) << endl;
+    return -1;
+}
 
+
+// Same but find internal face. Expensive addressing.
+label findInternalFace(const primitiveMesh& mesh, const labelList& meshF)
+{
+    const labelList& pFaces = mesh.pointFaces()[meshF[0]];
+
+    forAll(pFaces, i)
+    {
+        label faceI = pFaces[i];
+
+        const face& f = mesh.faces()[faceI];
+
+        // Count uses of vertices of meshF for f
+        label nMatched = 0;
+
+        forAll(f, fp)
+        {
+            if (findIndex(meshF, f[fp]) != -1)
+            {
+                nMatched++;
+            }
+        }
+
+        if (nMatched == meshF.size())
+        {
+            return faceI;
+        }        
+    }
     return -1;
 }
 
@@ -146,6 +184,37 @@ bool correctOrientation(const pointField& points, const cellShape& shape)
 }
 
 
+void storeCellInZone
+(
+    const label regPhys,
+    const label cellI,
+    Map<label>& regionToZone,
+    List<DynamicList<label> >& zoneCells
+)
+{
+    Map<label>::iterator zoneFnd = regionToZone.find(regPhys);
+
+    if (zoneFnd == regionToZone.end())
+    {
+        // New region. Allocate zone for it.
+        zoneCells.setSize(zoneCells.size() + 1);
+
+        label zoneI = zoneCells.size()-1;
+
+        Info<< "Mapping region " << regPhys << " to Foam cellZone "
+            << zoneI << endl;
+        regionToZone.insert(regPhys, zoneI);
+
+        zoneCells[zoneI].append(cellI);
+    }
+    else
+    {
+        // Existing zone for region
+        zoneCells[zoneFnd()].append(cellI);
+    }
+}
+
+
 // Main program:
 
 int main(int argc, char *argv[])
@@ -153,6 +222,7 @@ int main(int argc, char *argv[])
     argList::noParallel();
     argList::validArgs.append(".msh file");
     argList::validOptions.insert("autoInvert", "");
+    argList::validOptions.insert("verbose", "");
 
 #   include "setRootCase.H"
 #   include "createTime.H"
@@ -160,6 +230,7 @@ int main(int argc, char *argv[])
     fileName mshName(args.args()[3]);
 
     bool autoInvert = args.options().found("autoInvert");
+    bool verbose = args.options().found("verbose");
 
     IFstream inFile(mshName);
 
@@ -248,12 +319,24 @@ int main(int argc, char *argv[])
     // From gmsh physical region to Foam patch
     Map<label> regionToPatch;
 
+    // From gmsh physical region to Foam cellZone
+    Map<label> regionToZone;
+
     // Storage for patch faces.
     List<DynamicList<face> > patchFaces(0);
+
+    // Storage for cell zones.
+    List<DynamicList<label> > zoneCells(0);
 
 
     for (label elemI = 0; elemI < nElems; elemI++)
     {
+        if (verbose && (elemI % 1000) == 0)
+        {
+            Info<< "Reading element " << elemI
+                << " out of " << nElems << endl;
+        }
+
         label elmNumber, elmType, regPhys, regElem, nNodes;
 
         inFile >> elmNumber >> elmType >> regPhys >> regElem >> nNodes;
@@ -324,6 +407,14 @@ int main(int argc, char *argv[])
         }
         else if (elmType == MSHTET)
         {
+            storeCellInZone
+            (
+                regPhys,
+                cellI,
+                regionToZone,
+                zoneCells
+            );
+
             inFile
                 >> tetPoints[0] >> tetPoints[1] >> tetPoints[2]
                 >> tetPoints[3];
@@ -336,6 +427,14 @@ int main(int argc, char *argv[])
         }
         else if (elmType == MSHPYR)
         {
+            storeCellInZone
+            (
+                regPhys,
+                cellI,
+                regionToZone,
+                zoneCells
+            );
+
             inFile
                 >> pyrPoints[0] >> pyrPoints[1] >> pyrPoints[2]
                 >> pyrPoints[3] >> pyrPoints[4];
@@ -348,6 +447,14 @@ int main(int argc, char *argv[])
         }
         else if (elmType == MSHPRISM)
         {
+            storeCellInZone
+            (
+                regPhys,
+                cellI,
+                regionToZone,
+                zoneCells
+            );
+
             inFile
                 >> prismPoints[0] >> prismPoints[1] >> prismPoints[2]
                 >> prismPoints[3] >> prismPoints[4] >> prismPoints[5];
@@ -378,6 +485,14 @@ int main(int argc, char *argv[])
         }
         else if (elmType == MSHHEX)
         {
+            storeCellInZone
+            (
+                regPhys,
+                cellI,
+                regionToZone,
+                zoneCells
+            );
+
             inFile
                 >> hexPoints[0] >> hexPoints[1]
                 >> hexPoints[2] >> hexPoints[3]
@@ -449,6 +564,27 @@ int main(int argc, char *argv[])
     Info<< endl;
 
 
+    label nValidCellZones = 0;
+
+    Info<< "CellZones:" << nl
+        << "Zone\tSize" << endl;
+
+    forAll(zoneCells, zoneI)
+    {
+        zoneCells[zoneI].shrink();
+
+        const labelList& zCells = zoneCells[zoneI];
+
+        if (zCells.size() > 0)
+        {
+            nValidCellZones++;
+
+            Info<< "    " << zoneI << '\t' << zCells.size() << endl;
+        }
+    }
+    Info<< endl;
+
+
     // Problem is that the orientation of the patchFaces does not have to
     // be consistent with the outwards orientation of the mesh faces. So
     // we have to construct the mesh in two stages:
@@ -477,7 +613,7 @@ int main(int argc, char *argv[])
         polyPatch::typeName
     );
 
-    repatchPolyMesh mesh
+    polyMesh mesh
     (
         IOobject
         (
@@ -494,19 +630,32 @@ int main(int argc, char *argv[])
         boundaryPatchPhysicalTypes
     );
 
+    repatchPolyTopoChanger repatcher(mesh);
 
     // Now use the patchFaces to patch up the outside faces of the mesh.
 
     // Get the patch for all the outside faces (= default patch added as last)
     const polyPatch& pp = mesh.boundaryMesh()[mesh.boundaryMesh().size()-1];
 
+    // Storage for faceZones.
+    List<DynamicList<label> > zoneFaces(patchFaces.size());
+
+
     // Go through all the patchFaces and find corresponding face in pp.
     forAll(patchFaces, patchI)
     {
         const DynamicList<face>& pFaces = patchFaces[patchI];
 
+        Info<< "Finding faces of patch " << patchI << endl;
+
         forAll(pFaces, i)
         {
+            if (verbose && (i % 1000) == 0)
+            {
+                Info<< "\tFinding face " << i << " of " << pFaces.size()
+                    << endl;
+            }
+
             const face& f = pFaces[i];
 
             // Find face in pp using all vertices of f.
@@ -516,15 +665,131 @@ int main(int argc, char *argv[])
             {
                 label meshFaceI = pp.start() + patchFaceI;
 
-                mesh.changePatchID(meshFaceI, patchI);
+                repatcher.changePatchID(meshFaceI, patchI);
+            }
+            else
+            {
+                // Maybe internal face? If so add to faceZone with same index
+                // - might be useful.
+                label meshFaceI = findInternalFace(mesh, f);
+
+                if (meshFaceI != -1)
+                {
+                    zoneFaces[patchI].append(meshFaceI);
+                }
+                else
+                {
+                    WarningIn(args.executable())
+                        << "Could not match gmsh face " << f
+                        << " to any of the interior or exterior faces"
+                        << " that share the same 0th point" << endl;
+                }
             }
         }
     }
+    Info<< nl;
+
+    // Face zones
+    label nValidFaceZones = 0;
+
+    Info<< "FaceZones:" << nl
+        << "Zone\tSize" << endl;
+
+    forAll(zoneFaces, zoneI)
+    {
+        zoneFaces[zoneI].shrink();
+
+        const labelList& zFaces = zoneFaces[zoneI];
+
+        if (zFaces.size() > 0)
+        {
+            nValidFaceZones++;
+
+            Info<< "    " << zoneI << '\t' << zFaces.size() << endl;
+        }
+    }
+    Info<< endl;
+
 
     //Get polyMesh to write to constant
     runTime.setTime(instant(runTime.constant()), 0);
 
-    mesh.repatch();
+    repatcher.repatch();
+
+    List<cellZone*> cz;
+    List<faceZone*> fz;
+
+    // Construct and add the zones. Note that cell ordering does not change
+    // because of repatch() and neither does internal faces so we can
+    // use the zoneCells/zoneFaces as is.
+
+    if (nValidCellZones > 0)
+    {
+        cz.setSize(nValidCellZones);
+
+        nValidCellZones = 0;
+
+        forAll(zoneCells, zoneI)
+        {
+            if (zoneCells[zoneI].size() > 0)
+            {
+                word zoneName = "cellZone_" + name(zoneI);
+    
+                Info<< "Writing zone " << zoneI << " to cellZone "
+                    << zoneName << " and cellSet"
+                    << endl;
+
+                cellSet cset(mesh, zoneName, zoneCells[zoneI]);
+                cset.write();
+
+                cz[nValidCellZones] = new cellZone
+                (
+                    zoneName,
+                    zoneCells[zoneI],
+                    nValidCellZones,
+                    mesh.cellZones()
+                );
+                nValidCellZones++;
+            }
+        }
+    }
+
+    if (nValidFaceZones > 0)
+    {
+        fz.setSize(nValidFaceZones);
+
+        nValidFaceZones = 0;
+
+        forAll(zoneFaces, zoneI)
+        {
+            if (zoneFaces[zoneI].size() > 0)
+            {
+                word zoneName = "faceZone_" + name(zoneI);
+    
+                Info<< "Writing zone " << zoneI << " to faceZone "
+                    << zoneName << " and faceSet"
+                    << endl;
+
+                faceSet fset(mesh, zoneName, zoneFaces[zoneI]);
+                fset.write();
+
+                fz[nValidFaceZones] = new faceZone
+                (
+                    zoneName,
+                    zoneFaces[zoneI],
+                    boolList(zoneFaces[zoneI].size(), true),
+                    nValidFaceZones,
+                    mesh.faceZones()
+                );
+                nValidFaceZones++;
+            }
+        }
+    }
+
+    if (cz.size() > 0 || fz.size() > 0)
+    {
+        mesh.addZones(List<pointZone*>(0), fz, cz);
+    }
 
     mesh.write();
 

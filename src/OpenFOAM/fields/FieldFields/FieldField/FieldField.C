@@ -154,6 +154,14 @@ FieldField<Field, Type>::FieldField(const FieldField<Field, Type>& f)
 
 
 template<template<class> class Field, class Type>
+FieldField<Field, Type>::FieldField(FieldField<Field, Type>& f, bool reUse)
+:
+    refCount(),
+    PtrList<Field<Type> >(f, reUse)
+{}
+
+
+template<template<class> class Field, class Type>
 FieldField<Field, Type>::FieldField(const PtrList<Field<Type> >& tl)
 :
     PtrList<Field<Type> >(tl)

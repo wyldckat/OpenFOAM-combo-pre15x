@@ -54,12 +54,6 @@ namespace Foam
 template<template<class> class PatchField, class PointPatch, class Type>
 class PointPatchField;
 
-template<class T> class Map;
-
-template<class Type> class constraint;
-
-template<class Type> class tetFemMatrix;
-
 class objectRegistry;
 class dictionary;
 class PointPatchFieldMapper;
@@ -335,74 +329,12 @@ public:
                 notImplemented(type() + "::addField(Field<Type>&) const");
             }
 
-            //- Add boundary source for gradient-type conditions
-            virtual void addBoundarySourceDiag
-            (
-                tetFemMatrix<Type>&
-            ) const
-            {}
-
-            //- Set boundary condition to matrix
-            virtual void setBoundaryCondition
-            (
-                Map<constraint<Type> > &
-            ) const
-            {}
-
-
-        // Matrix construction (completion) functionality
-
-            //- Add diagonal/source contributions
-            virtual void initAddDiag(const scalarField&) const
-            {}
-
-            virtual void initAddSource(const scalarField&) const
-            {}
-
-            virtual void addDiag(scalarField&) const
-            {
-                notImplemented(type() + "::addDiag(scalarField&) const");
-            }
-
-            virtual void addSource(scalarField&) const
-            {
-                notImplemented(type() + "::addSource(scalarField&) const");
-            }
-
-            //- Get the cut edge coefficients in Amul order
-            virtual tmp<scalarField> cutBouCoeffs(const lduMatrix&) const
-            {
-                return tmp<scalarField>(new scalarField(size(), 0));
-            }
-
-            //- Get the cut edge coefficients in Tmul order
-            virtual tmp<scalarField> cutIntCoeffs(const lduMatrix&) const
-            {
-                return tmp<scalarField>(new scalarField(size(), 0));
-            }
-
-            //- Add upper/lower contributions
-            virtual void initAddUpperLower(const scalarField&) const
-            {}
-
-            virtual void addUpperLower(scalarField&) const
-            {
-                notImplemented(type() + "::addUpperLower(scalarField&) const");
-            }
-
-            virtual void eliminateUpperLower(scalarField&) const
-            {
-                notImplemented
-                (
-                    type()
-                  + "::eliminateUpperLower(scalarField&) const"
-                );
-            }
-
             //- Return neighbour colouring
             virtual tmp<labelField> nbrColour(const labelField& cField) const
             {
-                return patchInternalField(cField);
+                notImplemented(type() + "::nbrColour(const labelField&) const");
+
+                return tmp<labelField>(labelField::null());
             }
 
 

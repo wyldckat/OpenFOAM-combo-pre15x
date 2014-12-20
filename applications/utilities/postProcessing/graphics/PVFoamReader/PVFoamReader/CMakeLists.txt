@@ -16,8 +16,9 @@ SET(PVFoamReader_LIBS
   vtkGraphics
 )
 
-INCLUDE_DIRECTORIES($ENV{FOAM_SRC}/OpenFOAM/lnInclude)
-INCLUDE_DIRECTORIES(../../../vtkFoam/lnInclude)
+INCLUDE_DIRECTORIES($ENV{FOAM_SRC}/OpenFOAM/lnInclude $ENV{FOAM_SRC}/finiteVolume/lnInclude)
+INCLUDE_DIRECTORIES($ENV{ParaView_INST_DIR}/include ../../../vtkFoam/lnInclude)
+ADD_DEFINITIONS(-D$ENV{WM_PRECISION_OPTION})
 
 #-----------------------------------------------------------------------------
 # Most users should not need to change anything below this line.
@@ -67,4 +68,4 @@ CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/PVFoamReader.pvsm.in
                ${PROJECT_BINARY_DIR}/../${PROJECT_NAME}.pvsm @ONLY IMMEDIATE)
 
 LINK_DIRECTORIES($ENV{FOAM_LIBBIN})
-TARGET_LINK_LIBRARIES(${PROJECT_NAME} OpenFOAM vtkFoam)
+TARGET_LINK_LIBRARIES(${PROJECT_NAME} OpenFOAM finiteVolume vtkFoam)

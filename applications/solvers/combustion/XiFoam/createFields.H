@@ -44,7 +44,7 @@
         mesh
     );
 
-#   include "createPhi.H"
+#   include "compressibleCreatePhi.H"
 
 
     Info<< "Creating turbulence model\n" << endl;

@@ -42,10 +42,10 @@ namespace Foam
 //- Calculate and return the laminar viscosity
 void twoPhaseMixture::calcNu()
 {
-    volScalarField limitedGamma = min(max(gamma_, 0.0), 1.0);
+    volScalarField limitedGamma = min(max(gamma_, scalar(0)), scalar(1));
 
     // Average kinematic viscosity calculated from dynamic viscosity
-    nu_ = mu()/(limitedGamma*rho1_ + (1.0 - limitedGamma)*rho2_);
+    nu_ = mu()/(limitedGamma*rho1_ + (scalar(1) - limitedGamma)*rho2_);
 }
 
 
@@ -66,6 +66,7 @@ twoPhaseMixture::twoPhaseMixture
     (
         viscosityModel::New
         (
+            "nu1",
             subDict(phase1Name_),
             U,
             phi
@@ -75,6 +76,7 @@ twoPhaseMixture::twoPhaseMixture
     (
         viscosityModel::New
         (
+            "nu2",
             subDict(phase2Name_),
             U,
             phi
@@ -110,7 +112,7 @@ twoPhaseMixture::twoPhaseMixture
 
 tmp<volScalarField> twoPhaseMixture::mu() const
 {
-    volScalarField limitedGamma = min(max(gamma_, 0.0), 1.0);
+    volScalarField limitedGamma = min(max(gamma_, scalar(0)), scalar(1));
 
     return tmp<volScalarField> 
     (
@@ -118,7 +120,7 @@ tmp<volScalarField> twoPhaseMixture::mu() const
         (
             "mu",
             limitedGamma*rho1_*nuModel1_->nu()
-          + (1.0 - limitedGamma)*rho2_*nuModel2_->nu()
+          + (scalar(1) - limitedGamma)*rho2_*nuModel2_->nu()
         )
     );
 }
@@ -126,7 +128,8 @@ tmp<volScalarField> twoPhaseMixture::mu() const
 
 tmp<surfaceScalarField> twoPhaseMixture::muf() const
 {
-    surfaceScalarField gammaf = min(max(fvc::interpolate(gamma_), 0.0), 1.0);
+    surfaceScalarField gammaf =
+        min(max(fvc::interpolate(gamma_), scalar(0)), scalar(1));
 
     return tmp<surfaceScalarField> 
     (
@@ -134,7 +137,7 @@ tmp<surfaceScalarField> twoPhaseMixture::muf() const
         (
             "mu",
             gammaf*rho1_*fvc::interpolate(nuModel1_->nu())
-          + (1.0 - gammaf)*rho2_*fvc::interpolate(nuModel2_->nu())
+          + (scalar(1) - gammaf)*rho2_*fvc::interpolate(nuModel2_->nu())
         )
     );
 }
@@ -142,7 +145,8 @@ tmp<surfaceScalarField> twoPhaseMixture::muf() const
 
 tmp<surfaceScalarField> twoPhaseMixture::nuf() const
 {
-    surfaceScalarField gammaf = min(max(fvc::interpolate(gamma_), 0.0), 1.0);
+    surfaceScalarField gammaf = 
+        min(max(fvc::interpolate(gamma_), scalar(0)), scalar(1));
 
     return tmp<surfaceScalarField> 
     (
@@ -151,8 +155,8 @@ tmp<surfaceScalarField> twoPhaseMixture::nuf() const
             "nu",
             (
                 gammaf*rho1_*fvc::interpolate(nuModel1_->nu())
-              + (1.0 - gammaf)*rho2_*fvc::interpolate(nuModel2_->nu())
-            )/(gammaf*rho1_ + (1.0 - gammaf)*rho2_)
+              + (scalar(1) - gammaf)*rho2_*fvc::interpolate(nuModel2_->nu())
+            )/(gammaf*rho1_ + (scalar(1) - gammaf)*rho2_)
         )
     );
 }

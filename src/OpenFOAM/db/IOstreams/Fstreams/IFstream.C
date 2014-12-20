@@ -26,7 +26,7 @@ License
 
 #include "IFstream.H"
 #include "OSspecific.H"
-#include "zfstream.H"
+#include "gzstream.h"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -70,7 +70,7 @@ IFstreamAllocator::IFstreamAllocator(const fileName& pathname)
 
         delete ifPtr_;
 
-        ifPtr_ = new gzifstream((pathname + ".gz").c_str());
+        ifPtr_ = new igzstream((pathname + ".gz").c_str());
 
         if (ifPtr_->good())
         {

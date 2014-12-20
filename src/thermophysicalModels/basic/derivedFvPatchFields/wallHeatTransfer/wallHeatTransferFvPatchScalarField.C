@@ -110,6 +110,33 @@ wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void wallHeatTransferFvPatchScalarField::autoMap
+(
+    const fvPatchFieldMapper& m
+)
+{
+    scalarField::autoMap(m);
+    Tinf_.autoMap(m);
+    alphaWall_.autoMap(m);
+}
+
+
+void wallHeatTransferFvPatchScalarField::rmap
+(
+    const fvPatchScalarField& ptf,
+    const labelList& addr
+)
+{
+    mixedFvPatchScalarField::rmap(ptf, addr);
+
+    const wallHeatTransferFvPatchScalarField& tiptf =
+        refCast<const wallHeatTransferFvPatchScalarField>(ptf);
+
+    Tinf_.rmap(tiptf.Tinf_, addr);
+    alphaWall_.rmap(tiptf.alphaWall_, addr);
+}
+
+
 // Update the coefficients associated with the patch field
 void wallHeatTransferFvPatchScalarField::updateCoeffs()
 {

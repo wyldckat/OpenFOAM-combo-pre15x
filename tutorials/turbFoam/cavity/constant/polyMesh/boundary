@@ -1,55 +1,52 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.2                                   |
+|  \\    /   O peration     | Version:  1.3                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 
-// FoamX Mesh Description File
-
 FoamFile
 {
-    version         2.0;
-    format          ascii;
+    version 2.0;
+    format ascii;
 
-    root            "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorialsTest/turbFoam";
-    case            "cavity";
-    instance        "constant/polyMesh";
-    local           "";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.3/tutorials/turbFoam";
+    case "cavity";
+    instance ""constant"";
+    local "polyMesh";
 
-    class           polyBoundaryMesh;
-    object          boundary;
+    class polyBoundaryMesh;
+    object boundary;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
+3
 (
-    movingWall
-    {
-        type            wall;
-        physicalType    wallFunctions;
-        startFace       760;
-        nFaces          20;
-    }
+movingWall
+{
+    type wall;
+    physicalType wallFunctions;
+    nFaces 20;
+    startFace 760;
+}
 
-    fixedWalls
-    {
-        type            wall;
-        physicalType    wallFunctions;
-        startFace       780;
-        nFaces          60;
-    }
+fixedWalls
+{
+    type wall;
+    physicalType wallFunctions;
+    nFaces 60;
+    startFace 780;
+}
 
-    frontAndBack
-    {
-        type            empty;
-        physicalType    empty;
-        startFace       840;
-        nFaces          800;
-    }
-
+frontAndBack
+{
+    type empty;
+    physicalType empty;
+    nFaces 800;
+    startFace 840;
+}
 )
 
 // ************************************************************************* //

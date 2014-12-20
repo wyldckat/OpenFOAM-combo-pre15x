@@ -27,6 +27,7 @@ License
 #include "argList.H"
 #include "Time.H"
 #include "DimensionedField.H"
+#include "GeoMesh.H"
 
 using namespace Foam;
 
@@ -35,9 +36,11 @@ namespace Foam
 
 class vMesh
 {
+
 public:
 
-    vMesh(){}
+    vMesh()
+    {}
 
     label size() const
     {
@@ -48,10 +51,11 @@ public:
 };
 
 template<>
-const word Foam::DimensionedField<scalar, vMesh>::typeName
+const word Foam::DimensionedField<scalar, GeoMesh<vMesh> >::typeName
 (
     "dimenionedScalarField"
 );
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Main program:
@@ -62,7 +66,9 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "createTime.H"
 
-    DimensionedField<scalar, vMesh> dsf
+    vMesh vm;
+
+    DimensionedField<scalar, GeoMesh<vMesh> > dsf
     (
         IOobject
         (
@@ -71,10 +77,13 @@ int main(int argc, char *argv[])
             runTime,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
-        )
+        ),
+        vm
     );
 
-    Info<< dsf.average() << endl;
+    Info<< dsf << endl;
+    dsf += dsf;
+    dsf -= dimensionedScalar("5", dsf.dimensions(), 5.0);
     Info<< dsf << endl;
 
     Info << "End\n" << endl;

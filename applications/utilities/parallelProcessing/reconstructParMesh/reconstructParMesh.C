@@ -40,12 +40,14 @@ Description
 #include "Time.H"
 #include "IOobjectList.H"
 #include "mergePolyMesh.H"
+#include "polyTopoChanger.H"
 #include "perfectInterface.H"
 #include "treeBoundBox.H"
 #include "matchPoints.H"
 #include "perfectInterface.H"
 #include "labelIOList.H"
 #include "processorPolyPatch.H"
+#include "mapPolyMesh.H"
 
 using namespace Foam;
 
@@ -327,30 +329,33 @@ int main(int argc, char *argv[])
                 masterMesh.removeZones();
                 masterMesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
 
-                // Add the perfect interface mesh modifier
-                tm[0] = new perfectInterface
-                (
-                    "couple",
-                    0,
-                    masterMesh,
-                    cutZoneName,
-                    masterPatchName,
-                    slavePatchName
-                );
+                polyTopoChanger coupler(masterMesh);
+                coupler.setSize(1);
 
-                Info << "Adding topology modifiers" << endl;
-                masterMesh.addTopologyModifiers(tm);
+                // Add the perfect interface mesh modifier
+                coupler.hook
+                (
+                    new perfectInterface
+                    (
+                        "couple",
+                        0,
+                        coupler,
+                        cutZoneName,
+                        masterPatchName,
+                        slavePatchName
+                    )
+                );
 
                 runTime++;
 
                 // Execute all polyMeshModifiers
                 Info << "Executing topology modifiers" << endl;
-                masterMesh.updateTopology();
-                //masterMesh.resetMorph();
-                masterMesh.removeMeshModifiers();
+                coupler.changeMesh();
+
                 masterMesh.removeZones();
             }
         }
+
         Info<< endl;
     }
 
@@ -410,7 +415,7 @@ int main(int argc, char *argv[])
                     IOobject
                     (
                         "pointProcAddressing",
-                        procMesh.cellsInstance(),
+                        procMesh.facesInstance(),
                         polyMesh::meshSubDir,
                         procMesh,
                         IOobject::NO_READ,
@@ -453,7 +458,7 @@ int main(int argc, char *argv[])
             IOobject
             (
                 "cellProcAddressing",
-                procMesh.cellsInstance(),
+                procMesh.facesInstance(),
                 polyMesh::meshSubDir,
                 procMesh,
                 IOobject::NO_READ,
@@ -495,7 +500,7 @@ int main(int argc, char *argv[])
                 IOobject
                 (
                     "faceProcAddressing",
-                    procMesh.cellsInstance(),
+                    procMesh.facesInstance(),
                     polyMesh::meshSubDir,
                     procMesh,
                     IOobject::NO_READ,
@@ -573,7 +578,7 @@ int main(int argc, char *argv[])
                 IOobject
                 (
                     "boundaryProcAddressing",
-                    procMesh.cellsInstance(),
+                    procMesh.facesInstance(),
                     polyMesh::meshSubDir,
                     procMesh,
                     IOobject::NO_READ,
@@ -669,11 +674,11 @@ int main(int argc, char *argv[])
 
 
         //Hack: write without constructing parallelInfo
-        fileName cellsInst
+        fileName facesInst
         (
             databases[procI].findInstance
             (
-                polyMesh::meshSubDir, "cells"
+                polyMesh::meshSubDir, "faces"
             )
         );
 
@@ -682,7 +687,7 @@ int main(int argc, char *argv[])
             IOobject
             (
                 "parallelData",
-                cellsInst,
+                facesInst,
                 polyMesh::meshSubDir,
                 databases[procI],
                 IOobject::NO_READ,

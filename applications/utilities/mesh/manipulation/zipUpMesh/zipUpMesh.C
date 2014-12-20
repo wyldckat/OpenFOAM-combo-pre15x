@@ -37,6 +37,7 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyMesh.H"
+#include "polyMeshZipUpCells.H"
 #include "boolList.H"
 
 using namespace Foam;
@@ -47,22 +48,16 @@ int main(int argc, char *argv[])
 {
 
 #   include "setRootCase.H"
-
 #   include "createTime.H"
+#   include "createPolyMesh.H"
 
-    Info << "Reading polyMesh" << endl;
-    polyMesh mesh
-    (
-        IOobject
-        (
-            polyMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
+    if (polyMeshZipUpCells(mesh))
+    {
+        Info<< "Writing zipped-up polyMesh to " << mesh.facesInstance() << endl;
+        mesh.write();
+    }
 
-    mesh.zipUpCells();
-    mesh.write();
+    Info<< "End\n" << endl;
 
     return(0);
 }

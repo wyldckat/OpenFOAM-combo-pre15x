@@ -34,6 +34,9 @@ Description
 #include "weighted.H"
 #include "gaussConvectionScheme.H"
 #include "multivariateGaussConvectionScheme.H"
+#include "MUSCL.H"
+#include "LimitedScheme.H"
+#include "boundaryTypes.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -66,6 +69,9 @@ int main(int argc, char *argv[])
         Info<< "Time = " << runTime.value() << nl << endl;
 
 #       include "readPISOControls.H"
+        scalar HbyAblend = readScalar(piso.lookup("HbyAblend"));
+
+#       include "readTimeControls.H"
 
         scalar CoNum = max
         (
@@ -75,19 +81,21 @@ int main(int argc, char *argv[])
 
         Info<< "Max Courant Number = " << CoNum << endl;
 
-        magRhoU = mag(rhoU);
-        H = (rhoE + p)/rho;
-
-        fv::multivariateGaussConvectionScheme<scalar> mvConvection
-        (
-            mesh,
-            fields,
-            phiv,
-            mesh.divScheme("div(phiv,rhoUH)")
-        );
+#       include "setDeltaT.H"
 
         for (int outerCorr=0; outerCorr<nOuterCorr; outerCorr++)
         {
+            magRhoU = mag(rhoU);
+            H = (rhoE + p)/rho;
+
+            fv::multivariateGaussConvectionScheme<scalar> mvConvection
+            (
+                mesh,
+                fields,
+                phiv,
+                mesh.divScheme("div(phiv,rhoUH)")
+            );
+
             solve
             (
                 fvm::ddt(rho)
@@ -117,20 +125,29 @@ int main(int argc, char *argv[])
               - mvConvection.fvcDiv(phiv, p)
             );
 
-            T == (rhoE - 0.5*rho*magSqr(rhoU/rho))/Cv/rho;
+            T = (rhoE - 0.5*rho*magSqr(rhoU/rho))/Cv/rho;
             psi = 1.0/(R*T);
-
             p = rho/psi;
 
             for (int corr=0; corr<nCorr; corr++)
             {
                 volScalarField rrhoUA = 1.0/rhoUEqn.A();
-                surfaceScalarField rrhoUAf = fvc::interpolate(rrhoUA);
-
+                surfaceScalarField rrhoUAf("rrhoUAf", fvc::interpolate(rrhoUA));
                 volVectorField HbyA = rrhoUA*rhoUEqn.H();
 
-                phi = (fvc::interpolate(HbyA) & mesh.Sf())
-                    + fvc::ddtPhiCorr(rrhoUA, rho, rhoU, phi);
+                surfaceScalarField HbyAWeights =
+                    HbyAblend*mesh.weights()
+                  + (1.0 - HbyAblend)*
+                    LimitedScheme
+                        <vector, MUSCLLimiter<NVDTVD>, limitFuncs::magSqr>
+                        (mesh, phi, IStringStream("HbyA")()).weights(HbyA);
+
+                phi =
+                    (
+                        surfaceInterpolationScheme<vector>::interpolate
+                        (HbyA, HbyAWeights) & mesh.Sf()
+                    )
+                  + HbyAblend*fvc::ddtPhiCorr(rrhoUA, rho, rhoU, phi);
 
                 p.boundaryField().updateCoeffs();
 
@@ -139,10 +156,13 @@ int main(int argc, char *argv[])
 
                 phi -= phiGradp;
 
-                phi.boundaryField() =
-                    rhoU.boundaryField() & mesh.Sf().boundaryField();
+#               include "resetPhiPatches.H"
 
-                phiv = phi/fvc::interpolate(rho);
+                surfaceScalarField rhof = 
+                    mvConvection.interpolationScheme()()(rho)()
+                   .interpolate(rho);
+
+                phiv = phi/rhof;
 
                 fvScalarMatrix pEqn
                 (
@@ -155,21 +175,24 @@ int main(int argc, char *argv[])
                 pEqn.solve();
 
                 phi += phiGradp + pEqn.flux();
-                phiv = phi/fvc::interpolate(rho);
                 rho = psi*p;
+                rhof = 
+                    mvConvection.interpolationScheme()()(rho)()
+                   .interpolate(rho);
+                phiv = phi/rhof;
 
                 rhoU = HbyA - rrhoUA*fvc::grad(p);
                 rhoU.correctBoundaryConditions();
             }
         }
 
-        U == rhoU/rho;
+        U = rhoU/rho;
 
         runTime.write();
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

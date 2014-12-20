@@ -46,11 +46,13 @@ defineRunTimeSelectionTable(viscosityModel, dictionary);
 
 viscosityModel::viscosityModel
 (
+    const word& name,
     const dictionary& viscosityProperties,
     const volVectorField& U,
     const surfaceScalarField& phi
 )
 :
+    name_(name),
     viscosityProperties_(viscosityProperties),
     U_(U),
     phi_(phi)

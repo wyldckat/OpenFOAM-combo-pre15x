@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "zeroGradientFaPatchField.H"
@@ -103,7 +101,7 @@ void zeroGradientFaPatchField<Type>::evaluate()
         this->updateCoeffs();
     }
 
-    operator==(this->patchInternalField());
+    this->operator==(this->patchInternalField());
     faPatchField<Type>::evaluate();
 }
 

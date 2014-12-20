@@ -85,5 +85,11 @@ ignitionSites
     }
 );
 
+ignitionSphereFraction  1;
+
+ignitionThickness       ignitionThickness [0 1 0 0 0 0 0] 0;
+ignitionCircleFraction  1;
+
+ignitionKernelArea      ignitionKernelArea [0 2 0 0 0 0 0] 0;
 
 // ************************************************************************* //

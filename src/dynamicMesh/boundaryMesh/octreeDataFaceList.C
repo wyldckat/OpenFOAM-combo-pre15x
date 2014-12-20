@@ -160,7 +160,7 @@ Foam::label Foam::octreeDataFaceList::getSampleType
 
     if (debug & 2)
     {
-        Info<< "getSampleType : sample:" << sample
+        Pout<< "getSampleType : sample:" << sample
             << " nearest face:" << faceI;
     }
 
@@ -180,7 +180,7 @@ Foam::label Foam::octreeDataFaceList::getSampleType
 
         if (debug & 2)
         {
-            Info<< " -> face hit:" << curHit.hitPoint()
+            Pout<< " -> face hit:" << curHit.hitPoint()
                 << " comparing to face normal " << mesh_.faceNormals()[faceI]
                 << endl;
         }
@@ -193,7 +193,7 @@ Foam::label Foam::octreeDataFaceList::getSampleType
 
     if (debug & 2)
     {
-        Info<< " -> face miss:" << curHit.missPoint();
+        Pout<< " -> face miss:" << curHit.missPoint();
     }
 
     //
@@ -212,7 +212,7 @@ Foam::label Foam::octreeDataFaceList::getSampleType
 
             if (debug & 2)
             {
-                    Info<< " -> face point hit :" << points[f[fp]]
+                    Pout<< " -> face point hit :" << points[f[fp]]
                         << " point normal:" << mesh_.pointNormals()[f[fp]]
                         << " distance:"
                         << mag(points[f[fp]] - curHit.missPoint())/typDim
@@ -236,7 +236,7 @@ Foam::label Foam::octreeDataFaceList::getSampleType
 
         if (debug & 2)
         {
-            Info<< " -> centre hit:" << ctr
+            Pout<< " -> centre hit:" << ctr
                 << " distance:"
                 << mag(ctr - curHit.missPoint())/typDim
                 << endl;
@@ -295,7 +295,7 @@ Foam::label Foam::octreeDataFaceList::getSampleType
 
             if (debug & 2)
             {
-                Info<< " -> real edge hit point:" << edgePoint
+                Pout<< " -> real edge hit point:" << edgePoint
                     << " comparing to edge normal:" << edgeNormal
                     << endl;
             }
@@ -355,7 +355,7 @@ Foam::label Foam::octreeDataFaceList::getSampleType
 
             if (debug & 2)
             {
-                Info<< " -> internal edge hit point:" << edgePoint
+                Pout<< " -> internal edge hit point:" << edgePoint
                     << " comparing to edge normal "
                     << 0.5*(nLeft + nRight)
                     << endl;
@@ -373,13 +373,13 @@ Foam::label Foam::octreeDataFaceList::getSampleType
 
     if (debug & 2)
     {
-        Info<< "Did not find sample " << sample
+        Pout<< "Did not find sample " << sample
             << " anywhere related to nearest face " << faceI << endl
             << "Face:";
 
         forAll(f, fp)
         {
-            Info<< "    vertex:" << f[fp] << "  coord:" << points[f[fp]]
+            Pout<< "    vertex:" << f[fp] << "  coord:" << points[f[fp]]
                 << endl;
         }
     }
@@ -547,7 +547,7 @@ Foam::scalar Foam::octreeDataFaceList::calcNearest
 
         scalar sign = mesh_.faceNormals()[faceI] & (sample - nearest);
 
-        Info<< "octreeDataFaceList::calcNearest : "
+        Pout<< "octreeDataFaceList::calcNearest : "
             << "sample:" << sample
             << "  faceI:" << faceI
             << "  ctr:" << ctr

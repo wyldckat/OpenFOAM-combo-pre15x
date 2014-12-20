@@ -36,7 +36,7 @@
         mesh
     );
 
-#   include "createPhi.H"
+#   include "compressibleCreatePhi.H"
 
 
     label pRefCell = 0;

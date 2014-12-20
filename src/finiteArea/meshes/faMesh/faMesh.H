@@ -232,6 +232,12 @@ class faMesh
 
 public:
 
+    // Public typedefs
+
+        typedef faMesh Mesh;
+        typedef faBoundaryMesh BoundaryMesh;
+
+
     // Static data members
 
     // Declare name of the class and it's debug switch

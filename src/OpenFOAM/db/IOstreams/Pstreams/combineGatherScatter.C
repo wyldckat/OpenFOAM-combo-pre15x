@@ -161,6 +161,135 @@ void Pstream::combineScatter(T& Value)
 }
 
 
+// Same thing but for whole list at a time
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+template <class T, class CombineOp>
+void Pstream::listCombineGather
+(
+    const List<Pstream::commsStruct>& comms,
+    List<T>& Values,
+    const CombineOp& cop
+)
+{
+    if (Pstream::parRun())
+    {
+        // Get my communication order
+        const commsStruct& myComm = comms[Pstream::myProcNo()];
+
+        // Receive from my downstairs neighbours
+        forAll(myComm.below(), belowI)
+        {
+            label belowID = myComm.below()[belowI];
+
+            //IPstream fromBelow(belowID, sizeof(T));
+            IPstream fromBelow(belowID);
+            List<T> receivedValues(fromBelow);
+
+            if (debug)
+            {
+                Pout<< " received from "
+                    << belowID << " data:" << receivedValues << endl;
+            }
+            forAll(Values, i)
+            {
+                cop(Values[i], receivedValues[i]);
+            }
+        }
+
+        // Send up Value
+        if (myComm.above() != -1)
+        {
+            //OPstream toAbove(myComm.above(), sizeof(T), false);
+            OPstream toAbove(myComm.above(), 0, false);
+
+            if (debug)
+            {
+                Pout<< " sending to " << myComm.above()
+                    << " data:" << Values << endl;
+            }
+            toAbove << Values;
+        }
+    }
+}
+
+
+template <class T, class CombineOp>
+void Pstream::listCombineGather(List<T>& Values, const CombineOp& cop)
+{
+    if (Pstream::nProcs() < Pstream::nProcsSimpleSum)
+    {
+        listCombineGather(Pstream::linearCommunication(), Values, cop);
+    }
+    else
+    {
+        listCombineGather(Pstream::treeCommunication(), Values, cop);
+    }
+}
+
+
+template <class T>
+void Pstream::listCombineScatter
+(
+    const List<Pstream::commsStruct>& comms,
+    List<T>& Values
+)
+{
+    if (Pstream::parRun())
+    {
+        // Get my communication order
+        const Pstream::commsStruct& myComm = comms[Pstream::myProcNo()];
+
+        // Reveive from up
+        if (myComm.above() != -1)
+        {
+            //IPstream fromAbove(myComm.above(), sizeof(T));
+            IPstream fromAbove(myComm.above());
+            Values = List<T>(fromAbove);
+
+            if (debug)
+            {
+                Pout<< " received from "
+                    << myComm.above() << " data:" << Values << endl;
+            }
+        }
+
+        // Send to my downstairs neighbours
+        forAll(myComm.below(), belowI)
+        {
+            label belowID = myComm.below()[belowI];
+
+            //OPstream toBelow(belowID, sizeof(T), false);
+            OPstream toBelow(belowID, 0, false);
+
+            toBelow << Values;
+
+            if (debug)
+            {
+                Pout<< " sent to " << belowID << " data:" << Values << endl;
+            }
+        }
+    }
+}
+
+
+template <class T>
+void Pstream::listCombineScatter(List<T>& Values)
+{
+    if (Pstream::nProcs() < Pstream::nProcsSimpleSum)
+    {
+        listCombineScatter(Pstream::linearCommunication(), Values);
+    }
+    else
+    {
+        listCombineScatter(Pstream::treeCommunication(), Values);
+    }
+}
+
+
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam

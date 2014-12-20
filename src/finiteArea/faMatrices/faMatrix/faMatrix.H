@@ -43,7 +43,6 @@ SourceFiles
 #include "tmp.H"
 #include "autoPtr.H"
 #include "dimensionedTypes.H"
-#include "constraint.H"
 #include "className.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -241,14 +240,11 @@ public:
         // Operations
 
             //- Set reference level for solution
-            autoPtr<constraint<Type> > setReference
+            void setReference
             (
                 const label cell,
                 const Type& value
             );
-
-            //- Unset reference level for solution
-            void unsetReference(const autoPtr<constraint<Type> >&);
 
             //- Set reference level for a component of the solution
             //  on a given patch face

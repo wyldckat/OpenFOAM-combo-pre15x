@@ -38,7 +38,7 @@ Description
 
 #include "RutlandFlashBoil.H"
 #include "addToRunTimeSelectionTable.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -240,7 +240,7 @@ scalar RutlandFlashBoil::boilingTime
                 
             for(label k=0; k < Niter ; k++)
             {
-                expSum += exp(sqr(-k*physicalConstant::pi*sqrt(F)/2.0));
+                expSum += exp(sqr(-k*mathematicalConstant::pi*sqrt(F)/2.0));
                 if(mag(expSum-expSumOld)/expSum < 1.0e-3)
                 {
                     break;    
@@ -269,7 +269,7 @@ scalar RutlandFlashBoil::boilingTime
         
         scalar Gf = 
         (
-            4.0 * alfaS * dTLB * physicalConstant::pi * sqr(diameter/2.0)
+            4.0 * alfaS * dTLB * mathematicalConstant::pi * sqr(diameter/2.0)
         ) 
         / 
         heatOfVapour; 
@@ -282,7 +282,7 @@ scalar RutlandFlashBoil::boilingTime
             scalar A = mag((vapourFarEnthalpy-vapourSurfaceEnthalpy)/heatOfVapour);
 
             // TL : 2.0? or 1.0? try 1!
-            scalar B = 1.0*physicalConstant::pi*kappa/cpGas*diameter*NusseltCorr;
+            scalar B = 1.0*mathematicalConstant::pi*kappa/cpGas*diameter*NusseltCorr;
             scalar nPos = B * log(1.0 + A)/Gf + 1.0;  
             scalar nNeg = (1.0/A)*(exp(Gf/B) - 1.0 - A) + 1.0;
         
@@ -357,7 +357,7 @@ scalar RutlandFlashBoil::boilingTime
             }
         }
         
-        time = ((4.0/3.0)*physicalConstant::pi*pow(diameter/2.0,3.0))*liquidDensity/(G+Gf);
+        time = ((4.0/3.0)*mathematicalConstant::pi*pow(diameter/2.0,3.0))*liquidDensity/(G+Gf);
         time = max(VSMALL, time);
     }
 

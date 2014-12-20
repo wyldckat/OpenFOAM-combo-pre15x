@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "zoneToCell.H"
@@ -61,7 +59,7 @@ void Foam::zoneToCell::combine(topoSet& set, const bool add) const
 
     if (zoneI != -1)
     {
-        const labelList& cellLabels = mesh_.cellZones()[zoneI].addressing();
+        const labelList& cellLabels = mesh_.cellZones()[zoneI];
 
         forAll(cellLabels, i)
         {

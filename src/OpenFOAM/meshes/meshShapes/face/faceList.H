@@ -44,6 +44,14 @@ namespace Foam
     typedef List<face> faceList;
     typedef SubList<face> faceSubList;
     typedef List<faceList> faceListList;
+
+    // Potential specialisation of faceList IO operators to speed-up
+    // IO by using compact storage
+    // template<>
+    // Istream& operator>>(Istream& is, faceList& fl);
+    //
+    // template<>
+    // Ostream& operator<<(Ostream& os, const unallocFaceList& ufl);
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

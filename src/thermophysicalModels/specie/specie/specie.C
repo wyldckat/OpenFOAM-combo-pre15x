@@ -29,6 +29,7 @@ Description
 
 #include "specie.H"
 #include "IOstreams.H"
+#include "dimensionedConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -37,14 +38,14 @@ namespace Foam
 
 /* * * * * * * * * * * * * public constants  * * * * * * * * * * * * */
 
-//- Universal gas constant [J/(kmol K)]
-const scalar specie::RR = 8314.51;
+//- Universal gas constant (default in [J/(kmol K)])
+const scalar specie::RR = dimensionedConstant("R", 8314.51);
 
-//- Standard pressure [Pa]
-const scalar specie::Pstd = 1.0e5;
+//- Standard pressure (default in [Pa])
+const scalar specie::Pstd = dimensionedConstant("Pstd", 1.0e5);
 
-//- Standard temperature [K]
-const scalar specie::Tstd = 298.15;
+//- Standard temperature (default in [K])
+const scalar specie::Tstd = dimensionedConstant("Tstd", 298.15);
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //

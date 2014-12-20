@@ -61,9 +61,7 @@ void Smagorinsky::correct(const tmp<volTensorField>& gradU)
 {
     GenEddyVisc::correct(gradU);
 
-    k_ = (2.0*ck_/ce_)*sqr(delta())*magSqr(dev(symm(gradU)));
-
-    nuSgs_ = ck_*delta()*sqrt(k_);
+    nuSgs_ = ck_*delta()*sqrt(k(gradU));
     nuSgs_.correctBoundaryConditions();
 }
 

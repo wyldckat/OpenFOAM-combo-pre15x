@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Generic field type.
-
 \*---------------------------------------------------------------------------*/
 
 #include "FieldMapper.H"
@@ -220,7 +217,8 @@ Field<Type>::Field
                     FatalIOErrorIn
                     (
                         "Field<Type>::Field"
-                        "(const word& keyword, const dictionary& dict, const label s)",
+                        "(const word& keyword, "
+                        "const dictionary& dict, const label s)",
                         dict
                     )   << "size " << this->size()
                         << " is not equal to the given value of " << s
@@ -232,7 +230,8 @@ Field<Type>::Field
                 FatalIOErrorIn
                 (
                     "Field<Type>::Field"
-                    "(const word& keyword, const dictionary& dict, const label s)",
+                    "(const word& keyword, "
+                    "const dictionary& dict, const label s)",
                     dict
                 )   << "expected keyword 'uniform' or 'nonuniform', found "
                     << firstToken.wordToken()
@@ -263,7 +262,8 @@ Field<Type>::Field
                 FatalIOErrorIn
                 (
                     "Field<Type>::Field"
-                    "(const word& keyword, const dictionary& dict, const label s)",
+                    "(const word& keyword, "
+                    "const dictionary& dict, const label s)",
                     dict
                 )   << "extected keyword 'uniform' or 'nonuniform', found "
                     << firstToken.info()
@@ -280,18 +280,6 @@ tmp<Field<Type> > Field<Type>::clone() const
     return tmp<Field<Type> >(new Field<Type>(*this));
 }
 
-
-/*
-template<class Type>
-template<class Type2>
-tmp<Field<Type> > Field<Type>::NewCalculatedType
-(
-    const Field<Type2>& f
-)
-{
-    return tmp<Field<Type> >(new Field<Type>(f.size()));
-}
-*/
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -400,11 +388,16 @@ void Field<Type>::map
     const FieldMapper& mapper
 )
 {
-    if (mapper.direct())
+    if
+    (
+        mapper.direct()
+     && &mapper.directAddressing()
+     && mapper.directAddressing().size()
+    )
     {
         map(mapF, mapper.directAddressing());
     }
-    else
+    else if (!mapper.direct() && mapper.addressing().size())
     {
         map(mapF, mapper.addressing(), mapper.weights());
     }
@@ -428,8 +421,23 @@ void Field<Type>::autoMap
     const FieldMapper& mapper
 )
 {
-    Field<Type> fCpy(*this);
-    map(fCpy, mapper);
+    if
+    (
+        (
+            mapper.direct()
+         && &mapper.directAddressing()
+         && mapper.directAddressing().size()
+        )
+     || (!mapper.direct() && mapper.addressing().size())
+    )
+    {
+        Field<Type> fCpy(*this);
+        map(fCpy, mapper);
+    }
+    else
+    {
+        this->setSize(mapper.size());
+    }
 }
 
 

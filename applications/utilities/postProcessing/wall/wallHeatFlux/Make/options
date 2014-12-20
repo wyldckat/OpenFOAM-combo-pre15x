@@ -1,6 +1,5 @@
 EXE_INC = \
-    -I$(LIB_SRC)/cfdTools/compressible \
-    -I$(LIB_SRC)/cfdTools/general/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude \
     -I$(LIB_SRC)/turbulenceModels \
     -I$(LIB_SRC)/thermophysicalModels/specie/lnInclude \
     -I$(LIB_SRC)/thermophysicalModels/combustion/lnInclude \
@@ -9,7 +8,7 @@ EXE_INC = \
 EXE_LIBS = \
     -lcompressibleTurbulenceModels \
     -lcombustionThermophysicalModels \
-    -lcfdTools \
+    -lfiniteVolume \
     -lspecie \
     -lbasicThermophysicalModels \
     -lfoamUtil

@@ -39,6 +39,7 @@ Description
 #include "scalarField.H"
 #include "vectorField.H"
 #include "tensorField.H"
+#include "sphericalTensorField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

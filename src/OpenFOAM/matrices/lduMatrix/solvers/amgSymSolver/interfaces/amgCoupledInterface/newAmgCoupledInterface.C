@@ -42,14 +42,6 @@ autoPtr<amgCoupledInterface> amgCoupledInterface::New
     const label intIndex
 )
 {
-    if (lduMatrix::debug == 3)
-    {
-        Info<< "amgCoupledInterface::New(const "
-            << "lduCoupledInterface* fineInterfacePtr) : "
-            << "constructing amgCoupledInterface"
-            << endl;
-    }
-
     word coupleType(fineInterfacePtr->type());
 
     lduInterfaceConstructorTable::iterator cstrIter =
@@ -63,6 +55,17 @@ autoPtr<amgCoupledInterface> amgCoupledInterface::New
         (
             new amgCoupledInterface(fineInterfacePtr, intIndex)
         );
+        /*
+        FatalErrorIn
+        (
+            "amgCoupledInterface::New"
+            "(const lduCoupledInterface* fineInterfacePtr,"
+            "const label intIndex)"
+        )   << "Unknown amgCoupledInterface type " << coupleType << ".\n"
+            << "Valid amgCoupledInterface types are :"
+            << lduInterfaceConstructorTablePtr_->toc()
+            << exit(FatalError);
+        */
     }
 
     return autoPtr<amgCoupledInterface>(cstrIter()(fineInterfacePtr, intIndex));

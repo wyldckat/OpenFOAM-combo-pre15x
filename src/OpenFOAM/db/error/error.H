@@ -74,7 +74,6 @@ protected:
         bool throwExceptions_;
         OStringStream* messageStreamPtr_;
 
-
 public:
 
     // Constructors
@@ -138,10 +137,16 @@ public:
         //- Create and return a dictionary
         operator dictionary() const;
 
-        //- Exit : can be called for any error to exit program
+
+        //- Helper function to print a stack
+        static void printStack(Ostream& os);
+
+        //- Exit : can be called for any error to exit program. Prints stack
+        //  before exiting.
         void exit(const int errNo = 1);
 
-        //- Abort : used to stop code for fatal errors
+        //- Abort : used to stop code for fatal errors. Prints stack before
+        //  exiting.
         void abort();
 
 

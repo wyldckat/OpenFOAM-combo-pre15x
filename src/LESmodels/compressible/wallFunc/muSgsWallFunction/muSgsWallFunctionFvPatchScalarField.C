@@ -112,7 +112,7 @@ void muSgsWallFunctionFvPatchScalarField::evaluate()
     const scalarField& ry = patch().deltaCoeffs();
 
     const fvPatchVectorField& U = lookupPatchField<volVectorField, vector>("U");
-    vectorField Up = U.patchInternalField();
+    scalarField magUp = mag(U.patchInternalField() - U);
 
     const scalarField& muw = lookupPatchField<volScalarField, scalar>("mu");
     const scalarField& rhow = lookupPatchField<volScalarField, scalar>("rho");
@@ -122,7 +122,7 @@ void muSgsWallFunctionFvPatchScalarField::evaluate()
 
     forAll(muSgsw, facei)
     {
-        scalar magUpara = mag(Up[facei]);
+        scalar magUpara = magUp[facei];
 
         scalar utau = sqrt
         (
@@ -154,42 +154,17 @@ void muSgsWallFunctionFvPatchScalarField::evaluate()
                 err = mag((utau - utauNew)/utau);
                 utau = utauNew;
 
-            } while (err > 0.01 && ++iter < 10);
+            } while (utau > VSMALL && err > 0.01 && ++iter < 10);
 
-            muSgsw[facei] = rhow[facei]*sqr(utau)/magFaceGradU[facei] - muw[facei];
+            muSgsw[facei] = 
+                max(rhow[facei]*sqr(utau)/magFaceGradU[facei] - muw[facei],0.0);
         }
         else
         {
             muSgsw[facei] = 0;
         }
     }
-
-    //This bit just reports the mean y+ value of wall patches
-    //Delete if not required
-    const scalarField& wallFaceAreas(patch().magSf());
-    const scalar totalPatchArea(sum(wallFaceAreas));
-    scalar yPlusMean(0.0);
-    scalar muSgsMean(0.0);
-
-    forAll(muSgsw, facei)
-    {
-        scalar utau= sqrt((muSgsw[facei] + muw[facei])*magFaceGradU[facei]/rhow[facei]);
-
-        yPlusMean = yPlusMean +
-                    utau/(ry[facei]*muw[facei]/rhow[facei])
-                                        *(wallFaceAreas[facei]/totalPatchArea);
-        muSgsMean = muSgsMean +
-                    muSgsw[facei]*(wallFaceAreas[facei]/totalPatchArea);
-    }
-
-    Info << " Patch no " << patch().index() << " = " << patch().type()
-         << "; Patch name: " << patch().name()
-         << "; y+ Mean = " << yPlusMean
-         << "; muSgs(mean)(wall) = " << muSgsMean << endl;
-
 }
-
-
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

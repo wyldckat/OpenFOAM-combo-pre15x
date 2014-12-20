@@ -36,6 +36,7 @@ SourceFiles
 #ifndef transformField_H
 #define transformField_H
 
+#include "transform.H"
 #include "tensorField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -69,6 +70,25 @@ tmp<Field<Type> > transform(const tensor&, const Field<Type>&);
 
 template<class Type>
 tmp<Field<Type> > transform(const tensor&, const tmp<Field<Type> >&);
+
+
+template<class Type1, class Type2>
+tmp<Field<Type1> > transformFieldMask(const Field<Type2>&);
+
+template<class Type1, class Type2>
+tmp<Field<Type1> > transformFieldMask(const tmp<Field<Type2> >&);
+
+template<>
+tmp<Field<sphericalTensor> > transformFieldMask<sphericalTensor>
+(
+    const tensorField&
+);
+
+template<>
+tmp<Field<sphericalTensor> > transformFieldMask<sphericalTensor>
+(
+    const tmp<tensorField>&
+);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

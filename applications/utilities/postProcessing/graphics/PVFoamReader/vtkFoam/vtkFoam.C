@@ -101,7 +101,11 @@ void Foam::vtkFoam::setSelectedTime
     {
         if(reader->GetTimeSelection()->GetArraySetting(i))
         {
-            word timeName = reader->GetTimeSelection()->GetArrayName(i);
+            word timeName = string::validate<word>
+            (
+                reader->GetTimeSelection()->GetArrayName(i)
+            );
+
             forAll(Times, j)
             {
                 if (Times[j].name() == timeName)

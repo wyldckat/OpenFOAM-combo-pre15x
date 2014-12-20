@@ -22,17 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "attachDetach.H"
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
+#include "polyTopoChanger.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -65,17 +61,18 @@ void Foam::attachDetach::detachInterface
 
     if (debug)
     {
-        Info<< "void attachDetach::detachInterface("
+        Pout<< "void attachDetach::detachInterface("
             << "polyTopoChange& ref) const "
             << " for object " << name() << " : "
             << "Detaching interface" << endl;
     }
 
-    const faceZoneMesh& zoneMesh = mesh().faceZones();
+    const polyMesh& mesh = topoChanger().mesh();
+    const faceZoneMesh& zoneMesh = mesh.faceZones();
 
     const primitiveFacePatch& masterFaceLayer = zoneMesh[faceZoneID_.index()]();
-    const pointField& points = mesh().points();
-    const labelListList& meshEdgeFaces = mesh().edgeFaces();
+    const pointField& points = mesh.points();
+    const labelListList& meshEdgeFaces = mesh.edgeFaces();
 
     const labelList& mp = masterFaceLayer.meshPoints();
     const edgeList& zoneLocalEdges = masterFaceLayer.edges();
@@ -99,7 +96,7 @@ void Foam::attachDetach::detachInterface
 
         forAll (curFaces, faceI)
         {
-            if (!mesh().isInternalFace(curFaces[faceI]))
+            if (!mesh.isInternalFace(curFaces[faceI]))
             {
                 // The edge belongs to a boundary face
                 edgeIsInternal = false;
@@ -109,7 +106,7 @@ void Foam::attachDetach::detachInterface
 
         if (edgeIsInternal)
         {
-// Info<< "Internal edge found: (" << mp[zoneLocalEdges[curEdgeID].start()] << " " << mp[zoneLocalEdges[curEdgeID].end()] << ")" << endl;
+// Pout<< "Internal edge found: (" << mp[zoneLocalEdges[curEdgeID].start()] << " " << mp[zoneLocalEdges[curEdgeID].end()] << ")" << endl;
 
             // Reset the point creation
             addedPoints[zoneLocalEdges[curEdgeID].start()] =
@@ -119,7 +116,7 @@ void Foam::attachDetach::detachInterface
                 mp[zoneLocalEdges[curEdgeID].end()];
         }
     }
-// Info << "addedPoints before point creation: " << addedPoints << endl;
+// Pout << "addedPoints before point creation: " << addedPoints << endl;
 
     // Create new points for face zone
     forAll (addedPoints, pointI)
@@ -137,19 +134,19 @@ void Foam::attachDetach::detachInterface
                         true                       // supports a cell
                     )
                 );
-// Info << "Adding point " << points[mp[pointI]] << " for original point " << mp[pointI] << endl;
+// Pout << "Adding point " << points[mp[pointI]] << " for original point " << mp[pointI] << endl;
         }
     }
 
     // Modify faces in the master zone and duplicate for the slave zone
 
-    const labelList& mf = zoneMesh[faceZoneID_.index()].addressing();
+    const labelList& mf = zoneMesh[faceZoneID_.index()];
     const boolList& mfFlip = zoneMesh[faceZoneID_.index()].flipMap();
     const faceList& zoneFaces = masterFaceLayer.localFaces();
 
-    const faceList& faces = mesh().faces();
-    const labelList& own = mesh().faceOwner();
-    const labelList& nei = mesh().faceNeighbour();
+    const faceList& faces = mesh.faces();
+    const labelList& own = mesh.faceOwner();
+    const labelList& nei = mesh.faceNeighbour();
 
     forAll (mf, faceI)
     {
@@ -201,7 +198,7 @@ void Foam::attachDetach::detachInterface
                     false                           // zone flip
                 )
             );
-// Info << "Flip.  Modifying face: " << faces[curFaceID].reverseFace() << " next to cell: " << nei[curFaceID] << " and adding face: " << newFace << " next to cell: " << own[curFaceID] << endl;
+// Pout << "Flip.  Modifying face: " << faces[curFaceID].reverseFace() << " next to cell: " << nei[curFaceID] << " and adding face: " << newFace << " next to cell: " << own[curFaceID] << endl;
         }
         else
         {
@@ -239,7 +236,7 @@ void Foam::attachDetach::detachInterface
                     false                           // face flip in zone
                 )
             );
-// Info << "No flip.  Modifying face: " << faces[curFaceID] << " next to cell: " << own[curFaceID] << " and adding face: " << newFace << " next to cell: " << nei[curFaceID] << endl;
+// Pout << "No flip.  Modifying face: " << faces[curFaceID] << " next to cell: " << own[curFaceID] << " and adding face: " << newFace << " next to cell: " << nei[curFaceID] << endl;
         }
     }
 
@@ -258,11 +255,12 @@ void Foam::attachDetach::detachInterface
     // attributes (apart from the vertex numbers).
 
     // Create the map of faces in the master cell layer
-    const labelList& mc = mesh().faceZones()[faceZoneID_.index()].masterCells();
+    const labelList& mc =
+        mesh.faceZones()[faceZoneID_.index()].masterCells();
 
     labelHashSet masterCellFaceMap(6*mc.size());
 
-    const cellList& cells = mesh().cells();
+    const cellList& cells = mesh.cells();
 
     forAll (mc, cellI)
     {
@@ -311,7 +309,7 @@ void Foam::attachDetach::detachInterface
             }
 
             // Do the neighbour side if face is internal
-            if (mesh().isInternalFace(mcf[mcfI]))
+            if (mesh.isInternalFace(mcf[mcfI]))
             {
                 const label neiCell = nei[mcf[mcfI]];
 
@@ -374,7 +372,7 @@ void Foam::attachDetach::detachInterface
         // If the face has changed, create a modification entry
         if (changed)
         {
-            if (mesh().isInternalFace(curFaceID))
+            if (mesh.isInternalFace(curFaceID))
             {
                 ref.setAction
                 (
@@ -391,7 +389,7 @@ void Foam::attachDetach::detachInterface
                         false                       // face zone flip
                     )
                 );
-// Info << "modifying stick-out face. Internal Old face: " << oldFace << " new face: " << newFace << " own: " << own[curFaceID] << " nei: " << nei[curFaceID] << endl;
+// Pout << "modifying stick-out face. Internal Old face: " << oldFace << " new face: " << newFace << " own: " << own[curFaceID] << " nei: " << nei[curFaceID] << endl;
             }
             else
             {
@@ -404,20 +402,20 @@ void Foam::attachDetach::detachInterface
                         own[curFaceID],              // owner
                         -1,                          // neighbour
                         false,                       // flip flux
-                        mesh().boundaryMesh().whichPatch(curFaceID), // patch
+                        mesh.boundaryMesh().whichPatch(curFaceID), // patch
                         false,                        // remove from zone
                         -1,                           // zone for face
                         false                         // face zone flip
                     )
                 );   
-// Info << "modifying stick-out face. Boundary Old face: " << oldFace << " new face: " << newFace << " own: " << own[curFaceID] << " patch: " << mesh().boundaryMesh().whichPatch(curFaceID) << endl;
+// Pout << "modifying stick-out face. Boundary Old face: " << oldFace << " new face: " << newFace << " own: " << own[curFaceID] << " patch: " << mesh.boundaryMesh().whichPatch(curFaceID) << endl;
             }                                                  
         }
     }
 
     if (debug)
     {
-        Info<< "void attachDetach::detachInterface("
+        Pout<< "void attachDetach::detachInterface("
             << "polyTopoChange& ref) const "
             << " for object " << name() << " : "
             << "Finished detaching interface" << endl;

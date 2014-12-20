@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
             (
                 "wallHeatFlux",
                 runTime.timeName(),
-                runTime
+                mesh
             ),
             mesh,
             dimensionedScalar("wallHeatFlux", heatFlux.dimensions(), 0.0)

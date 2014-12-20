@@ -86,7 +86,7 @@ void vanDriestDelta::calcDelta()
     delta_ = min
     (
         static_cast<const volScalarField&>(geometricDelta_()),
-        (kappa_/Cdelta_)*((1.0 + SMALL) - exp(-y/ystar/Aplus_))*y
+        (kappa_/Cdelta_)*((scalar(1) + SMALL) - exp(-y/ystar/Aplus_))*y
     );
 }
 
@@ -97,9 +97,16 @@ vanDriestDelta::vanDriestDelta(const fvMesh& mesh, const dictionary& dd)
 :
     LESdelta(mesh),
     geometricDelta_(LESdelta::New(mesh, dd.subDict(type() + "Coeffs"))),
-    kappa_(dd.lookup("kappa")),
-    Aplus_(dd.subDict(type() + "Coeffs").lookup("Aplus")),
-    Cdelta_(dd.subDict(type() + "Coeffs").lookup("Cdelta"))
+    kappa_(dimensionedScalar(dd.lookup("kappa")).value()),
+    Aplus_
+    (
+        dimensionedScalar(dd.subDict(type() + "Coeffs").lookup("Aplus")).value()
+    ),
+    Cdelta_
+    (
+        dimensionedScalar(dd.subDict(type() + "Coeffs").lookup("Cdelta"))
+       .value()
+    )
 {
     delta_ = geometricDelta_();
 }
@@ -112,9 +119,9 @@ void vanDriestDelta::read(const dictionary& d)
     const dictionary& dd(d.subDict(type() + "Coeffs"));
 
     geometricDelta_().read(dd);
-    d.lookup("kappa") >> kappa_;
-    dd.lookup("Aplus") >> Aplus_;
-    dd.lookup("Cdelta") >> Cdelta_;
+    kappa_ = dimensionedScalar(d.lookup("kappa")).value();
+    Aplus_ = dimensionedScalar(dd.lookup("Aplus")).value();
+    Cdelta_ = dimensionedScalar(dd.lookup("Cdelta")).value();
     calcDelta();
 }
 

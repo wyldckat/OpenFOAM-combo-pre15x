@@ -36,7 +36,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from time
 Foam::cloud::cloud(const objectRegistry& obr)
 :
     regIOobject

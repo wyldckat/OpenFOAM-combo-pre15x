@@ -1,7 +1,7 @@
 if (nGammaSubCycles > 1)
 {
-    surfaceScalarField rhoPhiSum = 0.0*rhoPhi;
     dimensionedScalar totalDeltaT = runTime.deltaT();
+    surfaceScalarField rhoPhiSum = 0.0*rhoPhi;
 
     for
     (
@@ -22,4 +22,4 @@ else
 
 interface.correct();
 
-rho == gamma*rho1 + (1.0 - gamma)*rho2;
+rho == gamma*rho1 + (scalar(1) - gamma)*rho2;

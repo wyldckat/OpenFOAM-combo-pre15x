@@ -398,6 +398,22 @@ dimensioned<Type> operator-
 
 
 template <class Type>
+dimensioned<Type> operator*
+(
+    const dimensioned<scalar>& ds,
+    const dimensioned<Type>& dt
+)
+{
+    return dimensioned<Type>
+    (
+        '(' + ds.name() + '*' + dt.name() + ')',
+        ds.dimensions() * dt.dimensions(),
+        ds.value() * dt.value()
+    );
+}
+
+
+template <class Type>
 dimensioned<Type> operator/
 (
     const dimensioned<Type>& dt,
@@ -406,7 +422,7 @@ dimensioned<Type> operator/
 {
     return dimensioned<Type>
     (
-        dt.name() + "/(" + ds.name() + ')',
+        '(' + dt.name() + '|' + ds.name() + ')',
         dt.dimensions()/ds.dimensions(),
         dt.value()/ds.value()
     );
@@ -424,7 +440,7 @@ operator op(const dimensioned<Type1>& dt1, const dimensioned<Type2>& dt2)     \
 {                                                                             \
     return dimensioned<typename product<Type1, Type2>::type>                  \
     (                                                                         \
-        dt1.name() + #op + dt2.name(),                                        \
+        '(' + dt1.name() + #op + dt2.name() + ')',                            \
         dt1.dimensions() op dt2.dimensions(),                                 \
         dt1.value() op dt2.value()                                            \
     );                                                                        \
@@ -439,8 +455,8 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     return dimensioned<typename product<Type, Form>::type>                    \
-    (                                                                        \
-        dt1.name() + #op + word(name(t2)),                                    \
+    (                                                                         \
+        '(' + dt1.name() + #op + name(t2) + ')',                              \
         dt1.dimensions(),                                                     \
         dt1.value() op static_cast<const Form&>(t2)                           \
     );                                                                        \
@@ -456,7 +472,7 @@ operator op                                                                   \
 {                                                                             \
     return dimensioned<typename product<Form, Type>::type>                    \
     (                                                                         \
-        word(name(t1)) + #op + dt2.name(),                                    \
+        '(' + name(t1) + #op + dt2.name() + ')',                              \
         dt2.dimensions(),                                                     \
         static_cast<const Form&>(t1) op dt2.value()                           \
     );                                                                        \
@@ -469,21 +485,6 @@ PRODUCT_OPERATOR(innerProduct, &, dot)
 PRODUCT_OPERATOR(scalarProduct, &&, dotdot)
 
 #undef PRODUCT_OPERATOR
-
-template <class Type>
-dimensioned<Type> operator*
-(
-    const dimensioned<scalar>& ds,
-    const dimensioned<Type>& dt
-)
-{
-    return dimensioned<Type>
-    (
-        ds.name() + '*' + dt.name(),
-        ds.dimensions() * dt.dimensions(),
-        ds.value() * dt.value()
-    );
-}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -478,21 +478,21 @@ Foam::labelHashSet Foam::surfaceSets::getHangingCells
 //    );
 //
 //
-//    Info<< "rawInside:" << rawInside.size() << endl;
+//    Pout<< "rawInside:" << rawInside.size() << endl;
 //
 //    label nRemoved;
 //    do
 //    {
 //        nRemoved = removeHangingCells(mesh, querySurf, rawInside);
 //
-//        Info<< nl
+//        Pout<< nl
 //            << "Removed " << nRemoved
 //            << " rawInside cells that have all their points on the outside"
 //            << endl;
 //    }
 //    while (nRemoved != 0);
 //
-//    Info<< "Writing inside cells (" << rawInside.size() << ") to cellSet "
+//    Pout<< "Writing inside cells (" << rawInside.size() << ") to cellSet "
 //        << rawInside.instance()/rawInside.local()/rawInside.name()
 //        << endl << endl;
 //    rawInside.write();
@@ -516,20 +516,20 @@ Foam::labelHashSet Foam::surfaceSets::getHangingCells
 //
 //    outsideSource.applyToSet(topoSetSource::NEW, rawOutside);
 //
-//    Info<< "rawOutside:" << rawOutside.size() << endl;
+//    Pout<< "rawOutside:" << rawOutside.size() << endl;
 //
 //    do
 //    {
 //        nRemoved = removeHangingCells(mesh, querySurf, rawOutside);
 //
-//        Info<< nl
+//        Pout<< nl
 //            << "Removed " << nRemoved
 //            << " rawOutside cells that have all their points on the outside"
 //            << endl;
 //    }
 //    while (nRemoved != 0);
 //
-//    Info<< "Writing outside cells (" << rawOutside.size() << ") to cellSet "
+//    Pout<< "Writing outside cells (" << rawOutside.size() << ") to cellSet "
 //        << rawOutside.instance()/rawOutside.local()/rawOutside.name()
 //        << endl << endl;
 //    rawOutside.write();
@@ -541,7 +541,7 @@ Foam::labelHashSet Foam::surfaceSets::getHangingCells
 //    cellToCell deleteInsideSource(mesh, rawInside.name());
 //
 //    deleteInsideSource.applyToSet(topoSetSource::DELETE, cutCells);
-//    Info<< "Writing cut cells (" << cutCells.size() << ") to cellSet "
+//    Pout<< "Writing cut cells (" << cutCells.size() << ") to cellSet "
 //        << cutCells.instance()/cutCells.local()/cutCells.name()
 //        << endl << endl;
 //    cutCells.write();
@@ -570,7 +570,7 @@ Foam::labelHashSet Foam::surfaceSets::getHangingCells
 //        nearPoints
 //    );
 //
-//    Info<< nl
+//    Pout<< nl
 //        << "Selected " << nearPoints.size()
 //        << " points that are closer than " << edgeFactor
 //        << " times the local minimum lengthscale to the surface"
@@ -591,11 +591,11 @@ Foam::labelHashSet Foam::surfaceSets::getHangingCells
 //    pToCell.applyToSet(topoSetSource::DELETE, inside);
 //    pToCell.applyToSet(topoSetSource::DELETE, outside);
 //
-//    Info<< nl
+//    Pout<< nl
 //        << "Removed " << rawInside.size() - inside.size()
 //        << " inside cells that are too close to the surface" << endl;
 //
-//    Info<< nl
+//    Pout<< nl
 //        << "Removed " << rawOutside.size() - outside.size()
 //        << " inside cells that are too close to the surface" << nl << endl;
 //
@@ -612,7 +612,7 @@ Foam::labelHashSet Foam::surfaceSets::getHangingCells
 //    {
 //        nRemoved = removeHangingCells(mesh, querySurf, inside);
 //
-//        Info<< nl
+//        Pout<< nl
 //            << "Removed " << nRemoved
 //            << " inside cells that have all their points on the outside"
 //            << endl;
@@ -622,7 +622,7 @@ Foam::labelHashSet Foam::surfaceSets::getHangingCells
 //    {
 //        nRemoved = removeHangingCells(mesh, querySurf, outside);
 //
-//        Info<< nl
+//        Pout<< nl
 //            << "Removed " << nRemoved
 //            << " outside cells that have all their points on the inside"
 //            << endl;
@@ -635,13 +635,13 @@ Foam::labelHashSet Foam::surfaceSets::getHangingCells
 //    //
 //
 //
-//    Info<< "Writing inside cells (" << inside.size() << ") to cellSet "
+//    Pout<< "Writing inside cells (" << inside.size() << ") to cellSet "
 //        << inside.instance()/inside.local()/inside.name()
 //        << endl << endl;
 //
 //    inside.write();
 //
-//    Info<< "Writing outside cells (" << outside.size() << ") to cellSet "
+//    Pout<< "Writing outside cells (" << outside.size() << ") to cellSet "
 //        << outside.instance()/outside.local()/outside.name()
 //        << endl << endl;
 //    

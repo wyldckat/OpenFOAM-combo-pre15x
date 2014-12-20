@@ -126,17 +126,17 @@ int main(int argc, char *argv[])
             //makeGraph(y, wallNormal & R & wallNormal, "Rww", gFormat);
             //makeGraph(y, flowDirection & R & wallNormal, "Rfw", gFormat);
 
-            makeGraph(y, sqrt(R.component(tensor::XX)), "u", gFormat);
-            makeGraph(y, sqrt(R.component(tensor::YY)), "v", gFormat);
-            makeGraph(y, sqrt(R.component(tensor::ZZ)), "w", gFormat);
+            //makeGraph(y, sqrt(R.component(tensor::XX)), "u", gFormat);
+            //makeGraph(y, sqrt(R.component(tensor::YY)), "v", gFormat);
+            //makeGraph(y, sqrt(R.component(tensor::ZZ)), "w", gFormat);
             makeGraph(y, R.component(tensor::XY), "uv", gFormat);
 
             makeGraph(y, mag(fvc::grad(U)), "gammaDot", gFormat);
         }
 
-        Info<< "ExecutionTime = "
-            << runTime.elapsedCpuTime()
-            << " s\n\n" << endl;
+        Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
+            << "  ClockTime = " << runTime.elapsedClockTime() << " s"
+            << nl << endl;
     }
 
     Info<< "End\n" << endl;

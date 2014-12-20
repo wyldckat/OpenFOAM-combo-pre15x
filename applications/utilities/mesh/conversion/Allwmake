@@ -5,7 +5,7 @@ set -x
 (cd ccm24ToFoam ; ./Allwmake)
 wmake starToFoam
 wmake sammToFoam
-wmake ideasToFoam
+wmake ansysToFoam
 wmake cfxToFoam
 wmake gambitToFoam
 wmake fluentMeshToFoam
@@ -17,3 +17,4 @@ wmake gmshToFoam
 wmake mshToFoam
 wmake tetgenToFoam
 wmake writeMeshObj
+wmake polyDualMesh

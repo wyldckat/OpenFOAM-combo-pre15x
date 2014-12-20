@@ -78,9 +78,6 @@ class Cloud
         const unallocLabelList& owner_;
         const unallocLabelList& neighbour_;
 
-        //- use soft-sphere tracking algorithm or not
-        const bool softAlgorithm_;
-
 
 public:
 
@@ -97,15 +94,13 @@ public:
         Cloud
         (
             const polyMesh& mesh,
-            const IDLList<particleType>& particles,
-            const bool softAlgorithm = false
+            const IDLList<particleType>& particles
         );
 
         //- Construct from mesh by reading from file
         Cloud
         (
-            const polyMesh& mesh,
-            const bool softAlgoritm = false
+            const polyMesh& mesh
         );
 
 
@@ -179,7 +174,7 @@ public:
             virtual bool writeData(Ostream&) const;
 
             //- Write the field data for the cloud of particles
-            void writeFields() const;
+            virtual void writeFields() const;
 
 
     // Ostream Operator

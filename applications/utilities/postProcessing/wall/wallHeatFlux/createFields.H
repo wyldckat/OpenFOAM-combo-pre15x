@@ -11,7 +11,7 @@ volScalarField rho
     (
         "rho",
         runTime.timeName(),
-        runTime
+        mesh
     ),
     thermo->rho()
 );
@@ -29,7 +29,7 @@ volVectorField U
     mesh
 );
 
-#include "createPhi.H"
+#include "compressibleCreatePhi.H"
 
 autoPtr<compressible::turbulenceModel> turbulence
 (

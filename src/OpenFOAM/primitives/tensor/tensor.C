@@ -28,7 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "tensor.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -65,7 +65,12 @@ const tensor tensor::one
 );
 
 template<>
-const tensor tensor::I(Foam::I);
+const tensor tensor::I
+(
+    1, 0, 0,
+    0, 1, 0,
+    0, 0, 1
+);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -115,8 +120,8 @@ vector eigenValues(const tensor& t)
         scalar sqrtP = sqrt(P);
 
         i = -2.0*sqrtP*cos(theta/3.0) - a/3.0;
-        ii = -2.0*sqrtP*cos((theta + 2.0*physicalConstant::pi)/3.0) - a/3.0;
-        iii = -2.0*sqrtP*cos((theta - 2.0*physicalConstant::pi)/3.0) - a/3.0;
+        ii = -2.0*sqrtP*cos((theta + 2.0*mathematicalConstant::pi)/3.0) - a/3.0;
+        iii = -2.0*sqrtP*cos((theta - 2.0*mathematicalConstant::pi)/3.0) - a/3.0;
     }
     else if (disc >= -small && disc <= small)
     {

@@ -27,7 +27,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "parcel.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -104,13 +104,13 @@ scalar parcel::Pr
 
 scalar parcel::N(const scalar rho) const
 {
-    return 6.0*m_/(rho*pow(d_, 3.0)*physicalConstant::pi);
+    return 6.0*m_/(rho*pow(d_, 3.0)*mathematicalConstant::pi);
 }
 
 
 scalar parcel::Vd() const
 {
-    return pow(d_, 3.0)*physicalConstant::pi/6.0;
+    return pow(d_, 3.0)*mathematicalConstant::pi/6.0;
 }
 
 

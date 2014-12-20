@@ -51,7 +51,7 @@ void Foam::triSurfaceTools::writeOBJ
 
         outFile<< "v " << pt.x() << ' ' << pt.y() << ' ' << pt.z() << endl;
     }
-    Info<< "Written " << pts.size() << " vertices to file " << fName << endl;
+    Pout<< "Written " << pts.size() << " vertices to file " << fName << endl;
 }
 
 
@@ -77,7 +77,7 @@ void Foam::triSurfaceTools::writeOBJ
             nVerts++;
         }
     }
-    Info<< "Written " << nVerts << " vertices to file " << fName << endl;
+    Pout<< "Written " << nVerts << " vertices to file " << fName << endl;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -829,7 +829,7 @@ void Foam::triSurfaceTools::getMergedEdges
             vert1I,
             vert2I
         );
-        //Info<< "Face:" << surf.localFaces()[face1I] << " other vertices:"
+        //Pout<< "Face:" << surf.localFaces()[face1I] << " other vertices:"
         //    << vert1I << ' ' << vert2I << endl;
 
         // Check vert1, vert2 for usage by v2Face.
@@ -1074,7 +1074,7 @@ bool Foam::triSurfaceTools::collapseCreatesFold
 //    const labelHashSet& collapsedFaces
 //)
 //{
-//Info<< "duplicate : edgeI:" << edgeI << surf.edges()[edgeI]
+//Pout<< "duplicate : edgeI:" << edgeI << surf.edges()[edgeI]
 //    << " collapsedFaces:" << collapsedFaces.toc() << endl;
 //
 //    // Mark neighbours of faces to be collapsed, i.e. get the first layer
@@ -1092,14 +1092,14 @@ bool Foam::triSurfaceTools::collapseCreatesFold
 //
 //        const labelList& myEdges = surf.faceEdges()[faceI];
 //
-//        Info<< "collapsing faceI:" << faceI << " uses edges:" << myEdges
+//        Pout<< "collapsing faceI:" << faceI << " uses edges:" << myEdges
 //            << endl;
 //
 //        forAll(myEdges, myEdgeI)
 //        {
 //            const labelList& myFaces = surf.edgeFaces()[myEdges[myEdgeI]];
 //
-//            Info<< "Edge " << myEdges[myEdgeI] << " is used by faces "
+//            Pout<< "Edge " << myEdges[myEdgeI] << " is used by faces "
 //                << myFaces << endl;
 //
 //            if ((myEdges[myEdgeI] != edgeI) && (myFaces.size() == 2))
@@ -1133,7 +1133,7 @@ bool Foam::triSurfaceTools::collapseCreatesFold
 //
 //    labelList neighbourList = neighbours.toc();
 //
-//Info<< "edgeI:" << edgeI << "  neighbourList:" << neighbourList << endl;
+//Pout<< "edgeI:" << edgeI << "  neighbourList:" << neighbourList << endl;
 //
 //
 //    forAll(neighbourList, i)
@@ -1149,7 +1149,7 @@ bool Foam::triSurfaceTools::collapseCreatesFold
 //            {
 //                forAll(faceJEdges, fJ)
 //                {
-//                    Info<< " comparing " << faceIEdges[fI] << " to "
+//                    Pout<< " comparing " << faceIEdges[fI] << " to "
 //                        << faceJEdges[fJ] << endl;
 //
 //                    if (faceIEdges[fI] == faceJEdges[fJ])
@@ -1160,7 +1160,7 @@ bool Foam::triSurfaceTools::collapseCreatesFold
 //            }
 //        }
 //    }
-//    Info<< "Found no match. Returning false" << endl;
+//    Pout<< "Found no match. Returning false" << endl;
 //    return false;
 //}
 
@@ -1246,7 +1246,7 @@ Foam::triSurface Foam::triSurfaceTools::collapseEdges
     //        {
     //            // Neighbours on different regions. For now dont allow
     //            // any collapse.
-    //            //Info<< "protecting face " << neighbours[0]
+    //            //Pout<< "protecting face " << neighbours[0]
     //            //    << ' ' << neighbours[1] << endl;
     //            faceStatus[neighbours[0]] = NOEDGE;
     //            faceStatus[neighbours[1]] = NOEDGE;
@@ -1397,7 +1397,7 @@ Foam::triSurface Foam::triSurfaceTools::collapseEdges
         }
         else
         {
-            //Info<< "Collapsed triangle " << faceI
+            //Pout<< "Collapsed triangle " << faceI
             //    << " vertices:" << f << endl;
         }
     }

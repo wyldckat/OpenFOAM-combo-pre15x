@@ -67,6 +67,22 @@ Foam::string foamSpecieString(const char* YYText)
 }
 
 
+Foam::word foamName(const char* YYText)
+{
+    Foam::string fn(YYText);
+    Foam::string::stripInvalid<Foam::word>(fn);
+    return fn;
+}
+
+
+Foam::word foamName(const Foam::string& s)
+{
+    Foam::string fn(s);
+    Foam::string::stripInvalid<Foam::word>(fn);
+    return fn;
+}
+
+
  /* ------------------------------------------------------------------------- *\
    ------ cppLexer::yylex()
  \* ------------------------------------------------------------------------- */
@@ -75,7 +91,7 @@ Foam::string foamSpecieString(const char* YYText)
 
 %}
 
-one_space             [ \t\f\015]
+one_space             [ \t\f\r]
 space                 {one_space}*
 some_space            {one_space}+
 cspace                ","{space}
@@ -333,7 +349,7 @@ bool finishReaction = false;
     }
 
 <readElements>{elementName} {
-        currentElementName = word(YYText());
+        currentElementName = foamName(YYText());
         correctElementName(currentElementName);
 
         if (!elementIndices_.found(currentElementName))
@@ -371,7 +387,7 @@ bool finishReaction = false;
     }
 
 <readSpecies>{specieName} {
-        word specieName(foamSpecieString(YYText()));
+        word specieName(foamName(foamSpecieString(YYText())));
 
         if (specieName == "THERMO")
         {
@@ -453,7 +469,7 @@ bool finishReaction = false;
 
         for (int i=0; i<4; i++)
         {
-            word elementName(thermoFormula(5*i, 2));
+            word elementName(foamName(thermoFormula(5*i, 2)));
             label nAtoms = atoi(thermoFormula(5*i + 2, 3).c_str());
 
             if (elementName.size() && nAtoms)
@@ -505,7 +521,7 @@ bool finishReaction = false;
 
 <readThermoFormula2>{thermoFormula2} {
         string thermoFormula(YYText());
-        word elementName(thermoFormula(0, 2));
+        word elementName(foamName(thermoFormula(0, 2)));
         label nAtoms = atoi(thermoFormula(2, 3).c_str());
 
         if
@@ -670,7 +686,7 @@ bool finishReaction = false;
 
 <readReactionKeyword>{reactionKeyword} {
 
-        word keyword(YYText());
+        word keyword(foamName(YYText()));
 
         HashTable<int>::iterator reactionKeywordIter
         (
@@ -828,8 +844,7 @@ bool finishReaction = false;
 
 <readReactionKeyword>{reactionKeywordSlash} {
 
-        word keyword(YYText());
-        keyword.replace("|", "");
+        word keyword(foamName(YYText()));
 
         HashTable<int>::iterator reactionKeywordIter
         (
@@ -1304,7 +1319,8 @@ bool finishReaction = false;
 <readPDependentSpecie>{pDependentSpecie} {
 
         word rhsPDependentSpecieName = pDependentSpecieName;
-        pDependentSpecieName = foamSpecieString(YYText());
+        pDependentSpecieName = 
+            foamName(foamSpecieString(YYText()));
         pDependentSpecieName =
             pDependentSpecieName(0, pDependentSpecieName.size() - 1);
 
@@ -1375,7 +1391,7 @@ bool finishReaction = false;
     }
 
 <readTdepSpecie>{specieName} {
-        word specieName(foamSpecieString(YYText()));
+        word specieName(foamName(foamSpecieString(YYText())));
         FatalErrorIn("chemkinReader::lex()")
             << "Temperature-dependent reaction on line "
             << lineNo_ << "not yet supported"
@@ -1384,7 +1400,8 @@ bool finishReaction = false;
     }
 
 <readReactionOrderSpecie>{specieName} {
-        currentSpecieName = word(foamSpecieString(YYText()));
+        currentSpecieName =
+            word(foamName(foamSpecieString(YYText())));
 
         HashTable<label>::iterator specieIndexIter
         (

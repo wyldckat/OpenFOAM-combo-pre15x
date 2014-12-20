@@ -56,7 +56,7 @@ void fft::transform
 {
     forAll(nn, idim)
     {
-        scalar pow2 = log(nn[idim])/log(2);
+        scalar pow2 = log(scalar(nn[idim]))/log(scalar(2));
         if ((pow2 - int(pow2 + 0.5)) > SMALL)
         {
             FatalErrorIn

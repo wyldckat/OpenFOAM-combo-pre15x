@@ -119,6 +119,20 @@ public:
 
     // Member Functions
 
+        //- Smooth for the given number of sweeps
+        static void smooth
+        (
+            const word& fieldName,
+            scalarField& psi,
+            const lduMatrix& matrix,
+            const scalarField& Source,
+            const FieldField<Field, scalar>& bouCoeffs,
+            const lduCoupledInterfacePtrsList& interfaces,
+            const direction cmpt,
+            const label nSweeps
+        );
+
+
         //- Solve the matrix with this solver
         lduMatrix::solverPerformance solve();
 

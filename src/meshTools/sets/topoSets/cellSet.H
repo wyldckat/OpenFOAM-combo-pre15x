@@ -143,7 +143,10 @@ public:
         virtual label maxSize(const polyMesh& mesh) const;
 
         //- Update any stored data for new labels
-        virtual void updateTopology(const mapPolyMesh& morphMap);
+        virtual void updateMesh(const mapPolyMesh& morphMap);
+
+        //- Update any stored data for new labels
+        //virtual void updateMesh(const directPolyTopoChange& meshMod);
 
         //- Write maxLen items with label and coordinates. 
         virtual void writeDebug

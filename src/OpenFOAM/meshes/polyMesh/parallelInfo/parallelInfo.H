@@ -411,7 +411,7 @@ public:
             //- Change global mesh data given a topological change. Does a
             //  full parallel analysis to determine shared points and
             //  boundaries.
-            void updateTopology(const mapPolyMesh&);
+            void updateMesh();
 
 
         // Write

@@ -41,13 +41,14 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyTopoChange.H"
+#include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
-#include "morphMesh.H"
+#include "polyMesh.H"
 #include "cellCuts.H"
 #include "cellSet.H"
 #include "cellModeller.H"
 #include "meshCutter.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "geomCellLooper.H"
 #include "plane.H"
 #include "edgeVertex.H"
@@ -530,10 +531,11 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createPolyMesh.H"
 
     scalar featureAngle(readScalar(IStringStream(args.args()[3])()));
 
-    scalar radAngle = featureAngle * physicalConstant::pi/180.0;
+    scalar radAngle = featureAngle * mathematicalConstant::pi/180.0;
     scalar minCos = Foam::cos(radAngle);
     scalar minSin = Foam::sin(radAngle);
 
@@ -568,16 +570,6 @@ int main(int argc, char *argv[])
     }
     Info<< endl;
 
-    Info<< "Create polyMesh for time = " << runTime.value() << nl << endl;
-    morphMesh mesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
 
     // Cell circumference cutter
     geomCellLooper cellCutter(mesh);
@@ -679,18 +671,22 @@ int main(int argc, char *argv[])
 
         runTime++;
 
-        mesh.setMorphTimeIndex(runTime.timeIndex());
+        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
+        (
+            mesh,
+            meshMod
+        );
 
-        mesh.updateTopology(meshMod);
-
-        // Move mesh (since morphing does not do this)
-        mesh.movePoints(mesh.morphMap().preMotionPoints());
+        if (morphMap().hasMotionPoints())
+        {
+            mesh.movePoints(morphMap().preMotionPoints());
+        }
 
         // Update stored labels on meshCutter
-        cutter.updateTopology(mesh.morphMap());
+        cutter.updateMesh(morphMap());
 
         // Update cellSet
-        cellsToCut.updateTopology(mesh.morphMap());
+        cellsToCut.updateMesh(morphMap());
 
         Info<< "Remaining:" << cellsToCut.size() << endl;
 

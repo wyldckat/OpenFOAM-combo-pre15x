@@ -21,10 +21,8 @@
             fvm::laplacian(rUAf, pd) == fvc::div(phi)
         );
 
-        fvScalarMatrix::reference pdRef =
-            pdEqn.setReference(pdRefCell, pdRefValue);
+        pdEqn.setReference(pdRefCell, pdRefValue);
         pdEqn.solve();
-        pdEqn.unsetReference(pdRef);
 
         if (nonOrth == nNonOrthCorr)
         {

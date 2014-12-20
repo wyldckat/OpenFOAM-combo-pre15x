@@ -22,13 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "pointSet.H"
 #include "mapPolyMesh.H"
 #include "polyMesh.H"
+//#include "directPolyTopoChange.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -99,19 +98,25 @@ pointSet::~pointSet()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::label pointSet::maxSize(const polyMesh& mesh) const
+label pointSet::maxSize(const polyMesh& mesh) const
 {
     return mesh.nPoints();
 }
 
 
-void pointSet::updateTopology(const mapPolyMesh& morphMap)
+void pointSet::updateMesh(const mapPolyMesh& morphMap)
 {
     updateLabels(morphMap.reversePointMap());
 }
 
 
-void Foam::pointSet::writeDebug
+//void pointSet::updateMesh(const directPolyTopoChange& meshMod)
+//{
+//    updateLabels(meshMod.pointMap());
+//}
+
+
+void pointSet::writeDebug
 (
     Ostream& os,
     const primitiveMesh& mesh,

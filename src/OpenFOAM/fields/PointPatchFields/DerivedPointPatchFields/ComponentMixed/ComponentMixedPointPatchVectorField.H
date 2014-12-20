@@ -40,9 +40,6 @@ SourceFiles
 #ifndef ComponentMixedPointPatchVectorField_H
 #define ComponentMixedPointPatchVectorField_H
 
-#include "tetPolyPatchFields.H"
-#include "Map.H"
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -199,12 +196,6 @@ public:
 
             //- Insert boundary value into the internal field
             virtual void evaluate();
-
-            //- Set boundary condition to matrix
-            virtual void setBoundaryCondition
-            (
-                Map<constraint<vector> > &
-            ) const;
 
 
         //- Write

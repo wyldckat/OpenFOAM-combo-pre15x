@@ -389,7 +389,7 @@ WARN_LOGFILE           =
 
 INPUT                  = $(WM_PROJECT_DIR)/src/OpenFOAM \
                          $(WM_PROJECT_DIR)/src/Pstream \
-                         $(WM_PROJECT_DIR)/src/cfdTools \
+                         $(WM_PROJECT_DIR)/src/finiteVolume \
                          $(WM_PROJECT_DIR)/src/transportModels/incompressible \
                          $(WM_PROJECT_DIR)/src/thermophysicalModels/thermophysicalFunctions \
                          $(WM_PROJECT_DIR)/src/thermophysicalModels/specie \
@@ -404,7 +404,7 @@ INPUT                  = $(WM_PROJECT_DIR)/src/OpenFOAM \
                          $(WM_PROJECT_DIR)/src/LESmodels/compressible \
                          $(WM_PROJECT_DIR)/src/errorEstimation \
                          $(WM_PROJECT_DIR)/src/finiteArea \
-                         $(WM_PROJECT_DIR)/src/finiteElement \
+                         $(WM_PROJECT_DIR)/src/tetDecompositionFiniteElement \
                          $(WM_PROJECT_DIR)/src/dynamicMesh \
                          $(WM_PROJECT_DIR)/src/triSurface \
                          $(WM_PROJECT_DIR)/src/edgeMesh \
@@ -415,10 +415,10 @@ INPUT                  = $(WM_PROJECT_DIR)/src/OpenFOAM \
                          $(WM_PROJECT_DIR)/src/randomProcesses \
                          $(WM_PROJECT_DIR)/src/sampling \
                          $(WM_PROJECT_DIR)/src/meshTools \
-                         $(WM_PROJECT_DIR)/src/movingFvMesh \
-                         $(WM_PROJECT_DIR)/src/topoFvMesh \
-                         $(WM_PROJECT_DIR)/src/Gstream \
-                         $(WM_PROJECT_DIR)/src/postProcessing
+                         $(WM_PROJECT_DIR)/src/dynamicFvMesh \
+                         $(WM_PROJECT_DIR)/src/topoChangerFvMesh \
+                         $(WM_PROJECT_DIR)/src/tetDecompositionMotionSolver \
+                         $(WM_PROJECT_DIR)/src/Gstream
 
 # If the value of the INPUT tag contains directories, you can use the 
 # FILE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp 

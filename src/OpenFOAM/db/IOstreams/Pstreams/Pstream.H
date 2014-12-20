@@ -347,7 +347,7 @@ public:
 
 
         // Combine variants. Inplace combine values from processors.
-        // (no need for null constructor; does need construct from Istream)
+        // (Uses construct from Istream instead of <<)
 
             template <class T, class CombineOp>
             static void combineGather
@@ -373,8 +373,36 @@ public:
             template <class T>
             static void combineScatter(T& Value);
 
+        // Combine variants working on whole List at a time.
 
-        // Gather/scatter but keep data separate
+            template <class T, class CombineOp>
+            static void listCombineGather
+            (
+                const List<commsStruct>& comms,
+                List<T>& Value,
+                const CombineOp& cop
+            );
+
+            //- Like above but switches between linear/tree communication
+            template <class T, class CombineOp>
+            static void listCombineGather(List<T>& Value, const CombineOp& cop);
+
+            //- Scatter data. Reverse of combineGather
+            template <class T>
+            static void listCombineScatter
+            (
+                const List<commsStruct>& comms,
+                List<T>& Value
+            );
+
+            //- Like above but switches between linear/tree communication
+            template <class T>
+            static void listCombineScatter(List<T>& Value);
+
+
+        // Gather/scatter keeping the individual processor data separate.
+        // Values is a List of size Pstream::nProcs() where
+        // Values[Pstream::myProcNo()] is the data for the current processor.
 
             //- Gather data but keep individual values separate
             template <class T>

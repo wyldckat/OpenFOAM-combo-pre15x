@@ -112,8 +112,11 @@ public:
             //- Read a label
             virtual Istream& read(label&) = 0;
 
-            //- Read a scalar
-            virtual Istream& read(scalar&) = 0;
+            //- Read a floatScalar
+            virtual Istream& read(floatScalar&) = 0;
+
+            //- Read a doubleScalar
+            virtual Istream& read(doubleScalar&) = 0;
 
             //- Read binary block
             virtual Istream& read(char*, std::streamsize) = 0;

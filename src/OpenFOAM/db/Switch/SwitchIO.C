@@ -28,8 +28,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "Switch.H"
 #include "IOstreams.H"
 

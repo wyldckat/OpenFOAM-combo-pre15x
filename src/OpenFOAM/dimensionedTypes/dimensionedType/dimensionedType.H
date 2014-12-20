@@ -195,6 +195,12 @@ dimensioned<Type> operator-(const dimensioned<Type>&);
 template<class Type>
 dimensioned<Type> operator-(const dimensioned<Type>&, const dimensioned<Type>&);
 
+template<class Type>
+dimensioned<Type> operator*
+(
+    const dimensioned<scalar>&,
+    const dimensioned<Type>&
+);
 
 template<class Type>
 dimensioned<Type> operator/
@@ -235,13 +241,6 @@ PRODUCT_OPERATOR(innerProduct, &, dot)
 PRODUCT_OPERATOR(scalarProduct, &&, dotdot)
 
 #undef PRODUCT_OPERATOR
-
-template<class Type>
-dimensioned<Type> operator*
-(
-    const dimensioned<scalar>&,
-    const dimensioned<Type>&
-);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

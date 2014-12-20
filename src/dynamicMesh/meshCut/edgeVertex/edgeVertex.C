@@ -225,7 +225,12 @@ Foam::label Foam::edgeVertex::cutPairToEdge
 }
 
 
-Foam::Ostream& Foam::edgeVertex::writeCut(Ostream& os, const label cut) const
+Foam::Ostream& Foam::edgeVertex::writeCut
+(
+    Ostream& os,
+    const label cut,
+    const scalar weight
+) const
 {
     if (isEdge(cut))
     {
@@ -233,20 +238,24 @@ Foam::Ostream& Foam::edgeVertex::writeCut(Ostream& os, const label cut) const
 
         const edge& e = mesh().edges()[edgeI];
 
-        os  << "edge:" << edgeI << e << ' ' << coord(cut, 0.5);
+        os  << "edge:" << edgeI << e << ' ' << coord(cut, weight);
     }
     else
     {
         label vertI = getVertex(cut);
 
-        os << "vertex:" << vertI << ' ' << coord(cut, -GREAT);
+        os << "vertex:" << vertI << ' ' << coord(cut, weight);
     }
     return os;
 }
 
 
-Foam::Ostream& Foam::edgeVertex::writeCuts(Ostream& os, const labelList& cuts)
- const
+Foam::Ostream& Foam::edgeVertex::writeCuts
+(
+    Ostream& os,
+    const labelList& cuts,
+    const scalarField& weights
+) const
 {
     forAll(cuts, cutI)
     {
@@ -254,7 +263,7 @@ Foam::Ostream& Foam::edgeVertex::writeCuts(Ostream& os, const labelList& cuts)
         {
             os << ' ';
         }
-        writeCut(os, cuts[cutI]);
+        writeCut(os, cuts[cutI], weights[cutI]);
     }
     return os;
 }

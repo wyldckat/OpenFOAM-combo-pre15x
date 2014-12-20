@@ -33,7 +33,7 @@ Description
 #ifndef tensorIOField_H
 #define tensorIOField_H
 
-#include "primitiveFields.H"
+#include "tensorField.H"
 #include "IOField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

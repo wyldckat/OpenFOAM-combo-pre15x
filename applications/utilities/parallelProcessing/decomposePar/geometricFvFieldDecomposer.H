@@ -114,11 +114,6 @@ public:
                     return directAddressing_.size();
                 }
 
-                virtual bool resizeOnly() const
-                {
-                    return false;
-                }
-
                 bool direct() const
                 {
                     return true;
@@ -200,11 +195,6 @@ public:
                     return addressing_.size();
                 }
 
-                virtual bool resizeOnly() const
-                {
-                    return false;
-                }
-
                 bool direct() const
                 {
                     return false;
@@ -257,11 +247,6 @@ public:
                 label size() const
                 {
                     return addressing_.size();
-                }
-
-                virtual bool resizeOnly() const
-                {
-                    return false;
                 }
 
                 bool direct() const

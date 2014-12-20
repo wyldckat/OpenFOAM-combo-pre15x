@@ -35,7 +35,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-scalarField contactPatchPair::slavePressure
+tmp<scalarField> contactPatchPair::slavePressure
 (
     const scalarField& pressure
 ) const
@@ -52,12 +52,12 @@ scalarField contactPatchPair::slavePressure
 //             )
 //         );
 
-    scalarField result =
+    tmp<scalarField> tresult =
         patchToPatchInterpolate_.faceInterpolate<scalar>(pressure);
 
-    result = min(result, 0.0);
+    tresult = min(tresult, scalar(0));
 
-    return result;
+    return tresult;
 }
 
 

@@ -187,7 +187,6 @@ public:
 
         //- Return off-diagonal index given owner and neighbour label
         label triIndex(const label a, const label b) const;
-
 };
 
 

@@ -60,7 +60,7 @@ export FOAM_JOB_DIR=$WM_PROJECT_INST_DIR/jobControl
 
 export WM_DIR=$WM_PROJECT_DIR/wmake
 export WM_LINK_LANGUAGE=c++
-export WM_OPTIONS=$WM_ARCH${WM_COMPILER}$WM_COMPILE_OPTION
+export WM_OPTIONS=$WM_ARCH${WM_COMPILER}$WM_PRECISION_OPTION$WM_COMPILE_OPTION
 
 export WM_SHELL=${SHELL##*/}
 export PATH=$WM_DIR:$PATH
@@ -104,13 +104,13 @@ WM_COMPILER_LIB=
 
 if [ "$WM_COMPILER" = "Gcc" -o "$machineTest" = "Linux" -a "$WM_COMPILER" = "" ]; then
     export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-3.4.3$WM_COMPILER_ARCH
-    WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.3/bin"
+    WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.4/bin"
     WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 fi
 
 if [ "$WM_COMPILER" = "Gcc4" ]; then
-    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.0.1$WM_COMPILER_ARCH
-    WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.3/bin"
+    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.1.0$WM_COMPILER_ARCH
+    WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.4/bin"
     WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 fi
 
@@ -146,18 +146,6 @@ elif [ "$machineTest" = "SunOS" ]; then
 elif [ "$machineTest" = "IRIX" -o "$machineTest" = "IRIX64" ]; then
 
     export JAVA_HOME=$WM_PROJECT_INST_DIR/$WM_ARCH/j2re1.4.1
-
-# IBM RS6000 workstation
-# ~~~~~~~~~~~~~~~~~~~~~~
-elif [ "$machineTest" = "AIX" ]; then
-
-    export JAVA_HOME=/usr/java14/jre
-
-# HP workstation 
-# ~~~~~~~~~~~~~~
-elif [ "$machineTest" = "HP-UX" ]; then
-
-    export JAVA_HOME=/opt/java1.4
 
 # An unsupported operating system
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -208,7 +196,6 @@ if [ .$WM_MPLIB = .MPICH ]; then
     AddPath $MPICH_ARCH_PATH/bin
 
     export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/mpich-$MPICH_VERSION
-    AddLib $FOAM_MPI_LIBBIN
 
 elif [ .$WM_MPLIB = .LAM ]; then
 
@@ -220,20 +207,28 @@ elif [ .$WM_MPLIB = .LAM ]; then
     AddPath $LAM_ARCH_PATH/bin
 
     export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/lam-$LAM_VERSION
-    AddLib $FOAM_MPI_LIBBIN
+
+elif [ .$WM_MPLIB = .OPENMPI ]; then
+
+    export OPENMPI_VERSION=1.0.2a7
+    export OPENMPI_HOME=$FOAM_SRC/openmpi-$OPENMPI_VERSION
+    export OPENMPI_ARCH_PATH=$OPENMPI_HOME/platforms/$WM_OPTIONS
+
+    AddLib $OPENMPI_ARCH_PATH/lib
+    AddPath $OPENMPI_ARCH_PATH/bin
+
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/openmpi-$OPENMPI_VERSION
 
 else
-    AddLib $FOAM_LIBBIN/dummy
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/dummy
 fi
+
+AddLib $FOAM_MPI_LIBBIN
+
 
 # Set the MPI buffer size (used by all platforms except SGI MPI)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 export MPI_BUFFER_SIZE=20000000
 
-
-# Source setup files for optional packages 
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SOURCE $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/ensightFoam/bashrc
-SOURCE $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/paraview/bashrc
 
 # -----------------------------------------------------------------------------

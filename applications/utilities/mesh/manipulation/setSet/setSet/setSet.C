@@ -36,10 +36,11 @@ Description
 #include "IStringStream.H"
 #include "topoSet.H"
 #include "cellSet.H"
+#include "faceSet.H"
 #include "OFstream.H"
 #include "IFstream.H"
 #include "demandDrivenData.H"
-#include "writeFaceSet.H"
+#include "writePatch.H"
 #include "writePointSet.H"
 
 #include <stdio.h>
@@ -88,7 +89,7 @@ void backup
 {
     if (fromSet.size() > 0)
     {
-        Info<< "    Backing up " << fromName << " into " << toName << endl;
+        Pout<< "    Backing up " << fromName << " into " << toName << endl;
 
         topoSet backupSet(mesh, toName, fromSet);
 
@@ -121,33 +122,88 @@ void writeVTK
 {
     if (typeid(currentSet) == typeid(faceSet))
     {
-        writeFaceSet
+        // Faces of set with OpenFOAM faceID as value
+
+        faceList setFaces(currentSet.size());
+        labelList faceValues(currentSet.size());
+        label setFaceI = 0;
+
+        forAllConstIter(topoSet, currentSet, iter)
+        {
+            setFaces[setFaceI] = mesh.faces()[iter.key()];
+            faceValues[setFaceI] = iter.key();
+            setFaceI++;
+        }
+
+        primitiveFacePatch fp(setFaces, mesh.points());
+
+        writePatch
         (
             true,
-            mesh,
-            currentSet,
+            currentSet.name(),
+            fp,
+            "faceID",
+            faceValues,
             mesh.time().path()/vtkName
         );
     }
     else if (typeid(currentSet) == typeid(cellSet))
     {
-        faceSet cellFaces(mesh, "cellFaces", currentSet.size());
+        // External faces of cellset with OpenFOAM cellID as value
+
+        Map<label> cellFaces(currentSet.size());
 
         forAllConstIter(cellSet, currentSet, iter)
         {
-            const cell& cFaces = mesh.cells()[iter.key()];
+            label cellI = iter.key();
+
+            const cell& cFaces = mesh.cells()[cellI];
 
             forAll(cFaces, i)
             {
-                cellFaces.insert(cFaces[i]);
+                label faceI = cFaces[i];
+
+                if (mesh.isInternalFace(faceI))
+                {
+                    label otherCellI = mesh.faceOwner()[faceI];
+
+                    if (otherCellI == cellI)
+                    {
+                        otherCellI = mesh.faceNeighbour()[faceI];
+                    }
+
+                    if (!currentSet.found(otherCellI))
+                    {
+                        cellFaces.insert(faceI, cellI);
+                    }
+                }
+                else
+                {
+                    cellFaces.insert(faceI, cellI);
+                }
             }
         }
 
-        writeFaceSet
+        faceList setFaces(cellFaces.size());
+        labelList faceValues(cellFaces.size());
+        label setFaceI = 0;
+        
+        forAllConstIter(Map<label>, cellFaces, iter)
+        {
+            setFaces[setFaceI] = mesh.faces()[iter.key()];
+            faceValues[setFaceI] = iter();              // Cell ID
+            setFaceI++;
+        }
+
+        primitiveFacePatch fp(setFaces, mesh.points());
+
+        writePatch
         (
             true,
-            mesh,
-            cellFaces,
+            currentSet.name(),
+            fp,
+            "cellID",
+            faceValues,
             mesh.time().path()/vtkName
         );
     }
@@ -176,7 +232,8 @@ void writeVTK
 
 void printHelp(Ostream& os)
 {
-    os  << "Please type 'help', 'quit' or a set command after prompt." << endl
+    os  << "Please type 'help', 'quit', 'time ddd'"
+        << " or a set command after prompt." << endl
         << endl
         << "A set command should be of the following form" << endl
         << endl
@@ -283,7 +340,7 @@ bool doCommand
 
         if (!currentSetPtr.valid())
         {
-            Info<< "    Cannot construct/load set "
+            Pout<< "    Cannot construct/load set "
                 << topoSet::localPath(mesh, setName) << endl;
 
             error = true;
@@ -292,7 +349,7 @@ bool doCommand
         {
             topoSet& currentSet = currentSetPtr();
 
-            Info<< "    Set:" << currentSet.name()
+            Pout<< "    Set:" << currentSet.name()
                 << "  Size:" << currentSet.size()
                 << "  Action:" << actionName
                 << endl;
@@ -313,8 +370,8 @@ bool doCommand
             }
             else if (action == topoSetSource::LIST)
             {
-                currentSet.writeDebug(Info, mesh, 100);
-                Info<< endl;
+                currentSet.writeDebug(Pout, mesh, 100);
+                Pout<< endl;
             }
             else if (action == topoSetSource::SUBSET)
             {
@@ -385,7 +442,7 @@ bool doCommand
                       + ".vtk"
                     );
 
-                    Info<< "    Writing " << currentSet.name()
+                    Pout<< "    Writing " << currentSet.name()
                         << " (size " << currentSet.size() << ") to "
                         << currentSet.instance()/currentSet.local()
                            /currentSet.name()
@@ -397,7 +454,7 @@ bool doCommand
                 }
                 else
                 {
-                    Info<< "    Writing " << currentSet.name()
+                    Pout<< "    Writing " << currentSet.name()
                         << " (size " << currentSet.size() << ") to "
                         << currentSet.instance()/currentSet.local()
                            /currentSet.name() << endl << endl;
@@ -411,22 +468,22 @@ bool doCommand
     {
         error = true;
 
-        Info<< fIOErr.message().c_str() << endl;
+        Pout<< fIOErr.message().c_str() << endl;
 
         if (sourceType.size() != 0)
         {
-            Info << topoSetSource::usage(sourceType).c_str();
+            Pout<< topoSetSource::usage(sourceType).c_str();
         }
     }
     catch (Foam::error& fErr)
     {
         error = true;
 
-        Info<< fErr.message().c_str() << endl;
+        Pout<< fErr.message().c_str() << endl;
 
         if (sourceType.size() != 0)
         {
-            Info << topoSetSource::usage(sourceType).c_str();
+            Pout<< topoSetSource::usage(sourceType).c_str();
         }
     }
 
@@ -442,23 +499,100 @@ enum commandStatus
 };
 
 
-commandStatus parseType(const word& setType)
+void printMesh(const Time& runTime, const polyMesh& mesh)
+{
+    Pout<< "Time:" << runTime.timeName()
+        << "  cells:" << mesh.nCells()
+        << "  faces:" << mesh.nFaces()
+        << "  points:" << mesh.nPoints()
+        << "  patches:" << mesh.boundaryMesh().size() << nl;
+}
+
+
+
+commandStatus parseType
+(
+    Time& runTime,
+    polyMesh& mesh,
+    const word& setType,
+    IStringStream& is
+)
 {
     if (setType.size() == 0)
     {
-        Info<< "Type 'help' for usage information" << endl;
+        Pout<< "Type 'help' for usage information" << endl;
 
         return INVALID;
     }
     else if (setType == "help")
     {
-        printHelp(Info);
+        printHelp(Pout);
+
+        return INVALID;
+    }
+    else if (setType == "time")
+    {
+        scalar time = readScalar(is);
+
+        instantList Times = runTime.times();
+
+        int nearestIndex = -1;
+        scalar nearestDiff = Foam::GREAT;
+
+        forAll(Times, timeIndex)
+        {
+            if (Times[timeIndex].name() == "constant") continue;
+
+            scalar diff = fabs(Times[timeIndex].value() - time);
+            if (diff < nearestDiff)
+            {
+                nearestDiff = diff;
+                nearestIndex = timeIndex;
+            }
+        }
+
+        Pout<< "Changing time from " << runTime.timeName()
+            << " to " << Times[nearestIndex].name()
+            << endl;
+
+        runTime.setTime(Times[nearestIndex], nearestIndex);
+        polyMesh::readUpdateState stat = mesh.readUpdate();
+
+        switch(stat)
+        {
+            case polyMesh::UNCHANGED:
+                Pout<< "    mesh not changed." << endl;
+            break;
+
+            case polyMesh::POINTS_MOVED:
+                Pout<< "    points moved; topology unchanged." << endl;
+            break;
+
+            case polyMesh::TOPO_CHANGE:
+                Pout<< "    topology changed; patches unchanged." << nl
+                    << "    ";
+                printMesh(runTime, mesh);
+
+            break;
+
+            case polyMesh::TOPO_PATCH_CHANGE:
+                Pout<< "    topology changed and patches changed." << nl
+                    << "    ";
+                printMesh(runTime, mesh);
+
+            break;
+
+            default:
+                FatalErrorIn("parseType") << "Illegal mesh update state "
+                    << stat  << abort(FatalError);
+            break;
+        }
 
         return INVALID;
     }
     else if (setType == "quit")
     {
-        Info<< "Quitting ..." << endl;
+        Pout<< "Quitting ..." << endl;
 
         return QUIT;
     }
@@ -473,8 +607,11 @@ commandStatus parseType(const word& setType)
     }
     else
     {
-        SeriousErrorIn("commandStatus parseType(const word& setType)")
-            << "Illegal set type " << setType << endl
+        SeriousErrorIn
+        (
+            "commandStatus parseType(Time&, polyMesh&, const word&"
+            ", IStringStream&)"
+        )   << "Illegal set type " << setType << endl
             << "Should be one of 'cellSet' 'faceSet' 'pointSet'"
             << endl;
 
@@ -534,11 +671,8 @@ int main(int argc, char *argv[])
 
 #   include "createPolyMesh.H"
 
-    Info<< "Mesh:" << nl
-        << "    cells :" << mesh.nCells() << nl
-        << "    points:" << mesh.nPoints() << nl
-        << "    faces :" << mesh.nFaces() << nl
-        << endl;
+    // Print some mesh info
+    printMesh(runTime, mesh);
 
 
     std::ifstream* fileStreamPtr(NULL);
@@ -547,7 +681,7 @@ int main(int argc, char *argv[])
     {
         fileName batchFile(args.options()["batch"]);
 
-        Info<< "Reading commands from file " << batchFile << endl;
+        Pout<< "Reading commands from file " << batchFile << endl;
 
         if (!exists(batchFile))
         {
@@ -561,18 +695,11 @@ int main(int argc, char *argv[])
     else if (!read_history(historyFile))
     {
         Info<< "Successfully read history from " << historyFile << endl;
-
-        string msg =
-          "# Time:" + runTime.timeName()
-        + "  cells:" + Foam::name(mesh.nCells())
-        + "  faces:" + Foam::name(mesh.nFaces())
-        + "  points:" + Foam::name(mesh.nPoints());
-    
-        add_history(msg.c_str());
     }        
 #endif
 
-    Info<< "Please type 'help', 'quit' or a set command after prompt." << endl;
+
+    Pout<< "Please type 'help', 'quit' or a set command after prompt." << endl;
 
     bool ok = false;
 
@@ -596,7 +723,7 @@ int main(int argc, char *argv[])
         {
             if (!fileStreamPtr->good())
             {
-                Info<< "End of batch file" << endl;
+                Pout<< "End of batch file" << endl;
                 break;
             }
 
@@ -604,7 +731,7 @@ int main(int argc, char *argv[])
 
             if (rawLine.size() > 0)
             {
-                Info<< "Doing:" << rawLine << endl;
+                Pout<< "Doing:" << rawLine << endl;
             }
         }
         else
@@ -625,7 +752,7 @@ int main(int argc, char *argv[])
             }
 #           else
             {
-                Info<< "Command>" << flush;
+                Pout<< "Command>" << flush;
                 std::getline(std::cin, rawLine);
             }
 #           endif
@@ -641,7 +768,7 @@ int main(int argc, char *argv[])
         // Type: cellSet, faceSet, pointSet
         is >> setType;
 
-        stat = parseType(setType);
+        stat = parseType(runTime, mesh, setType, is);
 
         if (stat == VALID)
         {
@@ -673,7 +800,7 @@ int main(int argc, char *argv[])
         delete fileStreamPtr;
     }
 
-    Info << nl << "End" << endl;
+    Pout << nl << "End" << endl;
 
     return 0;
 }

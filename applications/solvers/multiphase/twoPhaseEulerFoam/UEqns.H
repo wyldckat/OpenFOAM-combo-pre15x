@@ -7,11 +7,11 @@ fvVectorMatrix UbEqn(Ub, Ub.dimensions()*dimVol/dimTime);
 
     surfaceScalarField phiRa =
       - fvc::interpolate(nuEffa)
-       *mesh.magSf()*fvc::snGrad(alpha)/fvc::interpolate(alpha + 0.001);
+       *mesh.magSf()*fvc::snGrad(alpha)/fvc::interpolate(alpha + scalar(0.001));
 
     UaEqn =
     (
-        (1.0 + Cvm*rhob*beta/rhoa)*
+        (scalar(1) + Cvm*rhob*beta/rhoa)*
         (
             fvm::ddt(Ua)
           + fvm::div(phia, Ua, "div(phia,Ua)")
@@ -23,7 +23,7 @@ fvVectorMatrix UbEqn(Ub, Ub.dimensions()*dimVol/dimTime);
 
       + fvm::div(phiRa, Ua, "div(phia,Ua)")
       - fvm::Sp(fvc::div(phiRa), Ua)
-      + (fvc::grad(alpha)/(fvc::average(alpha) + 0.001) & Rca)
+      + (fvc::grad(alpha)/(fvc::average(alpha) + scalar(0.001)) & Rca)
      ==
     //  g                          // Buoyancy term transfered to p-equation
       - fvm::Sp(beta/rhoa*K, Ua)
@@ -39,11 +39,11 @@ fvVectorMatrix UbEqn(Ub, Ub.dimensions()*dimVol/dimTime);
 
     surfaceScalarField phiRb =
        - fvc::interpolate(nuEffb)
-        *mesh.magSf()*fvc::snGrad(beta)/fvc::interpolate(beta + 0.001);
+        *mesh.magSf()*fvc::snGrad(beta)/fvc::interpolate(beta + scalar(0.001));
 
     UbEqn = 
     (
-        (1.0 + Cvm*rhob*alpha/rhob)*
+        (scalar(1) + Cvm*rhob*alpha/rhob)*
         (
             fvm::ddt(Ub)
           + fvm::div(phib, Ub, "div(phib,Ub)")
@@ -56,7 +56,7 @@ fvVectorMatrix UbEqn(Ub, Ub.dimensions()*dimVol/dimTime);
       + fvm::div(phiRb, Ub, "div(phib,Ub)")
       - fvm::Sp(fvc::div(phiRb), Ub)
 
-      + (fvc::grad(beta)/(fvc::average(beta) + 0.001) & Rcb)
+      + (fvc::grad(beta)/(fvc::average(beta) + scalar(0.001)) & Rcb)
      ==
     //  g                          // Buoyancy term transfered to p-equation
       - fvm::Sp(alpha/rhob*K, Ub)

@@ -163,9 +163,11 @@ lduMatrix::solverPerformance GaussSeidel::solve()
 
         do
         {
-            matrix_.smooth
+            smooth
             (
+                fieldName_,
                 psi_,
+                matrix_,
                 source_,
                 coupleBouCoeffs_,
                 interfaces_,
@@ -190,8 +192,6 @@ lduMatrix::solverPerformance GaussSeidel::solve()
             (solverPerf.nIterations() += nSweeps_) < maxIter_
         && !(solverPerf.checkConvergence(tolerance_, relTol_))
         );
-
-        solverPerf.print(matrix_.quietOperation());
     }
 
     return solverPerf;

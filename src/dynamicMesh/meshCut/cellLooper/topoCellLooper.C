@@ -29,7 +29,7 @@ Description
 #include "topoCellLooper.H"
 #include "cellFeatures.H"
 #include "polyMesh.H"
-#include "physicalConstants.H"
+#include "mathematicalConstants.H"
 #include "DynamicList.H"
 #include "ListOps.H"
 #include "meshTools.H"
@@ -53,7 +53,7 @@ addToRunTimeSelectionTable(cellLooper, topoCellLooper, word);
 
 // Angle for polys to be considered splitHexes.
 const Foam::scalar Foam::topoCellLooper::featureCos =
-    Foam::cos(10.0 * physicalConstant::pi/180.0);
+    Foam::cos(10.0 * mathematicalConstant::pi/180.0);
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -356,7 +356,7 @@ void Foam::topoCellLooper::walkAcrossFace
 
         if (debug)
         {
-            Info<< "    Don't know what to do. Stepped to non-feature point "
+            Pout<< "    Don't know what to do. Stepped to non-feature point "
                 << "at index " << index << " in superEdge:" << superEdge
                 << endl;
         }
@@ -402,17 +402,17 @@ void Foam::topoCellLooper::walkSplitHex
     {
         if (debug)
         {
-            Info<< "Entering walk with : cell:" << cellI << " face:" << faceI;
+            Pout<< "Entering walk with : cell:" << cellI << " face:" << faceI;
             if (faceI != -1)
             {
-                Info<< " verts:" << mesh().faces()[faceI];
+                Pout<< " verts:" << mesh().faces()[faceI];
             }
-            Info<< " edge:" << edgeI;
+            Pout<< " edge:" << edgeI;
             if (edgeI != -1)
             {
-                Info<< " verts:" << mesh().edges()[edgeI];
+                Pout<< " verts:" << mesh().edges()[edgeI];
             }
-            Info<< " vert:" << vertI << endl;
+            Pout<< " vert:" << vertI << endl;
         }
 
         label startLoop = -1;
@@ -482,7 +482,7 @@ void Foam::topoCellLooper::walkSplitHex
 
             if (debug)
             {
-                Info<< "    stepped across edge " << mesh().edges()[edgeI]
+                Pout<< "    stepped across edge " << mesh().edges()[edgeI]
                     << " to face " << faceI << " verts:"
                     << mesh().faces()[faceI] << endl;
             }
@@ -547,7 +547,7 @@ void Foam::topoCellLooper::walkSplitHex
 
                     if (debug)
                     {
-                        Info<< "    stepped from non-edge vertex " << vertI
+                        Pout<< "    stepped from non-edge vertex " << vertI
                             << " to face " << faceI << " verts:"
                             << mesh().faces()[faceI]
                             << " since candidate edges:" << nextEdges << endl;
@@ -578,7 +578,7 @@ void Foam::topoCellLooper::walkSplitHex
 
                     if (debug)
                     {
-                        Info<< "    stepped from non-edge vertex " << vertI
+                        Pout<< "    stepped from non-edge vertex " << vertI
                             << " along edge " << edgeI << " verts:"
                             << mesh().edges()[edgeI]
                             << " out of candidate edges:"
@@ -600,7 +600,7 @@ void Foam::topoCellLooper::walkSplitHex
 
                     if (debug)
                     {
-                        Info<< "    stepped from non-edge vertex " << vertI
+                        Pout<< "    stepped from non-edge vertex " << vertI
                             << " along edge " << edgeI << " verts:"
                             << mesh().edges()[edgeI]
                             << " out of candidate edges:" << nextEdges << endl;
@@ -673,17 +673,17 @@ void Foam::topoCellLooper::walkSplitHex
 
         if (debug)
         {
-            Info<< "Walked to : face:" << faceI;
+            Pout<< "Walked to : face:" << faceI;
             if (faceI != -1)
             {
-                Info<< " verts:" << mesh().faces()[faceI];
+                Pout<< " verts:" << mesh().faces()[faceI];
             }
-            Info<< " edge:" << edgeI;
+            Pout<< " edge:" << edgeI;
             if (edgeI != -1)
             {
-                Info<< " verts:" << mesh().edges()[edgeI];
+                Pout<< " verts:" << mesh().edges()[edgeI];
             }
-            Info<< " vert:" << vertI << endl;
+            Pout<< " vert:" << vertI << endl;
         }
     }
     while (true);

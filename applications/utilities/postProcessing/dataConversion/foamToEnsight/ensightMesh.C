@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
@@ -600,34 +598,28 @@ void Foam::ensightMesh::write
 ) const
 {
     const Time& runTime = mesh.time();
-
     const pointField& points = mesh.points();
     const cellList& cellFaces = mesh.cells();
     const faceList& faces = mesh.faces();
     const cellShapeList& cellShapes = mesh.cellShapes();
 
-    word caseFileTimeName = prepend;
     word timeFile = prepend;
 
-    if (mesh.moving())
+    if (timeIndex == 0)
     {
-        caseFileTimeName += "***.";
+        timeFile += "000.";
+    }
+    else if (mesh.moving())
+    {
         timeFile += itoa(timeIndex) + '.';
     }
 
+    // set the filename of the ensight file
+    fileName ensightGeometryFileName = timeFile + "mesh";
+    
     OFstream *ensightGeometryFilePtr = NULL;
     if (Pstream::master())
     {
-        if (timeIndex == 0)
-        {
-            ensightCaseFile 
-                << "GEOMETRY" << nl
-                << "model:        1     "
-                << (caseFileTimeName + "mesh").c_str() << nl;
-        }
-
-        // set the filename of the ensight file
-        fileName ensightGeometryFileName = timeFile + "mesh";
         ensightGeometryFilePtr = new OFstream
         (
             postProcPath/ensightGeometryFileName,

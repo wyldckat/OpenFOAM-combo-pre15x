@@ -124,7 +124,7 @@ void Foam::cellToFace::combine(topoSet& set, const bool add) const
 
                 if (fndFace == numCells.end())
                 {
-                    numCells.insert(faceI, 0);
+                    numCells.insert(faceI, 1);
                 }
                 else
                 {
@@ -208,14 +208,14 @@ void Foam::cellToFace::applyToSet
 {
     if ((action == topoSetSource::NEW) || (action == topoSetSource::ADD))
     {
-        Info<< "    Adding faces according to cellSet " << setName_
+        Pout<< "    Adding faces according to cellSet " << setName_
             << " ..." << endl;
 
         combine(set, true);
     }
     else if (action == topoSetSource::DELETE)
     {
-        Info<< "    Removing faces according to cellSet " << setName_
+        Pout<< "    Removing faces according to cellSet " << setName_
             << " ..." << endl;
 
         combine(set, false);

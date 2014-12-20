@@ -17,12 +17,10 @@ if(turbulence)
     volScalarField Gcoef =
         alphak*Cmu*k*(g & fvc::grad(rho))/(epsilon + epsilon0);
 
+#   include "wallFunctions.H"
 
     // Dissipation equation
-
-#   include "wallDissipation.H"
-
-    solve
+    fvScalarMatrix epsEqn
     (
         fvm::ddt(rho, epsilon)
       + fvm::div(phi, epsilon)
@@ -34,9 +32,13 @@ if(turbulence)
      ==
         C1*G*epsilon/k
       - fvm::SuSp(C1*(1.0 - C3)*Gcoef + (2.0/3.0*C1)*rho*divU, epsilon)
-      - fvm::Sp(C2*rho*epsilon/k + boundaryCentral, epsilon)
-      + boundarySource
+      - fvm::Sp(C2*rho*epsilon/k, epsilon)
     );
+
+#   include "wallDissipation.H"
+
+    epsEqn.relax();
+    epsEqn.solve();
 
     bound(epsilon, epsilon0);
 

@@ -53,6 +53,36 @@ class processorLduCoupledInterface
     virtual public lduCoupledInterface
 {
 
+protected:
+
+    // Protected member functions
+
+        //- Raw field send function
+        template<class Type>
+        void send
+        (
+            const tmp<Field<Type> >&,
+            const bool bufferdTransfer
+        ) const;
+
+        //- Raw field receive function returning field
+        template<class Type>
+        tmp<Field<Type> > receive(const label size) const;
+
+
+        //- Raw field send function with data compression
+        template<class Type>
+        void compressedSend
+        (
+            const tmp<Field<Type> >&,
+            const bool bufferdTransfer
+        ) const;
+
+        //- Raw field receive function with data compression returning field
+        template<class Type>
+        tmp<Field<Type> > compressedReceive(const label size) const;
+
+
 public:
 
     //- Runtime type information
@@ -97,6 +127,12 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "processorLduCoupledInterfaceTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

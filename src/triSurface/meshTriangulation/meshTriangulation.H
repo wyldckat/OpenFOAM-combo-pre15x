@@ -1,35 +1,40 @@
-// The FOAM Project // File: meshTriangulation.H
-/*
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
 -------------------------------------------------------------------------------
- =========         | Class Interface
- \\      /         |
-  \\    /          | Name:   meshTriangulation
-   \\  /           | Family: triSurface
-    \\/            |
-    F ield         | FOAM version: 2.3
-    O peration     |
-    A and          | Copyright (C) 1991-2005 Nabla Ltd.
-    M anipulation  |          All Rights Reserved.
--------------------------------------------------------------------------------
-CLASS
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+Class
     meshTriangulation
 
-DESCRIPTION
-    Triangulation (in compact point numbering) of selected mesh faces.
-    Uses faceTriangulation so handles non-convex faces.
+Description
+    Triangulation of mesh faces. Generates (multiply connected) trisurface.
+    All patch faces keep their patchID as triangle region. Internal faces
+    get the supplied region number.
 
-    Is the triangulated faces after construction. Note that this will usually
-    be multiply connected.
+SourceFiles
+    meshTriangulation.C
 
-C++
-    listOfSourceFiles
-        meshTriangulation.C
-    endListOfSourceFiles
+\*---------------------------------------------------------------------------*/
 
-AUTHOR
-    Mattijs Janssens.
-*/
-// ------------------------------------------------------------------------- //
 
 #ifndef meshTriangulation_H
 #define meshTriangulation_H
@@ -64,11 +69,34 @@ class meshTriangulation
 
     // Private Member Functions
 
+        //- Is face internal to the subset.
         static bool isInternalFace
         (
-            const primitiveMesh& mesh,
+            const primitiveMesh&,
             const boolList& includedCell,
             const label faceI
+        );
+
+        //- find boundary faces of subset.
+        static void getFaces
+        (
+            const primitiveMesh&,
+            const boolList& includedCell,
+            boolList& faceIsCut,
+            label& nFaces,
+            label& nInternalFaces
+        );
+
+        //- Add triangulation of face to triangles. Optionally reverse.
+        void insertTriangles
+        (
+            const triFaceList&,
+            const label faceI,
+            const label regionI,
+            const bool reverse,
+
+            List<labelledTri>& triangles,
+            label& triI
         );
 
 
@@ -84,12 +112,16 @@ public:
 
         //- Construct from selected mesh cell and region number to be used
         //  for triangles resulting from internal faces. (all boundary triangles
-        //  get polyMesh patch id)
+        //  get polyMesh patch id). 
+        //  faceCentreDecomposition = true  : decomposition around face centre
+        //                            false : decomposition using
+        //                                    existing vertices
         meshTriangulation
         (
             const polyMesh&,
             const label internalFacesPatch,
-            const boolList& includedCell
+            const boolList& includedCell,
+            const bool faceCentreDecomposition = false
         );
 
 

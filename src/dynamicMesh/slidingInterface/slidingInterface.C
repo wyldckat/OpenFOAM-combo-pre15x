@@ -27,7 +27,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "slidingInterface.H"
-#include "polyMeshMorphEngine.H"
+#include "polyTopoChanger.H"
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
@@ -52,12 +52,14 @@ namespace Foam
     );
 }
 
+
 template<>
 const char* Foam::NamedEnum<Foam::slidingInterface::typeOfMatch, 2>::names[] =
 {
     "integral",
     "partial"
 };
+
 
 const Foam::NamedEnum<Foam::slidingInterface::typeOfMatch, 2>
 Foam::slidingInterface::typeOfMatchNames_;
@@ -67,6 +69,8 @@ Foam::slidingInterface::typeOfMatchNames_;
 
 void Foam::slidingInterface::checkDefinition()
 {
+    const polyMesh& mesh = topoChanger().mesh();
+
     if
     (
         !masterFaceZoneID_.active()
@@ -88,8 +92,8 @@ void Foam::slidingInterface::checkDefinition()
     // Check the sizes and set up state
     if
     (
-        mesh().faceZones()[masterFaceZoneID_.index()].size() == 0
-     || mesh().faceZones()[slaveFaceZoneID_.index()].size() == 0
+        mesh.faceZones()[masterFaceZoneID_.index()].size() == 0
+     || mesh.faceZones()[slaveFaceZoneID_.index()].size() == 0
     )
     {
         FatalErrorIn("void slidingInterface::checkDefinition()")
@@ -100,7 +104,7 @@ void Foam::slidingInterface::checkDefinition()
 
     if (debug)
     {
-        Info<< "Sliding interface object " << name() << " :" << nl
+        Pout<< "Sliding interface object " << name() << " :" << nl
             << "    master face zone: " << masterFaceZoneID_.index() << nl
             << "    slave face zone: " << slaveFaceZoneID_.index() << endl;
     }
@@ -123,7 +127,7 @@ Foam::slidingInterface::slidingInterface
 (
     const word& name,
     const label index,
-    const polyMesh& mesh,
+    const polyTopoChanger& mme,
     const word& masterFaceZoneName,
     const word& slaveFaceZoneName,
     const word& cutPointZoneName,
@@ -135,36 +139,36 @@ Foam::slidingInterface::slidingInterface
     const intersection::algorithm algo
 )
 :
-    polyMeshModifier(name, index, mesh, true),
+    polyMeshModifier(name, index, mme, true),
     masterFaceZoneID_
     (
         masterFaceZoneName,
-        mesh.faceZones()
+        mme.mesh().faceZones()
     ),
     slaveFaceZoneID_
     (
         slaveFaceZoneName,
-        mesh.faceZones()
+        mme.mesh().faceZones()
     ),
     cutPointZoneID_
     (
         cutPointZoneName,
-        mesh.pointZones()
+        mme.mesh().pointZones()
     ),
     cutFaceZoneID_
     (
         cutFaceZoneName,
-        mesh.faceZones()
+        mme.mesh().faceZones()
     ),
     masterPatchID_
     (
         masterPatchName,
-        mesh.boundaryMesh()
+        mme.mesh().boundaryMesh()
     ),
     slavePatchID_
     (
         slavePatchName,
-        mesh.boundaryMesh()
+        mme.mesh().boundaryMesh()
     ),
     matchType_(tom),
     coupleDecouple_(coupleDecouple),
@@ -195,7 +199,7 @@ Foam::slidingInterface::slidingInterface
             "(\n"
             "    const word& name,\n"
             "    const label index,\n"
-            "    const polyMesh& mesh,\n"
+            "    const polyTopoChanger& mme,\n"
             "    const word& masterFaceZoneName,\n"
             "    const word& slaveFaceZoneName,\n"
             "    const word& cutFaceZoneName,\n"
@@ -222,39 +226,39 @@ Foam::slidingInterface::slidingInterface
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyMesh& mesh
+    const polyTopoChanger& mme
 )
 :
-    polyMeshModifier(name, index, mesh, Switch(dict.lookup("active"))),
+    polyMeshModifier(name, index, mme, Switch(dict.lookup("active"))),
     masterFaceZoneID_
     (
         dict.lookup("masterFaceZoneName"),
-        mesh.faceZones()
+        mme.mesh().faceZones()
     ),
     slaveFaceZoneID_
     (
         dict.lookup("slaveFaceZoneName"),
-        mesh.faceZones()
+        mme.mesh().faceZones()
     ),
     cutPointZoneID_
     (
         dict.lookup("cutPointZoneName"),
-        mesh.pointZones()
+        mme.mesh().pointZones()
     ),
     cutFaceZoneID_
     (
         dict.lookup("cutFaceZoneName"),
-        mesh.faceZones()
+        mme.mesh().faceZones()
     ),
     masterPatchID_
     (
         dict.lookup("masterPatchName"),
-        mesh.boundaryMesh()
+        mme.mesh().boundaryMesh()
     ),
     slavePatchID_
     (
         dict.lookup("slavePatchName"),
-        mesh.boundaryMesh()
+        mme.mesh().boundaryMesh()
     ),
     matchType_(typeOfMatchNames_.read((dict.lookup("typeOfMatch")))),
     coupleDecouple_(dict.lookup("coupleDecouple")),
@@ -286,7 +290,7 @@ Foam::slidingInterface::slidingInterface
     {
         if (debug)
         {
-            Info<< "slidingInterface::slidingInterface(...) "
+            Pout<< "slidingInterface::slidingInterface(...) "
                 << " for object " << name << " : "
                 << "Interface attached.  Reading master and slave face zones "
                 << "and retired point lookup." << endl;
@@ -348,7 +352,7 @@ bool Foam::slidingInterface::changeTopology() const
         // Always changes.  If not attached, project points
         if (debug)
         {
-            Info<< "bool slidingInterface::changeTopology() const "
+            Pout<< "bool slidingInterface::changeTopology() const "
                 << "for object " << name() << " : "
                 << "Couple-decouple mode." << endl;
         }
@@ -364,7 +368,11 @@ bool Foam::slidingInterface::changeTopology() const
         return true;
     }
 
-    if (attached_ && !mesh().moving() && !mesh().morphing())
+    if
+    (
+        attached_
+     && !topoChanger().mesh().moving()
+    )
     {
         // If the mesh is not moving or morphing and the interface is
         // already attached, the topology will not change
@@ -415,14 +423,15 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
 {
     if (debug)
     {
-        Info<< "void slidingInterface::modifyMotionPoints(" 
+        Pout<< "void slidingInterface::modifyMotionPoints(" 
             << "pointField& motionPoints) const for object " << name() << " : "
             << "Adjusting motion points." << endl;
     }
 
+    const polyMesh& mesh = topoChanger().mesh();
+
     // Get point from the cut zone
-    const labelList& cutPoints =
-        mesh().pointZones()[cutPointZoneID_.index()].addressing();
+    const labelList& cutPoints = mesh.pointZones()[cutPointZoneID_.index()];
 
     if (cutPoints.size() > 0 && !projectedSlavePointsPtr_)
     {
@@ -437,15 +446,15 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
         const Map<Pair<edge> >& cpepm = cutPointEdgePairMap();
 
         const Map<label>& slaveZonePointMap =
-            mesh().faceZones()[slaveFaceZoneID_.index()]().meshPointMap();
+            mesh.faceZones()[slaveFaceZoneID_.index()]().meshPointMap();
 
         const primitiveFacePatch& masterPatch =
-            mesh().faceZones()[masterFaceZoneID_.index()]();
+            mesh.faceZones()[masterFaceZoneID_.index()]();
         const edgeList& masterEdges = masterPatch.edges();
         const pointField& masterLocalPoints = masterPatch.localPoints();
 
         const primitiveFacePatch& slavePatch =
-            mesh().faceZones()[slaveFaceZoneID_.index()]();
+            mesh.faceZones()[slaveFaceZoneID_.index()]();
         const edgeList& slaveEdges = slavePatch.edges();
         const pointField& slaveLocalPoints = slavePatch.localPoints();
         const vectorField& slavePointNormals = slavePatch.pointNormals();
@@ -459,7 +468,7 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
             {
                 if (debug)
                 {
-                    Info << "p";
+                    Pout << "p";
                 }
 
                 // Cut point is a retired point
@@ -476,7 +485,7 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
 
                 if (cpepmIter != cpepm.end())
                 {
-//                     Info << "Need to re-create hit for point " << cutPoints[pointI] << " lookup: " << cpepmIter() << endl;
+//                     Pout << "Need to re-create hit for point " << cutPoints[pointI] << " lookup: " << cpepmIter() << endl;
 
                     // Note.
                     // The edge cutting code is repeated in
@@ -503,7 +512,7 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
                         );
 
                     const edge& cme = masterEdges[curMasterEdgeIndex];
-//                     Info << "curMasterEdgeIndex: " << curMasterEdgeIndex << " cme: " << cme << endl;
+//                     Pout << "curMasterEdgeIndex: " << curMasterEdgeIndex << " cme: " << cme << endl;
                     const edge& globalSlaveEdge = cpepmIter().second();
 
                     const label curSlaveEdgeIndex =
@@ -523,7 +532,7 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
                         );
 
                     const edge& curSlaveEdge = slaveEdges[curSlaveEdgeIndex];
-//                     Info << "curSlaveEdgeIndex: " << curSlaveEdgeIndex << " curSlaveEdge: " << curSlaveEdge << endl;
+//                     Pout << "curSlaveEdgeIndex: " << curSlaveEdgeIndex << " curSlaveEdge: " << curSlaveEdge << endl;
                     const point& a = projectedSlavePoints[curSlaveEdge.start()];
                     const point& b = projectedSlavePoints[curSlaveEdge.end()];
 
@@ -594,7 +603,7 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
                         }
                         else
                         {
-                            Info<< "Missed slave edge!!!  This is an error.  "
+                            Pout<< "Missed slave edge!!!  This is an error.  "
                                 << "Master edge: "
                                 << cme.line(masterLocalPoints)
                                 << " slave edge: " << curSlaveLine
@@ -611,7 +620,7 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
                     }
                     else
                     {
-                        Info<< "Missed master edge!!!  This is an error"
+                        Pout<< "Missed master edge!!!  This is an error"
                             << endl;
                     }
                 }
@@ -631,29 +640,31 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
         }
         if (debug)
         {
-            Info << endl;
+            Pout << endl;
         }
     }
 }
 
 
-void Foam::slidingInterface::updateTopology(const mapPolyMesh& m)
+void Foam::slidingInterface::updateMesh(const mapPolyMesh& m)
 {
     if (debug)
     {
-        Info<< "void slidingInterface::updateTopology(const mapPolyMesh& m)" 
+        Pout<< "void slidingInterface::updateMesh(const mapPolyMesh& m)" 
             << " const for object " << name() << " : "
             << "Updating topology." << endl;
     }
 
     // Mesh has changed topologically.  Update local topological data
-    masterFaceZoneID_.update(mesh().faceZones());
-    slaveFaceZoneID_.update(mesh().faceZones());
-    cutPointZoneID_.update(mesh().pointZones());
-    cutFaceZoneID_.update(mesh().faceZones());
+    const polyMesh& mesh = topoChanger().mesh();
 
-    masterPatchID_.update(mesh().boundaryMesh());
-    slavePatchID_.update(mesh().boundaryMesh());
+    masterFaceZoneID_.update(mesh.faceZones());
+    slaveFaceZoneID_.update(mesh.faceZones());
+    cutPointZoneID_.update(mesh.pointZones());
+    cutFaceZoneID_.update(mesh.faceZones());
+
+    masterPatchID_.update(mesh.boundaryMesh());
+    slavePatchID_.update(mesh.boundaryMesh());
 
     if (!attached())
     {

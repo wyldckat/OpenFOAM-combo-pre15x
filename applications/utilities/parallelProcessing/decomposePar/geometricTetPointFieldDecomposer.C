@@ -138,7 +138,7 @@ tetPolyPatchFieldDecomposer::calcPatchAddressing() const
             pointLookup[directAddressing_[targetPatchPoints[pointI]]];
     }
 
-    if (min(addr) < 0)
+    if (addr.size() && min(addr) < 0)
     {
         FatalErrorIn
         (

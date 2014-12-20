@@ -22,14 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "attachDetach.H"
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
+#include "polyTopoChanger.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -57,18 +56,19 @@ void Foam::attachDetach::attachInterface
 
     if (debug)
     {
-        Info<< "void attachDetach::attachInterface("
+        Pout<< "void attachDetach::attachInterface("
             << "polyTopoChange& ref) const "
             << " for object " << name() << " : "
             << "Attaching interface" << endl;
     }
 
-    const faceList& faces = mesh().faces();
-    const labelList& own = mesh().allOwner();
-    const labelList& nei = mesh().allNeighbour();
+    const polyMesh& mesh = topoChanger().mesh();
+    const faceList& faces = mesh.faces();
+    const labelList& own = mesh.allOwner();
+    const labelList& nei = mesh.allNeighbour();
 
-    const polyPatch& masterPatch = mesh().boundaryMesh()[masterPatchID_.index()];
-    const polyPatch& slavePatch = mesh().boundaryMesh()[slavePatchID_.index()];
+    const polyPatch& masterPatch = mesh.boundaryMesh()[masterPatchID_.index()];
+    const polyPatch& slavePatch = mesh.boundaryMesh()[slavePatchID_.index()];
 
     const label masterPatchStart = masterPatch.start();
     const label slavePatchStart = slavePatch.start();
@@ -84,19 +84,19 @@ void Foam::attachDetach::attachInterface
         ref.setAction(polyRemovePoint(removedPoints[pointI]));
     }
 
-// Info << "Points to be mapped: " << removedPoints << endl;
+// Pout << "Points to be mapped: " << removedPoints << endl;
     // Remove all faces from the slave patch
     for (label i = 0; i < slavePatch.size(); i++)
     {
         ref.setAction(polyRemoveFace(i + slavePatchStart));
-// Info << "Removing face " << i + slavePatchStart << endl;
+// Pout << "Removing face " << i + slavePatchStart << endl;
     }
 
     // Modify the faces from the master patch
     const labelList& masterFaceCells = masterPatch.faceCells();
     const labelList& slaveFaceCells = slavePatch.faceCells();
 
-    const boolList& mfFlip = mesh().faceZones()[faceZoneID_.index()].flipMap();
+    const boolList& mfFlip = mesh.faceZones()[faceZoneID_.index()].flipMap();
 
     forAll (masterFaceCells, faceI)
     {
@@ -142,14 +142,14 @@ void Foam::attachDetach::attachInterface
     }
 
     // Renumber faces affected by point removal
-// Info << "slaveMeshPoints: " << slaveMeshPoints << endl;
+// Pout << "slaveMeshPoints: " << slaveMeshPoints << endl;
     // Make a map of faces that need to be renumbered
     labelHashSet facesToModifyMap
     (
         slaveMeshPoints.size()*primitiveMesh::facesPerPoint_
     );
 
-    const labelListList& pf = mesh().pointFaces();
+    const labelListList& pf = mesh.pointFaces();
     const labelHashSet& removedFaces = ref.removedFaces();
 
     // Grab all the faces off the points in the slave patch.  If the face has
@@ -191,18 +191,18 @@ void Foam::attachDetach::attachInterface
             }
         }
 
-// Info<< "face label: " << curFaceID << " old face: " << faces[curFaceID] << " new face: " << newFace << endl;
+// Pout<< "face label: " << curFaceID << " old face: " << faces[curFaceID] << " new face: " << newFace << endl;
 
         // Get face zone and its flip
-        label modifiedFaceZone = mesh().faceZones().whichZone(curFaceID);
+        label modifiedFaceZone = mesh.faceZones().whichZone(curFaceID);
         bool modifiedFaceZoneFlip = false;
 
         if (modifiedFaceZone >= 0)
         {
             modifiedFaceZoneFlip =
-                mesh().faceZones()[modifiedFaceZone].flipMap()
+                mesh.faceZones()[modifiedFaceZone].flipMap()
                 [
-                    mesh().faceZones()[modifiedFaceZone].whichFace(curFaceID)
+                    mesh.faceZones()[modifiedFaceZone].whichFace(curFaceID)
                 ];
         }
             
@@ -216,7 +216,7 @@ void Foam::attachDetach::attachInterface
                 own[curFaceID],         // owner
                 nei[curFaceID],         // neighbour
                 false,                  // face flip
-                mesh().boundaryMesh().whichPatch(curFaceID),// patch for face
+                mesh.boundaryMesh().whichPatch(curFaceID),// patch for face
                 false,                  // remove from zone
                 modifiedFaceZone,       // zone for face
                 modifiedFaceZoneFlip    // face flip in zone
@@ -226,7 +226,7 @@ void Foam::attachDetach::attachInterface
 
     if (debug)
     {
-        Info<< "void attachDetach::attachInterface("
+        Pout<< "void attachDetach::attachInterface("
             << "polyTopoChange& ref) const "
             << " for object " << name() << " : "
             << "Finished attaching interface" << endl;
@@ -245,7 +245,7 @@ void Foam::attachDetach::modifyMotionPoints
 
     if (debug)
     {
-        Info<< "void attachDetach::modifyMotionPoints(" 
+        Pout<< "void attachDetach::modifyMotionPoints(" 
             << "pointField& motionPoints) const "
             << " for object " << name() << " : "
             << "Adjusting motion points." << endl;
@@ -265,7 +265,7 @@ void Foam::attachDetach::modifyMotionPoints
 
         if (pointDiff > removedPoints.size()*positionDifference_)
         {
-            Info<< "Point motion difference = " << pointDiff << endl;
+            Pout<< "Point motion difference = " << pointDiff << endl;
         }
     }
 
