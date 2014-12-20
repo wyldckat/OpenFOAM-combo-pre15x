@@ -30,7 +30,6 @@ Description
 SourceFiles
     foamFileWriters.C
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef foamFileWriters_H
@@ -49,6 +48,8 @@ namespace Foam
 
 typedef foamFile<scalar> foamFileScalarWriter;
 typedef foamFile<vector> foamFileVectorWriter;
+typedef foamFile<sphericalTensor> foamFileSphericalTensorWriter;
+typedef foamFile<symmTensor> foamFileSymmTensorWriter;
 typedef foamFile<tensor> foamFileTensorWriter;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -23,10 +23,11 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Global
-    nonlinearwallFunctions
+    nonLinearwallFunctions
 
 Description
-    Calculate wall dissipation for non-linear models.
+    Calculate wall generation and dissipation from wall-functions 
+    for non-linear models.
 
 \*---------------------------------------------------------------------------*/
 
@@ -93,13 +94,11 @@ Description
                 if (yPlus > yPlusLam_)
                 {
                     G[faceCelli] +=
-                        nutw[facei]*magFaceGradU[facei]
-                        //-*0.5*log(2.0*yPlus/yPlusLam_)    //  UMIST correction
+                        (nutw[facei] + nuw[facei])
+                        *magFaceGradU[facei]
                         *Cmu25*sqrt(k_[faceCelli])
                         /(kappa_*y_[patchi][facei])
                       - (nonlinearStress[faceCelli] && gradU[faceCelli]);
-
-                    // N.B. non - linear stress term added on to wall functions
                 }
             }
         }

@@ -258,19 +258,36 @@ void Cloud<particleType>::autoMap(const mapPolyMesh& mapper)
                "for lagrangian cloud " << name() << endl;
     }
 
-    const labelList& reverseMap = mapper.reverseFaceMap();
+    const labelList& reverseCellMap = mapper.reverseCellMap();
+    const labelList& reverseFaceMap = mapper.reverseFaceMap();
 
     forAllIter(typename Cloud<particleType>, *this, pIter)
     {
-        if (reverseMap[pIter().celli_] != -1)
+        if (reverseCellMap[pIter().celli_] >= 0)
         {
-            pIter().celli_ = reverseMap[pIter().celli_];
+            pIter().celli_ = reverseCellMap[pIter().celli_];
+
+            if (pIter().facei_ >= 0 && reverseFaceMap[pIter().facei_] >= 0)
+            {
+                pIter().facei_ = reverseFaceMap[pIter().facei_];
+            }
+            else
+            {
+                pIter().facei_ = -1;
+            }
         }
         else
         {
+            label trackStartCell = mapper.mergedCell(pIter().celli_);
+
+            if (trackStartCell < 0)
+            {
+                trackStartCell = 0;
+            }
+
             vector p = pIter().position();
             const_cast<vector&>(pIter().position()) = 
-                polyMesh_.cellCentres()[0];
+                polyMesh_.cellCentres()[trackStartCell];
             pIter().stepFraction() = 0;
             pIter().track(p);
         }

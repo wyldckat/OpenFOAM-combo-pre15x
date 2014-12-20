@@ -32,7 +32,7 @@ License
 namespace Foam
 {
     makeLimitedSurfaceInterpolationScheme(SFCD, SFCDLimiter)
-    makeLimitedVSurfaceInterpolationScheme(SFCD, SFCDLimiter)
+    makeLimitedVSurfaceInterpolationScheme(SFCDV, SFCDLimiter)
 }
 
 // ************************************************************************* //

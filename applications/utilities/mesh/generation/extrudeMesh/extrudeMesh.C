@@ -64,11 +64,11 @@ Description
 #include "dimensionedTypes.H"
 #include "IFstream.H"
 #include "faceMesh.H"
-#include "directPolyTopoChange.H"
-#include "directEdgeCollapser.H"
+#include "polyTopoChange.H"
+#include "polyTopoChanger.H"
+#include "edgeCollapser.H"
 #include "mathematicalConstants.H"
 #include "globalMeshData.H"
-#include "polyTopoChanger.H"
 #include "perfectInterface.H"
 
 #include "extrudedMesh.H"
@@ -236,7 +236,7 @@ int main(int argc, char *argv[])
         Pout<< "Collapsing edges < " << mergeDim << " ..." << nl << endl;
 
         // Edge collapsing engine
-        directEdgeCollapser collapser(mesh);
+        edgeCollapser collapser(mesh);
 
         const edgeList& edges = mesh.edges();
         const pointField& points = mesh.points();
@@ -258,13 +258,13 @@ int main(int argc, char *argv[])
         }
 
         // Topo change container
-        directPolyTopoChange meshMod(mesh);
+        polyTopoChange meshMod(mesh);
         // Put all modifications into meshMod
         bool anyChange = collapser.setRefinement(meshMod);
 
         if (anyChange)
         {
-            // Construct new mesh from directPolyTopoChange.
+            // Construct new mesh from polyTopoChange.
             autoPtr<mapPolyMesh> map = meshMod.changeMesh(mesh, false);
 
             // Update fields
@@ -333,14 +333,10 @@ int main(int argc, char *argv[])
         );
 
         // Execute all polyMeshModifiers
-        autoPtr<mapPolyMesh> morphMap = stitcher.changeMesh();
+        autoPtr<mapPolyMesh> morphMap = stitcher.changeMesh(true);
 
         mesh.movePoints(morphMap->preMotionPoints());
     }
-
-
-
-    mesh.checkMesh();
 
     if (!mesh.write())
     {

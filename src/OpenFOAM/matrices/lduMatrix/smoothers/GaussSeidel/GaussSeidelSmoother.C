@@ -84,8 +84,10 @@ void Foam::GaussSeidelSmoother::smooth
     register scalar* __restrict__ bPrimePtr = bPrime.begin();
 
     register const scalar* const __restrict__ diagPtr = matrix_.diag().begin();
-    register const scalar* const __restrict__ upperPtr = matrix_.upper().begin();
-    register const scalar* const __restrict__ lowerPtr = matrix_.lower().begin();
+    register const scalar* const __restrict__ upperPtr =
+        matrix_.upper().begin();
+    register const scalar* const __restrict__ lowerPtr =
+        matrix_.lower().begin();
 
     register const label* const __restrict__ uPtr =
         matrix_.lduAddr().upperAddr().begin();

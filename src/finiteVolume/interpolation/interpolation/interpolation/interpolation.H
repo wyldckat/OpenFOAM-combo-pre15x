@@ -91,6 +91,14 @@ public:
 
     // Selectors
 
+        //- Return a reference to the specified interpolation scheme
+        static autoPtr<interpolation<Type> > New
+        (
+            const word& interpolationType,
+            const volPointInterpolation& pInterp,
+            const GeometricField<Type, fvPatchField, volMesh>& psi
+        );
+
         //- Return a reference to the selected interpolation scheme
         static autoPtr<interpolation<Type> > New
         (
@@ -122,7 +130,6 @@ public:
         {
             return psi_;
         }
-
 
         //- Interpolate field to the given point in the given cell
         virtual Type interpolate

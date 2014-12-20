@@ -25,6 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "fvMeshSubset.H"
+#include "emptyFvsPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -63,7 +64,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > fvMeshSubset::interpolate
                 new emptyFvPatchField<Type>
                 (
                     sMesh.boundary()[patchI],
-                    internalField
+                    DimensionedField<Type, volMesh>::null()
                 )
             );
         }
@@ -76,7 +77,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > fvMeshSubset::interpolate
                 (
                     vf.boundaryField()[pm[patchI]],
                     sMesh.boundary()[patchI],
-                    internalField,
+                    DimensionedField<Type, volMesh>::null(),
                     patchFieldSubset(*this, patchI)
                 )
             );
@@ -111,9 +112,9 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > fvMeshSubset::interpolate
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > fvMeshSubset::interpolate
 (
-    const GeometricField<Type, fvPatchField, surfaceMesh>& vf
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& vf
 ) const
 {
     // Get reference to the subset mesh
@@ -133,7 +134,7 @@ tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
     // Create and map the patch field values
     const labelList& pm = patchMap();
 
-    PtrList<fvPatchField<Type> > patchFields(pm.size());
+    PtrList<fvsPatchField<Type> > patchFields(pm.size());
 
     forAll (patchFields, patchI)
     {
@@ -145,10 +146,10 @@ tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
             patchFields.set
             (
                 patchI,
-                new emptyFvPatchField<Type>
+                new emptyFvsPatchField<Type>
                 (
                     sMesh.boundary()[patchI],
-                    internalField
+                    DimensionedField<Type, surfaceMesh>::null()
                 )
             );
         }
@@ -157,11 +158,11 @@ tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
             patchFields.set
             (
                 patchI,
-                fvPatchField<Type>::New
+                fvsPatchField<Type>::New
                 (
                     vf.boundaryField()[pm[patchI]],
                     sMesh.boundary()[patchI],
-                    internalField,
+                    DimensionedField<Type, surfaceMesh>::null(),
                     patchFieldSubset(*this, patchI)
                 )
             );
@@ -173,7 +174,7 @@ tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
     // into existing patch but since we don't know that at this point...
     forAll(patchFields, patchI)
     {
-        fvPatchField<Type>& pfld = patchFields[patchI];
+        fvsPatchField<Type>& pfld = patchFields[patchI];
 
         label meshFaceI = pfld.patch().patch().start();
 
@@ -189,9 +190,9 @@ tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
     }
 
     // Create the complete field from the pieces
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tresF
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tresF
     (
-        new GeometricField<Type, fvPatchField, surfaceMesh>
+        new GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             IOobject
             (

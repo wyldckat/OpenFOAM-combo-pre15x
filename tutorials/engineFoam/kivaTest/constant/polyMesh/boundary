@@ -1,7 +1,7 @@
-/*---------------------------------------------------------------------------*\
+/*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.4                                   |
+|  \\    /   O peration     | Version:  1.4.1                                 |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,10 +11,10 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "";
-    case "";
-    instance ""constant"";
-    local "";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.4.1/tutorials/engineFoam";
+    case "kivaTest";
+    instance "constant";
+    local "polyMesh";
 
     class polyBoundaryMesh;
     object boundary;
@@ -26,8 +26,7 @@ FoamFile
 (
 piston
 {
-    type movingWall;
-    physicalType fixedTemperatureMovingWallFunctions;
+    type wall;
     nFaces 1326;
     startFace 79522;
 }
@@ -35,7 +34,6 @@ piston
 liner
 {
     type wall;
-    physicalType fixedTemperatureWallFunctions;
     nFaces 2710;
     startFace 80848;
 }
@@ -43,7 +41,6 @@ liner
 cylinderHead
 {
     type wall;
-    physicalType fixedTemperatureWallFunctions;
     nFaces 2184;
     startFace 83558;
 }

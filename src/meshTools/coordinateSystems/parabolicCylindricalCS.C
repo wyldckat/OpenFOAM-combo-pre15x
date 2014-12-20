@@ -43,10 +43,16 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+Foam::parabolicCylindricalCS::parabolicCylindricalCS()
+:
+    coordinateSystem()
+{}
+
+
 Foam::parabolicCylindricalCS::parabolicCylindricalCS
 (
     const word& name,
-    const vector& origin,
+    const point& origin,
     const vector& axis,
     const vector& direction
 )
@@ -58,7 +64,7 @@ Foam::parabolicCylindricalCS::parabolicCylindricalCS
 Foam::parabolicCylindricalCS::parabolicCylindricalCS
 (
     const word& name,
-    const vector& origin,
+    const point& origin,
     const coordinateRotation& cr
 )
 :
@@ -78,89 +84,100 @@ Foam::parabolicCylindricalCS::parabolicCylindricalCS
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::vector Foam::parabolicCylindricalCS::toGlobal(const vector& localV) const
+Foam::vector Foam::parabolicCylindricalCS::localToGlobal
+(
+    const vector& local,
+    bool translate
+) const
 {
-    // Notation: u = localV.x() v = localV.y() z = localV.z();
-    if (localV.y() < 0.0)
+    // Notation: u = local.x() v = local.y() z = local.z();
+    if (local.y() < 0.0)
     {
-        FatalErrorIn("parabolicCylindricalCS::toGlobal(const vector&) const")
+        FatalErrorIn
+        (
+            "parabolicCylindricalCS::localToGlobal(const vector&, bool) const"
+        )
             << "parabolic cylindrical coordinates v < 0"
             << abort(FatalError);
     }
 
-    return coordinateSystem::toGlobal
+    return coordinateSystem::localToGlobal
     (
         vector
         (
-            0.5*(sqr(localV.x()) - sqr(localV.y())),
-            localV.x()*localV.y(),
-            localV.z()
-        )
+            0.5*(sqr(local.x()) - sqr(local.y())),
+            local.x()*local.y(),
+            local.z()
+        ),
+        translate
     );
 }
 
-
-Foam::tmp<Foam::vectorField> Foam::parabolicCylindricalCS::toGlobal
+Foam::tmp<Foam::vectorField> Foam::parabolicCylindricalCS::localToGlobal
 (
-    const vectorField& localV
+    const vectorField& local,
+    bool translate
 ) const
 {
-    if (min(localV.component(vector::Y)) < 0.0)
+    if (min(local.component(vector::Y)) < 0.0)
     {
         FatalErrorIn
         (
-            "parabolicCylindricalCS::toGlobal(const vectorField&) const"
+            "parabolicCylindricalCS::localToGlobal(const vectorField&, bool) const"
         )   << "parabolic cylindrical coordinates v < 0"
             << abort(FatalError);
     }
 
-    vectorField lc(localV.size());
+    vectorField lc(local.size());
     lc.replace
     (
         vector::X,
         0.5*
         (
-            sqr(localV.component(vector::X))
-          - sqr(localV.component(vector::Y))
+            sqr(local.component(vector::X))
+          - sqr(local.component(vector::Y))
         )
     );
 
     lc.replace
     (
         vector::Y,
-        localV.component(vector::X)*localV.component(vector::Y)
+        local.component(vector::X) * local.component(vector::Y)
     );
 
     lc.replace
     (
         vector::Z,
-        localV.component(vector::Z)
+        local.component(vector::Z)
     );
 
-    return coordinateSystem::toGlobal(lc);
+    return coordinateSystem::localToGlobal(lc, translate);
 }
 
 
-Foam::vector Foam::parabolicCylindricalCS::toLocal(const vector& globalV) const
+Foam::vector Foam::parabolicCylindricalCS::globalToLocal
+(
+    const vector& global,
+    bool translate
+) const
 {
     notImplemented
     (
-        "vector parabolicCylindricalCS::toLocal(const vector& globalV) const"
+        "parabolicCylindricalCS::globalToLocal(const vector&, bool) const"
     );
 
     return vector::zero;
 }
 
-
-Foam::tmp<Foam::vectorField> Foam::parabolicCylindricalCS::toLocal
+Foam::tmp<Foam::vectorField> Foam::parabolicCylindricalCS::globalToLocal
 (
-    const vectorField& globalV
+    const vectorField& global,
+    bool translate
 ) const
 {
     notImplemented
     (
-        "tmp<vectorField> parabolicCylindricalCS::toLocal(const "
-        "vectorField& globalV) const"
+        "parabolicCylindricalCS::globalToLocal(const vectorField&, bool) const"
     );
 
     return tmp<vectorField>(&vectorField::null());

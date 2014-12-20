@@ -93,7 +93,8 @@ void primitiveMesh::makeCellCentresAndVols
     const labelList& own = faceOwner();
     const labelList& nei = faceNeighbour();
 
-    // first estimate the approximate cell centre as the average of face centres
+    // first estimate the approximate cell centre as the average of
+    // face centres
 
     vectorField cEst(nCells(), vector::zero);
     labelField nCellFaces(nCells(), 0);

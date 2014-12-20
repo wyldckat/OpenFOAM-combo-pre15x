@@ -38,24 +38,6 @@ namespace Foam
         vanLeer,
         vanLeerLimiter
     )
-
-    makeLLimitedMultivariateSurfaceInterpolationScheme
-    (
-        limitedVanLeer,
-        LimitedLimiter,
-        vanLeerLimiter,
-        NVDTVD,
-        magSqr
-    )
-
-    makeLLimitedMultivariateSurfaceInterpolationScheme
-    (
-        vanLeer01,
-        Limited01Limiter,
-        vanLeerLimiter,
-        NVDTVD,
-        magSqr
-    )
 }
 
 // ************************************************************************* //

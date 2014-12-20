@@ -61,46 +61,29 @@ public:
 
     // Constructors
 
+        //- Construct null
+        cartesianCS();
+
         //- Construct from origin and 2 axes
         cartesianCS
         (
             const word& name,
-            const vector& origin,
+            const point& origin,
             const vector& axis,
             const vector& dir
         );
 
-        //- Construct from origin and rotation angles
+        //- Construct from origin and rotation
         cartesianCS
         (
             const word& name,
-            const vector& origin,
+            const point& origin,
             const coordinateRotation& cr
         );
 
         //- Construct from dictionary
         cartesianCS(const word& name, const dictionary& dict);
 
-
-    // Destructor
-
-        virtual ~cartesianCS()
-        {}
-
-
-    // Member Functions
-
-        //- Convert from local coordinate system to the global Cartesian system
-        virtual vector toGlobal(const vector& localV) const;
-
-        //- Convert from local coordinate system to the global Cartesian system
-        virtual tmp<vectorField> toGlobal(const vectorField& localV) const;
-
-        //- Convert from global Cartesian system to the local coordinate system 
-        virtual vector toLocal(const vector& globalV) const;
-
-        //- Convert from global Cartesian system to the local coordinate system 
-        virtual tmp<vectorField> toLocal(const vectorField& globalV) const;
 };
 
 

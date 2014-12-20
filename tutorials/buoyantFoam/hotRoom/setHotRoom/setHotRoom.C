@@ -33,7 +33,6 @@ Description
 #include "fvCFD.H"
 #include "OSspecific.H"
 #include "fixedValueFvPatchFields.H"
-#include "fvPatchFieldFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,7 +47,7 @@ int main(int argc, char *argv[])
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-fvPatchScalarFieldField& Tpatches = T.boundaryField();
+volScalarField::GeometricBoundaryField& Tpatches = T.boundaryField();
 
 forAll(Tpatches, patchI)
 {

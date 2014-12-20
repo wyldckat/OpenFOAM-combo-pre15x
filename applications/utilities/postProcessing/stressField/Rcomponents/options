@@ -1,1 +1,1 @@
-EXE_LIBS = -lfoamUtil
+EXE_LIBS =

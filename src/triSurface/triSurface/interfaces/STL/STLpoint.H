@@ -37,7 +37,6 @@ SourceFiles
 
 #include "point.H"
 
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -48,10 +47,9 @@ namespace Foam
 \*---------------------------------------------------------------------------*/
 
 class STLpoint
+:
+    public Vector<float>
 {
-    // Private data
-
-        float x_, y_, z_;
 
 public:
 
@@ -70,30 +68,9 @@ public:
         inline STLpoint(Istream&);
 
 
-    // Member Functions
-
-        // Access
-
-            inline float x() const;
-            inline float y() const;
-            inline float z() const;
-
-
-        // Check
-
-        // Edit
-
-        // Write
-
     // Member Operators
 
         inline operator point() const;
-
-
-    // Ostream operator
-
-        inline friend Istream& operator>>(Istream&, STLpoint&);
-        inline friend Ostream& operator<<(Ostream&, const STLpoint&);
 };
 
 

@@ -128,7 +128,7 @@ public:
              || skewCorrectionVectors::New(this->mesh()).skew();
         }
 
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         skewCorrection
         (
             const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -138,9 +138,9 @@ public:
 
             const skewCorrectionVectors& scv = skewCorrectionVectors::New(mesh);
 
-            tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tsfCorr
+            tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tsfCorr
             (
-                new GeometricField<Type, fvPatchField, surfaceMesh>
+                new GeometricField<Type, fvsPatchField, surfaceMesh>
                 (
                     IOobject
                     (
@@ -183,7 +183,7 @@ public:
 
 
         //- Return the explicit correction to the face-interpolate
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         correction
         (
             const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -208,7 +208,7 @@ public:
             else
             {
                 return 
-                    tmp<GeometricField<Type, fvPatchField, surfaceMesh> >(NULL);
+                    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >(NULL);
             }
         }
 };

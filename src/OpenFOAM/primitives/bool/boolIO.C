@@ -58,11 +58,11 @@ Istream& operator>>(Istream& is, bool& b)
     }
     else if (t.isWord())
     {
-        if (t.wordToken() == "true")
+        if (t.wordToken() == "true" || t.wordToken() == "on")
         {
             b = true;
         }
-        else if (t.wordToken() == "false")
+        else if (t.wordToken() == "false" || t.wordToken() == "off")
         {
             b = false;
         }

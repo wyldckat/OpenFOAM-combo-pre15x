@@ -4,7 +4,6 @@ set -x
 (cd $FOAM_SRC/OpenFOAM ; wmakeLnInclude . )
 
 wmake libso zlib-1.2.1
-wmake libso foamUser
 
 if [ "$WM_MPLIB" = "OPENMPI" -a ! -r $OPENMPI_ARCH_PATH/lib/libmpi.a -a ! -r $OPENMPI_ARCH_PATH/lib/libmpi.so ]
 then
@@ -16,6 +15,8 @@ then
 
         ./configure \
             --prefix=$OPENMPI_ARCH_PATH \
+            --disable-mpirun-prefix-by-default \
+            --disable-orterun-prefix-by-default \
             --enable-shared --disable-static \
             --disable-mpi-f77 --disable-mpi-f90 --disable-mpi-cxx \
             --disable-mpi-profile
@@ -150,5 +151,3 @@ then
     gmake distclean
     cd ..
 fi
-
-wmake libso foamUtil

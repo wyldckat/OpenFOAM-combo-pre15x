@@ -76,11 +76,11 @@ void Foam::lduMatrix::Amul
         ApsiPtr[cell] = diagPtr[cell]*psiPtr[cell];
     }
 
+
+    register const label nFaces = upper().size();
     #ifdef ICC_IA64_PREFETCH
     #pragma swp  
     #endif
-
-    register const label nFaces = upper().size();
     for (register label face=0; face<nFaces; face++)
     {
         #ifdef ICC_IA64_PREFETCH
@@ -333,11 +333,11 @@ void Foam::lduMatrix::residual
         rAPtr[cell] = sourcePtr[cell] - diagPtr[cell]*psiPtr[cell];
     }
 
+
+    register const label nFaces = upper().size();
     #ifdef ICC_IA64_PREFETCH
     #pragma swp  
     #endif
-
-    register const label nFaces = upper().size();
     for (register label face=0; face<nFaces; face++)
     {
         #ifdef ICC_IA64_PREFETCH

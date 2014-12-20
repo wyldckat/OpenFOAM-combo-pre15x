@@ -38,24 +38,6 @@ namespace Foam
         SuperBee,
         SuperBeeLimiter
     )
-
-    makeLLimitedMultivariateSurfaceInterpolationScheme
-    (
-        limitedSuperBee,
-        LimitedLimiter,
-        SuperBeeLimiter,
-        NVDTVD,
-        magSqr
-    )
-
-    makeLLimitedMultivariateSurfaceInterpolationScheme
-    (
-        SuperBee01,
-        Limited01Limiter,
-        SuperBeeLimiter,
-        NVDTVD,
-        magSqr
-    )
 }
 
 

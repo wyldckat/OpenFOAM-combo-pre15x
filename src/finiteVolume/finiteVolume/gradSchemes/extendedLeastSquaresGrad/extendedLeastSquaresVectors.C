@@ -138,7 +138,7 @@ void Foam::extendedLeastSquaresVectors::makeLeastSquaresVectors() const
     // in the construction of d vectors.  
     forAll(d.boundaryField(), patchI)
     {
-        const fvPatchVectorField& pd = d.boundaryField()[patchI];
+        const fvsPatchVectorField& pd = d.boundaryField()[patchI];
 
         const fvPatch& p = pd.patch();
         const unallocLabelList& faceCells = p.faceCells();
@@ -244,9 +244,9 @@ void Foam::extendedLeastSquaresVectors::makeLeastSquaresVectors() const
 
     forAll(lsP.boundaryField(), patchI)
     {
-        const fvPatchVectorField& pd = d.boundaryField()[patchI];
+        const fvsPatchVectorField& pd = d.boundaryField()[patchI];
 
-        fvPatchVectorField& patchLsP = lsP.boundaryField()[patchI];
+        fvsPatchVectorField& patchLsP = lsP.boundaryField()[patchI];
 
         const fvPatch& p = patchLsP.patch();
         const unallocLabelList& faceCells = p.faceCells();

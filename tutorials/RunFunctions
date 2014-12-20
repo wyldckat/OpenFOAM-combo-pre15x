@@ -46,12 +46,18 @@ runParallel ()
     if [ -f $2/log.$1 ] ; then
         echo "$1 already run on $2: remove log file to run"
     else
-        echo "Starting LAM using $4 machines file"
-        lamboot -v $4
+        if [ "$WM_MPLIB" = "LAM" ]
+        then
+            echo "Starting LAM using $4 machines file"
+            lamboot -v $4
+        fi
         echo "Running $1 in parallel on $2 using $3 processes"
         mpirun -np $3 $1 . $2 -parallel < /dev/null > $2/log.$1 2>&1
-        echo "Stopping LAM"
-        lamclean
+        if [ "$WM_MPLIB" = "LAM" ]
+        then
+            echo "Stopping LAM"
+            lamclean
+        fi
     fi
 }
 

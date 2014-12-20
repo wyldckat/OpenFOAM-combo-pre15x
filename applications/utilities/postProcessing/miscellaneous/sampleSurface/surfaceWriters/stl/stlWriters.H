@@ -30,7 +30,6 @@ Description
 SourceFiles
     stlWriters.C
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef stlWriters_H
@@ -49,6 +48,8 @@ namespace Foam
 
 typedef stl<scalar> stlScalarWriter;
 typedef stl<vector> stlVectorWriter;
+typedef stl<sphericalTensor> stlSphericalTensorWriter;
+typedef stl<symmTensor> stlSymmTensorWriter;
 typedef stl<tensor> stlTensorWriter;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

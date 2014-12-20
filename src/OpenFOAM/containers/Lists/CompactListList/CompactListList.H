@@ -50,7 +50,7 @@ SourceFiles
 #ifndef CompactListList_H
 #define CompactListList_H
 
-#include "List.H"
+#include "labelList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -122,7 +122,7 @@ public:
 
         // Access
 
-            //- Return the primary size, i.e. the number or rows
+            //- Return the primary size, i.e. the number of rows
             inline label size() const;
 
             //- Return the offset table
@@ -150,12 +150,30 @@ public:
             //- Reset sizes of CompactListList and value for new elements.
             void setSize(const label nRows, const label nData, const T&);
 
+            //- Return sizes (to be used e.g. for construction)
+            labelList sizes() const;
+
+            //- Reset size of CompactListList.
+            void setSize(const UList<label>& rowSizes);
+
             //- Clear the CompactListList, i.e. set sizes to zero.
             void clear();
 
             //- Transfer the contents of the argument CompactListList
             //  into this CompactListList and annull the argument list.
             void transfer(CompactListList<T>&);
+
+
+        // Other
+
+            //- Return index into m
+            inline label index(const label row, const label col) const;
+
+            //- Get row for index into m.
+            inline label whichRow(const label index) const;
+
+            //- Get column index (j) given above row
+            inline label whichColumn(const label row, const label index) const;
 
 
     // Member operators
@@ -166,16 +184,14 @@ public:
         //- Return const subscript-checked row as UList.
         inline const UList<T> operator[](const label i) const;
 
-
         //- Return subscript-checked element.
         inline T& operator()(const label i, const label j);
 
         //- Return const subscript-checked element.
         inline const T& operator()(const label i, const label j) const;
 
-
-        //- Allow conversion to a List<List<T> >
-        operator List<List<T> >() const;
+        //- Return as List<List<T> >
+        List<List<T> > operator()() const;
 
         //- Assignment of all entries to the given value
         inline void operator=(const T&);

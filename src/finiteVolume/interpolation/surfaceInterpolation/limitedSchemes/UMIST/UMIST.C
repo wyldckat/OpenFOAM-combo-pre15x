@@ -32,6 +32,7 @@ License
 namespace Foam
 {
     makeLimitedSurfaceInterpolationScheme(UMIST, UMISTLimiter)
+    makeLimitedVSurfaceInterpolationScheme(UMISTV, UMISTLimiter)
 }
 
 // ************************************************************************* //

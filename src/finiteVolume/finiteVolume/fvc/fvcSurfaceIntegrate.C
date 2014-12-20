@@ -44,7 +44,7 @@ template<class Type>
 void surfaceIntegrate
 (
     Field<Type>& ivf,
-    const GeometricField<Type, fvPatchField, surfaceMesh>& ssf
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& ssf
 )
 {
     const fvMesh& mesh = ssf.mesh();
@@ -65,7 +65,7 @@ void surfaceIntegrate
         const unallocLabelList& pFaceCells =
             mesh.boundary()[patchi].faceCells();
 
-        const fvPatchField<Type>& pssf = ssf.boundaryField()[patchi];
+        const fvsPatchField<Type>& pssf = ssf.boundaryField()[patchi];
 
         forAll(mesh.boundary()[patchi], facei)
         {
@@ -81,7 +81,7 @@ template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 surfaceIntegrate
 (
-    const GeometricField<Type, fvPatchField, surfaceMesh>& ssf
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& ssf
 )
 {
     const fvMesh& mesh = ssf.mesh();
@@ -121,7 +121,7 @@ template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 surfaceIntegrate
 (
-    const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >& tssf
+    const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >& tssf
 )
 {
     tmp<GeometricField<Type, fvPatchField, volMesh> > tvf
@@ -137,7 +137,7 @@ template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 surfaceSum
 (
-    const GeometricField<Type, fvPatchField, surfaceMesh>& ssf
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& ssf
 )
 {
     const fvMesh& mesh = ssf.mesh();
@@ -175,7 +175,7 @@ surfaceSum
         const unallocLabelList& pFaceCells =
             mesh.boundary()[patchi].faceCells();
 
-        const fvPatchField<Type>& pssf = ssf.boundaryField()[patchi];
+        const fvsPatchField<Type>& pssf = ssf.boundaryField()[patchi];
 
         forAll(mesh.boundary()[patchi], facei)
         {
@@ -192,7 +192,7 @@ surfaceSum
 template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> > surfaceSum
 (
-    const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >& tssf
+    const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >& tssf
 )
 {
     tmp<GeometricField<Type, fvPatchField, volMesh> > tvf = surfaceSum(tssf());

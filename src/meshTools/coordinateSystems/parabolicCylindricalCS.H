@@ -53,6 +53,34 @@ class parabolicCylindricalCS
     public coordinateSystem
 {
 
+protected:
+
+    // Protected Member Functions
+
+        //- Convert from local coordinate system to the global Cartesian system
+        //  with optional translation for the origin
+        virtual vector localToGlobal(const vector&, bool translate) const;
+
+        //- Convert from local coordinate system to the global Cartesian system
+        //  with optional translation for the origin
+        virtual tmp<vectorField> localToGlobal
+        (
+            const vectorField&,
+            bool translate
+        ) const;
+
+        //- Convert from global Cartesian system to the local coordinate system
+        //  with optional translation for the origin
+        virtual vector globalToLocal(const vector&, bool translate) const;
+
+        //- Convert from global Cartesian system to the local coordinate system
+        //  with optional translation for the origin
+        virtual tmp<vectorField> globalToLocal
+        (
+            const vectorField&,
+            bool translate
+        ) const;
+
 public:
 
     //- Runtime type information
@@ -61,11 +89,14 @@ public:
 
     // Constructors
 
+        //- Construct null
+        parabolicCylindricalCS();
+
         //- Construct from components
-        parabolicCylindricalCS 
+        parabolicCylindricalCS
         (
             const word& name,
-            const vector& origin,
+            const point& origin,
             const vector& axis,
             const vector& direction
         );
@@ -74,7 +105,7 @@ public:
         parabolicCylindricalCS
         (
             const word& name,
-            const vector& origin,
+            const point& origin,
             const coordinateRotation& cr
         );
 
@@ -88,17 +119,6 @@ public:
 
     // Member Functions
 
-        //- Convert from local coordinate system to the global Cartesian system
-        virtual vector toGlobal(const vector& localV) const;
-
-        //- Convert from local coordinate system to the global Cartesian system
-        virtual tmp<vectorField> toGlobal(const vectorField& localV) const;
-
-        //- Convert from global Cartesian coordinate system to the local system
-        virtual vector toLocal(const vector& globalV) const;
-
-        //- Convert from global Cartesian coordinate system to the local system
-        virtual tmp<vectorField> toLocal(const vectorField& globalV) const;
 };
 
 

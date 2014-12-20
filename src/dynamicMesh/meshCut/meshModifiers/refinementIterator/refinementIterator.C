@@ -169,8 +169,11 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
         // Do all changes
         //
 
-        autoPtr<mapPolyMesh> morphMap = 
-            polyTopoChanger::changeMesh(mesh_, meshMod);
+        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh
+        (
+            mesh_,
+            false
+        );
 
         // Move mesh (since morphing does not do this)
         if (morphMap().hasMotionPoints())

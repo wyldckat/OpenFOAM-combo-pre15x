@@ -61,8 +61,8 @@ then
 fi
 
 
-$WM_DIR/${WM_SHELL}Scripts/makeFiles
-$WM_DIR/${WM_SHELL}Scripts/makeOptions
+$WM_DIR/scripts/makeFiles
+$WM_DIR/scripts/makeOptions
 
 
 #------------------------------------------------------------------------------

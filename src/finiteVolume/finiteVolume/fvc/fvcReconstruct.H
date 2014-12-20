@@ -58,7 +58,7 @@ namespace fvc
         <typename outerProduct<vector, Type>::type, fvPatchField, volMesh>
     > reconstruct
     (
-        const GeometricField<Type, fvPatchField, surfaceMesh>&
+        const GeometricField<Type, fvsPatchField, surfaceMesh>&
     );
 
     template<class Type>
@@ -68,7 +68,7 @@ namespace fvc
         <typename outerProduct<vector, Type>::type, fvPatchField, volMesh>
     > reconstruct
     (
-        const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >&
+        const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >&
     );
 }
 

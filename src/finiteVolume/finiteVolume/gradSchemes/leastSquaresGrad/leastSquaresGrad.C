@@ -109,7 +109,7 @@ leastSquaresGrad<Type>::grad
     // Boundary faces
     forAll(vsf.boundaryField(), patchi)
     {
-        const fvPatchVectorField& patchOwnLs = ownLs.boundaryField()[patchi];
+        const fvsPatchVectorField& patchOwnLs = ownLs.boundaryField()[patchi];
 
         const unallocLabelList& faceCells =
             lsGrad.boundaryField()[patchi].patch().faceCells();

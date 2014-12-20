@@ -33,6 +33,7 @@ License
 namespace Foam
 {
     makeLimitedSurfaceInterpolationScheme(MUSCL, MUSCLLimiter)
+    makeLimitedVSurfaceInterpolationScheme(MUSCLV, MUSCLLimiter)
 
     makeLLimitedSurfaceInterpolationTypeScheme
     (

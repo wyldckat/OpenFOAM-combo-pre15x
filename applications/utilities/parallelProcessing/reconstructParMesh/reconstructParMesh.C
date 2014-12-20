@@ -328,6 +328,49 @@ int main(int argc, char *argv[])
     runTime.setTime(databases[0]);
 
 
+    // Read point on individual processors to determine merge tolerance
+    // (otherwise single cell domains might give problems)
+
+    boundBox bb
+    (
+        point(GREAT, GREAT, GREAT),
+        point(-GREAT, -GREAT, -GREAT)
+    );
+
+    for (label procI = 0; procI < nProcs; procI++)
+    {
+        Pout<< "Reading points from "
+            << databases[procI].caseName()
+            << " for time = " << databases[procI].timeName()
+            << nl << endl;
+
+        pointIOField points
+        (
+            IOobject
+            (
+                "points",
+                databases[procI].findInstance(polyMesh::meshSubDir, "points"),
+                polyMesh::meshSubDir,
+                databases[procI],
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            )
+        );
+
+        boundBox domainBb(points, false);
+
+        bb.min() = min(bb.min(), domainBb.min());
+        bb.max() = max(bb.max(), domainBb.max());
+    }
+    const scalar mergeDist = mergeTol*mag(bb.max() - bb.min());
+
+    Pout<< "Overall mesh bounding box  : " << bb << nl
+        << "Relative tolerance         : " << mergeTol << nl
+        << "Absolute matching distance : " << mergeDist << nl
+        << endl;
+
+
     // Addressing from processor to reconstructed case
     labelListList cellProcAddressing(nProcs);
     labelListList faceProcAddressing(nProcs);
@@ -356,7 +399,6 @@ int main(int argc, char *argv[])
             cellList(0)
         );
 
-
         for (label procI = 0; procI < nProcs; procI++)
         {
             Pout<< "Reading mesh to add from "
@@ -373,17 +415,6 @@ int main(int argc, char *argv[])
                     databases[procI]
                 )
             );
-
-            // Construct merge distance based on merge tolerance and bb
-            // (note: this should be bb of all meshes but don't know this yet)
-
-            const boundBox bb(meshToAdd.points());
-            const scalar mergeDist = mergeTol*mag(bb.max() - bb.min());
-
-            Pout<< "Relative tolerance          : " << mergeTol << nl
-                << "Absolute matching distance  : " << mergeDist << nl
-                << endl;
-
 
             // Initialize its addressing
             cellProcAddressing[procI] = identity(meshToAdd.nCells());

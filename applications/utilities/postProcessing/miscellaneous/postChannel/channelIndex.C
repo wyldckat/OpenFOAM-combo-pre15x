@@ -22,20 +22,15 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
 #include "channelIndex.H"
-
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// from components
 channelIndex::channelIndex(const fvMesh& m)
 :
-    indexingDict
+    indexingDict_
     (
         IOobject
         (
@@ -46,19 +41,23 @@ channelIndex::channelIndex(const fvMesh& m)
             IOobject::NO_WRITE
         )
     ),
-    Nx(readLabel(indexingDict.lookup("Nx"))),
-    Ny(indexingDict.lookup("Ny")),
-    Nz(readLabel(indexingDict.lookup("Nz"))),
-    cumNy(Ny.size()),
-    Nlayers(Ny[0])
+    nx_(readLabel(indexingDict_.lookup("Nx"))),
+    ny_(indexingDict_.lookup("Ny")),
+    nz_(readLabel(indexingDict_.lookup("Nz"))),
+    symmetric_
+    (
+        readBool(indexingDict_.lookup("symmetric"))
+    ),
+    cumNy_(ny_.size()),
+    nLayers_(ny_[0])
 {
     // initialise the layers
-    cumNy[0] = Ny[0];
+    cumNy_[0] = ny_[0];
 
-    for (label j = 1; j<Ny.size(); j++)
+    for (label j=1; j<ny_.size(); j++)
     {
-        Nlayers += Ny[j];
-        cumNy[j] = Ny[j]+cumNy[j-1];
+        nLayers_ += ny_[j];
+        cumNy_[j] = ny_[j]+cumNy_[j-1];
     }
 }
 
@@ -73,7 +72,8 @@ channelIndex::~channelIndex()
 
 scalarField channelIndex::collapse
 (
-    const volScalarField& vsf
+    const volScalarField& vsf,
+    const bool asymmetric
 ) const
 {
     scalarField cs(nLayers(), 0.0);
@@ -93,6 +93,28 @@ scalarField channelIndex::collapse
         cs[j] /= scalar(nx()*nz());
     }
 
+    if (symmetric_)
+    {
+        label nlb2 = nLayers()/2;
+
+        if (asymmetric)
+        {
+            for (label j=0; j<nlb2; j++)
+            {
+                cs[j] = 0.5*(cs[j] - cs[nLayers() - j - 1]);
+            }
+        }
+        else
+        {
+            for (label j=0; j<nlb2; j++)
+            {
+                cs[j] = 0.5*(cs[j] + cs[nLayers() - j - 1]);
+            }
+        }
+
+        cs.setSize(nlb2);
+    }
+
     return cs;
 }
 
@@ -102,15 +124,28 @@ scalarField channelIndex::y
     const volVectorField& cellCentres
 ) const
 {
-    scalarField Y(nLayers());
-
-    label j;
-    for (j=0; j<nLayers(); j++)
+    if (symmetric_)
     {
-        Y[j] = cellCentres[operator()(0,j,0)].y();
-    }
+        scalarField Y(nLayers()/2);
 
-    return Y;
+        for (label j=0; j<nLayers()/2; j++)
+        {
+            Y[j] = cellCentres[operator()(0, j, 0)].y();
+        }
+
+        return Y;
+    }
+    else
+    {
+        scalarField Y(nLayers());
+
+        for (label j=0; j<nLayers(); j++)
+        {
+            Y[j] = cellCentres[operator()(0, j, 0)].y();
+        }
+
+        return Y;
+    }
 }
 
 
@@ -129,14 +164,14 @@ label channelIndex::operator()
     label j(0);
     label tmpJy(Jy);
 
-    while (Jy>=cumNy[j])
+    while(Jy >= cumNy_[j])
     {
-        index += Nx*Ny[j]*Nz;
-        tmpJy -= Ny[j];
+        index += nx_*ny_[j]*nz_;
+        tmpJy -= ny_[j];
         j++;
     }
 
-    index += Jx + Nx*tmpJy + Nx*Ny[j]*Jz;
+    index += Jx + nx_*tmpJy + nx_*ny_[j]*Jz;
 
     return index;
 }

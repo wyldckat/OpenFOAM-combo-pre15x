@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "nearWallDist.H"
@@ -100,13 +98,12 @@ void Foam::nearWallDist::doAll()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::nearWallDist::nearWallDist(const Foam::fvMesh& mesh)
 :
     volScalarField::GeometricBoundaryField
     (
         mesh.boundary(),
-        scalarField(mesh.nCells(), 0.0),
+        mesh.V(),           // Dummy internal field,
         calculatedFvPatchScalarField::typeName
     ),
     mesh_(mesh)
@@ -123,8 +120,6 @@ Foam::nearWallDist::~nearWallDist()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-
-// Correct for mesh geom/topo changes
 void Foam::nearWallDist::correct()
 {
     if (mesh_.moving())

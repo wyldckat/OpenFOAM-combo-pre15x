@@ -40,7 +40,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class Limited01Weight Declaration
+                    Class Limited01Limiter Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class LimitedScheme>

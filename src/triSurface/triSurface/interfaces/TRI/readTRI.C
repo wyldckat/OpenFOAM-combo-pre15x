@@ -47,7 +47,7 @@ namespace Foam
 
 bool triSurface::readTRI(const fileName& TRIfileName)
 {
-    std::ifstream TRIfile(TRIfileName.c_str());
+    IFstream TRIfile(TRIfileName);
 
     if (!TRIfile.good())
     {
@@ -65,7 +65,7 @@ bool triSurface::readTRI(const fileName& TRIfileName)
 
     while(TRIfile)
     {
-        string line = getLine(TRIfile);
+        string line = getLineNoComment(TRIfile);
 
         if (line.size() == 0)
         {

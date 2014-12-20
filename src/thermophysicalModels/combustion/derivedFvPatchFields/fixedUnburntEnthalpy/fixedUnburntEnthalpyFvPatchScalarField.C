@@ -40,7 +40,7 @@ namespace Foam
 fixedUnburntEnthalpyFvPatchScalarField::fixedUnburntEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedValueFvPatchScalarField(p, iF)
@@ -51,7 +51,7 @@ fixedUnburntEnthalpyFvPatchScalarField::fixedUnburntEnthalpyFvPatchScalarField
 (
     const fixedUnburntEnthalpyFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -62,7 +62,7 @@ fixedUnburntEnthalpyFvPatchScalarField::fixedUnburntEnthalpyFvPatchScalarField
 fixedUnburntEnthalpyFvPatchScalarField::fixedUnburntEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -82,7 +82,7 @@ fixedUnburntEnthalpyFvPatchScalarField::fixedUnburntEnthalpyFvPatchScalarField
 fixedUnburntEnthalpyFvPatchScalarField::fixedUnburntEnthalpyFvPatchScalarField
 (
     const fixedUnburntEnthalpyFvPatchScalarField& tppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedValueFvPatchScalarField(tppsf, iF)
@@ -91,7 +91,6 @@ fixedUnburntEnthalpyFvPatchScalarField::fixedUnburntEnthalpyFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Update the coefficients associated with the patch field
 void fixedUnburntEnthalpyFvPatchScalarField::updateCoeffs()
 {
     if (updated())

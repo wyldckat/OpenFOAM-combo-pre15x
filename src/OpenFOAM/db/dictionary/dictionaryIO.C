@@ -90,7 +90,7 @@ bool dictionary::read(Istream& is, const word& lastEntry)
         else if (!hashedEntries_.insert(entryPtr->keyword(), entryPtr))
         {
             IOWarningIn("dictionary::read(Istream&, const word&)", is)
-                << " could not add entry" << endl
+                << "could not add entry" << endl
                 << "    " << *entryPtr
                 << "    on line " << is.lineNumber()
                 << " of dictionary " << name()

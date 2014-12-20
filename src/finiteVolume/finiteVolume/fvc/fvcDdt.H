@@ -85,7 +85,7 @@ namespace fvc
         GeometricField
         <
             typename Foam::flux<Type>::type,
-            fvPatchField,
+            fvsPatchField,
             surfaceMesh
         >
     >
@@ -96,7 +96,7 @@ namespace fvc
         const GeometricField
         <
             typename Foam::flux<Type>::type,
-            fvPatchField,
+            fvsPatchField,
             surfaceMesh
         >& phi
     );
@@ -107,7 +107,7 @@ namespace fvc
         GeometricField
         <
             typename Foam::flux<Type>::type,
-            fvPatchField,
+            fvsPatchField,
             surfaceMesh
         >
     >
@@ -119,7 +119,7 @@ namespace fvc
         const GeometricField
         <
             typename Foam::flux<Type>::type,
-            fvPatchField,
+            fvsPatchField,
             surfaceMesh
         >& phi
     );

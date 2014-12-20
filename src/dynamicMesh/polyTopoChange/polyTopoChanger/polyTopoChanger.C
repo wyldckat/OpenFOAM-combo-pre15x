@@ -257,6 +257,35 @@ void Foam::polyTopoChanger::update(const mapPolyMesh& m)
     instance() = mesh_.time().timeName();
 }
 
+
+Foam::autoPtr<Foam::mapPolyMesh> Foam::polyTopoChanger::changeMesh
+(
+    const bool inflate,
+    const bool syncParallel
+)
+{
+    if (changeTopology())
+    {
+        autoPtr<polyTopoChange> ref = topoChangeRequest();
+
+        autoPtr<mapPolyMesh> topoChangeMap = ref().changeMesh
+        (
+            mesh_,
+            inflate,
+            syncParallel
+        );
+
+        update(topoChangeMap());
+        mesh_.updateMesh(topoChangeMap());
+        return topoChangeMap;
+    }
+    else
+    {
+        return autoPtr<mapPolyMesh>(NULL);
+    }
+}
+
+
 // Add mesh modifiers to the morph engine
 void Foam::polyTopoChanger::addTopologyModifiers
 (

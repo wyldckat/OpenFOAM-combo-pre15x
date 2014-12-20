@@ -39,7 +39,7 @@ tractionDisplacementCorrectionFvPatchVectorField::
 tractionDisplacementCorrectionFvPatchVectorField
 (
     const fvPatch& p,
-    const vectorField& iF
+    const DimensionedField<vector, volMesh>& iF
 )
 :
     fixedGradientFvPatchVectorField(p, iF),
@@ -48,7 +48,6 @@ tractionDisplacementCorrectionFvPatchVectorField
 {
     fvPatchVectorField::operator=(patchInternalField());
     gradient() = vector::zero;
-    checkVolField();
 }
 
 
@@ -57,22 +56,21 @@ tractionDisplacementCorrectionFvPatchVectorField
 (
     const tractionDisplacementCorrectionFvPatchVectorField& tdpvf,
     const fvPatch& p,
-    const vectorField& iF,
+    const DimensionedField<vector, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
     fixedGradientFvPatchVectorField(tdpvf, p, iF, mapper),
     traction_(tdpvf.traction_, mapper),
     pressure_(tdpvf.pressure_, mapper)
-{
-    checkVolField();
-}
+{}
+
 
 tractionDisplacementCorrectionFvPatchVectorField::
 tractionDisplacementCorrectionFvPatchVectorField
 (
     const fvPatch& p,
-    const vectorField& iF,
+    const DimensionedField<vector, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -94,24 +92,20 @@ tractionDisplacementCorrectionFvPatchVectorField
     fixedGradientFvPatchVectorField(tdpvf),
     traction_(tdpvf.traction_),
     pressure_(tdpvf.pressure_)
-{
-    checkVolField();
-}
+{}
 
 
 tractionDisplacementCorrectionFvPatchVectorField::
 tractionDisplacementCorrectionFvPatchVectorField
 (
     const tractionDisplacementCorrectionFvPatchVectorField& tdpvf,
-    const vectorField& iF
+    const DimensionedField<vector, volMesh>& iF
 )
 :
     fixedGradientFvPatchVectorField(tdpvf, iF),
     traction_(tdpvf.traction_),
     pressure_(tdpvf.pressure_)
-{
-    checkVolField();
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //

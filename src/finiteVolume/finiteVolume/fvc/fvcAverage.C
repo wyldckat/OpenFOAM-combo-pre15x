@@ -45,7 +45,7 @@ template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 average
 (
-    const GeometricField<Type, fvPatchField, surfaceMesh>& ssf
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& ssf
 )
 {
     const fvMesh& mesh = ssf.mesh();
@@ -63,16 +63,23 @@ average
                 IOobject::NO_WRITE
             ),
             mesh,
-            ssf.dimensions(),
-            (
-                surfaceSum(mesh.magSf()*ssf)
-               /surfaceSum(mesh.magSf())
-            )().internalField(),
-            ssf.boundaryField()
+            ssf.dimensions()
         )
     );
 
-    taverage().correctBoundaryConditions();
+    GeometricField<Type, fvPatchField, volMesh>& av = taverage();
+
+    av.internalField() = 
+    (
+        surfaceSum(mesh.magSf()*ssf)/surfaceSum(mesh.magSf())
+    )().internalField();
+
+    forAll(av.boundaryField(), patchi)
+    {
+        av.boundaryField()[patchi] = ssf.boundaryField()[patchi];
+    }
+
+    av.correctBoundaryConditions();
 
     return taverage;
 }
@@ -82,7 +89,7 @@ template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 average
 (
-    const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >& tssf
+    const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >& tssf
 )
 {
     tmp<GeometricField<Type, fvPatchField, volMesh> > taverage

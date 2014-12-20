@@ -65,6 +65,14 @@ class CoEulerDdtScheme
 {
     // Private Data
 
+        //- Name of the flux field used to calculate the local time-step
+        word phiName_;
+
+        //- Name of the density field used to obtain the volumetric flux
+        //  from the mass flux if required
+        word rhoName_;
+
+        //- Maximum local Courant number
         scalar maxCo_;
 
 
@@ -95,6 +103,8 @@ public:
         CoEulerDdtScheme(const fvMesh& mesh, Istream& is)
         :
             ddtScheme<Type>(mesh, is),
+            phiName_(is),
+            rhoName_(is),
             maxCo_(readScalar(is))
         {}
 

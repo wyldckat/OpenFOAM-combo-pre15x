@@ -237,6 +237,8 @@ Foam::Time::Time
     writeCompression_(IOstream::UNCOMPRESSED),
     graphFormat_("raw"),
     runTimeModifiable_(true),
+
+    readLibs_(controlDict_, "libs"),
     functionObjects_(*this)
 {
     setControls();
@@ -290,6 +292,8 @@ Foam::Time::Time
     writeCompression_(IOstream::UNCOMPRESSED),
     graphFormat_("raw"),
     runTimeModifiable_(true),
+
+    readLibs_(controlDict_, "libs"),
     functionObjects_(*this)
 {
     setControls();
@@ -341,11 +345,13 @@ Foam::Time::Time
     writeCompression_(IOstream::UNCOMPRESSED),
     graphFormat_("raw"),
     runTimeModifiable_(true),
+
+    readLibs_(controlDict_, "libs"),
     functionObjects_(*this)
 {}
 
 
-// * * * * * * * * * * * * * * * * Destructor * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::Time::~Time()
 {}
@@ -450,7 +456,7 @@ bool Foam::Time::run() const
 {
     bool running = value() < (endTime_ - 0.5*deltaT_);
 
-    if (!running)
+    if (!running && timeIndex_ != startTimeIndex_)
     {
         const_cast<functionObjectList&>(functionObjects_).execute();
     }
@@ -478,6 +484,34 @@ void Foam::Time::setTime(const instant& inst, const label newIndex)
     value() = inst.value();
     dimensionedScalar::name() = inst.name();
     timeIndex_ = newIndex;
+
+    IOdictionary timeDict
+    (
+        IOobject
+        (
+            "time",
+            timeName(),
+            "uniform",
+            *this,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE
+        )
+    );
+
+    if (timeDict.found("deltaT"))
+    {
+        deltaT_ = readScalar(timeDict.lookup("deltaT"));
+    }
+
+    if (timeDict.found("deltaT0"))
+    {
+        deltaT0_ = readScalar(timeDict.lookup("deltaT0"));
+    }
+
+    if (timeDict.found("index"))
+    {
+        timeIndex_ = readLabel(timeDict.lookup("index"));
+    }
 }
 
 

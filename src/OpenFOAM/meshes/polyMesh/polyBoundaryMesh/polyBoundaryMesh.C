@@ -27,8 +27,6 @@ License
 #include "polyBoundaryMesh.H"
 #include "polyMesh.H"
 #include "primitiveMesh.H"
-#include "mapPolyMesh.H"
-#include "processorPolyPatch.H"
 #include "processorPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -43,7 +41,6 @@ defineTypeNameAndDebug(polyBoundaryMesh, 0);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-// Make identity map.
 labelList polyBoundaryMesh::ident(const label len)
 {
     labelList elems(len);
@@ -57,7 +54,6 @@ labelList polyBoundaryMesh::ident(const label len)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Read constructor given IOobject and a polyMesh reference
 polyBoundaryMesh::polyBoundaryMesh
 (
     const IOobject& io,
@@ -106,7 +102,6 @@ polyBoundaryMesh::polyBoundaryMesh
 }
 
 
-// Construct given size. Patches will be set later
 polyBoundaryMesh::polyBoundaryMesh
 (
     const IOobject& io,
@@ -151,7 +146,6 @@ void Foam::polyBoundaryMesh::clearAddressing()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Calculate the geometry for the patches (transformation tensors etc.)
 void polyBoundaryMesh::calcGeometry()
 {
     forAll(*this, patchi)
@@ -298,7 +292,6 @@ const List<labelPairList>& polyBoundaryMesh::neighbourEdges() const
 }
 
 
-// Return a list of patch names
 wordList polyBoundaryMesh::names() const
 {
     const polyPatchList& patches = *this;
@@ -314,7 +307,6 @@ wordList polyBoundaryMesh::names() const
 }
 
 
-// Return a list of patch types
 wordList polyBoundaryMesh::types() const
 {
     const polyPatchList& patches = *this;
@@ -330,7 +322,6 @@ wordList polyBoundaryMesh::types() const
 }
 
 
-// Return a list of physical types
 wordList polyBoundaryMesh::physicalTypes() const
 {
     const polyPatchList& patches = *this;
@@ -372,7 +363,6 @@ label polyBoundaryMesh::findPatchID(const word& patchName) const
 }
 
 
-// Return patch index for a given face label
 label polyBoundaryMesh::whichPatch(const label faceIndex) const
 {
     // Find out which patch the current face belongs to by comparing label
@@ -449,17 +439,14 @@ bool polyBoundaryMesh::checkParallelSync(const bool report) const
                 // There is processor patch inbetween normal patches.
                 boundaryError = true;
 
-                if (report)
+                if (debug || report)
                 {
-                    WarningIn
-                    (
-                        "polyBoundaryMesh::checkParallelSync(const bool) const"
-                    )   << "Problem with boundary patch " << patchI
+                    Pout<< " ***Problem with boundary patch " << patchI
                         << " named " << bm[patchI].name()
                         << " of type " <<  bm[patchI].type()
-                        << ".\nThe patch seems to be preceeded by processor"
+                        << ". The patch seems to be preceeded by processor"
                         << " patches. This is can give problems."
-                        << nl << endl;
+                        << endl;
                 }
             }
             else
@@ -495,21 +482,19 @@ bool polyBoundaryMesh::checkParallelSync(const bool report) const
         {
             boundaryError = true;
 
-            if (report && Pstream::master())
+            if (debug || report && Pstream::master())
             {
-                WarningIn
-                (
-                    "polyBoundaryMesh::checkParallelSync(const bool) const"
-                )   << "Inconsistent patches across processors." << nl
-                    << "Processor 0 has patch names:" << allNames[0]
-                    << " patch types:" << allTypes[0] << nl
-                    << "Processor " << procI << " has patch names:"
+                Info<< " ***Inconsistent patches across processors, "
+                       "processor 0 has patch names:" << allNames[0]
+                    << " patch types:" << allTypes[0]
+                    << " processor " << procI << " has patch names:"
                     << allNames[procI]
-                    << " patch types:" << allTypes[procI] << nl
+                    << " patch types:" << allTypes[procI]
                     << endl;
             }
         }
     }
+
     return boundaryError;
 }
 
@@ -527,15 +512,12 @@ bool polyBoundaryMesh::checkDefinition(const bool report) const
         {
             boundaryError = true;
 
-            WarningIn
-            (
-                "polyBoundaryMesh::checkDefinition(const bool) const"
-            )   << "Problem with boundary patch " << patchI
+            Info<< " ****Problem with boundary patch " << patchI
                 << " named " << bm[patchI].name()
                 << " of type " <<  bm[patchI].type()
-                << ".\nThe patch should start on face no " << nextPatchStart
+                << ". The patch should start on face no " << nextPatchStart
                 << " and the patch specifies " << bm[patchI].start()
-                << "." << nl << endl;
+                << "." << endl;
         }
 
         nextPatchStart += bm[patchI].size();
@@ -543,26 +525,25 @@ bool polyBoundaryMesh::checkDefinition(const bool report) const
 
     if (boundaryError)
     {
-        SeriousErrorIn
-        (
-            "bool polyBoundaryMesh::checkDefinition("
-            "const bool report) const"
-        )   << "This mesh is not valid: boundary definition is in error."
-            << endl;
+        if (debug || report)
+        {
+            Pout << " ***Boundary definition is in error." << endl;
+        }
+
+        return true;
     }
     else
     {
         if (debug || report)
         {
-            Pout << "Boundary definition OK." << endl;
+            Pout << "    Boundary definition OK." << endl;
         }
-    }
 
-    return boundaryError;
+        return false;
+    }
 }
 
 
-// Correct polyBoundaryMesh after moving points
 void polyBoundaryMesh::movePoints(const pointField& p)
 {
     polyPatchList& patches = *this;
@@ -579,7 +560,6 @@ void polyBoundaryMesh::movePoints(const pointField& p)
 }
 
 
-// Correct polyBoundaryMesh after topology update
 void polyBoundaryMesh::updateMesh()
 {
     deleteDemandDrivenData(neighbourEdgesPtr_);
@@ -598,7 +578,6 @@ void polyBoundaryMesh::updateMesh()
 }
 
 
-// Reorder patch order
 void polyBoundaryMesh::reorder(const UList<label>& oldToNew)
 {
     // Change order of patches

@@ -104,7 +104,7 @@ ddt
 
 
 template<class Type>
-tmp<GeometricField<typename flux<Type>::type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<typename flux<Type>::type, fvsPatchField, surfaceMesh> >
 ddtPhiCorr
 (
     const volScalarField& rA,
@@ -112,7 +112,7 @@ ddtPhiCorr
     const GeometricField
     <
         typename flux<Type>::type,
-        fvPatchField,
+        fvsPatchField,
         surfaceMesh
     >& phi
 )
@@ -126,7 +126,7 @@ ddtPhiCorr
 
 
 template<class Type>
-tmp<GeometricField<typename flux<Type>::type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<typename flux<Type>::type, fvsPatchField, surfaceMesh> >
 ddtPhiCorr
 (
     const volScalarField& rA,
@@ -135,7 +135,7 @@ ddtPhiCorr
     const GeometricField
     <
         typename flux<Type>::type,
-        fvPatchField,
+        fvsPatchField,
         surfaceMesh
     >& phi
 )

@@ -35,8 +35,6 @@ namespace Foam
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 makeWriters(raw);
-makeWriterTypes(sphericalTensorWriter, rawSphericalTensorWriter);
-makeWriterTypes(symmTensorWriter, rawSymmTensorWriter);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

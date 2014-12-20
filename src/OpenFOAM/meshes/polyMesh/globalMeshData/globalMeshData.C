@@ -31,6 +31,7 @@ License
 #include "processorPolyPatch.H"
 #include "demandDrivenData.H"
 #include "globalPoints.H"
+//#include "geomGlobalPoints.H"
 #include "labelIOList.H"
 #include "PackedList.H"
 #include "mergePoints.H"
@@ -45,7 +46,7 @@ namespace Foam
 }
 
 // Geometric matching tolerance. Factor of mesh bounding box.
-const Foam::scalar Foam::globalMeshData::matchTol_ = 1E-10;
+const Foam::scalar Foam::globalMeshData::matchTol_ = 1E-8;
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -469,6 +470,15 @@ Foam::globalMeshData::globalMeshData(const IOobject& io, const polyMesh& mesh)
     processorTopology(mesh.boundaryMesh()),
     mesh_(mesh),
     bb_(mesh.points()),
+    nTotalPoints_(-1),
+    nTotalFaces_(-1),
+    nTotalCells_(-1),
+    processorPatches_(0),
+    processorPatchIndices_(0),
+    processorPatchNeighbours_(0),
+    nGlobalPoints_(-1),
+    sharedPointLabels_(0),
+    sharedPointAddr_(0),
     sharedPointGlobalLabelsPtr_(NULL),
     nGlobalEdges_(-1),
     sharedEdgeLabelsPtr_(NULL),
@@ -714,6 +724,20 @@ void Foam::globalMeshData::updateMesh()
     // Do processor patch addressing
     initProcAddr();
 
+    // Bounding box (does communication)
+    bb_ = boundBox(mesh_.points(), true);
+
+    scalar tolDim = matchTol_*mag(bb_.max() - bb_.min());
+
+    if (debug)
+    {
+        Pout<< "globalMeshData : bb_:" << bb_
+            << " merge dist:" << tolDim << endl;
+    }
+
+
+
+    // Option 1. Topological
     {
         // Calculate all shared points. This does all the hard work.
         globalPoints parallelPoints(mesh_);
@@ -723,17 +747,20 @@ void Foam::globalMeshData::updateMesh()
         sharedPointLabels_ = parallelPoints.sharedPointLabels();
         sharedPointAddr_ = parallelPoints.sharedPointAddr();
     }
-
-    // Bounding box (does communication)
-    bb_ = boundBox(mesh_.points());
-
-    scalar tolDim = matchTol_*mag(bb_.max() - bb_.min());
-
-    if (debug)
-    {
-        Pout<< "globalMeshData : bb_:" << bb_ << " merge dist:" << tolDim << endl;
-    }
-
+    //// Option 2. Geometric
+    //{
+    //    // Calculate all shared points. This does all the hard work.
+    //    geomGlobalPoints parallelPoints(mesh_, tolDim);
+    //
+    //    // Copy data out.
+    //    nGlobalPoints_ = parallelPoints.nGlobalPoints();
+    //    sharedPointLabels_ = parallelPoints.sharedPointLabels();
+    //    sharedPointAddr_ = parallelPoints.sharedPointAddr();
+    //
+    //    nGlobalEdges_ = parallelPoints.nGlobalEdges();
+    //    sharedEdgeLabels_ = parallelPoints.sharedEdgeLabels();
+    //    sharedEdgeAddr_ = parallelPoints.sharedEdgeAddr();
+    //}
 
     // Total number of faces. Start off from all faces. Remove coincident
     // processor faces (on highest numbered processor) before summing.
@@ -909,65 +936,6 @@ void Foam::globalMeshData::updateMesh()
                     << nl;
             }
         }
-
-        // Compare my global data against what I can read from parallelData
-        // file.
-        globalMeshData oldData
-        (
-            IOobject
-            (
-                "parallelData",
-                mesh_.time().findInstance
-                (
-                    mesh_.dbDir()/mesh_.meshSubDir,
-                    "parallelData"
-                ),
-                mesh_.meshSubDir,
-                mesh_,
-                IOobject::MUST_READ,
-                IOobject::NO_WRITE
-            ),
-            mesh_
-        );
-
-        if (oldData.nTotalPoints() != nTotalPoints_)
-        {
-            FatalErrorIn("globalMeshData::updateMesh()")
-                << "nTotalPoints : old:" << oldData.nTotalPoints()
-                << " new:" << nTotalPoints_ << abort(FatalError);
-        }
-        if (oldData.nTotalFaces() != nTotalFaces_)
-        {
-            FatalErrorIn("globalMeshData::updateMesh()")
-                << "nTotalFaces : old:" << oldData.nTotalFaces()
-                << " new:" << nTotalFaces_ << abort(FatalError);
-        }
-        if (oldData.nTotalCells() != nTotalCells_)
-        {
-            FatalErrorIn("globalMeshData::updateMesh()")
-                << "nTotalPoints : old:" << oldData.nTotalCells()
-                << " new:" << nTotalCells_ << abort(FatalError);
-        }
-        if (oldData.nGlobalPoints() != nGlobalPoints_)
-        {
-            FatalErrorIn("globalMeshData::updateMesh()")
-                << "nGlobalPoints : old:" << oldData.nGlobalPoints()
-                << " new:" << nGlobalPoints_ << abort(FatalError);
-        }
-        if (oldData.sharedPointLabels() != sharedPointLabels_)
-        {
-            FatalErrorIn("globalMeshData::updateMesh()")
-                << "sharedPointLabels : old:" << oldData.sharedPointLabels()
-                << " new:" << sharedPointLabels_ << abort(FatalError);
-        }
-        if (oldData.sharedPointAddr() != sharedPointAddr_)
-        {
-            FatalErrorIn("globalMeshData::updateMesh()")
-                << "sharedPointAddr : old:" << oldData.sharedPointAddr()
-                << " new:" << sharedPointAddr_ << abort(FatalError);
-        }
-        // Cannot compare sharedPointGlobalLabels easily.
-
     }
 }
 

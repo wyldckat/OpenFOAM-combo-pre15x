@@ -52,27 +52,27 @@ namespace Foam
 namespace fvc
 {
     template<class Type>
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > snGrad
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > snGrad
     (
         const GeometricField<Type, fvPatchField, volMesh>&,
         const word& name
     );
 
     template<class Type>
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > snGrad
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > snGrad
     (
         const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
         const word& name
     );
 
     template<class Type>
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > snGrad
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > snGrad
     (
         const GeometricField<Type, fvPatchField, volMesh>&
     );
 
     template<class Type>
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > snGrad
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > snGrad
     (
         const tmp<GeometricField<Type, fvPatchField, volMesh> >&
     );

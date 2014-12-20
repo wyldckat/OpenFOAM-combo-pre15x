@@ -3,7 +3,6 @@
 currDir=`pwd`
 application=`basename $currDir`
 cases="shockTube forwardStep"
-utility=setShock
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/RunFunctions
@@ -13,8 +12,7 @@ do
     runApplication blockMesh $case
 #
     if [ "$case" = "shockTube" ] ; then
-        compileApplication $case $utility
-        runApplication $utility $case
+        runApplication setFields $case
     fi
 #
     runApplication $application $case

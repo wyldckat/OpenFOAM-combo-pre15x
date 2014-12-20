@@ -212,11 +212,13 @@ public:
         void addResistance(fvVectorMatrix& UEqn) const;
 
         //- Add the viscous and inertial resistance force contribution
-        //  to the tensorial diagonal
+        //  to the tensorial diagonal.
+        //  Optionally correct the processor BCs of AU.
         void addResistance
         (
             const fvVectorMatrix& UEqn,
-            volTensorField& AU
+            volTensorField& AU,
+            bool correctAUpBC = true
         ) const;
 
         //- Write the porousZone dictionary

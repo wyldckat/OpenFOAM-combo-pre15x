@@ -27,8 +27,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "triSurface.H"
-#include <fstream>
-#include <sstream>
+#include "IFstream.H"
 #include "IStringStream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -40,7 +39,7 @@ namespace Foam
 
 bool triSurface::readOBJ(const fileName& OBJfileName)
 {
-    std::ifstream OBJfile(OBJfileName.c_str());
+    IFstream OBJfile(OBJfileName);
 
     if (!OBJfile.good())
     {
@@ -58,12 +57,12 @@ bool triSurface::readOBJ(const fileName& OBJfileName)
 
     while (OBJfile.good())
     {
-        string line = getLine(OBJfile);
+        string line = getLineNoComment(OBJfile);
 
         if (line[line.size()-1] == '\\')
         {
             line.substr(0, line.size()-1);
-            line += getLine(OBJfile);
+            line += getLineNoComment(OBJfile);
         }
 
         // Read first word

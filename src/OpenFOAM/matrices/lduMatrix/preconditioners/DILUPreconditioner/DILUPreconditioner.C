@@ -49,17 +49,27 @@ Foam::DILUPreconditioner::DILUPreconditioner
     lduMatrix::preconditioner(sol),
     rD_(sol.matrix().diag())
 {
-    scalar* __restrict__ rDPtr = rD_.begin();
+    calcReciprocalD(rD_, sol.matrix());
+}
 
-    const label* const __restrict__ uPtr =
-        solver_.matrix().lduAddr().upperAddr().begin();
-    const label* const __restrict__ lPtr =
-        solver_.matrix().lduAddr().lowerAddr().begin();
 
-    const scalar* const __restrict__ upperPtr = solver_.matrix().upper().begin();
-    const scalar* const __restrict__ lowerPtr = solver_.matrix().lower().begin();
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-    register label nFaces = solver_.matrix().upper().size();
+void Foam::DILUPreconditioner::calcReciprocalD
+(
+    scalarField& rD,
+    const lduMatrix& matrix
+)
+{
+    scalar* __restrict__ rDPtr = rD.begin();
+
+    const label* const __restrict__ uPtr = matrix.lduAddr().upperAddr().begin();
+    const label* const __restrict__ lPtr = matrix.lduAddr().lowerAddr().begin();
+
+    const scalar* const __restrict__ upperPtr = matrix.upper().begin();
+    const scalar* const __restrict__ lowerPtr = matrix.lower().begin();
+
+    register label nFaces = matrix.upper().size();
     for (register label face=0; face<nFaces; face++)
     {
         #ifdef ICC_IA64_PREFETCH
@@ -74,12 +84,12 @@ Foam::DILUPreconditioner::DILUPreconditioner
         rDPtr[uPtr[face]] -= upperPtr[face]*lowerPtr[face]/rDPtr[lPtr[face]];
     }
 
+
+    // Calculate the reciprocal of the preconditioned diagonal
+    register label nCells = rD.size();
     #ifdef ICC_IA64_PREFETCH
     #pragma ivdep
     #endif
-
-    // Calculate the reciprocal of the preconditioned diagonal
-    register label nCells = rD_.size();
     for (register label cell=0; cell<nCells; cell++)
     {
         #ifdef ICC_IA64_PREFETCH
@@ -90,8 +100,6 @@ Foam::DILUPreconditioner::DILUPreconditioner
     }
 }
 
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void Foam::DILUPreconditioner::precondition
 (
@@ -111,8 +119,10 @@ void Foam::DILUPreconditioner::precondition
     const label* const __restrict__ losortPtr =
         solver_.matrix().lduAddr().losortAddr().begin();
 
-    const scalar* const __restrict__ upperPtr = solver_.matrix().upper().begin();
-    const scalar* const __restrict__ lowerPtr = solver_.matrix().lower().begin();
+    const scalar* const __restrict__ upperPtr =
+        solver_.matrix().upper().begin();
+    const scalar* const __restrict__ lowerPtr =
+        solver_.matrix().lower().begin();
 
     register label nCells = wA.size();
     register label nFaces = solver_.matrix().upper().size();
@@ -133,24 +143,13 @@ void Foam::DILUPreconditioner::precondition
         wAPtr[cell] = rDPtr[cell]*rAPtr[cell];
     }
 
-    #ifdef ICC_IA64_PREFETCH
-    #pragma noprefetch uPtr,lPtr,upperPtr,rDPtr,wAPtr
-    #pragma nounroll
-    #endif
 
     register label sface;
+    #ifdef ICC_IA64_PREFETCH
+    #pragma nounroll
+    #endif
     for (register label face=0; face<nFaces; face++)
     {
-        #ifdef ICC_IA64_PREFETCH
-        __builtin_prefetch (&uPtr[face+96],0,0);
-        __builtin_prefetch (&lPtr[face+96],0,0);
-        __builtin_prefetch (&losortPtr[face+96],0,0);
-        __builtin_prefetch (&lowerPtr[face+96],0,1);
-        __builtin_prefetch (&rDPtr[uPtr[face+32]],0,1);
-        __builtin_prefetch (&wAPtr[uPtr[face+32]],0,1); 
-        __builtin_prefetch (&wAPtr[lPtr[face+32]],0,1);
-        #endif
-
         sface = losortPtr[face];
         wAPtr[uPtr[sface]] -=
             rDPtr[uPtr[sface]]*lowerPtr[sface]*wAPtr[lPtr[sface]];
@@ -202,8 +201,10 @@ void Foam::DILUPreconditioner::preconditionT
     const label* const __restrict__ losortPtr =
         solver_.matrix().lduAddr().losortAddr().begin();
 
-    const scalar* const __restrict__ upperPtr = solver_.matrix().upper().begin();
-    const scalar* const __restrict__ lowerPtr = solver_.matrix().lower().begin();
+    const scalar* const __restrict__ upperPtr =
+        solver_.matrix().upper().begin();
+    const scalar* const __restrict__ lowerPtr =
+        solver_.matrix().lower().begin();
 
     register label nCells = wT.size();
     register label nFaces = solver_.matrix().upper().size();
@@ -234,7 +235,6 @@ void Foam::DILUPreconditioner::preconditionT
         #ifdef ICC_IA64_PREFETCH
         __builtin_prefetch (&uPtr[face+96],0,0);
         __builtin_prefetch (&lPtr[face+96],0,0);
-        __builtin_prefetch (&losortPtr[face+96],0,0);
         __builtin_prefetch (&upperPtr[face+96],0,1);
         __builtin_prefetch (&rDPtr[uPtr[face+32]],0,1);
         __builtin_prefetch (&wTPtr[lPtr[face+32]],0,1);
@@ -245,30 +245,13 @@ void Foam::DILUPreconditioner::preconditionT
             rDPtr[uPtr[face]]*upperPtr[face]*wTPtr[lPtr[face]];
     }
 
-    #ifdef ICC_IA64_PREFETCH
-    #pragma noprefetch uPtr,lPtr,rDPtr,wTPtr
-    #pragma nounroll
-    #endif
 
     register label sface;
+    #ifdef ICC_IA64_PREFETCH
+    #pragma nounroll
+    #endif
     for (register label face=nFacesM1; face>=0; face--)
     {
-        #ifdef ICC_IA64_PREFETCH
-        __builtin_prefetch (&uPtr[face-95],0,0);
-        __builtin_prefetch (&lPtr[face-95],0,0);
-        __builtin_prefetch (&losortPtr[face-95],0,0);
-        __builtin_prefetch (&lowerPtr[face-95],0,1);
-        __builtin_prefetch (&rDPtr[lPtr[face-16]],0,1);
-        __builtin_prefetch (&wTPtr[lPtr[face-16]],0,1);
-        __builtin_prefetch (&wTPtr[uPtr[face-16]],0,1);
-        __builtin_prefetch (&rDPtr[lPtr[face-24]],0,1);
-        __builtin_prefetch (&wTPtr[lPtr[face-24]],0,1);
-        __builtin_prefetch (&wTPtr[uPtr[face-24]],0,1);
-        __builtin_prefetch (&rDPtr[lPtr[face-32]],0,1);
-        __builtin_prefetch (&wTPtr[lPtr[face-32]],0,1);
-        __builtin_prefetch (&wTPtr[uPtr[face-32]],0,1);
-        #endif
-
         sface = losortPtr[face];
         wTPtr[lPtr[sface]] -=
             rDPtr[lPtr[sface]]*lowerPtr[sface]*wTPtr[uPtr[sface]];

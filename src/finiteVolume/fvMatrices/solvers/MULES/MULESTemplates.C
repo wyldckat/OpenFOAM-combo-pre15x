@@ -22,7 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "MULES.H"
 #include "upwind.H"
@@ -43,7 +43,7 @@ template<class SpType, class SuType>
 void Foam::MULES::explicitSolve
 (
     volScalarField& psi,
-    const surfaceScalarField& phiBD,
+    const surfaceScalarField& phi,
     surfaceScalarField& phiPsi,
     const SpType& Sp,
     const SuType& Su,
@@ -54,6 +54,8 @@ void Foam::MULES::explicitSolve
     Info<< "MULES: Solving for " << psi.name() << endl;
 
     const fvMesh& mesh = psi.mesh();
+
+    surfaceScalarField phiBD = upwind<scalar>(psi.mesh(), phi).flux(psi);
 
     surfaceScalarField& phiCorr = phiPsi;
     phiCorr -= phiBD;
@@ -120,9 +122,7 @@ void Foam::MULES::explicitSolve01
     //psi.max(psiMin);
     //psi.min(psiMax);
 
-    surfaceScalarField phiUD = upwind<scalar>(psi.mesh(), phi).flux(psi);
-
-    explicitSolve(psi, phiUD, phiPsi, Sp, Su, psiMax, psiMin);
+    explicitSolve(psi, phi, phiPsi, Sp, Su, psiMax, psiMin);
 }
 
 
@@ -482,7 +482,7 @@ void Foam::MULES::limiter
 
         forAll(lambdaBf, patchi)
         {
-            fvPatchScalarField& lambdaPf = lambdaBf[patchi];
+            fvsPatchScalarField& lambdaPf = lambdaBf[patchi];
             const scalarField& phiCorrfPf = phiCorrBf[patchi];
 
             const labelList& pFaceCells = mesh.boundary()[patchi].faceCells();

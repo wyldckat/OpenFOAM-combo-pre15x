@@ -337,10 +337,10 @@ int main(int argc, char *argv[])
          && cellIter()[6] == cellIter()[7]
         )
         {
-            labelsTet[0] = pointMap[cellIter()[0]];
-            labelsTet[1] = pointMap[cellIter()[1]];
-            labelsTet[2] = pointMap[cellIter()[2]];
-            labelsTet[3] = pointMap[cellIter()[4]];
+            labelsTet[0] = pointMap[cellIter()[0] ];
+            labelsTet[1] = pointMap[cellIter()[1] ];
+            labelsTet[2] = pointMap[cellIter()[2] ];
+            labelsTet[3] = pointMap[cellIter()[4] ];
 
             cellShapes[nCells++] = cellShape(tet, labelsTet);
         }
@@ -352,11 +352,11 @@ int main(int argc, char *argv[])
          && cellIter()[6] == cellIter()[7]
         )
         {
-            labelsPyramid[0] = pointMap[cellIter()[0]];
-            labelsPyramid[1] = pointMap[cellIter()[1]];
-            labelsPyramid[2] = pointMap[cellIter()[2]];
-            labelsPyramid[3] = pointMap[cellIter()[3]];
-            labelsPyramid[4] = pointMap[cellIter()[4]];
+            labelsPyramid[0] = pointMap[cellIter()[0] ];
+            labelsPyramid[1] = pointMap[cellIter()[1] ];
+            labelsPyramid[2] = pointMap[cellIter()[2] ];
+            labelsPyramid[3] = pointMap[cellIter()[3] ];
+            labelsPyramid[4] = pointMap[cellIter()[4] ];
 
             cellShapes[nCells++] = cellShape(pyr, labelsPyramid);
         }
@@ -367,26 +367,26 @@ int main(int argc, char *argv[])
          && cellIter()[6] == cellIter()[7]
         )
         {
-            labelsPrism[0] = pointMap[cellIter()[0]];
-            labelsPrism[1] = pointMap[cellIter()[1]];
-            labelsPrism[2] = pointMap[cellIter()[2]];
-            labelsPrism[3] = pointMap[cellIter()[4]];
-            labelsPrism[4] = pointMap[cellIter()[5]];
-            labelsPrism[5] = pointMap[cellIter()[6]];
+            labelsPrism[0] = pointMap[cellIter()[0] ];
+            labelsPrism[1] = pointMap[cellIter()[1] ];
+            labelsPrism[2] = pointMap[cellIter()[2] ];
+            labelsPrism[3] = pointMap[cellIter()[4] ];
+            labelsPrism[4] = pointMap[cellIter()[5] ];
+            labelsPrism[5] = pointMap[cellIter()[6] ];
 
             cellShapes[nCells++] = cellShape(prism, labelsPrism);
         }
 
         else // Hex
         {
-            labelsHex[0] = pointMap[cellIter()[0]];
-            labelsHex[1] = pointMap[cellIter()[1]];
-            labelsHex[2] = pointMap[cellIter()[2]];
-            labelsHex[3] = pointMap[cellIter()[3]];
-            labelsHex[4] = pointMap[cellIter()[4]];
-            labelsHex[5] = pointMap[cellIter()[5]];
-            labelsHex[6] = pointMap[cellIter()[6]];
-            labelsHex[7] = pointMap[cellIter()[7]];
+            labelsHex[0] = pointMap[cellIter()[0] ];
+            labelsHex[1] = pointMap[cellIter()[1] ];
+            labelsHex[2] = pointMap[cellIter()[2] ];
+            labelsHex[3] = pointMap[cellIter()[3] ];
+            labelsHex[4] = pointMap[cellIter()[4] ];
+            labelsHex[5] = pointMap[cellIter()[5] ];
+            labelsHex[6] = pointMap[cellIter()[6] ];
+            labelsHex[7] = pointMap[cellIter()[7] ];
 
             cellShapes[nCells++] = cellShape(hex, labelsHex);
         }
@@ -427,10 +427,10 @@ int main(int argc, char *argv[])
         {
             patchFaces.append
             (
-                cellShapes[cellMap[cellIter()]].faces()
+                cellShapes[cellMap[cellIter()] ].faces()
                 [
                     faceIndex
-                        [cellShapes[cellMap[cellIter()]].nFaces()]
+                        [cellShapes[cellMap[cellIter()] ].nFaces()]
                         [faceIter()-1]
                 ]
             );
@@ -480,9 +480,6 @@ int main(int argc, char *argv[])
         defaultFacesType,
         patchPhysicalTypes
     );
-
-    Info << "Checking mesh" << endl;
-    pShapeMesh.checkMesh();
 
     // Set the precision of the points data to 10
     IOstream::defaultPrecision(10);

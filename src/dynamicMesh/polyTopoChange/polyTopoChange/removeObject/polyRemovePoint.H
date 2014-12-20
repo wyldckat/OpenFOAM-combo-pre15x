@@ -54,6 +54,9 @@ class polyRemovePoint
         //- Point ID
         label pointID_;
 
+        //- Merge point ID or -1
+        label mergePointID_;
+
 
 public:
 
@@ -68,13 +71,15 @@ public:
         //- Construct null.  Used for constructing lists
         polyRemovePoint()
         :
-            pointID_(-1)
+            pointID_(-1),
+            mergePointID_(-1)
         {}
 
         //- Construct from components
-        polyRemovePoint(const label pointID)
+        polyRemovePoint(const label pointID, const label mergePointID = -1)
         :
-            pointID_(pointID)
+            pointID_(pointID),
+            mergePointID_(mergePointID)
         {}
 
         //- Construct and return a clone
@@ -93,6 +98,11 @@ public:
         label pointID() const
         {
             return pointID_;
+        }
+
+        label mergePointID() const
+        {
+            return mergePointID_;
         }
 };
 

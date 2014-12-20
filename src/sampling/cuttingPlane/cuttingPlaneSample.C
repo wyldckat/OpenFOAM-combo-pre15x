@@ -34,13 +34,10 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<Field<Type> > cuttingPlane::sample
+Foam::tmp<Foam::Field<Type> > Foam::cuttingPlane::sample
 (
     const Field<Type>& sf
 ) const
@@ -50,7 +47,7 @@ tmp<Field<Type> > cuttingPlane::sample
 
 
 template<class Type>
-tmp<Field<Type> > cuttingPlane::sample
+Foam::tmp<Foam::Field<Type> > Foam::cuttingPlane::sample
 (
     const tmp<Field<Type> >& tsf
 ) const
@@ -59,10 +56,5 @@ tmp<Field<Type> > cuttingPlane::sample
     tsf.clear();
     return tint;
 }
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

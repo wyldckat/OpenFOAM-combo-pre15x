@@ -49,13 +49,11 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyMesh.H"
-#include "directPolyTopoChange.H"
 #include "polyTopoChange.H"
-#include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
 #include "boundaryCutter.H"
 #include "cellSplitter.H"
-#include "directEdgeCollapser.H"
+#include "edgeCollapser.H"
 #include "meshTools.H"
 #include "Pair.H"
 
@@ -534,11 +532,7 @@ int main(int argc, char *argv[])
         cutter.setRefinement(cellToPyrCentre, meshMod);
 
         // Do changes
-        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
-        (
-            mesh,
-            meshMod
-        );
+        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh, false);
 
         if (morphMap().hasMotionPoints())
         {
@@ -558,7 +552,7 @@ int main(int argc, char *argv[])
         Info<< nl << "All input edges located. Modifying mesh." << endl;
 
         // Mesh change engine
-        directEdgeCollapser cutter(mesh);
+        edgeCollapser cutter(mesh);
 
         pointField newPoints(mesh.points());
 
@@ -576,7 +570,7 @@ int main(int argc, char *argv[])
         mesh.movePoints(newPoints);
 
         // Topo change container
-        directPolyTopoChange meshMod(mesh);
+        polyTopoChange meshMod(mesh);
 
         // Insert 
         cutter.setRefinement(meshMod);
@@ -620,11 +614,7 @@ int main(int argc, char *argv[])
         );
 
         // Do changes
-        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
-        (
-            mesh,
-            meshMod
-        );
+        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh, false);
 
         if (morphMap().hasMotionPoints())
         {

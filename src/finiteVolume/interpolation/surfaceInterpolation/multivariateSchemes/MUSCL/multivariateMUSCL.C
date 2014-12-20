@@ -38,24 +38,6 @@ namespace Foam
         MUSCL,
         MUSCLLimiter
     )
-
-    makeLLimitedMultivariateSurfaceInterpolationScheme
-    (
-        LimitedMUSCL,
-        LimitedLimiter,
-        MUSCLLimiter,
-        NVDTVD,
-        magSqr
-    )
-
-    makeLLimitedMultivariateSurfaceInterpolationScheme
-    (
-        MUSCL01,
-        Limited01Limiter,
-        MUSCLLimiter,
-        NVDTVD,
-        magSqr
-    )
 }
 
 // ************************************************************************* //

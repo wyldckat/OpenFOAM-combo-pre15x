@@ -33,6 +33,7 @@ Description
 #include "polyAddFace.H"
 #include "polyAddPoint.H"
 #include "polyModifyFace.H"
+#include "polyModifyPoint.H"
 #include "mapPolyMesh.H"
 #include "meshTools.H"
 
@@ -862,7 +863,7 @@ void Foam::boundaryCutter::updateMesh(const mapPolyMesh& morphMap)
 
             label newPointI = morphMap.reversePointMap()[oldPointI];
 
-            if (newFaceI != -1 && newPointI != -1)
+            if (newFaceI >= 0 && newPointI >= 0)
             {
                 newAddedPoints.insert(newFaceI, newPointI);
             }
@@ -897,7 +898,7 @@ void Foam::boundaryCutter::updateMesh(const mapPolyMesh& morphMap)
 
             label newEnd = morphMap.reversePointMap()[e.end()];
 
-            if (newStart != -1 && newEnd != -1)
+            if (newStart >= 0 && newEnd >= 0)
             {
                 const labelList& addedPoints = iter();
 
@@ -909,7 +910,7 @@ void Foam::boundaryCutter::updateMesh(const mapPolyMesh& morphMap)
                     label newAddedPointI =
                         morphMap.reversePointMap()[addedPoints[i]];
 
-                    if (newAddedPointI != -1)
+                    if (newAddedPointI >= 0)
                     {
                         newAddedPoints[newI++] = newAddedPointI;
                     }

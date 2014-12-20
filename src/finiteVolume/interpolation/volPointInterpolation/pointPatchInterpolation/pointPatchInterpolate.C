@@ -28,8 +28,8 @@ License
 #include "volFields.H"
 #include "pointFields.H"
 #include "emptyFvPatch.H"
-#include "ValuePointPatchField.H"
-#include "CoupledPointPatchField.H"
+#include "valuePointPatchField.H"
+#include "coupledPointPatchField.H"
 #include "coupledPointPatch.H"
 #include "transform.H"
 
@@ -78,26 +78,10 @@ void pointPatchInterpolation::interpolate
             if
             (
                 overrideFixedValue
-             && isA
-                <
-                    ValuePointPatchField
-                    <
-                        pointPatchField,
-                        pointPatch,
-                        Type
-                    >
-                >(ppf)
+             && isA<valuePointPatchField<Type> >(ppf)
             )
             {
-                refCast
-                <
-                    ValuePointPatchField
-                    <
-                        pointPatchField,
-                        pointPatch,
-                        Type
-                    >
-                >(ppf) = ppf;
+                refCast<valuePointPatchField<Type> >(ppf) = ppf;
             }
         }
     }
@@ -124,7 +108,7 @@ void pointPatchInterpolation::interpolate
                 label patchi =
                     fvMesh_.boundaryMesh().whichPatch(curFaces[facei]);
 
-                if (!isA<emptyFvPatch>(fvMesh_.boundary()[patchi]))
+                if (!isA<emptyFvPatch>(bm[patchi]) && !bm[patchi].coupled())
                 {
                     label faceInPatchi =
                         bm[patchi].patch().whichFace(curFaces[facei]);
@@ -145,16 +129,8 @@ void pointPatchInterpolation::interpolate
     {
         if (pf.boundaryField()[patchi].coupled())
         {
-            refCast
-            <
-                CoupledPointPatchField
-                <
-                    pointPatchField,
-                    pointPatch,
-                    coupledPointPatch,
-                    Type
-                >
-            >(pf.boundaryField()[patchi]).initSwapAdd(pf.internalField());
+            refCast<coupledPointPatchField<Type> >(pf.boundaryField()[patchi])
+                .initSwapAdd(pf.internalField());
         }
     }
 
@@ -162,16 +138,8 @@ void pointPatchInterpolation::interpolate
     {
         if (pf.boundaryField()[patchi].coupled())
         {
-            refCast
-            <
-                CoupledPointPatchField
-                <
-                    pointPatchField,
-                    pointPatch,
-                    coupledPointPatch,
-                    Type
-                >
-            >(pf.boundaryField()[patchi]).swapAdd(pf.internalField());
+            refCast<coupledPointPatchField<Type> >(pf.boundaryField()[patchi])
+                .swapAdd(pf.internalField());
         }
     }
 

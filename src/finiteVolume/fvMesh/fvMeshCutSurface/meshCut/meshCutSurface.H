@@ -114,7 +114,9 @@ class meshCutSurface
         //  from both sides)
         static triSurface removeDuplicates(const triSurface& surf);
 
+
 public:
+
         //- Generic tet cutting routine.
         //  Generate triangles given the cut vertices and edges of the tet.
         //  (Triangles can be incorrectly oriented)
@@ -153,12 +155,13 @@ public:
             label& triI
         );
 
+
     // Static functions
 
         //- Interpolate onto points given edge weights, cell centre values,
         //  face centre values and vertex values
         template <class T>
-        static Field<T> interpolate
+        static tmp<Field<T> > interpolate
         (
             const faceDecompCuts& cuts,
             const Field<T>& vField,
@@ -169,7 +172,7 @@ public:
         //- Interpolate onto points given edge weights, cell centre values,
         //  and vertex values
         template <class T>
-        static Field<T> interpolate
+        static tmp<Field<T> > interpolate
         (
             const cellDecompCuts& cuts,
             const Field<T>& vField,

@@ -22,11 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    select
-
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "interpolation.H"
@@ -34,48 +29,47 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 template<class Type>
-autoPtr<interpolation<Type> > interpolation<Type>::New
+Foam::autoPtr<Foam::interpolation<Type> >
+Foam::interpolation<Type>::New
 (
-    const dictionary& interpolationSchemes,
+    const word& interpolationType,
     const volPointInterpolation& pInterp,
     const GeometricField<Type, fvPatchField, volMesh>& psi
 )
 {
-    word interpolationType
-    (
-        interpolationSchemes.lookup(psi.name())
-    );
-
     typename dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_
             ->find(interpolationType);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        FatalIOErrorIn
+        FatalErrorIn
         (
-            "interpolation::New(const dictionary&, "
-            "const GeometricField<Type, fvPatchField, volMesh>&)",
-            interpolationSchemes
+            "interpolation::New(const word&, "
+            "const GeometricField<Type, fvPatchField, volMesh>&)"
         )   << "Unknown interpolation type " << interpolationType
-            << endl << endl
+            << " for field " << psi.name() << nl << nl
             << "Valid interpolation types : " << endl
             << dictionaryConstructorTablePtr_->toc()
-            << exit(FatalIOError);
+            << exit(FatalError);
     }
 
     return autoPtr<interpolation<Type> >(cstrIter()(pInterp, psi));
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class Type>
+Foam::autoPtr<Foam::interpolation<Type> >
+Foam::interpolation<Type>::New
+(
+    const dictionary& interpolationSchemes,
+    const volPointInterpolation& pInterp,
+    const GeometricField<Type, fvPatchField, volMesh>& psi
+)
+{
+    return New(word(interpolationSchemes.lookup(psi.name())), pInterp, psi);
+}
 
-} // End namespace Foam
 
 // ************************************************************************* //

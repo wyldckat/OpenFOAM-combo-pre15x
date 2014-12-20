@@ -55,8 +55,8 @@ class EulerCoordinateRotation
 {
     // Private member functions
 
-        //- Calculate transformation tensors
-        virtual void calcTransformations
+        //- Calculate transformation tensor
+        void calcTransform
         (
             const scalar phiAngle,
             const scalar thetaAngle,
@@ -72,6 +72,9 @@ public:
 
 
     // Constructors
+
+        //- Construct null
+        EulerCoordinateRotation();
 
         //- Construct from rotation vector
         EulerCoordinateRotation
@@ -92,11 +95,6 @@ public:
         //- Construct from dictionary
         EulerCoordinateRotation(const dictionary&);
 
-
-    // Destructor
-
-        virtual ~EulerCoordinateRotation()
-        {}
 };
 
 

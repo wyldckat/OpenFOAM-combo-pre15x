@@ -33,7 +33,7 @@ Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
 (
     const word& coordType,
     const word& name,
-    const vector& origin,
+    const point& origin,
     const vector& axis,
     const vector& dir
 )
@@ -70,7 +70,7 @@ Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
 (
     const word& coordType,
     const word& name,
-    const vector& origin,
+    const point& origin,
     const coordinateRotation& cr
 )
 {
@@ -115,11 +115,17 @@ Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
             << endl;
     }
 
-    // default type is cartesian
-    word coordType("cartesian");
+    // default type is self
+    word coordType(typeName_());
     if (dict.found("type"))
     {
 	dict.lookup("type") >> coordType;
+    }
+
+    // can (must) construct base class directly
+    if (coordType == typeName_())
+    {
+        return autoPtr<coordinateSystem>(new coordinateSystem(name, dict));
     }
 
     dictionaryConstructorTable::iterator cstrIter =
@@ -131,8 +137,9 @@ Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
         (
             "coordinateSystem::New(const word&, const dictionary&)",
             dict
-        )   << "Unknown coordinateSystem type " << coordType << endl << endl
-            << "Valid coordinateSystem types are :" << endl
+        )   << "Unknown coordinateSystem type " << coordType << nl << nl
+            << "Valid coordinateSystem types are :" << nl
+            << "[default: " << typeName_() << "]"
             << dictionaryConstructorTablePtr_->toc()
             << exit(FatalIOError);
     }
@@ -140,5 +147,16 @@ Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
     return autoPtr<coordinateSystem>(cstrIter()(name, dict));
 }
 
+
+Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
+(
+    Istream& is
+)
+{
+    word name(is);
+    dictionary dict(is);
+
+    return New(name, dict);
+}
 
 // ************************************************************************* //

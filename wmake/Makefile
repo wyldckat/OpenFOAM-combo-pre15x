@@ -47,7 +47,7 @@ SHELL      = /bin/sh
 # Set the directory containing the wmake scripts
 #------------------------------------------------------------------------------
 
-WM_SCRIPTS   = $(WM_DIR)/$(WM_SHELL)Scripts
+WM_SCRIPTS   = $(WM_DIR)/scripts
 
 
 #------------------------------------------------------------------------------

@@ -68,14 +68,14 @@ class cuttingPlane
         faceList cutFaces_;
 
 
-
     // Private Member Functions
 
-        //- Determine cut cells.
+        //- Determine cut cells, possibly restricted to a list of cells
         void calcCutCells
         (
             const primitiveMesh&,
-            const scalarField& dotProducts
+            const scalarField& dotProducts,
+            const labelList& cellIdLabels = labelList::null()
         );
 
         //- Determine intersection points (cutPoints_).
@@ -104,6 +104,27 @@ class cuttingPlane
         );
 
 
+protected:
+
+    // Constructors
+
+        //- Construct plane description without cutting
+        cuttingPlane(const plane&);
+
+
+    // Protected Member Functions
+
+        //- recut mesh with existing planeDesc
+        void reCut(const primitiveMesh&);
+
+        //- recut mesh with existing planeDesc, restricted to a list of cells
+        void reCut
+        (
+            const primitiveMesh&,
+            const labelList& cellIdLabels
+        );
+
+
 public:
 
     // Constructors
@@ -111,8 +132,20 @@ public:
         //- Construct from components: Mesh reference and plane
         cuttingPlane(const primitiveMesh&, const plane&);
 
+        //- Construct from mesh reference and plane,
+        //  restricted to a list of cells
+        cuttingPlane
+        (
+            const primitiveMesh&,
+            const plane&,
+            const labelList& cellIdLabels
+        );
+
 
     // Member Functions
+
+        //- Return plane used
+        const plane& planeDesc() const;
 
         //- Return pointField of cutting points
         const pointField& points() const;
@@ -137,7 +170,6 @@ public:
     // Member Operators
 
         void operator=(const cuttingPlane&);
-
 };
 
 

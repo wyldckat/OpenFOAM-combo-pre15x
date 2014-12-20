@@ -46,8 +46,6 @@ Foam::vtkMesh::vtkMesh
     baseMesh_(baseMesh),
     subsetter_(baseMesh),
     setName_(setName),
-    cMapPtr_(NULL),
-    pMapPtr_(NULL),
     topoPtr_(NULL)
 {
     if (setName.size() > 0)
@@ -65,8 +63,6 @@ Foam::vtkMesh::vtkMesh
 
 Foam::vtkMesh::~vtkMesh()
 {
-    deleteDemandDrivenData(cMapPtr_);
-    deleteDemandDrivenData(pMapPtr_);
     deleteDemandDrivenData(topoPtr_);
 }
 
@@ -82,8 +78,6 @@ Foam::polyMesh::readUpdateState Foam::vtkMesh::readUpdate()
         // Note: since fvMeshSubset has no movePoints() functionality reconstruct
         // the subset even if only movement.
 
-        deleteDemandDrivenData(cMapPtr_);
-        deleteDemandDrivenData(pMapPtr_);
         deleteDemandDrivenData(topoPtr_);
 
         if (setName_.size() > 0)

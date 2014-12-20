@@ -30,6 +30,7 @@ Description
 #include "STLtriangle.H"
 #include "IFstream.H"
 #include "OSspecific.H"
+#include "gzstream.h"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -40,12 +41,25 @@ namespace Foam
 
 bool triSurface::readSTLBINARY(const fileName& STLfileName)
 {
-    ifstream STLfile(STLfileName.c_str(), std::ios::binary);
+    bool compressed = false;
+
+    autoPtr<istream> STLfilePtr
+    (
+        new ifstream(STLfileName.c_str(), std::ios::binary)
+    );
+    // If the file is compressed, decompress it before reading.
+    if (!STLfilePtr->good() && file(STLfileName + ".gz"))
+    {
+        compressed = true;
+        STLfilePtr.reset(new igzstream((STLfileName + ".gz").c_str()));
+    }
+    istream& STLfile = STLfilePtr();
 
     if (!STLfile.good())
     {
         FatalErrorIn("triSurface::readSTLBINARY(const fileName&)")
             << "Cannot read file " << STLfileName
+            << " or file " << STLfileName + ".gz"
             << exit(FatalError);
     }
 
@@ -73,13 +87,15 @@ bool triSurface::readSTLBINARY(const fileName& STLfileName)
 
     // Compare the size of the file with that expected from the number of tris
     // If the comparison is not sensible then it maybe an ASCII file
-    label triDataSize = Foam::size(STLfileName) - 80;
-
-    if (nTris < triDataSize/50 || nTris > triDataSize/25)
+    if (!compressed)
     {
-        return false;
-    }
+        label triDataSize = Foam::size(STLfileName) - 80;
 
+        if (nTris < triDataSize/50 || nTris > triDataSize/25)
+        {
+            return false;
+        }
+    }
 
     // Everything OK so go ahead and read the triangles.
 
@@ -111,7 +127,7 @@ bool triSurface::readSTLBINARY(const fileName& STLfileName)
         operator[](i).region() = stlTri.region();
     }
 
-    STLfile.close();
+    //STLfile.close();
 
     stitchTriangles(rawPoints);
 

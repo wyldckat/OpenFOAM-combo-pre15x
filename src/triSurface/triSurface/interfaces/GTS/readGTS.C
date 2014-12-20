@@ -27,8 +27,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "triSurface.H"
-#include <fstream>
-#include <sstream>
+#include "IFstream.H"
 #include "IStringStream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -36,26 +35,11 @@ Description
 namespace Foam
 {
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-string triSurface::getLine(std::ifstream& is)
-{
-    string line;
-    do
-    {
-        std::getline(is, line);
-    }
-    while((line.size() == 0 || line[0] == '#') && is.good());
-
-    return line;
-}
-
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 bool triSurface::readGTS(const fileName& GTSfileName)
 {
-    std::ifstream GTSfile(GTSfileName.c_str());
+    IFstream GTSfile(GTSfileName);
 
     if (!GTSfile.good())
     {
@@ -67,7 +51,7 @@ bool triSurface::readGTS(const fileName& GTSfileName)
     // Read header
     label nPoints, nEdges, nElems;
 
-    string line = getLine(GTSfile);
+    string line = getLineNoComment(GTSfile);
     {
         IStringStream lineStream(line);
         lineStream >> nPoints >> nEdges >> nElems;
@@ -80,7 +64,7 @@ bool triSurface::readGTS(const fileName& GTSfileName)
     forAll(points_, pointi)
     {
         scalar x, y, z;
-        line = getLine(GTSfile);
+        line = getLineNoComment(GTSfile);
         {
             IStringStream lineStream(line);
             lineStream >> x >> y >> z;
@@ -93,7 +77,7 @@ bool triSurface::readGTS(const fileName& GTSfileName)
     forAll(edges, edgei)
     {
         label start, end;
-        line = getLine(GTSfile);
+        line = getLineNoComment(GTSfile);
         {
             IStringStream lineStream(line);
             lineStream >> start >> end;
@@ -106,9 +90,9 @@ bool triSurface::readGTS(const fileName& GTSfileName)
     forAll(*this, trianglei)
     {
         label e0Label, e1Label, e2Label;
-        label region = -1;
+        label region = 0;
 
-        line = getLine(GTSfile);
+        line = getLineNoComment(GTSfile);
         {
             IStringStream lineStream(line);
             lineStream >> e0Label >> e1Label >> e2Label;

@@ -28,6 +28,9 @@ License
 #include "Time.H"
 #include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
+#include "polyAddPoint.H"
+#include "polyAddCell.H"
+#include "polyAddFace.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -422,7 +425,8 @@ void Foam::mergePolyMesh::merge()
 
     }
 
-    polyTopoChanger::changeMesh(*this, meshMod_);
+    // Change mesh. No inflation
+    meshMod_.changeMesh(*this, false);
 
     // Clear topo change for the next operation
     meshMod_.clear();

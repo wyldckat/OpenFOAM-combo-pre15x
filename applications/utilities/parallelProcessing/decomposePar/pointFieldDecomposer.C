@@ -40,7 +40,7 @@ pointFieldDecomposer::patchFieldDecomposer::patchFieldDecomposer
     const labelList& directAddr
 )
 :
-    PointPatchFieldMapperPatchRef<pointPatch>
+    pointPatchFieldMapperPatchRef
     (
         completeMeshPatch,
         procMeshPatch

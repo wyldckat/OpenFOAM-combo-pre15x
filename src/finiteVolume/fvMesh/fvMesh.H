@@ -177,7 +177,8 @@ public:
             const pointField& points,
             const faceList& faces,
             const labelList& allOwner,
-            const labelList& allNeighbour
+            const labelList& allNeighbour,
+            const bool syncPar = true
         );
 
         //- Construct from components with cells rather than owner
@@ -188,7 +189,8 @@ public:
             const IOobject& io,
             const pointField& points,
             const faceList& faces,
-            const cellList& cells
+            const cellList& cells,
+            const bool syncPar = true
         );
 
 

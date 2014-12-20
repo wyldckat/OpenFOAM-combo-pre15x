@@ -31,7 +31,7 @@ License
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
-Foam::tmp<Foam::GeometricField<Type, Foam::fvPatchField, Foam::surfaceMesh> >
+Foam::tmp<Foam::GeometricField<Type, Foam::fvsPatchField, Foam::surfaceMesh> >
 Foam::linearUpwind<Type>::correction
 (
     const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -39,9 +39,9 @@ Foam::linearUpwind<Type>::correction
 {
     const fvMesh& mesh = this->mesh();
 
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tsfCorr
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tsfCorr
     (
-        new GeometricField<Type, fvPatchField, surfaceMesh>
+        new GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             IOobject
             (
@@ -57,7 +57,7 @@ Foam::linearUpwind<Type>::correction
         )
     );
 
-    GeometricField<Type, fvPatchField, surfaceMesh>& sfCorr = tsfCorr();
+    GeometricField<Type, fvsPatchField, surfaceMesh>& sfCorr = tsfCorr();
 
     const surfaceScalarField& faceFlux = this->faceFlux_;
 
@@ -86,12 +86,12 @@ Foam::linearUpwind<Type>::correction
     }
 
 
-    typename GeometricField<Type, fvPatchField, surfaceMesh>::
+    typename GeometricField<Type, fvsPatchField, surfaceMesh>::
         GeometricBoundaryField& bSfCorr = sfCorr.boundaryField();
 
     forAll(bSfCorr, patchi)
     {
-        fvPatchField<Type>& pSfCorr = bSfCorr[patchi];
+        fvsPatchField<Type>& pSfCorr = bSfCorr[patchi];
 
         if (pSfCorr.coupled())
         {

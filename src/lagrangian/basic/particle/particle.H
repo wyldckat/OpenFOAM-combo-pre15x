@@ -85,7 +85,7 @@ class particle
         //- Position of particle
         vector position_;
 
-        //- Index of the cell it is
+        //- Index of the cell it is in
         label celli_;
 
         //- Face index if the particle is on a face otherwise -1

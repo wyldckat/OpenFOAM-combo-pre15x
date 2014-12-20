@@ -57,7 +57,8 @@ tmp<volScalarField> CoEulerDdtScheme<Type>::CorDeltaT() const
                 mesh()
             ),
             mesh(),
-            dimensionedScalar("CorDeltaT", cofrDeltaT.dimensions(), 0.0)
+            dimensionedScalar("CorDeltaT", cofrDeltaT.dimensions(), 0.0),
+            zeroGradientFvPatchScalarField::typeName
         )
     );
 
@@ -75,7 +76,27 @@ tmp<volScalarField> CoEulerDdtScheme<Type>::CorDeltaT() const
             max(corDeltaT[neighbour[faceI]], cofrDeltaT[faceI]);
     }
 
-    corDeltaT.boundaryField() = cofrDeltaT.boundaryField();
+    forAll(corDeltaT.boundaryField(), patchi)
+    {
+        const fvsPatchScalarField& pcofrDeltaT =
+            cofrDeltaT.boundaryField()[patchi];
+
+        const fvPatch& p = pcofrDeltaT.patch();
+        const unallocLabelList& faceCells = p.patch().faceCells();
+
+        forAll(pcofrDeltaT, patchFacei)
+        {
+            corDeltaT[faceCells[patchFacei]] = max
+            (
+                corDeltaT[faceCells[patchFacei]],
+                pcofrDeltaT[patchFacei]
+            );
+        }
+    }
+
+    corDeltaT.correctBoundaryConditions();
+
+    //corDeltaT = max(corDeltaT, max(corDeltaT)/100.0);
 
     return tcorDeltaT;
 }
@@ -88,7 +109,7 @@ tmp<surfaceScalarField> CoEulerDdtScheme<Type>::CofrDeltaT() const
 
     const surfaceScalarField& phi =
         static_cast<const objectRegistry&>(mesh())
-       .lookupObject<surfaceScalarField>("phi").oldTime();
+        .lookupObject<surfaceScalarField>(phiName_);
 
     if (phi.dimensions() == dimensionSet(0, 3, -1, 0, 0))
     {
@@ -105,7 +126,7 @@ tmp<surfaceScalarField> CoEulerDdtScheme<Type>::CofrDeltaT() const
     {
         const volScalarField& rho =
             static_cast<const objectRegistry&>(mesh())
-           .lookupObject<volScalarField>("rho").oldTime();
+           .lookupObject<volScalarField>(rhoName_).oldTime();
  
         surfaceScalarField Co
         (
@@ -364,8 +385,7 @@ CoEulerDdtScheme<Type>::fvmDdt
 
     scalarField rDeltaT = CorDeltaT()().internalField();
 
-    Info<< max(rDeltaT) << endl;
-    Info<< min(rDeltaT) << endl;
+    Info<< "max/min rDeltaT " << max(rDeltaT) << " " << min(rDeltaT) << endl;
 
     fvm.diag() = rDeltaT*mesh().V();
     

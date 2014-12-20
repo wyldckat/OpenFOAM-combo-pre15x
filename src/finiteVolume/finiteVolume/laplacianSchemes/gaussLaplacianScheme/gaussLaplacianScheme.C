@@ -70,7 +70,7 @@ gaussLaplacianScheme<Type>::fvmLaplacianUncorrected
     forAll(fvm.psi().boundaryField(), patchI)
     {
         const fvPatchField<Type>& psf = fvm.psi().boundaryField()[patchI];
-        const fvPatchScalarField& patchGamma =
+        const fvsPatchScalarField& patchGamma =
             gammaMagSf.boundaryField()[patchI];
 
         fvm.internalCoeffs()[patchI] = patchGamma*psf.gradientInternalCoeffs();
@@ -82,7 +82,7 @@ gaussLaplacianScheme<Type>::fvmLaplacianUncorrected
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 gaussLaplacianScheme<Type>::gammaSnGradCorr
 (
     const surfaceVectorField& SfGammaCorr,
@@ -91,9 +91,9 @@ gaussLaplacianScheme<Type>::gammaSnGradCorr
 {
     const fvMesh& mesh = this->mesh();
 
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tgammaSnGradCorr
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tgammaSnGradCorr
     (
-        new GeometricField<Type, fvPatchField, surfaceMesh>
+        new GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             IOobject
             (
@@ -144,7 +144,7 @@ gaussLaplacianScheme<Type>::fvmLaplacian
         if (mesh.fluxRequired(vf.name()))
         {
             fvm.faceFluxCorrectionPtr() = new
-            GeometricField<Type, fvPatchField, surfaceMesh>
+            GeometricField<Type, fvsPatchField, surfaceMesh>
             (
                 gammaMagSf*this->tsnGradScheme_().correction(vf)
             );
@@ -190,7 +190,7 @@ gaussLaplacianScheme<Type>::fvmLaplacian
     tmp<fvMatrix<Type> > tfvm = fvmLaplacianUncorrected(SfGammaSn, vf);
     fvMatrix<Type>& fvm = tfvm();
 
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tfaceFluxCorrection
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tfaceFluxCorrection
         = gammaSnGradCorr(SfGammaCorr, vf);
 
     if (this->tsnGradScheme_().corrected())

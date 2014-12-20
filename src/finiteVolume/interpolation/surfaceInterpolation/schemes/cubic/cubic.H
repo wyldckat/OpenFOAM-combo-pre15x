@@ -108,7 +108,7 @@ public:
         }
 
         //- Return the explicit correction to the face-interpolate
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         correction
         (
             const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -125,9 +125,9 @@ public:
             surfaceScalarField kVecP = sqr(scalar(1) - lambda)*lambda;
             surfaceScalarField kVecN = sqr(lambda)*(lambda - scalar(1));
 
-            tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tsfCorr
+            tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tsfCorr
             (
-                new GeometricField<Type, fvPatchField, surfaceMesh>
+                new GeometricField<Type, fvsPatchField, surfaceMesh>
                 (
                     IOobject
                     (
@@ -139,7 +139,7 @@ public:
                 )
             );
 
-            GeometricField<Type, fvPatchField, surfaceMesh>& sfCorr = tsfCorr();
+            GeometricField<Type, fvsPatchField, surfaceMesh>& sfCorr = tsfCorr();
 
             for (direction cmpt=0; cmpt<pTraits<Type>::nComponents; cmpt++)
             {

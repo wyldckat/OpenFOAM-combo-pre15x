@@ -36,14 +36,14 @@ SourceFiles
 #ifndef writeFunctions_H
 #define writeFunctions_H
 
-#include "labelList.H"
 #include "floatScalar.H"
 #include "OFstream.H"
 #include "DynamicList.H"
-#include "point.H"
 #include "volFields.H"
 #include "pointFields.H"
 #include "vtkMesh.H"
+#include "volPointInterpolation.H"
+#include "PrimitivePatchInterpolation.H"
 
 using namespace Foam;
 
@@ -65,98 +65,171 @@ class writeFuns
 
 public:
 
-    //- Write ascii or binary. If binary optionally in-place swaps argument
-    static void write(std::ostream&, const bool, DynamicList<floatScalar>&);
-    static void write(std::ostream&, const bool, DynamicList<label>&);
+//    // Public classes
+//
+//        //- nearCell value
+//        template<class Type>
+//        class accessOp
+//        {
+//            const bool nearCell_;
+//
+//        public:
+//
+//            accessOp(const bool nearCell)
+//            :
+//                nearCell_(nearCell)
+//            {}
+//
+//            tmp<Field<Type> > operator()
+//            (
+//                const GeometricField<Type, fvPatchField, volMesh>& fld,
+//                const label patchI
+//            ) const
+//            {
+//                if (nearCell_)
+//                {
+//                    return fld.boundaryField()[patchI].patchInternalField();
+//                }
+//                else
+//                {
+//                    return fld.boundaryField()[patchI];
+//                }
+//            }
+//        };
+//
+//        //- nearCell value for point fields
+//        template<class Type>
+//        class internalAccessOp
+//        {
+//
+//        public:
+//
+//            internalAccessOp()
+//            {}
+//
+//            tmp<Field<Type> > operator()
+//            (
+//                const GeometricField<Type, pointPatchField, pointMesh>& fld,
+//                const label patchI
+//            ) const
+//            {
+//                return fld.boundaryField()[patchI].patchInternalField();
+//            }
+//        };
+//
+//        //- No op
+//        template<class Type>
+//        class noOp
+//        {
+//        public:
+//
+//            noOp()
+//            {}
+//
+//            tmp<Field<Type> > operator()(const Field<Type>& fld) const
+//            {
+//                return fld;
+//            }
+//        };
+//
+//        //- Interpolation
+//        template<class Type>
+//        class interpolateOp
+//        {
+//            const PrimitivePatchInterpolation<primitivePatch>& pi_;
+//
+//        public:
+//
+//            interpolateOp(const PrimitivePatchInterpolation<primitivePatch>& pi)
+//            :
+//                pi_(pi)
+//            {}
+//
+//            tmp<Field<Type> > operator()(const Field<Type>& fld) const
+//            {
+//                return pi_.faceToPointInterpolate(fld);
+//            }
+//        };
+
 
     //- Write ascii or binary. If binary optionally in-place swaps argument
     static void write(std::ostream&, const bool, List<floatScalar>&);
+    static void write(std::ostream&, const bool, DynamicList<floatScalar>&);
     static void write(std::ostream&, const bool, labelList&);
+    static void write(std::ostream&, const bool, DynamicList<label>&);
 
-    //- Append point to DynamicList
+    //- write header
+    static void writeHeader(std::ostream&, const bool, const string&);
+    static void writeCellDataHeader(std::ostream&, const label, const label);
+    static void writePointDataHeader
+    (
+        std::ostream&,
+        const label,
+        const label
+    );
+
+    //- convert to VTK and store
+    static void insert(const scalar&, DynamicList<floatScalar>& dest);
     static void insert(const point&, DynamicList<floatScalar>& dest);
+    static void insert(const tensor&, DynamicList<floatScalar>& dest);
 
-    //- Append elements of labelList to DynamicList
+    //- Append elements to DynamicList
     static void insert(const labelList&, DynamicList<label>&);
+    template<class Type>
+    static void insert(const List<Type>&, DynamicList<floatScalar>&);
 
-    //- Append elements of scalarList to DynamicList
-    static void insert(const List<scalar>&, DynamicList<floatScalar>&);
-
-    //- Append elements of scalarList to DynamicList using map
-    static void insert
+    //- Write volField with cell values (including decomposed cells)
+    template<class Type>
+    static void write
     (
-        const labelList& map,
-        const List<scalar>& source,
-        DynamicList<floatScalar>&
-    );
-
-    //- Append points to DynamicList of floats
-    static void insert(const List<point>& source, DynamicList<floatScalar>&);
-
-    //- As above but using map
-    static void insert
-    (
-        const labelList& map,
-        const List<point>& source,
-        DynamicList<floatScalar>&
-    );
-
-    //- Write volScalarField with cell values (including decomposed cells)
-    static void writeVSF
-    (
-        std::ostream& os,
+        std::ostream&,
         const bool binary,
-        const volScalarField& vsf,
-        const vtkMesh& vMesh
+        const GeometricField<Type, fvPatchField, volMesh>&,
+        const vtkMesh&
     );
 
-    //- Write volVectorField with cell values (including decomposed cells)
-    static void writeVVF
-    (
-        std::ostream& os,
-        const bool binary,
-        const volVectorField& vvf,
-        const vtkMesh& vMesh
-    );
-
-    //- Write pointScalarField on all mesh points. Interpolate to cell centre
+    //- Write pointField on all mesh points. Interpolate to cell centre
     //  for decomposed cell centres.
-    static void writePSF
+    template<class Type>
+    static void write
     (
-        std::ostream& os,
+        std::ostream&,
         const bool binary,
-        const pointScalarField& psf,
-        const vtkMesh& vMesh
-    );
-
-    //- Write pointVectorField on all mesh points. Interpolate to cell centre
-    //  for decomposed cell centres.
-    static void writePVF
-    (
-        std::ostream& os,
-        const bool binary,
-        const pointVectorField& pvf,
-        const vtkMesh& vMesh
+        const GeometricField<Type, pointPatchField, pointMesh>&,
+        const vtkMesh&
     );
 
     //- Write interpolated field on points and original cell values on
     //  decomposed cell centres.
-    static void writeIntVSF
+    template<class Type>
+    static void write
     (
-        std::ostream& os,
+        std::ostream&,
         const bool binary,
-        const volScalarField& vsf,
-        const pointScalarField& psf,
-        const vtkMesh& vMesh
+        const GeometricField<Type, fvPatchField, volMesh>&,
+        const GeometricField<Type, pointPatchField, pointMesh>&,
+        const vtkMesh&
     );
 
-    static void writeIntVVF
+    //- Write generic GeometricFields
+    template<class Type, template<class> class PatchField, class GeoMesh>
+    static void write
     (
-        std::ostream& os,
+        std::ostream&,
         const bool binary,
-        const volVectorField& vvf,
-        const pointVectorField& pvf,
-        const vtkMesh& vMesh
+        const PtrList<GeometricField<Type, PatchField, GeoMesh> >&,
+        const vtkMesh&
+    );
+
+    //- Interpolate and write volFields
+    template<class Type>
+    static void write
+    (
+        std::ostream&,
+        const bool binary,
+        const volPointInterpolation&,
+        const PtrList<GeometricField<Type, fvPatchField, volMesh> >&,
+        const vtkMesh&
     );
 };
 
@@ -164,6 +237,12 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "writeFunsTemplates.C"
+#endif
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -29,6 +29,7 @@ License
 #include "processorPointPatchFields.H"
 #include "globalPointPatchFields.H"
 #include "pointConstraint.H"
+#include "syncTools.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -36,11 +37,13 @@ template<class Type>
 void Foam::motionSmoother::checkConstraints
 (
     GeometricField<Type, pointPatchField, pointMesh>& pf
-) const
+)
 {
     typedef GeometricField<Type, pointPatchField, pointMesh> FldType;
 
-    const polyBoundaryMesh& bm = mesh_.boundaryMesh();
+    const polyMesh& mesh = pf.mesh();
+
+    const polyBoundaryMesh& bm = mesh.boundaryMesh();
 
     // first count the total number of patch-patch points
 
@@ -121,7 +124,7 @@ void Foam::motionSmoother::checkConstraints
                         "motionSmoother::checkConstraints"
                         "(GeometricField<Type, pointPatchField, pointMesh>&)"
                     )   << "Patch fields are not consistent on mesh point "
-                        << ppp << " coordinate " << mesh_.points()[ppp]
+                        << ppp << " coordinate " << mesh.points()[ppp]
                         << " at patch " << bm[patchi].name() << '.'
                         << endl
                         << "Reverse evaluation gives value " << savedVal
@@ -151,88 +154,172 @@ void Foam::motionSmoother::applyCornerConstraints
 }
 
 
-// Average of connected points. Unweighted.
+// Average of connected points.
 template <class Type>
-Type Foam::motionSmoother::avg
+Foam::tmp<Foam::GeometricField<Type, Foam::pointPatchField, Foam::pointMesh> >
+ Foam::motionSmoother::avg
 (
     const GeometricField<Type, pointPatchField, pointMesh>& fld,
-    const edgeList& edges,
-    const pointField& points,
-    const labelList& edgeLabels,
-    const label pointI
-)
-{
-    // Get avg scale of neighbours
-    Type avg(pTraits<Type>::zero);
-
-    forAll(edgeLabels, i)
-    {
-        const edge& e = edges[edgeLabels[i]];
-
-        avg += fld[e.otherVertex(pointI)];
-    }
-
-    return avg/edgeLabels.size();
-}
-
-
-// Distance weighted average with varying diffusivity.
-template <class Type>
-Type Foam::motionSmoother::avg
-(
-    const GeometricField<Type, pointPatchField, pointMesh>& fld,
-    const scalarField& edgeGamma,
-    const edgeList& edges,
-    const pointField& points,
-    const labelList& edgeLabels,
-    const label pointI
-)
-{
-    // Get avg scale of neighbours
-    Type avg(pTraits<Type>::zero);
-
-    scalar sumWeight = 0.0;
-
-    forAll(edgeLabels, i)
-    {
-        label edgeI = edgeLabels[i];
-
-        const edge& e = edges[edgeI];
-
-        scalar weight = min(GREAT, edgeGamma[edgeI] / Foam::sqr(e.mag(points)));
-
-        avg += weight*fld[e.otherVertex(pointI)];
-        sumWeight += weight;
-    }
-
-    return avg/sumWeight;
-}
-
-
-// smooth field (Gauss Seidel i.e. inline update)
-template <class Type>
-void Foam::motionSmoother::smooth
-(
-    GeometricField<Type, pointPatchField, pointMesh>& fld
+    const scalarField& edgeWeight,
+    const bool separation
 ) const
 {
+    tmp<GeometricField<Type, pointPatchField, pointMesh> > tres
+    (
+        new GeometricField<Type, pointPatchField, pointMesh>
+        (
+            IOobject
+            (
+                "avg("+fld.name()+')',
+                fld.time().timeName(),
+                fld.db(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            fld.mesh(),
+            dimensioned<Type>("zero", fld.dimensions(), pTraits<Type>::zero)
+        )
+    );
+    GeometricField<Type, pointPatchField, pointMesh>& res = tres();
+
+
     const polyMesh& mesh = fld.mesh()();
 
-    const labelListList& pointEdges = mesh.pointEdges();
-    const edgeList& edges = mesh.edges();
-    const pointField& points = mesh.points();
+    scalarField sumWeight(mesh.nPoints(), 0.0);
 
-    forAll(fld, pointI)
+
+    const edgeList& edges = mesh.edges();
+
+    forAll(edges, edgeI)
     {
-        if (isInternalPoint(pointI))
+        const edge& e = edges[edgeI];
+        const scalar& w = edgeWeight[edgeI];
+
+        res[e[0]] += w*fld[e[1]];
+        sumWeight[e[0]] += w;
+
+        res[e[1]] += w*fld[e[0]];
+        sumWeight[e[1]] += w;
+    }
+
+
+    // Correct for coupled edges counted twice after summing below.
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    forAll(patches, patchI)
+    {
+        if (isA<processorPolyPatch>(patches[patchI]))
         {
-            fld[pointI] =
-                0.5*fld[pointI]
-              + 0.5*avg(fld, edges, points, pointEdges[pointI], pointI);
+            const processorPolyPatch& pp =
+                refCast<const processorPolyPatch>(patches[patchI]);
+
+            if (pp.myProcNo() < pp.neighbProcNo())
+            {
+                // Remove contribution of my edges to sum.
+
+                const labelList& meshEdges = pp.meshEdges();
+
+                forAll(meshEdges, i)
+                {
+                    label edgeI = meshEdges[i];
+                    const edge& e = edges[edgeI];
+                    const scalar& w = edgeWeight[edgeI];
+
+                    res[e[0]] -= w*fld[e[1]];
+                    sumWeight[e[0]] -= w;
+
+                    res[e[1]] -= w*fld[e[0]];
+                    sumWeight[e[1]] -= w;
+                }
+            }
+        }
+        else if (isA<cyclicPolyPatch>(patches[patchI]))
+        {
+            // Remove first half contribution.
+
+            const cyclicPolyPatch& pp =
+                refCast<const cyclicPolyPatch>(patches[patchI]);
+
+            SubList<face> half0Faces
+            (
+                mesh.faces(),
+                pp.size()/2,
+                pp.start()
+            );
+
+            labelList::subList half0Cells
+            (
+                mesh.faceOwner(),
+                pp.size()/2,
+                pp.start()
+            );
+
+            labelList meshEdges
+            (
+                primitivePatch(half0Faces, mesh.points()).meshEdges
+                (
+                    edges,
+                    mesh.cellEdges(),
+                    half0Cells
+                )
+            );
+
+            forAll(meshEdges, i)
+            {
+                label edgeI = meshEdges[i];
+                const edge& e = edges[edgeI];
+                const scalar& w = edgeWeight[edgeI];
+
+                res[e[0]] -= w*fld[e[1]];
+                sumWeight[e[0]] -= w;
+
+                res[e[1]] -= w*fld[e[0]];
+                sumWeight[e[1]] -= w;
+            }
         }
     }
-    fld.correctBoundaryConditions();
-    applyCornerConstraints(fld);
+
+    // Still to be done: multiply shared edges.
+    // (mesh.globalData().sharedEdgeLabels()) However needs for us to keep
+    // count how many have already been corrected above.
+
+    syncTools::syncPointList
+    (
+        mesh,
+        res,
+        plusEqOp<Type>(),
+        pTraits<Type>::zero,    // null value
+        separation              // separation
+    );
+
+    syncTools::syncPointList
+    (
+        mesh,
+        sumWeight,
+        plusEqOp<scalar>(),
+        scalar(0),              // null value
+        false                   // separation
+    );
+
+
+    forAll(res, pointI)
+    {
+        if (mag(sumWeight[pointI]) < VSMALL)
+        {
+            // Unconnected point. Take over original value
+            res[pointI] = fld[pointI];
+        }
+        else
+        {
+            res[pointI] /= sumWeight[pointI];
+        }        
+    }
+
+    res.correctBoundaryConditions();
+    applyCornerConstraints(res);
+
+    return tres;
 }
 
 
@@ -241,31 +328,25 @@ template <class Type>
 void Foam::motionSmoother::smooth
 (
     const GeometricField<Type, pointPatchField, pointMesh>& fld,
-    const scalarField& edgeGamma,
+    const scalarField& edgeWeight,
+    const bool separation,
+
     GeometricField<Type, pointPatchField, pointMesh>& newFld
 ) const
 {
-    const polyMesh& mesh = fld.mesh()();
-
-    const labelListList& pointEdges = mesh.pointEdges();
-    const edgeList& edges = mesh.edges();
-    const pointField& points = mesh.points();
+    tmp<pointVectorField> tavgFld = avg
+    (
+        fld,
+        edgeWeight, // weighting
+        separation  // whether to apply separation vector
+    );
+    const pointVectorField& avgFld = tavgFld();
 
     forAll(fld, pointI)
     {
         if (isInternalPoint(pointI))
         {
-            newFld[pointI] =
-                0.5*fld[pointI]
-              + 0.5*avg
-                    (
-                        fld,
-                        edgeGamma,
-                        edges,
-                        points,
-                        pointEdges[pointI],
-                        pointI
-                    );
+            newFld[pointI] = 0.5*fld[pointI] + 0.5*avgFld[pointI];
         }
     }
     newFld.correctBoundaryConditions();
@@ -273,154 +354,47 @@ void Foam::motionSmoother::smooth
 }
 
 
-//- Sychronizes patch points on pointField
+//- Test synchronisation of pointField
 template<class Type, class CombineOp>
-void Foam::motionSmoother::syncField
+void Foam::motionSmoother::testSyncField
 (
-    GeometricField<Type, pointPatchField, pointMesh>& fld,
+    const Field<Type>& fld,
+    const CombineOp& cop,
     const Type& zero,
-    const CombineOp& cop
-)
+    const bool separation
+) const
 {
-    const polyMesh& mesh = fld.mesh()();
-
-
-    typedef ProcessorPointPatchField
-        <pointPatchField, pointPatch, processorPointPatch, Type>
-        ProcessorField;
-
-    if (Pstream::parRun() && mesh.globalData().parallel())
+    if (debug)
     {
-        forAll(fld.boundaryField(), patchI)
-        {
-            if
-            (
-                isA<ProcessorField>
-                (
-                    fld.boundaryField()[patchI]
-                )
-            )
-            {
-                const ProcessorField& pFld =
-                    refCast<const ProcessorField>
-                    (
-                        fld.boundaryField()[patchI]
-                    );
-
-                const processorPointPatch& procPatch =
-                    refCast<const processorPointPatch>
-                    (
-                        pFld.patch()
-                    );
-
-                OPstream toNeighbProc
-                (
-                    procPatch.neighbProcNo(),
-                    pFld.size()*sizeof(Type)
-                );
-
-                toNeighbProc << pFld.patchInternalField();
-            }
-        }
-
-        forAll(fld.boundaryField(), patchI)
-        {
-            if
-            (
-                isA<ProcessorField>
-                (
-                    fld.boundaryField()[patchI]
-                )
-            )
-            {
-                ProcessorField& pFld =
-                    refCast<ProcessorField>
-                    (
-                        fld.boundaryField()[patchI]
-                    );
-
-                const processorPointPatch& procPatch =
-                    refCast<const processorPointPatch>
-                    (
-                        pFld.patch()
-                    );
-
-                IPstream fromNeighbProc
-                (
-                    procPatch.neighbProcNo(),
-                    pFld.size()*sizeof(Type)
-                );
-
-                Field<Type> nbrFld(fromNeighbProc);
-
-                // Combing neighbouring values with my values.
-                Field<Type> myFld(pFld.patchInternalField());
-
-                cop(myFld, nbrFld);
-
-                // Get the addressing
-                const labelList& mp = procPatch.meshPoints();
-
-                forAll(pFld, i)
-                {
-                    fld[mp[i]] = myFld[i];
-                }
-            }
-        }
+        Pout<< "testSyncField : testing synchronisation of Field<Type>."
+            << endl;
     }
 
+    Field<Type> syncedFld(fld);
 
-    typedef GlobalPointPatchField
-        <pointPatchField, pointPatch, globalPointPatch, Type>
-        GlobalField;
+    syncTools::syncPointList
+    (
+        mesh_,
+        syncedFld,
+        cop,
+        zero,       // null value
+        separation  // separation
+    );
 
-    // Shared points.
-    if (Pstream::parRun() && mesh.globalData().parallel())
+    forAll(syncedFld, i)
     {
-        forAll(fld.boundaryField(), patchI)
+        if (syncedFld[i] != fld[i])
         {
-            if
+            FatalErrorIn
             (
-                isA<GlobalField>
-                (
-                    fld.boundaryField()[patchI]
-                )
-            )
-            {
-                const GlobalField& pFld =
-                    refCast<const GlobalField>
-                    (
-                        fld.boundaryField()[patchI]
-                    );
-
-                const globalPointPatch& procPatch =
-                    refCast<const globalPointPatch>
-                    (
-                        pFld.patch()
-                    );
-
-
-
-                Field<Type> gpf(procPatch.globalPointSize(), zero);
-
-                // Get the addressing
-                const labelList& mp = procPatch.meshPoints();
-                const labelList& addr = procPatch.sharedPointAddr();
-
-                forAll (addr, i)
-                {
-                    gpf[addr[i]] = fld[mp[i]];
-                }
-
-                combineReduce(gpf, cop);
-
-                forAll (addr, i)
-                {
-                    fld[mp[i]] = gpf[addr[i]];
-                }
-            }
+                "motionSmoother::testSyncField"
+                "(const Field<Type>&, const CombineOp&"
+                ", const Type&, const bool)"
+            )   << "On element " << i << " value:" << fld[i]
+                << " synchronised value:" << syncedFld[i]
+                << abort(FatalError);
         }
-    }    
+    }
 }
 
 

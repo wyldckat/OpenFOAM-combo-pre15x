@@ -103,7 +103,9 @@ class PtrList
         List<T*> ptrs_;
 
 
-    // Private member functions
+protected:
+
+    // Protected member functions
 
         //- Read from Istream using given Istream constructor class
         template<class INew>
@@ -156,8 +158,8 @@ public:
 
         // Edit
 
-            //- Reset size of PtrList.  This can only be used to set the size of
-            //  an empty PtrList, extend a PtrList, remove entries from
+            //- Reset size of PtrList.  This can only be used to set the size
+            //  of an empty PtrList, extend a PtrList, remove entries from
             //  the end of a PtrList. If the entries are non-empty they are
             //  deleted.
             void setSize(const label);

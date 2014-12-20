@@ -1,13 +1,13 @@
-writePatches.C
-writeInternal.C
 foamToVTK.C
+internalWriter.C
+lagrangianWriter.C
+patchWriter.C
+writeFuns.C
 writePatchGeom.C
 writeFaceSet.C
 writePointSet.C
-writePatch.C
-writeFuns.C
 writeSurfFields.C
-writeLagrangian.C
+
 vtkMesh.C
 vtkTopo.C
 

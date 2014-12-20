@@ -38,7 +38,6 @@ Description
 #include "evaluateError.H"
 #include "fvc.H"
 #include "mapPolyMesh.H"
-#include "removeFaces.H"
 #include "topoCellLooper.H"
 #include "cellCuts.H"
 
@@ -164,12 +163,11 @@ void Foam::errorDrivenRefinement::setRefinement(polyTopoChange& ref) const
     // - refine cells
 
     // Give 'hint' of faces to remove to cell splitter.
-//    const labelList& candidates = refPattern.unsplitFaces();
+    const labelList& candidates = refPattern.unsplitFaces();
+    ////Hack:no unsplitting
+    //labelList candidates;
 
-//Hack:no unsplitting
-labelList candidates;
-
-    boolList success(refinementEngine_.removeSplitFaces(candidates, ref));
+    labelList removedFaces(refinementEngine_.removeSplitFaces(candidates, ref));
 
     // Now success will be for every candidates whether face has been removed.
     // Protect cells using face from refinement.
@@ -177,18 +175,15 @@ labelList candidates;
     // List of protected cells
     boolList markedCell(mesh.nCells(), false);
 
-    forAll(candidates, i)
+    forAll(removedFaces, i)
     {
-        if (success[i])
+        label faceI = removedFaces[i];
+
+        markedCell[mesh.faceOwner()[faceI]] = true;
+
+        if (mesh.isInternalFace(faceI))
         {
-            label faceI = candidates[i];
-
-            markedCell[mesh.faceOwner()[faceI]] = true;
-
-            if (mesh.isInternalFace(faceI))
-            {
-                markedCell[mesh.faceNeighbour()[faceI]] = true;
-            }
+            markedCell[mesh.faceNeighbour()[faceI]] = true;
         }
     }
     

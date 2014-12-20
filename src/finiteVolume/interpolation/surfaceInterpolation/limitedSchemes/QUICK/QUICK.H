@@ -50,7 +50,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class QUICKWeight Declaration
+                           Class QUICKLimiter Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
@@ -75,23 +75,23 @@ public:
         const vector& d
     ) const
     {
-        scalar phif = 0.5*(cdWeight*phiP + (1 - cdWeight)*phiN);
+        scalar phiCD = cdWeight*phiP + (1 - cdWeight)*phiN;
+
+        scalar phif;
         scalar phiU;
 
         if (faceFlux > 0)
         {
-            phif += 0.5*(phiP + (1 - cdWeight)*(d & gradcP));
+            phif = 0.5*(phiCD + phiP + (1 - cdWeight)*(d & gradcP));
             phiU = phiP;
         }
         else
         {
-            phif += 0.5*(phiN - cdWeight*(d & gradcN));
+            phif = 0.5*(phiCD + phiN - cdWeight*(d & gradcN));
             phiU = phiN;
         }
 
-        scalar phiCD = cdWeight*phiP + (1 - cdWeight)*phiN;
-
-        // Calculate the effective limiter for the linearUpwind interpolation
+        // Calculate the effective limiter for the QUICK interpolation
         scalar QLimiter = (phif - phiU)/stabilise(phiCD - phiU, SMALL);
 
         // Limit the limiter between upwind and downwind

@@ -37,7 +37,7 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "faceSet.H"
-#include "directPolyTopoChange.H"
+#include "polyTopoChange.H"
 #include "polyModifyFace.H"
 #include "polyAddFace.H"
 #include "ReadFields.H"
@@ -120,7 +120,7 @@ int main(int argc, char *argv[])
 
 
     // Mesh change container
-    directPolyTopoChange meshMod(mesh);
+    polyTopoChange meshMod(mesh);
 
 
     // Creating baffles:

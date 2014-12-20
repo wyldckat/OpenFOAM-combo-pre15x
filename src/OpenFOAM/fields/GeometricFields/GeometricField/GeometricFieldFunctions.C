@@ -476,7 +476,7 @@ cmptAv(const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf)
 }
 
 
-#define UNARY_REDUCTION_FUNCTION_WITH_BOUNDARY(returnType, func, gFunc)                 \
+#define UNARY_REDUCTION_FUNCTION_WITH_BOUNDARY(returnType, func, gFunc)       \
                                                                               \
 template<class Type, template<class> class PatchField, class GeoMesh>         \
 dimensioned<returnType> func                                                  \
@@ -488,7 +488,7 @@ dimensioned<returnType> func                                                  \
     (                                                                         \
         #func "(" + gf.name() + ')',                                          \
         gf.dimensions(),                                                      \
-        Foam::func(gFunc(gf.internalField()), gFunc(gf.boundaryField()))              \
+        Foam::func(gFunc(gf.internalField()), gFunc(gf.boundaryField()))      \
     );                                                                        \
 }                                                                             \
                                                                               \
@@ -509,7 +509,7 @@ UNARY_REDUCTION_FUNCTION_WITH_BOUNDARY(Type, min, gMin)
 #undef UNARY_REDUCTION_FUNCTION_WITH_BOUNDARY
 
 
-#define UNARY_REDUCTION_FUNCTION(returnType, func, gFunc)                               \
+#define UNARY_REDUCTION_FUNCTION(returnType, func, gFunc)                     \
                                                                               \
 template<class Type, template<class> class PatchField, class GeoMesh>         \
 dimensioned<returnType> func                                                  \

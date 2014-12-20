@@ -40,7 +40,7 @@ namespace Foam
 gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedGradientFvPatchScalarField(p, iF)
@@ -51,7 +51,7 @@ gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 (
     const gradientRhoFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -62,7 +62,7 @@ gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -94,7 +94,7 @@ gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 (
     const gradientRhoFvPatchScalarField& wbppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedGradientFvPatchScalarField(wbppsf, iF)
@@ -102,8 +102,6 @@ gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-// Update the coefficients associated with the patch field
 
 void gradientRhoFvPatchScalarField::updateCoeffs()
 {
@@ -124,7 +122,6 @@ void gradientRhoFvPatchScalarField::updateCoeffs()
 }
 
 
-// Write
 void gradientRhoFvPatchScalarField::write(Ostream& os) const
 {
     fixedGradientFvPatchScalarField::write(os);

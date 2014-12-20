@@ -36,7 +36,7 @@ Description
 #include "IFstream.H"
 #include "dictionary.H"
 #include "Switch.H"
-#include "foamVersion.H"
+#include "IOobject.H"
 #include "JobInfo.H"
 #include "labelList.H"
 
@@ -110,6 +110,12 @@ argList::argList(int& argc, char**& argv, bool checkArgs, bool checkOpts)
         }
     }    
 
+    // Print the banner once only for parallel runs
+    if (Pstream::master())
+    {
+        IOobject::writeLogBanner(Info);
+    }
+   
 
     // Get executable name
     {
@@ -170,7 +176,7 @@ argList::argList(int& argc, char**& argv, bool checkArgs, bool checkOpts)
 
     args_.setSize(nArgs);
 
-    Info<< "Exec   : " << argListString.c_str() << endl;
+    Info<< endl << "Exec   : " << argListString.c_str() << endl;
 
     // Case is a single processor run unless it is running parallel
     int nProcs = 1;

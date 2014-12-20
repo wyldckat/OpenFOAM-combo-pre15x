@@ -53,39 +53,53 @@ void inv(Field<tensor>& tf, const UList<tensor>& tf1)
         return;
     }
 
-    tensorField tf1Plus(tf1);
     scalar scale = magSqr(tf1[0]);
+    Vector<bool> removeCmpts
+    (
+        magSqr(tf1[0].xx())/scale < SMALL,
+        magSqr(tf1[0].yy())/scale < SMALL,
+        magSqr(tf1[0].zz())/scale < SMALL
+    );
 
-    if (mag(tf1[0].xx())/scale < SMALL)
+    if (removeCmpts.x() || removeCmpts.y() || removeCmpts.z())
     {
-        tf1Plus += tensor(1,0,0,0,0,0,0,0,0);
+        tensorField tf1Plus(tf1);
+
+        if (removeCmpts.x())
+        {
+            tf1Plus += tensor(1,0,0,0,0,0,0,0,0);
+        }
+
+        if (removeCmpts.y())
+        {
+            tf1Plus += tensor(0,0,0,0,1,0,0,0,0);
+        }
+
+        if (removeCmpts.z())
+        {
+            tf1Plus += tensor(0,0,0,0,0,0,0,0,1);
+        }
+
+        TFOR_ALL_F_OP_FUNC_F(tensor, tf, =, inv, tensor, tf1Plus)
+
+        if (removeCmpts.x())
+        {
+            tf -= tensor(1,0,0,0,0,0,0,0,0);
+        }
+
+        if (removeCmpts.y())
+        {
+            tf -= tensor(0,0,0,0,1,0,0,0,0);
+        }
+
+        if (removeCmpts.z())
+        {
+            tf -= tensor(0,0,0,0,0,0,0,0,1);
+        }
     }
-
-    if (mag(tf1[0].yy())/scale < SMALL)
+    else
     {
-        tf1Plus += tensor(0,0,0,0,1,0,0,0,0);
-    }
-
-    if (mag(tf1[0].zz())/scale < SMALL)
-    {
-        tf1Plus += tensor(0,0,0,0,0,0,0,0,1);
-    }
-
-    TFOR_ALL_F_OP_FUNC_F(tensor, tf, =, inv, tensor, tf1Plus)
-
-    if (mag(tf1[0].xx())/scale < SMALL)
-    {
-        tf -= tensor(1,0,0,0,0,0,0,0,0);
-    }
-
-    if (mag(tf1[0].yy())/scale < SMALL)
-    {
-        tf -= tensor(0,0,0,0,1,0,0,0,0);
-    }
-
-    if (mag(tf1[0].zz())/scale < SMALL)
-    {
-        tf -= tensor(0,0,0,0,0,0,0,0,1);
+        TFOR_ALL_F_OP_FUNC_F(tensor, tf, =, inv, tensor, tf1)
     }
 }
 

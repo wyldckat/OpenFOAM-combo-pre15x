@@ -38,7 +38,10 @@ Description
 
     In the topology change points/faces/cells
     - can be unchanged. (faces might be renumbered though)
-    - can be removed.
+    - can be removed (into nothing)
+    - can be removed into/merged with existing same entity
+      (so point merged with other point, face with other face, cell with
+       other cell. Note that probably only cell with cell is relevant)
     - can be added from existing same 'master' entity 
       (so point from point, face from face and cell from cell)
     - can be inflated: face out of edge or point,
@@ -54,6 +57,11 @@ Description
         reversePointMap[oldPointI] contains new point label
     removed:
         reversePointMap[oldPointI] contains -1
+    merged into point:
+        - reversePointMap[oldPointI] contains <-1 : -newPointI-2
+        - pointMap[pointI] contains the old master point label
+        - pointsFromPoints gives for pointI all the old point labels
+          (including the old master point!)
     added-from-same:
         pointMap[pointI] contains the old master point label 
     appended:
@@ -67,6 +75,11 @@ Description
         reverseFaceMap[oldFaceI] contains new face label
     removed:
         reverseFaceMap[oldFaceI] contains -1
+    merged into face:
+        - reverseFaceMap[oldFaceI] contains <-1 : -newFaceI-2
+        - faceMap[faceI] contains the old master face label
+        - facesFromFaces gives for faceI all the old face labels
+          (including the old master face!)
     added-from-same:
         faceMap[faceI] contains the old master face label 
     inflated-from-edge:
@@ -94,6 +107,11 @@ Description
         reverseCellMap[oldCellI] contains new cell label
     removed:
         reverseCellMap[oldCellI] contains -1
+    merged into cell:
+        - reverseCellMap[oldCellI] contains <-1 : -newCellI-2
+        - cellMap[cellI] contains the old master cell label 
+        - cellsFromCells gives for cellI all the old cell labels
+          (including the old master cell!)
     added-from-same:
         cellMap[cellI] contains the old master cell label 
     inflated-from-face:
@@ -128,6 +146,7 @@ SourceFiles
 #include "objectMap.H"
 #include "pointField.H"
 #include "labelHashSet.H"
+#include "Map.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -166,6 +185,9 @@ class mapPolyMesh
         //  Size of the list equals the size of new points
         const labelList pointMap_;
 
+        //- Points resulting from merging points
+        const List<objectMap> pointsFromPointsMap_;
+
         //- Old face map.
         //  Contains a list of old face labels for every new face.
         //  Size of the list equals the number of new faces
@@ -181,6 +203,9 @@ class mapPolyMesh
         //- Faces inflated from edges
         const List<objectMap> facesFromEdgesMap_;
 
+        //- Faces resulting from merging faces
+        const List<objectMap> facesFromFacesMap_;
+
         //- Old cell map.
         //  Contains old cell label for all preserved cells.
         //  Size of the list equals the number or preserved cells
@@ -194,6 +219,9 @@ class mapPolyMesh
 
         //- Cells inflated from faces
         const List<objectMap> cellsFromFacesMap_;
+
+        //- Cells resulting from merging cells
+        const List<objectMap> cellsFromCellsMap_;
 
         //- Reverse point map
         const labelList reversePointMap_;
@@ -252,8 +280,6 @@ class mapPolyMesh
         //- Disallow default bitwise assignment
         void operator=(const mapPolyMesh&);
 
-        // Private member functions to calculate demand driven data
-
 
 public:
 
@@ -267,13 +293,16 @@ public:
             const label nOldFaces,
             const label nOldCells,
             const labelList& pointMap,
+            const List<objectMap>& pointsFromPoints,
             const labelList& faceMap,
             const List<objectMap>& facesFromPoints,
             const List<objectMap>& facesFromEdges,
+            const List<objectMap>& facesFromFaces,
             const labelList& cellMap,
             const List<objectMap>& cellsFromPoints,
             const List<objectMap>& cellsFromEdges,
             const List<objectMap>& cellsFromFaces,
+            const List<objectMap>& cellsFromCells,
             const labelList& reversePointMap,
             const labelList& reverseFaceMap,
             const labelList& reverseCellMap,
@@ -296,13 +325,16 @@ public:
             const label nOldFaces,
             const label nOldCells,
             labelList& pointMap,
+            List<objectMap>& pointsFromPoints,
             labelList& faceMap,
             List<objectMap>& facesFromPoints,
             List<objectMap>& facesFromEdges,
+            List<objectMap>& facesFromFaces,
             labelList& cellMap,
             List<objectMap>& cellsFromPoints,
             List<objectMap>& cellsFromEdges,
             List<objectMap>& cellsFromFaces,
+            List<objectMap>& cellsFromCells,
             labelList& reversePointMap,
             labelList& reverseFaceMap,
             labelList& reverseCellMap,
@@ -361,6 +393,12 @@ public:
                 return pointMap_;
             }
 
+            //- Points originating from points
+            const List<objectMap>& pointsFromPointsMap() const
+            {
+                return pointsFromPointsMap_;
+            }
+
             //- Old face map.
             //  Contains a list of old face labels for every new face.
             //  Warning: this map contains invalid entries for new faces
@@ -379,6 +417,12 @@ public:
             const List<objectMap>& facesFromEdgesMap() const
             {
                 return facesFromEdgesMap_;
+            }
+
+            //- Faces originating from faces
+            const List<objectMap>& facesFromFacesMap() const
+            {
+                return facesFromFacesMap_;
             }
 
             //- Old cell map.
@@ -406,6 +450,12 @@ public:
                 return cellsFromFacesMap_;
             }
 
+            //- Cells originating from cells
+            const List<objectMap>& cellsFromCellsMap() const
+            {
+                return cellsFromCellsMap_;
+            }
+
 
             // Reverse maps
 
@@ -416,12 +466,60 @@ public:
                     return reversePointMap_;
                 }
 
+                //- If point is removed return point (on new mesh) it merged
+                //  into
+                label mergedPoint(const label oldPointI) const
+                {
+                    label i = reversePointMap_[oldPointI];
+
+                    if (i == -1)
+                    {
+                        return i;
+                    }
+                    else if (i < -1)
+                    {
+                        return -i-2;
+                    }
+                    else
+                    {
+                        FatalErrorIn("mergedPoint(const label) const")
+                            << "old point label " << oldPointI
+                            << " has reverseMap " << i << endl
+                            << "Only call mergedPoint for removed points."
+                            << abort(FatalError);
+                        return -1;
+                    }
+                }
 
                 //- Reverse face map
                 //  Contains new face label for all old and added faces
                 const labelList& reverseFaceMap() const
                 {
                     return reverseFaceMap_;
+                }
+
+                //- If face is removed return face (on new mesh) it merged into
+                label mergedFace(const label oldFaceI) const
+                {
+                    label i = reverseFaceMap_[oldFaceI];
+
+                    if (i == -1)
+                    {
+                        return i;
+                    }
+                    else if (i < -1)
+                    {
+                        return -i-2;
+                    }
+                    else
+                    {
+                        FatalErrorIn("mergedFace(const label) const")
+                            << "old face label " << oldFaceI
+                            << " has reverseMap " << i << endl
+                            << "Only call mergedFace for removed faces."
+                            << abort(FatalError);
+                        return -1;
+                    }
                 }
 
                 //- Reverse cell map
@@ -431,12 +529,35 @@ public:
                     return reverseCellMap_;
                 }
 
+                //- If cell is removed return cell (on new mesh) it merged into
+                label mergedCell(const label oldCellI) const
+                {
+                    label i = reverseCellMap_[oldCellI];
 
-            //- Map of flipped face flux faces
-            const labelHashSet& flipFaceFlux() const
-            {
-                return flipFaceFlux_;
-            }
+                    if (i == -1)
+                    {
+                        return i;
+                    }
+                    else if (i < -1)
+                    {
+                        return -i-2;
+                    }
+                    else
+                    {
+                        FatalErrorIn("mergedCell(const label) const")
+                            << "old cell label " << oldCellI
+                            << " has reverseMap " << i << endl
+                            << "Only call mergedCell for removed cells."
+                            << abort(FatalError);
+                        return -1;
+                    }
+                }
+
+                //- Map of flipped face flux faces
+                const labelHashSet& flipFaceFlux() const
+                {
+                    return flipFaceFlux_;
+                }
 
                 //- Patch point renumbering
                 //  For every preserved point on a patch give the old position.

@@ -5,18 +5,21 @@ U = rUA*UEqn.H();
 
 if (transSonic)
 {
-    surfaceScalarField phid =
+    surfaceScalarField phid
     (
-        (fvc::interpolate(rho*U) & mesh.Sf())
-      + fvc::ddtPhiCorr(rUA, rho, U, phi)
-    )/fvc::interpolate(p);
+        "phid",
+        (
+            (fvc::interpolate(rho*U) & mesh.Sf())
+          + fvc::ddtPhiCorr(rUA, rho, U, phi)
+        )/fvc::interpolate(p)
+    );
 
     for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     {
         fvScalarMatrix pEqn
         (
             fvm::ddt(psi, p)
-          + fvm::div(phid, p, "div(phid,p)")
+          + fvm::div(phid, p)
           - fvm::laplacian(rho*rUA, p)
         );
 

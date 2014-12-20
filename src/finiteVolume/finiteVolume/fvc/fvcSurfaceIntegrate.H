@@ -56,33 +56,33 @@ namespace fvc
     void surfaceIntegrate
     (
         Field<Type>&,
-        const GeometricField<Type, fvPatchField, surfaceMesh>&
+        const GeometricField<Type, fvsPatchField, surfaceMesh>&
     );
 
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> >
     surfaceIntegrate
     (
-        const GeometricField<Type, fvPatchField, surfaceMesh>&
+        const GeometricField<Type, fvsPatchField, surfaceMesh>&
     );
 
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> >
     surfaceIntegrate
     (
-        const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >&
+        const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >&
     );
 
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > surfaceSum
     (
-        const GeometricField<Type, fvPatchField, surfaceMesh>&
+        const GeometricField<Type, fvsPatchField, surfaceMesh>&
     );
 
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > surfaceSum
     (
-        const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >&
+        const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >&
     );
 }
 

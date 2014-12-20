@@ -71,14 +71,14 @@ public:
         timeVaryingGammaContactAngleFvPatchScalarField
         (
             const fvPatch&,
-            const scalarField&
+            const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct from patch, internal field and dictionary
         timeVaryingGammaContactAngleFvPatchScalarField
         (
             const fvPatch&,
-            const scalarField&,
+            const DimensionedField<scalar, volMesh>&,
             const dictionary&
         );
 
@@ -88,7 +88,7 @@ public:
         (
             const timeVaryingGammaContactAngleFvPatchScalarField&,
             const fvPatch&,
-            const scalarField&,
+            const DimensionedField<scalar, volMesh>&,
             const fvPatchFieldMapper&
         );
 
@@ -105,11 +105,14 @@ public:
         timeVaryingGammaContactAngleFvPatchScalarField
         (
             const timeVaryingGammaContactAngleFvPatchScalarField&,
-            const scalarField&
+            const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchScalarField> clone(const scalarField& iF) const
+        virtual tmp<fvPatchScalarField> clone
+        (
+            const DimensionedField<scalar, volMesh>& iF
+        ) const
         {
             return tmp<fvPatchScalarField>
             (
@@ -124,7 +127,7 @@ public:
         virtual tmp<scalarField> theta
         (
             const fvPatchVectorField& Up,
-            const fvPatchVectorField& nHat
+            const fvsPatchVectorField& nHat
         ) const;
 
         //- Write

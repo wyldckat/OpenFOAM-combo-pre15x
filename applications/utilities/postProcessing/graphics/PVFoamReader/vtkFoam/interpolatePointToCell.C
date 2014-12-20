@@ -58,10 +58,8 @@ Type interpolatePointToCell
         {
             label v = f[fp];
 
-            if (!pointHad.found(v))
+            if (pointHad.insert(v))
             {
-                pointHad.insert(v);
-
                 sum += ptf[v];
             }
         }

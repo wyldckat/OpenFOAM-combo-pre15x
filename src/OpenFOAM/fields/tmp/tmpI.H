@@ -33,7 +33,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Store object pointer
 template<class T>
 inline tmp<T>::tmp(T* tPtr)
 :
@@ -43,7 +42,6 @@ inline tmp<T>::tmp(T* tPtr)
 {}
 
 
-// Store object const reference
 template<class T>
 inline tmp<T>::tmp(const T& tRef)
 :
@@ -53,7 +51,6 @@ inline tmp<T>::tmp(const T& tRef)
 {}
 
 
-// Construct copy (increment reference count if object is temporary)
 template<class T>
 inline tmp<T>::tmp(const tmp<T>& t)
 :
@@ -77,7 +74,6 @@ inline tmp<T>::tmp(const tmp<T>& t)
 }
 
 
-// Delete object
 template<class T>
 inline tmp<T>::~tmp()
 {
@@ -112,7 +108,6 @@ inline bool tmp<T>::valid() const
 }
 
 
-// Return tmp pointer for reuse
 template<class T>
 inline T* tmp<T>::ptr() const
 {
@@ -138,9 +133,6 @@ inline T* tmp<T>::ptr() const
     }
 }
 
-
-// If object pointer points to valid object:
-// delete object and set pointer to NULL
 
 template<class T>
 inline void tmp<T>::clear()
@@ -216,7 +208,6 @@ inline tmp<T>::operator const T&() const
 }
 
 
-// Return object pointer
 template<class T>
 inline T* tmp<T>::operator->()
 {
@@ -238,7 +229,6 @@ inline T* tmp<T>::operator->()
 }
 
 
-// Return object pointer
 template<class T>
 inline const T* tmp<T>::operator->() const
 {
@@ -249,7 +239,18 @@ inline const T* tmp<T>::operator->() const
 template<class T>
 inline void tmp<T>::operator=(const tmp<T>& t)
 {
-    clear();
+    if (isTmp_ && ptr_)
+    {
+        if (ptr_->okToDelete())
+        {
+            delete ptr_;
+            ptr_ = NULL;
+        }
+        else
+        {
+            ptr_->operator--();
+        }
+    }
 
     if (t.isTmp_)
     {

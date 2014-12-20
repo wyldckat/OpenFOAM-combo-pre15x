@@ -145,13 +145,13 @@ public:
         virtual const scalarListList& weights() const;
 
         //- Are there any inserted faces
-        bool insertedObjects() const
+        virtual bool insertedObjects() const
         {
             return faceMap_.insertedObjects();
         }
 
         //- Return list of inserted faces
-        const labelList& insertedObjectLabels() const;
+        virtual const labelList& insertedObjectLabels() const;
 
         //- Return flux flip map
         const labelHashSet& flipFaceFlux() const

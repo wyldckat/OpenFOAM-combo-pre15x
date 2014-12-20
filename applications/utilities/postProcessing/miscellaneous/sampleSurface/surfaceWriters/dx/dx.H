@@ -78,6 +78,20 @@ class dx
         void writeDXData
         (
             const pointField& points,
+            const sphericalTensorField& values,
+            Ostream& os
+        ) const;
+
+        void writeDXData
+        (
+            const pointField& points,
+            const symmTensorField& values,
+            Ostream& os
+        ) const;
+
+        void writeDXData
+        (
+            const pointField& points,
             const tensorField& values,
             Ostream& os
         ) const;
@@ -94,6 +108,7 @@ public:
 
         //- Construct null
         dx();
+
 
     // Destructor
 

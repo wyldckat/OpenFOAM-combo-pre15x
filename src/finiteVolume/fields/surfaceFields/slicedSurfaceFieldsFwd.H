@@ -42,10 +42,10 @@ namespace Foam
 class surfaceMesh;
 
 template<class Type>
-class fvPatchField;
+class fvsPatchField;
 
 template<class Type>
-class slicedFvPatchField;
+class slicedFvsPatchField;
 
 template
 <
@@ -57,15 +57,15 @@ template
 class SlicedGeometricField;
 
 typedef
-SlicedGeometricField<scalar, fvPatchField, slicedFvPatchField, surfaceMesh>
+SlicedGeometricField<scalar, fvsPatchField, slicedFvsPatchField, surfaceMesh>
 slicedSurfaceScalarField;
 
 typedef
-SlicedGeometricField<vector, fvPatchField, slicedFvPatchField, surfaceMesh>
+SlicedGeometricField<vector, fvsPatchField, slicedFvsPatchField, surfaceMesh>
 slicedSurfaceVectorField;
 
 typedef
-SlicedGeometricField<tensor, fvPatchField, slicedFvPatchField, surfaceMesh>
+SlicedGeometricField<tensor, fvsPatchField, slicedFvsPatchField, surfaceMesh>
 slicedSurfaceTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

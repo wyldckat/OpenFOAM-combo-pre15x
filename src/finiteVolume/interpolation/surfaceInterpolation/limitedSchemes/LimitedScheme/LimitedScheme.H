@@ -28,9 +28,9 @@ Class
 Description
 
     Class to create NVD/TVD limited weighting-factors.
-    The particular differencing scheme class is supplied as a template argument,
-    the weight function of which is called by the weight function of this class
-    for the internal faces as well as faces of coupled patches
+    The particular differencing scheme class is supplied as a template
+    argument, the weight function of which is called by the weight function
+    of this class for the internal faces as well as faces of coupled patches
     (e.g. processor-processor patches). The weight function is supplied the
     central-differencing weighting factor, the face-flux, the cell and face
     gradients (from which the normalised variable distribution may be created)
@@ -142,63 +142,63 @@ public:
 // Add the patch constructor functions to the hash tables
 
 #define makeLimitedSurfaceInterpolationTypeScheme(SS, LIMITER, NVDTVD, LIMFUNC, TYPE) \
-                                                                               \
-typedef LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC>              \
-    LimitedScheme##TYPE##LIMITER##NVDTVD##LIMFUNC##_;                          \
-defineTemplateTypeNameAndDebugWithName                                         \
-    (LimitedScheme##TYPE##LIMITER##NVDTVD##LIMFUNC##_, #SS, 0);                \
-                                                                               \
-surfaceInterpolationScheme<TYPE>::addMeshConstructorToTable                    \
-<LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC> >                   \
-    add##SS##LIMFUNC##TYPE##MeshConstructorToTable_;                           \
-                                                                               \
-surfaceInterpolationScheme<TYPE>::addMeshFluxConstructorToTable                \
-<LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC> >                   \
-    add##SS##LIMFUNC##TYPE##MeshFluxConstructorToTable_;                       \
-                                                                               \
-limitedSurfaceInterpolationScheme<TYPE>::addMeshConstructorToTable             \
-<LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC> >                   \
-    add##SS##LIMFUNC##TYPE##MeshConstructorToLimitedTable_;                    \
-                                                                               \
-limitedSurfaceInterpolationScheme<TYPE>::addMeshFluxConstructorToTable         \
-<LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC> >                   \
+                                                                              \
+typedef LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC>             \
+    LimitedScheme##TYPE##LIMITER##NVDTVD##LIMFUNC##_;                         \
+defineTemplateTypeNameAndDebugWithName                                        \
+    (LimitedScheme##TYPE##LIMITER##NVDTVD##LIMFUNC##_, #SS, 0);               \
+                                                                              \
+surfaceInterpolationScheme<TYPE>::addMeshConstructorToTable                   \
+<LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC> >                  \
+    add##SS##LIMFUNC##TYPE##MeshConstructorToTable_;                          \
+                                                                              \
+surfaceInterpolationScheme<TYPE>::addMeshFluxConstructorToTable               \
+<LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC> >                  \
+    add##SS##LIMFUNC##TYPE##MeshFluxConstructorToTable_;                      \
+                                                                              \
+limitedSurfaceInterpolationScheme<TYPE>::addMeshConstructorToTable            \
+<LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC> >                  \
+    add##SS##LIMFUNC##TYPE##MeshConstructorToLimitedTable_;                   \
+                                                                              \
+limitedSurfaceInterpolationScheme<TYPE>::addMeshFluxConstructorToTable        \
+<LimitedScheme<TYPE, LIMITER<NVDTVD>, limitFuncs::LIMFUNC> >                  \
     add##SS##LIMFUNC##TYPE##MeshFluxConstructorToLimitedTable_;
 
 
-#define makeLimitedSurfaceInterpolationScheme(SS, LIMITER)                     \
-                                                                               \
-makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDTVD,magSqr,scalar)     \
-makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDTVD,magSqr,vector)     \
+#define makeLimitedSurfaceInterpolationScheme(SS, LIMITER)                    \
+                                                                              \
+makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDTVD,magSqr,scalar)    \
+makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDTVD,magSqr,vector)    \
 makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDTVD,magSqr,sphericalTensor) \
-makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDTVD,magSqr,symmTensor) \
+makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDTVD,magSqr,symmTensor)\
 makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDTVD,magSqr,tensor)
 
 
-#define makeLimitedVSurfaceInterpolationScheme(SS, LIMITER)                    \
-makeLimitedSurfaceInterpolationTypeScheme(SS##V,LIMITER,NVDVTVDV,null,vector)
+#define makeLimitedVSurfaceInterpolationScheme(SS, LIMITER)                   \
+makeLimitedSurfaceInterpolationTypeScheme(SS,LIMITER,NVDVTVDV,null,vector)
 
 
 #define makeLLimitedSurfaceInterpolationTypeScheme(SS, LLIMITER, LIMITER, NVDTVD, LIMFUNC, TYPE) \
-                                                                               \
-typedef LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC>   \
-    LimitedScheme##TYPE##LLIMITER##LIMITER##NVDTVD##LIMFUNC##_;                \
-defineTemplateTypeNameAndDebugWithName                                         \
-    (LimitedScheme##TYPE##LLIMITER##LIMITER##NVDTVD##LIMFUNC##_, #SS, 0);      \
-                                                                               \
-surfaceInterpolationScheme<TYPE>::addMeshConstructorToTable                    \
-<LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> >        \
-    add##SS##LIMFUNC##TYPE##MeshConstructorToTable_;                           \
-                                                                               \
-surfaceInterpolationScheme<TYPE>::addMeshFluxConstructorToTable                \
-<LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> >        \
-    add##SS##LIMFUNC##TYPE##MeshFluxConstructorToTable_;                       \
-                                                                               \
-limitedSurfaceInterpolationScheme<TYPE>::addMeshConstructorToTable             \
-<LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> >        \
-    add##SS##LIMFUNC##TYPE##MeshConstructorToLimitedTable_;                    \
-                                                                               \
-limitedSurfaceInterpolationScheme<TYPE>::addMeshFluxConstructorToTable         \
-<LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> >        \
+                                                                              \
+typedef LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC>  \
+    LimitedScheme##TYPE##LLIMITER##LIMITER##NVDTVD##LIMFUNC##_;               \
+defineTemplateTypeNameAndDebugWithName                                        \
+    (LimitedScheme##TYPE##LLIMITER##LIMITER##NVDTVD##LIMFUNC##_, #SS, 0);     \
+                                                                              \
+surfaceInterpolationScheme<TYPE>::addMeshConstructorToTable                   \
+<LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> >       \
+    add##SS##LIMFUNC##TYPE##MeshConstructorToTable_;                          \
+                                                                              \
+surfaceInterpolationScheme<TYPE>::addMeshFluxConstructorToTable               \
+<LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> >       \
+    add##SS##LIMFUNC##TYPE##MeshFluxConstructorToTable_;                      \
+                                                                              \
+limitedSurfaceInterpolationScheme<TYPE>::addMeshConstructorToTable            \
+<LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> >       \
+    add##SS##LIMFUNC##TYPE##MeshConstructorToLimitedTable_;                   \
+                                                                              \
+limitedSurfaceInterpolationScheme<TYPE>::addMeshFluxConstructorToTable        \
+<LimitedScheme<TYPE, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> >       \
     add##SS##LIMFUNC##TYPE##MeshFluxConstructorToLimitedTable_;
 
 

@@ -103,7 +103,7 @@ void Foam::skewCorrectionVectors::makeSkewCorrectionVectors() const
 
     forAll(SkewCorrVecs.boundaryField(), patchI)
     {
-        fvPatchVectorField& patchSkewCorrVecs =
+        fvsPatchVectorField& patchSkewCorrVecs =
             SkewCorrVecs.boundaryField()[patchI];
 
         if (!patchSkewCorrVecs.coupled())

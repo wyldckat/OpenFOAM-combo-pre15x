@@ -26,3 +26,6 @@
     (
         thermodynamicProperties.lookup("psi")
     );
+
+    // Density offset, i.e. the constant part of the density
+    dimensionedScalar rhoO("rhoO", rho0 - psi*p0);

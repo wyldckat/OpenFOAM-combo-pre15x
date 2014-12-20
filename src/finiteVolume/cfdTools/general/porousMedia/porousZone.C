@@ -22,7 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "porousZone.H"
 #include "fvMesh.H"
@@ -289,7 +289,8 @@ void Foam::porousZone::addResistance(fvVectorMatrix& UEqn) const
 void Foam::porousZone::addResistance
 (
     const fvVectorMatrix& UEqn,
-    volTensorField& AU
+    volTensorField& AU,
+    bool correctAUpBC
 ) const
 {
     if (cellZoneID_ == -1)
@@ -359,6 +360,14 @@ void Foam::porousZone::addResistance
                 U
             );
         }
+    }
+
+    if (correctAUpBC)
+    {
+        // Correct the doundary conditions of the tensorial diagonal to ensure
+        // processor bounaries are correctly handled when AU^-1 is interpolated
+        // for the pressure equation.
+        AU.correctBoundaryConditions();
     }
 }
 

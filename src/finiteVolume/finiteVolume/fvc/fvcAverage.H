@@ -55,14 +55,14 @@ namespace fvc
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > average
     (
-        const GeometricField<Type, fvPatchField, surfaceMesh>&
+        const GeometricField<Type, fvsPatchField, surfaceMesh>&
     );
 
     //- Area-weighted average a surfaceField creating a volField
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > average
     (
-        const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >&
+        const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >&
     );
 
 

@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "cellMapper.H"
@@ -83,24 +81,11 @@ void Foam::cellMapper::calcAddressing() const
     {
         // Interpolative addressing
 
-        const labelList& cm = mpm_.cellMap();
-
         interpolationAddrPtr_ = new labelListList(mesh_.nCells());
         labelListList& addr = *interpolationAddrPtr_;
 
         weightsPtr_ = new scalarListList(mesh_.nCells());
         scalarListList& w = *weightsPtr_;
-
-        // Do mapped cells first
-        forAll (cm, cellI)
-        {
-            if (cm[cellI] > -1)
-            {
-                // Mapped from a single cell
-                addr[cellI] = labelList(1, cm[cellI]);
-                w[cellI] = scalarList(1, 1.0);
-            }
-        }
         
         const List<objectMap>& cfp = mpm_.cellsFromPointsMap();
 
@@ -109,9 +94,19 @@ void Foam::cellMapper::calcAddressing() const
             // Get addressing
             const labelList& mo = cfp[cfpI].masterObjects();
 
+            label cellI = cfp[cfpI].index();
+
+            if (addr[cellI].size() > 0)
+            {
+                FatalErrorIn("void cellMapper::calcAddressing() const")
+                    << "Master cell " << cellI
+                    << " mapped from point cells " << mo
+                    << " already destination of mapping." << abort(FatalError);
+            }
+
             // Map from masters, uniform weights
-            addr[cfp[cfpI].index()] = mo;
-            w[cfp[cfpI].index()] = scalarList(mo.size(), 1.0/mo.size());
+            addr[cellI] = mo;
+            w[cellI] = scalarList(mo.size(), 1.0/mo.size());
         }
 
         const List<objectMap>& cfe = mpm_.cellsFromEdgesMap();
@@ -121,9 +116,19 @@ void Foam::cellMapper::calcAddressing() const
             // Get addressing
             const labelList& mo = cfe[cfeI].masterObjects();
 
+            label cellI = cfe[cfeI].index();
+
+            if (addr[cellI].size() > 0)
+            {
+                FatalErrorIn("void cellMapper::calcAddressing() const")
+                    << "Master cell " << cellI
+                    << " mapped from edge cells " << mo
+                    << " already destination of mapping." << abort(FatalError);
+            }
+
             // Map from masters, uniform weights
-            addr[cfe[cfeI].index()] = mo;
-            w[cfe[cfeI].index()] = scalarList(mo.size(), 1.0/mo.size());
+            addr[cellI] = mo;
+            w[cellI] = scalarList(mo.size(), 1.0/mo.size());
         }
 
         const List<objectMap>& cff = mpm_.cellsFromFacesMap();
@@ -133,12 +138,60 @@ void Foam::cellMapper::calcAddressing() const
             // Get addressing
             const labelList& mo = cff[cffI].masterObjects();
 
+            label cellI = cff[cffI].index();
+
+            if (addr[cellI].size() > 0)
+            {
+                FatalErrorIn("void cellMapper::calcAddressing() const")
+                    << "Master cell " << cellI
+                    << " mapped from face cells " << mo
+                    << " already destination of mapping." << abort(FatalError);
+            }
+
             // Map from masters, uniform weights
-            addr[cff[cffI].index()] = mo;
-            w[cff[cffI].index()] = scalarList(mo.size(), 1.0/mo.size());
+            addr[cellI] = mo;
+            w[cellI] = scalarList(mo.size(), 1.0/mo.size());
         }
 
-        // Grab inserted points (for them the size of addressing is still zero
+        const List<objectMap>& cfc = mpm_.cellsFromCellsMap();
+
+        forAll (cfc, cfcI)
+        {
+            // Get addressing
+            const labelList& mo = cfc[cfcI].masterObjects();
+
+            label cellI = cfc[cfcI].index();
+
+            if (addr[cellI].size() > 0)
+            {
+                FatalErrorIn("void cellMapper::calcAddressing() const")
+                    << "Master cell " << cellI
+                    << " mapped from cell cells " << mo
+                    << " already destination of mapping." << abort(FatalError);
+            }
+
+            // Map from masters, uniform weights
+            addr[cellI] = mo;
+            w[cellI] = scalarList(mo.size(), 1.0/mo.size());
+        }
+
+
+        // Do mapped faces. Note that can already be set from cellsFromCells
+        // so check if addressing size still zero.
+
+        const labelList& cm = mpm_.cellMap();
+
+        forAll (cm, cellI)
+        {
+            if (cm[cellI] > -1 && addr[cellI].size() == 0)
+            {
+                // Mapped from a single cell
+                addr[cellI] = labelList(1, cm[cellI]);
+                w[cellI] = scalarList(1, 1.0);
+            }
+        }
+
+        // Grab inserted points (for them the size of addressing is still zero)
 
         insertedCellLabelsPtr_ = new labelList(mesh_.nCells());
         labelList& insertedCells = *insertedCellLabelsPtr_;
@@ -192,6 +245,7 @@ Foam::cellMapper::cellMapper(const mapPolyMesh& mpm)
         mpm_.cellsFromPointsMap().size() == 0
      && mpm_.cellsFromEdgesMap().size() == 0
      && mpm_.cellsFromFacesMap().size() == 0
+     && mpm_.cellsFromCellsMap().size() == 0
     )
     {
         direct_ = true;
@@ -234,6 +288,13 @@ Foam::cellMapper::cellMapper(const mapPolyMesh& mpm)
         forAll (cff, cffI)
         {
             cm[cff[cffI].index()] = 0;
+        }
+
+        const List<objectMap>& cfc = mpm_.cellsFromCellsMap();
+
+        forAll (cfc, cfcI)
+        {
+            cm[cfc[cfcI].index()] = 0;
         }
 
         if (min(cm) < 0)

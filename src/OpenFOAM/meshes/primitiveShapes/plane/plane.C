@@ -22,37 +22,29 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Geometric class that creates a 2D plane and can return the cutting point 
-    between a line and the plane.
-
 \*---------------------------------------------------------------------------*/
 
 #include "plane.H"
 #include "tensor.H"
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // Calculate base point and unit normal vector from plane equation
-void plane::calcPntAndVec(const scalarList& C)
+void Foam::plane::calcPntAndVec(const scalarList& C)
 {
-    if(mag(C[0]) > VSMALL)
+    if (mag(C[0]) > VSMALL)
     {
         basePoint_ = vector((-C[3]/C[0]), 0, 0);
     }
     else
     {
-        if(mag(C[1]) > VSMALL)
+        if (mag(C[1]) > VSMALL)
         {
             basePoint_ = vector(0, (-C[3]/C[1]), 0);
         }
         else
         {
-            if(mag(C[2]) > VSMALL)
+            if (mag(C[2]) > VSMALL)
             {
                 basePoint_ = vector(0, 0, (-C[3]/C[2]));
             }
@@ -79,7 +71,7 @@ void plane::calcPntAndVec(const scalarList& C)
 }
 
 
-void plane::calcPntAndVec
+void Foam::plane::calcPntAndVec
 (
     const point& point1,
     const point& point2,
@@ -131,23 +123,16 @@ void plane::calcPntAndVec
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct null
-plane::plane()
+// Construct from normal vector through the origin
+Foam::plane::plane(const vector& normalVector)
 :
-    unitVector_(GREAT, GREAT, GREAT),
-    basePoint_(GREAT, GREAT, GREAT)
+    unitVector_(normalVector),
+    basePoint_(vector::zero)
 {}
 
 
-// Construct from plane equation
-plane::plane(const scalarList& C) 
-{
-    calcPntAndVec(C);
-}
-
-
 // Construct from point and normal vector
-plane::plane(const point& basePoint, const vector& normalVector)
+Foam::plane::plane(const point& basePoint, const vector& normalVector)
 :
     unitVector_(normalVector),
     basePoint_(basePoint)
@@ -167,8 +152,15 @@ plane::plane(const point& basePoint, const vector& normalVector)
 }
 
 
+// Construct from plane equation
+Foam::plane::plane(const scalarList& C)
+{
+    calcPntAndVec(C);
+}
+
+
 // Construct from three points
-plane::plane
+Foam::plane::plane
 (
     const point& a,
     const point& b,
@@ -180,52 +172,42 @@ plane::plane
 
 
 // Construct from dictionary
-plane::plane(const dictionary& planeToInletDict)
+Foam::plane::plane(const dictionary& dict)
 :
-    unitVector_(0, 0, 0),
-    basePoint_(0, 0, 0)
+    unitVector_(vector::zero),
+    basePoint_(point::zero)
 {
-    word planeTypeDesignator(planeToInletDict.lookup("planeType"));
+    word planeType(dict.lookup("planeType"));
 
-    if (planeTypeDesignator == word("planeEquation"))
+    if (planeType == "planeEquation")
     {
+        const dictionary& subDict = dict.subDict("planeEquationDict");
         scalarList C(4);
 
-        dictionary planeEquationCoeffs
-        (
-            planeToInletDict.subDict("planeEquationDict")
-        );
-
-        C[0] = readScalar(planeEquationCoeffs.lookup("a"));
-        C[1] = readScalar(planeEquationCoeffs.lookup("b"));
-        C[2] = readScalar(planeEquationCoeffs.lookup("c"));
-        C[3] = readScalar(planeEquationCoeffs.lookup("d"));
+        C[0] = readScalar(subDict.lookup("a"));
+        C[1] = readScalar(subDict.lookup("b"));
+        C[2] = readScalar(subDict.lookup("c"));
+        C[3] = readScalar(subDict.lookup("d"));
 
         calcPntAndVec(C);
 
     }
-    else if (planeTypeDesignator == word("embeddedPoints"))
+    else if (planeType == "embeddedPoints")
     {
-        dictionary embeddedPoints
-        (
-            planeToInletDict.subDict("embeddedPointsDict")
-        );
+        const dictionary& subDict = dict.subDict("embeddedPoints");
 
-        point point1(embeddedPoints.lookup("point1"));
-        point point2(embeddedPoints.lookup("point2"));
-        point point3(embeddedPoints.lookup("point3"));
+        point point1(subDict.lookup("point1"));
+        point point2(subDict.lookup("point2"));
+        point point3(subDict.lookup("point3"));
 
         calcPntAndVec(point1, point2, point3);
     }
-    else if(planeTypeDesignator == word("pointAndNormal"))
+    else if (planeType == "pointAndNormal")
     {
-        dictionary pointAndVector
-        (
-            planeToInletDict.subDict("pointAndNormalDict")
-        );
+        const dictionary& subDict = dict.subDict("pointAndNormalDict");
 
-        basePoint_ = pointAndVector.lookup("basePoint");
-        unitVector_ = pointAndVector.lookup("normalVector");
+        basePoint_ = subDict.lookup("basePoint");
+        unitVector_ = subDict.lookup("normalVector");
         unitVector_ /= mag(unitVector_);
     }
     else
@@ -233,16 +215,16 @@ plane::plane(const dictionary& planeToInletDict)
         FatalIOErrorIn
         (
             "plane::plane(const dictionary&)",
-            planeToInletDict
-        )   
-        << "Invalid plane type: " << planeTypeDesignator
+            dict
+        )
+        << "Invalid plane type: " << planeType
         << abort(FatalIOError);
     }
 }
 
 
 // Construct from Istream. Assumes point and normal vector.
-plane::plane(Istream& is)
+Foam::plane::plane(Istream& is)
 :
     unitVector_(is),
     basePoint_(is)
@@ -265,21 +247,21 @@ plane::plane(Istream& is)
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // Return plane normal vector
-const vector& plane::normal() const
-{ 
+const Foam::vector& Foam::plane::normal() const
+{
     return unitVector_;
 }
 
 
 // Return plane base point
-const point& plane::refPoint() const
-{ 
+const Foam::point& Foam::plane::refPoint() const
+{
     return basePoint_;
 }
 
 
 // Return coefficcients for plane equation: ax + by + cz + d = 0
-scalarList plane::planeCoeffs() const
+Foam::scalarList Foam::plane::planeCoeffs() const
 {
     scalarList C(4);
 
@@ -327,21 +309,25 @@ scalarList plane::planeCoeffs() const
 
 
 // Return nearest point in the plane for the given point
-point plane::nearestPoint(const point& p) const
+Foam::point Foam::plane::nearestPoint(const point& p) const
 {
     return p - unitVector_*((p - basePoint_) & unitVector_);
 }
 
 
 // Return distance from the given point to the plane
-scalar plane::distance(const point& p) const
+Foam::scalar Foam::plane::distance(const point& p) const
 {
     return mag((p - basePoint_) & unitVector_);
 }
 
 
 // Cutting point for plane and line defined by origin and direction
-scalar plane::normalIntersect(const point& pnt0, const vector& dir) const
+Foam::scalar Foam::plane::normalIntersect
+(
+    const point& pnt0,
+    const vector& dir
+) const
 {
     scalar denom = stabilise((dir & unitVector_), VSMALL);
 
@@ -350,7 +336,7 @@ scalar plane::normalIntersect(const point& pnt0, const vector& dir) const
 
 
 // Cutting line of two planes
-plane::ray plane::planeIntersect(const plane& plane2) const
+Foam::plane::ray Foam::plane::planeIntersect(const plane& plane2) const
 {
     // Mathworld plane-plane intersection. Assume there is a point on the
     // intersection line with z=0 and solve the two plane equations
@@ -418,7 +404,11 @@ plane::ray plane::planeIntersect(const plane& plane2) const
 
 
 // Cutting point of three planes
-point plane::planePlaneIntersect(const plane& plane2, const plane& plane3) const
+Foam::point Foam::plane::planePlaneIntersect
+(
+    const plane& plane2,
+    const plane& plane3
+) const
 {
     List<scalarList> pcs(3);
     pcs[0]= planeCoeffs();
@@ -438,16 +428,34 @@ point plane::planePlaneIntersect(const plane& plane2, const plane& plane3) const
 }
 
 
-Ostream& operator<<(Ostream& os, const plane& a)
+// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
+
+bool Foam::operator==(const plane& a, const plane& b)
+{
+    if (a.basePoint_ == b.basePoint_ && a.unitVector_ == b.unitVector_)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+bool Foam::operator!=(const plane& a, const plane& b)
+{
+    return !(a == b);
+}
+
+
+// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
+
+Foam::Ostream& Foam::operator<<(Ostream& os, const plane& a)
 {
     os  << a.unitVector_ << token::SPACE << a.basePoint_;
 
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

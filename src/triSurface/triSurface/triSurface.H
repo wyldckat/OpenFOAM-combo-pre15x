@@ -50,6 +50,7 @@ namespace Foam
 {
 
 class Time;
+class IFstream;
 
 /*---------------------------------------------------------------------------*\
                            Class triSurface Declaration
@@ -185,28 +186,7 @@ class triSurface
         );
 
         //- read non-comment line
-        static string getLine(std::ifstream&);
-
-        //- Get first integer from string
-        static label parseInt(const string&);
-
-        //- Read line and split into command (first word) and args (rest).
-        //  Return false if eof reached.
-        static bool readCmd(std::ifstream& ACfile, string& cmd, string& args);
-
-        //- Read up to line starting with cmd. Sets args to rest of line.
-        //  Returns true if found, false if stream is not good anymore.
-        static bool readUpto(const string&, std::ifstream&, string& args);
-
-        //- like above but exits with error message instead of returning.
-        static void readUpto
-        (
-            const string& cmd,
-            std::ifstream& ACfile,
-            string& args,
-            const string errorMsg
-        );
-
+        static string getLineNoComment(IFstream&);
 
 public:
 

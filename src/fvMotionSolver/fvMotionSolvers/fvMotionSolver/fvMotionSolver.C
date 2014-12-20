@@ -33,6 +33,7 @@ namespace Foam
     defineTypeNameAndDebug(fvMotionSolver, 0);
 }
 
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::fvMotionSolver::fvMotionSolver(const polyMesh& mesh)

@@ -1,4 +1,3 @@
-#include "fvPatchFieldFields.H"
 #include "fixedGradientFvPatchFields.H"
 #include "zeroGradientFvPatchFields.H"
 #include "fixedRhoFvPatchScalarField.H"

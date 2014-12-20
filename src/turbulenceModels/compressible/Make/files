@@ -7,5 +7,9 @@ LaunderSharmaKE/LaunderSharmaKE.C
 LRR/LRR.C
 LaunderGibsonRSTM/LaunderGibsonRSTM.C
 realizableKE/realizableKE.C
+SpalartAllmaras/SpalartAllmaras.C
+kOmegaSST/kOmegaSST.C
+
+wallFunctions/mutWallFunctions/mutStandardRoughWallFunction/mutStandardRoughWallFunctionFvPatchScalarField.C
 
 LIB = $(FOAM_LIBBIN)/libcompressibleTurbulenceModels

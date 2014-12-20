@@ -22,7 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "dlLibraryTable.H"
 
@@ -39,6 +39,16 @@ Foam::dlLibraryTable::dlLibraryTable()
 :
     HashTable<fileName, void*, Hash<void*> >()
 {}
+
+
+Foam::dlLibraryTable::readDlLibrary::readDlLibrary
+(
+    const dictionary& dict,
+    const word& libsEntry
+)
+{
+    open(dict, libsEntry);
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -80,6 +90,32 @@ bool Foam::dlLibraryTable::open(const fileName& functionLibName)
 
             return true;
         }
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+bool Foam::dlLibraryTable::open
+(
+    const dictionary& dict,
+    const word& libsEntry
+)
+{
+    if (dict.found(libsEntry))
+    {
+        fileNameList libNames(dict.lookup(libsEntry));
+
+        bool allOpened = false;
+
+        forAll(libNames, i)
+        {
+            allOpened = dlLibraryTable::open(libNames[i]) && allOpened;
+        }
+
+        return allOpened;
     }
     else
     {

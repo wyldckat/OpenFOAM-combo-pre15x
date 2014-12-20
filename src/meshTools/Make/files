@@ -20,10 +20,8 @@ coordinateSystems/coordinateRotation/coordinateRotation.C
 coordinateSystems/coordinateRotation/EulerCoordinateRotation.C
 coordinateSystems/coordinateRotation/STARCDCoordinateRotation.C
 
-polyMeshAdder/faceCoupleInfo.C
-polyMeshAdder/polyMeshAdder.C
-
 polyMeshZipUpCells/polyMeshZipUpCells.C
+primitiveMeshGeometry/primitiveMeshGeometry.C
 
 meshSearch/meshSearch.C
 

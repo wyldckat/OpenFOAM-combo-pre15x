@@ -144,6 +144,9 @@ public:
         //- Clear the zones
         void clear();
 
+        //- Check zone definition. Return true if in error.
+        bool checkDefinition(const bool report = false) const;
+
         //- Correct zone mesh after moving points
         void movePoints(const pointField&);
 

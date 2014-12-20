@@ -99,7 +99,7 @@ label primitiveMesh::findNearestCell(const point& location) const
     label nearestCelli = 0;
     scalar minProximity = magSqr(centres[0] - location);
 
-    forAll(centres, celli)
+    for (label celli = 1; celli < centres.size(); celli++)
     {
         scalar proximity = magSqr(centres[celli] - location);
 
@@ -117,6 +117,11 @@ label primitiveMesh::findNearestCell(const point& location) const
 // Find cell enclosing this location
 label primitiveMesh::findCell(const point& location) const
 {
+    if (nCells() == 0)
+    {
+        return -1;
+    }
+
     // Find the nearest cell centre to this location
     label celli = findNearestCell(location);
 

@@ -18,7 +18,7 @@ dynMixedSmagorinsky/dynMixedSmagorinsky.C
 LRRDiffStress/LRRDiffStress.C
 DeardorffDiffStress/DeardorffDiffStress.C
 spectEddyVisc/spectEddyVisc.C
-//Smagorinsky2/Smagorinsky2.C
+/*Smagorinsky2/Smagorinsky2.C*/
 SpalartAllmaras/SpalartAllmaras.C
 laminar/laminar.C
 

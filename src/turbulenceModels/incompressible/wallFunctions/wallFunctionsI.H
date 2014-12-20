@@ -68,7 +68,8 @@ Description
             const scalarField& nuw = nu().boundaryField()[patchi];
             const scalarField& nutw = nut_.boundaryField()[patchi];
 
-            scalarField magFaceGradU = mag(U_.boundaryField()[patchi].snGrad());
+            scalarField magFaceGradU =
+                mag(U_.boundaryField()[patchi].snGrad());
 
             forAll(curPatch, facei)
             {
@@ -76,8 +77,8 @@ Description
 
                 scalar yPlus =
                     Cmu25*turbulenceModel::y_[patchi][facei]
-                    *sqrt(k_[faceCelli])
-                    /nuw[facei];
+                   *sqrt(k_[faceCelli])
+                   /nuw[facei];
 
                 // For corner cells (with two boundary or more faces),
                 // epsilon and G in the near-wall cell are calculated
@@ -92,7 +93,7 @@ Description
                 if (yPlus > yPlusLam_)
                 {
                     G[faceCelli] +=
-                        nutw[facei]
+                        (nutw[facei] + nuw[facei])
                        *magFaceGradU[facei]
                        *Cmu25*sqrt(k_[faceCelli])
                        /(kappa_*turbulenceModel::y_[patchi][facei]);

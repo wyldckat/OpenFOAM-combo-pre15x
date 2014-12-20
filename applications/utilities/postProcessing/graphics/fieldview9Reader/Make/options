@@ -101,5 +101,5 @@ EXE_LIBS = \
     $(FV_LIBS) \
     -lfiniteVolume \
     -lmeshTools \
-    -lfoamUtil
+   
 

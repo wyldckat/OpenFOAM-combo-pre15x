@@ -277,6 +277,22 @@ void ZoneMesh<ZoneType>::clear()
 }
 
 
+// Check zone definition
+template<class ZoneType>
+bool ZoneMesh<ZoneType>::checkDefinition(const bool report) const
+{
+    bool inError = false;
+
+    const PtrList<ZoneType>& zones = *this;
+
+    forAll (zones, zoneI)
+    {
+        inError |= zones[zoneI].checkDefinition(report);
+    }
+    return inError;
+}
+
+
 // Correct zone mesh after moving points
 template<class ZoneType>
 void ZoneMesh<ZoneType>::movePoints(const pointField& p)

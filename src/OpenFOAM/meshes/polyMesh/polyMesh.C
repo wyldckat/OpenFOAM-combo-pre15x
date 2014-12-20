@@ -63,10 +63,9 @@ void Foam::polyMesh::calcDirections() const
     {
         if (isA<emptyPolyPatch>(boundaryMesh()[patchi]))
         {
-            nEmptyPatches++;
-
             if (boundaryMesh()[patchi].size())
             {
+                nEmptyPatches++;
                 dirVec += sum(cmptMag(boundaryMesh()[patchi].faceAreas()));
             }
         }
@@ -160,6 +159,7 @@ Foam::polyMesh::polyMesh(const IOobject& io)
         ),
         *this
     ),
+    bounds_(points_),
     directions_(Vector<label>::zero),
     pointZones_
     (
@@ -273,7 +273,8 @@ Foam::polyMesh::polyMesh
     const pointField& points,
     const faceList& faces,
     const labelList& allOwner,
-    const labelList& allNeighbour
+    const labelList& allNeighbour,
+    const bool syncPar
 )
 :
     objectRegistry(io),
@@ -344,6 +345,7 @@ Foam::polyMesh::polyMesh
         *this,
         0
     ),
+    bounds_(points_, syncPar),
     directions_(Vector<label>::zero),
     pointZones_
     (
@@ -424,7 +426,8 @@ Foam::polyMesh::polyMesh
     const IOobject& io,
     const pointField& points,
     const faceList& faces,
-    const cellList& cells
+    const cellList& cells,
+    const bool syncPar
 )
 :
     objectRegistry(io),
@@ -495,6 +498,7 @@ Foam::polyMesh::polyMesh
         *this,
         0
     ),
+    bounds_(points_, syncPar),
     directions_(Vector<label>::zero),
     pointZones_
     (
@@ -604,15 +608,15 @@ void Foam::polyMesh::resetPrimitives
     const bool validBoundary
 )
 {
-    // Clear everything (copied from ~polyMesh)
-    clearOut();
-    resetMotion();
+    // Clear addressing. Keep geometric props for mapping.
+    clearAddressing();
 
     // Take over new primitive data. Note extra optimization to prevent
     // assignment to self.
     if (&points_ != &points)
     {
         points_ = points;
+        bounds_ = boundBox(points_, validBoundary);
     }
     if (&faces_ != &faces)
     {
@@ -995,7 +999,7 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
 
     tmp<scalarField> sweptVols = primitiveMesh::movePoints
     (
-        allPoints(),
+        points_,
         oldAllPoints()
     );
 
@@ -1006,11 +1010,13 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
     }
 
     // Force recalculation of all geometric data with new points
-    boundary_.movePoints(allPoints());
 
-    pointZones_.movePoints(allPoints());
-    faceZones_.movePoints(allPoints());
-    cellZones_.movePoints(allPoints());
+    bounds_ = boundBox(points_);
+    boundary_.movePoints(points_);
+
+    pointZones_.movePoints(points_);
+    faceZones_.movePoints(points_);
+    cellZones_.movePoints(points_);
 
     return sweptVols;
 }
@@ -1031,7 +1037,7 @@ const Foam::globalMeshData& Foam::polyMesh::globalData() const
     {
         if (debug)
         {
-            Info<< "polyMesh::globalData() const : "
+            Pout<< "polyMesh::globalData() const : "
                 << "Constructing parallelData from processor topology" << nl
                 << "This needs the patch faces to be correctly matched"
                 << endl;

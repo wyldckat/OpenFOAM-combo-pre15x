@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "dx.H"
@@ -150,6 +148,75 @@ void Foam::dx<Type>::writeDXData
 }
 
 
+// Write sphericalTensorField in DX format
+template<class Type>
+void Foam::dx<Type>::writeDXData
+(
+    const pointField& points,
+    const sphericalTensorField& values,
+    Ostream& os
+) const
+{
+    // Write data
+    os  << "object 3 class array type float rank 0 items "
+        << values.size()
+        << " data follows" << nl;
+
+    forAll(values, elemI)
+    {
+        os << float(values[elemI][0]) << nl;
+    }
+
+    if (values.size() == points.size())
+    {
+        os  << nl << "attribute \"dep\" string \"positions\""
+            << nl << nl;
+    }
+    else
+    {
+        os  << nl << "attribute \"dep\" string \"connections\""
+            << nl << nl;
+    }
+}
+
+
+// Write symmTensorField in DX format
+template<class Type>
+void Foam::dx<Type>::writeDXData
+(
+    const pointField& points,
+    const symmTensorField& values,
+    Ostream& os
+) const
+{
+    // Write data
+    os  << "object 3 class array type float rank 2 shape 3 items "
+        << values.size()
+        << " data follows" << nl;
+
+    forAll(values, elemI)
+    {
+        const symmTensor& t = values[elemI];
+
+        os  << float(t.xx()) << ' ' << float(t.xy()) << ' ' << float(t.xz())
+            << float(t.xy()) << ' ' << float(t.yy()) << ' ' << float(t.yz())
+            << float(t.xz()) << ' ' << float(t.yz()) << ' ' << float(t.zz())
+            << nl;
+    }
+
+    if (values.size() == points.size())
+    {
+        os  << nl << "attribute \"dep\" string \"positions\""
+            << nl << nl;
+    }
+    else
+    {
+        os  << nl << "attribute \"dep\" string \"connections\""
+            << nl << nl;
+    }
+}
+
+
 // Write tensorField in DX format
 template<class Type>
 void Foam::dx<Type>::writeDXData
@@ -204,7 +271,6 @@ void Foam::dx<Type>::writeDXTrailer(Ostream& os) const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 template<class Type>
 Foam::dx<Type>::dx()
 :

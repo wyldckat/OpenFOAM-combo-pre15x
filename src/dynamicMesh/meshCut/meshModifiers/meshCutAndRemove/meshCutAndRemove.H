@@ -54,6 +54,7 @@ class polyTopoChange;
 class cellCuts;
 class polyMesh;
 class face;
+class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
                            Class meshCutAndRemove Declaration
@@ -109,12 +110,12 @@ class meshCutAndRemove
             label& patchID
         ) const;
 
-        //- Get patch information for face.
+        //- Get zone information for face.
         void getZoneInfo
         (
             const label faceI,
             label& zoneID,
-            label& zoneFlip
+            bool& zoneFlip
         ) const;
 
         //- Adds a face from point. Flips face if owner>neighbour

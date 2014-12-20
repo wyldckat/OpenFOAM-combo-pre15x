@@ -11,6 +11,6 @@ compileApplication $currDir $application
 
 for case in $cases
 do
-    (cd $case ; ./makeMesh)
+    (cd $case ; ./makeMesh > log.makeMesh 2>&1)
     runApplication $application $case
 done 

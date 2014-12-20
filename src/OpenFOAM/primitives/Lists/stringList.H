@@ -34,14 +34,26 @@ Description
 #define stringList_H
 
 #include "string.H"
-#include "List.H"
+#include "labelList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
     typedef List<string> stringList;
+
+    //- Return the indices of the strings in the list
+    //  that match the given regular expression
+    template<class StringList>
+    labelList findStrings(const string& regexp, const StringList&);
 }
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "stringListTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

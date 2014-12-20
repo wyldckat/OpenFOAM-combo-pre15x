@@ -251,10 +251,10 @@ public:
 
         //- Decompose surface field
         template<class Type>
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         decomposeField
         (
-            const GeometricField<Type, fvPatchField, surfaceMesh>& field
+            const GeometricField<Type, fvsPatchField, surfaceMesh>& field
         ) const;
 
         template<class GeoField>

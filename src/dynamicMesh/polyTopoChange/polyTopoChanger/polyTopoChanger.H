@@ -78,30 +78,6 @@ protected:
         //- Reference to mesh
         polyMesh& mesh_;
 
-
-    // Protected Member Functions
-
-        // Topology changes
-
-            //- Rotate a face nShift positions in anticlockwise direction
-            static face rotateFace(const face& f, const label nShift);
-
-            //- Determine ordering of faces in coupled patches.
-            //  Calculate mapping to shuffle faces inside coupled patches and
-            //  rotation to make 0th vertex in faces align.
-            static bool reorderCoupledPatches
-            (
-                const polyBoundaryMesh& boundary,
-                const labelList& patchStarts,
-                const labelList& patchSizes,
-                const faceList& faces,
-                const pointField& points,
-
-                labelList& faceMap,
-                labelList& rotation
-            );
-
-
 public:
 
     //- Runtime type information
@@ -146,13 +122,11 @@ public:
         //- Modify point motion
         void modifyMotionPoints(pointField&) const;
 
-        static autoPtr<mapPolyMesh> changeMesh
+        autoPtr<mapPolyMesh> changeMesh
         (
-            polyMesh&,
-            const polyTopoChange&
+            const bool inflate,
+            const bool syncParallel = true
         );
-
-        autoPtr<mapPolyMesh> changeMesh();
 
         //- Force recalculation of locally stored data on topological change
         void update(const mapPolyMesh& m);

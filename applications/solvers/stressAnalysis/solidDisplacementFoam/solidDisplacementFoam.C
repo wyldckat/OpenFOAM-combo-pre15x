@@ -109,8 +109,11 @@ int main(int argc, char *argv[])
 
                 if (compactNormalStress)
                 {
-                    divSigmaExp = 
-                        fvc::div(sigmaD - (2*mu + lambda)*gradD, "div(sigmaD)");
+                    divSigmaExp = fvc::div
+                    (
+                        sigmaD - (2*mu + lambda)*gradD,
+                        "div(sigmaD)"
+                    );
                 }
                 else
                 {

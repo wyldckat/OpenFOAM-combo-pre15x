@@ -47,18 +47,17 @@ SourceFiles
 
 class channelIndex
 {
-
     // Private data
 
-    IOdictionary indexingDict;
+        IOdictionary indexingDict_;
 
-    const label Nx;
-    const labelList Ny;
-    const label Nz;
+        const label nx_;
+        const labelList ny_;
+        const label nz_;
+        const bool symmetric_;
 
-    labelList cumNy;
-
-    label Nlayers;
+        labelList cumNy_;
+        label nLayers_;
 
 
     // Private Member Functions
@@ -72,8 +71,8 @@ public:
 
     // Constructors
 
-        //- from components
         channelIndex(const fvMesh& m);
+
 
     // Destructor
 
@@ -87,25 +86,26 @@ public:
             //- return number of layers
             label nLayers() const
             {
-                return Nlayers;
+                return nLayers_;
             }
 
             //- number of cells in X direction
             label nx() const
             {
-                return Nx;
+                return nx_;
             }
 
             //- number of cells in Z direction
             label nz() const
             {
-                return Nz;
+                return nz_;
             }
 
             //- collapse a field to a line
             scalarField collapse
             (
-                const volScalarField& vsf
+                const volScalarField& vsf,
+                const bool asymmetric=false
             ) const;
 
             //- return the field of Y locations from the cell centres

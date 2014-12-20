@@ -22,15 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "surfaceWriter.H"
 #include "HashTable.H"
 #include "word.H"
 #include "fileName.H"
-
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -62,7 +59,6 @@ autoPtr<surfaceWriter<Type> > surfaceWriter<Type>::New(const word& writeType)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct null
 template<class Type>
 surfaceWriter<Type>::surfaceWriter()
 {}

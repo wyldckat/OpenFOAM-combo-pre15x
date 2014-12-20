@@ -29,6 +29,7 @@ License
 #include "floatScalar.H"
 #include "writeFuns.H"
 #include "emptyFvPatchFields.H"
+#include "fvsPatchFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,7 +43,6 @@ void writeSurfFields
     const bool binary,
     const vtkMesh& vMesh,
     const fileName& fileName,
-    const PtrList<surfaceScalarField>& surfScalarFields,
     const PtrList<surfaceVectorField>& surfVectorFields
 )
 {
@@ -77,54 +77,8 @@ void writeSurfFields
     writeFuns::write(str, binary, pField);
 
     str << "POINT_DATA " << mesh.nFaces() << std::endl
-        << "FIELD attributes "
-        << surfScalarFields.size() + surfVectorFields.size()
-        << std::endl;
+        << "FIELD attributes " << surfVectorFields.size() << std::endl;
 
-    // surfScalarFields
-    forAll(surfScalarFields, fieldI)
-    {
-        const surfaceScalarField& ssf = surfScalarFields[fieldI];
-
-        str << ssf.name() << " 3 "
-            << mesh.nFaces() << " float" << std::endl;
-
-        DynamicList<floatScalar> fField(3*mesh.nFaces());
-
-        for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
-        {
-            vector v(ssf[faceI]*mesh.Sf()[faceI]/mesh.magSf()[faceI]);
-
-            writeFuns::insert(v, fField);
-        }
-
-        forAll(ssf.boundaryField(), patchI)
-        {
-            const fvPatchScalarField& pf = ssf.boundaryField()[patchI];
-
-            const fvPatch& pp = mesh.boundary()[patchI];
-
-            if (isA<emptyFvPatchScalarField>(pf))
-            {
-                // Note: loop over polypatch size, not fvpatch size.
-                forAll(pp.patch(), i)
-                {
-                    writeFuns::insert(vector::zero, fField);
-                }
-            }
-            else
-            {
-                vectorField nf = pp.nf();
-
-                forAll(pf, i)
-                {
-                    writeFuns::insert(pf[i]*nf[i], fField);
-                }
-            }
-        }
-
-        writeFuns::write(str, binary, fField);
-    }
     // surfVectorFields
     forAll(surfVectorFields, fieldI)
     {
@@ -142,7 +96,7 @@ void writeSurfFields
 
         forAll(svf.boundaryField(), patchI)
         {
-            const fvPatchVectorField& pf = svf.boundaryField()[patchI];
+            const fvsPatchVectorField& pf = svf.boundaryField()[patchI];
 
             const fvPatch& pp = mesh.boundary()[patchI];
 
@@ -166,6 +120,7 @@ void writeSurfFields
         writeFuns::write(str, binary, fField);
     }
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

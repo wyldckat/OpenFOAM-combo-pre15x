@@ -32,6 +32,10 @@ Description
 #include "cellCuts.H"
 #include "mapPolyMesh.H"
 #include "meshTools.H"
+#include "polyModifyFace.H"
+#include "polyAddPoint.H"
+#include "polyAddFace.H"
+#include "polyAddCell.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -1047,7 +1051,7 @@ void Foam::meshCutter::updateMesh(const mapPolyMesh& morphMap)
 
             label newAddedCellI = morphMap.reverseCellMap()[addedCellI];
 
-            if (newCellI != -1 && newAddedCellI != -1)
+            if (newCellI >= 0 && newAddedCellI >= 0)
             {
                 if
                 (
@@ -1086,7 +1090,7 @@ void Foam::meshCutter::updateMesh(const mapPolyMesh& morphMap)
 
             label newAddedFaceI = morphMap.reverseFaceMap()[addedFaceI];
 
-            if ((newCellI != -1) && (newAddedFaceI != -1))
+            if ((newCellI >= 0) && (newAddedFaceI >= 0))
             {
                 if
                 (
@@ -1129,7 +1133,7 @@ void Foam::meshCutter::updateMesh(const mapPolyMesh& morphMap)
 
             label newAddedPointI = morphMap.reversePointMap()[addedPointI];
 
-            if ((newStart != -1) && (newEnd != -1) && (newAddedPointI != -1))
+            if ((newStart >= 0) && (newEnd >= 0) && (newAddedPointI >= 0))
             {
                 edge newE = edge(newStart, newEnd);
 

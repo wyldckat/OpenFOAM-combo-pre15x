@@ -162,53 +162,32 @@ void surfaceInterpolation::makeWeights() const
 
 
     // Set local references to mesh data
-    const surfaceVectorField& faceCentres = mesh_.Cf();
-    const volVectorField& cellCentres = mesh_.C();
+    const surfaceVectorField& Cf = mesh_.Cf();
+    const volVectorField& C = mesh_.C();
     const unallocLabelList& owner = mesh_.owner();
     const unallocLabelList& neighbour = mesh_.neighbour();
-    const surfaceVectorField& areas = mesh_.Sf();
-    const surfaceScalarField& magAreas = mesh_.magSf();
+    const surfaceVectorField& Sf = mesh_.Sf();
 
-    // Setup temporary storage for cell center to face center distances
-    scalarField ownerCellFaceDistances(areas.size());
-    scalarField neighbourCellFaceDistances(areas.size());
+    // ... and reference to the internal field of the weighting factors
+    scalarField& w = weightingFactors.internalField();
 
-    forAll(owner, faceI)
+    forAll(owner, facei)
     {
-        // Note: added mag in the dot-product in the numerator.  For
-        // all valid meshes, the non-orthogonality will be less that
+        // Note: mag in the dot-product.
+        // For all valid meshes, the non-orthogonality will be less that
         // 90 deg and the dot-product will be positive.  For invalid
         // meshes (d & s <= 0), this will stabilise the calculation
-        // but the result will be poor.  Meshes with this problem will
-        // be caught in mesh checking.  
-        ownerCellFaceDistances[faceI] =
-        mag
-        (
-            areas[faceI] & (faceCentres[faceI] - cellCentres[owner[faceI]])
-        )/magAreas[faceI];
-
-        neighbourCellFaceDistances[faceI] =
-        mag
-        (
-            areas[faceI] &
-            (
-                cellCentres[neighbour[faceI]] - faceCentres[faceI]
-            )
-        )/magAreas[faceI];
+        // but the result will be poor.
+        scalar SfdOwn = mag(Sf[facei] & (Cf[facei] - C[owner[facei]]));
+        scalar SfdNei = mag(Sf[facei] & (C[neighbour[facei]] - Cf[facei]));
+        w[facei] = SfdNei/(SfdOwn + SfdNei);
     }
 
-
-    weightingFactors.internalField() =
-        neighbourCellFaceDistances
-       /(
-            ownerCellFaceDistances + neighbourCellFaceDistances
-        );
-
-    forAll(mesh_.boundary(), patchI)
+    forAll(mesh_.boundary(), patchi)
     {
-        mesh_.boundary()[patchI].makeWeights
+        mesh_.boundary()[patchi].makeWeights
         (
-            weightingFactors.boundaryField()[patchI]
+            weightingFactors.boundaryField()[patchi]
         );
     }
 
@@ -250,33 +229,35 @@ void surfaceInterpolation::makeDeltaCoeffs() const
 
 
     // Set local references to mesh data
-    const volVectorField& cellCentres = mesh_.C();
+    const volVectorField& C = mesh_.C();
     const unallocLabelList& owner = mesh_.owner();
     const unallocLabelList& neighbour = mesh_.neighbour();
-    const surfaceVectorField& areas = mesh_.Sf();
-    const surfaceScalarField& magAreas = mesh_.magSf();
+    const surfaceVectorField& Sf = mesh_.Sf();
+    const surfaceScalarField& magSf = mesh_.magSf();
 
-    forAll(owner, faceI)
+    forAll(owner, facei)
     {
-        vector delta =
-            cellCentres[neighbour[faceI]] - cellCentres[owner[faceI]];
-        vector unitArea = areas[faceI]/magAreas[faceI];
+        vector delta = C[neighbour[facei]] - C[owner[facei]];
+        vector unitArea = Sf[facei]/magSf[facei];
 
         // Standard cell-centre distance form
-        //DeltaCoeffs[faceI] = (unitArea & delta)/magSqr(delta);
+        //DeltaCoeffs[facei] = (unitArea & delta)/magSqr(delta);
 
         // Slightly under-relaxed form
-        //DeltaCoeffs[faceI] = 1.0/mag(delta);
+        //DeltaCoeffs[facei] = 1.0/mag(delta);
 
         // More under-relaxed form
-        DeltaCoeffs[faceI] = 1.0/(mag(unitArea & delta) + VSMALL);
+        //DeltaCoeffs[facei] = 1.0/(mag(unitArea & delta) + VSMALL);
+
+        // Stabilised form for bad meshes
+        DeltaCoeffs[facei] = 1.0/max(unitArea & delta, 0.05*mag(delta));
     }
 
-    forAll(DeltaCoeffs.boundaryField(), patchI)
+    forAll(DeltaCoeffs.boundaryField(), patchi)
     {
-        mesh_.boundary()[patchI].makeDeltaCoeffs
+        mesh_.boundary()[patchi].makeDeltaCoeffs
         (
-            DeltaCoeffs.boundaryField()[patchI]
+            DeltaCoeffs.boundaryField()[patchi]
         );
     }
 }
@@ -302,70 +283,69 @@ void surfaceInterpolation::makeCorrectionVectors() const
         mesh_,
         dimless
     );
-    surfaceVectorField& CorrVecs = *correctionVectors_;
+    surfaceVectorField& corrVecs = *correctionVectors_;
 
     // Set local references to mesh data
-    const volVectorField& cellCentres = mesh_.C();
+    const volVectorField& C = mesh_.C();
     const unallocLabelList& owner = mesh_.owner();
     const unallocLabelList& neighbour = mesh_.neighbour();
-    const surfaceVectorField& areas = mesh_.Sf();
-    const surfaceScalarField& magAreas = mesh_.magSf();
+    const surfaceVectorField& Sf = mesh_.Sf();
+    const surfaceScalarField& magSf = mesh_.magSf();
     const surfaceScalarField& DeltaCoeffs = deltaCoeffs();
 
-    forAll(owner, faceI)
+    forAll(owner, facei)
     {
-        vector unitArea = areas[faceI]/magAreas[faceI];
-        vector delta =
-            cellCentres[neighbour[faceI]] - cellCentres[owner[faceI]];
+        vector unitArea = Sf[facei]/magSf[facei];
+        vector delta = C[neighbour[facei]] - C[owner[facei]];
 
-        CorrVecs[faceI] = unitArea - delta*DeltaCoeffs[faceI];
+        corrVecs[facei] = unitArea - delta*DeltaCoeffs[facei];
     }
 
     // Boundary correction vectors set to zero for boundary patches
     // and calculated consistently with internal corrections for
     // coupled patches
 
-    forAll(CorrVecs.boundaryField(), patchI)
+    forAll(corrVecs.boundaryField(), patchi)
     {
-        fvPatchVectorField& patchCorrVecs = CorrVecs.boundaryField()[patchI];
+        fvsPatchVectorField& patchcorrVecs = corrVecs.boundaryField()[patchi];
 
-        if (!patchCorrVecs.coupled())
+        if (!patchcorrVecs.coupled())
         {
-            patchCorrVecs = vector::zero;
+            patchcorrVecs = vector::zero;
         }
         else
         {
-            const fvPatchScalarField& patchDeltaCoeffs
-                = DeltaCoeffs.boundaryField()[patchI];
+            const fvsPatchScalarField& patchDeltaCoeffs
+                = DeltaCoeffs.boundaryField()[patchi];
 
-            const fvPatch& p = patchCorrVecs.patch();
+            const fvPatch& p = patchcorrVecs.patch();
 
-            vectorField patchDeltas = mesh_.boundary()[patchI].delta();
+            vectorField patchDeltas = mesh_.boundary()[patchi].delta();
 
-            forAll(p, patchFaceI)
+            forAll(p, patchFacei)
             {
                 vector unitArea =
-                    areas.boundaryField()[patchI][patchFaceI]
-                    /magAreas.boundaryField()[patchI][patchFaceI];
+                    Sf.boundaryField()[patchi][patchFacei]
+                   /magSf.boundaryField()[patchi][patchFacei];
 
-                const vector& delta = patchDeltas[patchFaceI];
+                const vector& delta = patchDeltas[patchFacei];
 
-                patchCorrVecs[patchFaceI] =
-                    unitArea - delta*patchDeltaCoeffs[patchFaceI];
+                patchcorrVecs[patchFacei] =
+                    unitArea - delta*patchDeltaCoeffs[patchFacei];
             }
         }
     }
 
     scalar NonOrthogCoeff = 0.0;
 
-    if (magAreas.size() > 0)
+    if (magSf.size() > 0)
     {
         NonOrthogCoeff =
             asin
             (
                 min
                 (
-                    (sum(magAreas*mag(CorrVecs))/sum(magAreas)).value(),
+                    (sum(magSf*mag(corrVecs))/sum(magSf)).value(),
                     1.0
                 )
             )*180.0/mathematicalConstant::pi;
@@ -396,8 +376,6 @@ void surfaceInterpolation::makeCorrectionVectors() const
             << "Finished constructing non-orthogonal correction vectors"
             << endl;
     }
-
-    //mesh_.checkFaceDotProduct(true, NULL);
 }
 
 

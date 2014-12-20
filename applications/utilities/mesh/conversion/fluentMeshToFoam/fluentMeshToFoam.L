@@ -838,7 +838,7 @@ endOfSection               {space}")"{space}
 label findFace(const primitiveMesh& mesh, const face& f)
 {
     // Get faces using zeroth vertex of face.
-    const labelList& pFaces = mesh.pointFaces()[f[0]];
+    const labelList& pFaces = mesh.pointFaces()[f[0] ];
 
     forAll(pFaces, i)
     {
@@ -915,7 +915,7 @@ int main(int argc, char *argv[])
 
     forAll (cellFaces, celli)
     {
-        cellFaces[celli].setSize(fluentModelNFaces[fluentCellModelID[celli]]);
+        cellFaces[celli].setSize(fluentModelNFaces[fluentCellModelID[celli] ]);
     }
 
     // fill in owner and neighbour
@@ -925,7 +925,7 @@ int main(int argc, char *argv[])
         if (owner[faceI] > -1)
         {
             label curCell = owner[faceI];
-            cellFaces[curCell][nFacesInCell[curCell]] = faceI;
+            cellFaces[curCell][nFacesInCell[curCell] ] = faceI;
 
             nFacesInCell[curCell]++;
         }
@@ -936,7 +936,7 @@ int main(int argc, char *argv[])
         if (neighbour[faceI] > -1)
         {
             label curCell = neighbour[faceI];
-            cellFaces[curCell][nFacesInCell[curCell]] = faceI;
+            cellFaces[curCell][nFacesInCell[curCell] ] = faceI;
 
             nFacesInCell[curCell]++;
         }
@@ -1534,10 +1534,6 @@ int main(int argc, char *argv[])
         patchPhysicalTypes
     );
 
-    Info<< endl << "Checking mesh..." << flush;
-    pShapeMesh.checkMesh();
-    Info<< "done." << endl << endl;
-
     // Set the precision of the points data to 10
     IOstream::defaultPrecision(10);
 
@@ -1588,14 +1584,14 @@ int main(int argc, char *argv[])
                 << " of type " << type << " starting at " << start() - 1
                 << " ending at " << end() - 1 << " to cellSet." << endl;
 
-	        labelList cls(end() - start());
+	        labelList cls(end() - start() + 1);
 
             // Mark zone cells, used for finding faces
             boolList zoneCell(pShapeMesh.nCells(), false);
             
 	        // shift cell indizes by 1
 	        label nr=0;
-	        for (label celli = (start() - 1); celli < (end() - 1); celli++)
+	        for (label celli = (start() - 1); celli < end(); celli++)
             {
                 cls[nr]=celli;
                 zoneCell[celli] = true;
@@ -1640,7 +1636,7 @@ int main(int argc, char *argv[])
                 const labelList& faceCells = bPatches[pI].faceCells();
                 forAll(faceCells, fcI)
                 {
-                    if(zoneCell[faceCells[fcI]])
+                    if(zoneCell[faceCells[fcI] ])
                     {
                         boundaryZones[pI].append(name);
                         break;

@@ -1,2 +1,0 @@
-libfoamUser.C
-LIB = $(FOAM_LIBBIN)/libfoamUser

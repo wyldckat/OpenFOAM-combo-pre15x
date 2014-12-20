@@ -22,10 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    SlicedGeometricField
-
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "SlicedGeometricField.H"
 
@@ -61,7 +58,7 @@ slicedBoundaryField
             new SlicedPatchField<Type>
             (
                 mesh.boundary()[patchi],
-                Field<Type>::null(),
+                DimensionedField<Type, GeoMesh>::null(),
                 completeField
             )
         );

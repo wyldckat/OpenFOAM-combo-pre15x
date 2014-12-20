@@ -97,6 +97,49 @@ inline List<T>& CompactListList<T>::m()
 }
 
 
+template<class T>
+inline label CompactListList<T>::index(const label i, const label j) const
+{
+    if (i == 0)
+    {
+        return j;
+    }
+    else
+    {
+        return offsets_[i-1] + j;
+    }
+}
+
+template<class T>
+inline label CompactListList<T>::whichRow(const label i) const
+{
+    if (i < 0 || i >= m_.size())
+    {
+        FatalErrorIn
+        (
+            "CompactListList<T>::whichRow(const label i) const"
+        )   << "Index " << i << " outside 0.." << m_.size()
+            << abort(FatalError);
+    }
+
+    forAll(offsets_, rowI)
+    {
+        if (i < offsets_[rowI])
+        {
+            return rowI;
+        }
+    }
+
+    return -1;
+}
+
+template<class T>
+inline label CompactListList<T>::whichColumn(const label row, const label i)
+ const
+{
+    return i - index(row, 0);
+}
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class T>
@@ -129,14 +172,7 @@ inline const UList<T> CompactListList<T>::operator[](const label i) const
 template<class T>
 inline T& CompactListList<T>::operator()(const label i, const label j)
 {
-    if (i == 0)
-    {
-        return m_[j];
-    }
-    else
-    {
-        return m_[offsets_[i-1] + j];
-    }
+    return m_[index(i, j)];
 }
 
 template<class T>
@@ -146,14 +182,7 @@ inline const T& CompactListList<T>::operator()
     const label j
 ) const
 {
-    if (i == 0)
-    {
-        return m_[j];
-    }
-    else
-    {
-        return m_[offsets_[i-1] + j];
-    }
+    return m_[index(i, j)];
 }
 
 

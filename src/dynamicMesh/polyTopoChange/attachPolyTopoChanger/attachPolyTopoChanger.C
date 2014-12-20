@@ -27,7 +27,6 @@ License
 #include "attachPolyTopoChanger.H"
 #include "polyMesh.H"
 #include "polyTopoChange.H"
-#include "mapPolyMesh.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -65,7 +64,7 @@ void Foam::attachPolyTopoChanger::attach(const bool removeEmptyPatches)
     const fileName oldInst = mesh_.facesInstance();
 
     // Execute all polyMeshModifiers
-    changeMesh();
+    changeMesh(false);  // no inflation
 
     const pointField p = mesh_.oldAllPoints();
 

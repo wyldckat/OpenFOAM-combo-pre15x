@@ -47,9 +47,6 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
-class fileName;
-
 /*---------------------------------------------------------------------------*\
                            Class surfaceWriter Declaration
 \*---------------------------------------------------------------------------*/
@@ -85,6 +82,7 @@ public:
 
         //- Construct null
         surfaceWriter();
+
 
     // Destructor
 
@@ -128,6 +126,8 @@ defineNamedTemplateTypeNameAndDebug(type, 0);
                                                             \
 makeTypeWritersTypeName(typeWriter##ScalarWriter);          \
 makeTypeWritersTypeName(typeWriter##VectorWriter);          \
+makeTypeWritersTypeName(typeWriter##SphericalTensorWriter); \
+makeTypeWritersTypeName(typeWriter##SymmTensorWriter);      \
 makeTypeWritersTypeName(typeWriter##TensorWriter);
 
 // Define type info for single template instantiation (e.g. vector)
@@ -146,6 +146,8 @@ addToRunTimeSelectionTable                                  \
                                                             \
 makeWriterTypes(scalarWriter, typeWriter##ScalarWriter);    \
 makeWriterTypes(vectorWriter, typeWriter##VectorWriter);    \
+makeWriterTypes(sphericalTensorWriter, typeWriter##SphericalTensorWriter); \
+makeWriterTypes(symmTensorWriter, typeWriter##SymmTensorWriter);\
 makeWriterTypes(tensorWriter, typeWriter##TensorWriter);
 
 

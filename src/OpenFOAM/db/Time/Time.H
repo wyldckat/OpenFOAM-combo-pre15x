@@ -50,6 +50,7 @@ SourceFiles
 #include "instantList.H"
 #include "NamedEnum.H"
 #include "typeInfo.H"
+#include "dlLibraryTable.H"
 #include "functionObjectList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -155,6 +156,9 @@ private:
 
         //- Is runtim modification of dictionaries allowed
         Switch runTimeModifiable_;
+
+        //- Instantiate a dummy class to cause the reading of dynamic libraries
+        dlLibraryTable::readDlLibrary readLibs_;
 
         //- Function objects executed at start and on ++, +=
         functionObjectList functionObjects_;
@@ -328,6 +332,12 @@ public:
             //- Return end time
             virtual dimensionedScalar endTime() const;
 
+            //- Return the list of function objects
+            const functionObjectList& functionObjects() const
+            {
+                return functionObjects_;
+            }
+
 
         // Check
 
@@ -347,7 +357,11 @@ public:
             virtual void setTime(const instant&, const label newIndex);
 
             //- Reset the time and time-index
-            virtual void setTime(const dimensionedScalar&,const label newIndex);
+            virtual void setTime
+            (
+                const dimensionedScalar&,
+                const label newIndex
+            );
 
             //- Reset the time and time-index
             virtual void setTime(const scalar, const label newIndex);
@@ -369,6 +383,12 @@ public:
 
             //- Reset time after sub-cycling back to given TimeState
             virtual void endSubCycle(const TimeState&);
+
+            //- Return non-const access to the list of function objects
+            functionObjectList& functionObjects()
+            {
+                return functionObjects_;
+            }
 
 
     // Member operators

@@ -33,7 +33,12 @@ License
 namespace Foam
 {
     makeLimitedSurfaceInterpolationScheme(limitedLinear, limitedLinearLimiter)
-    makeLimitedVSurfaceInterpolationScheme(limitedLinear, limitedLinearLimiter)
+
+    makeLimitedVSurfaceInterpolationScheme
+    (
+        limitedLinearV,
+        limitedLinearLimiter
+    )
 
     makeLLimitedSurfaceInterpolationTypeScheme
     (

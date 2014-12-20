@@ -318,37 +318,6 @@ bool Foam::PointEdgeWave<Type>::updateEdge
 }
 
 
-// Copy point information into member data
-template <class Type>
-void Foam::PointEdgeWave<Type>::setPointInfo
-(
-    const labelList& changedPoints,
-    const List<Type>& changedPointsInfo
-)
-{
-    forAll(changedPoints, changedPointI)
-    {
-        label pointI = changedPoints[changedPointI];
-
-        bool wasValid = allPointInfo_[pointI].valid();
-
-        // Copy info for pointI
-        allPointInfo_[pointI] = changedPointsInfo[changedPointI];
-
-        // Maintain count of unset points
-        if (!wasValid && allPointInfo_[pointI].valid())
-        {
-            --nUnvisitedPoints_;
-        }
-
-        // Mark pointI as changed, both on list and on point itself.
-
-        changedPoint_[pointI] = true;
-        changedPoints_[nChangedPoints_++] = pointI;
-    }
-}
-
-
 // Check if patches of given type name are present
 template <class Type>
 template <class PatchType>
@@ -740,8 +709,7 @@ Foam::PointEdgeWave<Type>::PointEdgeWave
     hasProcPatches_(countPatchType<processorPolyPatch>() > 0),
     nEvals_(0),
     nUnvisitedPoints_(pMesh_().nPoints()),
-    nUnvisitedEdges_(pMesh_().nEdges()),
-    iter_(0)
+    nUnvisitedEdges_(pMesh_().nEdges())
 {
     if (allPointInfo_.size() != pMesh_().nPoints())
     {
@@ -787,9 +755,9 @@ Foam::PointEdgeWave<Type>::PointEdgeWave
     }
 
     // Iterate until nothing changes
-    iterate(maxIter);
+    label iter = iterate(maxIter);
 
-    if ((maxIter > 0) && (iter_ >= maxIter))
+    if ((maxIter > 0) && (iter >= maxIter))
     {
         FatalErrorIn
         (
@@ -826,6 +794,40 @@ template <class Type>
 Foam::label Foam::PointEdgeWave<Type>::getUnsetEdges() const
 {
     return nUnvisitedEdges_;
+}
+
+
+// Copy point information into member data
+template <class Type>
+void Foam::PointEdgeWave<Type>::setPointInfo
+(
+    const labelList& changedPoints,
+    const List<Type>& changedPointsInfo
+)
+{
+    forAll(changedPoints, changedPointI)
+    {
+        label pointI = changedPoints[changedPointI];
+
+        bool wasValid = allPointInfo_[pointI].valid();
+
+        // Copy info for pointI
+        allPointInfo_[pointI] = changedPointsInfo[changedPointI];
+
+        // Maintain count of unset points
+        if (!wasValid && allPointInfo_[pointI].valid())
+        {
+            --nUnvisitedPoints_;
+        }
+
+        // Mark pointI as changed, both on list and on point itself.
+
+        if (!changedPoint_[pointI])
+        {
+            changedPoint_[pointI] = true;
+            changedPoints_[nChangedPoints_++] = pointI;
+        }
+    }
 }
 
 
@@ -979,13 +981,26 @@ Foam::label Foam::PointEdgeWave<Type>::pointToEdge()
 template <class Type>
 Foam::label Foam::PointEdgeWave<Type>::iterate(const label maxIter)
 {
+    if (nCyclicPatches_ > 0)
+    {
+        // Transfer changed points across cyclic halves
+        handleCyclicPatches();
+    }
+    if (hasProcPatches_)
+    {
+        // Transfer changed points from neighbouring processors.
+        handleProcPatches();
+    }
+
     nEvals_ = 0;
 
-    while(iter_ < maxIter)
+    label iter = 0;
+
+    while(iter < maxIter)
     {
         if (debug)
         {
-            Pout<< "Iteration " << iter_ << endl;
+            Pout<< "Iteration " << iter << endl;
         }
 
         label nEdges = pointToEdge();
@@ -1020,10 +1035,10 @@ Foam::label Foam::PointEdgeWave<Type>::iterate(const label maxIter)
             break;
         }
 
-        iter_++;
+        iter++;
     }
 
-    return nUnvisitedPoints_;
+    return iter;
 }
 
 // ************************************************************************* //

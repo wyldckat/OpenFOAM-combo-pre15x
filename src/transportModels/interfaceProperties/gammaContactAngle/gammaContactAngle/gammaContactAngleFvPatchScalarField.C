@@ -27,6 +27,7 @@ License
 #include "gammaContactAngleFvPatchScalarField.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fvPatchFieldMapper.H"
+#include "volMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,7 +43,7 @@ defineTypeNameAndDebug(gammaContactAngleFvPatchScalarField, 0);
 gammaContactAngleFvPatchScalarField::gammaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     zeroGradientFvPatchScalarField(p, iF)
@@ -53,7 +54,7 @@ gammaContactAngleFvPatchScalarField::gammaContactAngleFvPatchScalarField
 (
     const gammaContactAngleFvPatchScalarField& gcpsf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -64,7 +65,7 @@ gammaContactAngleFvPatchScalarField::gammaContactAngleFvPatchScalarField
 gammaContactAngleFvPatchScalarField::gammaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -86,7 +87,7 @@ gammaContactAngleFvPatchScalarField::gammaContactAngleFvPatchScalarField
 gammaContactAngleFvPatchScalarField::gammaContactAngleFvPatchScalarField
 (
     const gammaContactAngleFvPatchScalarField& gcpsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     zeroGradientFvPatchScalarField(gcpsf, iF)

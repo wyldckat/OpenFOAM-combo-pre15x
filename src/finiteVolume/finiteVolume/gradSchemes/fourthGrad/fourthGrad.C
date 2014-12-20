@@ -124,7 +124,7 @@ fourthGrad<Type>::grad
     {
         if (secondfGrad.boundaryField()[patchi].coupled())
         {
-            const fvPatchVectorField& patchOwnLs =
+            const fvsPatchVectorField& patchOwnLs =
                 ownLs.boundaryField()[patchi];
 
             const scalarField& lambdap = lambda.boundaryField()[patchi];

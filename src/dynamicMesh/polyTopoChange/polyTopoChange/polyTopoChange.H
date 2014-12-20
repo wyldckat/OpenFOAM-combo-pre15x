@@ -26,216 +26,614 @@ Class
     polyTopoChange
 
 Description
-    Class accumulates information on how to perform mesh refinement.
-    Once the refinement request is completed, polyMesh modifies the mesh
-    topology.
+    Direct mesh changes based on polyTopoChange syntax.
+
+    Instead of recording changes and executing them all in one go (as does
+    polyTopoChange) this class actually holds the current points/faces/cells
+    and does the change immediately.
+    It can be asked to compress out all unused points/faces/cells and
+    renumber everything to be consistent.
+
+    Note:
+    - adding a face using non-existing cells causes all intermediate cells
+    to be added. So always first add cells/points and then faces.
+    (or set strict checking)
+    - strict checking:
+        -any added/modified face can only use already existing vertices
+        -any added face                 ,,                     cells
+        -no item can be removed more than once.
+    - removed cell: cell set to 0 faces.
+    - removed face: face set to 0 vertices.
+    - removed point: coordinate set to greatPoint (GREAT,GREAT,GREAT).
+    Note that this might give problems if this value is used already.
+    To see if point is equal to above value we don't use == (which might give
+    problems with roundoff error) but instead compare the individual component
+    with >.
+    - coupled patches: the reorderCoupledFaces routine (borrowed from
+    the couplePatches utility) reorders coupled patch faces and
+    uses the cyclicPolyPatch,processorPolyPatch functionality.
 
 SourceFiles
     polyTopoChange.C
+    polyTopoChangeI.H
+    polyTopoChangeTemplates.C
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef polyTopoChange_H
 #define polyTopoChange_H
 
+#include "autoPtr.H"
 #include "DynamicList.H"
+#include "labelList.H"
+#include "IOobject.H"
+#include "typeInfo.H"
+#include "pointField.H"
+#include "PtrList.H"
+#include "cellList.H"
+#include "Map.H"
 #include "labelHashSet.H"
-#include "polyAddPoint.H"
-#include "polyModifyPoint.H"
-#include "polyRemovePoint.H"
-#include "polyAddFace.H"
-#include "polyModifyFace.H"
-#include "polyRemoveFace.H"
-#include "polyAddCell.H"
-#include "polyModifyCell.H"
-#include "polyRemoveCell.H"
+#include "mapPolyMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
+// Class forward declarations
+class face;
+class primitiveMesh;
 class polyMesh;
+class fvMesh;
+class Time;
+class fileName;
+class polyBoundaryMesh;
+class polyPatch;
+class dictionary;
+class topoAction;
+class objectMap;
 
 /*---------------------------------------------------------------------------*\
-                       Class polyTopoChange Declaration
+                           Class polyTopoChange Declaration
 \*---------------------------------------------------------------------------*/
 
 class polyTopoChange
 {
+        ////- Less function class used by upper-triangular face ordering
+        ////  - internal faces according to owner or for same owner according to
+        ////    neighbour
+        ////  - boundary faces according to region
+        //class faceLess
+        //{
+        //    const unallocLabelList& own_;
+        //    const unallocLabelList& nei_;
+        //    const unallocLabelList& region_;
+        //
+        //public:
+        //
+        //    faceLess
+        //    (
+        //        const unallocLabelList& own,
+        //        const unallocLabelList& nei,
+        //        const unallocLabelList& region
+        //    )
+        //    :
+        //        own_(own),
+        //        nei_(nei),
+        //        region_(region)
+        //    {}
+        //
+        //    bool operator()(const label a, const label b)
+        //    {
+        //        if (nei_[a] == -1)
+        //        {
+        //            if (nei_[b] == -1)
+        //            {
+        //                // Two boundary faces
+        //                return region_[a] < region_[b];
+        //            }
+        //            else
+        //            {
+        //                // b is internal face.
+        //                return false;
+        //            }
+        //        }
+        //        else
+        //        {
+        //            if (nei_[b] == -1)
+        //            {
+        //                return true;
+        //            }
+        //            else
+        //            {
+        //                // two internal faces.
+        //                if (own_[a] < own_[b])
+        //                {
+        //                    return true;
+        //                }
+        //                else if (own_[a] > own_[b])
+        //                {
+        //                    return false;
+        //                }
+        //                else
+        //                {
+        //                    return nei_[a] < nei_[b];
+        //                }
+        //            }
+        //        }
+        //    }
+        //};
+
+
+
+private:
+
+    // Static data members
+
+        //- Value of deleted point
+        static const point greatPoint;
+
+
     // Private data
 
-        //- Reference to mesh to be refined
-        const polyMesh& mesh_;
+        //- Whether to allow referencing illegal points/cells/faces
+        //  when adding/removing data.
+        const bool strict_;
 
-        //- Points to add
-        DynamicList<polyAddPoint> addedPoints_;
 
-        //- Points to modify
-        DynamicList<polyModifyPoint> modifiedPoints_;
+        // Patches
 
-        //- Points to remove
-        labelHashSet removedPoints_;
+            //- Number of patches
+            label nPatches_;
 
-        //- Faces to add
-        DynamicList<polyAddFace> addedFaces_;
 
-        //- Faces to modify
-        DynamicList<polyModifyFace> modifiedFaces_;
+        // Points
 
-        //- Faces to remove
-        labelHashSet removedFaces_;
+            //- Current point set
+            DynamicList<point> points_;
 
-        //- Number of cells to add
-        DynamicList<polyAddCell> addedCells_;
+            //- Original point label (or masterpoint for added points)
+            DynamicList<label> pointMap_;
 
-        //- Cells to modify
-        DynamicList<polyModifyCell> modifiedCells_;
+            //- For all original and added points contains new point label.
+            //  (used to map return value of addPoint to new mesh point)
+            DynamicList<label> reversePointMap_;
 
-        //- Cells to remove
-        labelHashSet removedCells_;
+            //- Zone of point
+            Map<label> pointZone_;
+
+            //- Retired points
+            labelHashSet retiredPoints_;
+
+
+        // Faces
+
+            //- Current faceList
+            DynamicList<face> faces_;
+
+            //- Patch for every external face (-1 for internal faces)
+            DynamicList<label> region_;
+
+            //- Owner for all faces
+            DynamicList<label> faceOwner_;
+
+            //- Neighbour for internal faces (-1 for external faces)
+            DynamicList<label> faceNeighbour_;
+
+            //- Original face label. Or master face for added-from-faces; 
+            //  -1 for faces added-from-edge or added-from-point)
+            DynamicList<label> faceMap_;
+
+            //- For all original and added faces contains new face label
+            //  (used to map return value of addFace to new mesh face)
+            DynamicList<label> reverseFaceMap_;
+
+            //- Faces added from point (corresponding faceMap_ will
+            //  be -1)
+            Map<label> faceFromPoint_;
+
+            //- Faces added from edge (corresponding faceMap_ will
+            //  be -1)
+            Map<label> faceFromEdge_;
+
+            //- In mapping whether to reverse the flux.
+            labelHashSet flipFaceFlux_;
+
+            //- Zone of face
+            Map<label> faceZone_;
+
+            //- Orientation of face in zone
+            Map<bool> faceZoneFlip_;
+
+            //- Active faces
+            label nActiveFaces_;
+
+
+        // Cells
+
+            //- Original cell label or master cell for added-from-cell;
+            //  -1 for cells added from face or edge.
+            DynamicList<label> cellMap_;
+
+            //- For all original and added cells contains new cell label
+            //  (used to map return value of addCell to new mesh cell)
+            DynamicList<label> reverseCellMap_;
+
+            //- Cells added from point
+            Map<label> cellFromPoint_;
+
+            //- Cells added from edge
+            Map<label> cellFromEdge_;
+
+            //- Cells added from face
+            Map<label> cellFromFace_;
+
+            //- Zone of cell
+            DynamicList<label> cellZone_;
 
 
     // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        polyTopoChange(const polyTopoChange&);
+        //- Reorder contents of container according to map
+        template<class T>
+        static void reorder(const labelList& map, DynamicList<T>&);
+        template<class T>
+        static void reorder(const labelList& map, List<DynamicList<T> >&);
+        template<class T>
+        static void renumberKey(const labelList& map, Map<T>&);
 
-        //- Disallow default bitwise assignment
-        void operator=(const polyTopoChange&);
+        //- Renumber elements of list according to map
+        static void renumber(const labelList&, DynamicList<label>&);
+        static void renumber(const labelList&, labelHashSet&);
+        //- Special handling of reverse maps which have <-1 in them
+        static void renumberReverseMap(const labelList&, DynamicList<label>&);
+
+        //- Renumber & compact elements of list according to map
+        static void renumberCompact(const labelList&, labelList&);
+
+        //- Count number of added and removed quantities from maps.
+        static void countMap
+        (
+            const labelList& map,
+            const labelList& reverseMap,
+            label& nAdd,
+            label& nInflate,
+            label& nMerge,
+            label& nRemove
+        );
+
+        //- Print some stats about mesh
+        static void writeMeshStats(const polyMesh& mesh, Ostream&);
+
+        //- Calculate object maps. Requires reverseMap to have destination
+        //  to be marked with <-1.
+        static void getMergeSets
+        (
+            const labelList& reverseCellMap,
+            const labelList& cellMap,
+            List<objectMap>& cellsFromCells
+        );
+
+        //- Check inputs to modFace or addFace
+        void checkFace
+        (
+            const face&,
+            const label faceI,
+            const label own,
+            const label nei,
+            const label patchI,
+            const label zoneI
+        ) const;
+
+        //- Construct cells (in packed storage)
+        void makeCells
+        (
+            const label nActiveFaces,
+            labelList& cellFaces,
+            labelList& cellFaceOffsets
+        ) const;
+
+        //- Do upper-triangular ordering and patch ordering.
+        void getFaceOrder
+        (
+            const label nActiveFaces,
+            const labelList& cellFaces,
+            const labelList& cellFaceOffsets,
+
+            labelList& oldToNew,
+            labelList& patchSizes,
+            labelList& patchStarts
+        ) const;
+
+        //- Compact and reorder faces according to map
+        void reorderCompactFaces
+        (
+            const label newSize,
+            const labelList& oldToNew
+        );
+
+        //- Remove all unused/removed points/faces/cells and update
+        //  face ordering.
+        void compact
+        (
+            labelList& patchSizes,
+            labelList& patchStarts
+        );
+
+        //- Select either internal or external faces out of faceLabels
+        static labelList selectFaces
+        (
+            const primitiveMesh&,
+            const labelList& faceLabels,
+            const bool internalFacesOnly
+        );
+
+        //- Calculate mapping for patchpoints only
+        void calcPatchPointMap
+        (
+            const List<Map<label> >&,
+            const labelList&,
+            const polyBoundaryMesh&,
+            labelListList&
+        ) const;
+
+        void calcFaceInflationMaps
+        (
+            const polyMesh&,
+            List<objectMap>&,
+            List<objectMap>&,
+            List<objectMap>&
+        ) const;
+
+        void calcCellInflationMaps
+        (
+            const polyMesh&,
+            List<objectMap>&,
+            List<objectMap>&,
+            List<objectMap>&,
+            List<objectMap>& 
+        ) const;
+
+        void resetZones
+        (
+            const polyMesh&,        // mesh to get existing info from
+            polyMesh&,              // mesh to change zones on
+            labelListList&,
+            labelListList&,
+            labelListList&
+        ) const;
+
+        void calcFaceZonePointMap
+        (
+            const polyMesh&,
+            const List<Map<label> >&,
+            labelListList&
+        ) const;
 
 
-    // Private static data
+        // Coupling
 
-        //- Minimum dynamic list size for object insertion
-        static const label minListSize;
+            //- Rotate face by number of positions
+            static face rotateFace(const face& f, const label nPos);
 
-        //- Estimated fraction of removed points
-        static const label pointFraction;
+            //- Do all coupled patch face reordering
+            void reorderCoupledFaces
+            (
+                const bool syncParallel,
+                const polyBoundaryMesh&,
+                const labelList& patchStarts,
+                const labelList& patchSizes,
+                const pointField& points
+            );
 
-        //- Estimated fraction of removed faces
-        static const label faceFraction;
-
-        //- Estimated fraction of removed cells
-        static const label cellFraction;
-
+        void compactAndReorder
+        (
+            const polyMesh&,
+            const bool syncParallel,
+            pointField& newPoints,
+            labelList& patchSizes,
+            labelList& patchStarts,
+            List<objectMap>& pointsFromPoints,
+            List<objectMap>& facesFromPoints,
+            List<objectMap>& facesFromEdges,
+            List<objectMap>& facesFromFaces,
+            List<objectMap>& cellsFromPoints,
+            List<objectMap>& cellsFromEdges,
+            List<objectMap>& cellsFromFaces,
+            List<objectMap>& cellsFromCells,
+            List<Map<label> >& oldPatchMeshPointMaps,
+            labelList& oldPatchNMeshPoints,
+            labelList& oldPatchStarts,
+            List<Map<label> >& oldFaceZoneMeshPointMaps
+        );
 
 public:
 
-    static int debug;
+    //- Runtime type information
+    ClassName("polyTopoChange");
+
 
 
     // Constructors
 
-        //- Construct from mesh reference
-        polyTopoChange(const polyMesh&);
-
-
-    // Destructor
-
-        ~polyTopoChange();
+        //- Construct from mesh. Adds all points/face/cells from mesh.
+        polyTopoChange(const polyMesh& mesh, const bool strict = true);
 
 
     // Member Functions
 
-        // Definition of topological change
+        // Access
 
-            //- Set topological action
+            //- Points. Shrunk after constructing mesh (or calling of compact())
+            const DynamicList<point>& points() const
+            {
+                return points_;
+            }
+
+            const DynamicList<face>& faces() const
+            {
+                return faces_;
+            }
+
+            const DynamicList<label>& region()const
+            {
+                return region_;
+            }
+
+            const DynamicList<label>& faceOwner()const
+            {
+                return faceOwner_;
+            }
+
+            const DynamicList<label>& faceNeighbour()const
+            {
+                return faceNeighbour_;
+            }
+
+            //- Is point removed?
+            inline bool pointRemoved(const label pointI) const;
+            //- Is face removed?
+            inline bool faceRemoved(const label faceI) const;
+            //- Is cell removed?
+            inline bool cellRemoved(const label cellI) const;
+
+
+        // Edit
+
+            //- Clear all storage
+            void clear();
+
+            //- Add all points/faces/cells of mesh. Additional offset for patch
+            //  or zone ids.
+            void addMesh
+            (
+                const polyMesh&,
+                const labelList& patchMap,
+                const labelList& pointZoneMap,
+                const labelList& faceZoneMap,
+                const labelList& cellZoneMap
+            );
+
+            //- Move all points. Incompatible with other topology changes.
+            void movePoints(const pointField& newPoints);
+
+            //- For compatibility with polyTopoChange: set topological action.
             label setAction(const topoAction& action);
 
+            //- Add point. Return new point label.
+            //  Notes:
+            //  - masterPointID can be < 0 (appended points)
+            //  - inCell = false: add retired point (to end of point list)
+            label addPoint
+            (
+                const point&,
+                const label masterPointID,
+                const label zoneID,
+                const bool inCell
+            );
 
-        // Topology morph data
+            //- Modify coordinate.
+            //  Notes:
+            //  - inCell = false: add retired point (to end of point list)
+            void modifyPoint
+            (
+                const label,
+                const point&,
+                const label newZoneID,
+                const bool inCell
+            );
 
-            //- Point balance (added - removed)
-            label pointBalance() const
-            {
-                return
-                    addedPoints_.size()
-                  + modifiedPoints_.size()
-                  - removedPoints_.size();
-            }
+            //- Remove/merge point.
+            void removePoint(const label, const label);
 
-            //- Face balance (added - removed)
-            label faceBalance() const
-            {
-                return
-                    addedFaces_.size()
-                  + modifiedFaces_.size()
-                  - removedFaces_.size();
-            }
+            //- Add face to cells. Return new face label.
+            //  own,nei<0, zoneID>=0 : add inactive face (to end of face list)
+            label addFace
+            (
+                const face& f,
+                const label own,
+                const label nei,
+                const label masterPointID,
+                const label masterEdgeID,
+                const label masterFaceID,
+                const bool flipFaceFlux,
+                const label patchID,
+                const label zoneID,
+                const bool zoneFlip
+            );
 
-            //- Cell balance (added - removed)
-            label cellBalance() const
-            {
-                return addedCells_.size() - removedCells_.size();
-            }
+            //- Modify vertices or cell of face.
+            void modifyFace
+            (
+                const face& f,
+                const label faceI,
+                const label own,
+                const label nei,
+                const bool flipFaceFlux,
+                const label patchID,
+                const label zoneID,
+                const bool zoneFlip
+            );
 
-            //- Added points
-            const DynamicList<polyAddPoint>& addedPoints() const
-            {
-                return addedPoints_;
-            }
+            //- Remove/merge face.
+            void removeFace(const label, const label);
 
-            //- Modified points
-            const DynamicList<polyModifyPoint>& modifiedPoints() const
-            {
-                return modifiedPoints_;
-            }
+            //- Add cell. Return new cell label.
+            label addCell
+            (
+                const label masterPointID,
+                const label masterEdgeID,
+                const label masterFaceID,
+                const label masterCellID,
+                const label zoneID
+            );
 
-            //- Map of removed points
-            const labelHashSet& removedPoints() const
-            {
-                return removedPoints_;
-            }
+            //- Modify zone of cell
+            void modifyCell(const label, const label zoneID);
 
-            //- Added faces
-            const DynamicList<polyAddFace>& addedFaces() const
-            {
-                return addedFaces_;
-            }
+            //- Remove/merge cell.
+            void removeCell(const label, const label);
 
-            //- Modified faces
-            const DynamicList<polyModifyFace>& modifiedFaces() const
-            {
-                return modifiedFaces_;
-            }
 
-            //- Map of removed faces
-            const labelHashSet& removedFaces() const
-            {
-                return removedFaces_;
-            }
+        // Other
 
-            //- Added cells
-            const DynamicList<polyAddCell>& addedCells() const
-            {
-                return addedCells_;
-            }
+            //- Inplace changes mesh without change of patches.
+            //  Adapts patch start/end and by default does parallel matching.
+            //  Clears all data. Returns map.
+            //  inflate = true : keep old mesh points. Put new points into the
+            //  returned map (preMotionPoints) so we can use inflation. Any
+            //  points out of nothing (appended points) are vector::zero.
+            //  inflate = false: set mesh points directly. Empty preMotionPoints
+            //  in the map.
+            autoPtr<mapPolyMesh> changeMesh
+            (
+                polyMesh& mesh,
+                const bool inflate,
+                const bool syncParallel = true
+            );
 
-            //- Modified cells
-            const DynamicList<polyModifyCell>& modifiedCells() const
-            {
-                return modifiedCells_;
-            }
-
-            //- Map of removed cells
-            const labelHashSet& removedCells() const
-            {
-                return removedCells_;
-            }
-
-            //- Check for consistency and report status
-            //  Returns false for no error.
-            bool check() const;
-
-            //- Clear all contents
-            void clear();
+            //- Create new mesh with old mesh patches
+            autoPtr<mapPolyMesh> makeMesh
+            (
+                autoPtr<fvMesh>& newMesh,
+                const IOobject& io,
+                const fvMesh& mesh,
+                const bool syncParallel = true
+            );
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "polyTopoChangeI.H"
+
+#ifdef NoRepository
+#   include "polyTopoChangeTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

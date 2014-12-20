@@ -33,7 +33,6 @@ License
 namespace Foam
 {
     defineTypeNameAndDebug(sphericalCS, 0);
-
     addToRunTimeSelectionTable(coordinateSystem, sphericalCS, origAxisDir);
     addToRunTimeSelectionTable(coordinateSystem, sphericalCS, origRotation);
     addToRunTimeSelectionTable(coordinateSystem, sphericalCS, dictionary);
@@ -41,10 +40,15 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+Foam::sphericalCS::sphericalCS()
+:
+    coordinateSystem()
+{}
+
 Foam::sphericalCS::sphericalCS
 (
     const word& name,
-    const vector& origin,
+    const point& origin,
     const vector& axis,
     const vector& direction
 )
@@ -56,7 +60,7 @@ Foam::sphericalCS::sphericalCS
 Foam::sphericalCS::sphericalCS
 (
     const word& name,
-    const vector& origin,
+    const point& origin,
     const coordinateRotation& cr
 )
 :
@@ -75,64 +79,71 @@ Foam::sphericalCS::sphericalCS
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-Foam::vector Foam::sphericalCS::toGlobal(const vector& localV) const
+Foam::vector Foam::sphericalCS::localToGlobal
+(
+    const vector& local,
+    bool translate
+) const
 {
-    scalar r = localV.x();
-    scalar theta = localV.y()*mathematicalConstant::pi/180.0;
-    scalar phi = localV.z()*mathematicalConstant::pi/180.0;
+    scalar r = local.x();
+    scalar theta = local.y()*mathematicalConstant::pi/180.0;
+    scalar phi = local.z()*mathematicalConstant::pi/180.0;
 
-    return coordinateSystem::toGlobal
+    return coordinateSystem::localToGlobal
     (
-        vector(r*cos(theta)*sin(phi), r*sin(theta)*sin(phi), r*cos(phi))
+        vector(r*cos(theta)*sin(phi), r*sin(theta)*sin(phi), r*cos(phi)),
+        translate
     );
 }
 
-
-Foam::tmp<Foam::vectorField> Foam::sphericalCS::toGlobal
+Foam::tmp<Foam::vectorField> Foam::sphericalCS::localToGlobal
 (
-    const vectorField& localV
+    const vectorField& local,
+    bool translate
 ) const
 {
-    const scalarField r = localV.component(vector::X);
+    const scalarField r = local.component(vector::X);
 
     const scalarField theta =
-        localV.component(vector::Y)*mathematicalConstant::pi/180.0;
+        local.component(vector::Y)*mathematicalConstant::pi/180.0;
 
     const scalarField phi =
-        localV.component(vector::Z)*mathematicalConstant::pi/180.0;
+        local.component(vector::Z)*mathematicalConstant::pi/180.0;
 
-    vectorField lc(localV.size());
+    vectorField lc(local.size());
     lc.replace(vector::X, r*cos(theta)*sin(phi));
     lc.replace(vector::Y, r*sin(theta)*sin(phi));
     lc.replace(vector::Z, r*cos(phi));
 
-    return coordinateSystem::toGlobal(lc);
+    return coordinateSystem::localToGlobal(lc, translate);
 }
 
 
-Foam::vector Foam::sphericalCS::toLocal(const vector& globalV) const
-{
-    const vector lc = coordinateSystem::toLocal(globalV);
-    const scalar r = mag(lc);
-
-    return
-        vector
-        (
-            r,
-            atan2(lc.y(), lc.x())*180.0/mathematicalConstant::pi,
-            acos(lc.z()/(r + SMALL))*180.0/mathematicalConstant::pi
-        );
-}
-
-
-Foam::tmp<Foam::vectorField> Foam::sphericalCS::toLocal
+Foam::vector Foam::sphericalCS::globalToLocal
 (
-    const vectorField& globalV
+    const vector& global,
+    bool translate
 ) const
 {
-    const vectorField lc = coordinateSystem::toLocal(globalV);
+    const vector lc = coordinateSystem::globalToLocal(global, translate);
+    const scalar r = mag(lc);
 
+    return vector
+    (
+        r,
+        atan2(lc.y(), lc.x())*180.0/mathematicalConstant::pi,
+        acos(lc.z()/(r + SMALL))*180.0/mathematicalConstant::pi
+    );
+}
+
+
+Foam::tmp<Foam::vectorField> Foam::sphericalCS::globalToLocal
+(
+    const vectorField& global,
+    bool translate
+) const
+{
+    const vectorField lc = coordinateSystem::globalToLocal(global, translate);
     const scalarField r = mag(lc);
 
     tmp<vectorField> tresult(new vectorField(lc.size()));
@@ -141,7 +152,7 @@ Foam::tmp<Foam::vectorField> Foam::sphericalCS::toLocal
     result.replace
     (
         vector::X, r
-        
+
     );
 
     result.replace

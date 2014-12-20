@@ -22,7 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "fvPatch.H"
 
@@ -49,7 +49,7 @@ Foam::tmp<Foam::Field<Type> > Foam::fvPatch::patchInternalField
 
 
 template<class GeometricField, class Type>
-const Foam::fvPatchField<Type>& Foam::fvPatch::patchField
+const typename GeometricField::PatchFieldType& Foam::fvPatch::patchField
 (
     const GeometricField& gf
 ) const

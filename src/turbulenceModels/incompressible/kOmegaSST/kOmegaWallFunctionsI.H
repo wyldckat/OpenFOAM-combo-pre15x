@@ -67,7 +67,8 @@ Description
             const scalarField& nuw = nu().boundaryField()[patchi];
             const scalarField& nutw = nut_.boundaryField()[patchi];
 
-            scalarField magFaceGradU = mag(U_.boundaryField()[patchi].snGrad());
+            scalarField magFaceGradU =
+                mag(U_.boundaryField()[patchi].snGrad());
 
             forAll(curPatch, facei)
             {
@@ -91,7 +92,7 @@ Description
                 if (yPlus > yPlusLam_)
                 {
                     G[faceCelli] +=
-                        nutw[facei]
+                        (nutw[facei] + nuw[facei])
                        *magFaceGradU[facei]
                        *Cmu25*sqrt(k_[faceCelli])
                        /(kappa_*y_[faceCelli]);

@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Creates a primitivePatch from a plane and a mesh
-
 \*---------------------------------------------------------------------------*/
 
 #include "cuttingPlane.H"
@@ -32,30 +29,38 @@ Description
 #include "linePointRef.H"
 #include "meshTools.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // Find cut cells
-void cuttingPlane::calcCutCells
+void Foam::cuttingPlane::calcCutCells
 (
     const primitiveMesh& mesh,
-    const scalarField& dotProducts
+    const scalarField& dotProducts,
+    const labelList& cellIdLabels
 )
 {
     const labelListList& cellEdges = mesh.cellEdges();
     const edgeList& edges = mesh.edges();
 
-    cutCells_.setSize(cellEdges.size());
+    label listSize = cellEdges.size();
+    if (&cellIdLabels)
+    {
+        listSize = cellIdLabels.size();
+    }
+
+    cutCells_.setSize(listSize);
     label cutcellI(0);
 
     // Find the cut cells by detecting any cell that uses points with
     // opposing dotProducts.
-    forAll(cellEdges, cellI)
+    for (label listI = 0; listI < listSize; ++listI)
     {
+        label cellI = listI;
+        if (&cellIdLabels)
+        {
+            cellI = cellIdLabels[listI];
+        }
+
         const labelList& cEdges = cellEdges[cellI];
 
         label nCutEdges = 0;
@@ -90,7 +95,7 @@ void cuttingPlane::calcCutCells
 // Determine for each edge the intersection point. Calculates
 // - cutPoints_ : coordinates of all intersection points
 // - edgePoint  : per edge -1 or the index into cutPoints_
-labelList cuttingPlane::intersectEdges
+Foam::labelList Foam::cuttingPlane::intersectEdges
 (
     const primitiveMesh& mesh,
     const scalarField& dotProducts
@@ -136,7 +141,7 @@ labelList cuttingPlane::intersectEdges
 
 // Coming from startEdgeI cross the edge to the other face
 // across to the next cut edge.
-bool cuttingPlane::walkCell
+bool Foam::cuttingPlane::walkCell
 (
     const primitiveMesh& mesh,
     const labelList& edgePoint,
@@ -181,7 +186,7 @@ bool cuttingPlane::walkCell
         if (nextEdgeI == -1)
         {
             // Did not find another cut edge on faceI. Do what?
-            WarningIn("cuttingPlane::walkCell")
+            WarningIn("Foam::cuttingPlane::walkCell")
                 << "Did not find closed walk along surface of cell " << cellI
                 << " starting from edge " << startEdgeI
                 << " in " << nIter << " iterations." << nl
@@ -197,7 +202,7 @@ bool cuttingPlane::walkCell
 
         if (nIter > 1000)
         {
-            WarningIn("cuttingPlane::walkCell")
+            WarningIn("Foam::cuttingPlane::walkCell")
                 << "Did not find closed walk along surface of cell " << cellI
                 << " starting from edge " << startEdgeI
                 << " in " << nIter << " iterations." << nl
@@ -215,7 +220,7 @@ bool cuttingPlane::walkCell
     }
     else
     {
-        WarningIn("cuttingPlane::walkCell")
+        WarningIn("Foam::cuttingPlane::walkCell")
             << "Did not find closed walk along surface of cell " << cellI
             << " starting from edge " << startEdgeI << nl
             << "Collected cutPoints so far:" << faceVerts
@@ -227,7 +232,7 @@ bool cuttingPlane::walkCell
 
 
 // For every cut cell determine a walk through all? its cuts.
-void cuttingPlane::walkCellCuts
+void Foam::cuttingPlane::walkCellCuts
 (
     const primitiveMesh& mesh,
     const labelList& edgePoint
@@ -259,8 +264,9 @@ void cuttingPlane::walkCellCuts
         // Check for the unexpected ...
         if (startEdgeI == -1)
         {
-            FatalErrorIn("cuttingPlane::walkCellCuts") << "Cannot find cut edge"
-                << " for cut cell " << cellI << abort(FatalError);
+            FatalErrorIn("Foam::cuttingPlane::walkCellCuts")
+                << "Cannot find cut edge for cut cell " << cellI
+                << abort(FatalError);
         }
 
         // Walk from starting edge around the circumference of the cell.
@@ -296,11 +302,52 @@ void cuttingPlane::walkCellCuts
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+// Construct without cutting
+Foam::cuttingPlane::cuttingPlane(const plane& newPlane)
+:
+    plane(newPlane)
+{}
+
+
 // Construct from components
-cuttingPlane::cuttingPlane(const primitiveMesh& mesh, const plane& newPlane)
+Foam::cuttingPlane::cuttingPlane
+(
+    const primitiveMesh& mesh,
+    const plane& newPlane
+)
 :
     plane(newPlane)
 {
+    reCut(mesh);
+}
+
+// Construct from mesh reference and plane, restricted to a list of cells
+Foam::cuttingPlane::cuttingPlane
+(
+    const primitiveMesh& mesh,
+    const plane& newPlane,
+    const labelList& cellIdLabels
+)
+:
+    plane(newPlane)
+{
+    reCut(mesh, cellIdLabels);
+}
+
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+// reCut mesh with existing planeDesc
+void Foam::cuttingPlane::reCut
+(
+    const primitiveMesh& mesh
+)
+{
+    cutCells_.clear();
+    cutPoints_.clear();
+    cutFaces_.clear();
+
     scalarField dotProducts = (mesh.points() - refPoint()) & normal();
 
     //// Perturb points cuts so edges are cut properly.
@@ -314,41 +361,72 @@ cuttingPlane::cuttingPlane(const primitiveMesh& mesh, const plane& newPlane)
     // the label of the intersection point (in cutPoints_)
     labelList edgePoint(intersectEdges(mesh, dotProducts));
 
-    // Do topological walk around cell to find closed loop. 
+    // Do topological walk around cell to find closed loop.
     walkCellCuts(mesh, edgePoint);
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// recut mesh with existing planeDesc
+void Foam::cuttingPlane::reCut
+(
+    const primitiveMesh& mesh,
+    const labelList& cellIdLabels
+)
+{
+    cutCells_.clear();
+    cutPoints_.clear();
+    cutFaces_.clear();
+
+    scalarField dotProducts = (mesh.points() - refPoint()) & normal();
+
+    // Determine cells that are (probably) cut.
+    calcCutCells(mesh, dotProducts, cellIdLabels);
+
+    // Determine cutPoints and return list of edge cuts. (per edge -1 or
+    // the label of the intersection point (in cutPoints_)
+    labelList edgePoint(intersectEdges(mesh, dotProducts));
+
+    // Do topological walk around cell to find closed loop.
+    walkCellCuts(mesh, edgePoint);
+}
+
+
+
+// Return plane used
+const Foam::plane& Foam::cuttingPlane::planeDesc() const
+{
+    return static_cast<const plane&>(*this);
+}
+
 
 // Return vectorField of cutting points
-const pointField& cuttingPlane::points() const
+const Foam::pointField& Foam::cuttingPlane::points() const
 {
     return cutPoints_;
 }
 
 
 // Return unallocFaceList of points in cells
-const faceList& cuttingPlane::faces() const
+const Foam::faceList& Foam::cuttingPlane::faces() const
 {
     return cutFaces_;
 }
 
 
 // Return labelList of cut cells
-const labelList& cuttingPlane::cells() const
+const Foam::labelList& Foam::cuttingPlane::cells() const
 {
     return cutCells_;
 }
 
 
-bool cuttingPlane::cut()
+bool Foam::cuttingPlane::cut()
 {
-    if(cutCells_.size() > 0)
+    if (cutCells_.size() > 0)
     {
         return true;
     }
-    else 
+    else
     {
         return false;
     }
@@ -357,25 +435,22 @@ bool cuttingPlane::cut()
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-void cuttingPlane::operator=(const cuttingPlane& rhs)
+void Foam::cuttingPlane::operator=(const cuttingPlane& rhs)
 {
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn("cuttingPlane::operator=(const cuttingPlane&)")
+        FatalErrorIn ("Foam::cuttingPlane::operator=(const cuttingPlane&)")
             << "Attempted assignment to self"
             << abort(FatalError);
     }
+
+    static_cast<plane&>(*this) = rhs;
 
     cutCells_ = rhs.cells();
     cutPoints_ = rhs.points();
     cutFaces_ = rhs.faces();
 }
 
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

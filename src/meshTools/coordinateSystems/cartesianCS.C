@@ -40,6 +40,12 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+Foam::cartesianCS::cartesianCS()
+:
+    coordinateSystem()
+{}
+
+
 Foam::cartesianCS::cartesianCS
 (
     const word& name,
@@ -71,38 +77,5 @@ Foam::cartesianCS::cartesianCS
 :
     coordinateSystem(name, dict)
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-Foam::vector Foam::cartesianCS::toGlobal(const vector& localV) const
-{
-    return coordinateSystem::toGlobal(localV);
-}
-
-
-Foam::tmp<Foam::vectorField> Foam::cartesianCS::toGlobal
-(
-    const vectorField& localV
-) const
-{
-    return coordinateSystem::toGlobal(localV);
-}
-
-
-Foam::vector Foam::cartesianCS::toLocal(const vector& globalV) const
-{
-    return coordinateSystem::toLocal(globalV);
-}
-
-
-Foam::tmp<Foam::vectorField> Foam::cartesianCS::toLocal
-(
-    const vectorField& globalV
-) const
-{
-    return coordinateSystem::toLocal(globalV);
-}
-
 
 // ************************************************************************* //

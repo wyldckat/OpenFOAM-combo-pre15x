@@ -48,7 +48,6 @@ SourceFiles
 #include "PtrDictionary.H"
 #include "volFields.H"
 #include "surfaceFields.H"
-#include "fvPatchFieldFields.H"
 #include "multivariateSurfaceInterpolationScheme.H"
 
 
@@ -202,7 +201,7 @@ private:
         (
             const phase& alpha1,
             const phase& alpha2,
-            fvPatchVectorFieldField& nHatb
+            surfaceVectorField::GeometricBoundaryField& nHatb
         ) const;
 
         tmp<volScalarField> K(const phase& alpha1, const phase& alpha2) const;

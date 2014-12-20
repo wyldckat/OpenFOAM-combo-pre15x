@@ -28,8 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "triSurface.H"
-#include <fstream>
-#include <sstream>
+#include "IFstream.H"
 #include "IStringStream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -41,7 +40,7 @@ namespace Foam
 
 bool triSurface::readOFF(const fileName& OFFfileName)
 {
-    std::ifstream OFFfile(OFFfileName.c_str());
+    IFstream OFFfile(OFFfileName);
 
     if (!OFFfile.good())
     {
@@ -51,7 +50,7 @@ bool triSurface::readOFF(const fileName& OFFfileName)
     }
 
     // Read header
-    string hdr = getLine(OFFfile);
+    string hdr = getLineNoComment(OFFfile);
     if (hdr != "OFF")
     {
         FatalErrorIn("triSurface::readOFF(const fileName&)")
@@ -63,7 +62,7 @@ bool triSurface::readOFF(const fileName& OFFfileName)
 
     label nPoints, nEdges, nElems;
 
-    string line = getLine(OFFfile);
+    string line = getLineNoComment(OFFfile);
     {
         IStringStream lineStream(line);
         lineStream >> nPoints >> nElems >> nEdges;
@@ -75,7 +74,7 @@ bool triSurface::readOFF(const fileName& OFFfileName)
     forAll(points, pointi)
     {
         scalar x, y, z;
-        line = getLine(OFFfile);
+        line = getLineNoComment(OFFfile);
         {
             IStringStream lineStream(line);
             lineStream >> x >> y >> z;
@@ -88,7 +87,7 @@ bool triSurface::readOFF(const fileName& OFFfileName)
 
     for (label faceI = 0; faceI < nElems; faceI++)
     {
-        line = getLine(OFFfile);
+        line = getLineNoComment(OFFfile);
         {
             IStringStream lineStream(line);
 

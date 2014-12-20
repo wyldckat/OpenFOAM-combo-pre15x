@@ -118,7 +118,7 @@ public:
         }
 
         //- Return the face-interpolate of the given cell field
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         interpolate
         (
             const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -126,9 +126,9 @@ public:
         {
             const fvMesh& mesh = vf.mesh();
 
-            tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tvff
+            tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tvff
             (
-                new GeometricField<Type, fvPatchField, surfaceMesh>
+                new GeometricField<Type, fvsPatchField, surfaceMesh>
                 (
                     IOobject
                     (
@@ -140,15 +140,19 @@ public:
                     vf.dimensions()
                 )
             );
-            GeometricField<Type, fvPatchField, surfaceMesh>& vff = tvff();
-            vff.boundaryField() = vf.boundaryField();
+            GeometricField<Type, fvsPatchField, surfaceMesh>& vff = tvff();
+
+            forAll(vff.boundaryField(), patchi)
+            {
+                vff.boundaryField()[patchi] = vf.boundaryField()[patchi];
+            }
 
             const unallocLabelList& own = mesh.owner();
             const unallocLabelList& nei = mesh.neighbour();
 
             forAll(vff, facei)
             {
-                vff[facei] = min(vf[own[facei]], vf[nei[facei]]);
+                vff[facei] = minMod(vf[own[facei]], vf[nei[facei]]);
             }
 
             return tvff;

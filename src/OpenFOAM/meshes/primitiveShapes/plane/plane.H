@@ -80,7 +80,9 @@ public:
             }
         };
 
+
 private:
+
     // Private data
 
         //- Plane normal
@@ -104,16 +106,17 @@ private:
             const point& point3
         );
 
+
 public:
 
     // Constructors
 
-        //- Construct null
-        plane();
- 
+        //- Construct from normal vector through the origin
+        plane(const vector& normalVector);
+
         //- Construct from normal vector and point in plane
         plane(const point& basePoint, const vector& normalVector);
- 
+
         //- Construct from three points in plane
         plane(const point& point1, const point& point2, const point& point3);
 
@@ -171,11 +174,17 @@ public:
         //- Return the cutting point between this plane and two other planes
         point planePlaneIntersect(const plane&, const plane&) const;
 
+
+    // friend Operators
+
+        friend bool operator==(const plane&, const plane&);
+        friend bool operator!=(const plane&, const plane&);
+
+
     // IOstream Operators
 
         //- Write plane properties
         friend Ostream& operator<<(Ostream&, const plane&);
-
 };
 
 

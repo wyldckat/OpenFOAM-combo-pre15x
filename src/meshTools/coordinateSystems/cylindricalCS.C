@@ -33,7 +33,6 @@ License
 namespace Foam
 {
     defineTypeNameAndDebug(cylindricalCS, 0);
-
     addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, origAxisDir);
     addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, origRotation);
     addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, dictionary);
@@ -42,10 +41,16 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+Foam::cylindricalCS::cylindricalCS()
+:
+    coordinateSystem()
+{}
+
+
 Foam::cylindricalCS::cylindricalCS
 (
     const word& name,
-    const vector& origin,
+    const point& origin,
     const vector& axis,
     const vector& direction
 )
@@ -57,7 +62,7 @@ Foam::cylindricalCS::cylindricalCS
 Foam::cylindricalCS::cylindricalCS
 (
     const word& name,
-    const vector& origin,
+    const point& origin,
     const coordinateRotation& cr
 )
 :
@@ -77,55 +82,64 @@ Foam::cylindricalCS::cylindricalCS
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::vector Foam::cylindricalCS::toGlobal(const vector& localV) const
+Foam::vector Foam::cylindricalCS::localToGlobal
+(
+    const vector& local,
+    bool translate
+) const
 {
-    scalar theta = 
-	localV.y()*mathematicalConstant::pi/180.0;
+    scalar theta =
+        local.y()*mathematicalConstant::pi/180.0;
 
-    return coordinateSystem::toGlobal
+    return coordinateSystem::localToGlobal
     (
-        vector(localV.x()*cos(theta), localV.x()*sin(theta), localV.z())
+        vector(local.x()*cos(theta), local.x()*sin(theta), local.z()),
+        translate
     );
 }
 
-
-Foam::tmp<Foam::vectorField> Foam::cylindricalCS::toGlobal
+Foam::tmp<Foam::vectorField> Foam::cylindricalCS::localToGlobal
 (
-    const vectorField& localV
+    const vectorField& local,
+    bool translate
 ) const
 {
-    scalarField theta = 
-	localV.component(vector::Y)*mathematicalConstant::pi/180.0;
+    scalarField theta =
+        local.component(vector::Y)*mathematicalConstant::pi/180.0;
 
-    vectorField lc(localV.size());
-    lc.replace(vector::X, localV.component(vector::X)*cos(theta));
-    lc.replace(vector::Y, localV.component(vector::X)*sin(theta));
-    lc.replace(vector::Z, localV.component(vector::Z));
+    vectorField lc(local.size());
+    lc.replace(vector::X, local.component(vector::X)*cos(theta));
+    lc.replace(vector::Y, local.component(vector::X)*sin(theta));
+    lc.replace(vector::Z, local.component(vector::Z));
 
-    return coordinateSystem::toGlobal(lc);
+    return coordinateSystem::localToGlobal(lc, translate);
 }
 
-
-Foam::vector Foam::cylindricalCS::toLocal(const vector& globalV) const
-{
-    const vector lc = coordinateSystem::toLocal(globalV);
-
-    return
-        vector
-        (
-            sqrt(sqr(lc.x()) + sqr(lc.y())),
-            atan2(lc.y(),lc.x())*180.0/mathematicalConstant::pi,
-            lc.z()
-        );
-}
-
-
-Foam::tmp<Foam::vectorField> Foam::cylindricalCS::toLocal
+Foam::vector Foam::cylindricalCS::globalToLocal
 (
-    const vectorField& globalV
+    const vector& global,
+    bool translate
 ) const
 {
-    const vectorField lc = coordinateSystem::toLocal(globalV);
+    const vector lc =
+        coordinateSystem::globalToLocal(global, translate);
+
+    return vector
+    (
+        sqrt(sqr(lc.x()) + sqr(lc.y())),
+        atan2(lc.y(),lc.x())*180.0/mathematicalConstant::pi,
+        lc.z()
+    );
+}
+
+Foam::tmp<Foam::vectorField> Foam::cylindricalCS::globalToLocal
+(
+    const vectorField& global,
+    bool translate
+) const
+{
+    const vectorField lc =
+        coordinateSystem::globalToLocal(global, translate);
 
     tmp<vectorField> tresult(new vectorField(lc.size()));
     vectorField& result = tresult();
@@ -147,6 +161,5 @@ Foam::tmp<Foam::vectorField> Foam::cylindricalCS::toLocal
 
     return tresult;
 }
-
 
 // ************************************************************************* //

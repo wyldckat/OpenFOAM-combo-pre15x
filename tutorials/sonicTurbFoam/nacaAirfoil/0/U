@@ -35,6 +35,7 @@ boundaryField
         pInf            100000;
         TInf            300;
         UInf            (600 148.16 0);
+        gamma           1.4;
         value           uniform (600 148.16 0);
     }
 

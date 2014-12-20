@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "vtk.H"
@@ -164,6 +162,79 @@ void Foam::vtk<Type>::writeData
         const vector& v = values[elemI];
 
         os << float(v[0]) << ' ' << float(v[1]) << ' ' << float(v[2]) << nl;
+    }
+}
+
+
+// Write sphericalTensorField in vtk format
+template<class Type>
+void Foam::vtk<Type>::writeData
+(
+    const fileName& fieldName,
+    const pointField& points,
+    const sphericalTensorField& values,
+    Ostream& os
+) const
+{
+    // Write data
+    if (values.size() == points.size())
+    {
+        os  << "POINT_DATA " << values.size()
+            << nl
+            << "FIELD attributes 1" << nl;
+    }
+    else
+    {
+        os  << "CELL_DATA " << values.size()
+            << nl
+            << "FIELD attributes 1" << nl;
+    }
+
+    os  << fieldName << " 1 " << values.size() << " float" << nl;
+
+    forAll(values, elemI)
+    {
+        const sphericalTensor& v = values[elemI];
+
+        os  << float(v[0])
+            << nl;
+    }
+}
+
+
+// Write symmTensorField in vtk format
+template<class Type>
+void Foam::vtk<Type>::writeData
+(
+    const fileName& fieldName,
+    const pointField& points,
+    const symmTensorField& values,
+    Ostream& os
+) const
+{
+    // Write data
+    if (values.size() == points.size())
+    {
+        os  << "POINT_DATA " << values.size()
+            << nl
+            << "FIELD attributes 1" << nl;
+    }
+    else
+    {
+        os  << "CELL_DATA " << values.size()
+            << nl
+            << "FIELD attributes 1" << nl;
+    }
+
+    os  << fieldName << " 6 " << values.size() << " float" << nl;
+
+    forAll(values, elemI)
+    {
+        const symmTensor& v = values[elemI];
+
+        os  << float(v[0]) << ' ' << float(v[1]) << ' ' << float(v[2])
+            << float(v[3]) << ' ' << float(v[4]) << ' ' << float(v[5])
+            << nl;
     }
 }
 

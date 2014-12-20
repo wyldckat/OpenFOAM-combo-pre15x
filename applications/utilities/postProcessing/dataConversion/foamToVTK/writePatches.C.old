@@ -1,0 +1,164 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
+
+\*---------------------------------------------------------------------------*/
+
+#include "writePatches.H"
+#include "OFstream.H"
+#include "floatScalar.H"
+#include "writeFuns.H"
+#include "writePatchGeom.H"
+#include "indirectPrimitivePatch.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
+
+void writePatches
+(
+    const bool binary,
+    const bool nearCellValue,
+    const vtkMesh& vMesh,
+    const labelList& patches,
+    const fileName& fileName,
+    const PtrList<volScalarField>& volScalarFields,
+    const PtrList<volVectorField>& volVectorFields
+)
+{
+    const fvMesh& mesh = vMesh.mesh();
+
+    std::ofstream pStream(fileName.c_str());
+
+    writeFuns::writeHeader(pStream, binary, "patches");
+    pStream << "DATASET POLYDATA" << std::endl;
+
+
+    //------------------------------------------------------------------
+    //
+    // Write topology
+    // 
+    //------------------------------------------------------------------
+
+    // Create PrimitivePatch for all selected patches
+
+    labelList faceLabels(mesh.nFaces() - mesh.nInternalFaces());
+    label bFaceI = 0;
+
+    forAll(patches, i)
+    {
+        label patchI = patches[i];
+
+        const polyPatch& pp = mesh.boundaryMesh()[patchI];
+
+        if (!isType<emptyPolyPatch>(pp))
+        {
+            forAll(pp, patchFaceI)
+            {
+                faceLabels[bFaceI++] = pp.start() + patchFaceI;
+            }
+        }
+    }
+    faceLabels.setSize(bFaceI);
+
+    indirectPrimitivePatch allPp
+    (
+        IndirectList<face>
+        (
+            mesh.faces(),
+            faceLabels
+        ),
+        mesh.points()
+    );
+
+    writePatchGeom(binary, allPp.localFaces(), allPp.localPoints(), pStream);
+
+
+    //-----------------------------------------------------------------
+    //
+    // Write data
+    // 
+    //-----------------------------------------------------------------
+
+    pStream
+        << "CELL_DATA " << allPp.size() << std::endl
+        << "FIELD attributes "
+        << 1 + volScalarFields.size() + volVectorFields.size()
+        << std::endl;
+
+    // PatchID
+    {
+        DynamicList<floatScalar> fField(allPp.size());
+
+        pStream
+            << "patchID 1 "
+            << allPp.size() << " float" << std::endl;
+
+        forAll(patches, i)
+        {
+            label patchI = patches[i];
+
+            const polyPatch& pp = mesh.boundaryMesh()[patchI];
+
+            if (!isType<emptyPolyPatch>(pp))
+            {
+                writeFuns::insert(scalarField(pp.size(), patchI), fField);
+            }
+        }
+        writeFuns::write(pStream, binary, fField);
+    }
+
+    // VolScalarFields
+    writeFuns::write
+    (
+        pStream,
+        binary,
+        writeFuns::accessOp<scalar>(nearCellValue),
+        writeFuns::noOp<scalar>(),          // interpolation op
+        volScalarFields,
+        vMesh,
+        patches
+    );
+
+    // VolVectorFields
+    writeFuns::write
+    (
+        pStream,
+        binary,
+        writeFuns::accessOp<vector>(nearCellValue),
+        writeFuns::noOp<vector>(),          // interpolation op
+        volVectorFields,
+        vMesh,
+        patches
+    );
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

@@ -39,7 +39,7 @@ tractionDisplacementFvPatchVectorField::
 tractionDisplacementFvPatchVectorField
 (
     const fvPatch& p,
-    const vectorField& iF
+    const DimensionedField<vector, volMesh>& iF
 )
 :
     fixedGradientFvPatchVectorField(p, iF),
@@ -48,7 +48,6 @@ tractionDisplacementFvPatchVectorField
 {
     fvPatchVectorField::operator=(patchInternalField());
     gradient() = vector::zero;
-    checkVolField();
 }
 
 
@@ -57,23 +56,21 @@ tractionDisplacementFvPatchVectorField
 (
     const tractionDisplacementFvPatchVectorField& tdpvf,
     const fvPatch& p,
-    const vectorField& iF,
+    const DimensionedField<vector, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
     fixedGradientFvPatchVectorField(tdpvf, p, iF, mapper),
     traction_(tdpvf.traction_, mapper),
     pressure_(tdpvf.pressure_, mapper)
-{
-    checkVolField();
-}
+{}
 
 
 tractionDisplacementFvPatchVectorField::
 tractionDisplacementFvPatchVectorField
 (
     const fvPatch& p,
-    const vectorField& iF,
+    const DimensionedField<vector, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -95,24 +92,20 @@ tractionDisplacementFvPatchVectorField
     fixedGradientFvPatchVectorField(tdpvf),
     traction_(tdpvf.traction_),
     pressure_(tdpvf.pressure_)
-{
-    checkVolField();
-}
+{}
 
 
 tractionDisplacementFvPatchVectorField::
 tractionDisplacementFvPatchVectorField
 (
     const tractionDisplacementFvPatchVectorField& tdpvf,
-    const vectorField& iF
+    const DimensionedField<vector, volMesh>& iF
 )
 :
     fixedGradientFvPatchVectorField(tdpvf, iF),
     traction_(tdpvf.traction_),
     pressure_(tdpvf.pressure_)
-{
-    checkVolField();
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -128,7 +121,6 @@ void tractionDisplacementFvPatchVectorField::autoMap
 }
 
 
-// Reverse-map the given fvPatchField onto this fvPatchField
 void tractionDisplacementFvPatchVectorField::rmap
 (
     const fvPatchVectorField& ptf,
@@ -145,7 +137,6 @@ void tractionDisplacementFvPatchVectorField::rmap
 }
 
 
-// Update the coefficients associated with the patch field
 void tractionDisplacementFvPatchVectorField::updateCoeffs()
 {
     if (updated())
@@ -206,7 +197,6 @@ void tractionDisplacementFvPatchVectorField::updateCoeffs()
 }
 
 
-// Write
 void tractionDisplacementFvPatchVectorField::write(Ostream& os) const
 {
     fvPatchVectorField::write(os);

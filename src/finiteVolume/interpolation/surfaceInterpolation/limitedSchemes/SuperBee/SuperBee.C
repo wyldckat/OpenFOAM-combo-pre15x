@@ -25,7 +25,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "LimitedScheme.H"
-#include "Limited01.H"
 #include "SuperBee.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -33,26 +32,7 @@ License
 namespace Foam
 {
     makeLimitedSurfaceInterpolationScheme(SuperBee, SuperBeeLimiter)
-
-    makeLLimitedSurfaceInterpolationTypeScheme
-    (
-        limitedSuperBee,
-        LimitedLimiter,
-        SuperBeeLimiter,
-        NVDTVD,
-        magSqr,
-        scalar
-    )
-
-    makeLLimitedSurfaceInterpolationTypeScheme
-    (
-        SuperBee01,
-        Limited01Limiter,
-        SuperBeeLimiter,
-        NVDTVD,
-        magSqr,
-        scalar
-    )
+    makeLimitedVSurfaceInterpolationScheme(SuperBeeV, SuperBeeLimiter)
 }
 
 // ************************************************************************* //

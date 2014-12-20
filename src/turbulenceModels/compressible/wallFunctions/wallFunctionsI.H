@@ -67,18 +67,20 @@ Description
 
             const scalarField& rhow = rho_.boundaryField()[patchi];
 
-            const scalarField muw = mu().boundaryField()[patchi];
+            const scalarField& muw = mu().boundaryField()[patchi];
             const scalarField& mutw = mut_.boundaryField()[patchi];
 
-            scalarField magFaceGradU = mag(U_.boundaryField()[patchi].snGrad());
+            scalarField magFaceGradU =
+                mag(U_.boundaryField()[patchi].snGrad());
 
             forAll(curPatch, facei)
             {
                 label faceCelli = curPatch.faceCells()[facei];
 
                 scalar yPlus =
-                    Cmu25*turbulenceModel::y_[patchi][facei]*sqrt(k_[faceCelli])
-                    /(muw[facei]/rhow[facei]);
+                    Cmu25*turbulenceModel::y_[patchi][facei]
+                   *sqrt(k_[faceCelli])
+                   /(muw[facei]/rhow[facei]);
 
                 // For corner cells (with two boundary or more faces),
                 // epsilon and G in the near-wall cell are calculated
@@ -93,10 +95,10 @@ Description
                 if (yPlus > yPlusLam_)
                 {
                     G[faceCelli] +=
-                        mutw[facei]*magFaceGradU[facei]
-                      //- *0.5*log(2.0*yPlus/yPlusLam_)    //  UMIST correction
-                        *Cmu25*sqrt(k_[faceCelli])
-                        /(kappa_*turbulenceModel::y_[patchi][facei]);
+                        (mutw[facei] + muw[facei])
+                       *magFaceGradU[facei]
+                       *Cmu25*sqrt(k_[faceCelli])
+                       /(kappa_*turbulenceModel::y_[patchi][facei]);
                 }
             }
         }

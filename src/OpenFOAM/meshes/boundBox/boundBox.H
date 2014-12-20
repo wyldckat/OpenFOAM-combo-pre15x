@@ -107,6 +107,9 @@ public:
                 return ::Foam::mag(max_ - min_);
             }
 
+
+        // Query
+
             //- Intersects other boundingbox?
             bool intersects(const boundBox& bb) const
             {

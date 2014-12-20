@@ -80,7 +80,7 @@ int main(int argc, char *argv[])
 #           include "pEqn.H"
         }
 
-#       include "movingMeshRhoUContinuityErrs.H"
+#       include "continuityErrs.H"
 
         runTime.write();
 

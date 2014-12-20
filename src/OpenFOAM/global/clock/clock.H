@@ -62,7 +62,7 @@ class clock
         mutable time_t newTime_;
 
         //- Names of the months
-        static char *monthnames[];
+        static const char *monthnames[];
 
 
 public:

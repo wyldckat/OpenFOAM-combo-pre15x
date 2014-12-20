@@ -51,7 +51,7 @@ uncorrectedSnGrad<Type>::~uncorrectedSnGrad()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 uncorrectedSnGrad<Type>::correction
 (
     const GeometricField<Type, fvPatchField, volMesh>&
@@ -62,7 +62,7 @@ uncorrectedSnGrad<Type>::correction
         "uncorrectedSnGrad<Type>::correction"
         "(const GeometricField<Type, fvPatchField, volMesh>&)"
     );
-    return tmp<GeometricField<Type, fvPatchField, surfaceMesh> >(NULL);
+    return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >(NULL);
 }
 
 

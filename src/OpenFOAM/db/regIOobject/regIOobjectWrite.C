@@ -39,7 +39,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-//  Write object to Ostream according to read/write options
 bool regIOobject::writeObject
 (
     IOstream::streamFormat fmt,
@@ -68,9 +67,10 @@ bool regIOobject::writeObject
     if
     (
         instance() != time().timeName()
-     && instance() != time().constant()
-     && instance() != "constant"
      && instance() != time().system()
+     && instance() != time().caseSystem()
+     && instance() != time().constant()
+     && instance() != time().caseConstant()
     )
     {
         const_cast<regIOobject&>(*this).instance() = time().timeName();
@@ -112,13 +112,17 @@ bool regIOobject::writeObject
         Info<< " .... written" << endl;
     }
 
-    lastModified_ = lastModified(objectPath());
+    // Only update the lastModified_ time if this object is re-readable,
+    // i.e. lastModified_ is already set
+    if (lastModified_)
+    {
+        lastModified_ = lastModified(objectPath());
+    }
 
     return os.good();
 }
 
 
-//  Write using setting from DB
 bool regIOobject::write() const
 {
     return writeObject

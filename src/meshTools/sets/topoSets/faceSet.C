@@ -29,7 +29,6 @@ License
 #include "polyMesh.H"
 #include "processorPolyPatch.H"
 #include "cyclicPolyPatch.H"
-//#include "directPolyTopoChange.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -216,12 +215,6 @@ void faceSet::updateMesh(const mapPolyMesh& morphMap)
 {
     updateLabels(morphMap.reverseFaceMap());
 }
-
-
-//void faceSet::updateMesh(const directPolyTopoChange& meshMod)
-//{
-//    updateLabels(meshMod.faceMap());
-//}
 
 
 void faceSet::writeDebug

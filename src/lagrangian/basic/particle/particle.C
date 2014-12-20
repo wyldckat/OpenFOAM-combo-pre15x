@@ -162,6 +162,9 @@ void particle<particleType>::correctAfterParallelTransfer
 
     // Convert the face index back into a global index
     facei_ += ppp.start();
+
+    // Reset the face index for the next tracking operation
+    // facei_ = -1;
 }
 
 

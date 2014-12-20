@@ -32,7 +32,7 @@ Class
 
 #include "SlicedGeometricField.H"
 #include "fieldTypes.H"
-#include "slicedFvPatchField.H"
+#include "slicedFvsPatchField.H"
 #include "surfaceMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -43,15 +43,15 @@ namespace Foam
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 typedef
-SlicedGeometricField<scalar, fvPatchField, slicedFvPatchField, surfaceMesh>
+SlicedGeometricField<scalar, fvsPatchField, slicedFvsPatchField, surfaceMesh>
 slicedSurfaceScalarField;
 
 typedef
-SlicedGeometricField<vector, fvPatchField, slicedFvPatchField, surfaceMesh>
+SlicedGeometricField<vector, fvsPatchField, slicedFvsPatchField, surfaceMesh>
 slicedSurfaceVectorField;
 
 typedef
-SlicedGeometricField<tensor, fvPatchField, slicedFvPatchField, surfaceMesh>
+SlicedGeometricField<tensor, fvsPatchField, slicedFvsPatchField, surfaceMesh>
 slicedSurfaceTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

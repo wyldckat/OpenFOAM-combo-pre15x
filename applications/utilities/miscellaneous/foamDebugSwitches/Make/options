@@ -3,7 +3,7 @@ EXE_LIBS = \
     -lLESfilters \
     -lODE \
     -lcompressibleLESmodels \
-    -lfoamUtil \
+    \
     -lbasicThermophysicalModels \
     -lfiniteVolume \
     -lcombustionThermophysicalModels \
@@ -23,4 +23,5 @@ EXE_LIBS = \
     -lsampling \
     -lspecie \
     -lthermophysicalFunctions \
-    -ltriSurface
+    -ltriSurface \
+    -lpdf

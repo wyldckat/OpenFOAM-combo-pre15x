@@ -72,12 +72,9 @@ inline const Foam::List<Foam::label>& Foam::BiIndirectList<T>::addressing()
 
 
 template<class T>
-inline void Foam::BiIndirectList<T>::resetAddressing
-(
-    const List<label>& addr
-)
+inline Foam::List<Foam::label>& Foam::BiIndirectList<T>::addressing()
 {
-    addressing_ = addr;
+    return addressing_;
 }
 
 

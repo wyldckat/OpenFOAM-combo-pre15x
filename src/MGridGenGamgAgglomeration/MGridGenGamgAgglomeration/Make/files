@@ -1,4 +1,0 @@
-MGridGenGamgAgglomeration.C
-MGridGenGamgAgglomerate.C
-
-LIB = $(FOAM_LIBBIN)/libMGridGenGamgAgglomeration

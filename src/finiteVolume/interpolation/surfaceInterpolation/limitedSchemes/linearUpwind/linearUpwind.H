@@ -139,7 +139,7 @@ public:
         }
 
         //- Return the explicit correction to the face-interpolate
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         correction
         (
             const GeometricField<Type, fvPatchField, volMesh>& vf

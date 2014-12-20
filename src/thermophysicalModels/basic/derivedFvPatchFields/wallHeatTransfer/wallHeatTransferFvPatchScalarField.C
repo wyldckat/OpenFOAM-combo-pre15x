@@ -40,7 +40,7 @@ namespace Foam
 wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     mixedFvPatchScalarField(p, iF),
@@ -57,7 +57,7 @@ wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
 (
     const wallHeatTransferFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -70,7 +70,7 @@ wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
 wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -110,7 +110,7 @@ wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
 wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
 (
     const wallHeatTransferFvPatchScalarField& tppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     mixedFvPatchScalarField(tppsf, iF),
@@ -148,7 +148,6 @@ void wallHeatTransferFvPatchScalarField::rmap
 }
 
 
-// Update the coefficients associated with the patch field
 void wallHeatTransferFvPatchScalarField::updateCoeffs()
 {
     if (updated())
@@ -178,7 +177,6 @@ void wallHeatTransferFvPatchScalarField::updateCoeffs()
 }
 
 
-// Write
 void wallHeatTransferFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);

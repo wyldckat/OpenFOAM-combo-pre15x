@@ -35,7 +35,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-// Construct list of edge vectors
 tmp<vectorField> face::calcEdges(const pointField& points) const
 {
     tmp<vectorField> tedges(new vectorField(size()));
@@ -58,7 +57,6 @@ tmp<vectorField> face::calcEdges(const pointField& points) const
 }
 
 
-// Calculate cosine of angle between edges at point index
 scalar face::edgeCos
 (
     const vectorField& edges,
@@ -73,7 +71,6 @@ scalar face::edgeCos
 }
 
 
-// Find index of most concave angle
 label face::mostConcaveAngle
 (
     const pointField& points,
@@ -121,8 +118,6 @@ label face::mostConcaveAngle
 }
 
 
-// Counts/Splits face in triangles/triangles+quads.
-// Recurses over anything more complex than triangle or quad.
 void face::split
 (
     const face::splitMode mode,
@@ -314,65 +309,62 @@ point face::centre(const pointField& meshPoints) const
 {
     // Calculate the centre by breaking the face into triangles and
     // area-weighted averaging their centres
-    // Changed to deal with small concavity by using a central decomposition
-    // 
 
-    // If the face is a triangle, do a direct calculation to avoid round-off
-    // error-related problems
-    // 
+    // If the face is a triangle, do a direct calculation
     if (size() == 3)
     {
-        return triPointRef
-        (
-            meshPoints[operator[](0)],
-            meshPoints[operator[](1)],
-            meshPoints[operator[](2)]
-        ).centre();
+        return 
+            (1.0/3.0)
+           *(
+               meshPoints[operator[](0)]
+             + meshPoints[operator[](1)]
+             + meshPoints[operator[](2)]
+            );
     }
+
+    label nPoints = size();
+
+    point centrePoint = point::zero;
+    for (register label pI=0; pI<nPoints; pI++)
+    {
+        centrePoint += meshPoints[operator[](pI)];
+    }
+    centrePoint /= nPoints;
 
     scalar sumA = 0;
     vector sumAc = vector::zero;
 
-    point centrePoint = average(points(meshPoints));
-
-    label nPoints = size();
-
-    point nextPoint = centrePoint;
-
-    register label pI;
-
-    for (pI = 0; pI < nPoints; pI++)
+    for (register label pI=0; pI<nPoints; pI++)
     {
-        if (pI < nPoints - 1)
-        {
-            nextPoint = meshPoints[operator[](pI + 1)];
-        }
-        else
-        {
-            nextPoint = meshPoints[operator[](0)];
-        }
+        const point& nextPoint = meshPoints[operator[]((pI + 1) % nPoints)];
 
-        // Note: for best accuracy, centre point always comes last
-        // 
-        vector n = triPointRef
+        // Calculate 3*triangle centre
+        vector ttc
         (
-            meshPoints[operator[](pI)],
-            nextPoint,
-            centrePoint
-        ).centre();
+            meshPoints[operator[](pI)]
+          + nextPoint
+          + centrePoint
+        );
 
-        scalar a = triPointRef
+        // Calculate 2*triangle area
+        scalar ta = Foam::mag
         (
-            meshPoints[operator[](pI)],
-            nextPoint,
-            centrePoint
-        ).mag();
+            (meshPoints[operator[](pI)] - centrePoint)
+          ^ (nextPoint - centrePoint)
+        );
 
-        sumA += a;
-        sumAc += a*n;
+        sumA += ta;
+        sumAc += ta*ttc;
     }
 
-    return sumAc/(sumA + VSMALL);
+    if (sumA > VSMALL)
+    {
+        return sumAc/(3*sumA);
+    }
+    else
+    {
+        return centrePoint;
+    }
 }
 
 
@@ -397,7 +389,7 @@ vector face::normal(const pointField& meshPoints) const
 
     vector n = vector::zero;
 
-    point centrePoint = average(points(meshPoints));
+    point centrePoint = Foam::average(points(meshPoints));
 
     label nPoints = size();
 
@@ -481,11 +473,10 @@ scalar face::sweptVol
     // Calculate the swept volume by breaking the face into triangles and
     // summing their swept volumes.
     // Changed to deal with small concavity by using a central decomposition
-    // 
 
-    point centreOldPoint = average(points(oldPoints));
+    point centreOldPoint = Foam::average(points(oldPoints));
 
-    point centreNewPoint = average(points(newPoints));
+    point centreNewPoint = Foam::average(points(newPoints));
 
     label nPoints = size();
 
@@ -509,19 +500,18 @@ scalar face::sweptVol
         }
 
         // Note: for best accuracy, centre point always comes last
-        // 
         sv += triPointRef
               (
+                  centreOldPoint,
                   oldPoints[operator[](pI)],
-                  nextOldPoint,
-                  centreOldPoint
+                  nextOldPoint
               ).sweptVol
               (
                   triPointRef
                   (
+                      centreNewPoint,
                       newPoints[operator[](pI)],
-                      nextNewPoint,
-                      centreNewPoint
+                      nextNewPoint
                   )
               );
     }

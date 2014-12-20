@@ -29,6 +29,10 @@ License
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
 #include "polyTopoChanger.H"
+#include "polyAddPoint.H"
+#include "polyAddCell.H"
+#include "polyAddFace.H"
+#include "polyModifyFace.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 

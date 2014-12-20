@@ -27,8 +27,8 @@ License
 // Foam header files.
 #include "fileName.H"
 #include "OFstream.H"
+#include "IOobject.H"
 #include "OSspecific.H"
-#include "banner.H"
 
 // FoamX header files.
 #include "FoamX.H"
@@ -168,7 +168,7 @@ void FoamX::DictionaryWriter::writeHeader
     const word& className
 )
 {
-    writeBanner(file());
+    IOobject::writeBanner(file());
     file() << endl;
     writeComment(title);
     writeEndl();

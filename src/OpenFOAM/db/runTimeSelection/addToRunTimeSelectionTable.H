@@ -47,6 +47,12 @@ namespace Foam
     baseType::add##argNames##ConstructorToTable<thisType>                     \
         add##thisType##argNames##ConstructorTo##baseType##Table_
 
+#define addNamedToRunTimeSelectionTable(baseType,thisType,argNames,lookup)    \
+                                                                              \
+    /* Add the thisType constructor function to the table */                  \
+    baseType::add##argNames##ConstructorToTable<thisType>                     \
+        add##thisType##argNames##ConstructorTo##baseType##Table_(#lookup)
+
 #define addTemplateToRunTimeSelectionTable(baseType,thisType,Targ,argNames)   \
                                                                               \
     /* Add the thisType constructor function to the table */                  \

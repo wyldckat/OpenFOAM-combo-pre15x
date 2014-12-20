@@ -38,7 +38,7 @@ Description
 SourceFiles
     lduMatrixATmul.C
     lduMatrix.C
-    lduMatrixHoperations.C
+    lduMatrixTemplates.C
     lduMatrixOperations.C
     lduMatrixSolver.C
     lduMatrixPreconditioner.C
@@ -732,17 +732,7 @@ public:
             void sumDiag();
             void negSumDiag();
 
-            //- Relax matrix (for steady-state solution)
-            //  alpha=1 : diagonally equal
-            //  alpha<1 :    ,,      dominant
-            void relax
-            (
-                const FieldField<Field, scalar>& intCoeffsCmptAvg,
-                const FieldField<Field, scalar>& magInterfaceBouCoeffs,
-                const lduInterfaceFieldPtrsList& interfaces,
-                const scalar alpha=1.0
-            );
-
+            void sumMagOffDiag(scalarField& sumOff) const;
 
             //- Matrix multiplication with updated interfaces.
             void Amul
@@ -844,6 +834,8 @@ public:
             template<class Type>
             tmp<Field<Type> > H(const tmp<Field<Type> >&) const;
 
+            tmp<scalarField> H1() const;
+
             template<class Type>
             tmp<Field<Type> > faceH(const Field<Type>&) const;
 
@@ -877,7 +869,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #ifdef NoRepository
-#   include "lduMatrixHoperations.C"
+#   include "lduMatrixTemplates.C"
 #endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

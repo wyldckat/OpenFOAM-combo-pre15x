@@ -11,4 +11,4 @@ EXE_LIBS = \
     -lfiniteVolume \
     -lspecie \
     -lbasicThermophysicalModels \
-    -lfoamUtil
+   

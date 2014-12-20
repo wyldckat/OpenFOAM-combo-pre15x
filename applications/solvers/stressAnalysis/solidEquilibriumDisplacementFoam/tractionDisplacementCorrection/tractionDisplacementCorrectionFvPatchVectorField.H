@@ -62,14 +62,14 @@ public:
         tractionDisplacementCorrectionFvPatchVectorField
         (
             const fvPatch&,
-            const vectorField&
+            const DimensionedField<vector, volMesh>&
         );
 
         //- Construct from patch, internal field and Istream
         tractionDisplacementCorrectionFvPatchVectorField
         (
             const fvPatch&,
-            const vectorField&,
+            const DimensionedField<vector, volMesh>&,
             Istream&
         );
 
@@ -77,7 +77,7 @@ public:
         tractionDisplacementCorrectionFvPatchVectorField
         (
             const fvPatch&,
-            const vectorField&,
+            const DimensionedField<vector, volMesh>&,
             const dictionary&
         );
 
@@ -87,7 +87,7 @@ public:
         (
             const tractionDisplacementCorrectionFvPatchVectorField&,
             const fvPatch&,
-            const vectorField&,
+            const DimensionedField<vector, volMesh>&,
             const fvPatchFieldMapper&
         );
 
@@ -110,11 +110,14 @@ public:
         tractionDisplacementCorrectionFvPatchVectorField
         (
             const tractionDisplacementCorrectionFvPatchVectorField&,
-            const vectorField&
+            const DimensionedField<vector, volMesh>&
         );
 
         //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchVectorField> clone(const vectorField& iF) const
+        virtual tmp<fvPatchVectorField> clone
+        (
+            const DimensionedField<vector, volMesh>& iF
+        ) const
         {
             return tmp<fvPatchVectorField>
             (

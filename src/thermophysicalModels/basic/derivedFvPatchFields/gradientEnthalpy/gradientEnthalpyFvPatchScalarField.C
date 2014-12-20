@@ -40,7 +40,7 @@ namespace Foam
 gradientEnthalpyFvPatchScalarField::gradientEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedGradientFvPatchScalarField(p, iF)
@@ -51,7 +51,7 @@ gradientEnthalpyFvPatchScalarField::gradientEnthalpyFvPatchScalarField
 (
     const gradientEnthalpyFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -62,7 +62,7 @@ gradientEnthalpyFvPatchScalarField::gradientEnthalpyFvPatchScalarField
 gradientEnthalpyFvPatchScalarField::gradientEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -82,7 +82,7 @@ gradientEnthalpyFvPatchScalarField::gradientEnthalpyFvPatchScalarField
 gradientEnthalpyFvPatchScalarField::gradientEnthalpyFvPatchScalarField
 (
     const gradientEnthalpyFvPatchScalarField& tppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedGradientFvPatchScalarField(tppsf, iF)
@@ -91,7 +91,6 @@ gradientEnthalpyFvPatchScalarField::gradientEnthalpyFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Update the coefficients associated with the patch field
 void gradientEnthalpyFvPatchScalarField::updateCoeffs()
 {
     if (updated())

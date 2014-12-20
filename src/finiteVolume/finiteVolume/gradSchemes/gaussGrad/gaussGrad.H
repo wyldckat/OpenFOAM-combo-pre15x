@@ -125,7 +125,7 @@ public:
             <typename outerProduct<vector, Type>::type, fvPatchField, volMesh>
         > grad
         (
-            const GeometricField<Type, fvPatchField, surfaceMesh>&
+            const GeometricField<Type, fvsPatchField, surfaceMesh>&
         );
 
 

@@ -47,9 +47,10 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyTopoChange.H"
-#include "directPolyTopoChange.H"
-#include "directCombineFaces.H"
-#include "directRemovePoints.H"
+#include "polyModifyFace.H"
+#include "polyAddFace.H"
+#include "combineFaces.H"
+#include "removePoints.H"
 #include "polyMesh.H"
 #include "mapPolyMesh.H"
 #include "mathematicalConstants.H"
@@ -99,8 +100,8 @@ void checkSnapMesh
         Pout<< "Checking non orthogonality" << endl;
 
         label nOldSize = wrongFaces.size();
-        mesh.setOrthWarn(maxNonOrtho);
-        mesh.checkFaceDotProduct(false, &wrongFaces);
+        mesh.setNonOrthThreshold(maxNonOrtho);
+        mesh.checkFaceOrthogonality(false, &wrongFaces);
 
         Pout<< "Detected " << wrongFaces.size() - nOldSize
             << " faces with non-orthogonality > " << maxNonOrtho << " degrees"
@@ -161,7 +162,7 @@ label mergePatchFaces
 )
 {
     // Patch face merging engine
-    directCombineFaces faceCombiner(mesh);
+    combineFaces faceCombiner(mesh);
 
     // Get all sets of faces that can be merged
     labelListList allFaceSets(faceCombiner.getMergeSets(minCos, concaveSin));
@@ -186,7 +187,7 @@ label mergePatchFaces
         autoPtr<mapPolyMesh> map;
         {
             // Topology changes container
-            directPolyTopoChange meshMod(mesh);
+            polyTopoChange meshMod(mesh);
 
             // Merge all faces of a set into the first face of the set.
             faceCombiner.setRefinement(allFaceSets, meshMod);
@@ -258,20 +259,25 @@ label mergePatchFaces
                     inplaceRenumber(map().reversePointMap(), setFaceVerts[i]);
 
                     // Debug: check that all points are still there.
-                    if (findIndex(setFaceVerts[i], -1) != -1)
+                    forAll(setFaceVerts[i], j)
                     {
-                        FatalErrorIn("mergePatchFaces")
-                            << "In set:" << setI << " old face labels:"
-                            << allFaceSets[setI] << " new face vertices:"
-                            << setFaceVerts[i] << " are unmapped vertices!"
-                            << abort(FatalError);
+                        label newVertI = setFaceVerts[i][j];
+
+                        if (newVertI < 0)
+                        {
+                            FatalErrorIn("mergePatchFaces")
+                                << "In set:" << setI << " old face labels:"
+                                << allFaceSets[setI] << " new face vertices:"
+                                << setFaceVerts[i] << " are unmapped vertices!"
+                                << abort(FatalError);
+                        }
                     }
                 }
             }
 
 
             // Topology changes container
-            directPolyTopoChange meshMod(mesh);
+            polyTopoChange meshMod(mesh);
 
 
             // Restore faces
@@ -380,7 +386,7 @@ label mergeEdges(const scalar minCos, polyMesh& mesh)
         << "." << nl << endl;
 
     // Point removal analysis engine
-    directRemovePoints pointRemover(mesh);
+    removePoints pointRemover(mesh);
 
     // Count usage of points
     boolList pointCanBeDeleted;
@@ -392,7 +398,7 @@ label mergeEdges(const scalar minCos, polyMesh& mesh)
             << " straight edge points ..." << endl;
 
         // Topology changes container
-        directPolyTopoChange meshMod(mesh);
+        polyTopoChange meshMod(mesh);
 
         pointRemover.setRefinement(pointCanBeDeleted, meshMod);
 

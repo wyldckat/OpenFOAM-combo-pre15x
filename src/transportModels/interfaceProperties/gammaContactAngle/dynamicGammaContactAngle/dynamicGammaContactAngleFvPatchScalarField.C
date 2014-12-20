@@ -27,6 +27,7 @@ License
 #include "dynamicGammaContactAngleFvPatchScalarField.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fvPatchFieldMapper.H"
+#include "volMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -39,7 +40,7 @@ dynamicGammaContactAngleFvPatchScalarField::
 dynamicGammaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     gammaContactAngleFvPatchScalarField(p, iF),
@@ -55,7 +56,7 @@ dynamicGammaContactAngleFvPatchScalarField
 (
     const dynamicGammaContactAngleFvPatchScalarField& gcpsf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -71,7 +72,7 @@ dynamicGammaContactAngleFvPatchScalarField::
 dynamicGammaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -103,7 +104,7 @@ dynamicGammaContactAngleFvPatchScalarField::
 dynamicGammaContactAngleFvPatchScalarField
 (
     const dynamicGammaContactAngleFvPatchScalarField& gcpsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     gammaContactAngleFvPatchScalarField(gcpsf, iF),
@@ -116,11 +117,10 @@ dynamicGammaContactAngleFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Evaluate and return dynamic contact-angle
 tmp<scalarField> dynamicGammaContactAngleFvPatchScalarField::theta
 (
     const fvPatchVectorField& Up,
-    const fvPatchVectorField& nHat
+    const fvsPatchVectorField& nHat
 ) const
 {
     if (uTheta_ < SMALL)
@@ -148,7 +148,6 @@ tmp<scalarField> dynamicGammaContactAngleFvPatchScalarField::theta
 }
 
 
-// Write
 void dynamicGammaContactAngleFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);

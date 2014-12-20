@@ -34,6 +34,23 @@ License
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template <class T>
+Foam::List<T> Foam::transform
+(
+    const tensor& rotTensor,
+    UList<T>& field
+)
+{
+    List<T> newField(field.size());
+
+    forAll(field, i)
+    {
+        newField[i] = Foam::transform(rotTensor, field[i]);
+    }
+    return newField;
+}
+
+
+template <class T>
 void Foam::syncTools::transformList
 (
     const tensorField& rotTensor,
@@ -75,6 +92,295 @@ void Foam::syncTools::separateList
 {}
 
 
+////XXXXXX
+//template <class T, class CombineOp>
+//void Foam::syncTools::syncPointList
+//(
+//    const polyMesh& mesh,
+//    const primitivePatch& allBoundary,
+//    Map<T>& pointValues,        // from allBoundary point label to value
+//    const CombineOp& cop,
+//    const T& nullValue,
+//    const bool applySeparation
+//)
+//{
+//    if (allBoundary.size() != mesh.nFaces()-mesh.nInternalFaces())
+//    {
+//        FatalErrorIn
+//        (
+//            "syncTools<class T, class CombineOp>::syncPointList"
+//            "(const polyMesh&, const indirectPrimitivePatch&, Map<T>&"
+//            ", const CombineOp&, const T&, const bool)"
+//        )   << "Number of faces in allBoundary:" << allBoundary.size()
+//            << " is not equal to the number of boundary faces in the mesh "
+//            << mesh.nPoints() << abort(FatalError);
+//    }
+//
+//    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+//
+//    if (!hasCouples(patches))
+//    {
+//        return;
+//    }
+//
+//
+//    // Build map from point on allBoundary to boundary faces and index in
+//    // boundary face.
+//    labelList allFace(allBoundary.nPoints(), -1);
+//    labelList allIndex(allBoundary.nPoints());
+//
+//    forAll(pointFaces, allpointI)
+//    {
+//        const labelList& pFaces = pointFaces[allPointI];
+//
+//        forAll(pFaces, 
+//
+//    }
+//
+//    // Is there any coupled patch with transformation?
+//    bool hasTransformation = false;
+//
+//    if (Pstream::parRun())
+//    {
+//        // Send
+//        DynamicList<label> 
+//
+//
+//        forAll(patches, patchI)
+//        {
+//            if
+//            (
+//                isA<processorPolyPatch>(patches[patchI])
+//             && patches[patchI].nPoints() > 0
+//            )
+//            {
+//                const processorPolyPatch& procPatch =
+//                    refCast<const processorPolyPatch>(patches[patchI]);
+//
+//
+//                // Collect local face and index
+//                DynamicList<label> localFace(procPatch.nPoints());
+//                labelList localIndex(procPatch.nPoints());
+//
+//                forAllConstIter(Map<T>, pointValues, iter)
+//                {
+//                    label allPointI = iter.key();
+//                    const T& val = iter();
+//
+//                    const labelList& pFaces =
+//                            allBoundary.pointFaces()[allPointI];
+//
+//                    forAll(pFaces, i)
+//                    {
+//                        label meshFaceI = mesh.nInternalFaces() + pFaces[i];
+//                        label patchFaceI = meshFaceI - procPatch.start();
+//
+//                        if (patchFaceI >= 0 && patchFaceI < procPatch.size())
+//                        {
+//                            localFaces.append(patchFaceI);
+//
+//                            const face& f = procPatch[patchFaceI];
+//                            localIndex.append
+//                            (
+//                                findIndex
+//                                (
+//                                    f,
+//                                    allBoundary.meshPoints()[allPointI]
+//                                )
+//                            );
+//                        }
+//                    }
+//                }
+//
+//
+//                // Get data per patchPoint in neighbouring point numbers.
+//                List<T> patchInfo(procPatch.nPoints(), nullValue);
+//
+//                const labelList& nbrPts = procPatch.neighbPoints();
+//
+//                forAll(meshPts, pointI)
+//                {
+//                    patchInfo[nbrPts[pointI]] = pointValues[meshPts[pointI]];
+//                }
+//
+//                if (contiguous<T>())
+//                {
+//                    OPstream::write
+//                    (
+//                        procPatch.neighbProcNo(),
+//                        reinterpret_cast<const char*>(patchInfo.begin()),
+//                        patchInfo.byteSize(),
+//                        true                    // buffered
+//                    );
+//                }
+//                else
+//                {
+//                    OPstream toNeighb(procPatch.neighbProcNo());
+//                    toNeighb << patchInfo;
+//                }
+//            }
+//        }
+//
+//
+//        // Receive and combine.
+//
+//        forAll(patches, patchI)
+//        {
+//            if
+//            (
+//                isA<processorPolyPatch>(patches[patchI])
+//             && patches[patchI].nPoints() > 0
+//            )
+//            {
+//                const processorPolyPatch& procPatch =
+//                    refCast<const processorPolyPatch>(patches[patchI]);
+//                checkTransform(procPatch, applySeparation);
+//
+//                List<T> nbrPatchInfo(procPatch.nPoints());
+//
+//                if (contiguous<T>())
+//                {
+//                    IPstream::read
+//                    (
+//                        procPatch.neighbProcNo(),
+//                        reinterpret_cast<char*>(nbrPatchInfo.begin()),
+//                        nbrPatchInfo.byteSize()
+//                    );
+//                }
+//                else
+//                {
+//                    IPstream fromNeighb(procPatch.neighbProcNo());
+//                    fromNeighb >> nbrPatchInfo;
+//                }
+//
+//                if (!procPatch.parallel())
+//                {
+//                    hasTransformation = true;
+//                    transformList(procPatch.reverseT(), nbrPatchInfo);
+//                }
+//                else if (applySeparation && procPatch.separated())
+//                {
+//                    hasTransformation = true;
+//                    separateList(-procPatch.separation(), nbrPatchInfo);
+//                }
+//
+//                const labelList& meshPts = procPatch.meshPoints();
+//
+//                forAll(meshPts, pointI)
+//                {
+//                    label meshPointI = meshPts[pointI];
+//                    cop(pointValues[meshPointI], nbrPatchInfo[pointI]);
+//                }
+//            }
+//        }
+//    }
+//
+//    // Do the cyclics.
+//    forAll(patches, patchI)
+//    {
+//        if (isA<cyclicPolyPatch>(patches[patchI]))
+//        {
+//            const cyclicPolyPatch& cycPatch =
+//                refCast<const cyclicPolyPatch>(patches[patchI]);
+//
+//            checkTransform(cycPatch, applySeparation);
+//
+//            const labelList& meshPts = cycPatch.meshPoints();
+//            const edgeList& coupledPoints = cycPatch.coupledPoints();
+//
+//            List<T> half0Values(coupledPoints.size());
+//            List<T> half1Values(coupledPoints.size());
+//
+//            forAll(coupledPoints, i)
+//            {
+//                const edge& e = coupledPoints[i];
+//
+//                label point0 = meshPts[e[0]];
+//                label point1 = meshPts[e[1]];
+//
+//                half0Values[i] = pointValues[point0];
+//                half1Values[i] = pointValues[point1];
+//            }
+//
+//            if (!cycPatch.parallel())
+//            {
+//                hasTransformation = true;
+//                transformList(cycPatch.forwardT(), half0Values);
+//            }
+//            else if (applySeparation && cycPatch.separated())
+//            {
+//                hasTransformation = true;
+//
+//                const vectorField& v =
+//                    cycPatch.coupledPolyPatch::separation();
+//                separateList(v, half0Values);
+//                separateList(-v, half1Values);
+//            }
+//
+//            forAll(coupledPoints, i)
+//            {
+//                const edge& e = coupledPoints[i];
+//
+//                label point0 = meshPts[e[0]];
+//                label point1 = meshPts[e[1]];
+//
+//                cop(pointValues[point0], half1Values[i]);
+//                cop(pointValues[point1], half0Values[i]);
+//            }
+//        }
+//    }
+//
+//    //- Note: hasTransformation is only used for warning messages so
+//    //  reduction not strictly nessecary.
+//    //reduce(hasTransformation, orOp<bool>());
+//
+//    // Synchronize multiple shared points.
+//    const globalMeshData& pd = mesh.globalData();
+//
+//    if (pd.nGlobalPoints() > 0)
+//    {
+//        if (hasTransformation)
+//        {
+//            WarningIn
+//            (
+//                "syncTools<class T, class CombineOp>::syncPointList"
+//                "(const polyMesh&, UList<T>&, const CombineOp&, const T&"
+//                ", const bool)"
+//            )   << "There are decomposed cyclics in this mesh with"
+//                << " transformations." << endl
+//                << "This is not supported. The result will be incorrect"
+//                << endl;
+//        }
+//        else
+//        {
+//            // Values on shared points.
+//            List<T> sharedPts(pd.nGlobalPoints(), nullValue);
+//
+//            forAll(pd.sharedPointLabels(), i)
+//            {
+//                label meshPointI = pd.sharedPointLabels()[i];
+//
+//                // Fill my entries in the shared points
+//                sharedPts[pd.sharedPointAddr()[i]] = pointValues[meshPointI];
+//            }
+//
+//            // Combine on master.
+//            Pstream::listCombineGather(sharedPts, cop);
+//            Pstream::listCombineScatter(sharedPts);
+//
+//            // Now we will all have the same information. Merge it back with
+//            // my local information.
+//            forAll(pd.sharedPointLabels(), i)
+//            {
+//                label meshPointI = pd.sharedPointLabels()[i];
+//                pointValues[meshPointI] = sharedPts[pd.sharedPointAddr()[i]];
+//            }
+//        }
+//    }
+//}
+////XXXXXX
+
+
 template <class T, class CombineOp>
 void Foam::syncTools::syncPointList
 (
@@ -113,7 +419,11 @@ void Foam::syncTools::syncPointList
 
         forAll(patches, patchI)
         {
-            if (isA<processorPolyPatch>(patches[patchI]))
+            if
+            (
+                isA<processorPolyPatch>(patches[patchI])
+             && patches[patchI].nPoints() > 0
+            )
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patches[patchI]);
@@ -152,7 +462,11 @@ void Foam::syncTools::syncPointList
 
         forAll(patches, patchI)
         {
-            if (isA<processorPolyPatch>(patches[patchI]))
+            if
+            (
+                isA<processorPolyPatch>(patches[patchI])
+             && patches[patchI].nPoints() > 0
+            )
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patches[patchI]);
@@ -303,6 +617,57 @@ void Foam::syncTools::syncPointList
 
 
 template <class T, class CombineOp>
+void Foam::syncTools::syncPointList
+(
+    const polyMesh& mesh,
+    const labelList& meshPoints,
+    UList<T>& pointValues,
+    const CombineOp& cop,
+    const T& nullValue,
+    const bool applySeparation
+)
+{
+    if (pointValues.size() != meshPoints.size())
+    {
+        FatalErrorIn
+        (
+            "syncTools<class T, class CombineOp>::syncPointList"
+            "(const polyMesh&, const labelList&, UList<T>&, const CombineOp&"
+            ", const T&, const bool)"
+        )   << "Number of values " << pointValues.size()
+            << " is not equal to the number of points "
+            << meshPoints.size() << abort(FatalError);
+    }
+
+    if (!hasCouples(mesh.boundaryMesh()))
+    {
+        return;
+    }
+
+    List<T> meshValues(mesh.nPoints(), nullValue);
+
+    forAll(meshPoints, i)
+    {
+        meshValues[meshPoints[i]] = pointValues[i];
+    }
+
+    syncTools::syncPointList
+    (
+        mesh,
+        meshValues,
+        cop,            // combine op
+        nullValue,      // null value
+        applySeparation // separation
+    );
+
+    forAll(meshPoints, i)
+    {
+        pointValues[i] = meshValues[meshPoints[i]];
+    }
+}
+
+
+template <class T, class CombineOp>
 void Foam::syncTools::syncEdgeList
 (
     const polyMesh& mesh,
@@ -340,7 +705,11 @@ void Foam::syncTools::syncEdgeList
 
         forAll(patches, patchI)
         {
-            if (isA<processorPolyPatch>(patches[patchI]))
+            if
+            (
+                isA<processorPolyPatch>(patches[patchI])
+             && patches[patchI].nEdges() > 0
+            )
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patches[patchI]);
@@ -379,7 +748,11 @@ void Foam::syncTools::syncEdgeList
 
         forAll(patches, patchI)
         {
-            if (isA<processorPolyPatch>(patches[patchI]))
+            if
+            (
+                isA<processorPolyPatch>(patches[patchI])
+             && patches[patchI].nEdges() > 0
+            )
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patches[patchI]);
@@ -571,7 +944,11 @@ void Foam::syncTools::syncBoundaryFaceList
 
         forAll(patches, patchI)
         {
-            if (isA<processorPolyPatch>(patches[patchI]))
+            if
+            (
+                isA<processorPolyPatch>(patches[patchI])
+             && patches[patchI].size() > 0
+            )
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patches[patchI]);
@@ -606,7 +983,11 @@ void Foam::syncTools::syncBoundaryFaceList
 
         forAll(patches, patchI)
         {
-            if (isA<processorPolyPatch>(patches[patchI]))
+            if
+            (
+                isA<processorPolyPatch>(patches[patchI])
+             && patches[patchI].size() > 0
+            )
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patches[patchI]);

@@ -36,9 +36,6 @@ namespace Foam
 
 defineTypeNameAndDebug(primitiveMesh, 0);
 
-const scalar primitiveMesh::closedTolerance_ = 1.0e-7;
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct null
@@ -270,7 +267,7 @@ tmp<scalarField> primitiveMesh::movePoints
     tmp<scalarField> tsweptVols(new scalarField(f.size()));
     scalarField& sweptVols = tsweptVols();
 
-    forAll (f, faceI)
+    forAll(f, faceI)
     {
         sweptVols[faceI] = f[faceI].sweptVol(oldP, points_);
     }

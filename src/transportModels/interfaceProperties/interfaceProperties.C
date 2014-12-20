@@ -38,6 +38,7 @@ Description
 #include "surfaceInterpolate.H"
 #include "fvcDiv.H"
 #include "fvcGrad.H"
+#include "fvcSnGrad.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,7 +47,8 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * //
 
-const scalar interfaceProperties::convertToRad = mathematicalConstant::pi/180.0;
+const scalar interfaceProperties::convertToRad =
+    mathematicalConstant::pi/180.0;
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -59,11 +61,11 @@ const scalar interfaceProperties::convertToRad = mathematicalConstant::pi/180.0;
 
 void interfaceProperties::correctContactAngle
 (
-    fvPatchVectorFieldField& nHatb
+    surfaceVectorField::GeometricBoundaryField& nHatb
 ) const
 {
     const fvMesh& mesh = gamma_.mesh();
-    const fvPatchScalarFieldField& gbf = gamma_.boundaryField();
+    const volScalarField::GeometricBoundaryField& gbf = gamma_.boundaryField();
 
     const fvBoundaryMesh& boundary = mesh.boundary();
 
@@ -72,9 +74,10 @@ void interfaceProperties::correctContactAngle
         if (isA<gammaContactAngleFvPatchScalarField>(gbf[patchi]))
         {
             const gammaContactAngleFvPatchScalarField& gcap = 
-                refCast<const gammaContactAngleFvPatchScalarField>(gbf[patchi]);
+                refCast<const gammaContactAngleFvPatchScalarField>
+                (gbf[patchi]);
 
-            fvPatchVectorField& nHatp = nHatb[patchi];
+            fvsPatchVectorField& nHatp = nHatb[patchi];
             scalarField theta = 
                 convertToRad*gcap.theta(U_.boundaryField()[patchi], nHatp);
 
@@ -117,8 +120,8 @@ void interfaceProperties::calculateK()
     // Interpolated face-gradient of gamma
     surfaceVectorField gradGammaf = fvc::interpolate(gradGamma);
     //gradGammaf -=
-    //    2*(mesh.Sf()/mesh.magSf())
-    //    *(fvc::snGrad(gamma_) - (mesh.Sf() & gradGammaf)/mesh.magSf());
+    //    (mesh.Sf()/mesh.magSf())
+    //   *(fvc::snGrad(gamma_) - (mesh.Sf() & gradGammaf)/mesh.magSf());
 
     // Face unit interface normal
     surfaceVectorField nHatfv = gradGammaf/(mag(gradGammaf) + deltaN_);
@@ -132,9 +135,15 @@ void interfaceProperties::calculateK()
 
     // Complex expression for curvature.
     // Correction is formally zero but numerically non-zero.
-    //volVectorField nHat = gradGamma/(mag(gradGamma) + deltaN_);
-    //nHat.boundaryField() = nHatfv.boundaryField();
-    //K_ = -fvc::div(nHatf_) + (nHat & fvc::grad(nHatfv) & nHat);
+    /*
+    volVectorField nHat = gradGamma/(mag(gradGamma) + deltaN_);
+    forAll(nHat.boundaryField(), patchi)
+    {
+        nHat.boundaryField()[patchi] = nHatfv.boundaryField()[patchi];
+    }
+
+    K_ = -fvc::div(nHatf_) + (nHat & fvc::grad(nHatfv) & nHat);
+    */
 }
 
 

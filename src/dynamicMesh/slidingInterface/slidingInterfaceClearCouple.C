@@ -28,6 +28,8 @@ License
 #include "polyTopoChange.H"
 #include "polyMesh.H"
 #include "polyTopoChanger.H"
+#include "polyRemovePoint.H"
+#include "polyRemoveFace.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 

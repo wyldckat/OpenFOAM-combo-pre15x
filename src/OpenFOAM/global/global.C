@@ -40,11 +40,6 @@ Description
 #include "new.C"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// Print banner
-
-#include "banner.C"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Global IO streams
 
 #include "IOstreams.C"

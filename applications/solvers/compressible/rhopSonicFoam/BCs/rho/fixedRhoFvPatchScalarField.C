@@ -39,7 +39,7 @@ namespace Foam
 fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedValueFvPatchScalarField(p, iF)
@@ -50,7 +50,7 @@ fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 (
     const fixedRhoFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -61,7 +61,7 @@ fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -81,7 +81,7 @@ fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 (
     const fixedRhoFvPatchScalarField& tppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedValueFvPatchScalarField(tppsf, iF)
@@ -90,7 +90,6 @@ fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Update the coefficients associated with the patch field
 void fixedRhoFvPatchScalarField::updateCoeffs()
 {
     if (updated())
@@ -109,7 +108,7 @@ void fixedRhoFvPatchScalarField::updateCoeffs()
     fixedValueFvPatchScalarField::updateCoeffs();
 }
 
-// Write
+
 void fixedRhoFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);

@@ -40,7 +40,7 @@ namespace Foam
 mixedEnthalpyFvPatchScalarField::mixedEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     mixedFvPatchScalarField(p, iF)
@@ -55,7 +55,7 @@ mixedEnthalpyFvPatchScalarField::mixedEnthalpyFvPatchScalarField
 (
     const mixedEnthalpyFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -66,7 +66,7 @@ mixedEnthalpyFvPatchScalarField::mixedEnthalpyFvPatchScalarField
 mixedEnthalpyFvPatchScalarField::mixedEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -86,7 +86,7 @@ mixedEnthalpyFvPatchScalarField::mixedEnthalpyFvPatchScalarField
 mixedEnthalpyFvPatchScalarField::mixedEnthalpyFvPatchScalarField
 (
     const mixedEnthalpyFvPatchScalarField& tppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     mixedFvPatchScalarField(tppsf, iF)
@@ -95,7 +95,6 @@ mixedEnthalpyFvPatchScalarField::mixedEnthalpyFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Update the coefficients associated with the patch field
 void mixedEnthalpyFvPatchScalarField::updateCoeffs()
 {
     if (updated())

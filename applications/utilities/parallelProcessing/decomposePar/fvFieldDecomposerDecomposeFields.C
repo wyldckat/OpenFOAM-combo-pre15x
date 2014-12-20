@@ -26,6 +26,7 @@ License
 
 #include "fvFieldDecomposer.H"
 #include "processorFvPatchField.H"
+#include "processorFvsPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,7 +59,7 @@ fvFieldDecomposer::decomposeField
                 (
                     field.boundaryField()[boundaryAddressing_[patchi]],
                     procMesh_.boundary()[patchi],
-                    internalField,
+                    DimensionedField<Type, volMesh>::null(),
                     *patchFieldDecomposerPtrs_[patchi]
                 )
             );
@@ -71,7 +72,7 @@ fvFieldDecomposer::decomposeField
                 new processorFvPatchField<Type>
                 (
                     procMesh_.boundary()[patchi],
-                    internalField,
+                    DimensionedField<Type, volMesh>::null(),
                     Field<Type>
                     (
                         field.internalField(),
@@ -105,10 +106,10 @@ fvFieldDecomposer::decomposeField
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 fvFieldDecomposer::decomposeField
 (
-    const GeometricField<Type, fvPatchField, surfaceMesh>& field
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& field
 ) const
 {
     labelList mapAddr
@@ -156,7 +157,7 @@ fvFieldDecomposer::decomposeField
     }
 
     // Create and map the patch field values
-    PtrList<fvPatchField<Type> > patchFields(boundaryAddressing_.size());
+    PtrList<fvsPatchField<Type> > patchFields(boundaryAddressing_.size());
 
     forAll (boundaryAddressing_, patchi)
     {
@@ -165,11 +166,11 @@ fvFieldDecomposer::decomposeField
             patchFields.set
             (
                 patchi,
-                fvPatchField<Type>::New
+                fvsPatchField<Type>::New
                 (
                     field.boundaryField()[boundaryAddressing_[patchi]],
                     procMesh_.boundary()[patchi],
-                    internalField,
+                    DimensionedField<Type, surfaceMesh>::null(),
                     *patchFieldDecomposerPtrs_[patchi]
                 )
             );
@@ -179,10 +180,10 @@ fvFieldDecomposer::decomposeField
             patchFields.set
             (
                 patchi,
-                new processorFvPatchField<Type>
+                new processorFvsPatchField<Type>
                 (
                     procMesh_.boundary()[patchi],
-                    internalField,
+                    DimensionedField<Type, surfaceMesh>::null(),
                     Field<Type>
                     (
                         allFaceField,
@@ -194,9 +195,9 @@ fvFieldDecomposer::decomposeField
     }
 
     // Create the field for the processor
-    return tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+    return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
     (
-        new GeometricField<Type, fvPatchField, surfaceMesh>
+        new GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             IOobject
             (

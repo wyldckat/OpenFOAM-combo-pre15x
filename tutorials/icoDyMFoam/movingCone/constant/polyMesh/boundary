@@ -1,7 +1,7 @@
-/*---------------------------------------------------------------------------*\
+/*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.4                                   |
+|  \\    /   O peration     | Version:  1.4.1                                 |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -9,12 +9,12 @@
 FoamFile
 {
     version 2.0;
-    format ascii;
+    format binary;
 
-    root "";
-    case "";
-    instance "";
-    local "";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.4.1/tutorials/icoDyMFoam";
+    case "movingCone";
+    instance "constant";
+    local "polyMesh";
 
     class polyBoundaryMesh;
     object boundary;
@@ -47,7 +47,7 @@ fixedWall
 
 axis
 {
-    type empty;
+    type symmetryPlane;
     nFaces 0;
     startFace 3835;
 }

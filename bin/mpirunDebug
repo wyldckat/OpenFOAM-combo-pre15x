@@ -90,6 +90,31 @@ if [ "$spawn" -ne 1 -a "$spawn" -ne 2 ]; then
     exit 1    
 fi
 
+# check ~/.OpenFOAM-VERSION
+# check <site>/etc
+# check <site>/.OpenFOAM-VERSION
+if [ "$WM_PROJECT" ]; then
+
+   : ${FOAM_DOT_DIR:=.$WM_PROJECT-$WM_PROJECT_VERSION}
+
+   for i in \
+      $HOME/$FOAM_DOT_DIR \
+      $WM_PROJECT_DIR/etc \
+      $WM_PROJECT_DIR/$FOAM_DOT_DIR \
+      ;
+   do
+      if [ -f "$i/bashrc" ]; then
+         sourceFoam="$i/bashrc"
+         break
+      fi
+   done
+fi
+
+# Construct test string for remote execution.
+# Source OpenFOAM settings if OpenFOAM environment not set.
+sourceFoam='[ "$WM_PROJECT" ] || . '"$sourceFoam"
+
+echo "**sourceFoam:$sourceFoam"
 
 rm -f $HOME/mpirun.schema
 touch $HOME/mpirun.schema
@@ -99,25 +124,35 @@ xpos=0
 ypos=0
 for ((proc=0; proc<$nProcs; proc++))
 do
-    procFile="processor${proc}.log"
+    procCmdFile="$HOME/processor${proc}.sh"
+    procLog="processor${proc}.log"
     geom="-geometry 120x20+$xpos+$ypos"
     node=""
-    if [ "$spawn" -eq 2 ]; then
-        node="c${proc} "
+
+    if [ .$WM_MPLIB = .OPENMPI ]; then
+        node="-np 1 "
+    elif [ .$WM_MPLIB = .LAM ]; then
+        if [ "$spawn" -eq 2 ]; then
+            node="c${proc} "
+        fi
     fi
 
     if [ "$method" -eq 1 ]; then
-        echo "${node}xterm -font fixed -title 'processor'$proc $geom -e /bin/sh -c \"gdb -command $HOME/gdbCommands $exec 2>&1 | tee $procFile; read dummy\"" >> $HOME/mpirun.schema
+        echo "$sourceFoam; cd $PWD; gdb -command $HOME/gdbCommands $exec 2>&1 | tee $procLog; read dummy" > $procCmdFile
+        #echo "$sourceFoam; cd $PWD; $exec $args; read dummy" > $procCmdFile
+        echo "${node}xterm -font fixed -title 'processor'$proc $geom -e $procCmdFile" >> $HOME/mpirun.schema
     elif [ "$method" -eq 2 ]; then
-        echo "${node}/bin/bash -c \"gdb -command $HOME/gdbCommands $exec >& $procFile\"" >> $HOME/mpirun.schema
+        echo "$sourceFoam; cd $PWD; gdb -command $HOME/gdbCommands >& $procLog" > $procCmdFile
+        echo "${node}$procCmdFile" >> $HOME/mpirun.schema
     elif [ "$method" -eq 3 ]; then
-        echo "${node}/bin/bash -c \"$exec $args >& $procFile\"" >> $HOME/mpirun.schema
+        echo "$sourceFoam; cd $PWD; $exec $args >& $procLog" > $procCmdFile
+        echo "${node}$procCmdFile" >> $HOME/mpirun.schema
     elif [ "$method" -eq 4 ]; then
-        echo "${node}xterm -font fixed -title 'processor'$proc $geom -e /bin/sh -c \"valgrind $exec $args; read dummy\"" >> $HOME/mpirun.schema
+        echo "$sourceFoam; cd $PWD; valgrind $exec $args; read dummy" > $procCmdFile
+        echo "${node}xterm -font fixed -title 'processor'$proc $geom -e$procCmdFile" >> $HOME/mpirun.schema
     fi
-    
-    #echo "${node}xterm -title 'processor'$proc -e /bin/sh -c \"$exec $args; read dummy\"" >> $HOME/mpirun.schema
-    #echo "${node}xterm -title 'processor'$proc $geom -e /bin/sh -c \"valgrind --tool=memcheck $exec $args; read dummy\"" >> $HOME/mpirun.schema
+
+    chmod +x $procCmdFile
 
     let column=proc%6
     if [ $proc -ne 0 -a $column -eq 0 ]; then
@@ -130,10 +165,14 @@ done
 
 for ((proc=0; proc<$nProcs; proc++))
 do
-    procFile="processor${proc}.log"
-    echo "    tail -f $procFile"
+    procLog="processor${proc}.log"
+    echo "    tail -f $procLog"
 done
 
 $ECHO "Constructed $HOME/mpirun.schema file. Press return to execute.\c"
 read dummy
-mpirun $HOME/mpirun.schema </dev/null
+if [ .$WM_MPLIB = .OPENMPI ]; then
+    mpirun -app $HOME/mpirun.schema </dev/null
+elif [ .$WM_MPLIB = .LAM ]; then
+    mpirun $HOME/mpirun.schema </dev/null
+fi

@@ -48,7 +48,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class SuperBeeWeight Declaration
+                       Class SuperBeeLimiter Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
@@ -75,7 +75,7 @@ public:
     {
         scalar r = LimiterFunc::r
         (
-            cdWeight, faceFlux, phiP, phiN, gradcP, gradcN, d
+            faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
         return max(max(min(2*r, 1), min(r, 2)), 0);

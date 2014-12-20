@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 #------------------------------------------------------------------------------
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
@@ -27,43 +27,134 @@
 #     wmakeScheduler
 #
 # Description
-#     Scheduler for network distributed compilations using wmake
+#     Scheduler for network distributed compilations using wmake.
+#     - WM_HOSTS contains a list of hosts and number of concurrent processes
+#     eg,
+#        export WM_HOSTS="hostA:1 hostB:2 hostC:1"
+#
+#     Sources the relevant cshrc/bashrc if not set.
+#
+#     WM_PROJECT_DIR, WM_PROJECT and WM_PROJECT_VERSION will have been set
+#     before calling this routine
+#
+# Usage
+#     wmakeScheduler COMMAND
+#         run 'COMMAND' on one of the slots listed in WM_HOSTS
+#
+#     wmakeScheduler -count
+#         count the total number of slots available in WM_HOSTS
+#         eg,  WM_NCOMPPROCS=$(wmakeScheduler -count)
 #
 #-------------------------------------------------------------------------------
-
 lockDir=$HOME/.wmakeScheduler
 
-eval "cores=$WM_HOSTS"
-n=${#cores[@]}
+# fallback - 1 core on current host
+: ${WM_HOSTS:=$HOST:1}
 
-while [ true ]
+# count the total number of slots available and exit
+if [ "$1" = "-count" ]
+then
+   expr $(
+      for slotGroup in $WM_HOSTS
+      do
+         n=${slotGroup##*:}
+         if [ "$n" = "${slotGroup%%:*}" ]; then n=1; fi # missing ':'
+         echo "+ ${n:-1}"
+      done)
+   exit 0
+fi
+
+# where to source OpenFOAM settings in a remote shell
+# This code tries to figure out which cshrc or bashrc to execute.
+# !! Assumes remote computer running same shell and startup files
+# in same location
+
+sourceFoam=false    # fallback command
+case $SHELL in
+*/csh | */tcsh )    # [t]csh vs bash|ksh|sh
+   shellRc=cshrc
+   ;;
+*)
+   shellRc=bashrc
+   ;;
+esac
+
+# check ~/.OpenFOAM-VERSION
+# check <site>/etc
+# check <site>/.OpenFOAM-VERSION
+if [ "$WM_PROJECT" ]; then
+
+   : ${FOAM_DOT_DIR:=.$WM_PROJECT-$WM_PROJECT_VERSION}
+
+   for i in \
+      $HOME/$FOAM_DOT_DIR \
+      $WM_PROJECT_DIR/etc \
+      $WM_PROJECT_DIR/$FOAM_DOT_DIR \
+      ;
+   do
+      if [ -f "$i/$shellRc" ]; then
+         sourceFoam="$i/$shellRc"
+         break
+      fi
+   done
+fi
+
+# Construct test string for remote execution.
+# Source OpenFOAM settings if OpenFOAM environment not set.
+case $sourceFoam in
+   */cshrc)  sourceFoam='if ( ! $?WM_PROJECT ) source '"$sourceFoam";;
+   */bashrc) sourceFoam='[ "$WM_PROJECT" ] || . '"$sourceFoam";;
+esac
+
+
+# quote double-quotes
+set -- $(echo $* | sed -e s/\"/\'\"\'/g)
+## set -- $(echo $* | sed -e 's/"/\\"/g')
+
+## the same, without forking (not ksh, maybe not /bin/sh either)
+# set -- $(while [ "$#" -gt 0 ]; do echo "${1//\"/'\"'}"; shift; done)
+
+
+while :
 do
-    let "w = 15*$RANDOM"
-    usleep $w
-    for ((i=0; i<n; i++))
-    do
-        core=${cores[$i]}
-        host=${cores[$i]%:*}
-        #echo "** i:$i core:$core host:$host"
-        lock=$lockDir/$core
-        if [ ! -f $lock ]
-        then
-            touch $lock
-            cmd=`echo $* | sed s/\"/\'\"\'/g`
-            #echo "** Using core $core"
-            #echo "ssh $host \"cd $PWD; $cmd\""
+   # 0.5 sec
+   usleep 500000
+
+   for slotGroup in $WM_HOSTS
+   do
+      # split 'host:N', but catch 'host:' and 'host' too
+      host=${slotGroup%%:*}
+      n=${slotGroup##*:}
+      if [ "$n" = "$host" ]; then n=1; fi # missing ':'
+      : ${n:=1}
+
+      ## echo "** slot=$slot host=$host n=$n"
+
+      i=0
+      while [ "$i" -lt "$n" ]
+      do
+         lock="$host:$i"
+         if [ ! -f "$lockDir/$lock" ]
+         then
+            touch "$lockDir/$lock"
+            #echo "ssh $host cd $PWD && $*"
             if [ "$host" = "$HOST" ]
             then
-                $cmd
+               $*
+            elif [ -n "$JOB_ID" ]
+            then
+               qrsh -inherit -v PWD $host "$*"
             else
-                ssh $host "cd $PWD; $cmd"
+               ssh $host "$sourceFoam 2>/dev/null; cd $PWD && $*"
             fi
             retval=$?
-            #echo "** Releasing core $core"
-            rm -f $lock
+            ## echo "** Releasing $lock"
+            rm -f "$lockDir/$lock" 2>/dev/null
             exit $retval
-        fi
-    done
+         fi
+         i=$(expr $i + 1)
+      done
+   done
 done
 
 

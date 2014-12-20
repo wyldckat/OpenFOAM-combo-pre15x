@@ -47,18 +47,18 @@ namespace Foam
 class surfaceMesh;
 
 template<class Type>
-class fvPatchField;
+class fvsPatchField;
 
 template<class Type, template<class> class PatchField, class GeoMesh>
 class GeometricField;
 
-typedef GeometricField<scalar, fvPatchField, surfaceMesh> surfaceScalarField;
-typedef GeometricField<vector, fvPatchField, surfaceMesh> surfaceVectorField;
-typedef GeometricField<sphericalTensor, fvPatchField, surfaceMesh>
+typedef GeometricField<scalar, fvsPatchField, surfaceMesh> surfaceScalarField;
+typedef GeometricField<vector, fvsPatchField, surfaceMesh> surfaceVectorField;
+typedef GeometricField<sphericalTensor, fvsPatchField, surfaceMesh>
     surfaceSphericalTensorField;
-typedef GeometricField<symmTensor, fvPatchField, surfaceMesh>
+typedef GeometricField<symmTensor, fvsPatchField, surfaceMesh>
     surfaceSymmTensorField;
-typedef GeometricField<tensor, fvPatchField, surfaceMesh> surfaceTensorField;
+typedef GeometricField<tensor, fvsPatchField, surfaceMesh> surfaceTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "triSurface.H"
@@ -35,7 +33,6 @@ namespace Foam
 {
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 
 bool triSurface::stitchTriangles
 (
@@ -95,7 +92,8 @@ bool triSurface::stitchTriangles
             if (verbose)
             {
                 Pout<< "stitchTriangles : "
-                    << "Removed " << size() - newTriangleI << " triangles" << endl;
+                    << "Removed " << size() - newTriangleI
+                    << " triangles" << endl;
             }
             setSize(newTriangleI);
         }

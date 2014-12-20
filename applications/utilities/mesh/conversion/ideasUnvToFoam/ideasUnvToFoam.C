@@ -27,7 +27,7 @@ Description
 
     Uses either
     - DOF sets (757) or
-    - face groups (2467)
+    - face groups (2452(Cubit), 2467)
     to do patching.
     Works without but then puts all faces in defaultFaces patch.
 
@@ -252,6 +252,8 @@ void readCells
     const cellModel& hex = *(cellModeller::lookup("hex"));
     const cellModel& tet = *(cellModeller::lookup("tet"));
 
+    labelHashSet skippedElements;
+
     while (true)
     {
         string line;
@@ -273,6 +275,11 @@ void readCells
             is.getLine(line);
             is.getLine(line);
         }
+        else if (feID == 171)
+        {
+            // Rod. Skip.
+            is.getLine(line);
+        }
         else if (feID == 41)
         {
             // Triangle. Save - used for patching later on.
@@ -281,6 +288,17 @@ void readCells
             face cVerts(3);
             IStringStream lineStr(line);
             lineStr >> cVerts[0] >> cVerts[1] >> cVerts[2];
+            boundaryFaces.append(cVerts);
+            boundaryFaceIndices.append(cellI);
+        }
+        else if (feID == 94)
+        {
+            // Quad. Save - used for patching later on.
+            is.getLine(line);
+
+            face cVerts(4);
+            IStringStream lineStr(line);
+            lineStr >> cVerts[0] >> cVerts[1] >> cVerts[2] >> cVerts[3];
             boundaryFaces.append(cVerts);
             boundaryFaceIndices.append(cellI);
         }
@@ -312,10 +330,12 @@ void readCells
         }
         else
         {
-            FatalErrorIn("readCells(IFstream&, label&)")
-                << "Cell type " << feID << " not supported"
-                << " at line " << is.lineNumber()
-                << abort(FatalError);
+            if (skippedElements.insert(feID))
+            {
+                IOWarningIn("readCells(IFstream&, label&)", is)
+                    << "Cell type " << feID << " not supported" << endl;
+            }
+            is.getLine(line);  //Do nothing
         }
     }
 
@@ -575,6 +595,7 @@ int main(int argc, char *argv[])
                 );
             break;
 
+            case 2452:
             case 2467:
                 readPatches
                 (
@@ -801,7 +822,7 @@ int main(int argc, char *argv[])
         Info<< "Writing boundary faces to STL file boundaryFaces.stl"
             << nl << endl;
 
-        surface.write("boundaryFaces.stl");
+        surface.write(runTime.path()/"boundaryFaces.stl");
     }
 
 

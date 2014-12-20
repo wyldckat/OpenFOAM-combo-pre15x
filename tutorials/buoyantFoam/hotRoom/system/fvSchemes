@@ -35,11 +35,11 @@ gradSchemes
 divSchemes
 {
     default         none;
-    div(phi,U)      Gauss linear;
-    div(phi,h)      Gauss linear;
-    div(phi,k)      Gauss linear;
-    div(phi,epsilon) Gauss linear;
-    div(phi,R)      Gauss linear;
+    div(phi,U)      Gauss upwind;
+    div(phi,h)      Gauss upwind;
+    div(phi,k)      Gauss upwind;
+    div(phi,epsilon) Gauss upwind;
+    div(phi,R)      Gauss upwind;
     div(R)          Gauss linear;
     div((muEff*dev2(grad(U).T()))) Gauss linear;
 }

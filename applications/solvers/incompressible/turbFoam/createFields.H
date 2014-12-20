@@ -1,4 +1,3 @@
-
     Info<< "Reading field p\n" << endl;
     volScalarField p
     (

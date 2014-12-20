@@ -258,7 +258,7 @@ fvMatrix<Type>::fvMatrix(const fvMatrix<Type>& fvm)
     if (fvm.faceFluxCorrectionPtr_)
     {
         faceFluxCorrectionPtr_ = new
-        GeometricField<Type, fvPatchField, surfaceMesh>
+        GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             *(fvm.faceFluxCorrectionPtr_)
         );
@@ -312,7 +312,7 @@ fvMatrix<Type>::fvMatrix(const tmp<fvMatrix<Type> >& tfvm)
         else
         {
             faceFluxCorrectionPtr_ = new
-                GeometricField<Type, fvPatchField, surfaceMesh>
+                GeometricField<Type, fvsPatchField, surfaceMesh>
                 (
                     *(tfvm().faceFluxCorrectionPtr_)
                 );
@@ -495,7 +495,7 @@ void fvMatrix<Type>::setReference
     }
 }
 
-
+/*
 template<class Type>
 void fvMatrix<Type>::relax(const scalar alpha)
 {
@@ -515,6 +515,8 @@ void fvMatrix<Type>::relax(const scalar alpha)
             cmptAv(cmptMag(boundaryCoeffs_))
         );
 
+        Info<< min(diag()) << " " << max(diag()) << endl;
+
         scalarField oldDiag(diag());
         lduMatrix::relax
         (
@@ -523,6 +525,9 @@ void fvMatrix<Type>::relax(const scalar alpha)
             psi_.boundaryField().interfaces(),
             alpha
         );
+
+        Info<< min(diag()) << " " << max(diag()) << endl;
+
         source() += (diag() - oldDiag)*psi_.internalField();
     }
 
@@ -550,6 +555,96 @@ void fvMatrix<Type>::relax(const scalar alpha)
         }
     }
 }
+*/
+
+template<class Type>
+void fvMatrix<Type>::relax(const scalar alpha)
+{
+    if (alpha <= 0)
+    {
+        return;
+    }
+
+    Field<Type>& S = source();
+    scalarField& D = diag();
+
+    // Store the current unrelaxed diagonal for use in updating the source
+    scalarField D0(D);
+
+    // Calculate the sum-mag off-diagonal from the interior faces
+    scalarField sumOff(D.size(), 0.0);
+    sumMagOffDiag(sumOff);
+
+    // Handle the boundary contributions to the diagonal
+    forAll(psi_.boundaryField(), patchI)
+    {
+        const fvPatchField<Type>& ptf = psi_.boundaryField()[patchI];
+
+        if (ptf.size())
+        {
+            const unallocLabelList& pa = lduAddr().patchAddr(patchI);
+            Field<Type>& iCoeffs = internalCoeffs_[patchI];
+
+            if (ptf.coupled())
+            {
+                const Field<Type>& pCoeffs = boundaryCoeffs_[patchI];
+
+                // For coupled boundaries add the diagonal and
+                // off-diagonal contributions
+                forAll(pa, face)
+                {
+                    D[pa[face]] += component(iCoeffs[face], 0);
+                    sumOff[pa[face]] += mag(component(pCoeffs[face], 0));
+                }
+            }
+            else
+            {
+                // For non-coupled boundaries subtract the diagonal
+                // contribution off-diagonal sum which avoids having to remove
+                // it from the diagonal later.
+                // Also add the source contribution from the relaxation
+                forAll(pa, face)
+                {
+                    Type iCoeff0 = iCoeffs[face];
+                    iCoeffs[face] = cmptMag(iCoeffs[face]);
+                    sumOff[pa[face]] -= cmptMin(iCoeffs[face]);
+                    iCoeffs[face] /= alpha;
+                    S[pa[face]] +=
+                        scale(iCoeffs[face] - iCoeff0, psi_[pa[face]]);
+                }
+            }
+        }
+    }
+
+    // Ensure the matrix is diagonally dominant...
+    max(D, D, sumOff);
+
+    // ... then relax
+    D /= alpha;
+
+    // Now remove the diagonal contribution from coupled boundaries
+    forAll(psi_.boundaryField(), patchI)
+    {
+        const fvPatchField<Type>& ptf = psi_.boundaryField()[patchI];
+
+        if (ptf.size())
+        {
+            const unallocLabelList& pa = lduAddr().patchAddr(patchI);
+            Field<Type>& iCoeffs = internalCoeffs_[patchI];
+
+            if (ptf.coupled())
+            {
+                forAll(pa, face)
+                {
+                    D[pa[face]] -= component(iCoeffs[face], 0);
+                }
+            }
+        }
+    }
+
+    // Finally add the relaxation contribution to the source.
+    S += (D - D0)*psi_.internalField();
+}
 
 
 template<class Type>
@@ -567,6 +662,30 @@ tmp<scalarField> fvMatrix<Type>::D() const
 {
     tmp<scalarField> tdiag(new scalarField(diag()));
     addCmptAvBoundaryDiag(tdiag());
+    return tdiag;
+}
+
+
+template<class Type>
+tmp<Field<Type> > fvMatrix<Type>::DD() const
+{
+    tmp<Field<Type> > tdiag(pTraits<Type>::one*diag());
+
+    forAll(psi_.boundaryField(), patchI)
+    {
+        const fvPatchField<Type>& ptf = psi_.boundaryField()[patchI];
+
+        if (!ptf.coupled() && ptf.size())
+        {
+            addToInternalField
+            (
+                lduAddr().patchAddr(patchI),
+                internalCoeffs_[patchI],
+                tdiag()
+            );
+        }
+    }
+
     return tdiag;
 }
 
@@ -619,6 +738,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > fvMatrix<Type>::H() const
             zeroGradientFvPatchScalarField::typeName
         )
     );
+    GeometricField<Type, fvPatchField, volMesh>& Hphi = tHphi();
 
     // Loop over field components
     for (direction cmpt=0; cmpt<Type::nComponents; cmpt++)
@@ -630,35 +750,105 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > fvMatrix<Type>::H() const
         boundaryDiagCmpt.negate();
         addCmptAvBoundaryDiag(boundaryDiagCmpt);
 
-        tHphi().internalField().replace(cmpt, boundaryDiagCmpt*psiCmpt);
+        Hphi.internalField().replace(cmpt, boundaryDiagCmpt*psiCmpt);
     }
 
-    tHphi().internalField() += lduMatrix::H(psi_.internalField()) + source_;
-    addBoundarySource(tHphi().internalField());
+    Hphi.internalField() += lduMatrix::H(psi_.internalField()) + source_;
+    addBoundarySource(Hphi.internalField());
 
-    tHphi().internalField() /= psi_.mesh().V();
-    tHphi().correctBoundaryConditions();
+    Hphi.internalField() /= psi_.mesh().V();
+    Hphi.correctBoundaryConditions();
+
+    typename Type::labelType validComponents
+    (
+        pow
+        (
+            psi_.mesh().directions(),
+            pTraits<typename powProduct<Vector<label>, Type::rank>::type>::zero
+        )
+    );
+
+    for(direction cmpt=0; cmpt<Type::nComponents; cmpt++)
+    {
+        if (validComponents[cmpt] == -1)
+        {
+            Hphi.replace
+            (
+                cmpt,
+                dimensionedScalar("0", Hphi.dimensions(), 0.0)
+            );
+        }
+    }
 
     return tHphi;
 }
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMatrix<Type>::
+tmp<volScalarField> fvMatrix<Type>::H1() const
+{
+    tmp<volScalarField> tH1
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                "H(1)",
+                psi_.instance(),
+                psi_.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            psi_.mesh(),
+            dimensions_/(dimVol*psi_.dimensions()),
+            zeroGradientFvPatchScalarField::typeName
+        )
+    );
+    volScalarField& H1_ = tH1();
+
+    // Loop over field components
+    /*
+    for (direction cmpt=0; cmpt<Type::nComponents; cmpt++)
+    {
+        scalarField psiCmpt = psi_.internalField().component(cmpt);
+
+        scalarField boundaryDiagCmpt(psi_.size(), 0.0);
+        addBoundaryDiag(boundaryDiagCmpt, cmpt);
+        boundaryDiagCmpt.negate();
+        addCmptAvBoundaryDiag(boundaryDiagCmpt);
+
+        H1_.internalField().replace(cmpt, boundaryDiagCmpt);
+    }
+
+    H1_.internalField() += lduMatrix::H1();
+    */
+
+    H1_.internalField() = lduMatrix::H1();
+
+    H1_.internalField() /= psi_.mesh().V();
+    H1_.correctBoundaryConditions();
+
+    return tH1;
+}
+
+
+template<class Type>
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > fvMatrix<Type>::
 flux() const
 {
     if (!psi_.mesh().fluxRequired(psi_.name()))
     {
         FatalErrorIn("fvMatrix<Type>::flux()")
             << "flux requested but " << psi_.name()
-            << " not specified in the fluxRequired sub-dictionary of fvSchemes."
+            << " not specified in the fluxRequired sub-dictionary"
+               " of fvSchemes."
             << abort(FatalError);
     }
 
-    // construct GeometricField<Type, fvPatchField, surfaceMesh>
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tfieldFlux
+    // construct GeometricField<Type, fvsPatchField, surfaceMesh>
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tfieldFlux
     (
-        new GeometricField<Type, fvPatchField, surfaceMesh>
+        new GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             IOobject
             (
@@ -672,7 +862,7 @@ flux() const
             dimensions()
         )
     );
-    GeometricField<Type, fvPatchField, surfaceMesh>& fieldFlux = tfieldFlux();
+    GeometricField<Type, fvsPatchField, surfaceMesh>& fieldFlux = tfieldFlux();
 
     for (direction cmpt=0; cmpt<pTraits<Type>::nComponents; cmpt++)
     {
@@ -756,7 +946,7 @@ void fvMatrix<Type>::operator=(const fvMatrix<Type>& fvmv)
     else if (fvmv.faceFluxCorrectionPtr_)
     {
         faceFluxCorrectionPtr_ =
-            new GeometricField<Type, fvPatchField, surfaceMesh>
+            new GeometricField<Type, fvsPatchField, surfaceMesh>
         (*fvmv.faceFluxCorrectionPtr_);
     }
 }
@@ -803,7 +993,7 @@ void fvMatrix<Type>::operator+=(const fvMatrix<Type>& fvmv)
     else if (fvmv.faceFluxCorrectionPtr_)
     {
         faceFluxCorrectionPtr_ = new
-        GeometricField<Type, fvPatchField, surfaceMesh>
+        GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             *fvmv.faceFluxCorrectionPtr_
         );
@@ -837,7 +1027,7 @@ void fvMatrix<Type>::operator-=(const fvMatrix<Type>& fvmv)
     else if (fvmv.faceFluxCorrectionPtr_)
     {
         faceFluxCorrectionPtr_ =
-            new GeometricField<Type, fvPatchField, surfaceMesh>
+            new GeometricField<Type, fvsPatchField, surfaceMesh>
         (-*fvmv.faceFluxCorrectionPtr_);
     }
 }

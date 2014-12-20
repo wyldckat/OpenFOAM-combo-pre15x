@@ -31,19 +31,6 @@
 #
 #------------------------------------------------------------------------------
 
-cd src ; make ; cd ..
-
-rm -rf kshScripts
-mkdir kshScripts
-
-cd bashScripts
-
-for file in *
-do
-    cat $file | sed s/bash/ksh/ > ../kshScripts/$file
-    chmod ugo+rx ../kshScripts/$file
-done
-
-cd ..
+( cd src ; make )
 
 #------------------------------------------------------------------------------

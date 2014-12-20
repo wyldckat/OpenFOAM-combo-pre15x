@@ -154,7 +154,7 @@ void Foam::FDICPreconditioner::precondition
     }
 
     #ifdef ICC_IA64_PREFETCH
-    #pragma noprefetch uPtr,lPtr,upperPtr,rDPtr,wAPtr
+    #pragma noprefetch uPtr,lPtr,rDuUpperPtr,wAPtr
     #pragma nounroll
     #endif
 
@@ -172,7 +172,7 @@ void Foam::FDICPreconditioner::precondition
     }
 
     #ifdef ICC_IA64_PREFETCH
-    #pragma noprefetch uPtr,lPtr,rDPtr,wAPtr
+    #pragma noprefetch uPtr,lPtr,rDlUpperPtr,wAPtr
     #pragma nounroll
     #endif
 

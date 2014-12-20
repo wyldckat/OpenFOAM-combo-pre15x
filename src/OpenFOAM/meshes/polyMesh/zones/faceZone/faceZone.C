@@ -427,7 +427,7 @@ void Foam::faceZone::updateMesh(const mapPolyMesh& mpm)
     {
         label faceI = operator[](i);
 
-        if (faceMap[faceI] != -1)
+        if (faceMap[faceI] >= 0)
         {
             newAddressing[nFaces] = faceMap[faceI];
             newFlipMap[nFaces] = flipMap_[i];       // Keep flip map.
@@ -440,6 +440,35 @@ void Foam::faceZone::updateMesh(const mapPolyMesh& mpm)
 
     transfer(newAddressing);
     flipMap_.transfer(newFlipMap);
+}
+
+
+bool Foam::faceZone::checkDefinition(const bool report) const
+{
+    const labelList& addr = *this;
+
+    bool boundaryError = false;
+
+    forAll(addr, i)
+    {
+        if (addr[i] < 0 || addr[i] >= zoneMesh().mesh().allFaces().size())
+        {
+            boundaryError = true;
+
+            if (report)
+            {
+                SeriousErrorIn
+                (
+                    "bool faceZone::checkDefinition("
+                    "const bool report) const"
+                )   << "Zone " << name()
+                    << " contains invalid face label " << addr[i] << nl
+                    << "Valid face labels are 0.."
+                    << zoneMesh().mesh().allFaces().size()-1 << endl;
+            }
+        }
+    }
+    return boundaryError;
 }
 
 

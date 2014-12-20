@@ -54,7 +54,7 @@ correctedSnGrad<Type>::~correctedSnGrad()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 correctedSnGrad<Type>::correction
 (
     const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -62,10 +62,10 @@ correctedSnGrad<Type>::correction
 {
     const fvMesh& mesh = this->mesh();
 
-    // construct GeometricField<Type, fvPatchField, surfaceMesh>
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tssf
+    // construct GeometricField<Type, fvsPatchField, surfaceMesh>
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tssf
     (
-        new GeometricField<Type, fvPatchField, surfaceMesh>
+        new GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             IOobject
             (
@@ -79,7 +79,7 @@ correctedSnGrad<Type>::correction
             vf.dimensions()*mesh.deltaCoeffs().dimensions()
         )
     );
-    GeometricField<Type, fvPatchField, surfaceMesh>& ssf = tssf();
+    GeometricField<Type, fvsPatchField, surfaceMesh>& ssf = tssf();
 
     for (direction cmpt = 0; cmpt < pTraits<Type>::nComponents; cmpt++)
     {

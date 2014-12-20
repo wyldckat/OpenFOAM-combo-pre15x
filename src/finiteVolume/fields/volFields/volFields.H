@@ -40,6 +40,7 @@ SourceFiles
 #include "fvMesh.H"
 #include "fvPatchField.H"
 #include "volFieldsFwd.H"
+#include "calculatedFvPatchFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

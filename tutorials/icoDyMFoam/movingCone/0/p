@@ -46,7 +46,7 @@ boundaryField
 
     axis            
     {
-        type            empty;
+        type            symmetryPlane;
     }
 
     left            

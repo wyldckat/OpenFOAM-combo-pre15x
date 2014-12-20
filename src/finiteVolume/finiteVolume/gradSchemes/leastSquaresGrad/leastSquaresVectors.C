@@ -127,8 +127,8 @@ void Foam::leastSquaresVectors::makeLeastSquaresVectors() const
 
     forAll(lsP.boundaryField(), patchi)
     {
-        const fvPatchScalarField& pw = w.boundaryField()[patchi];
-        const fvPatchScalarField& pMagSf = magSf.boundaryField()[patchi];
+        const fvsPatchScalarField& pw = w.boundaryField()[patchi];
+        const fvsPatchScalarField& pMagSf = magSf.boundaryField()[patchi];
 
         const fvPatch& p = pw.patch();
         const unallocLabelList& faceCells = p.patch().faceCells();
@@ -189,10 +189,10 @@ void Foam::leastSquaresVectors::makeLeastSquaresVectors() const
 
     forAll(lsP.boundaryField(), patchi)
     {
-        fvPatchVectorField& patchLsP = lsP.boundaryField()[patchi];
+        fvsPatchVectorField& patchLsP = lsP.boundaryField()[patchi];
 
-        const fvPatchScalarField& pw = w.boundaryField()[patchi];
-        const fvPatchScalarField& pMagSf = magSf.boundaryField()[patchi];
+        const fvsPatchScalarField& pw = w.boundaryField()[patchi];
+        const fvsPatchScalarField& pMagSf = magSf.boundaryField()[patchi];
 
         const fvPatch& p = pw.patch();
         const unallocLabelList& faceCells = p.faceCells();

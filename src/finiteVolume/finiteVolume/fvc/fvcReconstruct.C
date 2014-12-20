@@ -50,7 +50,7 @@ tmp
 >
 reconstruct
 (
-    const GeometricField<Type, fvPatchField, surfaceMesh>& ssf
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& ssf
 )
 {
     typedef typename outerProduct<vector, Type>::type GradType;
@@ -69,7 +69,7 @@ reconstruct
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            inv(surfaceSum(mesh.Sf()*(mesh.Sf()/mesh.magSf())))
+            inv(surfaceSum(sqr(mesh.Sf())/mesh.magSf()))
           & surfaceSum((mesh.Sf()/mesh.magSf())*ssf),
             zeroGradientFvPatchField<GradType>::typeName
         )
@@ -91,7 +91,7 @@ tmp
 >
 reconstruct
 (
-    const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >& tssf
+    const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >& tssf
 )
 {
     typedef typename outerProduct<vector, Type>::type GradType;

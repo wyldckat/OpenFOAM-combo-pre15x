@@ -215,7 +215,7 @@ polyPatch::~polyPatch()
 
 bool polyPatch::constraintType(const word& pt)
 {
-    return pointPatchField<scalar>::PointPatchConstructorTablePtr_->found(pt);
+    return pointPatchField<scalar>::pointPatchConstructorTablePtr_->found(pt);
 }
 
 

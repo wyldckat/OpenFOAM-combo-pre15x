@@ -583,9 +583,6 @@ polyMesh pShapeMesh
     patchPhysicalTypes
 );
 
-Info << "Checking mesh" << endl;
-pShapeMesh.checkMesh();
-
 Info << "Writing polyMesh" << endl;
 pShapeMesh.write();
 

@@ -263,18 +263,97 @@ void Foam::multiDirRefinement::refineHex8
             << endl;
     }
 
-    hexRef8 hexRefiner(mesh);
+    hexRef8 hexRefiner
+    (
+        mesh,
+        labelList(mesh.nCells(), 0),    // cellLevel
+        labelList(mesh.nPoints(), 0),   // pointLevel
+        refinementHistory
+        (
+            IOobject
+            (
+                "refinementHistory",
+                mesh.facesInstance(),
+                polyMesh::meshSubDir,
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            List<refinementHistory::splitCell8>(0),
+            labelList(0)
+        )                                   // refinement history
+    );
 
     polyTopoChange meshMod(mesh);
 
-    hexRefiner.setRefinement(hexCells, meshMod);
+    labelList consistentCells
+    (
+        hexRefiner.consistentRefinement
+        (
+            hexCells,
+            true                  // buffer layer
+        )
+    );
 
-    autoPtr<mapPolyMesh> morphMap = 
-        polyTopoChanger::changeMesh(mesh, meshMod);
-
-    if (morphMap().hasMotionPoints())
+    // Check that consistentRefinement hasn't added cells
     {
-        mesh.movePoints(morphMap().preMotionPoints());
+        // Create count 1 for original cells
+        Map<label> hexCellSet(2*hexCells.size());
+        forAll(hexCells, i)
+        {
+            hexCellSet.insert(hexCells[i], 1);
+        }
+
+        // Increment count 
+        forAll(consistentCells, i)
+        {
+            label cellI = consistentCells[i];
+
+            Map<label>::iterator iter = hexCellSet.find(cellI);
+
+            if (iter == hexCellSet.end())
+            {
+                FatalErrorIn
+                (
+                    "multiDirRefinement::refineHex8"
+                    "(polyMesh&, const labelList&, const bool)"
+                )   << "Resulting mesh would not satisfy 2:1 ratio"
+                    << " when refining cell " << cellI << abort(FatalError);
+            }
+            else
+            {
+                iter() = 2;
+            }
+        }
+
+        // Check if all been visited (should always be since
+        // consistentRefinement set up to extend set.
+        forAllConstIter(Map<label>, hexCellSet, iter)
+        {
+            if (iter() != 2)
+            {
+                FatalErrorIn
+                (
+                    "multiDirRefinement::refineHex8"
+                    "(polyMesh&, const labelList&, const bool)"
+                )   << "Resulting mesh would not satisfy 2:1 ratio"
+                    << " when refining cell " << iter.key()
+                    << abort(FatalError);
+            }
+        }
+    }
+
+
+    hexRefiner.setRefinement(consistentCells, meshMod);
+
+    // Use inflation
+    autoPtr<mapPolyMesh> morphMapPtr = meshMod.changeMesh(mesh, true, true);
+    const mapPolyMesh& morphMap = morphMapPtr();
+
+    if (morphMap.hasMotionPoints())
+    {
+        mesh.movePoints(morphMap.preMotionPoints());
     }
 
     if (writeMesh)
@@ -288,9 +367,43 @@ void Foam::multiDirRefinement::refineHex8
             << mesh.time().timeName() << endl;
     }
 
+    hexRefiner.updateMesh(morphMap);
+
     // Take over split pattern from hex refiner. (should be empty at this
     // point)
-    addedCells_ = hexRefiner.addedCells();
+
+    // From old cell label to index
+    Map<label> consistentSet(2*consistentCells.size());
+
+    forAll(consistentCells, i)
+    {
+        consistentSet.insert(consistentCells[i], i);
+    }
+
+    // Collect all cells originating from same old cell (original + 7 extra)
+
+    addedCells_.setSize(consistentCells.size());
+    forAll(addedCells_, i)
+    {
+        addedCells_[i].setSize(8);
+    }
+    labelList nAddedCells(consistentCells.size(), 0);
+
+    const labelList& cellMap = morphMap.cellMap();
+
+    forAll(cellMap, cellI)
+    {
+        label oldCellI = cellMap[cellI];
+
+        Map<label>::const_iterator iter = consistentSet.find(oldCellI);
+
+        if (iter != consistentSet.end())
+        {
+            label index = iter();
+
+            addedCells_[nAddedCells[index]++] = cellI;
+        }
+    }
 }
 
 
@@ -399,7 +512,7 @@ void Foam::multiDirRefinement::refineFromDict
     }
 
     // Construct undoable refinement topology modifier. 
-    //Note: undoability switched off since hexRef8 not undoable anyway.
+    //Note: undoability switched off.
     // Might want to reconsider if needs to be possible. But then can always
     // use other constructor.
     undoableMeshCutter cutter(mesh, false);

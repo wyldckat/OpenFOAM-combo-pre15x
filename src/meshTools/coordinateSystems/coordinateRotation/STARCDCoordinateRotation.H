@@ -52,8 +52,8 @@ class STARCDCoordinateRotation
 {
     // Private member functions
 
-        //- Calculate transformation tensors
-        virtual void calcTransformations
+        //- Calculate transformation tensor
+        void calcTransform
         (
             const scalar rotZ,
             const scalar rotX,
@@ -69,6 +69,9 @@ public:
 
 
     // Constructors
+
+        //- Construct null
+        STARCDCoordinateRotation();
 
         //- Construct from rotation vector
         STARCDCoordinateRotation
@@ -89,11 +92,6 @@ public:
         //- Construct from dictionary
         STARCDCoordinateRotation(const dictionary&);
 
-
-    // Destructor
-
-        virtual ~STARCDCoordinateRotation()
-        {}
 };
 
 

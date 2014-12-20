@@ -105,6 +105,11 @@ public:
         twoDPointCorrector(const polyMesh& mesh);
 
 
+    // Destructor
+
+        ~twoDPointCorrector();
+
+
     // Member Functions
 
         //- Is 2D correction required, i.e. is the mesh a wedge or slab

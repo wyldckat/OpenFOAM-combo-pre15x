@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "meshCutSurface.H"
@@ -37,7 +35,7 @@ Description
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template <class T>
-Foam::Field<T> Foam::meshCutSurface::interpolate
+Foam::tmp<Foam::Field<T> > Foam::meshCutSurface::interpolate
 (
     const faceDecompCuts& cuts,
     const Field<T>& vField,
@@ -47,7 +45,8 @@ Foam::Field<T> Foam::meshCutSurface::interpolate
 {
     const primitiveMesh& mesh = cuts.mesh();
 
-    Field<T> vals(cuts.size());
+    tmp<Field<T> > tvals(new Field<T>(cuts.size()));
+    Field<T>& vals = tvals();
 
     label pointI = 0;
 
@@ -108,12 +107,12 @@ Foam::Field<T> Foam::meshCutSurface::interpolate
         vals[pointI++] = e.interpolate(mesh, fField, pField, weight);
     }
 
-    return vals;
+    return tvals;
 }
 
 
 template <class T>
-Foam::Field<T> Foam::meshCutSurface::interpolate
+Foam::tmp<Foam::Field<T> > Foam::meshCutSurface::interpolate
 (
     const cellDecompCuts& cuts,
     const Field<T>& vField,
@@ -122,7 +121,8 @@ Foam::Field<T> Foam::meshCutSurface::interpolate
 {
     const primitiveMesh& mesh = cuts.mesh();
 
-    Field<T> vals(cuts.size());
+    tmp<Field<T> > tvals(new Field<T>(cuts.size()));
+    Field<T>& vals = tvals();
 
     label pointI = 0;
 
@@ -167,7 +167,7 @@ Foam::Field<T> Foam::meshCutSurface::interpolate
         vals[pointI++] = e.interpolate(mesh, pField, weight);
     }
 
-    return vals;
+    return tvals;
 }
 
 

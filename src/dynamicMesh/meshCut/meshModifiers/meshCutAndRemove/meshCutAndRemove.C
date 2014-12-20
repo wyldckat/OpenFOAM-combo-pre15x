@@ -27,9 +27,10 @@ License
 #include "meshCutAndRemove.H"
 #include "polyMesh.H"
 #include "polyTopoChange.H"
-#include "polyAddCell.H"
 #include "polyAddFace.H"
 #include "polyAddPoint.H"
+#include "polyRemovePoint.H"
+#include "polyRemoveFace.H"
 #include "polyModifyFace.H"
 #include "cellCuts.H"
 #include "mapPolyMesh.H"
@@ -243,7 +244,7 @@ void Foam::meshCutAndRemove::getZoneInfo
 (
     const label faceI,
     label& zoneID,
-    label& zoneFlip
+    bool& zoneFlip
 ) const
 {
     zoneID = mesh().faceZones().whichZone(faceI);
@@ -271,7 +272,8 @@ void Foam::meshCutAndRemove::addFace
     const label patchID
 )
 {
-    label zoneID, zoneFlip;
+    label zoneID;
+    bool zoneFlip;
 
     getZoneInfo(faceI, zoneID, zoneFlip);
 
@@ -353,7 +355,8 @@ void Foam::meshCutAndRemove::modFace
     const label patchID
 )
 {
-    label zoneID, zoneFlip;
+    label zoneID;
+    bool zoneFlip;
 
     getZoneInfo(faceI, zoneID, zoneFlip);
 
@@ -740,6 +743,61 @@ void Foam::meshCutAndRemove::setRefinement
             }   
         }
 
+
+        // Check
+        const Map<edge>& faceSplitCut = cuts.faceSplitCut();
+
+        forAllConstIter(Map<edge>, faceSplitCut, iter)
+        {
+            const edge& fCut = iter();
+
+            forAll(fCut, i)
+            {
+                label cut = fCut[i];
+
+                if (!isEdge(cut))
+                {
+                    label pointI = getVertex(cut);
+
+                    if (!usedPoint[pointI])
+                    {
+                        FatalErrorIn
+                        (
+                            "meshCutAndRemove::setRefinement("
+                            ", const label, const cellCuts&, const labelList&"
+                            ", polyTopoChange&)"
+                        )   << "Problem: faceSplitCut not used by any loop"
+                            << " or cell anchor point"
+                            << "face:" << iter.key() << " point:" << pointI
+                            << " coord:" << mesh().points()[pointI]
+                            << abort(FatalError);
+                    }
+                }
+            }
+        }
+
+        forAll(cuts.pointIsCut(), pointI)
+        {
+            if (cuts.pointIsCut()[pointI])
+            {
+                if (!usedPoint[pointI])
+                {
+                    FatalErrorIn
+                    (
+                        "meshCutAndRemove::setRefinement("
+                        ", const label, const cellCuts&, const labelList&"
+                        ", polyTopoChange&)"
+                    )   << "Problem: point is marked as cut but"
+                        << " not used by any loop"
+                        << " or cell anchor point"
+                        << "point:" << pointI
+                        << " coord:" << mesh().points()[pointI]
+                        << abort(FatalError);
+                }
+            }
+        }
+
+
         // Remove unused points.
         forAll(usedPoint, pointI)
         {
@@ -757,7 +815,7 @@ void Foam::meshCutAndRemove::setRefinement
 
 
     //
-    // For all cut cells add an internal face
+    // For all cut cells add an internal or external face
     //
 
     forAll(cellLoops, cellI)
@@ -1266,10 +1324,9 @@ void Foam::meshCutAndRemove::setRefinement
 }
 
 
-void Foam::meshCutAndRemove::updateMesh(const mapPolyMesh& morphMap)
+void Foam::meshCutAndRemove::updateMesh(const mapPolyMesh& map)
 {
     // Update stored labels for mesh change.
-
     {
         Map<label> newAddedFaces(addedFaces_.size());
 
@@ -1282,13 +1339,13 @@ void Foam::meshCutAndRemove::updateMesh(const mapPolyMesh& morphMap)
         {
             label cellI = iter.key();
 
-            label newCellI = morphMap.reverseCellMap()[cellI];
+            label newCellI = map.reverseCellMap()[cellI];
 
             label addedFaceI = iter();
 
-            label newAddedFaceI = morphMap.reverseFaceMap()[addedFaceI];
+            label newAddedFaceI = map.reverseFaceMap()[addedFaceI];
 
-            if ((newCellI != -1) && (newAddedFaceI != -1))
+            if ((newCellI >= 0) && (newAddedFaceI >= 0))
             {
                 if
                 (
@@ -1310,7 +1367,6 @@ void Foam::meshCutAndRemove::updateMesh(const mapPolyMesh& morphMap)
         addedFaces_.transfer(newAddedFaces);
     }
 
-
     {
         HashTable<label, edge, Hash<edge> > newAddedPoints(addedPoints_.size());
 
@@ -1324,15 +1380,15 @@ void Foam::meshCutAndRemove::updateMesh(const mapPolyMesh& morphMap)
         {
             const edge& e = iter.key();
 
-            label newStart = morphMap.reversePointMap()[e.start()];
+            label newStart = map.reversePointMap()[e.start()];
 
-            label newEnd = morphMap.reversePointMap()[e.end()];
+            label newEnd = map.reversePointMap()[e.end()];
 
             label addedPointI = iter();
 
-            label newAddedPointI = morphMap.reversePointMap()[addedPointI];
+            label newAddedPointI = map.reversePointMap()[addedPointI];
 
-            if ((newStart != -1) && (newEnd != -1) && (newAddedPointI != -1))
+            if ((newStart >= 0) && (newEnd >= 0) && (newAddedPointI >= 0))
             {
                 edge newE = edge(newStart, newEnd);
 

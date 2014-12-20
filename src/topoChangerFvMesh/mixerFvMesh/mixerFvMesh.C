@@ -346,15 +346,16 @@ bool Foam::mixerFvMesh::update()
      // Rotational speed needs to be converted from rpm
     movePoints
     (
-        csPtr_->toGlobal
+        csPtr_->globalPosition
         (
-            csPtr_->toLocal(allPoints())
+            csPtr_->localPosition(allPoints())
           + vector(0, rpm_*360.0*time().deltaT().value()/60.0, 0)
             *movingPointsMask()
         )
     );
 
-    autoPtr<mapPolyMesh> topoChangeMap = topoChanger_.changeMesh();
+    // Make changes. Use inflation (so put new points in topoChangeMap)
+    autoPtr<mapPolyMesh> topoChangeMap = topoChanger_.changeMesh(true);
 
     if (topoChangeMap.valid())
     {
@@ -368,9 +369,9 @@ bool Foam::mixerFvMesh::update()
 
     movePoints
     (
-        csPtr_->toGlobal
+        csPtr_->globalPosition
         (
-            csPtr_->toLocal(oldAllPoints())
+            csPtr_->localPosition(oldAllPoints())
           + vector(0, rpm_*360.0*time().deltaT().value()/60.0, 0)
             *movingPointsMask()
         )

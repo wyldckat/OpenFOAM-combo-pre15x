@@ -145,7 +145,7 @@ public:
 
         //- Reconstruct surface field
         template<class Type>
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         reconstructFvSurfaceField
         (
             const IOobject& fieldIoObject

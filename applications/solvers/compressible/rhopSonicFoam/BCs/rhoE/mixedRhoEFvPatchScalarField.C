@@ -39,7 +39,7 @@ namespace Foam
 mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     mixedFvPatchScalarField(p, iF)
@@ -54,7 +54,7 @@ mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 (
     const mixedRhoEFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -65,7 +65,7 @@ mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -101,7 +101,7 @@ mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 (
     const mixedRhoEFvPatchScalarField& ptpsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     mixedFvPatchScalarField(ptpsf, iF)
@@ -110,7 +110,6 @@ mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Map from self
 void mixedRhoEFvPatchScalarField::autoMap
 (
     const fvPatchFieldMapper& m
@@ -120,7 +119,6 @@ void mixedRhoEFvPatchScalarField::autoMap
 }
 
 
-// Reverse-map the given fvPatchField onto this fvPatchField
 void mixedRhoEFvPatchScalarField::rmap
 (
     const fvPatchField<scalar>& ptf,
@@ -131,7 +129,6 @@ void mixedRhoEFvPatchScalarField::rmap
 }
 
 
-// Update the coefficients associated with the patch field
 void mixedRhoEFvPatchScalarField::updateCoeffs()
 {
     if (updated())
@@ -176,11 +173,11 @@ void mixedRhoEFvPatchScalarField::updateCoeffs()
 }
 
 
-// Write
 void mixedRhoEFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);
-    os.writeKeyword("valueFraction") << valueFraction() << token::END_STATEMENT << endl;
+    os.writeKeyword("valueFraction") << valueFraction()
+        << token::END_STATEMENT << endl;
     os.writeKeyword("refValue") << refValue() << token::END_STATEMENT << endl;
     os.writeKeyword("refGrad") << refGrad() << token::END_STATEMENT << endl;
     writeEntry("value", os);

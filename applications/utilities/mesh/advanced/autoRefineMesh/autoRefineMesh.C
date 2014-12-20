@@ -505,23 +505,31 @@ void subsetMesh
     labelIOList& refLevel
 )
 {
-    removeCells cellRemover(mesh, mesh.boundaryMesh()[patchI].name());
-
-    polyTopoChange meshMod(mesh);
+    removeCells cellRemover(mesh);
 
     labelList cellLabels(cellsToRemove.toc());
 
     Info<< "Mesh has:" << mesh.nCells() << " cells."
         << " Removing:" << cellLabels.size() << " cells" << endl;
 
-    cellRemover.setRefinement(cellLabels, meshMod);
+    // exposed faces
+    labelList exposedFaces(cellRemover.getExposedFaces(cellLabels));
+
+    polyTopoChange meshMod(mesh);
+    cellRemover.setRefinement
+    (
+        cellLabels,
+        exposedFaces,
+        labelList(patchI, exposedFaces.size()),
+        meshMod
+    );
 
     // Do all changes
     Info<< "Morphing ..." << endl;
 
     const Time& runTime = mesh.time();
 
-    autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh(mesh, meshMod);
+    autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh, false);
 
     if (morphMap().hasMotionPoints())
     {
@@ -689,6 +697,7 @@ int main(int argc, char *argv[])
     );
 
     fileName surfName(refineDict.lookup("surface"));
+    surfName.expand();
     label nCutLayers(readLabel(refineDict.lookup("nCutLayers")));
     label cellLimit(readLabel(refineDict.lookup("cellLimit")));
     bool selectCut(readBool(refineDict.lookup("selectCut")));

@@ -35,9 +35,9 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyMesh.H"
-#include "directPolyTopoChange.H"
+#include "polyTopoChange.H"
 #include "faceSet.H"
-#include "directRemoveFaces.H"
+#include "removeFaces.H"
 
 using namespace Foam;
 
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
     labelList candidates(candidateSet.toc());
 
     // Face removal engine. No checking for not merging boundary faces.
-    directRemoveFaces faceRemover(mesh, 2);
+    removeFaces faceRemover(mesh, 2);
 
     // Get compatible set of faces and connected sets of cells.
     labelList cellRegion;
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
     }
 
     // Topo changes container
-    directPolyTopoChange meshMod(mesh);
+    polyTopoChange meshMod(mesh);
 
     // Insert mesh refinement into polyTopoChange.
     faceRemover.setRefinement

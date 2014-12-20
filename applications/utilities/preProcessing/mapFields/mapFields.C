@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     runTimeSource.setTime(runTimeTarget);
 
     Info<< "\nSource time: " << runTimeSource.value()
-        << "\nTarget time:   " << runTimeTarget.value()
+        << "\nTarget time: " << runTimeTarget.value()
         << endl;
 
     HashTable<word> patchMap;

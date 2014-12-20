@@ -81,9 +81,26 @@ class vtk
         (
             const fileName& fieldName,
             const pointField& points,
+            const sphericalTensorField& values,
+            Ostream& os
+        ) const;
+
+        void writeData
+        (
+            const fileName& fieldName,
+            const pointField& points,
+            const symmTensorField& values,
+            Ostream& os
+        ) const;
+
+        void writeData
+        (
+            const fileName& fieldName,
+            const pointField& points,
             const tensorField& values,
             Ostream& os
         ) const;
+
 
 public:
 

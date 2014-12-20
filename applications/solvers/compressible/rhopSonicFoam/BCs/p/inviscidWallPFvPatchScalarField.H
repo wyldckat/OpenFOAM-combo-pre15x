@@ -60,14 +60,14 @@ public:
         inviscidWallPFvPatchScalarField
         (
             const fvPatch&,
-            const scalarField&
+            const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct from patch, internal field and dictionary
         inviscidWallPFvPatchScalarField
         (
             const fvPatch&,
-            const scalarField&,
+            const DimensionedField<scalar, volMesh>&,
             const dictionary&
         );
 
@@ -77,7 +77,7 @@ public:
         (
             const inviscidWallPFvPatchScalarField&,
             const fvPatch&,
-            const scalarField&,
+            const DimensionedField<scalar, volMesh>&,
             const fvPatchFieldMapper&
         );
 
@@ -100,11 +100,14 @@ public:
         inviscidWallPFvPatchScalarField
         (
             const inviscidWallPFvPatchScalarField&,
-            const scalarField&
+            const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchScalarField> clone(const scalarField& iF) const
+        virtual tmp<fvPatchScalarField> clone
+        (
+            const DimensionedField<scalar, volMesh>& iF
+        ) const
         {
             return tmp<fvPatchScalarField>
             (

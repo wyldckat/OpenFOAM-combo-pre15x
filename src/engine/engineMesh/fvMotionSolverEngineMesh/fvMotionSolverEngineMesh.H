@@ -36,7 +36,7 @@ SourceFiles
 #define fvMotionSolverEngineMesh_H
 
 #include "engineMesh.H"
-#include "componentLaplacianFvMotionSolver.H"
+#include "velocityComponentLaplacianFvMotionSolver.H"
 #include "dimensionedScalar.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -58,7 +58,7 @@ class fvMotionSolverEngineMesh
 
         //- Mesh-motion solver to solve for the "z" component of the cell-centre
         //  displacements
-        componentLaplacianFvMotionSolver motionSolver_;
+        velocityComponentLaplacianFvMotionSolver motionSolver_;
 
 
     // Private Member Functions

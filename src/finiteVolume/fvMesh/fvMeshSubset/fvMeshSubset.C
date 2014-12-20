@@ -1170,7 +1170,8 @@ void Foam::fvMeshSubset::setLargeCellSubset
         ),
         newPoints,
         newFaces,
-        newCells
+        newCells,
+        syncPar           // parallel synchronisation
     );
 
 

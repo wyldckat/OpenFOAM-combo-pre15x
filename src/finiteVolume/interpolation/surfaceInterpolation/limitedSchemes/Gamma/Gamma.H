@@ -90,7 +90,7 @@ public:
     {
         scalar phict = LimiterFunc::phict
         (
-            cdWeight, faceFlux, phiP, phiN, gradcP, gradcN, d
+            faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
         return min(max(phict/k_, 0), 1);

@@ -267,6 +267,20 @@ void FieldField<Field, Type>::replace
 
 
 template<template<class> class Field, class Type>
+void FieldField<Field, Type>::replace
+(
+    const direction d,
+    const cmptType& s
+)
+{
+    forAll(*this, i)
+    {
+        this->operator[](i).replace(d, s);
+    }
+}
+
+
+template<template<class> class Field, class Type>
 tmp<FieldField<Field, Type> > FieldField<Field, Type>::T() const
 {
     tmp<FieldField<Field, Type> > transpose

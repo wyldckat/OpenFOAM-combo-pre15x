@@ -45,8 +45,8 @@ pointFieldDecomposer::decomposeField
     // Create and map the internal field values
     Field<Type> internalField(field.internalField(), pointAddressing_);
 
-    // Create a list of pointers for the patchFields including one extra for the
-    // global patch
+    // Create a list of pointers for the patchFields including one extra
+    // for the global patch
     PtrList<pointPatchField<Type> > patchFields
     (
         boundaryAddressing_.size() + 1
@@ -64,7 +64,7 @@ pointFieldDecomposer::decomposeField
                 (
                     field.boundaryField()[boundaryAddressing_[patchi]],
                     procMesh_.boundary()[patchi],
-                    internalField,
+                    DimensionedField<Type, pointMesh>::null(),
                     *patchFieldDecomposerPtrs_[patchi]
                 )
             );
@@ -74,11 +74,10 @@ pointFieldDecomposer::decomposeField
             patchFields.set
             (
                 patchi,
-                new ProcessorPointPatchField
-                <pointPatchField, pointPatch, processorPointPatch, Type>
+                new processorPointPatchField<Type>
                 (
                     procMesh_.boundary()[patchi],
-                    internalField
+                    DimensionedField<Type, pointMesh>::null()
                 )
             );
         }
@@ -88,11 +87,10 @@ pointFieldDecomposer::decomposeField
     patchFields.set
     (
         boundaryAddressing_.size(),
-        new GlobalPointPatchField
-        <pointPatchField, pointPatch, globalPointPatch, Type>
+        new globalPointPatchField<Type>
         (
             procMesh_.boundary().globalPatch(),
-            internalField
+            DimensionedField<Type, pointMesh>::null()
         )
     );
 

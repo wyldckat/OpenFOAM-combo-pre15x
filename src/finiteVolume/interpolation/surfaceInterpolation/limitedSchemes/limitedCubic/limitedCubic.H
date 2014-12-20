@@ -48,7 +48,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class limitedCubicWeight Declaration
+                      Class limitedCubicLimiter Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
@@ -67,7 +67,7 @@ public:
     {
         if (k_ < 0 || k_ > 1)
         {
-            FatalIOErrorIn("GammaWeight(Istream& is)", is)
+            FatalIOErrorIn("limitedCubicLimiter(Istream& is)", is)
                 << "coefficient = " << k_
                 << " should be >= 0 and <= 1"
                 << exit(FatalIOError);
@@ -90,7 +90,7 @@ public:
     {
         scalar twor = twoByk_*LimiterFunc::r
         (
-            cdWeight, faceFlux, phiP, phiN, gradcP, gradcN, d
+            faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
         scalar phiU;

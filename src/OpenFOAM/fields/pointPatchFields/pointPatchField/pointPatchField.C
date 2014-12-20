@@ -22,11 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "pointPatchField.H"
+#include "pointMesh.H"
 #include "dictionary.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -40,10 +39,12 @@ template<class Type>
 pointPatchField<Type>::pointPatchField
 (
     const pointPatch& p,
-    const Field<Type>& iF
+    const DimensionedField<Type, pointMesh>& iF
 )
 :
-    PointPatchField<Foam::pointPatchField, pointPatch, Type>(p, iF)
+    patch_(p),
+    internalField_(iF),
+    updated_(false)
 {}
 
 
@@ -53,7 +54,9 @@ pointPatchField<Type>::pointPatchField
     const pointPatchField<Type>& ptf
 )
 :
-    PointPatchField<Foam::pointPatchField, pointPatch, Type>(ptf)
+    patch_(ptf.patch_),
+    internalField_(ptf.internalField_),
+    updated_(false)
 {}
 
 
@@ -61,15 +64,199 @@ template<class Type>
 pointPatchField<Type>::pointPatchField
 (
     const pointPatchField<Type>& ptf,
-    const Field<Type>& iF
+    const DimensionedField<Type, pointMesh>& iF
 )
 :
-    PointPatchField<Foam::pointPatchField, pointPatch, Type>(ptf, iF)
+    patch_(ptf.patch_),
+    internalField_(iF),
+    updated_(false)
 {}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+const objectRegistry& pointPatchField<Type>::db() const
+{
+    return patch_.boundaryMesh().mesh()();
+}
+
+
+template<class Type>
+void pointPatchField<Type>::write(Ostream& os) const
+{
+    os.writeKeyword("type") << type() << token::END_STATEMENT << nl;
+}
+
+
+template<class Type>
+tmp<Field<Type> > pointPatchField<Type>::patchInternalField() const
+{
+    return patchInternalField(internalField());
+}
+
+
+template<class Type>
+template<class Type1>
+tmp<Field<Type1> > pointPatchField<Type>::patchInternalField
+(
+    const Field<Type1>& iF
+) const
+{
+    // Check size
+    if (iF.size() != internalField().size())
+    {
+        FatalErrorIn
+        (
+            "tmp<Field<Type1> > pointPatchField<"
+            "Type>::"
+            "patchInternalField(const Field<Type1>& iF) const"
+        )   << "given internal field does not correspond to the mesh. "
+            << "Field size: " << iF.size()
+            << " mesh size: " << internalField().size()
+            << abort(FatalError);
+    }
+
+    // get addressing
+    const labelList& meshPoints = patch().meshPoints();
+
+    tmp<Field<Type1> > tvalues(new Field<Type1>(meshPoints.size()));
+    Field<Type1>& values = tvalues();
+
+    forAll (meshPoints, pointI)
+    {
+        values[pointI] = iF[meshPoints[pointI]];
+    }
+
+    return tvalues;
+}
+
+
+template<class Type>
+template<class Type1>
+void pointPatchField<Type>::addToInternalField
+(
+    Field<Type1>& iF,
+    const Field<Type1>& pF
+) const
+{
+    // Check size
+    if (iF.size() != internalField().size())
+    {
+        FatalErrorIn
+        (
+            "void pointPatchField<Type>::"
+            "addToInternalField("
+            "Field<Type1>& iF, const Field<Type1>& iF) const"
+        )   << "given internal field does not correspond to the mesh. "
+            << "Field size: " << iF.size()
+            << " mesh size: " << internalField().size()
+            << abort(FatalError);
+    }
+
+    if (pF.size() != size())
+    {
+        FatalErrorIn
+        (
+            "void pointPatchField<Type>::"
+            "addToInternalField("
+            "Field<Type1>& iF, const Field<Type1>& iF) const"
+        )   << "given patch field does not correspond to the mesh. "
+            << "Field size: " << pF.size()
+            << " mesh size: " << size()
+            << abort(FatalError);
+    }
+
+    // Get the addressing
+    const labelList& mp = patch().meshPoints();
+
+    forAll (mp, pointI)
+    {
+        iF[mp[pointI]] += pF[pointI];
+    }
+}
+
+
+template<class Type>
+template<class Type1>
+void pointPatchField<Type>::setInInternalField
+(
+    Field<Type1>& iF,
+    const Field<Type1>& pF
+) const
+{
+    // Check size
+    if (iF.size() != internalField().size())
+    {
+        FatalErrorIn
+        (
+            "void pointPatchField<Type>::"
+            "setInInternalField("
+            "Field<Type1>& iF, const Field<Type1>& iF) const"
+        )   << "given internal field does not correspond to the mesh. "
+            << "Field size: " << iF.size()
+            << " mesh size: " << internalField().size()
+            << abort(FatalError);
+    }
+
+    if (pF.size() != size())
+    {
+        FatalErrorIn
+        (
+            "void pointPatchField<Type>::"
+            "setInInternalField("
+            "Field<Type1>& iF, const Field<Type1>& iF) const"
+        )   << "given patch field does not correspond to the mesh. "
+            << "Field size: " << pF.size()
+            << " mesh size: " << size()
+            << abort(FatalError);
+    }
+
+    // Get the addressing
+    const labelList& mp = patch().meshPoints();
+
+    forAll (mp, pointI)
+    {
+        iF[mp[pointI]] = pF[pointI];
+    }
+}
+
+
+template<class Type>
+void pointPatchField<Type>::evaluate()
+{
+    if (!updated_)
+    {
+        updateCoeffs();
+    }
+    
+    updated_ = false;
+}
+
+
+// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
+
+template<class Type>
+Ostream& operator<<
+(
+    Ostream& os,
+    const pointPatchField<Type>& ptf
+)
+{
+    ptf.write(os);
+
+    os.check("Ostream& operator<<(Ostream&, const pointPatchField<Type>&)");
+
+    return os;
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "newPointPatchField.C"
 
 // ************************************************************************* //

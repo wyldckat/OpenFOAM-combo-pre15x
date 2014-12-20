@@ -100,6 +100,7 @@ public:
 
         typedef DimensionedField<Type, GeoMesh> DimensionedInternalField;
         typedef Field<Type> InternalField;
+        typedef PatchField<Type> PatchFieldType;
 
 
     class GeometricBoundaryField
@@ -116,36 +117,40 @@ public:
 
         // Constructors
 
-            //- Construct from a BoundaryMesh a field reference and a patch type
+            //- Construct from a BoundaryMesh,
+            //  reference to the internal field
+            //  and a patch type
             GeometricBoundaryField
             (
                 const BoundaryMesh&,
-                const Field<Type>&,
+                const DimensionedInternalField&,
                 const word&
             );
 
-            //- Construct from a BoundaryMesh, field reference
+            //- Construct from a BoundaryMesh,
+            //  reference to the internal field
             //  and a wordList of patch types
             GeometricBoundaryField
             (
                 const BoundaryMesh&,
-                const Field<Type>&,
+                const DimensionedInternalField&,
                 const wordList&
             );
 
-            //- Construct from a BoundaryMesh, field reference
+            //- Construct from a BoundaryMesh,
+            //  reference to the internal field
             //  and a PtrList<PatchField<Type> >
             GeometricBoundaryField
             (
                 const BoundaryMesh&,
-                const Field<Type>&,
+                const DimensionedInternalField&,
                 const PtrList<PatchField<Type> >&
             );
 
-            //- Construct as copy but setting Field correctly
+            //- Construct as copy setting the reference to the internal field
             GeometricBoundaryField
             (
-                const Field<Type>&,
+                const DimensionedInternalField&,
                 const GeometricBoundaryField&
             );
 
@@ -163,7 +168,7 @@ public:
             GeometricBoundaryField
             (
                 const BoundaryMesh&,
-                const Field<Type>&,
+                const DimensionedInternalField&,
                 const dictionary&
             );
 
@@ -464,6 +469,12 @@ public:
         (
             const direction,
             const GeometricField<cmptType, PatchField, GeoMesh>&
+        );
+
+        void replace
+        (
+            const direction,
+            const dimensioned<cmptType>&
         );
 
         void max(const dimensioned<Type>&);

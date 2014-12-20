@@ -54,38 +54,53 @@ void inv(Field<symmTensor>& tf, const UList<symmTensor>& tf1)
         return;
     }
 
-    symmTensorField tf1Plus(tf1);
+    scalar scale = magSqr(tf1[0]);
+    Vector<bool> removeCmpts
+    (
+        magSqr(tf1[0].xx())/scale < SMALL,
+        magSqr(tf1[0].yy())/scale < SMALL,
+        magSqr(tf1[0].zz())/scale < SMALL
+    );
 
-    if (mag(tf1[0].xx()) < SMALL)
+    if (removeCmpts.x() || removeCmpts.y() || removeCmpts.z())
     {
-        tf1Plus += symmTensor(1,0,0,0,0,0);
+        symmTensorField tf1Plus(tf1);
+
+        if (removeCmpts.x())
+        {
+            tf1Plus += symmTensor(1,0,0,0,0,0);
+        }
+
+        if (removeCmpts.y())
+        {
+            tf1Plus += symmTensor(0,0,0,1,0,0);
+        }
+
+        if (removeCmpts.z())
+        {
+            tf1Plus += symmTensor(0,0,0,0,0,1);
+        }
+
+        TFOR_ALL_F_OP_FUNC_F(symmTensor, tf, =, inv, symmTensor, tf1Plus)
+
+        if (removeCmpts.x())
+        {
+            tf -= symmTensor(1,0,0,0,0,0);
+        }
+
+        if (removeCmpts.y())
+        {
+            tf -= symmTensor(0,0,0,1,0,0);
+        }
+
+        if (removeCmpts.z())
+        {
+            tf -= symmTensor(0,0,0,0,0,1);
+        }
     }
-
-    if (mag(tf1[0].yy()) < SMALL)
+    else
     {
-        tf1Plus += symmTensor(0,0,0,1,0,0);
-    }
-
-    if (mag(tf1[0].zz()) < SMALL)
-    {
-        tf1Plus += symmTensor(0,0,0,0,0,1);
-    }
-
-    TFOR_ALL_F_OP_FUNC_F(symmTensor, tf, =, inv, symmTensor, tf1Plus)
-
-    if (mag(tf1[0].xx()) < SMALL)
-    {
-        tf -= symmTensor(1,0,0,0,0,0);
-    }
-
-    if (mag(tf1[0].yy()) < SMALL)
-    {
-        tf -= symmTensor(0,0,0,1,0,0);
-    }
-
-    if (mag(tf1[0].zz()) < SMALL)
-    {
-        tf -= symmTensor(0,0,0,0,0,1);
+        TFOR_ALL_F_OP_FUNC_F(symmTensor, tf, =, inv, symmTensor, tf1)
     }
 }
 

@@ -16,7 +16,7 @@
     scalarField RxxValues = channelIndexing.collapse(Rxx);
     scalarField RyyValues = channelIndexing.collapse(Ryy);
     scalarField RzzValues = channelIndexing.collapse(Rzz);
-    scalarField RxyValues = channelIndexing.collapse(Rxy);
+    scalarField RxyValues = channelIndexing.collapse(Rxy, true);
 
     scalarField pPrime2MeanValues = channelIndexing.collapse(pPrime2Mean);
 

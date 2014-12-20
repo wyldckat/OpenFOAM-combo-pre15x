@@ -39,7 +39,7 @@ namespace Foam
 fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 (
     const fvPatch& p,
-    const vectorField& iF
+    const DimensionedField<vector, volMesh>& iF
 )
 :
     fixedValueFvPatchVectorField(p, iF)
@@ -50,7 +50,7 @@ fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 (
     const fixedRhoUFvPatchVectorField& ptf,
     const fvPatch& p,
-    const vectorField& iF,
+    const DimensionedField<vector, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -61,7 +61,7 @@ fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 (
     const fvPatch& p,
-    const vectorField& iF,
+    const DimensionedField<vector, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -81,7 +81,7 @@ fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 (
     const fixedRhoUFvPatchVectorField& tppsf,
-    const vectorField& iF
+    const DimensionedField<vector, volMesh>& iF
 )
 :
     fixedValueFvPatchVectorField(tppsf, iF)
@@ -90,7 +90,6 @@ fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Update the coefficients associated with the patch field
 void fixedRhoUFvPatchVectorField::updateCoeffs()
 {
     if (updated())
@@ -109,7 +108,7 @@ void fixedRhoUFvPatchVectorField::updateCoeffs()
     fixedValueFvPatchVectorField::updateCoeffs();
 }
 
-// Write
+
 void fixedRhoUFvPatchVectorField::write(Ostream& os) const
 {
     fvPatchVectorField::write(os);

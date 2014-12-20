@@ -398,10 +398,6 @@ Foam::mirrorFvMesh::mirrorFvMesh(const IOobject& io)
     }
 
     pMesh.addPatches(p);
-
-    Info << "Checking mesh" << endl;
-    pMesh.checkMesh();
-
 }
 
 

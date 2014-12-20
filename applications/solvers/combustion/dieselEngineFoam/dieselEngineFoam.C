@@ -74,6 +74,7 @@ int main(int argc, char *argv[])
         Info<< "Crank angle = " << runTime.theta() << " CA-deg" << endl;
 
         mesh.move();
+        vpi.updateMesh();
 
         dieselSpray.evolve();
 

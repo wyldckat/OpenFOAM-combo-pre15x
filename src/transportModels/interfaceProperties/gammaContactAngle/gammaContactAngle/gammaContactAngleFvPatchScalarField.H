@@ -39,6 +39,7 @@ SourceFiles
 #define gammaContactAngleFvPatchScalarField_H
 
 #include "zeroGradientFvPatchFields.H"
+#include "fvsPatchFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -66,14 +67,14 @@ public:
         gammaContactAngleFvPatchScalarField
         (
             const fvPatch&,
-            const scalarField&
+            const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct from patch, internal field and dictionary
         gammaContactAngleFvPatchScalarField
         (
             const fvPatch&,
-            const scalarField&,
+            const DimensionedField<scalar, volMesh>&,
             const dictionary&
         );
 
@@ -83,7 +84,7 @@ public:
         (
             const gammaContactAngleFvPatchScalarField&,
             const fvPatch&,
-            const scalarField&,
+            const DimensionedField<scalar, volMesh>&,
             const fvPatchFieldMapper&
         );
 
@@ -97,7 +98,7 @@ public:
         gammaContactAngleFvPatchScalarField
         (
             const gammaContactAngleFvPatchScalarField&,
-            const scalarField&
+            const DimensionedField<scalar, volMesh>&
         );
 
 
@@ -107,7 +108,7 @@ public:
         virtual tmp<scalarField> theta
         (
             const fvPatchVectorField& Up,
-            const fvPatchVectorField& nHat
+            const fvsPatchVectorField& nHat
         ) const = 0;
 };
 

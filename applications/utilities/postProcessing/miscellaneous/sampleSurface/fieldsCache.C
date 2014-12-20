@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "fieldsCache.H"
@@ -31,7 +29,6 @@ Description
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct null
 template<class Type>
 Foam::fieldsCache<Type>::fieldsCache()
 :
@@ -103,5 +100,6 @@ const Foam::interpolation<Type>& Foam::fieldsCache<Type>::interpolator
         return *interpolators_[name];
     }
 }
+
 
 // ************************************************************************* //

@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include <fstream>
@@ -90,11 +88,6 @@ void Foam::fluentFvMesh::writeFluentMesh() const
 
     // Writing number of faces
     label nFcs = nFaces();
-
-    forAll (boundary(), patchI)
-    {
-        nFcs += boundary()[patchI].size();
-    }
 
     fluentMeshFile
             << "(13 (0 1 ";
@@ -236,6 +229,8 @@ void Foam::fluentFvMesh::writeFluentMesh() const
 
     const cellShapeList& cells = cellShapes();
 
+    bool hasWarned = false;
+
     forAll (cells, cellI)
     {
         if (cells[cellI].model() == tet)
@@ -256,10 +251,18 @@ void Foam::fluentFvMesh::writeFluentMesh() const
         }
         else
         {
-            FatalErrorIn("void fluentFvMesh::writeFluentMesh() const")
-                << "foamMeshToFluent: cell shape for cell "
-                << cellI << " not supported by Fluent"
-                << abort(FatalError);
+            if (!hasWarned)
+            {
+                hasWarned = true;
+
+                WarningIn("void fluentFvMesh::writeFluentMesh() const")
+                    << "foamMeshToFluent: cell shape for cell "
+                    << cellI << " only supported by Fluent polyhedral meshes."
+                    << nl
+                    << "    Suppressing any further messages for polyhedral"
+                    << " cells." << endl;
+            }
+            fluentMeshFile << " " << 7;
         }
     }
 

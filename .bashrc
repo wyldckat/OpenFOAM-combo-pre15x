@@ -5,7 +5,7 @@
 #  \\    /   O peration     |
 #   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
-#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # License
 #     This file is part of OpenFOAM.
 #
@@ -62,7 +62,6 @@ export WM_DIR=$WM_PROJECT_DIR/wmake
 export WM_LINK_LANGUAGE=c++
 export WM_OPTIONS=$WM_ARCH${WM_COMPILER}$WM_PRECISION_OPTION$WM_COMPILE_OPTION
 
-export WM_SHELL=${SHELL##*/}
 export PATH=$WM_DIR:$PATH
 
 export FOAM_DOT_DIR=.$WM_PROJECT-$WM_PROJECT_VERSION
@@ -98,19 +97,7 @@ WM_COMPILER_BIN=
 WM_COMPILER_LIB=
 
 if [ "$WM_COMPILER" = "Gcc" -o "$machineTest" = "Linux" -a "$WM_COMPILER" = "" ]; then
-    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-3.4.3$WM_COMPILER_ARCH
-    WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.4/bin"
-    WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
-fi
-
-if [ "$WM_COMPILER" = "Gcc4" ]; then
-    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.1.2$WM_COMPILER_ARCH
-    WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.4/bin"
-    WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
-fi
-
-if [ "$WM_COMPILER" = "Gcc42" ]; then
-    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.2-20061031$WM_COMPILER_ARCH
+    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.2.1$WM_COMPILER_ARCH
     WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.4/bin"
     WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 fi
@@ -187,7 +174,21 @@ fi
 # Communications library
 # ~~~~~~~~~~~~~~~~~~~~~~
 
-if [ .$WM_MPLIB = .LAM ]; then
+if [ .$WM_MPLIB = .OPENMPI ]; then
+
+    export OPENMPI_VERSION=1.2.3
+    export OPENMPI_HOME=$FOAM_SRC/openmpi-$OPENMPI_VERSION
+    export OPENMPI_ARCH_PATH=$OPENMPI_HOME/platforms/$WM_OPTIONS
+
+    # Tell OpenMPI where to find it's install directory
+    export OPAL_PREFIX=$OPENMPI_ARCH_PATH
+
+    AddLib $OPENMPI_ARCH_PATH/lib
+    AddPath $OPENMPI_ARCH_PATH/bin
+
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/openmpi-$OPENMPI_VERSION
+
+elif [ .$WM_MPLIB = .LAM ]; then
 
     export LAM_VERSION=7.1.2
     export LAMHOME=$FOAM_SRC/lam-$LAM_VERSION
@@ -197,17 +198,6 @@ if [ .$WM_MPLIB = .LAM ]; then
     AddPath $LAM_ARCH_PATH/bin
 
     export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/lam-$LAM_VERSION
-
-elif [ .$WM_MPLIB = .OPENMPI ]; then
-
-    export OPENMPI_VERSION=1.2b3
-    export OPENMPI_HOME=$FOAM_SRC/openmpi-$OPENMPI_VERSION
-    export OPENMPI_ARCH_PATH=$OPENMPI_HOME/platforms/$WM_OPTIONS
-
-    AddLib $OPENMPI_ARCH_PATH/lib
-    AddPath $OPENMPI_ARCH_PATH/bin
-
-    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/openmpi-$OPENMPI_VERSION
 
 elif [ .$WM_MPLIB = .MPICH ]; then
 
@@ -243,6 +233,16 @@ elif [ .$WM_MPLIB = .GAMMA ]; then
 
     export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/gamma
 
+elif [ .$WM_MPLIB = .MPIGAMMA ]; then
+
+    export GAMMA_ARCH_PATH=/usr
+    export MPIGAMMA_ARCH_PATH=/usr/local/mpigamma
+
+    #AddLib $MPIGAMMA_ARCH_PATH/lib
+    #AddPath $MPIGAMMA_ARCH_PATH/bin
+
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/mpigamma
+
 elif [ .$WM_MPLIB = .MPI ]; then
 
     export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/mpi
@@ -254,15 +254,16 @@ fi
 AddLib $FOAM_MPI_LIBBIN
 
 
-# CGAL library if available
-# ~~~~~~~~~~~~~~~~~~~~~~~~~
-
-AddLib $CGAL_LIB_DIR
-
-
 # Set the MPI buffer size (used by all platforms except SGI MPI)
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 export MPI_BUFFER_SIZE=20000000
+
+
+# CGAL library if available
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+if [ "$CGAL_LIB_DIR" ]; then
+    AddLib $CGAL_LIB_DIR
+fi
 
 
 # -----------------------------------------------------------------------------

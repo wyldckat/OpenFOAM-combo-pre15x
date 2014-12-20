@@ -140,9 +140,6 @@ class PointEdgeWave
         label nUnvisitedPoints_;
         label nUnvisitedEdges_;
 
-        //- Iteration counter
-        label iter_;
-
 
     // Private Member Functions
 
@@ -205,13 +202,6 @@ class PointEdgeWave
             const Type& neighbourInfo,
             const scalar tol,
             Type& edgeInfo
-        );
-
-        //- Copy initial data into allPointInfo_
-        void setPointInfo
-        (
-            const labelList& changedPoints,
-            const List<Type>& changedPointsInfo
         );
 
         // Parallel, cyclic
@@ -311,8 +301,6 @@ public:
             return allEdgeInfo_;
         }
 
-
-
         //- Get number of unvisited edges, i.e. edges that were not (yet)
         //  reached from walking across mesh. This can happen from
         //  - not enough iterations done
@@ -322,6 +310,13 @@ public:
 
         label getUnsetPoints() const;
 
+        //- Copy initial data into allPointInfo_
+        void setPointInfo
+        (
+            const labelList& changedPoints,
+            const List<Type>& changedPointsInfo
+        );
+
         //- Propagate from point to edge. Returns total number of edges
         //  (over all processors) changed.
         label pointToEdge();
@@ -330,7 +325,8 @@ public:
         //  (over all processors) changed.
         label edgeToPoint();
 
-        //- Iterate until no changes or maxIter reached.
+        //- Iterate until no changes or maxIter reached. Returns actual
+        //  number of iterations.
         label iterate(const label maxIter);
 };
 

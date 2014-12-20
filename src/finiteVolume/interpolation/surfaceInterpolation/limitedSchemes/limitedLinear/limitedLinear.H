@@ -48,7 +48,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class limitedLinearWeight Declaration
+                    Class limitedLinearLimiter Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
@@ -67,7 +67,7 @@ public:
     {
         if (k_ < 0 || k_ > 1)
         {
-            FatalIOErrorIn("GammaWeight(Istream& is)", is)
+            FatalIOErrorIn("limitedLinearLimiter(Istream& is)", is)
                 << "coefficient = " << k_
                 << " should be >= 0 and <= 1"
                 << exit(FatalIOError);
@@ -88,12 +88,12 @@ public:
         const vector& d
     ) const
     {
-        scalar twor = twoByk_*LimiterFunc::r
+        scalar r = LimiterFunc::r
         (
-            cdWeight, faceFlux, phiP, phiN, gradcP, gradcN, d
+            faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
-        return max(min(twor, 1), 0);
+        return max(min(twoByk_*r, 1), 0);
     }
 };
 

@@ -86,6 +86,17 @@ IFstreamAllocator::~IFstreamAllocator()
 }
 
 
+istream& IFstreamAllocator::stdStream()
+{
+    if (!ifPtr_)
+    {
+        FatalErrorIn("IFstreamAllocator::stdStream()")
+            << "No stream allocated." << abort(FatalError);
+    }
+    return *ifPtr_;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 IFstream::IFstream

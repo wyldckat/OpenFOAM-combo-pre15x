@@ -22,11 +22,11 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "porousZones.H"
 #include "Time.H"
-#include "fvMesh.H"
+#include "volFields.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -72,10 +72,17 @@ void Foam::porousZones::addResistance
     volTensorField& AU
 ) const
 {
+    // addResistance for each zone, delaying the correction of the
+    // precessor BCs of AU
     forAll(*this, i)
     {
-        operator[](i).addResistance(UEqn, AU);
+        operator[](i).addResistance(UEqn, AU, false);
     }
+
+    // Correct the doundary conditions of the tensorial diagonal to ensure
+    // processor bounaries are correctly handled when AU^-1 is interpolated
+    // for the pressure equation.
+    AU.correctBoundaryConditions();
 }
 
 

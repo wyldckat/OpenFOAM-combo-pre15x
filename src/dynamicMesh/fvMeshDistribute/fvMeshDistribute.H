@@ -143,6 +143,9 @@ class fvMeshDistribute
         //- Check all procs have same names and in exactly same order.
         static void checkEqualWordList(const wordList&);
 
+        //- Merge wordlists over all processors
+        static wordList mergeWordList(const wordList&);
+
 
         // Patch handling
 
@@ -151,31 +154,39 @@ class fvMeshDistribute
 
             //- Appends processorPolyPatch. Returns patchID.
             label addProcPatch(const word& patchName, const label nbrProc);
+
             //- Add patch field
-            template<class T, class Mesh>
+            template<class GeoField>
             void addPatchFields(const word& patchFieldType);
+
             //- Deletes last patch.
             void deleteTrailingPatch();
+
             // Delete trailing patch fields
-            template<class T, class Mesh>
+            template<class GeoField>
             void deleteTrailingPatchFields();
+
             //- Save boundary fields
             template <class T, class Mesh>
-            void saveBoundaryFields(PtrList<FieldField<fvPatchField, T> >&)
-             const;
+            void saveBoundaryFields
+            (
+                PtrList<FieldField<fvsPatchField, T> >& bflds
+            ) const;
+
             //- Map boundary fields
             template <class T, class Mesh>
             void mapBoundaryFields
             (
-                const mapPolyMesh&,
-                const PtrList<FieldField<fvPatchField, T> >&
+                const mapPolyMesh& map,
+                const PtrList<FieldField<fvsPatchField, T> >& oldBflds
             );
+
             //- Init patch fields of certain type
-            template <class T, class Mesh>
+            template<class GeoField>
             void initPatchFields
             (
                 const word& patchFieldType,
-                const T& initVal
+                const typename GeoField::value_type& initVal
             );
 
             //- Delete all processor patches. Move any processor faces into
@@ -193,6 +204,13 @@ class fvMeshDistribute
                 labelListList& constructFaceMap
             );
 
+            //- Merge any shared points that are geometrically shared. Needs
+            //  parallel valid mesh - uses globalMeshData.
+            //  constructPointMap is adapted for the new point labels.
+            autoPtr<mapPolyMesh> mergeSharedPoints
+            (
+                labelListList& constructPointMap
+            );
 
         // Coupling information
 
@@ -258,7 +276,7 @@ class fvMeshDistribute
         // Other
 
             //- Remove cells. Add all exposed faces to patch oldInternalPatchI
-            autoPtr<mapPolyMesh> removeCells
+            autoPtr<mapPolyMesh> doRemoveCells
             (
                 const labelList& cellsToRemove,
                 const label oldInternalPatchI
@@ -284,12 +302,15 @@ class fvMeshDistribute
             (
                 const label domain,
                 const fvMesh& mesh,
+                const wordList& pointZoneNames,
+                const wordList& facesZoneNames,
+                const wordList& cellZoneNames,
                 const labelList& sourceFace,
                 const labelList& sourceProc,
                 const labelList& sourceNewProc
             );
             //- Send subset of fields
-            template<class T, class Mesh>
+            template<class GeoField>
             static void sendFields
             (
                 const label domain,
@@ -301,6 +322,9 @@ class fvMeshDistribute
             static autoPtr<fvMesh> receiveMesh
             (
                 const label domain,
+                const wordList& pointZoneNames,
+                const wordList& facesZoneNames,
+                const wordList& cellZoneNames,
                 Time& runTime,
                 labelList& domainSourceFace,
                 labelList& domainSourceProc,
@@ -308,13 +332,13 @@ class fvMeshDistribute
             );
 
             //- Receive fields. Opposite of sendFields
-            template<class T, class Mesh>
+            template<class GeoField>
             static void receiveFields
             (
                 const label domain,
                 const wordList& fieldNames,
                 fvMesh&,
-                PtrList<GeometricField<T, fvPatchField, Mesh> >&
+                PtrList<GeoField>&
             );
 
             //- Disallow default bitwise copy construct
@@ -355,7 +379,7 @@ public:
             );
 
             //- Print some field info
-            template<class T, class Mesh>
+            template<class GeoField>
             static void printFieldInfo(const fvMesh&);
 
             //- Print some info on mesh.

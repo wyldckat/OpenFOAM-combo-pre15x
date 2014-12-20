@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "IOstreams.H"
@@ -327,7 +325,7 @@ inline const Point& triangle<Point, PointRef>::c() const
 template<class Point, class PointRef>
 inline Point triangle<Point, PointRef>::centre() const
 {
-    return 1.0/3.0*(a_ + b_ + c_);
+    return (1.0/3.0)*(a_ + b_ + c_);
 }
 
 

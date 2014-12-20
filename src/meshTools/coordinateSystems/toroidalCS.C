@@ -33,7 +33,6 @@ License
 namespace Foam
 {
     defineTypeNameAndDebug(toroidalCS, 0);
-
     addToRunTimeSelectionTable(coordinateSystem, toroidalCS, dictionary);
 }
 
@@ -43,7 +42,7 @@ namespace Foam
 Foam::toroidalCS::toroidalCS
 (
     const word& name,
-    const vector& origin,
+    const point& origin,
     const vector& axis,
     const vector& direction,
     const scalar radius
@@ -57,7 +56,7 @@ Foam::toroidalCS::toroidalCS
 Foam::toroidalCS::toroidalCS
 (
     const word& name,
-    const vector& origin,
+    const point& origin,
     const coordinateRotation& cr,
     const scalar radius
 )
@@ -80,68 +79,79 @@ Foam::toroidalCS::toroidalCS
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::vector Foam::toroidalCS::toGlobal(const vector& localV) const
+Foam::vector Foam::toroidalCS::localToGlobal
+(
+    const vector& local,
+    bool translate
+) const
 {
-    // Notation: r = localV.x()
-    scalar theta = localV.y()*mathematicalConstant::pi/180.0;
-    scalar phi = localV.z()*mathematicalConstant::pi/180.0;
+    // Notation: r = local.x()
+    scalar theta = local.y()*mathematicalConstant::pi/180.0;
+    scalar phi = local.z()*mathematicalConstant::pi/180.0;
 
-    scalar rprime = radius_ + localV.x()*sin(phi);
+    scalar rprime = radius_ + local.x()*sin(phi);
 
-    if ((localV.x()*sin(phi)) > (radius_))
+    if ((local.x()*sin(phi)) > (radius_))
     {
         FatalErrorIn("toroidalCS::toGlobal(vector) const")
             << "Badly defined toroidal coordinates"
             << abort(FatalError);
     }
 
-    return coordinateSystem::toGlobal
+    return coordinateSystem::localToGlobal
     (
-        vector(rprime*cos(theta), rprime*sin(theta), localV.x()*cos(phi))
+        vector(rprime*cos(theta), rprime*sin(theta), local.x()*cos(phi)),
+        translate
     );
 }
 
-
-Foam::tmp<Foam::vectorField> Foam::toroidalCS::toGlobal
+Foam::tmp<Foam::vectorField> Foam::toroidalCS::localToGlobal
 (
-    const vectorField& localV
+    const vectorField& local,
+    bool translate
 ) const
 {
-    const scalarField r = localV.component(vector::X);
+    const scalarField r = local.component(vector::X);
 
     const scalarField theta =
-        localV.component(vector::Y)*mathematicalConstant::pi/180.0;
+        local.component(vector::Y)*mathematicalConstant::pi/180.0;
 
     const scalarField phi =
-        localV.component(vector::Z)*mathematicalConstant::pi/180.0;
+        local.component(vector::Z)*mathematicalConstant::pi/180.0;
 
     const scalarField rprime = radius_ + r*sin(phi);
 
-    vectorField lc(localV.size());
+    vectorField lc(local.size());
     lc.replace(vector::X, rprime*cos(theta));
     lc.replace(vector::Y, rprime*sin(theta));
     lc.replace(vector::Z, r*cos(phi));
 
-    return coordinateSystem::toGlobal(lc);
+    return coordinateSystem::localToGlobal(lc, translate);
 }
 
-
-Foam::vector Foam::toroidalCS::toLocal(const vector& globalV) const
-{
-    notImplemented("vector toroidalCS::toLocal(const vector& globalV) const");
-
-    return vector::zero;
-}
-
-
-Foam::tmp<Foam::vectorField> Foam::toroidalCS::toLocal
+Foam::vector Foam::toroidalCS::globalToLocal
 (
-    const vectorField& globalV
+    const vector& global,
+    bool translate
 ) const
 {
     notImplemented
     (
-        "tmp<vectorField> toroidalCS::toLocal(const vectorField& globalV) const"
+        "toroidalCS::globalToLocal(const vector&, bool) const"
+    );
+
+    return vector::zero;
+}
+
+Foam::tmp<Foam::vectorField> Foam::toroidalCS::globalToLocal
+(
+    const vectorField& global,
+    bool translate
+) const
+{
+    notImplemented
+    (
+        "toroidalCS::globalToLocal(const vectorField&, bool) const"
     );
 
     return tmp<vectorField>(&vectorField::null());
@@ -165,11 +175,11 @@ void Foam::toroidalCS::writeDict(Ostream& os, bool subDict) const
 
     coordinateSystem::writeDict(os, false);
     os.writeKeyword("radius") << radius() << token::END_STATEMENT << nl;
-   
+
     if (subDict)
     {
 	os << decrIndent << indent << token::END_BLOCK << endl;
-    }    
+    }
 }
 
 

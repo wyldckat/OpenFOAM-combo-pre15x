@@ -26,12 +26,14 @@ License
 
 #include "LimitedScheme.H"
 #include "QUICK.H"
+#include "QUICKV.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
     makeLimitedSurfaceInterpolationScheme(QUICK, QUICKLimiter)
+    makeLimitedVSurfaceInterpolationScheme(QUICKV, QUICKVLimiter)
 }
 
 // ************************************************************************* //

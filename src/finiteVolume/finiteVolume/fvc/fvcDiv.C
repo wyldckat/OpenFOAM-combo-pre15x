@@ -46,7 +46,7 @@ template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 div
 (
-    const GeometricField<Type, fvPatchField, surfaceMesh>& ssf
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& ssf
 )
 {
     return tmp<GeometricField<Type, fvPatchField, volMesh> >
@@ -64,7 +64,7 @@ template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 div
 (
-    const tmp<GeometricField<Type, fvPatchField, surfaceMesh> >& tssf
+    const tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >& tssf
 )
 {
     tmp<GeometricField<Type, fvPatchField, volMesh> > Div(fvc::div(tssf()));

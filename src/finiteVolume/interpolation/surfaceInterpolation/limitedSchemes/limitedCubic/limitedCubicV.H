@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    limitedCubicV
+    limitedCubicVLimiter
 
 Description
     Class with limiter function which returns the limiter for the
@@ -67,7 +67,7 @@ public:
     {
         if (k_ < 0 || k_ > 1)
         {
-            FatalIOErrorIn("GammaWeight(Istream& is)", is)
+            FatalIOErrorIn("limitedCubicVLimiter(Istream& is)", is)
                 << "coefficient = " << k_
                 << " should be >= 0 and <= 1"
                 << exit(FatalIOError);
@@ -90,7 +90,7 @@ public:
     {
         scalar twor = twoByk_*LimiterFunc::r
         (
-            cdWeight, faceFlux, phiP, phiN, gradcP, gradcN, d
+            faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
         vector fV = cdWeight*phiP + (1.0 - cdWeight)*phiN;

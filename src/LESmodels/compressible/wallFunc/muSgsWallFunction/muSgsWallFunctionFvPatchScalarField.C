@@ -44,7 +44,7 @@ namespace LESmodels
 muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedValueFvPatchScalarField(p, iF)
@@ -55,7 +55,7 @@ muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 (
     const muSgsWallFunctionFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -66,7 +66,7 @@ muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     Istream& is
 )
 :
@@ -77,7 +77,7 @@ muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -97,7 +97,7 @@ muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 (
     const muSgsWallFunctionFvPatchScalarField& tppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedValueFvPatchScalarField(tppsf, iF)

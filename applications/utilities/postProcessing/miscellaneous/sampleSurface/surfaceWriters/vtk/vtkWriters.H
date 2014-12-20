@@ -30,7 +30,6 @@ Description
 SourceFiles
     vtkWriters.C
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef vtkWriters_H
@@ -49,6 +48,8 @@ namespace Foam
 
 typedef vtk<scalar> vtkScalarWriter;
 typedef vtk<vector> vtkVectorWriter;
+typedef vtk<sphericalTensor> vtkSphericalTensorWriter;
+typedef vtk<symmTensor> vtkSymmTensorWriter;
 typedef vtk<tensor> vtkTensorWriter;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

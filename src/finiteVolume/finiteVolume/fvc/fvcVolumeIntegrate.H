@@ -27,7 +27,8 @@ Namespace
 
 Description
     Volume integrate volField creating a volField.
-    Volume integrate volField over the whole domain creating a dimensioned<Type>
+    Volume integrate volField over the whole domain
+    creating a dimensioned<Type>
 
 SourceFiles
     fvcVolumeIntegrate.C

@@ -33,6 +33,10 @@ Description
 #include "polyTopoChange.H"
 #include "oppositeFace.H"
 #include "polyTopoChanger.H"
+#include "polyRemoveCell.H"
+#include "polyRemoveFace.H"
+#include "polyRemovePoint.H"
+#include "polyModifyFace.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -140,11 +144,9 @@ void Foam::layerAdditionRemoval::removeCellLayer
         }
     }
 
-    labelList ftr = facesToRemoveMap.toc();
-
-    forAll (ftr, ftrI)
+    forAllConstIter(labelHashSet, facesToRemoveMap, iter)
     {
-        ref.setAction(polyRemoveFace(ftr[ftrI]));
+        ref.setAction(polyRemoveFace(iter.key()));
     }
 
     // Remove all points that will be collapsed
@@ -170,9 +172,6 @@ void Foam::layerAdditionRemoval::removeCellLayer
         removedPointMap.insert(ptc[pointI], meshPoints[pointI]);
     }
 
-    // Get reference to removed faces map
-    const labelHashSet removedFaces = ref.removedFaces();
-
     const labelListList& pf = mesh.pointFaces();
 
     const faceList& faces = mesh.faces();
@@ -188,7 +187,7 @@ void Foam::layerAdditionRemoval::removeCellLayer
 
         forAll (curFaces, faceI)
         {
-            if (!removedFaces.found(curFaces[faceI]))
+            if (!facesToRemoveMap.found(curFaces[faceI]))
             {
                 facesToModify.insert(curFaces[faceI]);
             }

@@ -50,8 +50,8 @@ boundaryField
     }
     inlet
     {
-        type            massFluxInletVelocity;
-        massFlux        0.1;
+        type            massFlowRateInletVelocity;
+        massFlowRate    0.1;
         value           uniform (0 0 0);
     }
     outlet

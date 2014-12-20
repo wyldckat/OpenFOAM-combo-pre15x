@@ -27,7 +27,7 @@ Application
 
 Description
     Transient solver for incompressible, laminar flow of Newtonian fluids
-    with dynamic mesh.
+    with moving mesh.
 
 \*---------------------------------------------------------------------------*/
 
@@ -77,51 +77,62 @@ int main(int argc, char *argv[])
         // Make the fluxes relative to the mesh motion
         fvc::makeRelative(phi, U);
 
-#       include "UEqn.H"
+        //#       include "meshCourantNo.H"
 
-        // --- PISO loop
-
-        for (int corr=0; corr<nCorr; corr++)
+        // --- PIMPLE loop
+        for (int ocorr=0; ocorr<nOuterCorr; ocorr++)
         {
-            rAU = 1.0/UEqn.A();
+#           include "UEqn.H"
 
-            U = rAU*UEqn.H();
-            phi = (fvc::interpolate(U) & mesh.Sf());
-              //+ fvc::ddtPhiCorr(rAU, U, phi);
-
-            adjustPhi(phi, U, p);
-
-            for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
+            // --- PISO loop
+            for (int corr=0; corr<nCorr; corr++)
             {
-                fvScalarMatrix pEqn
-                (
-                    fvm::laplacian(rAU, p) == fvc::div(phi)
-                );
+                rAU = 1.0/UEqn.A();
 
-                pEqn.setReference(pRefCell, pRefValue);
+                U = rAU*UEqn.H();
+                phi = (fvc::interpolate(U) & mesh.Sf());
+                  //+ fvc::ddtPhiCorr(rAU, U, phi);
 
-                if (corr == nCorr-1 && nonOrth == nNonOrthCorr)
+                adjustPhi(phi, U, p);
+
+                for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
                 {
-                    pEqn.solve(mesh.solver(p.name() + "Final"));
-                }
-                else
-                {
-                    pEqn.solve(mesh.solver(p.name()));
-                }
+                    fvScalarMatrix pEqn
+                    (
+                        fvm::laplacian(rAU, p) == fvc::div(phi)
+                    );
+
+                    pEqn.setReference(pRefCell, pRefValue);
+
+                    if (corr == nCorr-1 && nonOrth == nNonOrthCorr)
+                    {
+                        pEqn.solve(mesh.solver(p.name() + "Final"));
+                    }
+                    else
+                    {
+                        pEqn.solve(mesh.solver(p.name()));
+                    }
                 
-                if (nonOrth == nNonOrthCorr)
-                {
-                    phi -= pEqn.flux();
+                    if (nonOrth == nNonOrthCorr)
+                    {
+                        phi -= pEqn.flux();
+                    }
                 }
+
+#               include "continuityErrs.H"
+
+                // Explicitly relax pressure for momentum corrector
+                if (ocorr != nOuterCorr-1)
+                {
+                    p.relax();
+                }
+
+                // Make the fluxes relative to the mesh motion
+                fvc::makeRelative(phi, U);
+
+                U -= rAU*fvc::grad(p);
+                U.correctBoundaryConditions();
             }
-
-#           include "continuityErrs.H"
-
-            // Make the fluxes relative to the mesh motion
-            fvc::makeRelative(phi, U);
-
-            U -= rAU*fvc::grad(p);
-            U.correctBoundaryConditions();
         }
 
         runTime.write();

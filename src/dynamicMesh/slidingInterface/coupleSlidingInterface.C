@@ -34,6 +34,10 @@ License
 #include "triPointRef.H"
 #include "plane.H"
 #include "polyTopoChanger.H"
+#include "polyAddPoint.H"
+#include "polyAddFace.H"
+#include "polyModifyPoint.H"
+#include "polyModifyFace.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -1173,8 +1177,6 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
     // Collect all affected faces
 
-    const labelHashSet& removedPoints = ref.removedPoints();
-
     // Master side
 
     // Grab the list of faces in the layer
@@ -1199,7 +1201,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
         forAll (oldRichFace, pointI)
         {
-            if (removedPoints.found(oldRichFace[pointI]))
+            if (ref.pointRemoved(oldRichFace[pointI]))
             {
                 changed = true;
             }
@@ -1459,7 +1461,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
             }
             else if
             (
-                removedPoints.found(oldRichFace[pointI])
+                ref.pointRemoved(oldRichFace[pointI])
              || masterMeshPointMap.found(oldRichFace[pointI])
             )
             {

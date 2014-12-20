@@ -82,7 +82,7 @@ int main(int argc, char *argv[])
               + fvc::ddtPhiCorr(rUA, rho, U, phi)
             )/fvc::interpolate(rho);
 
-            phi = (rho0/psi - p0)*phid;
+            phi = (rhoO/psi)*phid;
 
             fvScalarMatrix pEqn
             (
@@ -102,7 +102,7 @@ int main(int argc, char *argv[])
             U.correctBoundaryConditions();
         }
 
-        rho = rho0 + psi*(p - p0);
+        rho = rhoO + psi*p;
 
         runTime.write();
 

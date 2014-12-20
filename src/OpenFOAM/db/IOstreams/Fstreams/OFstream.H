@@ -72,6 +72,14 @@ class OFstreamAllocator
     // Destructor
 
         ~OFstreamAllocator();
+
+
+public:
+
+    // Member functions
+
+        //- Access to underlying std::ostream
+        ostream& stdStream();
 };
 
 

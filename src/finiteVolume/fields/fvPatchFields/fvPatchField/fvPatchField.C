@@ -34,70 +34,27 @@ License
 namespace Foam
 {
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-template<class Type>
-void fvPatchField<Type>::checkPatch() const
-{
-    if (this->size() != patch_.size())
-    {
-        FatalErrorIn("fvPatchField<Type>::checkPatch() const")
-            << "number of fvPatchField entries (" << this->size()
-            << ") != number of patch faces (" << patch_.size() << ')'
-            << " for patch: " << patch_.name() << " index " << patch_.index()
-            << abort(FatalError);
-    }
-}
-
-
-template<class Type>
-void fvPatchField<Type>::checkInternalField() const
-{
-    if (&internalField_ && internalField_.size())
-    {
-        label iFs = internalField_.size();
-
-        const fvMesh& mesh = patch_.boundaryMesh().mesh();
-        label nPoints = mesh.nPoints();
-        label nInternalFaces = mesh.nInternalFaces();
-        label nCells = mesh.nCells();
-
-        if (iFs != nPoints && iFs != nInternalFaces && iFs != nCells)
-        {
-            FatalErrorIn("fvPatchField<Type>::checkInternalField() const")
-                << "internal field size " << iFs << " does not match" << nl
-                << "    the number of points " << nPoints << nl
-                << "    the number of internal faces " << nInternalFaces << nl
-                << "    or the number of cells " << nCells
-                << abort(FatalError);
-        }
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
 fvPatchField<Type>::fvPatchField
 (
     const fvPatch& p,
-    const Field<Type>& iF
+    const DimensionedField<Type, volMesh>& iF
 )
 :
     Field<Type>(p.size()),
     patch_(p),
     internalField_(iF),
     updated_(false)
-{
-    checkInternalField();
-}
+{}
 
 
 template<class Type>
 fvPatchField<Type>::fvPatchField
 (
     const fvPatch& p,
-    const Field<Type>& iF,
+    const DimensionedField<Type, volMesh>& iF,
     const Field<Type>& f
 )
 :
@@ -105,9 +62,7 @@ fvPatchField<Type>::fvPatchField
     patch_(p),
     internalField_(iF),
     updated_(false)
-{
-    checkInternalField();
-}
+{}
 
 
 template<class Type>
@@ -115,7 +70,7 @@ fvPatchField<Type>::fvPatchField
 (
     const fvPatchField<Type>& ptf,
     const fvPatch& p,
-    const Field<Type>& iF,
+    const DimensionedField<Type, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -123,16 +78,14 @@ fvPatchField<Type>::fvPatchField
     patch_(p),
     internalField_(iF),
     updated_(false)
-{
-    checkInternalField();
-}
+{}
 
 
 template<class Type>
 fvPatchField<Type>::fvPatchField
 (
     const fvPatch& p,
-    const Field<Type>& iF,
+    const DimensionedField<Type, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -172,16 +125,14 @@ template<class Type>
 fvPatchField<Type>::fvPatchField
 (
     const fvPatchField<Type>& ptf,
-    const Field<Type>& iF
+    const DimensionedField<Type, volMesh>& iF
 )
 :
     Field<Type>(ptf),
     patch_(ptf.patch_),
     internalField_(iF),
     updated_(false)
-{
-    checkInternalField();
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -205,30 +156,6 @@ void fvPatchField<Type>::check(const fvPatchField<Type>& ptf) const
 }
 
 
-// Does this patchField correspond to a volTypeField
-template<class Type>
-bool fvPatchField<Type>::isVolField() const
-{
-    return
-        internalField().size()
-     == patch().boundaryMesh().mesh().nCells();
-}
-
-// Does this patchField correspond to a volTypeField
-template<class Type>
-void fvPatchField<Type>::checkVolField() const
-{
-    if (!isVolField())
-    {
-        FatalErrorIn("fvPatchField<Type>::checkVolField() const")
-            << "This " << type() << " patchField"
-            << " is not part of a volTypeField which may cause "
-               "undefined behaviour from the evaluate and other functions"
-            << abort(FatalError);
-    }
-}
-
-
 // Return gradient at boundary
 template<class Type>
 tmp<Field<Type> > fvPatchField<Type>::snGrad() const
@@ -245,7 +172,6 @@ tmp<Field<Type> > fvPatchField<Type>::patchInternalField() const
 }
 
 
-// Map from self
 template<class Type>
 void fvPatchField<Type>::autoMap
 (
@@ -256,7 +182,6 @@ void fvPatchField<Type>::autoMap
 }
 
 
-// Reverse-map the given fvPatchField onto this fvPatchField
 template<class Type>
 void fvPatchField<Type>::rmap
 (
@@ -268,7 +193,6 @@ void fvPatchField<Type>::rmap
 }
 
 
-// Evaluate the patch field, sets Updated to false
 template<class Type>
 void fvPatchField<Type>::evaluate()
 {
@@ -281,7 +205,6 @@ void fvPatchField<Type>::evaluate()
 }
 
 
-// Write
 template<class Type>
 void fvPatchField<Type>::write(Ostream& os) const
 {

@@ -50,11 +50,11 @@ namespace Foam
 //  true if anything merged, false otherwise.
 bool mergePoints
 (
-    const pointField& points,
+    const UList<point>& points,
     const scalar mergeTol,
     const bool verbose,
     labelList& pointMap,
-    pointField& newPoints,
+    List<point>& newPoints,
     const point& origin = point::zero
 );
 

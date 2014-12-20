@@ -71,6 +71,18 @@ protected:
         mutable volPointInterpolation vpi_;
 
 
+    // Protected member functions
+
+        //- Create the corresponding patch types for cellMotion from those
+        //  of the given pointMotion
+        template<class Type>
+        wordList cellMotionBoundaryTypes
+        (
+            const typename GeometricField<Type, pointPatchField, pointMesh>::
+            GeometricBoundaryField& pmUbf
+        ) const;
+
+
 public:
 
     //- Runtime type information
@@ -110,6 +122,12 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "fvMotionSolverTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

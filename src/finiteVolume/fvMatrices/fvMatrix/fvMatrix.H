@@ -120,7 +120,7 @@ class fvMatrix
 
 
         //- Face flux field for non-orthogonal correction
-        mutable GeometricField<Type, fvPatchField, surfaceMesh>
+        mutable GeometricField<Type, fvsPatchField, surfaceMesh>
             *faceFluxCorrectionPtr_;
 
 
@@ -287,7 +287,7 @@ public:
 
 
             //- Declare return type of the faceFluxCorrectionPtr() function
-            typedef GeometricField<Type, fvPatchField, surfaceMesh>
+            typedef GeometricField<Type, fvsPatchField, surfaceMesh>
                 *surfaceTypeFieldPtr;
 
             //- Return pointer to face-flux non-orthogonal correction field
@@ -353,8 +353,11 @@ public:
             //- Return the matrix residual
             tmp<Field<Type> > residual() const;
 
-            //- Return the matrix diagonal
+            //- Return the matrix scalar diagonal
             tmp<scalarField> D() const;
+
+            //- Return the matrix Type diagonal
+            tmp<Field<Type> > DD() const;
 
             //- Return the central coefficient
             tmp<volScalarField> A() const;
@@ -362,8 +365,12 @@ public:
             //- Return the H operation source
             tmp<GeometricField<Type, fvPatchField, volMesh> > H() const;
 
+            //- Return H(1)
+            tmp<volScalarField> H1() const;
+
             //- Return the face-flux field from the matrix
-            tmp<GeometricField<Type, fvPatchField, surfaceMesh> > flux() const;
+            tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
+            flux() const;
 
 
     // Member operators
@@ -379,11 +386,23 @@ public:
         void operator-=(const fvMatrix<Type>&);
         void operator-=(const tmp<fvMatrix<Type> >&);
 
-        void operator+=(const GeometricField<Type,fvPatchField,volMesh>&);
-        void operator+=(const tmp<GeometricField<Type,fvPatchField,volMesh> >&);
+        void operator+=
+        (
+            const GeometricField<Type, fvPatchField,volMesh>&
+        );
+        void operator+=
+        (
+            const tmp<GeometricField<Type, fvPatchField,volMesh> >&
+        );
 
-        void operator-=(const GeometricField<Type,fvPatchField,volMesh>&);
-        void operator-=(const tmp<GeometricField<Type,fvPatchField,volMesh> >&);
+        void operator-=
+        (
+            const GeometricField<Type, fvPatchField,volMesh>&
+        );
+        void operator-=
+        (
+            const tmp<GeometricField<Type, fvPatchField,volMesh> >&
+        );
 
         void operator+=(const dimensioned<Type>&);
         void operator-=(const dimensioned<Type>&);
@@ -402,7 +421,7 @@ public:
         friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
         (
             const fvMatrix<Type>&,
-            const GeometricField<Type,fvPatchField,volMesh>&
+            const GeometricField<Type, fvPatchField, volMesh>&
         );
 
         friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
@@ -414,13 +433,13 @@ public:
         friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
         (
             const tmp<fvMatrix<Type> >&,
-            const GeometricField<Type,fvPatchField,volMesh>&
+            const GeometricField<Type, fvPatchField, volMesh>&
         );
 
         friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
         (
             const tmp<fvMatrix<Type> >&,
-            const tmp<GeometricField<Type,fvPatchField,volMesh> >&
+            const tmp<GeometricField<Type, fvPatchField, volMesh> >&
         );
 
 

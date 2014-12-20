@@ -1,4 +1,4 @@
-/*---------------------------------------------------------------------------*\
+/*---------------------------------------------------------------------------* \
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
@@ -22,10 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    An IOPtrList of a given type is a PtrList of that type which supports
-    automated input and output.
-
 \*---------------------------------------------------------------------------*/
 
 #include "IOPtrList.H"
@@ -41,29 +37,56 @@ template<class T>
 template<class INew>
 IOPtrList<T>::IOPtrList(const IOobject& io, const INew& inewt)
 :
-    regIOobject(io),
-    PtrList<T>(readStream(typeName), inewt)
+    regIOobject(io)
 {
-    close();
+    if
+    (
+        io.readOpt() == IOobject::MUST_READ
+     || (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+    )
+    {
+        PtrList<T>::read(readStream(typeName), inewt);
+        close();
+    }
 }
 
 
 template<class T>
 IOPtrList<T>::IOPtrList(const IOobject& io)
 :
-    regIOobject(io),
-    PtrList<T>(readStream(typeName))
+    regIOobject(io)
 {
-    close();
+    if
+    (
+        io.readOpt() == IOobject::MUST_READ
+     || (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+    )
+    {
+        PtrList<T>::read(readStream(typeName), INew<T>());
+        close();
+    }
 }
 
 
 template<class T>
 IOPtrList<T>::IOPtrList(const IOobject& io, const PtrList<T>& list)
 :
-    regIOobject(io),
-    PtrList<T>(list)
-{}
+    regIOobject(io)
+{
+    if
+    (
+        io.readOpt() == IOobject::MUST_READ
+     || (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+    )
+    {
+        PtrList<T>::read(readStream(typeName), INew<T>());
+        close();
+    }
+    else
+    {
+        PtrList<T>::operator=(list);
+    }
+}
 
 
 template<class T>

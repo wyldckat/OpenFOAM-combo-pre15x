@@ -52,9 +52,9 @@ namespace Foam
 //  with (almost) identical mag. pts0 can be subset of pts1.
 bool matchPoints
 (
-    const pointField& pts0,
-    const pointField& pts1,
-    const scalarField& tols,
+    const UList<point>& pts0,
+    const UList<point>& pts1,
+    const UList<scalar>& tols,
     const bool verbose,
     labelList& from0To1,
     const point& origin = point::zero

@@ -179,7 +179,7 @@ public:
 
         //- Return the explicit correction to the face-interpolate
         //  set to zero on the near-boundary faces where upwinf is applied
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         correction
         (
             const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -187,10 +187,10 @@ public:
         {
             if (tScheme_().corrected())
             {
-                tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tcorr = 
+                tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tcorr = 
                     tScheme_().correction(vf);
 
-                GeometricField<Type, fvPatchField, surfaceMesh>& corr = tcorr();
+                GeometricField<Type, fvsPatchField, surfaceMesh>& corr = tcorr();
 
                 const fvMesh& mesh_ = this->mesh();
                 const cellList& cells = mesh_.cells();
@@ -231,7 +231,7 @@ public:
             else
             {
                 return 
-                    tmp<GeometricField<Type, fvPatchField, surfaceMesh> >(NULL);
+                    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >(NULL);
             }
         }
 };

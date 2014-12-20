@@ -81,25 +81,12 @@ void Foam::faceMapper::calcAddressing() const
     {
         // Interpolative addressing
 
-        const labelList& fm = mpm_.faceMap();
-
         interpolationAddrPtr_ = new labelListList(mesh_.nFaces());
         labelListList& addr = *interpolationAddrPtr_;
 
         weightsPtr_ = new scalarListList(mesh_.nFaces());
         scalarListList& w = *weightsPtr_;
 
-        // Do mapped faces first
-        forAll (fm, faceI)
-        {
-            if (fm[faceI] > -1)
-            {
-                // Mapped from a single face
-                addr[faceI] = labelList(1, fm[faceI]);
-                w[faceI] = scalarList(1, 1.0);
-            }
-        }
-        
         const List<objectMap>& ffp = mpm_.facesFromPointsMap();
 
         forAll (ffp, ffpI)
@@ -107,9 +94,19 @@ void Foam::faceMapper::calcAddressing() const
             // Get addressing
             const labelList& mo = ffp[ffpI].masterObjects();
 
+            label faceI = ffp[ffpI].index();
+
+            if (addr[faceI].size() > 0)
+            {
+                FatalErrorIn("void faceMapper::calcAddressing() const")
+                    << "Master face " << faceI
+                    << " mapped from point faces " << mo
+                    << " already destination of mapping." << abort(FatalError);
+            }
+
             // Map from masters, uniform weights
-            addr[ffp[ffpI].index()] = mo;
-            w[ffp[ffpI].index()] = scalarList(mo.size(), 1.0/mo.size());
+            addr[faceI] = mo;
+            w[faceI] = scalarList(mo.size(), 1.0/mo.size());
         }
 
         const List<objectMap>& ffe = mpm_.facesFromEdgesMap();
@@ -119,12 +116,60 @@ void Foam::faceMapper::calcAddressing() const
             // Get addressing
             const labelList& mo = ffe[ffeI].masterObjects();
 
+            label faceI = ffe[ffeI].index();
+
+            if (addr[faceI].size() > 0)
+            {
+                FatalErrorIn("void faceMapper::calcAddressing() const")
+                    << "Master face " << faceI
+                    << " mapped from edge faces " << mo
+                    << " already destination of mapping." << abort(FatalError);
+            }
+
             // Map from masters, uniform weights
-            addr[ffe[ffeI].index()] = mo;
-            w[ffe[ffeI].index()] = scalarList(mo.size(), 1.0/mo.size());
+            addr[faceI] = mo;
+            w[faceI] = scalarList(mo.size(), 1.0/mo.size());
         }
 
-        // Grab inserted points (for them the size of addressing is still zero
+        const List<objectMap>& fff = mpm_.facesFromFacesMap();
+
+        forAll (fff, fffI)
+        {
+            // Get addressing
+            const labelList& mo = fff[fffI].masterObjects();
+
+            label faceI = fff[fffI].index();
+
+            if (addr[faceI].size() > 0)
+            {
+                FatalErrorIn("void faceMapper::calcAddressing() const")
+                    << "Master face " << faceI
+                    << " mapped from face faces " << mo
+                    << " already destination of mapping." << abort(FatalError);
+            }
+
+            // Map from masters, uniform weights
+            addr[faceI] = mo;
+            w[faceI] = scalarList(mo.size(), 1.0/mo.size());
+        }
+
+
+        // Do mapped faces. Note that can already be set from facesFromFaces
+        // so check if addressing size still zero.
+        const labelList& fm = mpm_.faceMap();
+
+        forAll (fm, faceI)
+        {
+            if (fm[faceI] > -1 && addr[faceI].size() == 0)
+            {
+                // Mapped from a single face
+                addr[faceI] = labelList(1, fm[faceI]);
+                w[faceI] = scalarList(1, 1.0);
+            }
+        }
+
+
+        // Grab inserted points (for them the size of addressing is still zero)
 
         insertedFaceLabelsPtr_ = new labelList(mesh_.nFaces());
         labelList& insertedFaces = *insertedFaceLabelsPtr_;
@@ -177,6 +222,7 @@ Foam::faceMapper::faceMapper(const mapPolyMesh& mpm)
     (
         mpm_.facesFromPointsMap().size() == 0
      && mpm_.facesFromEdgesMap().size() == 0
+     && mpm_.facesFromFacesMap().size() == 0
     )
     {
         direct_ = true;
@@ -196,7 +242,7 @@ Foam::faceMapper::faceMapper(const mapPolyMesh& mpm)
         // Need to check all 3 lists to see if there are inserted faces
         // with no owner
 
-        // Make a copy of the face map, add the entried for faces from points
+        // Make a copy of the face map, add the entries for faces from points
         // and faces from edges and check for left-overs
         labelList fm(mesh_.nFaces(), -1);
 
@@ -212,6 +258,13 @@ Foam::faceMapper::faceMapper(const mapPolyMesh& mpm)
         forAll (ffe, ffeI)
         {
             fm[ffe[ffeI].index()] = 0;
+        }
+
+        const List<objectMap>& fff = mpm_.facesFromFacesMap();
+
+        forAll (fff, fffI)
+        {
+            fm[fff[fffI].index()] = 0;
         }
 
         if (min(fm) < 0)

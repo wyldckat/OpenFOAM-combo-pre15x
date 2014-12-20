@@ -82,9 +82,14 @@ int main(int argc, char *argv[])
             dimensionedVector("wallShearStress", R.dimensions(), vector::zero)
         );
 
-        wallShearStress.boundaryField() =
-            (-mesh.Sf().boundaryField()/mesh.magSf().boundaryField())
-          & R.boundaryField();
+        forAll(wallShearStress.boundaryField(), patchi)
+        {
+            wallShearStress.boundaryField()[patchi] =
+            (
+                -mesh.Sf().boundaryField()[patchi]
+                /mesh.magSf().boundaryField()[patchi]
+            ) & R.boundaryField()[patchi];
+        }
 
         wallShearStress.write();
     }

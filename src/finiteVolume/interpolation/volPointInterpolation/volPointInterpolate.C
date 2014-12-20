@@ -27,11 +27,7 @@ License
 #include "volPointInterpolation.H"
 #include "volFields.H"
 #include "pointFields.H"
-#include "emptyFvPatch.H"
-#include "CoupledPointPatchField.H"
-#include "coupledPointPatch.H"
 #include "globalPointPatch.H"
-#include "transform.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

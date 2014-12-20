@@ -186,6 +186,35 @@ void Foam::pointZone::clearAddressing()
 }
 
 
+bool Foam::pointZone::checkDefinition(const bool report) const
+{
+    const labelList& addr = *this;
+
+    bool boundaryError = false;
+
+    forAll(addr, i)
+    {
+        if (addr[i] < 0 || addr[i] >= zoneMesh_.mesh().allPoints().size())
+        {
+            boundaryError = true;
+
+            if (report)
+            {
+                SeriousErrorIn
+                (
+                    "bool pointZone::checkDefinition("
+                    "const bool report) const"
+                )   << "Zone " << name()
+                    << " contains invalid point label " << addr[i] << nl
+                    << "Valid point labels are 0.."
+                    << zoneMesh_.mesh().allPoints().size()-1 << endl;
+            }
+        }
+    }
+    return boundaryError;
+}
+
+
 void Foam::pointZone::write(Ostream& os) const
 {
     os  << nl << name()

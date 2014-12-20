@@ -39,7 +39,7 @@ HLINE="-----------------------------------------------------------------------"
 FATALERROR=0
 SSHRSHOK=0
 WIDTH=20
-FOAM_VERSION=2.3
+FOAM_VERSION=1.4.1
 OS=`uname -s`
 
 #FUNCTIONS

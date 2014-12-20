@@ -51,7 +51,7 @@ class interpolationCellPointFace
     // Private data
 
         GeometricField<Type, pointPatchField, pointMesh> psip_;
-        GeometricField<Type, fvPatchField, surfaceMesh> psis_;
+        GeometricField<Type, fvsPatchField, surfaceMesh> psis_;
 
         bool findTet
         (

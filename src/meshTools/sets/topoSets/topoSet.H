@@ -270,9 +270,6 @@ public:
         //- Update any stored data for new labels. Not implemented.
         virtual void updateMesh(const mapPolyMesh& morphMap);
 
-        //- Update any stored data for new labels. Not implemented.
-        //virtual void updateMesh(const directPolyTopoChange& meshMod);
-
         //- Return max allowable index (+1). Not implemented.
         virtual label maxSize(const polyMesh& mesh) const;
 

@@ -31,7 +31,11 @@ License
 
 namespace Foam
 {
-    makeLimitedSurfaceInterpolationScheme(filteredLinear, filteredLinearLimiter)
+    makeLimitedSurfaceInterpolationScheme
+    (
+        filteredLinear,
+        filteredLinearLimiter
+    )
 }
 
 // ************************************************************************* //

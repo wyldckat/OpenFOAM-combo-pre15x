@@ -47,8 +47,6 @@ namespace Foam
 
 // Class forward declarations
 class Time;
-//class fvMesh;
-//class fvMeshSubset;
 
 /*---------------------------------------------------------------------------*\
                            Class vtkMesh Declaration
@@ -66,10 +64,6 @@ class vtkMesh
 
         //- Current cellSet (or empty)
         const word setName_;
-
-        //- cellMap, pointMap for if not running subset
-        mutable labelList* cMapPtr_;
-        mutable labelList* pMapPtr_;
 
         //- Current decomposition of topology
         mutable vtkTopo* topoPtr_;
@@ -108,6 +102,11 @@ public:
                 return baseMesh_;
             }
 
+            const fvMeshSubset& subsetter() const
+            {
+                return subsetter_;
+            }
+
             //- Check if running subMesh
             bool useSubMesh() const
             {
@@ -127,50 +126,27 @@ public:
             //- Access either mesh or submesh
             const fvMesh& mesh() const
             {
-                if (setName_.size() == 0)
-                {
-                    return subsetter_.baseMesh();
-                }
-                else
+                if (useSubMesh())
                 {
                     return subsetter_.subMesh();
                 }
-            }
-
-            //- Cell mapping array.
-            const labelList& cMap() const
-            {
-                if (useSubMesh())
-                {
-                    return subsetter_.cellMap();
-                }
                 else
                 {
-                    if (!cMapPtr_)
-                    {
-                        cMapPtr_ = new labelList(identity(baseMesh_.nCells()));
-                    }
-                    return *cMapPtr_;
+                    return baseMesh_;
                 }
             }
 
-            //- Point mapping array.
-            const labelList& pMap() const
+            //- Number of field cells
+            label nFieldCells() const
             {
-                if (useSubMesh())
-                {
-                    return subsetter_.pointMap();
-                }
-                else
-                {
-                    if (!pMapPtr_)
-                    {
-                        pMapPtr_ = new labelList(identity(baseMesh_.nPoints()));
-                    }
-                    return *pMapPtr_;
-                }
+                return topo().cellTypes().size();
             }
 
+            //- Number of field points
+            label nFieldPoints() const
+            {
+                return mesh().nPoints() + topo().addPointCellLabels().size();
+            }
 
 
         // Edit
@@ -181,28 +157,20 @@ public:
 
             //- Map volume field (does in fact do very little interpolation;
             //  just copied from fvMeshSubset)
-            template<class Type>
-            tmp<GeometricField<Type, fvPatchField, volMesh> > interpolate
-            (
-                const GeometricField<Type, fvPatchField, volMesh>& fld
-            ) const
+            template<class GeoField>
+            tmp<GeoField> interpolate(const GeoField& fld) const
             {
-                if (setName_.size() == 0)
+                if (useSubMesh())
                 {
-                    return fld;
+                    tmp<GeoField> subFld = subsetter_.interpolate(fld);
+                    subFld().rename(fld.name());
+                    return subFld;
                 }
                 else
                 {
-                    tmp<GeometricField<Type, fvPatchField, volMesh> > subFld =
-                        subsetter_.interpolate(fld);
-
-                    subFld().rename(fld.name());
-
-                    return subFld;
+                    return fld;
                 }
             }
-
-        // Write
 
 };
 

@@ -326,6 +326,18 @@ public:
 
         // Writing
 
+            //- Write the standard OpenFOAM file/dictionary banner
+            template<class Stream>
+            static inline void writeBanner(Stream& os);
+
+            //- Write the standard OpenFOAM log banner
+            template<class Stream>
+            static inline void writeLogBanner(Stream& os);
+
+            //- Write the standard file section divider
+            template<class Stream>
+            static inline void writeDivider(Stream& os);
+
             //- Write header
             bool writeHeader(Ostream&) const;
 
@@ -362,6 +374,10 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#   include "IOobjectI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

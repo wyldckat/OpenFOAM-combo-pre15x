@@ -22,29 +22,23 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "functionObjectList.H"
 #include "Time.H"
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::functionObjectList::functionObjectList(const Time& t)
+Foam::functionObjectList::functionObjectList
+(
+    const Time& t,
+    const bool execution
+)
 :
     HashPtrTable<functionObject>(),
-    time_(t)
-{
-    if (t.controlDict().found("functions"))
-    {
-        HashPtrTable<functionObject> functions
-        (
-            t.controlDict().lookup("functions"),
-            functionObject::iNew(time_)
-        );
-        
-        transfer(functions);
-    }
-}
+    time_(t),
+    execution_(execution)
+{}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -57,27 +51,64 @@ Foam::functionObjectList::~functionObjectList()
 
 bool Foam::functionObjectList::start()
 {
-    bool ok = false;
-
-    forAllIter(HashPtrTable<functionObject>, *this, iter)
+    if (execution_)
     {
-        ok = iter()->start() && ok;
-    }
+        bool ok = false;
 
-    return ok;
+        if (time_.controlDict().found("functions"))
+        {
+            HashPtrTable<functionObject> functions
+            (
+                time_.controlDict().lookup("functions"),
+                functionObject::iNew(time_)
+            );
+        
+            transfer(functions);
+
+            forAllIter(HashPtrTable<functionObject>, *this, iter)
+            {
+                ok = iter()->start() && ok;
+            }
+        }
+
+        return ok;
+    }
+    else
+    {
+        return true;
+    }
 }
 
 
 bool Foam::functionObjectList::execute()
 {
-    bool ok = false;
-
-    forAllIter(HashPtrTable<functionObject>, *this, iter)
+    if (execution_)
     {
-        ok = iter()->execute() && ok;
-    }
+        bool ok = false;
 
-    return ok;
+        forAllIter(HashPtrTable<functionObject>, *this, iter)
+        {
+            ok = iter()->execute() && ok;
+        }
+
+        return ok;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+void Foam::functionObjectList::on()
+{
+    execution_ = true;
+}
+
+
+void Foam::functionObjectList::off()
+{
+    execution_ = false;
 }
 
 

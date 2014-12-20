@@ -38,9 +38,9 @@ SourceFiles
 #include "GeometricFields.H"
 #include "surfaceMesh.H"
 #include "fvMesh.H"
-#include "fvPatchField.H"
+#include "fvsPatchFields.H"
 #include "surfaceFieldsFwd.H"
-#include "calculatedFvPatchFields.H"
+#include "calculatedFvsPatchFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

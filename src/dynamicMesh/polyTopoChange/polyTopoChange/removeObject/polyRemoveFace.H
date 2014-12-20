@@ -54,6 +54,8 @@ class polyRemoveFace
         //- Face ID
         label faceID_;
 
+        //- Merge faceID or -1
+        label mergeFaceID_;
 
 public:
 
@@ -68,13 +70,15 @@ public:
         //- Construct null.  Used for constructing lists
         polyRemoveFace()
         :
-            faceID_(-1)
+            faceID_(-1),
+            mergeFaceID_(-1)
         {}
 
         //- Construct from components
-        polyRemoveFace(const label faceID)
+        polyRemoveFace(const label faceID, const label mergeFaceID = -1)
         :
-            faceID_(faceID)
+            faceID_(faceID),
+            mergeFaceID_(mergeFaceID)
         {}
 
         //- Construct and return a clone
@@ -93,6 +97,12 @@ public:
         label faceID() const
         {
             return faceID_;
+        }
+
+        //- Return merge face ID
+        label mergeFaceID() const
+        {
+            return mergeFaceID_;
         }
 };
 

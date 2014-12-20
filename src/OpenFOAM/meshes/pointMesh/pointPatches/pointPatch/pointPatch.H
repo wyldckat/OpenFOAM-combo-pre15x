@@ -130,7 +130,11 @@ public:
         virtual const vectorField& pointNormals() const = 0;
 
         //- Accumulate the effect of constraint direction of this patch
-        virtual void applyConstraint(const label pointi, pointConstraint&) const
+        virtual void applyConstraint
+        (
+            const label pointi,
+            pointConstraint&
+        ) const
         {}
 };
 

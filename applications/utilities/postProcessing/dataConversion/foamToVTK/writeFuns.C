@@ -28,7 +28,6 @@ Description
 
 #include "writeFuns.H"
 #include "vtkTopo.H"
-#include "interpolateToCell.H"
 
 #ifdef __mips
 #include <standards.h>
@@ -178,15 +177,69 @@ void Foam::writeFuns::write
 }
 
 
-// Store vector in dest.
-void Foam::writeFuns::insert(const point& pt, DynamicList<floatScalar>& dest)
+void Foam::writeFuns::writeHeader
+(
+    std::ostream& os,
+    const bool binary,
+    const string& name
+)
 {
-    dest.append(float(pt.x()));
-    dest.append(float(pt.y()));
-    dest.append(float(pt.z()));
+    os  << "# vtk DataFile Version 2.0" << std::endl
+        << name << std::endl;
+
+    if (binary)
+    {
+        os << "BINARY" << std::endl;
+    }
+    else
+    {
+        os << "ASCII" << std::endl;
+    }
 }
 
 
+void Foam::writeFuns::writeCellDataHeader
+(
+    std::ostream& os,
+    const label nCells,
+    const label nFields
+)
+{
+    os  << "CELL_DATA " << nCells << std::endl
+        << "FIELD attributes " << nFields << std::endl;
+}
+
+
+void Foam::writeFuns::writePointDataHeader
+(
+    std::ostream& os,
+    const label nPoints,
+    const label nFields
+)
+{
+    os  << "POINT_DATA  " << nPoints << std::endl
+        << "FIELD attributes " << nFields << std::endl;
+}
+
+
+void Foam::writeFuns::insert(const scalar& pt, DynamicList<floatScalar>& dest)
+{
+    dest.append(float(pt));
+}
+void Foam::writeFuns::insert(const vector& pt, DynamicList<floatScalar>& dest)
+{
+    for (direction cmpt = 0; cmpt < vector::nComponents; cmpt++)
+    {
+        dest.append(float(pt[cmpt]));
+    }
+}
+void Foam::writeFuns::insert(const tensor& pt, DynamicList<floatScalar>& dest)
+{
+    for (direction cmpt = 0; cmpt < tensor::nComponents; cmpt++)
+    {
+        dest.append(float(pt[cmpt]));
+    }
+}
 // Store labelList in dest.
 void Foam::writeFuns::insert(const labelList& source, DynamicList<label>& dest)
 {
@@ -195,274 +248,6 @@ void Foam::writeFuns::insert(const labelList& source, DynamicList<label>& dest)
         dest.append(source[i]);
     }
 }
-
-
-// Store scalarField in dest
-void Foam::writeFuns::insert
-(
-    const List<scalar>& source,
-    DynamicList<floatScalar>& dest
-)
-{
-    forAll(source, i)
-    {
-        dest.append(float(source[i]));
-    }
-}
-
-
-// Store scalarField (indexed through map) in dest
-void Foam::writeFuns::insert
-(
-    const labelList& map,
-    const List<scalar>& source,
-    DynamicList<floatScalar>& dest
-)
-{
-    forAll(map, i)
-    {
-        dest.append(float(source[map[i]]));
-    }
-}
-
-
-void Foam::writeFuns::insert
-(
-    const List<point>& source,
-    DynamicList<floatScalar>& dest
-)
-{
-    forAll(source, i)
-    {
-       insert(source[i], dest);
-    }
-}
-
-void Foam::writeFuns::insert
-(
-    const labelList& map,
-    const List<point>& source,
-    DynamicList<floatScalar>& dest
-)
-{
-    forAll(map, i)
-    {
-       insert(source[map[i]], dest);
-    }
-}
-
-
-void Foam::writeFuns::writeVSF
-(
-    std::ostream& os,
-    const bool binary,
-    const volScalarField& vsf,
-    const vtkMesh& vMesh
-)
-{
-    const labelList& vtkCellTypes = vMesh.topo().cellTypes();
-    const labelList& superCells = vMesh.topo().superCells();
-    const labelList& cMap = vMesh.cMap();
-
-    os  << vsf.name() << " 1 " << vtkCellTypes.size()
-        << " float" << std::endl;
-
-    DynamicList<floatScalar> fField(vtkCellTypes.size());
-
-    insert(cMap, vsf, fField);
-
-    forAll(superCells, superCellI)
-    {
-        label origCellI = cMap[superCells[superCellI]];
-
-        fField.append(vsf[origCellI]);
-    }
-    write(os, binary, fField);
-}
-
-
-void Foam::writeFuns::writeVVF
-(
-    std::ostream& os,
-    const bool binary,
-    const volVectorField& vvf,
-    const vtkMesh& vMesh
-)
-{
-    const labelList& vtkCellTypes = vMesh.topo().cellTypes();
-    const labelList& superCells = vMesh.topo().superCells();
-    const labelList& cMap = vMesh.cMap();
-
-    os  << vvf.name() << " 3 " << vtkCellTypes.size()
-        << " float" << std::endl;
-
-    DynamicList<floatScalar> fField(3*vtkCellTypes.size());
-
-    insert(cMap, vvf, fField);
-
-    forAll(superCells, superCellI)
-    {
-        label origCellI = cMap[superCells[superCellI]];
-
-        insert(vvf[origCellI], fField);
-    }
-    write(os, binary, fField);
-}
-
-
-void Foam::writeFuns::writePSF
-(
-    std::ostream& os,
-    const bool binary,
-    const pointScalarField& psf,
-    const vtkMesh& vMesh
-)
-{
-    const fvMesh& mesh = vMesh.mesh();
-    const vtkTopo& topo = vMesh.topo();
-
-    const labelList& addPointCellLabels = topo.addPointCellLabels();
-    const label nTotPoints = mesh.nPoints() + addPointCellLabels.size();
-
-    const labelList& cMap = vMesh.cMap();
-    const labelList& pMap = vMesh.pMap();
-
-    os  << psf.name() << " 1 " << nTotPoints << " float" << std::endl;
-
-    DynamicList<floatScalar> fField(nTotPoints);
-
-    insert(pMap, psf, fField);
-
-    forAll(addPointCellLabels, api)
-    {
-        label origCellI = cMap[addPointCellLabels[api]];
-
-        scalar val =
-            interpolateToCell<pointScalarField, scalar>
-            (
-                mesh,
-                psf,
-                origCellI
-            );
-
-        fField.append(float(val));
-    }
-    write(os, binary, fField);
-}
-
-
-void Foam::writeFuns::writePVF
-(
-    std::ostream& os,
-    const bool binary,
-    const pointVectorField& pvf,
-    const vtkMesh& vMesh
-)
-{
-    const fvMesh& mesh = vMesh.mesh();
-    const vtkTopo& topo = vMesh.topo();
-
-    const labelList& addPointCellLabels = topo.addPointCellLabels();
-    const label nTotPoints = mesh.nPoints() + addPointCellLabels.size();
-
-    const labelList& cMap = vMesh.cMap();
-    const labelList& pMap = vMesh.pMap();
-
-    os  << pvf.name() << " 3 " << nTotPoints << " float" << std::endl;
-
-    DynamicList<floatScalar> fField(3*nTotPoints);
-
-    insert(pMap, pvf, fField);
-
-    forAll(addPointCellLabels, api)
-    {
-        label origCellI = cMap[addPointCellLabels[api]];
-
-        insert
-        (
-            interpolateToCell<pointVectorField, vector>
-            (
-                mesh,
-                pvf,
-                origCellI
-            ),
-            fField
-        );
-    }
-    write(os, binary, fField);
-}
-
-
-void Foam::writeFuns::writeIntVSF
-(
-    std::ostream& os,
-    const bool binary,
-    const volScalarField& vsf,
-    const pointScalarField& psf,
-    const vtkMesh& vMesh
-)
-{
-    const fvMesh& mesh = vMesh.mesh();
-    const vtkTopo& topo = vMesh.topo();
-
-    const labelList& addPointCellLabels = topo.addPointCellLabels();
-    const label nTotPoints = mesh.nPoints() + addPointCellLabels.size();
-
-    const labelList& cMap = vMesh.cMap();
-    const labelList& pMap = vMesh.pMap();
-
-
-    os  << vsf.name() << " 1 " << nTotPoints << " float" << std::endl;
-
-    DynamicList<floatScalar> fField(nTotPoints);
-
-    insert(pMap, psf, fField);
-
-    forAll(addPointCellLabels, api)
-    {
-        label origCellI = cMap[addPointCellLabels[api]];
-
-        fField.append(float(vsf[origCellI]));
-    }
-    write(os, binary, fField);
-}
-
-
-void Foam::writeFuns::writeIntVVF
-(
-    std::ostream& os,
-    const bool binary,
-    const volVectorField& vvf,
-    const pointVectorField& pvf,
-    const vtkMesh& vMesh
-)
-{
-    const fvMesh& mesh = vMesh.mesh();
-    const vtkTopo& topo = vMesh.topo();
-
-    const labelList& addPointCellLabels = topo.addPointCellLabels();
-    const label nTotPoints = mesh.nPoints() + addPointCellLabels.size();
-
-    const labelList& cMap = vMesh.cMap();
-    const labelList& pMap = vMesh.pMap();
-
-
-    os  << vvf.name() << " 3 " << nTotPoints << " float" << std::endl;
-
-    DynamicList<floatScalar> fField(3*nTotPoints);
-
-    insert(pMap, pvf, fField);
-
-    forAll(addPointCellLabels, api)
-    {
-        label origCellI = cMap[addPointCellLabels[api]];
-
-        insert(vvf[origCellI], fField);
-    }
-    write(os, binary, fField);
-}
-
-
 
 
 // ************************************************************************* //

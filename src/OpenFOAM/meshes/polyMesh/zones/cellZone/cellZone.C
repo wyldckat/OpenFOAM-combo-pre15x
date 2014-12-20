@@ -188,6 +188,35 @@ void Foam::cellZone::clearAddressing()
 }
 
 
+bool Foam::cellZone::checkDefinition(const bool report) const
+{
+    const labelList& addr = *this;
+
+    bool boundaryError = false;
+
+    forAll(addr, i)
+    {
+        if (addr[i] < 0 || addr[i] >= zoneMesh_.mesh().nCells())
+        {
+            boundaryError = true;
+
+            if (report)
+            {
+                SeriousErrorIn
+                (
+                    "bool cellZone::checkDefinition("
+                    "const bool report) const"
+                )   << "Zone " << name()
+                    << " contains invalid cell label " << addr[i] << nl
+                    << "Valid cell labels are 0.."
+                    << zoneMesh_.mesh().nCells()-1 << endl;
+            }
+        }
+    }
+    return boundaryError;
+}
+
+
 void Foam::cellZone::write(Ostream& os) const
 {
     os  << nl << name()

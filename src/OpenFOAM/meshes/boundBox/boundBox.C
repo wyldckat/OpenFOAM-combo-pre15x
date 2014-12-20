@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    A bounding box defined in terms of the points at it's extremities.
-
 \*---------------------------------------------------------------------------*/
 
 #include "boundBox.H"
@@ -37,7 +34,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct as the bounding box of the given pointField
 boundBox::boundBox(const pointField& points, const bool doReduce)
 :
     min_(vector::zero),
@@ -81,7 +77,6 @@ boundBox::boundBox(const pointField& points, const bool doReduce)
 }
 
 
-// Construct from Istream
 boundBox::boundBox(Istream& is)
 :
     min_(is),

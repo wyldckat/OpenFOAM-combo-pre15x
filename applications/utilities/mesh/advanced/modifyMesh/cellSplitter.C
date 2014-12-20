@@ -481,7 +481,7 @@ void Foam::cellSplitter::updateMesh(const mapPolyMesh& morphMap)
 
         label newPointI = morphMap.reversePointMap()[oldPointI];
 
-        if (newCellI != -1 && newPointI != -1)
+        if (newCellI >= 0 && newPointI >= 0)
         {
             newAddedPoints.insert(newCellI, newPointI);
         }

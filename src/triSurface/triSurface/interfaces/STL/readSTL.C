@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "triSurface.H"
@@ -38,11 +36,33 @@ namespace Foam
 
 bool triSurface::readSTL(const fileName& STLfileName)
 {
-    if (!readSTLBINARY(STLfileName))
+    token firstToken;
     {
-        return readSTLASCII(STLfileName);
+        IFstream str(STLfileName);
+
+        if (!str.good())
+        {
+            return false;
+        }
+        firstToken = token(str);
     }
-    return true;
+
+    if (firstToken.isWord())
+    {
+        word firstWord(firstToken.wordToken());
+
+        for (size_t i = 0; i < firstWord.size(); i++)
+        {
+            firstWord[i] = std::toupper(firstWord[i]);
+        }
+
+        if (firstWord == "SOLID")
+        {
+            return readSTLASCII(STLfileName);
+        }
+    }
+
+    return readSTLBINARY(STLfileName);
 }
 
 

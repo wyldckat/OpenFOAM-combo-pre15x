@@ -66,9 +66,21 @@ inline objectMap::objectMap(Istream& is)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+label& objectMap::index()
+{
+    return index_;
+}
+
+
 inline label objectMap::index() const
 {
     return index_;
+}
+
+
+inline labelList& objectMap::masterObjects()
+{
+    return masterObjects_;
 }
 
 

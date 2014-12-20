@@ -979,6 +979,18 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::replace
 
 
 template<class Type, template<class> class PatchField, class GeoMesh>
+void Foam::GeometricField<Type, PatchField, GeoMesh>::replace
+(
+    const direction d,
+    const dimensioned<cmptType>& ds
+)
+{
+    internalField().replace(d, ds.value());
+    boundaryField().replace(d, ds.value());
+}
+
+
+template<class Type, template<class> class PatchField, class GeoMesh>
 void Foam::GeometricField<Type, PatchField, GeoMesh>::max
 (
     const dimensioned<Type>& dt

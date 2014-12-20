@@ -119,7 +119,12 @@ inline bool notEqual(const Scalar s1, const Scalar s2)
 
 inline Scalar limit(const Scalar s1, const Scalar s2)
 {
-    return (mag(s1) < mag(s2))? s1: 0.0;
+    return (mag(s1) < mag(s2)) ? s1: 0.0;
+}
+
+inline Scalar minMod(const Scalar s1, const Scalar s2)
+{
+    return (mag(s1) < mag(s2)) ? s1: s2;
 }
 
 inline Scalar magSqr(const Scalar s)

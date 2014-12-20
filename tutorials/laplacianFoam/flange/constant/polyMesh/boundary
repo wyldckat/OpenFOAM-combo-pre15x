@@ -1,7 +1,7 @@
-/*---------------------------------------------------------------------------*\
+/*--------------------------------*- C++ -*----------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.4                                   |
+|  \\    /   O peration     | Version:  1.4.1                                 |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,10 +11,10 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "";
-    case "";
-    instance ""constant"";
-    local "";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.4.1/tutorials/laplacianFoam";
+    case "flange";
+    instance "constant";
+    local "polyMesh";
 
     class polyBoundaryMesh;
     object boundary;
@@ -22,39 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-4
-(
-patch1
-{
-    type patch;
-    physicalType adiabatic;
-    nFaces 2440;
-    startFace 15316;
-}
-
-patch2
-{
-    type patch;
-    physicalType fixedTemp;
-    nFaces 348;
-    startFace 17756;
-}
-
-patch3
-{
-    type patch;
-    physicalType adiabatic;
-    nFaces 96;
-    startFace 18104;
-}
-
-patch4
-{
-    type patch;
-    physicalType fixedTemp;
-    nFaces 384;
-    startFace 18200;
-}
-)
+0
+()
 
 // ************************************************************************* //

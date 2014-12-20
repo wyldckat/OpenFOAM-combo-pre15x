@@ -98,7 +98,7 @@ Foam::pointFieldReconstructor::reconstructField(const IOobject& fieldIoObject)
                         (
                             procField.boundaryField()[patchi],
                             mesh_.boundary()[curBPatch],
-                            internalField,
+                            DimensionedField<Type, pointMesh>::null(),
                             pointPatchFieldReconstructor
                             (
                                 mesh_.boundary()[curBPatch].size()

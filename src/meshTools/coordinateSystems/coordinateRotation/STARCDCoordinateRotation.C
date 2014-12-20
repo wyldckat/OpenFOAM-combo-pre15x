@@ -25,8 +25,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "STARCDCoordinateRotation.H"
-#include "addToRunTimeSelectionTable.H"
 #include "dictionary.H"
+#include "addToRunTimeSelectionTable.H"
 #include "Switch.H"
 #include "mathematicalConstants.H"
 
@@ -35,11 +35,10 @@ License
 namespace Foam
 {
     defineTypeNameAndDebug(STARCDCoordinateRotation, 0);
-
     addToRunTimeSelectionTable
     (
-        coordinateRotation, 
-        STARCDCoordinateRotation, 
+        coordinateRotation,
+        STARCDCoordinateRotation,
         dictionary
     );
 }
@@ -47,7 +46,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void Foam::STARCDCoordinateRotation::calcTransformations
+void Foam::STARCDCoordinateRotation::calcTransform
 (
     const scalar rotZ,
     const scalar rotX,
@@ -66,36 +65,47 @@ void Foam::STARCDCoordinateRotation::calcTransformations
         z *= mathematicalConstant::pi/180.0;
     }
 
-    R_ = tensor
+    tensor::operator=
     (
-        cos(y)*cos(z) - sin(x)*sin(y)*sin(z),
-        -cos(x)*sin(z),
-        sin(x)*cos(y)*sin(z) + sin(y)*cos(z),
+        tensor
+        (
+            cos(y)*cos(z) - sin(x)*sin(y)*sin(z),
+            -cos(x)*sin(z),
+            sin(x)*cos(y)*sin(z) + sin(y)*cos(z),
 
-        cos(y)*sin(z) + sin(x)*sin(y)*cos(z),
-        cos(x)*cos(z),
-        sin(y)*sin(z) - sin(x)*cos(y)*cos(z),
+            cos(y)*sin(z) + sin(x)*sin(y)*cos(z),
+            cos(x)*cos(z),
+            sin(y)*sin(z) - sin(x)*cos(y)*cos(z),
 
-        -cos(x)*sin(y),
-        sin(x),
-        cos(x)*cos(y)
+            -cos(x)*sin(y),
+            sin(x),
+            cos(x)*cos(y)
+        )
     );
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+Foam::STARCDCoordinateRotation::STARCDCoordinateRotation()
+:
+    coordinateRotation()
+{}
+
+
 Foam::STARCDCoordinateRotation::STARCDCoordinateRotation
 (
     const vector& rotZrotXrotY,
     const bool inDegrees
 )
+:
+    coordinateRotation()
 {
-    calcTransformations
+    calcTransform
     (
-        rotZrotXrotY.component(0),
-        rotZrotXrotY.component(1),
-        rotZrotXrotY.component(2),
+        rotZrotXrotY.component(vector::X),
+        rotZrotXrotY.component(vector::Y),
+        rotZrotXrotY.component(vector::Z),
         inDegrees
     );
 }
@@ -108,8 +118,10 @@ Foam::STARCDCoordinateRotation::STARCDCoordinateRotation
     const scalar rotY,
     const bool inDegrees
 )
+:
+    coordinateRotation()
 {
-    calcTransformations( rotZ, rotX, rotY, inDegrees );
+    calcTransform( rotZ, rotX, rotY, inDegrees );
 }
 
 
@@ -117,6 +129,8 @@ Foam::STARCDCoordinateRotation::STARCDCoordinateRotation
 (
     const dictionary& dict
 )
+:
+    coordinateRotation()
 {
     vector rotation(dict.lookup("rotation"));
 
@@ -126,14 +140,13 @@ Foam::STARCDCoordinateRotation::STARCDCoordinateRotation
         inDegrees = Switch(dict.lookup("degrees"));
     }
 
-    calcTransformations
+    calcTransform
     (
-        rotation.component(0),
-        rotation.component(1),
-        rotation.component(2),
+        rotation.component(vector::X),
+        rotation.component(vector::Y),
+        rotation.component(vector::Z),
         inDegrees
     );
 }
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

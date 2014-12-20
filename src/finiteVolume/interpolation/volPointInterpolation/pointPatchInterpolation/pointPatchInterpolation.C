@@ -63,7 +63,7 @@ void pointPatchInterpolation::makePatchPatchAddressing()
 
     forAll(bm, patchi)
     {
-        if(!isA<emptyFvPatch>(bm[patchi]))
+        if(!isA<emptyFvPatch>(bm[patchi]) && !bm[patchi].coupled())
         {
             nPatchPatchPoints += bm[patchi].patch().boundaryPoints().size();
         }
@@ -81,7 +81,7 @@ void pointPatchInterpolation::makePatchPatchAddressing()
 
     forAll(bm, patchi)
     {
-        if(!isA<emptyFvPatch>(bm[patchi]))
+        if(!isA<emptyFvPatch>(bm[patchi]) && !bm[patchi].coupled())
         {
             const labelList& bp = bm[patchi].patch().boundaryPoints();
             const labelList& meshPoints = bm[patchi].patch().meshPoints();
@@ -211,7 +211,7 @@ void pointPatchInterpolation::makePatchPatchWeights()
                 label patchi =
                     fvMesh_.boundaryMesh().whichPatch(curFaces[facei]);
 
-                if (!isA<emptyFvPatch>(bm[patchi]))
+                if (!isA<emptyFvPatch>(bm[patchi]) && !bm[patchi].coupled())
                 {
                     pw[nFacesAroundPoint] =
                         1.0/mag

@@ -397,6 +397,7 @@ Foam::vtkFoam::vtkFoam(const char* const FileName, vtkFoamReader* reader)
     }
 
     dbPtr_ = new Time(Time::controlDictName, rootPath_, casePath_);
+    dbPtr_->functionObjects().off();
     setSelectedTime(*dbPtr_, reader_);
 
     if (debug)

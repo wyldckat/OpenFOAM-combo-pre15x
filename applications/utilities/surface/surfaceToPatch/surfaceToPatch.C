@@ -33,7 +33,7 @@ Description
 #include "boundaryMesh.H"
 #include "polyMesh.H"
 #include "faceSet.H"
-#include "directPolyTopoChange.H"
+#include "polyTopoChange.H"
 #include "polyModifyFace.H"
 #include "globalMeshData.H"
 
@@ -104,7 +104,7 @@ bool repatchFace
     const labelList& nearest,
     const labelList& surfToMeshPatch,
     const label faceI,
-    directPolyTopoChange& meshMod
+    polyTopoChange& meshMod
 )
 {
     bool changed = false;
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
     }
 
 
-    directPolyTopoChange meshMod(mesh);
+    polyTopoChange meshMod(mesh);
 
     label nChanged = 0;
 

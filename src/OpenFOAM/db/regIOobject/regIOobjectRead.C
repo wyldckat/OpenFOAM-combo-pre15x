@@ -36,7 +36,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Read header and return stream
 Istream& regIOobject::readStream()
 {
     if (IFstream::debug)
@@ -87,7 +86,6 @@ Istream& regIOobject::readStream()
 }
 
 
-// Read header for given object type
 Istream& regIOobject::readStream(const word& aType)
 {
     if (IFstream::debug)
@@ -124,7 +122,6 @@ Istream& regIOobject::readStream(const word& aType)
 }
 
 
-// Close Istream
 void regIOobject::close()
 {
     if (IFstream::debug)

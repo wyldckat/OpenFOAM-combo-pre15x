@@ -33,41 +33,30 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-typedef PointPatchField<pointPatchField, pointPatch, scalar>
-    basePointPatchScalarField;
-typedef PointPatchField<pointPatchField, pointPatch, vector>
-    basePointPatchVectorField;
-typedef PointPatchField<pointPatchField, pointPatch, sphericalTensor>
-    basePointPatchSphericalTensorField;
-typedef PointPatchField<pointPatchField, pointPatch, symmTensor>
-    basePointPatchSymmTensorField;
-typedef PointPatchField<pointPatchField, pointPatch, tensor>
-    basePointPatchTensorField;
+defineNamedTemplateTypeNameAndDebug(pointPatchScalarField, 0);
+defineTemplateRunTimeSelectionTable(pointPatchScalarField, pointPatch);
+defineTemplateRunTimeSelectionTable(pointPatchScalarField, patchMapper);
+defineTemplateRunTimeSelectionTable(pointPatchScalarField, dictionary);
 
-defineNamedTemplateTypeNameAndDebug(basePointPatchScalarField, 0);
-defineTemplateRunTimeSelectionTable(basePointPatchScalarField, PointPatch);
-defineTemplateRunTimeSelectionTable(basePointPatchScalarField, patchMapper);
-defineTemplateRunTimeSelectionTable(basePointPatchScalarField, dictionary);
+defineNamedTemplateTypeNameAndDebug(pointPatchVectorField, 0);
+defineTemplateRunTimeSelectionTable(pointPatchVectorField, pointPatch);
+defineTemplateRunTimeSelectionTable(pointPatchVectorField, patchMapper);
+defineTemplateRunTimeSelectionTable(pointPatchVectorField, dictionary);
 
-defineNamedTemplateTypeNameAndDebug(basePointPatchVectorField, 0);
-defineTemplateRunTimeSelectionTable(basePointPatchVectorField, PointPatch);
-defineTemplateRunTimeSelectionTable(basePointPatchVectorField, patchMapper);
-defineTemplateRunTimeSelectionTable(basePointPatchVectorField, dictionary);
+defineNamedTemplateTypeNameAndDebug(pointPatchSphericalTensorField, 0);
+defineTemplateRunTimeSelectionTable(pointPatchSphericalTensorField, pointPatch);
+defineTemplateRunTimeSelectionTable(pointPatchSphericalTensorField, patchMapper);
+defineTemplateRunTimeSelectionTable(pointPatchSphericalTensorField, dictionary);
 
-defineNamedTemplateTypeNameAndDebug(basePointPatchSphericalTensorField, 0);
-defineTemplateRunTimeSelectionTable(basePointPatchSphericalTensorField, PointPatch);
-defineTemplateRunTimeSelectionTable(basePointPatchSphericalTensorField, patchMapper);
-defineTemplateRunTimeSelectionTable(basePointPatchSphericalTensorField, dictionary);
+defineNamedTemplateTypeNameAndDebug(pointPatchSymmTensorField, 0);
+defineTemplateRunTimeSelectionTable(pointPatchSymmTensorField, pointPatch);
+defineTemplateRunTimeSelectionTable(pointPatchSymmTensorField, patchMapper);
+defineTemplateRunTimeSelectionTable(pointPatchSymmTensorField, dictionary);
 
-defineNamedTemplateTypeNameAndDebug(basePointPatchSymmTensorField, 0);
-defineTemplateRunTimeSelectionTable(basePointPatchSymmTensorField, PointPatch);
-defineTemplateRunTimeSelectionTable(basePointPatchSymmTensorField, patchMapper);
-defineTemplateRunTimeSelectionTable(basePointPatchSymmTensorField, dictionary);
-
-defineNamedTemplateTypeNameAndDebug(basePointPatchTensorField, 0);
-defineTemplateRunTimeSelectionTable(basePointPatchTensorField, PointPatch);
-defineTemplateRunTimeSelectionTable(basePointPatchTensorField, patchMapper);
-defineTemplateRunTimeSelectionTable(basePointPatchTensorField, dictionary);
+defineNamedTemplateTypeNameAndDebug(pointPatchTensorField, 0);
+defineTemplateRunTimeSelectionTable(pointPatchTensorField, pointPatch);
+defineTemplateRunTimeSelectionTable(pointPatchTensorField, patchMapper);
+defineTemplateRunTimeSelectionTable(pointPatchTensorField, dictionary);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

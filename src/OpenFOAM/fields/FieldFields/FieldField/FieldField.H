@@ -155,6 +155,9 @@ public:
         //- Replace a component field of the field
         void replace(const direction, const FieldField<Field, cmptType>&);
 
+        //- Replace a component field of the field
+        void replace(const direction, const cmptType&);
+
         //- Return the field transpose (only defined for second rank tensors)
         tmp<FieldField<Field, Type> > T() const;
 

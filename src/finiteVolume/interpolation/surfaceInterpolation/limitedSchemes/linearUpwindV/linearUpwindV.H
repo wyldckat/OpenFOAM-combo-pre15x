@@ -139,7 +139,7 @@ public:
         }
 
         //- Return the explicit correction to the face-interpolate
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         correction
         (
             const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -147,9 +147,9 @@ public:
         {
             const fvMesh& mesh = this->mesh();
 
-            tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tsfCorr
+            tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > tsfCorr
             (
-                new GeometricField<Type, fvPatchField, surfaceMesh>
+                new GeometricField<Type, fvsPatchField, surfaceMesh>
                 (
                     IOobject
                     (
@@ -167,7 +167,7 @@ public:
                 )
             );
 
-            GeometricField<Type, fvPatchField, surfaceMesh>& sfCorr = tsfCorr();
+            GeometricField<Type, fvsPatchField, surfaceMesh>& sfCorr = tsfCorr();
 
             const surfaceScalarField& faceFlux = this->faceFlux_;
             const surfaceScalarField& w = mesh.weights();

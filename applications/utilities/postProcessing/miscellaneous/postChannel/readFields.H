@@ -28,10 +28,10 @@
         ),
         mesh
     );
-    volScalarField Rxx(R.component(tensor::XX));
-    volScalarField Ryy(R.component(tensor::YY));
-    volScalarField Rzz(R.component(tensor::ZZ));
-    volScalarField Rxy(R.component(tensor::XY));
+    volScalarField Rxx(R.component(symmTensor::XX));
+    volScalarField Ryy(R.component(symmTensor::YY));
+    volScalarField Rzz(R.component(symmTensor::ZZ));
+    volScalarField Rxy(R.component(symmTensor::XY));
 
     volScalarField pPrime2Mean
     (

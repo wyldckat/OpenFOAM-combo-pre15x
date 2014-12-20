@@ -112,8 +112,8 @@ word Time::findInstance
 
     if 
     (
-        file(path()/"constant"/dir/name)
-     && IOobject(name, "constant", dir, *this).headerOk()
+        file(path()/constant()/dir/name)
+     && IOobject(name, constant(), dir, *this).headerOk()
     )
     {
         if (debug)
@@ -121,22 +121,22 @@ word Time::findInstance
             Info<< "Time::findInstance(const word& dir, "
                 << "const word& name) : "
                 << "reading " << name
-                << " from " << "constant"/dir
+                << " from " << constant()/dir
                 << endl;
         }
 
-        return "constant";
+        return constant();
     }
 
     if (rOpt == IOobject::MUST_READ)
     {
         FatalErrorIn("Time::findInstance(const word& dir, const word& name)")
             << "Cannot find file \"" << name << "\" in directory "
-            << "constant"/dir
+            << constant()/dir
             << exit(FatalError);
     }
 
-    return "constant";
+    return constant();
 }
 
 

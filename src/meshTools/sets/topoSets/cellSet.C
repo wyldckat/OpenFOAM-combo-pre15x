@@ -27,7 +27,6 @@ License
 #include "cellSet.H"
 #include "mapPolyMesh.H"
 #include "polyMesh.H"
-//#include "directPolyTopoChange.H"
 #include "Time.H"
 #include "addToRunTimeSelectionTable.H"
 
@@ -184,12 +183,6 @@ void cellSet::updateMesh(const mapPolyMesh& morphMap)
 }
 
 
-//void cellSet::updateMesh(const directPolyTopoChange& meshMod)
-//{
-//    updateLabels(meshMod.cellMap());
-//}
-
-
 void Foam::cellSet::writeDebug
 (
     Ostream& os,
@@ -199,6 +192,7 @@ void Foam::cellSet::writeDebug
 {
     topoSet::writeDebug(os, mesh.cellCentres(), maxLen);
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

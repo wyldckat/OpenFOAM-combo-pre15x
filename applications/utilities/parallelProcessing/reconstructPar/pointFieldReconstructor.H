@@ -38,7 +38,7 @@ SourceFiles
 
 #include "pointMesh.H"
 #include "pointFields.H"
-#include "PointPatchFieldMapperPatchRef.H"
+#include "pointPatchFieldMapperPatchRef.H"
 #include "IOobjectList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -66,7 +66,7 @@ class pointFieldReconstructor
         //- List of processor boundary addressing lists
         const PtrList<labelIOList>& boundaryProcAddressing_;
 
-        //- Point patcg addressing
+        //- Point patch addressing
         labelListListList patchPointAddressing_;
 
 
@@ -86,7 +86,7 @@ public:
 
         class pointPatchFieldReconstructor
         :
-            public PointPatchFieldMapper
+            public pointPatchFieldMapper
         {
             label size_;
 
@@ -142,7 +142,6 @@ public:
         //- Reconstruct and write all fields
         template<class Type>
         void reconstructFields(const IOobjectList& objects);
-
 };
 
 

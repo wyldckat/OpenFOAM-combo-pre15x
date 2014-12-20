@@ -57,6 +57,9 @@ class functionObjectList
 
         const Time& time_;
 
+        //- Switch for the execultion of the functionObjects
+        bool execution_;
+
 
     // Private Member Functions
 
@@ -71,8 +74,12 @@ public:
 
     // Constructors
 
-        //- Construct from Time
-        functionObjectList(const Time& t);
+        //- Construct from Time and the execution setting
+        functionObjectList
+        (
+            const Time& t,
+            const bool execution=true
+        );
 
 
     // Destructor
@@ -82,11 +89,17 @@ public:
 
     // Member Functions
 
-        //- start is called at the start of the time-loop
+        //- Start is called at the start of the time-loop
         virtual bool start();
 
-        //- execute is called at each ++ or += of the time-loop
+        //- Execute is called at each ++ or += of the time-loop
         virtual bool execute();
+
+        //- Switch the function objects on
+        virtual void on();
+
+        //- Switch the function objects off
+        virtual void off();
 
         //- Read and set the function objects if their data has changed
         virtual bool read();

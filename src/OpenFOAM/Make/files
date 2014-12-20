@@ -7,6 +7,9 @@ $(OSspecific)/timer.C
 $(OSspecific)/fileStat.C
 $(OSspecific)/Unix.C
 $(OSspecific)/cpuTime/cpuTime.C
+$(OSspecific)/clockTime/clockTime.C
+$(OSspecific)/printStack.C
+/*$(OSspecific)/dummyPrintStack.C*/
 
 global/global.C
 global/dimensionedConstants/dimensionedConstants.C
@@ -202,13 +205,15 @@ $(lduMatrix)/solvers/BICCG/BICCG.C
 $(lduMatrix)/smoothers/GaussSeidel/GaussSeidelSmoother.C
 $(lduMatrix)/smoothers/DIC/DICSmoother.C
 $(lduMatrix)/smoothers/DICGaussSeidel/DICGaussSeidelSmoother.C
+$(lduMatrix)/smoothers/DILU/DILUSmoother.C
+$(lduMatrix)/smoothers/DILUGaussSeidel/DILUGaussSeidelSmoother.C
 
 $(lduMatrix)/preconditioners/noPreconditioner/noPreconditioner.C
 $(lduMatrix)/preconditioners/diagonalPreconditioner/diagonalPreconditioner.C
 $(lduMatrix)/preconditioners/DICPreconditioner/DICPreconditioner.C
 $(lduMatrix)/preconditioners/FDICPreconditioner/FDICPreconditioner.C
 $(lduMatrix)/preconditioners/DILUPreconditioner/DILUPreconditioner.C
-$(lduMatrix)/preconditioners/gamgPreconditioner/gamgPreconditioner.C
+$(lduMatrix)/preconditioners/GAMGPreconditioner/GAMGPreconditioner.C
 
 lduAddressing = $(lduMatrix)/lduAddressing
 $(lduAddressing)/lduAddressing.C
@@ -219,55 +224,37 @@ $(lduAddressing)/lduInterfaceField/lduInterfaceField.C
 $(lduAddressing)/lduInterfaceField/processorLduInterfaceField.C
 $(lduAddressing)/lduInterfaceField/cyclicLduInterfaceField.C
 
-gamgSolver = $(lduMatrix)/solvers/gamgSolver
-$(gamgSolver)/gamgSolver.C
-$(gamgSolver)/gamgSolverAgglomerateMatrix.C
-$(gamgSolver)/gamgSolverScalingFactor.C
-$(gamgSolver)/gamgSolverSolve.C
+GAMG = $(lduMatrix)/solvers/GAMG
+$(GAMG)/GAMGSolver.C
+$(GAMG)/GAMGSolverAgglomerateMatrix.C
+$(GAMG)/GAMGSolverScalingFactor.C
+$(GAMG)/GAMGSolverSolve.C
 
-gamgInterfaces = $(gamgSolver)/interfaces
-$(gamgInterfaces)/gamgInterface/gamgInterface.C
-$(gamgInterfaces)/gamgInterface/newGamgInterface.C
-$(gamgInterfaces)/processorGamgInterface/processorGamgInterface.C
-$(gamgInterfaces)/cyclicGamgInterface/cyclicGamgInterface.C
+GAMGInterfaces = $(GAMG)/interfaces
+$(GAMGInterfaces)/GAMGInterface/GAMGInterface.C
+$(GAMGInterfaces)/GAMGInterface/newGAMGInterface.C
+$(GAMGInterfaces)/processorGAMGInterface/processorGAMGInterface.C
+$(GAMGInterfaces)/cyclicGAMGInterface/cyclicGAMGInterface.C
 
-gamgInterfaceFields = $(gamgSolver)/interfaceFields
-$(gamgInterfaceFields)/gamgInterfaceField/gamgInterfaceField.C
-$(gamgInterfaceFields)/gamgInterfaceField/newGamgInterfaceField.C
-$(gamgInterfaceFields)/processorGamgInterfaceField/processorGamgInterfaceField.C
-$(gamgInterfaceFields)/cyclicGamgInterfaceField/cyclicGamgInterfaceField.C
+GAMGInterfaceFields = $(GAMG)/interfaceFields
+$(GAMGInterfaceFields)/GAMGInterfaceField/GAMGInterfaceField.C
+$(GAMGInterfaceFields)/GAMGInterfaceField/newGAMGInterfaceField.C
+$(GAMGInterfaceFields)/processorGAMGInterfaceField/processorGAMGInterfaceField.C
+$(GAMGInterfaceFields)/cyclicGAMGInterfaceField/cyclicGAMGInterfaceField.C
 
-gamgAgglomerations = $(gamgSolver)/gamgAgglomerations
+GAMGAgglomerations = $(GAMG)/GAMGAgglomerations
 
-gamgAgglomeration = $(gamgAgglomerations)/gamgAgglomeration
-$(gamgAgglomeration)/gamgAgglomeration.C
-$(gamgAgglomeration)/gamgAgglomerateLduAddressing.C
+GAMGAgglomeration = $(GAMGAgglomerations)/GAMGAgglomeration
+$(GAMGAgglomeration)/GAMGAgglomeration.C
+$(GAMGAgglomeration)/GAMGAgglomerateLduAddressing.C
 
-pairGamgAgglomeration = $(gamgAgglomerations)/pairGamgAgglomeration
-$(pairGamgAgglomeration)/pairGamgAgglomeration.C
-$(pairGamgAgglomeration)/pairGamgAgglomerate.C
-$(pairGamgAgglomeration)/pairGamgAgglomerationCombineLevels.C
+pairGAMGAgglomeration = $(GAMGAgglomerations)/pairGAMGAgglomeration
+$(pairGAMGAgglomeration)/pairGAMGAgglomeration.C
+$(pairGAMGAgglomeration)/pairGAMGAgglomerate.C
+$(pairGAMGAgglomeration)/pairGAMGAgglomerationCombineLevels.C
 
-algebraicPairGamgAgglomeration = $(gamgAgglomerations)/algebraicPairGamgAgglomeration
-$(algebraicPairGamgAgglomeration)/algebraicPairGamgAgglomeration.C
-
-amgSymSolver = $(lduMatrix)/solvers/amgSymSolver
-$(amgSymSolver)/amgSymSolver.C
-$(amgSymSolver)/amgSymSolverCalcAgglomeration.C
-$(amgSymSolver)/amgSymSolverMakeCoarseMatrix.C
-$(amgSymSolver)/amgSymSolverOperations.C
-$(amgSymSolver)/amgSymSolverSolve.C
-
-amgInterfaces = $(amgSymSolver)/interfaces
-amgInterfaceField = $(amgInterfaces)/amgInterfaceField
-$(amgInterfaceField)/amgInterfaceField.C
-$(amgInterfaceField)/newAmgInterfaceField.C
-
-amgProcessorInterface = $(amgInterfaces)/processorAmgInterfaceField
-$(amgProcessorInterface)/processorAmgInterfaceField.C
-
-amgCyclicInterface = $(amgInterfaces)/cyclicAmgInterfaceField
-$(amgCyclicInterface)/cyclicAmgInterfaceField.C
+algebraicPairGAMGAgglomeration = $(GAMGAgglomerations)/algebraicPairGAMGAgglomeration
+$(algebraicPairGAMGAgglomeration)/algebraicPairGAMGAgglomeration.C
 
 meshes/lduMesh/lduMesh.C
 
@@ -316,16 +303,18 @@ polyPatches = $(polyMesh)/polyPatches
 $(polyPatches)/polyPatch/polyPatch.C
 $(polyPatches)/polyPatch/newPolyPatch.C
 
-basicPolyPatches = $(polyPatches)/basicPolyPatches
-$(basicPolyPatches)/emptyPolyPatch/emptyPolyPatch.C
-$(basicPolyPatches)/symmetryPolyPatch/symmetryPolyPatch.C
-$(basicPolyPatches)/wedgePolyPatch/wedgePolyPatch.C
-$(basicPolyPatches)/coupledPolyPatch/coupledPolyPatch.C
+basicPolyPatches = $(polyPatches)/basic
+$(basicPolyPatches)/coupled/coupledPolyPatch.C
 
-derivedPolyPatches = $(polyPatches)/derivedPolyPatches
-$(derivedPolyPatches)/wallPolyPatch/wallPolyPatch.C
-$(derivedPolyPatches)/processorPolyPatch/processorPolyPatch.C
-$(derivedPolyPatches)/cyclicPolyPatch/cyclicPolyPatch.C
+constraintPolyPatches = $(polyPatches)/constraint
+$(constraintPolyPatches)/empty/emptyPolyPatch.C
+$(constraintPolyPatches)/symmetry/symmetryPolyPatch.C
+$(constraintPolyPatches)/wedge/wedgePolyPatch.C
+$(constraintPolyPatches)/cyclic/cyclicPolyPatch.C
+$(constraintPolyPatches)/processor/processorPolyPatch.C
+
+derivedPolyPatches = $(polyPatches)/derived
+$(derivedPolyPatches)/wall/wallPolyPatch.C
 
 polyBoundaryMesh = $(polyMesh)/polyBoundaryMesh
 $(polyBoundaryMesh)/polyBoundaryMesh.C
@@ -368,8 +357,6 @@ $(primitiveMesh)/primitiveMeshCellCells.C
 $(primitiveMesh)/primitiveMeshCellCentresAndVols.C
 $(primitiveMesh)/primitiveMeshCellEdges.C
 $(primitiveMesh)/primitiveMeshCells.C
-$(primitiveMesh)/primitiveMeshCheck.C
-$(primitiveMesh)/primitiveMeshCheckMotion.C
 $(primitiveMesh)/primitiveMeshClear.C
 $(primitiveMesh)/primitiveMeshEdgeCells.C
 $(primitiveMesh)/primitiveMeshEdgeFaces.C
@@ -382,6 +369,12 @@ $(primitiveMesh)/primitiveMeshPointFaces.C
 $(primitiveMesh)/primitiveMeshPointPoints.C
 $(primitiveMesh)/primitiveMeshCellPoints.C
 $(primitiveMesh)/primitiveMeshCalcCellShapes.C
+
+primitiveMeshCheck = $(primitiveMesh)/primitiveMeshCheck
+$(primitiveMeshCheck)/primitiveMeshCheck.C
+$(primitiveMeshCheck)/primitiveMeshCheckMotion.C
+$(primitiveMeshCheck)/primitiveMeshCheckPointNearness.C
+$(primitiveMeshCheck)/primitiveMeshCheckEdgeLength.C
 
 primitivePatch = meshes/primitivePatch
 $(primitivePatch)/patchZones.C
@@ -416,18 +409,20 @@ $(pointPatches)/pointPatch/pointPatch.C
 $(pointPatches)/facePointPatch/facePointPatch.C
 $(pointPatches)/facePointPatch/newFacePointPatch.C
 
-basicPointPatches = $(pointPatches)/basicPointPatches
-$(basicPointPatches)/emptyPointPatch/emptyPointPatch.C
-$(basicPointPatches)/coupledPointPatch/coupledPointPatch.C
-$(basicPointPatches)/symmetryPointPatch/symmetryPointPatch.C
-$(basicPointPatches)/wedgePointPatch/wedgePointPatch.C
+basicPointPatches = $(pointPatches)/basic
+$(basicPointPatches)/coupled/coupledPointPatch.C
 
-derivedPointPatches = $(pointPatches)/derivedPointPatches
-$(derivedPointPatches)/coupledFacePointPatch/coupledFacePointPatch.C
-$(derivedPointPatches)/cyclicPointPatch/cyclicPointPatch.C
-$(derivedPointPatches)/processorPointPatch/processorPointPatch.C
-$(derivedPointPatches)/globalPointPatch/globalPointPatch.C
-$(derivedPointPatches)/wallPointPatch/wallPointPatch.C
+constraintPointPatches = $(pointPatches)/constraint
+$(constraintPointPatches)/empty/emptyPointPatch.C
+$(constraintPointPatches)/symmetry/symmetryPointPatch.C
+$(constraintPointPatches)/wedge/wedgePointPatch.C
+$(constraintPointPatches)/cyclic/cyclicPointPatch.C
+$(constraintPointPatches)/processor/processorPointPatch.C
+
+derivedPointPatches = $(pointPatches)/derived
+$(derivedPointPatches)/coupled/coupledFacePointPatch.C
+$(derivedPointPatches)/global/globalPointPatch.C
+$(derivedPointPatches)/wall/wallPointPatch.C
 
 pointBoundaryMesh = $(pointMesh)/pointBoundaryMesh
 $(pointBoundaryMesh)/pointBoundaryMesh.C
@@ -461,7 +456,7 @@ $(Fields)/tensorField/tensorIOField.C
 pointPatchFields = fields/pointPatchFields
 $(pointPatchFields)/pointPatchField/pointPatchFields.C
 
-basicPointPatchFields = $(pointPatchFields)/basicPointPatchFields
+basicPointPatchFields = $(pointPatchFields)/basic
 $(basicPointPatchFields)/calculated/calculatedPointPatchFields.C
 $(basicPointPatchFields)/default/defaultPointPatchFields.C
 $(basicPointPatchFields)/coupled/coupledPointPatchFields.C
@@ -470,13 +465,15 @@ $(basicPointPatchFields)/fixedValue/fixedValuePointPatchFields.C
 $(basicPointPatchFields)/zeroGradient/zeroGradientPointPatchFields.C
 $(basicPointPatchFields)/mixed/mixedPointPatchFields.C
 
-derivedPointPatchFields = $(pointPatchFields)/derivedPointPatchFields
-$(derivedPointPatchFields)/empty/emptyPointPatchFields.C
-$(derivedPointPatchFields)/cyclic/cyclicPointPatchFields.C
-$(derivedPointPatchFields)/wedge/wedgePointPatchFields.C
+constraintPointPatchFields = $(pointPatchFields)/constraint
+$(constraintPointPatchFields)/empty/emptyPointPatchFields.C
+$(constraintPointPatchFields)/symmetry/symmetryPointPatchFields.C
+$(constraintPointPatchFields)/wedge/wedgePointPatchFields.C
+$(constraintPointPatchFields)/cyclic/cyclicPointPatchFields.C
+$(constraintPointPatchFields)/processor/processorPointPatchFields.C
+
+derivedPointPatchFields = $(pointPatchFields)/derived
 $(derivedPointPatchFields)/slip/slipPointPatchFields.C
-$(derivedPointPatchFields)/symmetry/symmetryPointPatchFields.C
-$(derivedPointPatchFields)/processor/processorPointPatchFields.C
 $(derivedPointPatchFields)/global/globalPointPatchFields.C
 
 fields/GeometricFields/pointFields/pointFields.C

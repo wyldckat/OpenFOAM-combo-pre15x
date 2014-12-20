@@ -1,11 +1,11 @@
 %{
-/*----------------------------------------------------------------------------*\
+/*---------------------------------------------------------------------------*\
  =========                   |
  \\      /   F ield          | OpenFOAM: The Open Source CFD Toolbox
   \\    /    O peration      |
    \\  /     A nd            | Copyright (C) 1991-2007 OpenCFD Ltd.
     \\/      M anipulation   |
--------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
 
@@ -38,7 +38,7 @@ Description
 Usage
     wmkdep [ -Idirectory ... -Idirectory] filename
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #define FILE_STACK_SIZE 300
 #define HASH_TABLE_SIZE 500
@@ -59,7 +59,7 @@ void importDirectory(const char* dirName);
 %s CMNT CFNAME SCFNAME JFNAME FFNAME
 %%
 
-"//".*\n                  ;               /* remove c++ style one line comments */
+"//".*\n                  ;            /* remove c++ style one line comments */
 
 "/*"                      BEGIN(CMNT);    /* start removing c style comment */
 <CMNT>.|\n                ;
@@ -292,7 +292,7 @@ void nextFile(const char* fileName)
 
     if (lookUp(fileHashTable, fileName)) return;
 
-    if(currentBuffer >= FILE_STACK_SIZE)
+    if (currentBuffer >= FILE_STACK_SIZE)
     {
         fprintf
         (
@@ -306,9 +306,9 @@ void nextFile(const char* fileName)
 
     buffers[currentBuffer++] = YY_CURRENT_BUFFER;
 
-    if(!(yyin = fopen(fileName, "r")))
+    if (!(yyin = fopen(fileName, "r")))
     {
-        for(d=0; d<nDirectories; d++)
+        for (d=0; d<nDirectories; d++)
         {
             pathName = addDirectoryName(directories[d], fileName);
 
@@ -427,11 +427,17 @@ void importDirectory(const char* dirName)
 }
 
 
-/* the lexer calls yywrap to handle EOF conditions */
+/* The lexer calls yywrap to handle EOF conditions */
 
 int yywrap()
 {
-    /* Delete buffer which has just reached EOF */
+    /* Close the file for the buffer which has just reached EOF */
+    /* This causes strange problems
+    fclose(yyin);
+    yyin = 0;
+    */
+
+    /* Delete the buffer */
     yy_delete_buffer(YY_CURRENT_BUFFER);
 
     /* Set buffer counter to previous buffer */
@@ -440,7 +446,6 @@ int yywrap()
     if (currentBuffer >= 0) /* if buffer counter refers to a valid file */
     {
         /* reset input buffer to the previous buffer on the stack */
-        //yyin = buffers[currentBuffer];
         yy_switch_to_buffer(buffers[currentBuffer]);
 
         /* Return to the normal state for the previous buffer on the stack */

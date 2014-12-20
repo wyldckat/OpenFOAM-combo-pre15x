@@ -63,6 +63,7 @@ public:
         //- Construct null
         foamFile();
 
+
     // Destructor
 
         virtual ~foamFile();

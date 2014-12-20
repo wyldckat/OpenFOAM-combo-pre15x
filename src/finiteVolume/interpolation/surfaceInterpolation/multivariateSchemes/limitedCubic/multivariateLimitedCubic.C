@@ -38,24 +38,6 @@ namespace Foam
         limitedCubic,
         limitedCubicLimiter
     )
-
-    makeLLimitedMultivariateSurfaceInterpolationScheme
-    (
-        limitedLimitedCubic,
-        LimitedLimiter,
-        limitedCubicLimiter,
-        NVDTVD,
-        magSqr
-    )
-
-    makeLLimitedMultivariateSurfaceInterpolationScheme
-    (
-        limitedCubic01,
-        Limited01Limiter,
-        limitedCubicLimiter,
-        NVDTVD,
-        magSqr
-    )
 }
 
 

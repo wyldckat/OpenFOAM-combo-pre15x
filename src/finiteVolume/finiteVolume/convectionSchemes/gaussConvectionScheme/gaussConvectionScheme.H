@@ -109,13 +109,13 @@ public:
 
     // Member Functions
 
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
         (
             const surfaceScalarField&,
             const GeometricField<Type, fvPatchField, volMesh>&
         ) const;
 
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> > flux
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > flux
         (
             const surfaceScalarField&,
             const GeometricField<Type, fvPatchField, volMesh>&

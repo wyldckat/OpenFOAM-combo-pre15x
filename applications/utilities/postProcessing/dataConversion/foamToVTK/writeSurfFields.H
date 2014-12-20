@@ -51,7 +51,6 @@ void writeSurfFields
     const bool binary,
     const vtkMesh& vMesh,
     const fileName& fileName,
-    const PtrList<surfaceScalarField>& surfScalarFields,
     const PtrList<surfaceVectorField>& surfVectorFields
 );
 

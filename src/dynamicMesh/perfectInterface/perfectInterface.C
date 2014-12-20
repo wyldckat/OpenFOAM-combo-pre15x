@@ -35,6 +35,9 @@ Description
 #include "addToRunTimeSelectionTable.H"
 #include "mapPolyMesh.H"
 #include "matchPoints.H"
+#include "polyModifyFace.H"
+#include "polyRemovePoint.H"
+#include "polyRemoveFace.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 

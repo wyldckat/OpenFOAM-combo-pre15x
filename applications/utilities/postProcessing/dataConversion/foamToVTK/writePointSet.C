@@ -76,7 +76,7 @@ void writePointSet
 
     writeFuns::insert
     (
-        IndirectList<point>(vMesh.mesh().points(), set.toc()),
+        IndirectList<point>(vMesh.mesh().points(), set.toc())(),
         ptField
     );
 

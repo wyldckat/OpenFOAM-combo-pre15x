@@ -61,6 +61,9 @@ class triSurfaceMeshes
         //- Names of surfaces
         fileNameList names_;
 
+        //- Indices of all surfaces. Precalculated and stored.
+        const labelList allSurfaces_;
+
         //- Trees
         mutable autoPtr<PtrList<indexedOctree<treeDataTriSurface> > > treesPtr_;
 
@@ -83,6 +86,9 @@ public:
         //- Construct from directory (io.instance()) and list of local filenames
         triSurfaceMeshes(const IOobject& io, const fileNameList&);
 
+        //- Clear derived storage
+        void clearOut();
+
 
     // Member Functions
 
@@ -104,6 +110,88 @@ public:
             }
             return treesPtr_();
         }
+
+
+        //- Find any intersection. Return hit point information and surface
+        //  number
+        label findAnyIntersection
+        (
+            const labelList& surfacesToTest,
+            const point& start,
+            const point& end,
+            pointIndexHit&
+        ) const;
+
+        label findAnyIntersection
+        (
+            const point& start,
+            const point& end,
+            pointIndexHit&
+        ) const;
+
+
+        //- Find all intersections in order from start to end. Returns for
+        //  every hit the surface and the hit info.
+        void findAllIntersections
+        (
+            const labelList& surfacesToTest,
+            const point& start,
+            const point& end,
+            labelList& surfaces,
+            List<pointIndexHit>& surfaceHits
+        ) const;
+
+        void findAllIntersections
+        (
+            const point& start,
+            const point& end,
+            labelList& surfaces,
+            List<pointIndexHit>& surfaceHits
+        ) const;
+
+
+        //- Find intersections of edge nearest to both endpoints.
+        void findNearestIntersection
+        (
+            const labelList& surfacesToTest,
+            const point& start,
+            const point& end,
+
+            label& surface1,        // surface index
+            pointIndexHit& hit1,    // hit point information
+            label& surface2,
+            pointIndexHit& hit2
+        ) const;
+
+        void findNearestIntersection
+        (
+            const point& start,
+            const point& end,
+
+            label& surface1,        // surface index
+            pointIndexHit& hit1,    // hit point information
+            label& surface2,
+            pointIndexHit& hit2
+        ) const;
+
+
+        //- Find nearest. Return -1 or surface and nearest point (in
+        //  pointIndexHit)
+        label findNearest
+        (
+            const labelList& surfacesToTest,
+            const point&,
+            const scalar nearestDistSqr,
+            pointIndexHit&
+        ) const;
+
+        label findNearest
+        (
+            const point&,
+            const scalar nearestDistSqr,
+            pointIndexHit&
+        ) const;
+
 };
 
 

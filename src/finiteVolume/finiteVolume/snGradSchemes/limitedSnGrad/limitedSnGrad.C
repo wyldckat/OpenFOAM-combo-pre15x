@@ -61,13 +61,13 @@ limitedSnGrad<Type>::~limitedSnGrad()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 limitedSnGrad<Type>::correction
 (
     const GeometricField<Type, fvPatchField, volMesh>& vf
 ) const
 {
-    GeometricField<Type, fvPatchField, surfaceMesh> corr = 
+    GeometricField<Type, fvsPatchField, surfaceMesh> corr = 
         correctedSnGrad<Type>(this->mesh()).correction(vf);
 
     surfaceScalarField limiter

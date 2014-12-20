@@ -43,7 +43,7 @@ namespace fv
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 multivariateGaussConvectionScheme<Type>::interpolate
 (
     const surfaceScalarField& faceFlux,
@@ -60,7 +60,7 @@ multivariateGaussConvectionScheme<Type>::interpolate
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 multivariateGaussConvectionScheme<Type>::flux
 (
     const surfaceScalarField& faceFlux,

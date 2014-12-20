@@ -101,7 +101,11 @@ int main(int argc, char *argv[])
             dimensionedScalar("wallHeatFlux", heatFlux.dimensions(), 0.0)
         );
 
-        wallHeatFlux.boundaryField() = patchHeatFlux;
+        forAll(wallHeatFlux.boundaryField(), patchi)
+        {
+            wallHeatFlux.boundaryField()[patchi] = patchHeatFlux[patchi];
+        }
+
         wallHeatFlux.write();
     }
 

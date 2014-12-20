@@ -26,7 +26,6 @@ License
 
 #include "topoSet.H"
 #include "mapPolyMesh.H"
-//#include "directPolyTopoChange.H"
 #include "polyMesh.H"
 #include "boundBox.H"
 
@@ -165,7 +164,7 @@ void topoSet::topoSet::updateLabels(const labelList& map)
         {
             label newCellI = map[iter.key()];
 
-            if (newCellI != -1)
+            if (newCellI >= 0)
             {
                 newSet.insert(newCellI);
             }
@@ -566,12 +565,6 @@ void topoSet::updateMesh(const mapPolyMesh&)
 {
     notImplemented("topoSet::updateMesh(const mapPolyMesh&)");
 }
-
-
-//void topoSet::updateMesh(const directPolyTopoChange&)
-//{
-//    notImplemented("topoSet::updateMesh(const directPolyTopoChange&)");
-//}
 
 
 //- Return max index+1.

@@ -92,6 +92,20 @@ int main(int argc, char *argv[])
             mesh
         );
 
+        volScalarField yPlus
+        (
+            IOobject
+            (
+                "yPlus",
+                runTime.timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            mesh,
+            dimensionedScalar("yPlus", dimless, 0.0)
+        );
+
 #       include "createPhi.H"
 
         singlePhaseTransportModel laminarTransport(U, phi);
@@ -105,8 +119,8 @@ int main(int argc, char *argv[])
         {
             if (typeid(mesh.boundary()[patchI]) == typeid(wallFvPatch))
             {
-                tmp<scalarField> tYp = turbulence->yPlus(patchI);
-                scalarField& Yp = tYp();
+                yPlus.boundaryField()[patchI] = turbulence->yPlus(patchI);
+                const scalarField& Yp = yPlus.boundaryField()[patchI];
 
                 Info<< "Patch " << patchI
                     << " named " << mesh.boundary()[patchI].name()
@@ -114,7 +128,11 @@ int main(int argc, char *argv[])
                     << " average: " << average(Yp) << nl << endl;
             }
         }
+
+        yPlus.write();
     }
+
+    Info<< "End\n" << endl;
 
     return(0);
 }

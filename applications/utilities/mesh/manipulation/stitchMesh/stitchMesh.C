@@ -379,7 +379,7 @@ int main(int argc, char *argv[])
     runTime++;
 
     // Execute all polyMeshModifiers
-    autoPtr<mapPolyMesh> morphMap = stitcher.changeMesh();
+    autoPtr<mapPolyMesh> morphMap = stitcher.changeMesh(true);
 
     mesh.movePoints(morphMap->preMotionPoints());
 

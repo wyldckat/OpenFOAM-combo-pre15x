@@ -87,7 +87,7 @@ namespace fvc
 
     //- Interpolate field onto faces using scheme given by Istream
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const GeometricField<Type, fvPatchField, volMesh>& tvf,
         const surfaceScalarField& faceFlux,
@@ -96,7 +96,7 @@ namespace fvc
 
     //- Interpolate field onto faces using scheme given by name in fvSchemes
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const GeometricField<Type, fvPatchField, volMesh>& tvf,
         const surfaceScalarField& faceFlux,
@@ -105,7 +105,7 @@ namespace fvc
 
     //- Interpolate field onto faces using scheme given by name in fvSchemes
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf,
         const surfaceScalarField& faceFlux,
@@ -114,7 +114,7 @@ namespace fvc
 
     //- Interpolate field onto faces using scheme given by name in fvSchemes
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const GeometricField<Type, fvPatchField, volMesh>& tvf,
         const tmp<surfaceScalarField>& faceFlux,
@@ -123,7 +123,7 @@ namespace fvc
 
     //- Interpolate field onto faces using scheme given by name in fvSchemes
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf,
         const tmp<surfaceScalarField>& faceFlux,
@@ -133,7 +133,7 @@ namespace fvc
 
     //- Interpolate field onto faces using scheme given by Istream
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const GeometricField<Type, fvPatchField, volMesh>& tvf,
         Istream& schemeData
@@ -141,7 +141,7 @@ namespace fvc
 
     //- Interpolate field onto faces using scheme given by name in fvSchemes
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const GeometricField<Type, fvPatchField, volMesh>& tvf,
         const word& name
@@ -149,7 +149,7 @@ namespace fvc
 
     //- Interpolate field onto faces using scheme given by name in fvSchemes
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf,
         const word& name
@@ -158,14 +158,14 @@ namespace fvc
 
     //- Interpolate tmp field onto faces using central differencing
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf
     );
 
     //- Interpolate field onto faces using central differencing
     template<class Type>
-    static tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+    static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
     (
         const GeometricField<Type, fvPatchField, volMesh>& tvf
     );

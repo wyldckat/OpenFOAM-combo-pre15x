@@ -26,26 +26,51 @@ Class
     pointPatchField
 
 Description
-    Abstract base class for point patch fields. Note the special
-    mechanism at work here: the field itself holds no values, as the point
-    values belong to the internal field. However, the field will create a
-    list of values if required.
+    Abstract base class for point-mesh patch fields.
+
+    The base-field does not store values as they are part of the 
+    "internal field".  There are derived classes to store constraint values
+    e.g. fixedValuePointPatchField derived from the generic
+    valuePointPatchField which ensures the values in the "internal field"
+    are reset to the fixed-values by applying the stored values.
 
 SourceFiles
     pointPatchField.C
+    newpointPatchField.C
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef pointPatchField_H
 #define pointPatchField_H
 
-#include "PointPatchField.H"
 #include "pointPatch.H"
+#include "DimensionedField.H"
+#include "autoPtr.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+// Class forward declarations
+
+class objectRegistry;
+class dictionary;
+class pointPatchFieldMapper;
+class pointMesh;
+
+// * * * * * * Forward declaration of template friend fuctions * * * * * * * //
+
+template<class Type>
+class pointPatchField;
+
+template<class Type>
+Ostream& operator<<
+(
+    Ostream&,
+    const pointPatchField<Type>&
+);
+
 
 /*---------------------------------------------------------------------------*\
                        Class pointPatchField Declaration
@@ -53,11 +78,70 @@ namespace Foam
 
 template<class Type>
 class pointPatchField
-:
-    public PointPatchField<pointPatchField, pointPatch, Type>
 {
+    // Private data
+
+        //- Reference to patch
+        const pointPatch& patch_;
+
+        //- Reference to internal field
+        const DimensionedField<Type, pointMesh>& internalField_;
+
+        //- Update index used so that updateCoeffs is called only once during
+        //  the construction of the matrix
+        bool updated_;
+
 
 public:
+
+    typedef pointPatch Patch;
+
+
+    //- Runtime type information
+    TypeName("pointPatchField");
+
+
+    // Declare run-time constructor selection tables
+
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            pointPatchField,
+            pointPatch,
+            (
+                const pointPatch& p,
+                const DimensionedField<Type, pointMesh>& iF
+            ),
+            (p, iF)
+        );
+
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            pointPatchField,
+            patchMapper,
+            (
+                const pointPatchField<Type>& ptf,
+                const pointPatch& p,
+                const DimensionedField<Type, pointMesh>& iF,
+                const pointPatchFieldMapper& m
+            ),
+            (dynamic_cast<const pointPatchFieldType&>(ptf), p, iF, m)
+        );
+
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            pointPatchField,
+            dictionary,
+            (
+                const pointPatch& p,
+                const DimensionedField<Type, pointMesh>& iF,
+                const dictionary& dict
+            ),
+            (p, iF, dict)
+        );
+
 
     // Constructors
 
@@ -65,49 +149,274 @@ public:
         pointPatchField
         (
             const pointPatch&,
-            const Field<Type>&
+            const DimensionedField<Type, pointMesh>&
         );
 
         //- Construct as copy
         pointPatchField(const pointPatchField<Type>&);
 
         //- Construct and return a clone
-        virtual autoPtr<pointPatchField<Type> > clone() const
-        {
-            return autoPtr<pointPatchField<Type> >
-            (
-                new pointPatchField<Type>(*this)
-            );
-        }
+        virtual autoPtr<pointPatchField<Type> > clone() const = 0;
 
         //- Construct as copy setting internal field reference
-        pointPatchField(const pointPatchField<Type>&, const Field<Type>&);
+        pointPatchField
+        (
+            const pointPatchField<Type>&,
+            const DimensionedField<Type, pointMesh>&
+        );
 
         //- Construct and return a clone setting internal field reference
-        virtual autoPtr<pointPatchField<Type> >
-        clone(const Field<Type>& iF) const
-        {
-            return autoPtr<pointPatchField<Type> >
-            (
-                new pointPatchField<Type>(*this, iF)
-            );
-        }
+        virtual autoPtr<pointPatchField<Type> > clone
+        (
+            const DimensionedField<Type, pointMesh>& iF
+        ) const = 0;
+
+
+    // Selectors
+
+        //- Return a pointer to a new patchField created on freestore given
+        //  patch and internal field
+        //  (does not set the patch field values)
+        static autoPtr<pointPatchField<Type> > New
+        (
+            const word&,
+            const pointPatch&,
+            const DimensionedField<Type, pointMesh>&
+        );
+
+        //- Return a pointer to a new patchField created on freestore from
+        //  a given pointPatchField mapped onto a new patch
+        static autoPtr<pointPatchField<Type> > New
+        (
+            const pointPatchField<Type>&,
+            const pointPatch&,
+            const DimensionedField<Type, pointMesh>&,
+            const pointPatchFieldMapper&
+        );
+
+        //- Return a pointer to a new patchField created on freestore
+        //  from dictionary
+        static autoPtr<pointPatchField<Type> > New
+        (
+            const pointPatch&,
+            const DimensionedField<Type, pointMesh>&,
+            const dictionary&
+        );
+
+
+        //- Return a pointer to a new CalculatedpointPatchField created on
+        //  freestore without setting patchField values
+        template<class Type2>
+        static autoPtr<pointPatchField<Type> >
+        NewCalculatedType
+        (
+            const pointPatchField<Type2>&
+        );
 
 
     // Destructor
 
-        virtual ~pointPatchField()
+        virtual ~pointPatchField<Type>()
         {}
+
+
+    // Member functions
+
+        // Access
+
+            //- Return local objectRegistry
+            const objectRegistry& db() const;
+
+            //- Return size
+            label size() const
+            {
+                return patch().size();
+            }
+
+            //- Return patch
+            const pointPatch& patch() const
+            {
+                return patch_;
+            }
+
+            //- Return dimensioned internal field reference
+            const DimensionedField<Type, pointMesh>&
+            dimensionedInternalField() const
+            {
+                return internalField_;
+            }
+
+            //- Return internal field reference
+            const Field<Type>& internalField() const
+            {
+                return internalField_;
+            }
+
+            //- Return true if this patch field is coupled
+            virtual bool coupled() const
+            {
+                return false;
+            }
+
+            //- Return true if the boundary condition has already been updated
+            bool updated() const
+            {
+                return updated_;
+            }
+
+            //- Return field created from appropriate internal field values
+            tmp<Field<Type> > patchInternalField() const;
+
+            //- Return field created from appropriate internal field values
+            //  given internal field reference
+            template<class Type1>
+            tmp<Field<Type1> > patchInternalField
+            (
+                const Field<Type1>& iF
+            ) const;
+
+            //- Given the internal field and a patch field,
+            //  add the patch field to the internal field
+            template<class Type1>
+            void addToInternalField
+            (
+                Field<Type1>& iF,
+                const Field<Type1>& pF
+            ) const;
+
+            //- Given the internal field and a patch field,
+            //  set the patch field in the internal field
+            template<class Type1>
+            void setInInternalField
+            (
+                Field<Type1>& iF,
+                const Field<Type1>& pF
+            ) const;
+
+            //- Return the type of the calculated for of pointPatchField
+            static const word& calculatedType();
+
+
+        // Mapping functions
+
+            //- Map (and resize as needed) from self given a mapping object
+            virtual void autoMap
+            (
+                const pointPatchFieldMapper&
+            )
+            {}
+
+            //- Reverse map the given pointPatchField onto this pointPatchField
+            virtual void rmap
+            (
+                const pointPatchField<Type>&,
+                const labelList&
+            )
+            {}
+
+
+        // Evaluation functions
+
+            //- Update the coefficients associated with the patch field
+            //  Sets Updated to true
+            virtual void updateCoeffs()
+            {
+                updated_ = true;
+            }
+
+            //- Initialise evaluation of the patch field (do nothing)
+            virtual void initEvaluate(const bool=false)
+            {}
+
+            //- Evaluate the patch field
+            virtual void evaluate();
+
+
+        //- Write
+        virtual void write(Ostream&) const;
 
 
     // Member operators
 
-        virtual void operator=(const Type& t)
-        {
-            PointPatchField<Foam::pointPatchField, pointPatch, Type>::
-            operator=(t);
-        }
+        virtual void operator=
+        (
+            const pointPatchField<Type>&
+        )
+        {}
+
+        virtual void operator+=
+        (
+            const pointPatchField<Type>&
+        )
+        {}
+
+        virtual void operator-=
+        (
+            const pointPatchField<Type>&
+        )
+        {}
+
+        virtual void operator*=
+        (
+            const pointPatchField<scalar>&
+        )
+        {}
+
+        virtual void operator/=
+        (
+            const pointPatchField<scalar>&
+        )
+        {}
+
+        virtual void operator=(const Field<Type>&){}
+        virtual void operator+=(const Field<Type>&){}
+        virtual void operator-=(const Field<Type>&){}
+
+        virtual void operator*=(const Field<scalar>&){}
+        virtual void operator/=(const Field<scalar>&){}
+
+        virtual void operator=(const Type&){}
+        virtual void operator+=(const Type&){}
+        virtual void operator-=(const Type&){}
+        virtual void operator*=(const scalar){}
+        virtual void operator/=(const scalar){}
+
+
+        // Force an assignment irrespective of form of patch
+        // By default these do nothing unless the patch actually has boundary
+        // values
+
+            virtual void operator==
+            (
+                const pointPatchField<Type>&
+            )
+            {}
+
+            virtual void operator==(const Field<Type>&){}
+            virtual void operator==(const Type&){}
+
+
+    // Ostream operator
+
+        friend Ostream& operator<< <Type>
+        (
+            Ostream&,
+            const pointPatchField<Type>&
+        );
 };
+
+
+// This function is added as a hack to enable simple backward compatability
+// with verions using referenceLevel in GeometicField
+template<class Type>
+const pointPatchField<Type>& operator+
+(
+    const pointPatchField<Type>& ppf,
+    const Type&
+)
+{
+    return ppf;
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -116,9 +425,89 @@ public:
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+#include "pointPatchFieldFunctions.H"
+
 #ifdef NoRepository
 #   include "pointPatchField.C"
+#   include "calculatedPointPatchField.H"
 #endif
+
+
+#define makePointPatchTypeFieldTypeName(type)                                 \
+                                                                              \
+defineNamedTemplateTypeNameAndDebug(type, 0);
+
+#define makePointPatchFieldsTypeName(type)                                    \
+                                                                              \
+makePointPatchTypeFieldTypeName(type##PointPatchScalarField);                 \
+makePointPatchTypeFieldTypeName(type##PointPatchVectorField);                 \
+makePointPatchTypeFieldTypeName(type##PointPatchSphericalTensorField);        \
+makePointPatchTypeFieldTypeName(type##PointPatchSymmTensorField);             \
+makePointPatchTypeFieldTypeName(type##PointPatchTensorField);
+
+#define makePointPatchTypeField(PatchTypeField, typePatchTypeField)           \
+                                                                              \
+defineNamedTemplateTypeNameAndDebug(typePatchTypeField, 0);                   \
+                                                                              \
+addToRunTimeSelectionTable                                                    \
+(                                                                             \
+    PatchTypeField, typePatchTypeField, pointPatch                            \
+);                                                                            \
+                                                                              \
+addToRunTimeSelectionTable                                                    \
+(                                                                             \
+    PatchTypeField,                                                           \
+    typePatchTypeField,                                                       \
+    patchMapper                                                               \
+);                                                                            \
+                                                                              \
+addToRunTimeSelectionTable                                                    \
+(                                                                             \
+    PatchTypeField, typePatchTypeField, dictionary                            \
+);
+
+
+#define makePointPatchFields(type)                                            \
+                                                                              \
+makePointPatchTypeField                                                       \
+(                                                                             \
+    pointPatchScalarField,                                                    \
+    type##PointPatchScalarField                                               \
+);                                                                            \
+                                                                              \
+makePointPatchTypeField                                                       \
+(                                                                             \
+    pointPatchVectorField,                                                    \
+    type##PointPatchVectorField                                               \
+);                                                                            \
+                                                                              \
+makePointPatchTypeField                                                       \
+(                                                                             \
+    pointPatchSphericalTensorField,                                           \
+    type##PointPatchSphericalTensorField                                      \
+);                                                                            \
+                                                                              \
+makePointPatchTypeField                                                       \
+(                                                                             \
+    pointPatchSymmTensorField,                                                \
+    type##PointPatchSymmTensorField                                           \
+);                                                                            \
+                                                                              \
+makePointPatchTypeField                                                       \
+(                                                                             \
+    pointPatchTensorField,                                                    \
+    type##PointPatchTensorField                                               \
+);
+             
+
+#define makePointPatchFieldTypedefs(type)                                     \
+                                                                              \
+typedef type##PointPatchField<scalar> type##PointPatchScalarField;            \
+typedef type##PointPatchField<vector> type##PointPatchVectorField;            \
+typedef type##PointPatchField<sphericalTensor>                                \
+    type##PointPatchSphericalTensorField;                                     \
+typedef type##PointPatchField<symmTensor> type##PointPatchSymmTensorField;    \
+typedef type##PointPatchField<tensor> type##PointPatchTensorField;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -126,4 +515,3 @@ public:
 #endif
 
 // ************************************************************************* //
-

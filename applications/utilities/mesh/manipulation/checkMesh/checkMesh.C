@@ -30,28 +30,14 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "primitiveMesh.H"
 #include "argList.H"
-
 #include "Time.H"
-
-#include "hexMatcher.H"
-#include "wedgeMatcher.H"
-#include "prismMatcher.H"
-#include "pyrMatcher.H"
-#include "tetWedgeMatcher.H"
-#include "tetMatcher.H"
-
-#include "regionSplit.H"
-#include "cellSet.H"
-#include "faceSet.H"
-#include "pointSet.H"
-#include "labelIOList.H"
-#include "mathematicalConstants.H"
+#include "polyMesh.H"
 #include "globalMeshData.H"
 
-#include "checkCoords.H"
-#include "checkEdges.H"
+#include "printMeshStats.H"
+#include "checkTopology.H"
+#include "checkGeometry.H"
 
 using namespace Foam;
 
@@ -59,8 +45,13 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
+
 #   include "addTimeOptionsNoConstant.H"
-#   include "addCoordsOption.H"
+
+    argList::validOptions.insert("fullTopology", "");
+    argList::validOptions.insert("pointNearness", "");
+    argList::validOptions.insert("cellDeterminant", "");
+
 #   include "setRootCase.H"
 #   include "createTime.H"
 
@@ -79,8 +70,6 @@ int main(int argc, char *argv[])
     {
         runTime.setTime(Times[i], i);
 
-        Info<< "Time = " << runTime.timeName() << endl;
-
         polyMesh::readUpdateState state = mesh.readUpdate();
 
         if
@@ -92,51 +81,66 @@ int main(int argc, char *argv[])
         {
             firstCheck = false;
 
+            Info<< "Time = " << runTime.timeName() << nl << endl;
+
             // Clear mesh before checking
             mesh.clearOut();
+
             // Reconstruct globalMeshData
             mesh.globalData();
 
+            printMeshStats(mesh);
+
             label noFailedChecks = 0;
 
-#           include "checkTopo.H"
-#           include "checkGeom.H"
-#           include "countCellShapes.H"
-#           include "countRegions.H"
+            noFailedChecks += checkTopology
+            (
+                mesh,
+                args.options().found("fullTopology")
+            );
+
+            noFailedChecks += checkGeometry
+            (
+                mesh,
+                args.options().found("pointNearness"),
+                args.options().found("cellDeterminant")
+            );
 
             reduce(noFailedChecks, sumOp<label>());
 
             if (noFailedChecks == 0)
             {
-                Info << "Mesh OK." << endl;
+                Info<< "\nMesh OK."
+                    << nl << endl;
             }
             else
             {
-                Info<< "Failed " << noFailedChecks << " mesh checks." << endl;
+                Info<< "\nFailed " << noFailedChecks << " mesh checks."
+                    << nl << endl;
             }
         }
         else if (state == polyMesh::POINTS_MOVED)
         {
-            label noFailedChecks = 0;
-
-#           include "checkGeom.H"
+            label noFailedChecks = checkGeometry
+            (
+                mesh,
+                args.options().found("pointNearness"),
+                args.options().found("cellDeterminant")
+            );
 
             reduce(noFailedChecks, sumOp<label>());
 
             if (noFailedChecks == 0)
             {
-                Info << "Mesh OK." << endl;
+                Info << "\nMesh OK."
+                    << nl << endl;
             }
             else
             {
-                Info<< "Failed " << noFailedChecks << " mesh checks." << endl;
+                Info<< "\nFailed " << noFailedChecks << " mesh checks."
+                    << nl << endl;
             }
         }
-        else
-        {
-            Info << "No mesh." << endl;
-        }
-        Info<< endl << endl;
     }
 
     Info<< "End\n" << endl;

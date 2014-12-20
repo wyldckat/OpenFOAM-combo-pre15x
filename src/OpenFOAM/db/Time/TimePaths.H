@@ -98,11 +98,19 @@ public:
                 return system_;
             }
 
+            //- Return system name for the case
+            //  which for parallel runs returns ../system()
+            fileName caseSystem() const;
+
             //- Return constant name
             const word& constant() const
             {
                 return constant_;
             }
+
+            //- Return constant name for the case
+            //  which for parallel runs returns ../constant()
+            fileName caseConstant() const;
 
             //- Return path
             fileName path() const

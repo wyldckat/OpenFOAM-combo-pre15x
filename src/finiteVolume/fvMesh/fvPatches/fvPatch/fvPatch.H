@@ -235,7 +235,10 @@ public:
 
             //- Return the corresponding patchField of the named field
             template<class GeometricField, class Type>
-            const fvPatchField<Type>& patchField(const GeometricField&) const;
+            const typename GeometricField::PatchFieldType& patchField
+            (
+                const GeometricField&
+            ) const;
 
             //- Lookup and return the patchField of the named field from the
             //  local objectRegistry.
@@ -243,7 +246,7 @@ public:
             //  instantiated within a templated function to avoid a bug in gcc.
             //  See inletOutletFvPatchField.C and outletInletFvPatchField.C
             template<class GeometricField, class Type>
-            const fvPatchField<Type>& lookupPatchField
+            const typename GeometricField::PatchFieldType& lookupPatchField
             (
                 const word& name,
                 const GeometricField* = NULL,

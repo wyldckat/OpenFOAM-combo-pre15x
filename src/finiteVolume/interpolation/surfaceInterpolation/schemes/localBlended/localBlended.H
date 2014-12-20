@@ -138,7 +138,7 @@ public:
 
         //- Return the face-interpolate of the given cell field
         //  with explicit correction
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         interpolate(const GeometricField<Type, fvPatchField, volMesh>& vf) const
         {
             const surfaceScalarField& blendingFactor = 

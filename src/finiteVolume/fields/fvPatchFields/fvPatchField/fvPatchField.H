@@ -35,7 +35,7 @@ Description
 
 SourceFiles
     fvPatchField.C
-    newPatchField.C
+    newFvPatchField.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -43,17 +43,20 @@ SourceFiles
 #define fvPatchField_H
 
 #include "fvPatch.H"
-#include "primitiveFields.H"
+#include "DimensionedField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
+// Class forward declarations
+
 class objectRegistry;
 class dictionary;
 class fvPatchFieldMapper;
-class lduMatrix;
+class volMesh;
+
 
 // * * * * * * Forward declaration of template friend fuctions * * * * * * * //
 
@@ -75,18 +78,15 @@ class fvPatchField
 {
     // Private data
 
+        //- Reference to patch
         const fvPatch& patch_;
-        const Field<Type>& internalField_;
+
+        //- Reference to internal field
+        const DimensionedField<Type, volMesh>& internalField_;
 
         //- Update index used so that updateCoeffs is called only once during
         //  the construction of the matrix
         bool updated_;
-
-
-    // Private member functions
-
-        void checkPatch() const;
-        void checkInternalField() const;
 
 
 public:
@@ -108,7 +108,10 @@ public:
             tmp,
             fvPatchField,
             patch,
-            (const fvPatch& p, const Field<Type>& iF),
+            (
+                const fvPatch& p,
+                const DimensionedField<Type, volMesh>& iF
+            ),
             (p, iF)
         );
 
@@ -120,7 +123,7 @@ public:
             (
                 const fvPatchField<Type>& ptf,
                 const fvPatch& p,
-                const Field<Type>& iF,
+                const DimensionedField<Type, volMesh>& iF,
                 const fvPatchFieldMapper& m
             ),
             (dynamic_cast<const fvPatchFieldType&>(ptf), p, iF, m)
@@ -131,7 +134,11 @@ public:
             tmp,
             fvPatchField,
             dictionary,
-            (const fvPatch& p, const Field<Type>& iF, const dictionary& dict),
+            (
+                const fvPatch& p,
+                const DimensionedField<Type, volMesh>& iF,
+                const dictionary& dict
+            ),
             (p, iF, dict)
         );
 
@@ -142,14 +149,14 @@ public:
         fvPatchField
         (
             const fvPatch&,
-            const Field<Type>&
+            const DimensionedField<Type, volMesh>&
         );
 
         //- Construct from patch and internal field and patch field
         fvPatchField
         (
             const fvPatch&,
-            const Field<Type>&,
+            const DimensionedField<Type, volMesh>&,
             const Field<Type>&
         );
 
@@ -157,7 +164,7 @@ public:
         fvPatchField
         (
             const fvPatch&,
-            const Field<Type>&,
+            const DimensionedField<Type, volMesh>&,
             const dictionary&
         );
 
@@ -166,7 +173,7 @@ public:
         (
             const fvPatchField<Type>&,
             const fvPatch&,
-            const Field<Type>&,
+            const DimensionedField<Type, volMesh>&,
             const fvPatchFieldMapper&
         );
 
@@ -180,10 +187,17 @@ public:
         }
 
         //- Construct as copy setting internal field reference
-        fvPatchField(const fvPatchField<Type>&, const Field<Type>&);
+        fvPatchField
+        (
+            const fvPatchField<Type>&,
+            const DimensionedField<Type, volMesh>&
+        );
 
         //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchField<Type> > clone(const Field<Type>& iF) const
+        virtual tmp<fvPatchField<Type> > clone
+        (
+            const DimensionedField<Type, volMesh>& iF
+        ) const
         {
             return tmp<fvPatchField<Type> >(new fvPatchField<Type>(*this, iF));
         }
@@ -198,7 +212,7 @@ public:
         (
             const word&,
             const fvPatch&,
-            const Field<Type>&
+            const DimensionedField<Type, volMesh>&
         );
 
         //- Return a pointer to a new patchField created on freestore from
@@ -207,7 +221,7 @@ public:
         (
             const fvPatchField<Type>&,
             const fvPatch&,
-            const Field<Type>&,
+            const DimensionedField<Type, volMesh>&,
             const fvPatchFieldMapper&
         );
 
@@ -216,7 +230,7 @@ public:
         static tmp<fvPatchField<Type> > New
         (
             const fvPatch&,
-            const Field<Type>&,
+            const DimensionedField<Type, volMesh>&,
             const dictionary&
         );
 
@@ -248,6 +262,13 @@ public:
                 return patch_;
             }
 
+            //- Return dimensioned internal field reference
+            const DimensionedField<Type, volMesh>&
+            dimensionedInternalField() const
+            {
+                return internalField_;
+            }
+
             //- Return internal field reference
             const Field<Type>& internalField() const
             {
@@ -276,13 +297,6 @@ public:
             {
                 return updated_;
             }
-
-            //- Does this patchField correspond to a volTypeField
-            bool isVolField() const;
-
-            //- Check that this patchField corresponds to a volTypeField,
-            // if not abort!
-            void checkVolField() const;
 
 
         // Mapping functions
@@ -474,7 +488,11 @@ addToRunTimeSelectionTable                                                 \
                                                                            \
 makePatchTypeField(fvPatchScalarField, type##FvPatchScalarField);          \
 makePatchTypeField(fvPatchVectorField, type##FvPatchVectorField);          \
-makePatchTypeField(fvPatchSphericalTensorField, type##FvPatchSphericalTensorField); \
+makePatchTypeField                                                         \
+(                                                                          \
+    fvPatchSphericalTensorField,                                           \
+    type##FvPatchSphericalTensorField                                      \
+);                                                                         \
 makePatchTypeField(fvPatchSymmTensorField, type##FvPatchSymmTensorField);  \
 makePatchTypeField(fvPatchTensorField, type##FvPatchTensorField);
 
@@ -483,7 +501,8 @@ makePatchTypeField(fvPatchTensorField, type##FvPatchTensorField);
                                                                            \
 typedef type##FvPatchField<scalar> type##FvPatchScalarField;               \
 typedef type##FvPatchField<vector> type##FvPatchVectorField;               \
-typedef type##FvPatchField<sphericalTensor> type##FvPatchSphericalTensorField; \
+typedef type##FvPatchField<sphericalTensor>                                \
+    type##FvPatchSphericalTensorField;                                     \
 typedef type##FvPatchField<symmTensor> type##FvPatchSymmTensorField;       \
 typedef type##FvPatchField<tensor> type##FvPatchTensorField;
 

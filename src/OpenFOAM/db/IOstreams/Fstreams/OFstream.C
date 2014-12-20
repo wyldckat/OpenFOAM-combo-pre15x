@@ -87,6 +87,17 @@ OFstreamAllocator::~OFstreamAllocator()
 }
 
 
+ostream& OFstreamAllocator::stdStream()
+{
+    if (!ofPtr_)
+    {
+        FatalErrorIn("OFstreamAllocator::stdStream()")
+            << "No stream allocated." << abort(FatalError);
+    }
+    return *ofPtr_;
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 OFstream::OFstream

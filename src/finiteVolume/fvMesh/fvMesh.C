@@ -36,7 +36,6 @@ License
 #include "mapPolyMesh.H"
 #include "MapFvFields.H"
 #include "fvMeshMapper.H"
-#include "fvSurfaceMapper.H"
 #include "mapClouds.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -188,10 +187,11 @@ fvMesh::fvMesh
     const pointField& points,
     const faceList& faces,
     const labelList& allOwner,
-    const labelList& allNeighbour
+    const labelList& allNeighbour,
+    const bool syncPar
 )
 :
-    polyMesh(io, points, faces, allOwner, allNeighbour),
+    polyMesh(io, points, faces, allOwner, allNeighbour, syncPar),
     surfaceInterpolation(*this),
     boundary_(*this),
     lduPtr_(NULL),
@@ -218,10 +218,11 @@ fvMesh::fvMesh
     const IOobject& io,
     const pointField& points,
     const faceList& faces,
-    const cellList& cells
+    const cellList& cells,
+    const bool syncPar
 )
 :
-    polyMesh(io, points, faces, cells),
+    polyMesh(io, points, faces, cells, syncPar),
     surfaceInterpolation(*this),
     boundary_(*this),
     lduPtr_(NULL),
@@ -369,28 +370,29 @@ void fvMesh::mapFields(const mapPolyMesh& meshMap)
     MapGeometricFields<tensor, fvPatchField, fvMeshMapper, volMesh>(mapper);
 
     // Map all the surfaceFields in the objectRegistry
-    MapGeometricFields<scalar, fvPatchField, fvMeshMapper, surfaceMesh>(mapper);
-    MapGeometricFields<vector, fvPatchField, fvMeshMapper, surfaceMesh>(mapper);
-    MapGeometricFields<tensor, fvPatchField, fvMeshMapper, surfaceMesh>(mapper);
+    MapGeometricFields<scalar, fvsPatchField, fvMeshMapper, surfaceMesh>(mapper);
+    MapGeometricFields<vector, fvsPatchField, fvMeshMapper, surfaceMesh>(mapper);
+    MapGeometricFields<tensor, fvsPatchField, fvMeshMapper, surfaceMesh>(mapper);
 
     // Map all the clouds in the objectRegistry
     mapClouds(*this, meshMap);
 
 
+    const labelList& cellMap = meshMap.cellMap();
+
+    // Map the old volume. Just map to new cell labels.
     if (V0Ptr_)
     {
         scalarField& V0 = *V0Ptr_;
 
-        scalarField V00(V0);
+        scalarField savedV0(V0);
         V0.setSize(nCells());
-
-        const labelList& cellMap = meshMap.cellMap();
 
         forAll(V0, i)
         {
             if (cellMap[i] > -1)
             {
-                V0[i] = V00[cellMap[i]];
+                V0[i] = savedV0[cellMap[i]];
             }
             else
             {
@@ -399,22 +401,40 @@ void fvMesh::mapFields(const mapPolyMesh& meshMap)
         }
     }
 
+    // Map the old-old volume. Just map to new cell labels.
     if (V00Ptr_)
     {
-        MapInternalField<scalar, fvMeshMapper, volMesh>()(*V00Ptr_, mapper);
+        scalarField& V00 = *V00Ptr_;
+
+        scalarField savedV00(V00);
+        V00.setSize(nCells());
+
+        forAll(V00, i)
+        {
+            if (cellMap[i] > -1)
+            {
+                V00[i] = savedV00[cellMap[i]];
+            }
+            else
+            {
+                V00[i] = 0.0;
+            }
+        }
     }
 }
 
 
 void fvMesh::updateMesh(const mapPolyMesh& mpm)
 {
+    // Update polyMesh. This needs to keep volume existent!
     polyMesh::updateMesh(mpm);
 
+    // Map all fields using current (i.e. not yet mapped) volume
+    mapFields(mpm);
+
+    // Clear the current volume and other geometry factors
     surfaceInterpolation::clearOut();
     clearGeomNotOldVol();
-
-    // Map all fields
-    mapFields(mpm);
 
     clearAddressing();
 

@@ -56,27 +56,29 @@ autoPtr<fvMesh> createMesh
     const bool haveMesh
 )
 {
-    Info<< "Create mesh for time = "
+    Pout<< "Create mesh for time = "
         << runTime.timeName() << nl << endl;
+
+    // Create dummy mesh. Only used on procs that don't have mesh.
+    // Note constructed on all processors since does parallel comms.
+    fvMesh dummyMesh
+    (
+        IOobject
+        (
+            fvMesh::defaultRegion,
+            instDir,
+            runTime,
+            IOobject::MUST_READ
+        ),
+        pointField(0),
+        faceList(0),
+        labelList(0),
+        labelList(0)
+    );
 
     if (!haveMesh)
     {
-        Pout<< "Creating dummy mesh in " << runTime.path()/instDir << endl;
-
-        fvMesh dummyMesh
-        (
-            IOobject
-            (
-                fvMesh::defaultRegion,
-                instDir,
-                runTime,
-                IOobject::MUST_READ
-            ),
-            pointField(0),
-            faceList(0),
-            labelList(0),
-            labelList(0)
-        );
+        Pout<< "Writing dummy mesh to " << runTime.path()/instDir << endl;
         dummyMesh.write();
     }
 
@@ -333,20 +335,21 @@ void writeDecomposition
 
 
 // Read vol or surface fields
-template<class T, class Mesh>
+//template<class T, class Mesh>
+template<class GeoField>
 void readFields
 (
     const boolList& haveMesh,
     const fvMesh& mesh,
     const autoPtr<fvMeshSubset>& subsetterPtr,
     IOobjectList& allObjects,
-    PtrList<GeometricField<T, fvPatchField, Mesh> >& fields
+    PtrList<GeoField>& fields
 )
 {
-    typedef GeometricField<T, fvPatchField, Mesh> fldType;
+    //typedef GeometricField<T, fvPatchField, Mesh> fldType;
 
     // Get my objects of type
-    IOobjectList objects(allObjects.lookupClass(fldType::typeName));
+    IOobjectList objects(allObjects.lookupClass(GeoField::typeName));
     // Check that we all have all objects
     wordList objectNames = objects.toc();
     // Get master names
@@ -356,7 +359,7 @@ void readFields
     if (haveMesh[Pstream::myProcNo()] && objectNames != masterNames)
     {
         FatalErrorIn("readFields()")
-            << "differing fields of type " << fldType::typeName
+            << "differing fields of type " << GeoField::typeName
             << " on processors." << endl
             << "Master has:" << masterNames << endl
             << Pstream::myProcNo() << " has:" << objectNames
@@ -375,12 +378,12 @@ void readFields
             io.writeOpt() = IOobject::AUTO_WRITE;
 
             // Load field
-            fields.set(i, new fldType(io, mesh));
+            fields.set(i, new GeoField(io, mesh));
 
             // Create zero sized field and send
             if (subsetterPtr.valid())
             {
-                tmp<fldType> tsubfld = subsetterPtr().interpolate(fields[i]);
+                tmp<GeoField> tsubfld = subsetterPtr().interpolate(fields[i]);
 
                 // Send to all processors that don't have a mesh
                 for (label procI = 1; procI < Pstream::nProcs(); procI++)
@@ -408,7 +411,7 @@ void readFields
             fields.set
             (
                 i,
-                new fldType
+                new GeoField
                 (
                     IOobject
                     (
@@ -437,7 +440,7 @@ void readFields
             io.writeOpt() = IOobject::AUTO_WRITE;
 
             // Load field
-            fields.set(i, new fldType(io, mesh));
+            fields.set(i, new GeoField(io, mesh));
         }
     }
 }
@@ -664,6 +667,26 @@ int main(int argc, char *argv[])
         volVectorFields
     );
 
+    PtrList<volSphericalTensorField> volSphereTensorFields;
+    readFields
+    (
+        haveMesh,
+        mesh,
+        subsetterPtr,
+        objects,
+        volSphereTensorFields
+    );
+
+    PtrList<volSymmTensorField> volSymmTensorFields;
+    readFields
+    (
+        haveMesh,
+        mesh,
+        subsetterPtr,
+        objects,
+        volSymmTensorFields
+    );
+
     PtrList<volTensorField> volTensorFields;
     readFields
     (
@@ -692,6 +715,26 @@ int main(int argc, char *argv[])
         subsetterPtr,
         objects,
         surfVectorFields
+    );
+
+    PtrList<surfaceSphericalTensorField> surfSphereTensorFields;
+    readFields
+    (
+        haveMesh,
+        mesh,
+        subsetterPtr,
+        objects,
+        surfSphereTensorFields
+    );
+
+    PtrList<surfaceSymmTensorField> surfSymmTensorFields;
+    readFields
+    (
+        haveMesh,
+        mesh,
+        subsetterPtr,
+        objects,
+        surfSymmTensorFields
     );
 
     PtrList<surfaceTensorField> surfTensorFields;

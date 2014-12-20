@@ -40,7 +40,7 @@ namespace Foam
 gammaFixedPressureFvPatchScalarField::gammaFixedPressureFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedValueFvPatchScalarField(p, iF),
@@ -52,7 +52,7 @@ gammaFixedPressureFvPatchScalarField::gammaFixedPressureFvPatchScalarField
 (
     const gammaFixedPressureFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -64,7 +64,7 @@ gammaFixedPressureFvPatchScalarField::gammaFixedPressureFvPatchScalarField
 gammaFixedPressureFvPatchScalarField::gammaFixedPressureFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -98,7 +98,7 @@ gammaFixedPressureFvPatchScalarField::gammaFixedPressureFvPatchScalarField
 gammaFixedPressureFvPatchScalarField::gammaFixedPressureFvPatchScalarField
 (
     const gammaFixedPressureFvPatchScalarField& tppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedValueFvPatchScalarField(tppsf, iF),
@@ -133,7 +133,6 @@ void gammaFixedPressureFvPatchScalarField::rmap
 }
 
 
-// Update the coefficients associated with the patch field
 void gammaFixedPressureFvPatchScalarField::updateCoeffs()
 {
     if (updated())
@@ -155,7 +154,6 @@ void gammaFixedPressureFvPatchScalarField::updateCoeffs()
 }
 
 
-// Write
 void gammaFixedPressureFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);

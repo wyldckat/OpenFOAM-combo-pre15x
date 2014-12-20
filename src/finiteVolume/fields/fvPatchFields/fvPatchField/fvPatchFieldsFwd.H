@@ -22,15 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    fvPatchField
-
-Description
-
 \*---------------------------------------------------------------------------*/
 
-#ifndef patchFieldsFwd_H
-#define patchFieldsFwd_H
+#ifndef fvPatchFieldsFwd_H
+#define fvPatchFieldsFwd_H
 
 #include "fieldTypes.H"
 

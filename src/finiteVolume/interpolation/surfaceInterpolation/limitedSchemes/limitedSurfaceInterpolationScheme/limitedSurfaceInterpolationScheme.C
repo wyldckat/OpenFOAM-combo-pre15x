@@ -202,7 +202,7 @@ tmp<surfaceScalarField> limitedSurfaceInterpolationScheme<Type>::weights
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 limitedSurfaceInterpolationScheme<Type>::flux
 (
     const GeometricField<Type, fvPatchField, volMesh>& phi

@@ -29,6 +29,8 @@ License
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
 #include "polyTopoChanger.H"
+#include "polyModifyFace.H"
+#include "polyModifyPoint.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -168,9 +170,6 @@ void Foam::slidingInterface::decoupleInterface
 
     // Re-create the master stick-out faces
 
-    const labelHashSet& removedPoints = ref.removedPoints();
-    const labelHashSet& removedFaces = ref.removedFaces();
-
     // Grab the list of faces in the layer
     const labelList& masterStickOuts = masterStickOutFaces();
 
@@ -189,7 +188,7 @@ void Foam::slidingInterface::decoupleInterface
         forAll (oldFace, pointI)
         {
             // Check if the point is removed
-            if (removedPoints.found(oldFace[pointI]))
+            if (ref.pointRemoved(oldFace[pointI]))
             {
                 // Point removed; skip it
                 changed = true;
@@ -270,7 +269,7 @@ void Foam::slidingInterface::decoupleInterface
             (
                 mesh.faceZones().whichZone(curFaces[faceI])
              != slaveFaceZoneID_.index()
-             && !removedFaces.found(curFaces[faceI])
+             && !ref.faceRemoved(curFaces[faceI])
 
             )
             {
@@ -307,7 +306,7 @@ void Foam::slidingInterface::decoupleInterface
 //                 Pout << "Reinstating retired point: " << oldFace[pointI] << " with old: " << rpm.find(oldFace[pointI])() << endl;
                 newFaceLabels.append(rpm.find(oldFace[pointI])());
             }
-            else if (removedPoints.found(oldFace[pointI]))
+            else if (ref.pointRemoved(oldFace[pointI]))
             {
                 // Point removed; skip it
                 changed = true;

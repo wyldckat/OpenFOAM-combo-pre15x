@@ -27,7 +27,6 @@ License
 #include "evaluateError.H"
 #include "volFields.H"
 #include "surfaceFields.H"
-#include "removeFaces.H"
 #include "refineCell.H"
 
 

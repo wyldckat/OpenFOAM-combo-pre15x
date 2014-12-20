@@ -34,9 +34,9 @@ Description
 
 bool Foam::matchPoints
 (
-    const pointField& pts0,
-    const pointField& pts1,
-    const scalarField& tols,
+    const UList<point>& pts0,
+    const UList<point>& pts1,
+    const UList<scalar>& tols,
     const bool verbose,
     labelList& from0To1,
     const point& origin
@@ -94,12 +94,12 @@ bool Foam::matchPoints
         {
             if (verbose)
             {
-                Info<< "Cannot find point in pts1 matching point " << face0I
+                Pout<< "Cannot find point in pts1 matching point " << face0I
                     << " coord:" << pts0[face0I]
                     << " in pts0 when using tolerance " << tol << endl;
 
                 // Go through range of equal mag and find equal vector.
-                Info<< "Searching started from:" << startI << " in pts1"
+                Pout<< "Searching started from:" << startI << " in pts1"
                     << endl;
                 for
                 (
@@ -113,7 +113,7 @@ bool Foam::matchPoints
                 {
                     label faceI = pts1Mag.indices()[j];
 
-                    Info<< "Compared coord:" << pts1[faceI]
+                    Pout<< "Compared coord:" << pts1[faceI]
                         << " with difference to point "
                         << mag(pts1[faceI] - pts0[face0I]) << endl;
                 }

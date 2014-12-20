@@ -100,10 +100,8 @@ public:
 
     // Member functions
 
-        //- Sync set across coupled patches.
-        //NOTE: to be done!
-        virtual void sync(const polyMesh& mesh)
-        {}
+        //- Sync set across coupled patches. Adds coupled points to set.
+        virtual void sync(const polyMesh& mesh);
 
         //- Return max index+1.
         virtual label maxSize(const polyMesh& mesh) const;
@@ -112,7 +110,7 @@ public:
         virtual void updateMesh(const mapPolyMesh& morphMap);
 
         //- Update any stored data for new labels
-        //virtual void updateMesh(const directPolyTopoChange& meshMod);
+        //virtual void updateMesh(const polyTopoChange& meshMod);
 
         //- Write maxLen items with label and coordinates. 
         virtual void writeDebug

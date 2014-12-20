@@ -41,7 +41,7 @@ namespace fvc
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 snGrad
 (
     const GeometricField<Type, fvPatchField, volMesh>& vf,
@@ -57,14 +57,14 @@ snGrad
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 snGrad
 (
     const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf,
     const word& name
 )
 {
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > SnGrad
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > SnGrad
     (
         fvc::snGrad(tvf(), name)
     );
@@ -74,7 +74,7 @@ snGrad
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 snGrad
 (
     const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -85,13 +85,13 @@ snGrad
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 snGrad
 (
     const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf
 )
 {
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > SnGrad
+    tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > SnGrad
     (
         fvc::snGrad(tvf())
     );

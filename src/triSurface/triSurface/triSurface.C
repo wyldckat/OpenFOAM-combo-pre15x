@@ -172,6 +172,19 @@ void triSurface::printTriangle
 }
 
 
+string triSurface::getLineNoComment(IFstream& is)
+{
+    string line;
+    do
+    {
+        is.getLine(line);
+    }
+    while((line.size() == 0 || line[0] == '#') && is.good());
+
+    return line;
+}
+
+
 // Remove non-triangles, double triangles.
 void triSurface::checkTriangles(const bool verbose)
 {
@@ -512,7 +525,13 @@ bool triSurface::read(Istream& is)
 // Read from file in given format
 bool triSurface::read(const fileName& name, const word& ext)
 {
-    if (ext == "ftr")
+    if (ext == "gz")
+    {
+        fileName unzipName = name.lessExt();
+
+        return read(unzipName, unzipName.ext());
+    }
+    else if (ext == "ftr")
     {
         return read(IFstream(name)());
     }

@@ -29,7 +29,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "IOobject.H"
-#include "banner.H"
 #include "token.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -70,9 +69,8 @@ bool IOobject::writeHeader(Ostream& os) const
 
     os  << "    object " << name() << ";\n";
     os  << "}\n\n";
-
-    os  << "// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //"
-        << nl << endl;
+    writeDivider(os);
+    os  << endl;
 
     return true;
 }

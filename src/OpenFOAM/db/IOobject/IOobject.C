@@ -42,7 +42,6 @@ defineTypeNameAndDebug(IOobject, 0);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-//  Construct from name, instance, objectRegistry, options
 IOobject::IOobject
 (
     const word& name,
@@ -73,7 +72,6 @@ IOobject::IOobject
 }
 
 
-//  Construct from name, instance, local, objectRegistry, options
 IOobject::IOobject
 (
     const word& name,

@@ -218,6 +218,9 @@ public:
         //- Clear addressing
         void clearAddressing();
 
+        //- Check zone definition. Return true if in error.
+        bool checkDefinition(const bool report = false) const;
+
         //- Correct patch after moving points
         virtual void movePoints(const pointField&)
         {}

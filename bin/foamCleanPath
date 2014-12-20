@@ -27,27 +27,25 @@
 #     foamCleanPath
 #
 # Description
-#     Usage: cleanPath path 'dir1 .. dirn'
+#     Usage: cleanPath path [wildcard]
 #
 #     Prints its argument (which should be a ':' separated path)
 #     without all
 #         - duplicate elements
 #         - non-accessible directories
-#         - elements which match any of dir1 .. dirn (uses grep)
+#         - elements whose start matches wildcard
 #------------------------------------------------------------------------------
 
 if [ $# -eq 1 ]; then
     dirList="$1"
-    wildCards=""
 else
     if [ $# -eq 2 ]; then
-        dirList="$1"
-        wildCards="$2"
+        dirList=`echo "$1" | sed -e "s@${2}[^:]*:@@g"`
     else
-        echo "Usage: $0 path 'wildcard .. wildcard'" 1>&2
+        echo "Usage: $0 path [wildcard]" 1>&2
         echo "" 1>&2
         echo "Prints argument path with all entries matching " 1>&2
-        echo " any of the wildcards removed." 1>&2
+        echo "the wildcard removed." 1>&2
         exit 1
     fi
 fi
@@ -66,20 +64,6 @@ do
         continue
     fi
 
-    #- matching wildcards
-    matchWildCard=false
-    for wildCard in $wildCards
-    do
-        echo "$dir" | grep  "$wildCard" >/dev/null
-        if [ $? -eq 0 ]; then
-            matchWildCard=true
-            break
-        fi
-    done
-    if [  "$matchWildCard" = 'true' ]; then
-        continue
-    fi
-
     #- duplicate
     dirListWithout=`echo ":${newDirList}:" | sed -e "s@:${dir}:@::@"`
     if [ "$dirListWithout" != ":${newDirList}:" ]; then
@@ -91,6 +75,7 @@ done
 
 IFS="$oldIFS"
 
+# Remove leading or trailing colons
 echo "$newDirList" | sed -e 's@^:@@' -e 's@:$@@'
 
 # -----------------------------------------------------------------------------

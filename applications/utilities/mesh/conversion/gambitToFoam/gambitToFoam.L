@@ -681,7 +681,7 @@ int main(int argc, char *argv[])
 
     forAll (pointMap, pointI)
     {
-        pointLookup[pointMap[pointI]] = pointI;
+        pointLookup[pointMap[pointI] ] = pointI;
     }
 
     // make a cell mapping array
@@ -699,7 +699,7 @@ int main(int argc, char *argv[])
 
     forAll (cellMap, cellI)
     {
-        cellLookup[cellMap[cellI]] = cellI;
+        cellLookup[cellMap[cellI] ] = cellI;
     }
 
     const cellModel& hex = *(cellModeller::lookup("hex"));
@@ -721,10 +721,10 @@ int main(int argc, char *argv[])
         // Tetrahedron
         if (cellTypes[cellI] == 6)
         {
-            labelsTet[0] = pointLookup[curCellLabels[0]];
-            labelsTet[1] = pointLookup[curCellLabels[2]];
-            labelsTet[2] = pointLookup[curCellLabels[3]];
-            labelsTet[3] = pointLookup[curCellLabels[1]];
+            labelsTet[0] = pointLookup[curCellLabels[0] ];
+            labelsTet[1] = pointLookup[curCellLabels[2] ];
+            labelsTet[2] = pointLookup[curCellLabels[3] ];
+            labelsTet[3] = pointLookup[curCellLabels[1] ];
 
             cells[cellI] = cellShape(tet, labelsTet);
         }
@@ -732,11 +732,11 @@ int main(int argc, char *argv[])
         // Square-based pyramid
         else if (cellTypes[cellI] == 7)
         {
-            labelsPyramid[0] = pointLookup[curCellLabels[0]];
-            labelsPyramid[1] = pointLookup[curCellLabels[1]];
-            labelsPyramid[2] = pointLookup[curCellLabels[3]];
-            labelsPyramid[3] = pointLookup[curCellLabels[2]];
-            labelsPyramid[4] = pointLookup[curCellLabels[4]];
+            labelsPyramid[0] = pointLookup[curCellLabels[0] ];
+            labelsPyramid[1] = pointLookup[curCellLabels[1] ];
+            labelsPyramid[2] = pointLookup[curCellLabels[3] ];
+            labelsPyramid[3] = pointLookup[curCellLabels[2] ];
+            labelsPyramid[4] = pointLookup[curCellLabels[4] ];
 
             cells[cellI] = cellShape(pyr, labelsPyramid);
         }
@@ -744,12 +744,12 @@ int main(int argc, char *argv[])
         // Triangular prism
         else if (cellTypes[cellI] == 5)
         {
-            labelsPrism[0] = pointLookup[curCellLabels[0]];
-            labelsPrism[1] = pointLookup[curCellLabels[1]];
-            labelsPrism[2] = pointLookup[curCellLabels[2]];
-            labelsPrism[3] = pointLookup[curCellLabels[3]];
-            labelsPrism[4] = pointLookup[curCellLabels[4]];
-            labelsPrism[5] = pointLookup[curCellLabels[5]];
+            labelsPrism[0] = pointLookup[curCellLabels[0] ];
+            labelsPrism[1] = pointLookup[curCellLabels[1] ];
+            labelsPrism[2] = pointLookup[curCellLabels[2] ];
+            labelsPrism[3] = pointLookup[curCellLabels[3] ];
+            labelsPrism[4] = pointLookup[curCellLabels[4] ];
+            labelsPrism[5] = pointLookup[curCellLabels[5] ];
 
             cells[cellI] = cellShape(prism, labelsPrism);
         }
@@ -757,14 +757,14 @@ int main(int argc, char *argv[])
         // Hex
         else if (cellTypes[cellI] == 4)
         {
-            labelsHex[0] = pointLookup[curCellLabels[0]];
-            labelsHex[1] = pointLookup[curCellLabels[1]];
-            labelsHex[2] = pointLookup[curCellLabels[3]];
-            labelsHex[3] = pointLookup[curCellLabels[2]];
-            labelsHex[4] = pointLookup[curCellLabels[4]];
-            labelsHex[5] = pointLookup[curCellLabels[5]];
-            labelsHex[6] = pointLookup[curCellLabels[7]];
-            labelsHex[7] = pointLookup[curCellLabels[6]];
+            labelsHex[0] = pointLookup[curCellLabels[0] ];
+            labelsHex[1] = pointLookup[curCellLabels[1] ];
+            labelsHex[2] = pointLookup[curCellLabels[3] ];
+            labelsHex[3] = pointLookup[curCellLabels[2] ];
+            labelsHex[4] = pointLookup[curCellLabels[4] ];
+            labelsHex[5] = pointLookup[curCellLabels[5] ];
+            labelsHex[6] = pointLookup[curCellLabels[7] ];
+            labelsHex[7] = pointLookup[curCellLabels[6] ];
 
             cells[cellI] = cellShape(hex, labelsHex);
         }
@@ -796,12 +796,12 @@ int main(int argc, char *argv[])
         forAll (curCells, faceI)
         {
             patchFaces[faceI] =
-                cells[cellLookup[curCells[faceI]]].faces()
+                cells[cellLookup[curCells[faceI] ] ].faces()
                 [
                     faceIndex
                     [
                         // this picks a cell type
-                        cells[cellLookup[curCells[faceI]]]
+                        cells[cellLookup[curCells[faceI] ] ]
                             .model().index()
                     ]
                     [curFaces[faceI] - 1] // this gives a fluent face - 1
@@ -852,9 +852,6 @@ int main(int argc, char *argv[])
         defaultFacesType,
         patchPhysicalTypes
     );
-
-    Info << "Checking mesh" << endl;
-    pShapeMesh.checkMesh();
 
     // Set the precision of the points data to 10
     IOstream::defaultPrecision(10);

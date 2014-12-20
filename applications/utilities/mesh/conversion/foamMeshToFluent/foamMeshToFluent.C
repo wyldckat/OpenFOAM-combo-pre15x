@@ -42,7 +42,9 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "createTime.H"
 
-    Info<< "Create mesh\n" << endl;
+    Info<< "Create mesh for time = "
+        << runTime.timeName() << nl << endl;
+
     fluentFvMesh mesh
     (
         IOobject

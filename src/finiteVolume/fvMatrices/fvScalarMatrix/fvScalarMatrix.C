@@ -34,8 +34,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Set reference level for a component of the solution
-// on a given patch face
 template<>
 void fvMatrix<scalar>::setComponentReference
 (
@@ -53,7 +51,8 @@ void fvMatrix<scalar>::setComponentReference
                 diag()[psi_.mesh().boundary()[patchi].faceCells()[facei]];
 
             boundaryCoeffs_[patchi][facei] += 
-                diag()[psi_.mesh().boundary()[patchi].faceCells()[facei]]*value;
+                diag()[psi_.mesh().boundary()[patchi].faceCells()[facei]]
+               *value;
         }
     }
 }
@@ -161,7 +160,6 @@ lduMatrix::solverPerformance fvMatrix<scalar>::solve(Istream& solverControls)
 }
 
 
-// Return the matrix residual
 template<>
 tmp<scalarField> fvMatrix<scalar>::residual() const
 {
@@ -186,7 +184,6 @@ tmp<scalarField> fvMatrix<scalar>::residual() const
 }
 
 
-// H operator
 template<>
 tmp<volScalarField> fvMatrix<scalar>::H() const
 {
@@ -216,6 +213,38 @@ tmp<volScalarField> fvMatrix<scalar>::H() const
     Hphi.correctBoundaryConditions();
 
     return tHphi;
+}
+
+
+template<>
+tmp<volScalarField> fvMatrix<scalar>::H1() const
+{
+    tmp<volScalarField> tH1
+    (
+        new volScalarField
+        (
+            IOobject
+            (
+                "H(1)",
+                psi_.instance(),
+                psi_.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            psi_.mesh(),
+            dimensions_/(dimVol*psi_.dimensions()),
+            zeroGradientFvPatchScalarField::typeName
+        )
+    );
+    volScalarField& H1_ = tH1();
+
+    H1_.internalField() = lduMatrix::H1();
+    //addBoundarySource(Hphi.internalField());
+
+    H1_.internalField() /= psi_.mesh().V();
+    H1_.correctBoundaryConditions();
+
+    return tH1;
 }
 
 

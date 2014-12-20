@@ -43,7 +43,7 @@ namespace fv
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 gaussConvectionScheme<Type>::interpolate
 (
     const surfaceScalarField&,
@@ -55,7 +55,7 @@ gaussConvectionScheme<Type>::interpolate
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
 gaussConvectionScheme<Type>::flux
 (
     const surfaceScalarField& faceFlux,
@@ -94,8 +94,8 @@ gaussConvectionScheme<Type>::fvmDiv
     forAll(fvm.psi().boundaryField(), patchI)
     {
         const fvPatchField<Type>& psf = fvm.psi().boundaryField()[patchI];
-        const fvPatchScalarField& patchFlux = faceFlux.boundaryField()[patchI];
-        const fvPatchScalarField& pw = weights.boundaryField()[patchI];
+        const fvsPatchScalarField& patchFlux = faceFlux.boundaryField()[patchI];
+        const fvsPatchScalarField& pw = weights.boundaryField()[patchI];
 
         fvm.internalCoeffs()[patchI] = patchFlux*psf.valueInternalCoeffs(pw);
         fvm.boundaryCoeffs()[patchI] = -patchFlux*psf.valueBoundaryCoeffs(pw);

@@ -30,6 +30,7 @@ License
 #include "fvPatchFields.H"
 #include "emptyFvPatch.H"
 #include "emptyFvPatchField.H"
+#include "emptyFvsPatchField.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -113,7 +114,7 @@ Foam::fvFieldReconstructor::reconstructFvVolumeField
                         (
                             procField.boundaryField()[patchI],
                             mesh_.boundary()[curBPatch],
-                            internalField,
+                            DimensionedField<Type, volMesh>::null(),
                             fvPatchFieldReconstructor
                             (
                                 mesh_.boundary()[curBPatch].size()
@@ -167,7 +168,7 @@ Foam::fvFieldReconstructor::reconstructFvVolumeField
                                 (
                                     mesh_.boundary()[curBPatch].type(),
                                     mesh_.boundary()[curBPatch],
-                                    internalField
+                                    DimensionedField<Type, volMesh>::null()
                                 )
                             );
                         }
@@ -201,7 +202,7 @@ Foam::fvFieldReconstructor::reconstructFvVolumeField
                 (
                     emptyFvPatchField<Type>::typeName,
                     mesh_.boundary()[patchI],
-                    internalField
+                    DimensionedField<Type, volMesh>::null()
                 )
             );
         }
@@ -232,14 +233,14 @@ Foam::fvFieldReconstructor::reconstructFvVolumeField
 
 
 template<class Type>
-Foam::tmp<Foam::GeometricField<Type, Foam::fvPatchField, Foam::surfaceMesh> >
+Foam::tmp<Foam::GeometricField<Type, Foam::fvsPatchField, Foam::surfaceMesh> >
 Foam::fvFieldReconstructor::reconstructFvSurfaceField
 (
     const IOobject& fieldIoObject
 )
 {
     // Read the field for all the processors
-    PtrList<GeometricField<Type, fvPatchField, surfaceMesh> > procFields
+    PtrList<GeometricField<Type, fvsPatchField, surfaceMesh> > procFields
     (
         procMeshes_.size()
     );
@@ -249,7 +250,7 @@ Foam::fvFieldReconstructor::reconstructFvSurfaceField
         procFields.set
         (
             procI,
-            new GeometricField<Type, fvPatchField, surfaceMesh>
+            new GeometricField<Type, fvsPatchField, surfaceMesh>
             (
                 IOobject
                 (
@@ -269,12 +270,12 @@ Foam::fvFieldReconstructor::reconstructFvSurfaceField
     Field<Type> internalField(mesh_.nInternalFaces());
 
     // Create the patch fields
-    PtrList<fvPatchField<Type> > patchFields(mesh_.boundary().size());
+    PtrList<fvsPatchField<Type> > patchFields(mesh_.boundary().size());
 
 
     forAll (procMeshes_, procI)
     {
-        const GeometricField<Type, fvPatchField, surfaceMesh>& procField =
+        const GeometricField<Type, fvsPatchField, surfaceMesh>& procField =
             procFields[procI];
 
         // Set the face values in the reconstructed field
@@ -320,11 +321,11 @@ Foam::fvFieldReconstructor::reconstructFvSurfaceField
                     patchFields.set
                     (
                         curBPatch,
-                        fvPatchField<Type>::New
+                        fvsPatchField<Type>::New
                         (
                             procField.boundaryField()[patchI],
                             mesh_.boundary()[curBPatch],
-                            internalField,
+                            DimensionedField<Type, surfaceMesh>::null(),
                             fvPatchFieldReconstructor
                             (
                                 mesh_.boundary()[curBPatch].size()
@@ -376,11 +377,12 @@ Foam::fvFieldReconstructor::reconstructFvSurfaceField
                                 patchFields.set
                                 (
                                     curBPatch,
-                                    fvPatchField<Type>::New
+                                    fvsPatchField<Type>::New
                                     (
                                         mesh_.boundary()[curBPatch].type(),
                                         mesh_.boundary()[curBPatch],
-                                        internalField
+                                        DimensionedField<Type, surfaceMesh>
+                                           ::null()
                                     )
                                 );
                             }
@@ -416,11 +418,11 @@ Foam::fvFieldReconstructor::reconstructFvSurfaceField
             patchFields.set
             (
                 patchI,
-                fvPatchField<Type>::New
+                fvsPatchField<Type>::New
                 (
-                    emptyFvPatchField<Type>::typeName,
+                    emptyFvsPatchField<Type>::typeName,
                     mesh_.boundary()[patchI],
-                    internalField
+                    DimensionedField<Type, surfaceMesh>::null()
                 )
             );
         }
@@ -429,9 +431,9 @@ Foam::fvFieldReconstructor::reconstructFvSurfaceField
 
     // Now construct and write the field
     // setting the internalField and patchFields
-    return tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+    return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
     (
-        new GeometricField<Type, fvPatchField, surfaceMesh>
+        new GeometricField<Type, fvsPatchField, surfaceMesh>
         (
             IOobject
             (
@@ -490,7 +492,7 @@ void Foam::fvFieldReconstructor::reconstructFvSurfaceFields
 )
 {
     const word& fieldClassName =
-        GeometricField<Type, fvPatchField, surfaceMesh>::typeName;
+        GeometricField<Type, fvsPatchField, surfaceMesh>::typeName;
 
     IOobjectList fields = objects.lookupClass(fieldClassName);
 

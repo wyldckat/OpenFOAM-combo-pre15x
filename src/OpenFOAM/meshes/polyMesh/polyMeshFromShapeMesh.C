@@ -145,7 +145,8 @@ polyMesh::polyMesh
     const wordList& boundaryPatchNames,
     const wordList& boundaryPatchTypes,
     const word& defaultBoundaryPatchType,
-    const wordList& boundaryPatchPhysicalTypes
+    const wordList& boundaryPatchPhysicalTypes,
+    const bool syncPar
 )
 :
     objectRegistry(io),
@@ -216,6 +217,7 @@ polyMesh::polyMesh
         *this,
         boundaryFaces.size() + 1    // add room for a default patch
     ),
+    bounds_(points_, syncPar),
     directions_(Vector<label>::zero),
     pointZones_
     (
@@ -599,11 +601,14 @@ polyMesh::polyMesh
     // Set the primitive mesh
     initMesh(cells);
 
-    // Calculate topology for the patches (processor-processor comms etc.)
-    boundary_.updateMesh();
+    if (syncPar)
+    {
+        // Calculate topology for the patches (processor-processor comms etc.)
+        boundary_.updateMesh();
 
-    // Calculate the geometry for the patches (transformation tensors etc.)
-    boundary_.calcGeometry();
+        // Calculate the geometry for the patches (transformation tensors etc.)
+        boundary_.calcGeometry();
+    }
 
     if (debug)
     {

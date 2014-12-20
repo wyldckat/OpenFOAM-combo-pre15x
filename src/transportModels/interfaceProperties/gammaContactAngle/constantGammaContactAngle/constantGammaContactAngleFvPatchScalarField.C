@@ -26,6 +26,7 @@ License
 
 #include "constantGammaContactAngleFvPatchScalarField.H"
 #include "addToRunTimeSelectionTable.H"
+#include "volMesh.H"
 #include "fvPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -39,7 +40,7 @@ constantGammaContactAngleFvPatchScalarField::
 constantGammaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     gammaContactAngleFvPatchScalarField(p, iF),
@@ -52,7 +53,7 @@ constantGammaContactAngleFvPatchScalarField
 (
     const constantGammaContactAngleFvPatchScalarField& gcpsf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -65,7 +66,7 @@ constantGammaContactAngleFvPatchScalarField::
 constantGammaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -91,7 +92,7 @@ constantGammaContactAngleFvPatchScalarField::
 constantGammaContactAngleFvPatchScalarField
 (
     const constantGammaContactAngleFvPatchScalarField& gcpsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     gammaContactAngleFvPatchScalarField(gcpsf, iF),
@@ -101,18 +102,16 @@ constantGammaContactAngleFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return equilibrium contact-angle
 tmp<scalarField> constantGammaContactAngleFvPatchScalarField::theta
 (
     const fvPatchVectorField&,
-    const fvPatchVectorField&
+    const fvsPatchVectorField&
 ) const
 {
     return tmp<scalarField>(new scalarField(size(), theta0_));
 }
 
 
-// Write
 void constantGammaContactAngleFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);
@@ -123,7 +122,11 @@ void constantGammaContactAngleFvPatchScalarField::write(Ostream& os) const
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-makePatchTypeField(fvPatchScalarField, constantGammaContactAngleFvPatchScalarField);
+makePatchTypeField
+(
+    fvPatchScalarField,
+    constantGammaContactAngleFvPatchScalarField
+);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

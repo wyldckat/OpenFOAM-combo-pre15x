@@ -201,6 +201,15 @@ twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh)
 {}
 
 
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::twoDPointCorrector::~twoDPointCorrector()
+{
+    clearAddressing();
+}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 direction twoDPointCorrector::normalDir() const

@@ -58,10 +58,13 @@ class repatchPolyTopoChanger
         polyMesh& mesh_;
 
         //- Topological change to accumulated all mesh changes
-        polyTopoChange meshMod_;
+        autoPtr<polyTopoChange> meshModPtr_;
 
 
     // Private Member Functions
+
+        //- Demand driven access to polyTopoChange
+        polyTopoChange& meshMod();
 
         //- Disallow default bitwise copy construct
         repatchPolyTopoChanger(const repatchPolyTopoChanger&);

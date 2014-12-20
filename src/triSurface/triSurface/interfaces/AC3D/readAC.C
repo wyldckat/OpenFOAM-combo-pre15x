@@ -31,8 +31,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "triSurface.H"
-#include <fstream>
-#include <sstream>
+#include "IFstream.H"
 #include "IStringStream.H"
 #include "transform.H"
 #include "tensor.H"
@@ -44,7 +43,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-label triSurface::parseInt(const string& str)
+static label parseInt(const string& str)
 {
     IStringStream intStream(str);
 
@@ -56,13 +55,12 @@ label triSurface::parseInt(const string& str)
 }
 
 
-bool triSurface::readCmd(std::ifstream& ACfile, string& cmd, string& args)
+static bool readCmd(IFstream& ACfile, string& cmd, string& args)
 {
     if (ACfile.good())
     {
         string line;
-
-        std::getline(ACfile, line);
+        ACfile.getLine(line);
 
         label spaceIndex = line.find(' ');
 
@@ -81,18 +79,17 @@ bool triSurface::readCmd(std::ifstream& ACfile, string& cmd, string& args)
 
 // Read up to line starting with cmd. Sets args to rest of line.
 // Returns true if found, false if stream is not good anymore.
-bool triSurface::readUpto
+static bool readUpto
 (
     const string& cmd,
-    std::ifstream& ACfile,
+    IFstream& ACfile,
     string& args
 )
 {
     while (ACfile.good())
     {
         string line;
-
-        std::getline(ACfile, line);
+        ACfile.getLine(line);
 
         label spaceIndex = line.find(' ');
 
@@ -111,10 +108,10 @@ bool triSurface::readUpto
 
 
 // Likewise but throws error if cmd not found
-void triSurface::readUpto
+static void readUpto
 (
     const string& cmd,
-    std::ifstream& ACfile,
+    IFstream& ACfile,
     string& args,
     const string errorMsg
 )
@@ -132,8 +129,7 @@ void triSurface::readUpto
 
 bool triSurface::readAC(const fileName& ACfileName)
 {
-    // Use std::ifstream so we can read line based
-    std::ifstream ACfile(ACfileName.c_str());
+    IFstream ACfile(ACfileName);
 
     if (!ACfile.good())
     {
@@ -143,8 +139,7 @@ bool triSurface::readAC(const fileName& ACfileName)
     }
 
     string line;
-
-    std::getline(ACfile, line);
+    ACfile.getLine(line);
 
     string version = line.substr(4);
 
@@ -240,7 +235,7 @@ bool triSurface::readAC(const fileName& ACfileName)
 
                 for (label vertI = 0; vertI < nVerts; vertI++)
                 {
-                    std::getline(ACfile, line);
+                    ACfile.getLine(line);
 
                     IStringStream lineStream(line);
 
@@ -279,15 +274,15 @@ bool triSurface::readAC(const fileName& ACfileName)
                             << exit(FatalError);
                     }
 
-                    std::getline(ACfile, line);
+                    ACfile.getLine(line);
 
                     label v0 = parseInt(line);
 
-                    std::getline(ACfile, line);
+                    ACfile.getLine(line);
 
                     label v1 = parseInt(line);
 
-                    std::getline(ACfile, line);
+                    ACfile.getLine(line);
 
                     label v2 = parseInt(line);
 

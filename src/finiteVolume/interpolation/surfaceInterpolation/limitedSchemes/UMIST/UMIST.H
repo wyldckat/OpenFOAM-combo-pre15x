@@ -47,7 +47,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class UMISTWeight Declaration
+                           Class UMISTLimiter Declaration
 \*---------------------------------------------------------------------------*/
 
 template<class LimiterFunc>
@@ -74,7 +74,7 @@ public:
     {
         scalar r = LimiterFunc::r
         (
-            cdWeight, faceFlux, phiP, phiN, gradcP, gradcN, d
+            faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
         return max(min(min(min(2*r, 0.75*r + 0.25), 0.25*r + 0.75), 2), 0);

@@ -183,7 +183,7 @@ public:
         typedef GeometricField
         <
             typename flux<Type>::type,
-            fvPatchField,
+            fvsPatchField,
             surfaceMesh
         > fluxFieldType;
 

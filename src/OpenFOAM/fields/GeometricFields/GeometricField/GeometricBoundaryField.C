@@ -35,13 +35,12 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct for given boundary mesh, field reference and a patch type
 template<class Type, template<class> class PatchField, class GeoMesh>
 GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
 GeometricBoundaryField
 (
     const BoundaryMesh& bmesh,
-    const Field<Type>& field,
+    const DimensionedField<Type, GeoMesh>& field,
     const word& patchFieldType
 )
 :
@@ -73,13 +72,12 @@ GeometricBoundaryField
 }
 
 
-// Construct for given boundary mesh, field reference and a patch type list
 template<class Type, template<class> class PatchField, class GeoMesh>
 GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
 GeometricBoundaryField
 (
     const BoundaryMesh& bmesh,
-    const Field<Type>& field,
+    const DimensionedField<Type, GeoMesh>& field,
     const wordList& patchFieldTypes
 )
 :
@@ -126,67 +124,12 @@ GeometricBoundaryField
 }
 
 
-// Construct from dictionary
 template<class Type, template<class> class PatchField, class GeoMesh>
 GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
 GeometricBoundaryField
 (
     const BoundaryMesh& bmesh,
-    const Field<Type>& field,
-    const dictionary& dict
-)
-:
-    FieldField<PatchField, Type>(bmesh.size()),
-    bmesh_(bmesh)
-{
-    if (debug)
-    {
-        Info<< "GeometricField<Type, PatchField, GeoMesh>::"
-               "GeometricBoundaryField::"
-               "GeometricBoundaryField"
-               "(const BoundaryMesh&, const Field<Type>&, const dictionary&)"
-            << endl;
-    }
-
-    forAll(bmesh_, patchi)
-    {
-        if (bmesh_[patchi].type() != emptyPolyPatch::typeName)
-        {
-            set
-            (
-                patchi,
-                PatchField<Type>::New
-                (
-                    bmesh_[patchi],
-                    field,
-                    dict.subDict(bmesh_[patchi].name())
-                )
-            );
-        }
-        else
-        {
-            set
-            (
-                patchi,
-                PatchField<Type>::New
-                (
-                    emptyPolyPatch::typeName,
-                    bmesh_[patchi],
-                    field
-                )
-            );
-        }
-    }
-}
-
-
-// Construct for given a patch field list a boundary mesh and a field reference
-template<class Type, template<class> class PatchField, class GeoMesh>
-GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
-GeometricBoundaryField
-(
-    const BoundaryMesh& bmesh,
-    const Field<Type>& field,
+    const DimensionedField<Type, GeoMesh>& field,
     const PtrList<PatchField<Type> >& ptfl
 )
 :
@@ -209,12 +152,11 @@ GeometricBoundaryField
 }
 
 
-// Construct as copy but setting Field correctly
 template<class Type, template<class> class PatchField, class GeoMesh>
 GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
 GeometricBoundaryField
 (
-    const Field<Type>& field,
+    const DimensionedField<Type, GeoMesh>& field,
     const typename GeometricField<Type, PatchField, GeoMesh>::
     GeometricBoundaryField& btf
 )
@@ -265,9 +207,61 @@ GeometricBoundaryField
 }
 
 
+template<class Type, template<class> class PatchField, class GeoMesh>
+GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
+GeometricBoundaryField
+(
+    const BoundaryMesh& bmesh,
+    const DimensionedField<Type, GeoMesh>& field,
+    const dictionary& dict
+)
+:
+    FieldField<PatchField, Type>(bmesh.size()),
+    bmesh_(bmesh)
+{
+    if (debug)
+    {
+        Info<< "GeometricField<Type, PatchField, GeoMesh>::"
+               "GeometricBoundaryField::"
+               "GeometricBoundaryField"
+               "(const BoundaryMesh&, const Field<Type>&, const dictionary&)"
+            << endl;
+    }
+
+    forAll(bmesh_, patchi)
+    {
+        if (bmesh_[patchi].type() != emptyPolyPatch::typeName)
+        {
+            set
+            (
+                patchi,
+                PatchField<Type>::New
+                (
+                    bmesh_[patchi],
+                    field,
+                    dict.subDict(bmesh_[patchi].name())
+                )
+            );
+        }
+        else
+        {
+            set
+            (
+                patchi,
+                PatchField<Type>::New
+                (
+                    emptyPolyPatch::typeName,
+                    bmesh_[patchi],
+                    field
+                )
+            );
+        }
+    }
+}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Update the boundary condition coefficients
 template<class Type, template<class> class PatchField, class GeoMesh>
 void GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
 updateCoeffs()
@@ -286,7 +280,6 @@ updateCoeffs()
 }
 
 
-// Evaluate boundary condition for each patch
 template<class Type, template<class> class PatchField, class GeoMesh>
 void GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
 evaluate()
@@ -316,7 +309,6 @@ evaluate()
 }
 
 
-// return a list of the patch types
 template<class Type, template<class> class PatchField, class GeoMesh>
 wordList GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
 types() const
@@ -334,7 +326,6 @@ types() const
 }
 
 
-// Return GeometricBoundaryField of the cell values neighbouring the boundary
 template<class Type, template<class> class PatchField, class GeoMesh>
 typename GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField
 GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::

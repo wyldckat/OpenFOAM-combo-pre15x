@@ -145,9 +145,6 @@ public:
         //- Update any stored data for new labels
         virtual void updateMesh(const mapPolyMesh& morphMap);
 
-        //- Update any stored data for new labels
-        //virtual void updateMesh(const directPolyTopoChange& meshMod);
-
         //- Write maxLen items with label and coordinates. 
         virtual void writeDebug
         (

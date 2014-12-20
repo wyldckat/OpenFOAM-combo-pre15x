@@ -25,8 +25,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "EulerCoordinateRotation.H"
-#include "addToRunTimeSelectionTable.H"
 #include "dictionary.H"
+#include "addToRunTimeSelectionTable.H"
 #include "Switch.H"
 #include "mathematicalConstants.H"
 
@@ -35,26 +35,24 @@ License
 namespace Foam
 {
     defineTypeNameAndDebug(EulerCoordinateRotation, 0);
-
     addToRunTimeSelectionTable
     (
         coordinateRotation,
-        EulerCoordinateRotation, 
+        EulerCoordinateRotation,
         dictionary
     );
 }
 
-
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void Foam::EulerCoordinateRotation::calcTransformations
+void Foam::EulerCoordinateRotation::calcTransform
 (
     const scalar phiAngle,
     const scalar thetaAngle,
     const scalar psiAngle,
     const bool inDegrees
-) 
-{    
+)
+{
     scalar phi   = phiAngle;
     scalar theta = thetaAngle;
     scalar psi   = psiAngle;
@@ -65,25 +63,34 @@ void Foam::EulerCoordinateRotation::calcTransformations
         theta *= mathematicalConstant::pi/180.0;
         psi   *= mathematicalConstant::pi/180.0;
     }
-    
-    R_ = tensor
+
+    tensor::operator=
     (
-        cos(phi)*cos(psi) - sin(phi)*sin(psi)*cos(theta),
-        -sin(phi)*cos(psi)*cos(theta) - cos(phi)*sin(psi),
-        sin(phi)*sin(theta),
-	
-        cos(phi)*sin(psi)*cos(theta) + sin(phi)*cos(psi),
-        cos(phi)*cos(psi)*cos(theta) - sin(phi)*sin(psi),
-        -cos(phi)*sin(theta),
-	
-        sin(psi)*sin(theta),
-        cos(psi)*sin(theta),
-        cos(theta)
+        tensor
+        (
+            cos(phi)*cos(psi) - sin(phi)*sin(psi)*cos(theta),
+            -sin(phi)*cos(psi)*cos(theta) - cos(phi)*sin(psi),
+            sin(phi)*sin(theta),
+
+            cos(phi)*sin(psi)*cos(theta) + sin(phi)*cos(psi),
+            cos(phi)*cos(psi)*cos(theta) - sin(phi)*sin(psi),
+            -cos(phi)*sin(theta),
+
+            sin(psi)*sin(theta),
+            cos(psi)*sin(theta),
+            cos(theta)
+        )
     );
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::EulerCoordinateRotation::EulerCoordinateRotation()
+:
+    coordinateRotation()
+{}
+
 
 Foam::EulerCoordinateRotation::EulerCoordinateRotation
 (
@@ -93,11 +100,11 @@ Foam::EulerCoordinateRotation::EulerCoordinateRotation
 :
     coordinateRotation()
 {
-    calcTransformations
+    calcTransform
     (
-        phiThetaPsi.component(0),
-        phiThetaPsi.component(1),
-        phiThetaPsi.component(2),
+        phiThetaPsi.component(vector::X),
+        phiThetaPsi.component(vector::Y),
+        phiThetaPsi.component(vector::Z),
         inDegrees
     );
 }
@@ -113,7 +120,7 @@ Foam::EulerCoordinateRotation::EulerCoordinateRotation
 :
     coordinateRotation()
 {
-    calcTransformations( phiAngle, thetaAngle, psiAngle, inDegrees );
+    calcTransform( phiAngle, thetaAngle, psiAngle, inDegrees );
 }
 
 
@@ -132,11 +139,11 @@ Foam::EulerCoordinateRotation::EulerCoordinateRotation
         inDegrees = Switch(dict.lookup("degrees"));
     }
 
-    calcTransformations
+    calcTransform
     (
-        rotation.component(0),
-        rotation.component(1),
-        rotation.component(2),
+        rotation.component(vector::X),
+        rotation.component(vector::Y),
+        rotation.component(vector::Z),
         inDegrees
     );
 }

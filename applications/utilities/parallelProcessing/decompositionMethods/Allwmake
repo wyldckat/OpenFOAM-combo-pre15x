@@ -1,7 +1,9 @@
 #!/bin/sh
 set -x
 
-wmake libso parMetisDecomp/ParMetis-3.1/METISLib
-wmake libso parMetisDecomp/ParMetis-3.1/ParMETISLib
-#wmake libso metisDecomp/metis-4.0/Lib
-wmake libso
+#wmake libso metis-4.0/Lib
+wmake libso metis-5.0pre2/GKlib
+wmake libso metis-5.0pre2/libmetis
+
+wmake libso decompositionMethods
+(cd parMetisDecomp; ./Allwmake)

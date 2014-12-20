@@ -65,19 +65,13 @@ void Foam::lduMatrix::negSumDiag()
 }
 
 
-void Foam::lduMatrix::relax
+void Foam::lduMatrix::sumMagOffDiag
 (
-    const FieldField<Field, scalar>& intCoeffsCmptAvg,
-    const FieldField<Field, scalar>& magInterfaceBouCoeffs,
-    const lduInterfaceFieldPtrsList& interfaces,
-    const scalar alpha
-)
+    scalarField& sumOff
+) const
 {
     const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
     const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
-
-    scalarField& Diag = diag();
-    scalarField sumOff(Diag.size(), 0.0);
 
     const unallocLabelList& l = lduAddr().lowerAddr();
     const unallocLabelList& u = lduAddr().upperAddr();
@@ -86,42 +80,6 @@ void Foam::lduMatrix::relax
     {
         sumOff[u[face]] += mag(Lower[face]);
         sumOff[l[face]] += mag(Upper[face]);
-    }
-
-    // Add the interface internal coefficients to diagonal
-    // and the interface boundary coefficients to the sum-off-diagonal
-    forAll(interfaces, patchI)
-    {
-        if (interfaces.set(patchI))
-        {
-            const unallocLabelList& pa = lduAddr().patchAddr(patchI);
-            const scalarField& iCoeffs = intCoeffsCmptAvg[patchI];
-            const scalarField& pCoeffs = magInterfaceBouCoeffs[patchI];
-
-            forAll(pa, face)
-            {
-                Diag[pa[face]] += iCoeffs[face];
-                sumOff[pa[face]] += pCoeffs[face];
-            }
-        }
-    }
-
-    Diag = max(Diag, sumOff);
-    Diag /= alpha;
-
-    // Remove the interface internal coefficients from the diagonal
-    forAll(interfaces, patchI)
-    {
-        if (interfaces.set(patchI))
-        {
-            const unallocLabelList& pa = lduAddr().patchAddr(patchI);
-            const scalarField& iCoeffs = intCoeffsCmptAvg[patchI];
-
-            forAll(pa, face)
-            {
-                Diag[pa[face]] -= iCoeffs[face];
-            }
-        }
     }
 }
 
@@ -369,6 +327,51 @@ void Foam::lduMatrix::operator*=(scalar s)
     {
         *lowerPtr_ *= s;
     }
+}
+
+
+Foam::tmp<Foam::scalarField > Foam::lduMatrix::H1() const
+{
+    tmp<scalarField > tH1
+    (
+        new scalarField(lduAddr().size(), 0.0)
+    );
+
+    if (lowerPtr_ || upperPtr_)
+    {
+        scalarField& H1_ = tH1();
+
+        scalar* __restrict__ H1Ptr = H1_.begin();
+
+        const label* __restrict__ uPtr = lduAddr().upperAddr().begin();
+        const label* __restrict__ lPtr = lduAddr().lowerAddr().begin();
+
+        const scalar* __restrict__ lowerPtr = lower().begin();
+        const scalar* __restrict__ upperPtr = upper().begin();
+
+        register const label nFaces = upper().size();
+
+        for (register label face=0; face<nFaces; face++)
+        {
+            #ifdef ICC_IA64_PREFETCH
+            __builtin_prefetch (&uPtr[face+32],0,0);
+            __builtin_prefetch (&lPtr[face+32],0,0);
+            __builtin_prefetch (&lowerPtr[face+32],0,1);
+            __builtin_prefetch (&H1Ptr[uPtr[face+32]],0,1);
+            #endif
+
+            H1Ptr[uPtr[face]] -= lowerPtr[face];
+        
+            #ifdef ICC_IA64_PREFETCH
+            __builtin_prefetch (&upperPtr[face+32],0,1);
+            __builtin_prefetch (&H1Ptr[lPtr[face+32]],0,1);
+                #endif
+
+            H1Ptr[lPtr[face]] -= upperPtr[face];
+        }
+    }
+
+    return tH1;
 }
 
 

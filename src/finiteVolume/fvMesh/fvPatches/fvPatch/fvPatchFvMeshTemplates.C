@@ -22,14 +22,14 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "fvPatch.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class GeometricField, class Type>
-const Foam::fvPatchField<Type>& Foam::fvPatch::lookupPatchField
+const typename GeometricField::PatchFieldType& Foam::fvPatch::lookupPatchField
 (
     const word& name,
     const GeometricField*,

@@ -48,6 +48,15 @@ Description
             }
         }
 
+
+    Note: shared points (parallel). A processor can have points which are
+    part of pp on another processor but have no pp itself (i.e. it has points
+    and/or edges but no faces of pp). Hence we have to be careful when
+    e.g. synchronising displacements that the value from the processor which
+    has faces of pp get priority. This is currently handled in setDisplacement
+    by resetting the internal displacement to zero before doing anything else.
+    The combine operator used will give preference to non-zero values.
+
 SourceFiles
     motionSmoother.C
     motionSmootherTemplates.C
@@ -69,6 +78,8 @@ SourceFiles
 namespace Foam
 {
 
+class polyMeshGeometry;
+
 /*---------------------------------------------------------------------------*\
                            Class motionSmoother Declaration
 \*---------------------------------------------------------------------------*/
@@ -77,16 +88,33 @@ class motionSmoother
 {
     // Private class
 
-        //! Can be removed once in PstreamCombineReduce
-        template <class T>
-        class minEqOp
+        //- To synchronise displacements. We want max displacement since
+        //  this is what is specified on pp and internal mesh will have
+        //  zero displacement.
+        class maxMagEqOp
         {
 
         public:
 
-            void operator()(T& x, const T& y) const
+            void operator()(vector& x, const vector& y) const
             {
-                x = min(x, y);
+                for (direction i = 0; i < vector::nComponents; i++)
+                {
+                    scalar magX = mag(x[i]);
+                    scalar magY = mag(y[i]);
+
+                    if (magX < magY)
+                    {
+                        x[i] = y[i];
+                    }
+                    else if (magX == magY)
+                    {
+                        if (y[i] > x[i])
+                        {
+                            x[i] = y[i];
+                        }
+                    }
+                }
             }
         };
 
@@ -107,30 +135,8 @@ class motionSmoother
         const labelList adaptPatchIDs_;
 
 
-        // Smoothing parameters
-
-        //- Amount by which to reduce displacement on points in error.
-        const scalar reduction_;
-
-        //- Number of smoothing iterations on scale_ to distribute error.
-        const label nSmoothScale_;
-
-
-        // Mesh check params
-
-            //- Max non-ortho
-            const scalar maxNonOrtho_;
-
-            //- Minimum allowed pyramid volume for accepting a mesh.
-            const scalar minVol_;
-
-            //- Max allowed concave angle (in degrees, 0 is straight,
-            //  <0 would be convex)
-            const scalar maxConcave_;
-
-            //- Min face area
-            const scalar minArea_;
-
+        // Smoothing and checking parameters
+        dictionary paramDict_;
 
         // Internal data
 
@@ -157,43 +163,62 @@ class motionSmoother
 
     // Private Member Functions
 
-        //- (unweighted) average of all values on points connected via edges
-        //  to pointI
-        template <class Type>
-        static Type avg
-        (
-            const GeometricField<Type, pointPatchField, pointMesh>&,
-            const edgeList& edges,
-            const pointField& points,
-            const labelList& edgeLabels,
-            const label pointI
-        );
+        ////- (unweighted) average of all values on points connected via edges
+        ////  to pointI
+        //template <class Type>
+        //static Type avg
+        //(
+        //    const GeometricField<Type, pointPatchField, pointMesh>&,
+        //    const edgeList& edges,
+        //    const pointField& points,
+        //    const labelList& edgeLabels,
+        //    const label pointI
+        //);
+        //
+        ////- Distance weighted average. Is average with inverse distance
+        ////  weighting and varying edge-diffusivity.
+        //template <class Type>
+        //static Type avg
+        //(
+        //    const GeometricField<Type, pointPatchField, pointMesh>&,
+        //    const scalarField& edgeGamma,
+        //    const edgeList& edges,
+        //    const pointField& points,
+        //    const labelList& edgeLabels,
+        //    const label pointI
+        //);
 
-        //- Distance weighted average. Is average with inverse distance
-        //  weighting and varying edge-diffusivity.
+        //- Average of connected points.
         template <class Type>
-        static Type avg
+        tmp<GeometricField<Type, pointPatchField, pointMesh> > avg
         (
-            const GeometricField<Type, pointPatchField, pointMesh>&,
-            const scalarField& edgeGamma,
-            const edgeList& edges,
-            const pointField& points,
-            const labelList& edgeLabels,
-            const label pointI
-        );
+            const GeometricField<Type, pointPatchField, pointMesh>& fld,
+            const scalarField& edgeWeight,
+            const bool separation
+        ) const;
 
         //- Check constraints
         template<class Type>
-        void checkConstraints
+        static void checkConstraints
         (
             GeometricField<Type, pointPatchField, pointMesh>&
-        ) const;
+        );
 
         //- Multi-patch constraints
         template<class Type>
         void applyCornerConstraints
         (
             GeometricField<Type, pointPatchField, pointMesh>&
+        ) const;
+
+        //- Test synchronisation of pointField
+        template<class Type, class CombineOp>
+        void testSyncField
+        (
+            const Field<Type>&,
+            const CombineOp& cop,
+            const Type& zero,
+            const bool separation
         ) const;
 
         //- Assemble tensors for multi-patch constraints
@@ -249,22 +274,26 @@ public:
 
     // Constructors
 
-        //- Construct from mesh, optional fixedValue patch
-        //  where displacement will be adapted and parameters: number of
-        //  error distribution cycles, minimum pyramid vol, max. concaveness
-        //  check. Will read displacement field.
+        //- Construct from mesh, patches to work on and smoothing parameters.
+        //  Reads displacement field (only boundary conditions used)
         motionSmoother
         (
             polyMesh&,
             pointMesh&,
             indirectPrimitivePatch& pp,         // 'outside' points
             const labelList& adaptPatchIDs,     // patches forming 'outside'
-            const scalar reduction = 0.5,       // scale back displacement
-            const label nSmoothScale = 1,       // number of smoothing iters
-            const scalar maxNonOrtho = 90,      // max non-ortho
-            const scalar minVol = SMALL,        // min allowed cell vol
-            const scalar maxConcave = 180,      // max allowed face concavity
-            const scalar minArea = VSMALL       // min face area
+            const dictionary& paramDict
+        );
+
+        //- Construct from mesh, patches to work on and smoothing parameters and
+        //  displacementfield (only boundary conditions used)
+        motionSmoother
+        (
+            polyMesh&,
+            indirectPrimitivePatch& pp,         // 'outside' points
+            const labelList& adaptPatchIDs,     // patches forming 'outside'
+            const pointVectorField&,
+            const dictionary& paramDict
         );
 
 
@@ -288,15 +317,6 @@ public:
 
             //- Patch labels that are being adapted
             const labelList& adaptPatchIDs() const;
-
-            scalar maxNonOrtho() const;
-
-            scalar minVol() const;
-
-            scalar maxConcave() const;
-
-            scalar minArea() const;
-
 
             //- Reference to displacement field
             pointVectorField& displacement();
@@ -325,7 +345,11 @@ public:
 
             //- Set displacement field from displacement on patch points.
             //  Modify provided displacement to be consistent with actual
-            //  boundary conditions on displacement.
+            //  boundary conditions on displacement. Note: resets the
+            //  displacement to be 0 on coupled patches beforehand
+            //  to make sure shared points
+            //  partially on pp (on some processors) and partially not
+            //  (on other processors) get the value from pp.
             void setDisplacement(pointField& patchDisp);
 
             //- Special correctBoundaryConditions which evaluates fixedValue
@@ -333,10 +357,15 @@ public:
             //  bc's.
             void correctBoundaryConditions(pointVectorField&) const;
 
-
             //- Move mesh. Does 2D correction (modifies passed pointField) and
             //  polyMesh::movePoints. Returns swept volumes.
             tmp<scalarField> movePoints(pointField&);
+
+            //- Set the errorReduction (by how much to scale the displacement
+            //  at error locations) parameter. Returns the old value.
+            //  Set to 0 (so revert to old mesh) grows out one cell layer
+            //  from error faces.
+            scalar setErrorReduction(const scalar);
 
             //- Move mesh with given scale. Return true if mesh ok or has
             //  less than nAllow errors, false
@@ -353,20 +382,37 @@ public:
             //- Update topology
             void updateMesh();
 
-            //- Check mesh with current settings. Collects incorrect faces
+            //- Check mesh with mesh settings in dict. Collects incorrect faces
             //  in set. Returns true if one or more faces in error.
             //  Parallel ok.
-            bool checkMesh(labelHashSet&) const;
+            static bool checkMesh
+            (
+                const bool report,
+                const polyMesh& mesh,
+                const dictionary& dict,
+                labelHashSet& wrongFaces
+            );
 
+            //- Check part of mesh with mesh settings in dict.
+            //  Collects incorrect faces in set. Returns true if one or
+            //  more faces in error. Parallel ok.
+            static bool checkMesh
+            (
+                const bool report,
+                const dictionary& dict,
+                const polyMeshGeometry&,
+                const labelList& checkFaces,
+                labelHashSet& wrongFaces
+            );
 
             // Helper functions to manipulate displacement vector.
 
-                //- Point-jacobi smoothing of internal points
-                template <class Type>
-                void smooth
-                (
-                    GeometricField<Type, pointPatchField, pointMesh>&
-                ) const;
+                ////- Point-jacobi smoothing of internal points
+                //template <class Type>
+                //void smooth
+                //(
+                //    GeometricField<Type, pointPatchField, pointMesh>&
+                //) const;
 
                 //- Fully explicit smoothing of internal points with varying
                 //  diffusivity.
@@ -374,19 +420,10 @@ public:
                 void smooth
                 (
                     const GeometricField<Type, pointPatchField, pointMesh>& fld,
-                    const scalarField& edgeGamma,
+                    const scalarField& edgeWeight,
+                    const bool separation,
                     GeometricField<Type, pointPatchField, pointMesh>& newFld
                 ) const;
-
-                //- Sychronizes patch points on pointField
-                template<class Type, class CombineOp>
-                static void syncField
-                (
-                    GeometricField<Type, pointPatchField, pointMesh>&,
-                    const Type& zero,
-                    const CombineOp& cop
-                );
-
 };
 
 

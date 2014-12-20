@@ -552,47 +552,27 @@ int main(int argc, char *argv[])
         //}
 
 
+        if (nCollapsed == 0)
+        {
+            break;
+        }
+
         polyTopoChange meshMod(mesh);
 
         // Insert mesh refinement into polyTopoChange.
         collapser.setRefinement(meshMod);
 
-        label nRemoved =
-            meshMod.removedFaces().size()
-          - meshMod.modifiedFaces().size();
-
-        label nChanged = meshMod.modifiedFaces().size();
-
-        label nPointsRemoved = meshMod.removedPoints().size();
-
-        Info<< "Changes:" << nl
-            << "    edges collapsed : " << nCollapsed << nl
-            << "    faces removed   : " << nRemoved << nl
-            << "    faces changed   : " << nChanged << nl
-            << "    points removed  : " << nPointsRemoved << nl
-            << endl;
-
-        if (nRemoved == 0 && nChanged == 0 && nPointsRemoved == 0)
-        {
-            break;
-        }
-
         // Do all changes
         Info<< "Morphing ..." << endl;
 
-        autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh
-        (
-            mesh,
-            meshMod
-        );
+        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh, false);
+
+        collapser.updateMesh(morphMap());
 
         if (morphMap().hasMotionPoints())
         {
             mesh.movePoints(morphMap().preMotionPoints());
         }
-
-        //Not implemented yet.
-        //collapser.updateMesh(morphMap());
 
         meshChanged = true;
     }

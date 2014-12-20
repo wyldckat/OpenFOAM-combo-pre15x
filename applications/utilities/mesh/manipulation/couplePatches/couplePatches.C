@@ -37,7 +37,7 @@ Description
 #include "argList.H"
 #include "polyMesh.H"
 #include "Time.H"
-#include "directPolyTopoChange.H"
+#include "polyTopoChange.H"
 #include "mapPolyMesh.H"
 #include "OFstream.H"
 #include "coupledPolyPatch.H"
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
         Info<< "Mesh has coupled patches ..." << nl << endl;
 
         // Dummy topo changes container
-        directPolyTopoChange meshMod(mesh);
+        polyTopoChange meshMod(mesh);
 
         // Do all changes
         Info<< "Doing dummy mesh morph to correct face ordering ..."

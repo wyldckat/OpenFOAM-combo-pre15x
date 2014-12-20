@@ -44,7 +44,6 @@ addToRunTimeSelectionTable(turbulenceModel, kEpsilon, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// from components
 kEpsilon::kEpsilon
 (
     const volScalarField& rho,
@@ -165,6 +164,7 @@ void kEpsilon::correct()
     {
         // Re-calculate viscosity
         mut_ = rho_*Cmu*sqr(k_)/(epsilon_ + epsilonSmall_);
+#       include "wallViscosityI.H"
         return;
     }
 
@@ -195,9 +195,9 @@ void kEpsilon::correct()
       - fvm::Sp(C2*rho_*epsilon_/k_, epsilon_)
     );
 
-    epsEqn().relax();
-
 #   include "wallDissipationI.H"
+
+    epsEqn().relax();
 
     solve(epsEqn);
     bound(epsilon_, epsilon0_);
@@ -211,7 +211,8 @@ void kEpsilon::correct()
       + fvm::div(phi_, k_)
       - fvm::laplacian(DkEff(), k_)
      ==
-        G - fvm::SuSp(2.0/3.0*rho_*divU, k_)
+        G 
+      - fvm::SuSp((2.0/3.0)*rho_*divU, k_)
       - fvm::Sp(rho_*epsilon_/k_, k_)
     );
 

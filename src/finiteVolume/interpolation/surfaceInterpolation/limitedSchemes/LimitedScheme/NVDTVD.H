@@ -27,9 +27,6 @@ Class
 
 Description
 
-SourceFiles
-    NVDTVD.C
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef NVDTVD_H
@@ -63,7 +60,6 @@ public:
 
         scalar phict
         (
-            const scalar cdWeight,
             const scalar faceFlux,
             const scalar phiP,
             const scalar phiN,
@@ -94,7 +90,6 @@ public:
 
         scalar r
         (
-            const scalar cdWeight,
             const scalar faceFlux,
             const scalar phiP,
             const scalar phiN,
@@ -119,7 +114,7 @@ public:
             // Stabilise for division
             gradf = stabilise(gradf, VSMALL);
 
-            return 2*gradcf/gradf - 1;
+            return 2*(gradcf/gradf) - 1;
         }
 };
 

@@ -67,12 +67,13 @@ namespace Foam
             return autoPtr<baseType>(new baseType##Type parList);       \
         }                                                               \
                                                                         \
-        add##argNames##ConstructorToTable()                             \
+        add##argNames##ConstructorToTable                               \
+        (                                                               \
+            const word& lookup = baseType##Type::typeName               \
+        )                                                               \
         {                                                               \
             construct##argNames##ConstructorTables();                   \
-                                                                        \
-            argNames##ConstructorTablePtr_                              \
-                ->insert(baseType##Type::typeName, New);                \
+            argNames##ConstructorTablePtr_->insert(lookup, New);        \
         }                                                               \
                                                                         \
         ~add##argNames##ConstructorToTable()                            \

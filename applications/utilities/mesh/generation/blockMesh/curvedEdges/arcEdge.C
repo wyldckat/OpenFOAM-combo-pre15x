@@ -33,21 +33,21 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(arcEdge, 0);
+namespace Foam
+{
+    defineTypeNameAndDebug(arcEdge, 0);
 
-// Add the curvedEdge constructor functions to the hash tables
-curvedEdge::addIstreamConstructorToTable<arcEdge>
-    addArcEdgeIstreamConstructorToTable_;
+    // Add the curvedEdge constructor functions to the hash tables
+    curvedEdge::addIstreamConstructorToTable<arcEdge>
+        addArcEdgeIstreamConstructorToTable_;
+}
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-cylindricalCS arcEdge::calcAngle()
+Foam::cylindricalCS Foam::arcEdge::calcAngle()
 {
     vector a = p2_ - p1_;
     vector b = p3_ - p1_;
@@ -108,7 +108,7 @@ cylindricalCS arcEdge::calcAngle()
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-arcEdge::arcEdge
+Foam::arcEdge::arcEdge
 (
     const pointField& points,
     const label start,
@@ -125,7 +125,7 @@ arcEdge::arcEdge
 
 
 // Construct from Istream
-arcEdge::arcEdge(const pointField& points, Istream& is)
+Foam::arcEdge::arcEdge(const pointField& points, Istream& is)
 :
     curvedEdge(points, is),
     p1_(points_[start_]),
@@ -137,7 +137,7 @@ arcEdge::arcEdge(const pointField& points, Istream& is)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-vector arcEdge::position(const scalar lambda) const
+Foam::vector Foam::arcEdge::position(const scalar lambda) const
 {
     if (lambda < 0 || lambda > 1)
     {
@@ -156,20 +156,18 @@ vector arcEdge::position(const scalar lambda) const
     }
     else
     {
-        return cs_.toGlobal(vector(radius_, lambda*angle_, 0.0));
+        return cs_.globalPosition(vector(radius_, lambda*angle_, 0.0));
     }
 }
 
 
 //- Return the length of the curve
-scalar arcEdge::length() const
+Foam::scalar Foam::arcEdge::length() const
 {
     return angle_*radius_*mathematicalConstant::pi/180.0;
 }
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

@@ -76,26 +76,17 @@ public:
         const vector& d
     ) const
     {
-        scalar gradf = phiN - phiP;
+        scalar df = phiN - phiP;
 
-        scalar dgradcP = d & gradcP;
-        scalar dgradcN = d & gradcN;
-
-        scalar limiter =
-            2
-          - 0.5*min(mag(gradf - dgradcP), mag(gradf - dgradcN))
-           /(max(mag(dgradcP), mag(dgradcN)) + SMALL);
-
-        /*
-        scalar gradcf = cdWeight*dgradcP + (1 - cdWeight)*dgradcN;
+        scalar dcP = d & gradcP;
+        scalar dcN = d & gradcN;
 
         scalar limiter =
             2
-          - 0.5*mag(gradf - gradcf)
-           /(max(mag(dgradcP), mag(dgradcN)) + SMALL);
-        */
+          - 0.5*min(mag(df - dcP), mag(df - dcN))
+           /(max(mag(dcP), mag(dcN)) + SMALL);
 
-        // Limit the limiter between upwind and linear
+        // Limit the limiter between linear and 20% upwind
         return max(min(limiter, 1), 0.8);
     }
 };

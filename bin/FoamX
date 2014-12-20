@@ -218,12 +218,9 @@ fi
 if [ `uname -s` = 'AIX' ]; then
     orbArgs=''
 else
-    orbArgs="-ORBDefaultInitRef corbaloc:iiop:1.0:$HOSTNAME:$HOSTPORT"
+    #orbArgs="-ORBDefaultInitRef corbaloc:iiop:1.0:$HOSTNAME:$HOSTPORT"
+    orbArgs="-ORBDefaultInitRef corbaloc:iiop:1.0:$HOSTNAME:$HOSTPORT -ORBInitialPort $HOSTPORT -ORBInitialHost $HOSTNAME"
 fi
-#orbArgs="-ORBInitialPort $HOSTPORT -ORBInitialHost $HOSTNAME"
-#orbArgs="-ORBInitRef NameService=corbaloc::$HOSTNAME.local:$HOSTPORT/NameService -ORBDefaultInitRef corbaloc:iiop:1.2:$HOSTNAME.local:$HOSTPORT"
-#orbArgs="-ORBInitRef NameService=corbaloc::penfold.local:12347/NameService"
-#orbArgs="-ORBInitialPort $HOSTPORT"
 #echo "Starting Java with ORB arguments : $orbArgs"
 
 # Set Language to English

@@ -140,6 +140,10 @@ public:
         //- Centre point of face
         point centre(const pointField&) const;
 
+        //- Calculate average value at centroid of face
+        template<class Type>
+        Type average(const pointField&, const Field<Type>&) const;
+
         //- Scalar magnitude
         inline scalar mag(const pointField&) const;
 
@@ -276,6 +280,10 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "faceI.H"
+
+#ifdef NoRepository
+#   include "faceTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

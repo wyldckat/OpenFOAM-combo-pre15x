@@ -292,9 +292,9 @@ public:
 
             //- Map surface field
             template<class Type>
-            tmp<GeometricField<Type, fvPatchField, surfaceMesh> > interpolate
+            tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
             (
-                const GeometricField<Type, fvPatchField, surfaceMesh>&
+                const GeometricField<Type, fvsPatchField, surfaceMesh>&
             ) const;
 };
 

@@ -51,13 +51,13 @@ Description
 #include "faceSet.H"
 #include "pointSet.H"
 #include "meshTools.H"
-#include "directPolyTopoChange.H"
+#include "polyTopoChange.H"
 #include "polyRemoveFace.H"
 #include "polyModifyFace.H"
 #include "indirectPrimitivePatch.H"
 #include "processorPolyPatch.H"
 #include "localPointRegion.H"
-#include "directDuplicatePoints.H"
+#include "duplicatePoints.H"
 #include "ReadFields.H"
 #include "volFields.H"
 #include "surfaceFields.H"
@@ -70,7 +70,7 @@ void insertDuplicateMerge
 (
     const polyMesh& mesh,
     const labelList& duplicates,
-    directPolyTopoChange& meshMod
+    polyTopoChange& meshMod
 )
 {
     const faceList& faces = mesh.faces();
@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
 
 
     // Mesh change engine
-    directPolyTopoChange meshMod(mesh);
+    polyTopoChange meshMod(mesh);
 
 
     if (split)
@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
         // Analyse which points need to be duplicated
         localPointRegion regionSide(mesh, nonManifPoints);
 
-        directDuplicatePoints pointDuplicator(mesh);
+        duplicatePoints pointDuplicator(mesh);
 
         pointDuplicator.setRefinement
         (

@@ -34,13 +34,26 @@ Description
 #include "repatchPolyTopoChanger.H"
 #include "polyTopoChanger.H"
 #include "mapPolyMesh.H"
+#include "polyModifyFace.H"
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+Foam::polyTopoChange& Foam::repatchPolyTopoChanger::meshMod()
+{
+    if (!meshModPtr_.valid())
+    {
+        meshModPtr_.reset(new polyTopoChange(mesh_));
+    }
+    return meshModPtr_();
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 Foam::repatchPolyTopoChanger::repatchPolyTopoChanger(polyMesh& mesh)
 :
     mesh_(mesh),
-    meshMod_(mesh_)
+    meshModPtr_(NULL)
 {}
 
 
@@ -51,6 +64,16 @@ void Foam::repatchPolyTopoChanger::changePatches
     const List<polyPatch*>& patches
 )
 {
+    if (meshModPtr_.valid())
+    {
+        FatalErrorIn
+        (
+            "repatchPolyTopoChanger::changePatches(const List<polyPatch*>&)"
+        )   << "Cannot change patches after having changed faces. " << nl
+            << "Please call changePatches first."
+            << exit(FatalError);
+    }
+    meshModPtr_.clear();
     mesh_.removeBoundary();
     mesh_.addPatches(patches);
 }
@@ -97,7 +120,7 @@ void Foam::repatchPolyTopoChanger::changePatchID
         zoneFlip = fZone.flipMap()[fZone.whichFace(faceID)];
     }
 
-    meshMod_.setAction
+    meshMod().setAction
     (
         polyModifyFace
         (
@@ -141,7 +164,7 @@ void Foam::repatchPolyTopoChanger::setFaceZone
         }
     }
 
-    meshMod_.setAction
+    meshMod().setAction
     (
         polyModifyFace
         (
@@ -216,7 +239,7 @@ void Foam::repatchPolyTopoChanger::changeAnchorPoint
     if (fp == 0)
     {
         // Do dummy modify to keep patch ordering.
-        meshMod_.setAction
+        meshMod().setAction
         (
             polyModifyFace
             (
@@ -251,7 +274,7 @@ void Foam::repatchPolyTopoChanger::changeAnchorPoint
         }
 
 
-        meshMod_.setAction
+        meshMod().setAction
         (
             polyModifyFace
             (
@@ -272,10 +295,11 @@ void Foam::repatchPolyTopoChanger::changeAnchorPoint
 
 void Foam::repatchPolyTopoChanger::repatch()
 {
-    polyTopoChanger::changeMesh(mesh_, meshMod_);
+    // Change mesh, no inflation
+    meshMod().changeMesh(mesh_, false);
 
     // Clear topo change for the next operation
-    meshMod_.clear();
+    meshModPtr_.clear();
 }
 
 

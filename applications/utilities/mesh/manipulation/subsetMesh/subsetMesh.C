@@ -83,7 +83,7 @@ void subsetSurfaceFields
 (
     const fvMeshSubset& subsetter,
     const wordList& fieldNames,
-    PtrList<GeometricField<Type, fvPatchField, surfaceMesh> >& subFields
+    PtrList<GeometricField<Type, fvsPatchField, surfaceMesh> >& subFields
 )
 {
     const fvMesh& baseMesh = subsetter.baseMesh();
@@ -94,7 +94,7 @@ void subsetSurfaceFields
 
         Info<< "Subsetting field " << fieldName << endl;
 
-        GeometricField<Type, fvPatchField, surfaceMesh> volField    
+        GeometricField<Type, fvsPatchField, surfaceMesh> volField    
         (
             IOobject
             (

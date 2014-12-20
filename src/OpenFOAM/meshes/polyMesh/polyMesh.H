@@ -51,6 +51,7 @@ SourceFiles
 #include "faceIOList.H"
 #include "labelIOList.H"
 #include "polyBoundaryMesh.H"
+#include "boundBox.H"
 #include "pointZoneMesh.H"
 #include "faceZoneMesh.H"
 #include "cellZoneMesh.H"
@@ -110,6 +111,10 @@ private:
 
             //- Boundary mesh
             mutable polyBoundaryMesh boundary_;
+
+            //- Mesh bounding-box. created from points on construction
+            //  and updated when the mesh moves
+            boundBox bounds_;
 
             //- vector of valid directions in mesh
             //  defined according to the presence of empty patches
@@ -210,7 +215,8 @@ public:
             const pointField& points,
             const faceList& faces,
             const labelList& allOwner,
-            const labelList& allNeighbour
+            const labelList& allNeighbour,
+            const bool syncPar = true
         );
 
         //- Construct from components with cells rather than owner
@@ -221,7 +227,8 @@ public:
             const IOobject& io,
             const pointField& points,
             const faceList& faces,
-            const cellList& cells
+            const cellList& cells,
+            const bool syncPar = true
         );
 
         //- Construct from cell shapes
@@ -234,7 +241,8 @@ public:
             const wordList& boundaryPatchNames,
             const wordList& boundaryPatchTypes,
             const word& defaultBoundaryPatchType,
-            const wordList& boundaryPatchPhysicalTypes
+            const wordList& boundaryPatchPhysicalTypes,
+            const bool syncPar = true
         );
 
 
@@ -287,6 +295,12 @@ public:
             const polyBoundaryMesh& boundaryMesh() const
             {
                 return boundary_;
+            }
+
+            //- Return mesh bounding box
+            const boundBox& bounds() const
+            {
+                return bounds_;
             }
 
             //- Return the vector of valid directions in mesh

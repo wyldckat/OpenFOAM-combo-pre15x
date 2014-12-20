@@ -41,7 +41,7 @@ gradientUnburntEnthalpyFvPatchScalarField::
 gradientUnburntEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedGradientFvPatchScalarField(p, iF)
@@ -53,7 +53,7 @@ gradientUnburntEnthalpyFvPatchScalarField
 (
     const gradientUnburntEnthalpyFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -65,7 +65,7 @@ gradientUnburntEnthalpyFvPatchScalarField::
 gradientUnburntEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -87,7 +87,7 @@ gradientUnburntEnthalpyFvPatchScalarField::
 gradientUnburntEnthalpyFvPatchScalarField
 (
     const gradientUnburntEnthalpyFvPatchScalarField& tppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedGradientFvPatchScalarField(tppsf, iF)
@@ -96,7 +96,6 @@ gradientUnburntEnthalpyFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Update the coefficients associated with the patch field
 void gradientUnburntEnthalpyFvPatchScalarField::updateCoeffs()
 {
     if (updated())
@@ -129,7 +128,11 @@ void gradientUnburntEnthalpyFvPatchScalarField::updateCoeffs()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-makePatchTypeField(fvPatchScalarField, gradientUnburntEnthalpyFvPatchScalarField);
+makePatchTypeField
+(
+    fvPatchScalarField,
+    gradientUnburntEnthalpyFvPatchScalarField
+);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -83,6 +83,9 @@ public:
 
     // Member Functions
 
+        //- Calculate the reciprocal of the preconditioned diagonal
+        static void calcReciprocalD(scalarField& rD, const lduMatrix& matrix);
+
         //- Return wA the preconditioned form of residual rA
         virtual void precondition
         (

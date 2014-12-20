@@ -76,7 +76,7 @@ Ostream& operator<<
 alphaContactAngleFvPatchScalarField::alphaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     zeroGradientFvPatchScalarField(p, iF)
@@ -87,7 +87,7 @@ alphaContactAngleFvPatchScalarField::alphaContactAngleFvPatchScalarField
 (
     const alphaContactAngleFvPatchScalarField& gcpsf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -99,7 +99,7 @@ alphaContactAngleFvPatchScalarField::alphaContactAngleFvPatchScalarField
 alphaContactAngleFvPatchScalarField::alphaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -113,7 +113,7 @@ alphaContactAngleFvPatchScalarField::alphaContactAngleFvPatchScalarField
 alphaContactAngleFvPatchScalarField::alphaContactAngleFvPatchScalarField
 (
     const alphaContactAngleFvPatchScalarField& gcpsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     zeroGradientFvPatchScalarField(gcpsf, iF),
@@ -123,7 +123,6 @@ alphaContactAngleFvPatchScalarField::alphaContactAngleFvPatchScalarField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Write
 void alphaContactAngleFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);

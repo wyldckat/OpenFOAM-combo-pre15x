@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
 
     runTime++;
 
-    autoPtr<mapPolyMesh> morphMap = polyTopoChanger::changeMesh(mesh, meshMod);
+    autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh, false);
 
     if (morphMap().hasMotionPoints())
     {

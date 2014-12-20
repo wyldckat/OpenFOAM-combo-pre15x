@@ -33,8 +33,6 @@ License
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-
-// write point entry
 template<class Type>
 void Foam::raw<Type>::writeGeometry
 (
@@ -48,7 +46,7 @@ void Foam::raw<Type>::writeGeometry
     os << pt.x() << ' ' << pt.y() << ' ' << pt.z() << ' ';
 }
 
-// write face entry
+
 template<class Type>
 void Foam::raw<Type>::writeGeometry
 (
@@ -313,7 +311,6 @@ void Foam::raw<Type>::writeData
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 template<class Type>
 Foam::raw<Type>::raw()
 :

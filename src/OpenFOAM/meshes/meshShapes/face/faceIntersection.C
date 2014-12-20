@@ -55,7 +55,7 @@ pointHit face::ray
     const intersection::direction dir
 ) const
 {
-    point ctr = average(points(meshPoints));
+    point ctr = Foam::average(points(meshPoints));
 
     scalar nearestHitDist = GREAT;
 

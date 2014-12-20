@@ -29,6 +29,9 @@ License
 #include "primitiveMesh.H"
 #include "polyTopoChange.H"
 #include "polyTopoChanger.H"
+#include "polyRemovePoint.H"
+#include "polyRemoveFace.H"
+#include "polyModifyFace.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -150,7 +153,6 @@ void Foam::attachDetach::attachInterface
     );
 
     const labelListList& pf = mesh.pointFaces();
-    const labelHashSet& removedFaces = ref.removedFaces();
 
     // Grab all the faces off the points in the slave patch.  If the face has
     //  not been removed, add it to the map of faces to renumber
@@ -160,7 +162,7 @@ void Foam::attachDetach::attachInterface
 
         forAll (curFaces, faceI)
         {
-            if (!removedFaces.found(curFaces[faceI]))
+            if (!ref.faceRemoved(curFaces[faceI]))
             {
                 facesToModifyMap.insert(curFaces[faceI]);
             }

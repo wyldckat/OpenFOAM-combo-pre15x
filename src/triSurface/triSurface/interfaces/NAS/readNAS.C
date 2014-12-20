@@ -24,7 +24,9 @@ License
 
 Description
     Nastran surface reader. Does Ansa $ANSA_NAME extension to get name
-    of patch.
+    of patch. Handles Ansa coordinates like:
+
+        GRID          28        10.20269-.030265-2.358-8
 
 \*---------------------------------------------------------------------------*/
 
@@ -38,6 +40,30 @@ namespace Foam
 {
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+
+// Do weird things to extract number
+static scalar parseNASCoord(const string& s)
+{
+    size_t expSign = s.find_last_of("+-");
+
+    if (expSign != string::npos && expSign > 0 && !isspace(s[expSign-1]))
+    {
+        scalar mantissa = readScalar(IStringStream(s.substr(0, expSign))());
+        scalar exp = readScalar(IStringStream(s.substr(expSign+1))());
+
+        if (s[expSign] == '-')
+        {
+            exp = -exp;
+        }
+        return mantissa*pow10(exp);
+    }
+    else
+    {
+        return readScalar(IStringStream(s)());
+    }
+}
+
 
 bool triSurface::readNAS(const fileName& OBJfileName)
 {
@@ -68,6 +94,9 @@ bool triSurface::readNAS(const fileName& OBJfileName)
     label ansaID = -1;
     word ansaType;
     string ansaName;
+
+    // Done warnings per unrecognized command
+    HashSet<word> unhandledCmd;
 
     while (OBJfile.good())
     {
@@ -111,9 +140,9 @@ bool triSurface::readNAS(const fileName& OBJfileName)
         }
 
 
-        if (line.size() > 0 && line[0] == '$')
+        if (line.size() == 0 || line[0] == '$')
         {
-            // Skip comment
+            // Skip empty or comment
             continue;
         }
 
@@ -170,6 +199,33 @@ bool triSurface::readNAS(const fileName& OBJfileName)
 
             faces.append(labelledTri(a, b, c, patchI));
         }
+        else if (cmd == "CQUAD4")
+        {
+            label index, group, a, b, c, d;
+
+            lineStream >> index >> group >> a >> b >> c >> d;
+
+            // Convert group into patch
+            Map<label>::const_iterator iter = groupToPatch.find(group);
+
+            label patchI;
+            if (iter == groupToPatch.end())
+            {
+                patchI = nPatches++;
+
+                Pout<< "Allocating Foam patch " << patchI
+                    << " for group " << group << endl;
+
+                groupToPatch.insert(group, patchI);
+            }
+            else
+            {
+                patchI = iter();
+            }
+
+            faces.append(labelledTri(a, b, c, patchI));
+            faces.append(labelledTri(c, d, a, patchI));
+        }
         else if (cmd == "PSHELL")
         {
             // Read shell type since gives patchnames.
@@ -189,10 +245,47 @@ bool triSurface::readNAS(const fileName& OBJfileName)
             lineStream >> index;
             indices.append(index);
 
-            scalar x = readScalar(IStringStream(line.substr(24, 8))());
-            scalar y = readScalar(IStringStream(line.substr(32, 8))());
-            scalar z = readScalar(IStringStream(line.substr(40, 8))());
+            scalar x = parseNASCoord(line.substr(24, 8));
+            scalar y = parseNASCoord(line.substr(32, 8));
+            scalar z = parseNASCoord(line.substr(40, 8));
             points.append(point(x, y, z));
+        }
+        else if (cmd == "GRID*")
+        {
+            // Assume on two lines with '*' continuation symbol on start of
+            // second line. (comes out of Tgrid. Typical line (spaces truncated)
+            // GRID*      126   0 -5.55999875E+02 -5.68730474E+02
+            // *         2.14897901E+02
+            string line2;
+            OBJfile.getLine(line2);
+            if (line2[0] != '*')
+            {
+                FatalErrorIn("triSurface::readNAS(const fileName&)")
+                    << "Expected continuation symbol '*' when reading GRID*"
+                    << " (double precision coordinate) output by Tgrid" << nl
+                    << "Read:" << line2 << nl
+                    << "File:" << OBJfile.name()
+                    << " line:" << OBJfile.lineNumber()
+                    << exit(FatalError);
+            }
+            IStringStream lineStream(line.substr(10) + line2.substr(1));
+
+            label index;
+            lineStream >> index;
+            indices.append(index);
+
+            readScalar(lineStream); // What is this field?
+            scalar x = readScalar(lineStream);
+            scalar y = readScalar(lineStream);
+            scalar z = readScalar(lineStream);
+            points.append(point(x, y, z));
+        }
+        else if (unhandledCmd.insert(cmd))
+        {
+            Info<< "Unhandled Nastran command " << line << nl
+                << "File:" << OBJfile.name()
+                << " line:" << OBJfile.lineNumber()
+                << endl;
         }
     }
 

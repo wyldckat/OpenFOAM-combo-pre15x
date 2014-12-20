@@ -41,7 +41,6 @@ SourceFiles
 #include "IOdictionary.H"
 #include "volFields.H"
 #include "surfaceFields.H"
-#include "fvPatchFieldFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -85,7 +84,7 @@ class interfaceProperties
         //  calculated from the component of U parallel to the wall
         void correctContactAngle
         (
-            fvPatchVectorFieldField& nHat
+            surfaceVectorField::GeometricBoundaryField& nHat
         ) const;
 
         //- Re-calculate the interface curvature

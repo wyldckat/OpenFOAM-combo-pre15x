@@ -30,7 +30,6 @@ Description
 SourceFiles
     dxWriters.C
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef dxWriters_H
@@ -49,6 +48,8 @@ namespace Foam
 
 typedef dx<scalar> dxScalarWriter;
 typedef dx<vector> dxVectorWriter;
+typedef dx<sphericalTensor> dxSphericalTensorWriter;
+typedef dx<symmTensor> dxSymmTensorWriter;
 typedef dx<tensor> dxTensorWriter;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

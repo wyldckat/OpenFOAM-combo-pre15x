@@ -48,8 +48,19 @@ Description
 int main(int argc, char *argv[])
 {
 
+#   include "addTimeOptions.H"
 #   include "setRootCase.H"
+
 #   include "createTime.H"
+
+    // Get times list
+    instantList Times = runTime.times();
+
+    // set startTime and endTime depending on -time and -latestTime options
+#   include "checkTimeOptions.H"
+
+    runTime.setTime(Times[startTime], startTime);
+
 #   include "createMesh.H"
 #   include "readTransportProperties.H"
 
@@ -58,11 +69,10 @@ int main(int argc, char *argv[])
     // Setup channel indexing for averaging over channel down to a line
     channelIndex channelIndexing(mesh);
 
-
     // For each time step read all fields
-    forAll(runTime.times(), i)
+    for (label i=startTime; i<endTime; i++)
     {
-        runTime.setTime(runTime.times()[i], i);
+        runTime.setTime(Times[i], i);
 
         Info<< "Collapsing fields for time " << runTime.timeName() << endl;
 

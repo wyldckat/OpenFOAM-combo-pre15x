@@ -152,6 +152,34 @@ void CompactListList<T>::setSize
     m_.setSize(nData, t);
 }
 
+template<class T>
+labelList CompactListList<T>::sizes() const
+{
+    labelList rowSizes(offsets_.size());
+
+    label prevOffset = 0;
+    forAll(offsets_, i)
+    {
+        rowSizes[i] = offsets_[i]-prevOffset;
+        prevOffset = offsets_[i];
+    }
+    return rowSizes;
+}
+
+template<class T>
+void CompactListList<T>::setSize(const UList<label>& rowSizes)
+{
+    offsets_.setSize(rowSizes.size());
+
+    label sumSize = 0;
+    forAll(rowSizes, i)
+    {
+        sumSize += rowSizes[i];
+        offsets_[i] = sumSize;
+    }
+
+    m_.setSize(sumSize);
+}
 
 template<class T>
 void CompactListList<T>::clear()
@@ -172,7 +200,7 @@ void CompactListList<T>::transfer(CompactListList<T>& a)
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
 template<class T>
-CompactListList<T>::operator List<List<T> >() const
+List<List<T> > CompactListList<T>::operator()() const
 {
     List<List<T> > llt(offsets_.size());
 

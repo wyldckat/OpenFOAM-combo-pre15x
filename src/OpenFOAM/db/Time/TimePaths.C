@@ -22,12 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    TimePaths
-
-Description
-
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "TimePaths.H"
 
@@ -47,6 +42,35 @@ Foam::TimePaths::TimePaths
     system_(systemName),
     constant_(constantName)
 {}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+Foam::fileName Foam::TimePaths::caseSystem() const
+{
+    if (processorCase_)
+    {
+        return ".."/system();
+    }
+    else
+    {
+        return system();
+    }
+}
+
+
+Foam::fileName Foam::TimePaths::caseConstant() const
+{
+    if (processorCase_)
+    {
+        return ".."/constant();
+    }
+    else
+    {
+        return constant();
+    }
+}
+
 
 
 // ************************************************************************* //

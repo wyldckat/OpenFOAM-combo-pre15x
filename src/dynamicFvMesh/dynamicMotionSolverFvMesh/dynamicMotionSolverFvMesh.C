@@ -61,9 +61,12 @@ bool dynamicMotionSolverFvMesh::update()
 {
     fvMesh::movePoints(motionPtr_->newPoints());
 
-    volVectorField& U = 
-        const_cast<volVectorField&>(lookupObject<volVectorField>("U"));
-    U.correctBoundaryConditions();
+    if (foundObject<volVectorField>("U"))
+    {
+        volVectorField& U = 
+            const_cast<volVectorField&>(lookupObject<volVectorField>("U"));
+        U.correctBoundaryConditions();
+    }
 
     return true;
 }

@@ -65,7 +65,7 @@ class gaussLaplacianScheme
             GeometricField<Type, fvPatchField, volMesh>&
         );
 
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> > gammaSnGradCorr
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > gammaSnGradCorr
         (
             const surfaceVectorField& SfGammaCorr,
             const GeometricField<Type, fvPatchField, volMesh>&

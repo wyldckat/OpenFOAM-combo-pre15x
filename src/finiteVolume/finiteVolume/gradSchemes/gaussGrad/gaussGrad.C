@@ -49,7 +49,7 @@ tmp
 >
 gaussGrad<Type>::grad
 (
-    const GeometricField<Type, fvPatchField, surfaceMesh>& ssf
+    const GeometricField<Type, fvsPatchField, surfaceMesh>& ssf
 )
 {
     typedef typename outerProduct<vector, Type>::type GradType;
@@ -102,7 +102,7 @@ gaussGrad<Type>::grad
 
         const vectorField& pSf = mesh.Sf().boundaryField()[patchi];
 
-        const fvPatchField<Type>& pssf = ssf.boundaryField()[patchi];
+        const fvsPatchField<Type>& pssf = ssf.boundaryField()[patchi];
 
         forAll(mesh.boundary()[patchi], facei)
         {

@@ -161,14 +161,14 @@ public:
             return mesh_;
         }
 
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         interpolate
         (
             const surfaceScalarField&,
             const GeometricField<Type, fvPatchField, volMesh>&
         ) const = 0;
 
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> > flux
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > flux
         (
             const surfaceScalarField&,
             const GeometricField<Type, fvPatchField, volMesh>&

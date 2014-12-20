@@ -116,9 +116,7 @@ int main(int argc, char *argv[])
             str << mesh.cellToProc();
 
             Info<< nl << "Written decomposition to "
-                <<  mesh.facesInstance()
-                  / polyMesh::defaultRegion
-                  / "cellDecomposition"
+                << str.name() << " for use in manual decomposition."
                 << nl << endl;
 
             // Write as volScalarField for postprocessing.
@@ -144,6 +142,10 @@ int main(int argc, char *argv[])
             }
 
             cellDist.write();
+
+            Info<< nl << "Written decomposition as volScalarField to "
+                << cellDist.name() << " for use in postprocessing."
+                << nl << endl;
         }
     }
 
@@ -408,6 +410,10 @@ int main(int argc, char *argv[])
         if
         (
             pointScalarFields.size()
+         || pointVectorFields.size()
+         || pointSphericalTensorFields.size()
+         || pointSymmTensorFields.size()
+         || pointTensorFields.size()
         )
         {
             labelIOList pointProcAddressing

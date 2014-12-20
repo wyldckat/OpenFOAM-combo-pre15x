@@ -46,6 +46,23 @@ SourceFiles
 namespace FoamX
 {
 
+// * * * * * * Forward declaration of friend fuctions * * * * ** * * * * * * //
+
+class FoamXAny;
+
+void operator>
+(
+    const FoamXServer::FoamXAny& any1,
+    const FoamXServer::FoamXAny& any2
+);
+
+void operator<
+(
+    const FoamXServer::FoamXAny& any1,
+    const FoamXServer::FoamXAny& any2
+);
+
+
 /*---------------------------------------------------------------------------*\
                            Class Any Declaration
 \*---------------------------------------------------------------------------*/

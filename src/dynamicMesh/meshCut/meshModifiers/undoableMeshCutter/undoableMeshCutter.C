@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "undoableMeshCutter.H"
@@ -166,12 +164,15 @@ void Foam::undoableMeshCutter::updateLabels
                     << " to " << newCellI << endl;
             }
 
-            // Update splitCell. Can do inplace since only one cellI will
-            // refer to this structure.
-            splitPtr->cellLabel() = newCellI;
+            if (newCellI >= 0)
+            {
+                // Update splitCell. Can do inplace since only one cellI will
+                // refer to this structure.
+                splitPtr->cellLabel() = newCellI;
 
-            // Update liveSplitCells
-            newLiveSplitCells.insert(newCellI, splitPtr);
+                // Update liveSplitCells
+                newLiveSplitCells.insert(newCellI, splitPtr);
+            }
         }
         liveSplitCells = newLiveSplitCells;
     }

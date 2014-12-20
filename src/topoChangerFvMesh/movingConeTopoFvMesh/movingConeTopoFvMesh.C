@@ -29,6 +29,8 @@ License
 #include "mapPolyMesh.H"
 #include "layerAdditionRemoval.H"
 #include "addToRunTimeSelectionTable.H"
+#include "meshTools.H"
+#include "OFstream.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -36,7 +38,12 @@ namespace Foam
 {
     defineTypeNameAndDebug(movingConeTopoFvMesh, 0);
 
-    addToRunTimeSelectionTable(topoChangerFvMesh, movingConeTopoFvMesh, IOobject);
+    addToRunTimeSelectionTable
+    (
+        topoChangerFvMesh,
+        movingConeTopoFvMesh,
+        IOobject
+    );
 }
 
 
@@ -202,11 +209,11 @@ void Foam::movingConeTopoFvMesh::addZonesAndModifiers()
             "rightExtrusionFaces",
             readScalar
             (
-                motionDict_.subDict("left").lookup("minThickness")
+                motionDict_.subDict("right").lookup("minThickness")
             ),
             readScalar
             (
-                motionDict_.subDict("left").lookup("maxThickness")
+                motionDict_.subDict("right").lookup("maxThickness")
             )
         );
     nMods++;
@@ -276,7 +283,27 @@ Foam::movingConeTopoFvMesh::movingConeTopoFvMesh(const IOobject& io)
         )
     )
 {
+    Pout<< "Initial time:" << time().value()
+        << " Initial curMotionVel_:" << curMotionVel_
+        << endl;
+
     addZonesAndModifiers();
+
+    curLeft_ = average
+    (
+        faceZones()
+        [
+            faceZones().findZoneID("leftExtrusionFaces")
+        ]().localPoints()
+    ).x() - SMALL;
+
+    curRight_ = average
+    (
+        faceZones()
+        [
+            faceZones().findZoneID("rightExtrusionFaces")
+        ]().localPoints()
+    ).x() + SMALL;
 }
 
 
@@ -290,7 +317,8 @@ Foam::movingConeTopoFvMesh::~movingConeTopoFvMesh()
 
 bool Foam::movingConeTopoFvMesh::update()
 {
-    autoPtr<mapPolyMesh> topoChangeMap = topoChanger_.changeMesh();
+    // Do mesh changes (use inflation - put new points in topoChangeMap)
+    autoPtr<mapPolyMesh> topoChangeMap = topoChanger_.changeMesh(true);
 
     // Calculate the new point positions depending on whether the
     // topological change has happened or not
@@ -300,12 +328,58 @@ bool Foam::movingConeTopoFvMesh::update()
         motionVelAmplitude_*
         Foam::sin(time().value()*M_PI/motionVelPeriod_); 
 
+    Pout<< "time:" << time().value() << " curMotionVel_:" << curMotionVel_
+        << " curLeft:" << curLeft_ << " curRight:" << curRight_
+        << endl;
+
     if (topoChangeMap.valid())
     {
         Info << "Topology change. Calculating motion points" << endl;
 
         if (topoChangeMap().hasMotionPoints())
         {
+            Info << "Topology change. Has premotion points" << endl;
+            //Info<< "preMotionPoints:" << topoChangeMap().preMotionPoints()
+            //    << endl;
+
+            {
+                OFstream str(db().path()/"meshPoints.obj");
+                Pout<< "Writing mesh with meshPoints to " << str.name()
+                    << endl;
+
+                const pointField& currentPoints = points();
+                label vertI = 0;
+                forAll(currentPoints, pointI)
+                {
+                    meshTools::writeOBJ(str, currentPoints[pointI]);
+                    vertI++;
+                }
+                forAll(edges(), edgeI)
+                {
+                    const edge& e = edges()[edgeI];
+                    str << "l " << e[0]+1 << ' ' << e[1]+1 << nl;
+                }
+            }
+            {
+                OFstream str(db().path()/"preMotionPoints.obj");
+                Pout<< "Writing mesh with preMotionPoints to " << str.name()
+                    << endl;
+
+                const pointField& newPoints = topoChangeMap().preMotionPoints();
+                label vertI = 0;
+                forAll(newPoints, pointI)
+                {
+                    meshTools::writeOBJ(str, newPoints[pointI]);
+                    vertI++;
+                }
+                forAll(edges(), edgeI)
+                {
+                    const edge& e = edges()[edgeI];
+                    str << "l " << e[0]+1 << ' ' << e[1]+1 << nl;
+                }
+            }
+
+
             motionMask_ =
                 vertexMarkup
                 (
@@ -316,6 +390,8 @@ bool Foam::movingConeTopoFvMesh::update()
         }
         else
         {
+            Info << "Topology change. Already set mesh points" << endl;
+
             motionMask_ =
                 vertexMarkup
                 (
@@ -369,8 +445,24 @@ bool Foam::movingConeTopoFvMesh::update()
             )*curMotionVel_*time().deltaT().value();
     }
 
-    curLeft_ += curMotionVel_.x()*time().deltaT().value();
-    curRight_ += curMotionVel_.x()*time().deltaT().value();
+//    curLeft_ += curMotionVel_.x()*time().deltaT().value();
+//    curRight_ += curMotionVel_.x()*time().deltaT().value();
+    curLeft_ = average
+    (
+        faceZones()
+        [
+            faceZones().findZoneID("leftExtrusionFaces")
+        ]().localPoints()
+    ).x() - SMALL;
+
+    curRight_ = average
+    (
+        faceZones()
+        [
+            faceZones().findZoneID("rightExtrusionFaces")
+        ]().localPoints()
+    ).x() + SMALL;
+
 
     // The mesh now contains the cells with zero volume
 

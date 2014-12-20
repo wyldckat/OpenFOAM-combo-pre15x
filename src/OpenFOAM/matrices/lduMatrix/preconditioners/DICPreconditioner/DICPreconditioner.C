@@ -40,6 +40,21 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
+Foam::DICPreconditioner::DICPreconditioner
+(
+    const lduMatrix::solver& sol,
+    Istream&
+)
+:
+    lduMatrix::preconditioner(sol),
+    rD_(sol.matrix().diag())
+{
+    calcReciprocalD(rD_, sol.matrix());
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
 void Foam::DICPreconditioner::calcReciprocalD
 (
     scalarField& rD,
@@ -67,12 +82,12 @@ void Foam::DICPreconditioner::calcReciprocalD
         rDPtr[uPtr[face]] -= upperPtr[face]*upperPtr[face]/rDPtr[lPtr[face]];
     }
 
-    #ifdef ICC_IA64_PREFETCH
-    #pragma ivdep
-    #endif
 
     // Calculate the reciprocal of the preconditioned diagonal
     register const label nCells = rD.size();
+    #ifdef ICC_IA64_PREFETCH
+    #pragma ivdep
+    #endif
     for (register label cell=0; cell<nCells; cell++)
     {
         #ifdef ICC_IA64_PREFETCH
@@ -83,21 +98,6 @@ void Foam::DICPreconditioner::calcReciprocalD
     }
 }
 
-
-Foam::DICPreconditioner::DICPreconditioner
-(
-    const lduMatrix::solver& sol,
-    Istream&
-)
-:
-    lduMatrix::preconditioner(sol),
-    rD_(sol.matrix().diag())
-{
-    calcReciprocalD(rD_, sol.matrix());
-}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void Foam::DICPreconditioner::precondition
 (

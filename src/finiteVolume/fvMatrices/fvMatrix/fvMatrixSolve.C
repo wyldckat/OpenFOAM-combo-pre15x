@@ -31,8 +31,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Set reference level for a component of the solution
-// on a given patch face
 template<class Type>
 void fvMatrix<Type>::setComponentReference
 (
@@ -50,7 +48,8 @@ void fvMatrix<Type>::setComponentReference
                 diag()[psi_.mesh().boundary()[patchi].faceCells()[facei]];
 
             boundaryCoeffs_[patchi][facei].component(cmpt) +=
-                diag()[psi_.mesh().boundary()[patchi].faceCells()[facei]]*value;
+                diag()[psi_.mesh().boundary()[patchi].faceCells()[facei]]
+               *value;
         }
     }
 }
@@ -164,7 +163,6 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve()
 }
 
 
-// Return the matrix residual
 template<class Type>
 tmp<Field<Type> > fvMatrix<Type>::residual() const
 {

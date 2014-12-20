@@ -27,9 +27,6 @@ Class
 
 Description
 
-SourceFiles
-    NVDVTVDV.C
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef NVDVTVDV_H
@@ -62,7 +59,6 @@ public:
 
         scalar phict
         (
-            const scalar cdWeight,
             const scalar faceFlux,
             const vector& phiP,
             const vector& phiN,
@@ -94,7 +90,6 @@ public:
 
         scalar r
         (
-            const scalar cdWeight,
             const scalar faceFlux,
             const vector& phiP,
             const vector& phiN,

@@ -127,7 +127,7 @@ public:
 
 
         //- Return the snGrad of the given cell field with the given deltaCoeffs
-        static tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         snGrad
         (
             const GeometricField<Type, fvPatchField, volMesh>&,
@@ -149,20 +149,20 @@ public:
 
         //- Return the explicit correction to the snGrad
         //  for the given field
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         correction(const GeometricField<Type, fvPatchField, volMesh>&) const
         {
-            return tmp<GeometricField<Type, fvPatchField, surfaceMesh> >(NULL);
+            return tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >(NULL);
         }
 
         //- Return the snGrad of the given cell field
         //  with explicit correction
-        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        virtual tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         snGrad(const GeometricField<Type, fvPatchField, volMesh>&) const;
 
         //- Return the snGrad of the given tmp cell field
         //  with explicit correction
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
         snGrad
         (
             const tmp<GeometricField<Type, fvPatchField, volMesh> >&

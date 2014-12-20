@@ -35,7 +35,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-//- Construct from IOobject and mesh by reading from file
 template<class particleType>
 Cloud<particleType>::Cloud
 (
@@ -83,7 +82,8 @@ Cloud<particleType>::Cloud
                     "Cloud<particleType>::Cloud(const IOobject&, "
                     "const polyMesh&)",
                     is
-                )   << "incorrect first token, '(', found " << firstToken.info()
+                )   << "incorrect first token, '(', found "
+                    << firstToken.info()
                     << exit(FatalIOError);
             }
 
@@ -147,7 +147,6 @@ IOobject Cloud<particleType>::fieldIOobject(const word& fieldName) const
 }
 
 
-//- Read and return a lagrangian data field
 template<class particleType>
 template<class Type>
 tmp<IOField<Type> > Cloud<particleType>::readField(const word& fieldName) const
@@ -190,6 +189,25 @@ bool Cloud<particleType>::writeData(Ostream& os) const
 template<class particleType>
 void Cloud<particleType>::writeFields() const
 {}
+
+
+template<class particleType>
+bool Cloud<particleType>::writeObject
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
+{
+    if (this->size())
+    {
+        return regIOobject::writeObject(fmt, ver, cmp);
+    }
+    else
+    {
+        return true;
+    }
+}
 
 
 // * * * * * * * * * * * * * * * Ostream Operators * * * * * * * * * * * * * //

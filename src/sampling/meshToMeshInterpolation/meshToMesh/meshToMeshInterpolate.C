@@ -365,7 +365,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > meshToMesh::interpolate
             (
                 fromVf.boundaryField()[patchI],
                 toMesh_.boundary()[patchI],
-                internalField,
+                DimensionedField<Type, volMesh>::null(),
                 patchFieldInterpolator
                 (
                     boundaryAddressing_[patchI]

@@ -72,6 +72,7 @@ Description
 #include "boolList.H"
 #include "cellModeller.H"
 #include "orientedSurface.H"
+#include "boundBox.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -568,8 +569,8 @@ void Foam::meshCutSurface::cutTetThroughVerts
 
 // Construct from edge cuts. Is given edges and position on edge.
 //  - cuts.cells(): list of cells affected in any way by cutting.
-//  - cuts.meshVerts(): labels of mesh vertices that are cut (cut exactly through
-//    point
+//  - cuts.meshVerts(): labels of mesh vertices that are cut
+//    (cut exactly through point
 //  - cuts.faceCentres(): face labels whose faceCentres are cut
 //  - cuts.cellCentres(): cell labels whose cellcentres are cut
 //  - cuts.meshEdges(): labels of mesh edges that are cut

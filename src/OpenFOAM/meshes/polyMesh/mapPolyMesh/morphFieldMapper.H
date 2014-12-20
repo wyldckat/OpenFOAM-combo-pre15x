@@ -34,6 +34,7 @@ Description
 #define morphFieldMapper_H
 
 #include "Field.H"
+#include "Map.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

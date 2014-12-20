@@ -39,7 +39,6 @@ SourceFiles
 #include "fieldTypes.H"
 #include "pointPatchFields.H"
 #include "pointMesh.H"
-#include "CalculatedPointPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -40,7 +40,7 @@ namespace Foam
 inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedGradientFvPatchScalarField(p, iF),
@@ -52,7 +52,7 @@ inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 (
     const inviscidWallPFvPatchScalarField& ptf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -64,7 +64,7 @@ inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -111,7 +111,7 @@ inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 (
     const inviscidWallPFvPatchScalarField& wbppsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     fixedGradientFvPatchScalarField(wbppsf, iF),
@@ -120,8 +120,6 @@ inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-// Update the coefficients associated with the patch field
 
 void inviscidWallPFvPatchScalarField::updateCoeffs()
 {
@@ -133,10 +131,10 @@ void inviscidWallPFvPatchScalarField::updateCoeffs()
     const fvPatchField<vector>& rhoUp =
         patch().lookupPatchField<volVectorField, vector>("rhoU");
 
-    const fvPatchField<scalar>& phip = 
+    const fvsPatchField<scalar>& phip = 
         patch().lookupPatchField<surfaceScalarField, scalar>("phi");
 
-    const fvPatchField<scalar>& rAp =
+    const fvsPatchField<scalar>& rAp =
         patch().lookupPatchField<surfaceScalarField, scalar>("rrhoUAf");
 
     gradient() = (fluxFraction_*phip - (patch().Sf() & rhoUp))/
@@ -146,7 +144,6 @@ void inviscidWallPFvPatchScalarField::updateCoeffs()
 }
 
 
-// Write
 void inviscidWallPFvPatchScalarField::write(Ostream& os) const
 {
     fixedGradientFvPatchScalarField::write(os);

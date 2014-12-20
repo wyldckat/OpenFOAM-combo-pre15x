@@ -27,6 +27,7 @@ License
 #include "timeVaryingGammaContactAngleFvPatchScalarField.H"
 #include "addToRunTimeSelectionTable.H"
 #include "fvPatchFieldMapper.H"
+#include "volMesh.H"
 #include "Time.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -36,10 +37,11 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-timeVaryingGammaContactAngleFvPatchScalarField::timeVaryingGammaContactAngleFvPatchScalarField
+timeVaryingGammaContactAngleFvPatchScalarField::
+timeVaryingGammaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     gammaContactAngleFvPatchScalarField(p, iF),
@@ -50,11 +52,12 @@ timeVaryingGammaContactAngleFvPatchScalarField::timeVaryingGammaContactAngleFvPa
 {}
 
 
-timeVaryingGammaContactAngleFvPatchScalarField::timeVaryingGammaContactAngleFvPatchScalarField
+timeVaryingGammaContactAngleFvPatchScalarField::
+timeVaryingGammaContactAngleFvPatchScalarField
 (
     const timeVaryingGammaContactAngleFvPatchScalarField& gcpsf,
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const fvPatchFieldMapper& mapper
 )
 :
@@ -66,10 +69,11 @@ timeVaryingGammaContactAngleFvPatchScalarField::timeVaryingGammaContactAngleFvPa
 {}
 
 
-timeVaryingGammaContactAngleFvPatchScalarField::timeVaryingGammaContactAngleFvPatchScalarField
+timeVaryingGammaContactAngleFvPatchScalarField::
+timeVaryingGammaContactAngleFvPatchScalarField
 (
     const fvPatch& p,
-    const scalarField& iF,
+    const DimensionedField<scalar, volMesh>& iF,
     const dictionary& dict
 )
 :
@@ -83,10 +87,11 @@ timeVaryingGammaContactAngleFvPatchScalarField::timeVaryingGammaContactAngleFvPa
 }
 
 
-timeVaryingGammaContactAngleFvPatchScalarField::timeVaryingGammaContactAngleFvPatchScalarField
+timeVaryingGammaContactAngleFvPatchScalarField::
+timeVaryingGammaContactAngleFvPatchScalarField
 (
     const timeVaryingGammaContactAngleFvPatchScalarField& gcpsf,
-    const scalarField& iF
+    const DimensionedField<scalar, volMesh>& iF
 )
 :
     gammaContactAngleFvPatchScalarField(gcpsf, iF),
@@ -99,11 +104,10 @@ timeVaryingGammaContactAngleFvPatchScalarField::timeVaryingGammaContactAngleFvPa
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Evaluate and return the time-varying equilibrium contact-angle
 tmp<scalarField> timeVaryingGammaContactAngleFvPatchScalarField::theta
 (
     const fvPatchVectorField&,
-    const fvPatchVectorField&
+    const fvsPatchVectorField&
 ) const
 {
     scalar t = patch().boundaryMesh().mesh().time().value();
@@ -126,7 +130,6 @@ tmp<scalarField> timeVaryingGammaContactAngleFvPatchScalarField::theta
 }
 
 
-// Write
 void timeVaryingGammaContactAngleFvPatchScalarField::write(Ostream& os) const
 {
     fvPatchScalarField::write(os);

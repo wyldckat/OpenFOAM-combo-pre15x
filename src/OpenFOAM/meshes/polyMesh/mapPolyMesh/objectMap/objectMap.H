@@ -76,9 +76,11 @@ public:
     // Member Functions
 
         //- Return object index
+        inline label& index();
         inline label index() const;
 
         //- Return master object index
+        inline labelList& masterObjects();
         inline const labelList& masterObjects() const;
 
 

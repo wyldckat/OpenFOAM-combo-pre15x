@@ -73,6 +73,14 @@ class IFstreamAllocator
     // Destructor
 
         ~IFstreamAllocator();
+
+
+public:
+
+    // Member functions
+
+        //- Access to underlying std::istream (for e.g. lexer)
+        istream& stdStream();
 };
 
 
@@ -82,7 +90,7 @@ class IFstreamAllocator
 
 class IFstream
 :
-    private IFstreamAllocator,
+    public IFstreamAllocator,
     public ISstream
 {
     // Private data
@@ -126,7 +134,6 @@ public:
             {
                 return pathname_;
             }
-
 
         // Print
 

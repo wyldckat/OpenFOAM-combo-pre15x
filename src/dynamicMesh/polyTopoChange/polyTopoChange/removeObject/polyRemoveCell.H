@@ -54,6 +54,8 @@ class polyRemoveCell
         //- Cell ID
         label cellID_;
 
+        //- Merge cell ID or -1
+        label mergeCellID_;
 
 public:
 
@@ -68,13 +70,15 @@ public:
         //- Construct null.  Used for constructing lists
         polyRemoveCell()
         :
-            cellID_(-1)
+            cellID_(-1),
+            mergeCellID_(-1)
         {}
 
         //- Construct from components
-        polyRemoveCell(const label cellID)
+        polyRemoveCell(const label cellID, const label mergeCellID = -1)
         :
-            cellID_(cellID)
+            cellID_(cellID),
+            mergeCellID_(mergeCellID)
         {}
 
         //- Construct and return a clone
@@ -93,6 +97,12 @@ public:
         label cellID() const
         {
             return cellID_;
+        }
+
+        //- Return cell ID
+        label mergeCellID() const
+        {
+            return mergeCellID_;
         }
 };
 

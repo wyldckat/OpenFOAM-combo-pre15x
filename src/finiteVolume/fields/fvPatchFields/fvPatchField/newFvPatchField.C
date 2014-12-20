@@ -24,8 +24,6 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 namespace Foam
 {
 
@@ -36,7 +34,7 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
 (
     const word& patchFieldType,
     const fvPatch& p,
-    const Field<Type>& iF
+    const DimensionedField<Type, volMesh>& iF
 )
 {
     if (debug)
@@ -81,7 +79,7 @@ template<class Type>
 tmp<fvPatchField<Type> > fvPatchField<Type>::New
 (
     const fvPatch& p,
-    const Field<Type>& iF,
+    const DimensionedField<Type, volMesh>& iF,
     const dictionary& dict
 )
 {
@@ -144,14 +142,12 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
 }
 
 
-// Return a pointer to a new patch created on freestore from
-// a given fvPatchField<Type> mapped onto a new patch
 template<class Type>
 tmp<fvPatchField<Type> > fvPatchField<Type>::New
 (
     const fvPatchField<Type>& ptf,
     const fvPatch& p,
-    const Field<Type>& iF,
+    const DimensionedField<Type, volMesh>& iF,
     const fvPatchFieldMapper& pfMapper
 )
 {

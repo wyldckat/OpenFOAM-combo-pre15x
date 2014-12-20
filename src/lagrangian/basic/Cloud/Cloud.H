@@ -177,6 +177,15 @@ public:
             //- Write the field data for the cloud of particles
             virtual void writeFields() const;
 
+            //- Write using given format, version and compression.
+            //  Only writes the cloud file if the Cloud isn't empty
+            virtual bool writeObject
+            (
+                IOstream::streamFormat fmt,
+                IOstream::versionNumber ver,
+                IOstream::compressionType cmp
+            ) const;
+
 
     // Ostream Operator
 

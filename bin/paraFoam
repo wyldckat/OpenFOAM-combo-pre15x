@@ -39,32 +39,40 @@ usage() {
     cat<<USAGE
 
 usage: $Script <root> <case>
-       $Script <root>
+       $Script <case>
        $Script
 
 USAGE
     exit 1
 }
 
-cd "$caseDir" 2>/dev/null || usage "directory does not exist:  '$caseDir'"
+# provide usage
+[ "$1" = "-h" ] && usage
 
-for check in system/controlDict system/fvSchemes system/fvSolution
-do
-    [ -s $check ] || usage "file does not exist:  '$check'"
-done
+cd "$caseDir" 2>/dev/null || usage "directory does not exist:  '$caseDir'"
 
 # get a sensible caseName (avoid '.' as a case name)
 caseName=${PWD##*/}
 
-# since we are now in the cwd, ROOT/CASE is '.'
-# just changing the $WM_PROJECT_DIR/bin/paraFoam.pvs template would work too
-# then we can remove the first sed expression
+# global root
+case "$caseName" in
+    processor*) rootDir=".." ;;
+    *)          rootDir="."  ;;
+esac
 
-sed -e s%ROOT/CASE%.%g \
+# check existence of essential files
+for check in system/controlDict system/fvSchemes system/fvSolution
+do
+    [ -s "$rootDir/$check" ] || usage "file does not exist:  '$check'"
+done
+
+
+# since we are now in the cwd, ROOT/CASE is '$PWD'
+sed -e s%ROOT/CASE%$PWD%g \
     -e s%CASE%$caseName%g $WM_PROJECT_DIR/bin/paraFoam.pvs > paraFoam.pvs
 
-touch ${caseName}.foam
+touch $caseName.foam
 paraview paraFoam.pvs
-rm paraFoam.pvs ${caseName}.foam 2>/dev/null
+rm paraFoam.pvs $caseName.foam 2>/dev/null
 
 #------------------------------------------------------------------------------

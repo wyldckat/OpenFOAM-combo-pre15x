@@ -21,11 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Class
-    triSurface
-
-Description
     
 \*---------------------------------------------------------------------------*/
 
@@ -33,31 +28,25 @@ Description
 
 #undef yyFlexLexer
 
- /* ------------------------------------------------------------------------- *\
+ /* ------------------------------------------------------------------------ *\
    ------ local definitions
- \* ------------------------------------------------------------------------- */
+ \* ------------------------------------------------------------------------ */
 
-#include "IStringStream.H"
+#include "IFstream.H"
 #include "triSurface.H"
 #include "STLpoint.H"
-#include "SLList.H"
-#include "fileName.H"
-#include "hashSignedLabel.H"
-#include "wordList.H"
+#include "OSspecific.H"
 
 using namespace Foam;
 
-label nTriangles = 0;
-short region = -1;      /* current region */
-short maxRegion = 0;    /* max region */
-
-label lineNo = 1;
-word startError;
-
-SLList<STLpoint> STLpoints;
-SLList<STLpoint> STLnormals;
-SLList<label> STLlabels;
-HashTable<label, word> STLsolidNames;
+// Dummy yyFlexLexer::yylex() to keep the linker happy. It is not called
+int yyFlexLexer::yylex()
+{
+    FatalErrorIn("yyFlexLexer::yylex()")
+        << "Should not have called this function"
+        << abort(FatalError);
+    return 0;
+}
 
 // Dummy yywrap to keep yylex happy at compile time.
 // It is called by yylex but is not used as the mechanism to change file.
@@ -66,6 +55,90 @@ extern "C" int yywrap()
 {
     return 1;
 }
+
+
+class STLLexer
+:
+    public yyFlexLexer
+{
+    // Private data
+
+        label nTriangles_;
+        short region_;       // current region
+        short maxRegion_;    // max region
+
+        label lineNo_;
+        word startError_;
+
+        DynamicList<STLpoint> STLpoints_;
+        //DynamicList<STLpoint> STLnormals_;
+        DynamicList<label> STLlabels_;
+        HashTable<label, word> STLsolidNames_;
+
+
+public:
+
+    // Constructors
+
+        //- From input stream and the approximate number of vertices in the STL
+        STLLexer(istream* is, const label approxNpoints);
+
+
+    // Member Functions
+
+        //- The lexer function itself
+        int lex();
+
+    // Access
+
+        label nTriangles() const
+        {
+            return nTriangles_;
+        }
+
+        DynamicList<STLpoint>& STLpoints()
+        {
+            return STLpoints_;
+        }
+
+        //DynamicList<STLpoint>& STLnormals()
+        //{
+        //    return STLnormals_;
+        //}
+
+        DynamicList<label>& STLlabels()
+        {
+            return STLlabels_;
+        }
+
+        const HashTable<label, word>& STLsolidNames() const
+        {
+            return STLsolidNames_;
+        }
+};
+
+
+STLLexer::STLLexer(istream* is, const label approxNpoints)
+:
+    yyFlexLexer(is),
+
+    nTriangles_(0),
+    region_(-1),
+    maxRegion_(0),
+
+    lineNo_(1),
+
+    STLpoints_(approxNpoints),
+    //STLnormals_(approxNpoints),
+    STLlabels_(approxNpoints)
+{}
+
+
+ /* ------------------------------------------------------------------------ *\
+   ------ cppLexer::yylex()
+ \* ------------------------------------------------------------------------ */
+
+#define YY_DECL int STLLexer::lex()
 
 %}
 
@@ -84,6 +157,7 @@ identifier            {alpha}({alpha}|{digit})*
 integer               {dec_digit}+
 label                 [1-9]{dec_digit}*
 zeroLabel             {digit}*
+signedInteger         [-+]?{integer}
 
 word                  ([[:alnum:]]|[[:punct:]])*
 string                {word}({some_space}{word})*
@@ -110,9 +184,9 @@ endfacet              {space}("endfacet"|"ENDFACET"){space}
 endsolid              {space}("endsolid"|"ENDSOLID")({some_space}{word})*
 
 
- /* ------------------------------------------------------------------------- *\
+ /* ------------------------------------------------------------------------ *\
                       -----  Exclusive start states -----
- \* ------------------------------------------------------------------------- */
+ \* ------------------------------------------------------------------------ */
 
 %option stack
 
@@ -126,40 +200,42 @@ endsolid              {space}("endsolid"|"ENDSOLID")({some_space}{word})*
 %%
 
 %{
-   
-STLpoint normal;
+    // End of read character pointer returned by strtof
+    char* endPtr;
 
-static const char* stateNames[7] =
-{
-    "reading solid",
-    "reading solid name",
-    "reading facet",
-    "reading normal",
-    "reading vertices",
-    "reading vertex",
-    "error"
-};
+    STLpoint normal;
+    STLpoint vertex;
+    label cmpt = 0;   // component index used for reading vertex
 
-static const char* stateExpects[7] =
-{
-    "'solid', 'color', 'facet' or 'endsolid'",
-    "<string>",
-    "'normal', 'outer loop' or 'endfacet'",
-    "<float> <float> <float>",
-    "'vertex' or 'endloop'",
-    "<float> <float> <float>",
-    ""
-};
+    static const char* stateNames[7] =
+    {
+        "reading solid",
+        "reading solid name",
+        "reading facet",
+        "reading normal",
+        "reading vertices",
+        "reading vertex",
+        "error"
+    };
 
-
+    static const char* stateExpects[7] =
+    {
+        "'solid', 'color', 'facet' or 'endsolid'",
+        "<string>",
+        "'normal', 'outer loop' or 'endfacet'",
+        "<float> <float> <float>",
+        "'vertex' or 'endloop'",
+        "<float> <float> <float>",
+        ""
+    };
 %}
 
 
- /* ------------------------------------------------------------------------- *\
+ /* ------------------------------------------------------------------------ *\
                             ------ Start Lexing ------
- \* ------------------------------------------------------------------------- */
+ \* ------------------------------------------------------------------------ */
 
- /*                      ------ Reading control header ------                 */
+ /*                      ------ Reading control header ------                */
 
 {solid} {
         BEGIN(readSolidName);
@@ -167,15 +243,32 @@ static const char* stateExpects[7] =
 
 <readSolidName>{string} {
         word solidName(Foam::string::validate<word>(YYText()));
-        if (STLsolidNames.found(solidName))
+        if (STLsolidNames_.found(solidName))
         {
-            region = STLsolidNames[solidName];
+            region_ = STLsolidNames_[solidName];
         }
         else
         {
-            region = maxRegion++;
-            STLsolidNames.insert(solidName, region);
+            region_ = maxRegion_++;
+            STLsolidNames_.insert(solidName, region_);
         }
+        BEGIN(INITIAL);
+    }
+
+<readSolidName>{space}\n {
+        word solidName("solid");
+        if (STLsolidNames_.found(solidName))
+        {
+            region_ = STLsolidNames_[solidName];
+        }
+        else
+        {
+            region_ = maxRegion_++;
+            STLsolidNames_.insert(solidName, region_);
+        }
+
+        lineNo_++;
+
         BEGIN(INITIAL);
     }
 
@@ -191,9 +284,12 @@ static const char* stateExpects[7] =
     }
 
 <readNormal>{point} {
-        IStringStream normalStream(YYText());
-        normalStream >> normal;
-        STLnormals.append(normal);
+        /*
+        normal.x() = strtof(YYText(), &endPtr);
+        normal.y() = strtof(endPtr, &endPtr);
+        normal.z() = strtof(endPtr, &endPtr);
+        STLnormals_.append(normal);
+        */
         BEGIN(readFacet);
     }
 
@@ -205,10 +301,26 @@ static const char* stateExpects[7] =
         BEGIN(readVertex);
     }
 
-<readVertex>{point} {
-        IStringStream pointStream(YYText());
-        STLpoints.append(STLpoint(pointStream));
-        BEGIN(readVertices);
+<readVertex>{space}{signedInteger}{space} {
+        vertex[cmpt++] = atol(YYText());
+
+        if (cmpt == 3)
+        {
+            cmpt = 0;
+            STLpoints_.append(vertex);
+            BEGIN(readVertices);
+        }
+    }
+
+<readVertex>{space}{float}{space} {
+        vertex[cmpt++] = atof(YYText());
+
+        if (cmpt == 3)
+        {
+            cmpt = 0;
+            STLpoints_.append(vertex);
+            BEGIN(readVertices);
+        }
     }
 
 <readVertices>{endloop} {
@@ -216,8 +328,8 @@ static const char* stateExpects[7] =
     }
 
 <readFacet>{endfacet} {
-        nTriangles++;
-        STLlabels.append(region);
+        nTriangles_++;
+        STLlabels_.append(region_);
         BEGIN(INITIAL);
     }
 
@@ -225,31 +337,35 @@ static const char* stateExpects[7] =
     }
 
 
- /* ------------------ Ignore remaining space and \n s. --------------------- */
+ /* ------------------ Ignore remaining space and \n s. -------------------- */
 
 <*>{space} {}
-<*>\n      { lineNo++; }
+<*>\n      { lineNo_++; }
 
- /* ------ Ignore remaining space and \n s.  Any other characters are errors. */
+
+ /* ------------------- Any other characters are errors -------------------- */
 
 <*>. {
-        startError = YYText();
+        startError_ = YYText();
         yy_push_state(stlerror);
     }
+
+
+ /* ---------------------------- Error handler ----------------------------- */
 
 <stlerror>.* {
         yy_pop_state();
         FatalErrorIn
         (
             "triSurface::readSTLASCII(const fileName& STLfileName)"
-        )   << "while " << stateNames[YY_START] << " on line " << lineNo << nl
+        )   << "while " << stateNames[YY_START] << " on line " << lineNo_ << nl
             << "    expected " << stateExpects[YY_START]
-            << " but found '" << startError.c_str() << YYText() << "'"
+            << " but found '" << startError_.c_str() << YYText() << "'"
             << exit(FatalError);
     }
 
 
- /*  ------------------------ On EOF terminate. ----------------------------  */
+ /*  ------------------------ On EOF terminate ----------------------------  */
 
 <<EOF>> {
             yyterminate();
@@ -261,31 +377,26 @@ static const char* stateExpects[7] =
 
 bool triSurface::readSTLASCII(const fileName& STLfileName)
 {
-    std::ifstream STLstream(STLfileName.c_str());
+    IFstream STLstream(STLfileName);
 
     if (!STLstream)
     {
         FatalErrorIn
         (
-            "triSurface::readSTLASCII(const fileName& STLfileName)"
+            "triSurface::readSTLASCII(const fileName&)"
         )   << "file " << STLfileName << " not found"
             << exit(FatalError);
     }
 
-    nTriangles = 0;
-    region = -1;      /* current region */
-    maxRegion = 0;    /* max region */
+    // Create the lexer obtaining the approximate number of vertices in the STL
+    // from the file size
+    STLLexer lexer(&STLstream.stdStream(), Foam::size(STLfileName)/400);
+    while(lexer.lex() != 0);
 
-    lineNo = 1;
+    DynamicList<STLpoint>& STLpoints = lexer.STLpoints();
 
-    STLpoints.clear();
-    STLnormals.clear();
-    STLlabels.clear();
-    STLsolidNames.clear();
-
-
-    yyFlexLexer lexer(&STLstream);
-    while(lexer.yylex() != 0);
+    /*
+    DynamicList<STLpoint>& STLnormals = lexer.STLnormals();
 
     if (STLpoints.size() != 3*STLnormals.size())
     {
@@ -297,54 +408,41 @@ bool triSurface::readSTLASCII(const fileName& STLfileName)
             << " but " << STLpoints.size() << " points"
             << exit(FatalError);
     }
+    */
 
     pointField rawPoints(STLpoints.size());
 
-    label i = 0;
-    for
-    (
-        SLList<STLpoint>::iterator iter = STLpoints.begin();
-        iter != STLpoints.end();
-        ++iter
-    )
+    forAll(rawPoints, i)
     {
-        rawPoints[i++] = *iter;
+        rawPoints[i] = STLpoints[i];
     }
 
-    pointField rawNormals(STLnormals.size());
-    i = 0;
-    for
-    (
-        SLList<STLpoint>::iterator iter = STLnormals.begin();
-        iter != STLnormals.end();
-        ++iter
-    )
+    STLpoints.clear();
+
+    setSize(lexer.nTriangles());
+    DynamicList<label>& STLlabels = lexer.STLlabels();
+
+    label pointi = 0;
+    forAll(*this, i)
     {
-        rawNormals[i++] = *iter;
+        operator[](i)[0] = pointi++;
+        operator[](i)[1] = pointi++;
+        operator[](i)[2] = pointi++;
+        operator[](i).region() = STLlabels[i];
     }
 
-    setSize(nTriangles);
-
-    label pointI = 0;
-    SLList<label>::iterator iter = STLlabels.begin();
-    forAll (*this, i)
-    {
-        operator[](i)[0] = pointI++;
-        operator[](i)[1] = pointI++;
-        operator[](i)[2] = pointI++;
-        operator[](i).region() = *iter;
-        ++iter;
-    }
+    STLlabels.clear();
 
     stitchTriangles(rawPoints);
 
     // Convert solidNames into regionNames
-    patches_.setSize(STLsolidNames.size());
+    patches_.setSize(lexer.STLsolidNames().size());
 
     for
     (
-        HashTable<label, word>::const_iterator iter = STLsolidNames.begin();
-        iter != STLsolidNames.end();
+        HashTable<label, word>::const_iterator iter =
+            lexer.STLsolidNames().begin();
+        iter != lexer.STLsolidNames().end();
         ++iter
     )
     {
@@ -357,6 +455,6 @@ bool triSurface::readSTLASCII(const fileName& STLfileName)
 }
 
 
- /* ------------------------------------------------------------------------- *\
+ /* ------------------------------------------------------------------------ *\
     ------ End of STLToFoam.L
- \* ------------------------------------------------------------------------- */
+ \* ------------------------------------------------------------------------ */

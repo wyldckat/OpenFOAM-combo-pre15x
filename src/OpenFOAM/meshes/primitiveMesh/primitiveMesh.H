@@ -55,7 +55,6 @@ SourceFiles
 #define primitiveMesh_H
 
 #include "edgeList.H"
-#include "boundBox.H"
 #include "pointField.H"
 #include "SubField.H"
 #include "SubList.H"
@@ -261,19 +260,12 @@ class primitiveMesh
 
     // Helper functions for mesh checking
 
-            //- Check for more than 2 shared points between two faces
-            void warnCommonPoints
-            (
-                const label,
-                const Map<label>&,
-                bool& hasWarned
-            ) const;
-
             //- Check if all points on face are shared with another face.
             bool checkDuplicateFaces
             (
                 const label,
                 const Map<label>&,
+                label& nBaffleFaces,
                 labelHashSet*
             ) const;
 
@@ -290,14 +282,18 @@ class primitiveMesh
 
         //- Static data to control mesh checking
 
-            //- Orthogonality warning threshold
-            static scalar orthWarn_;
-
-            //- Skewness warning threshold
-            static scalar skewWarn_;
+            //- Cell closedness warning threshold
+            //  set as the fraction of un-closed area to closed area
+            static scalar closedThreshold_;
 
             //- Aspect ratio warning threshold
-            static scalar aspectWarn_;
+            static scalar aspectThreshold_;
+
+            //- Non-orthogonality warning threshold in deg
+            static scalar nonOrthThreshold_;
+
+            //- Skewness warning threshold
+            static scalar skewThreshold_;
 
 
 protected:
@@ -341,9 +337,6 @@ public:
 
             //- Estimated number of points per face
             static const unsigned pointsPerFace_ = 4;
-
-            //- Tolerance for mesh and cell closedness
-            static const scalar closedTolerance_;
 
 
     // Constructors
@@ -488,9 +481,38 @@ public:
             inline bool isInternalFace(const label faceIndex) const;
 
 
-            // Mesh checking tools
+            // Topological checks
 
-                // Checks using geometry
+                //- Check cell zip-up
+                bool checkCellsZipUp
+                (
+                    const bool report = false,
+                    labelHashSet* setPtr = NULL
+                ) const;
+
+                //- Check uniqueness of face vertices
+                bool checkFaceVertices
+                (
+                    const bool report = false,
+                    labelHashSet* setPtr = NULL
+                ) const;
+
+                //- Check face-face connectivity
+                bool checkFaceFaces
+                (
+                    const bool report = false,
+                    labelHashSet* setPtr = NULL
+                ) const;
+
+                //- Check face ordering
+                bool checkUpperTriangular
+                (
+                    const bool report = false,
+                    labelHashSet* setPtr = NULL
+                ) const;
+
+
+            // Geometric checks
 
                 //- Check boundary for closedness
                 bool checkClosedBoundary(const bool report = false) const;
@@ -499,7 +521,8 @@ public:
                 bool checkClosedCells
                 (
                     const bool report = false,
-                    labelHashSet* setPtr = NULL
+                    labelHashSet* setPtr = NULL,
+                    labelHashSet* highAspectSetPtr = NULL
                 ) const;
 
                 //- Check for negative face areas
@@ -518,7 +541,7 @@ public:
                 ) const;
 
                 //- Check for non-orthogonality
-                bool checkFaceDotProduct
+                bool checkFaceOrthogonality
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
@@ -564,45 +587,33 @@ public:
                     labelHashSet* setPtr = NULL
                 ) const;
 
-                //- Check face ordering
-                bool checkUpperTriangular
+                //- Check for point-point-nearness,
+                //  e.g. colocated points which may be part of baffles.
+                bool checkPointNearness
                 (
-                    const bool report = false,
+                    const bool report,
+                    const scalar reportDistSqr,
                     labelHashSet* setPtr = NULL
                 ) const;
 
-                // Checks using topology only
-
-                //- Check cell zip-up
-                bool checkCellsZipUp
+                //- Check edge length
+                bool checkEdgeLength
                 (
-                    const bool report = false,
+                    const bool report,
+                    const scalar minLenSqr,
                     labelHashSet* setPtr = NULL
                 ) const;
 
-                //- Check uniqueness of face vertices
-                bool checkFaceVertices
-                (
-                    const bool report = false,
-                    labelHashSet* setPtr = NULL
-                ) const;
-
-                //- Check face-face connectivity
-                bool checkFaceFaces
-                (
-                    const bool report = false,
-                    labelHashSet* setPtr = NULL
-                ) const;
-
-                //- Check unconnected cells
-                bool checkFloatingCells
+                //- Check cell determinant
+                bool checkCellDeterminant
                 (
                     const bool report = false,
                     labelHashSet* setPtr = NULL
                 ) const;
 
 
-            //- Check mesh topology for correctness. Returns false for no error.
+            //- Check mesh topology for correctness.
+            //  Returns false for no error.
             bool checkTopology(const bool report = false) const;
 
             //- Check mesh geometry (& implicitly topology) for correctness. 
@@ -619,24 +630,22 @@ public:
                 const bool report = false
             ) const;
 
+
+            //- Set the closedness ratio warning threshold
+            static scalar setClosedThreshold(const scalar);
+
+            //- Set the aspect ratio warning threshold
+            static scalar setAspectThreshold(const scalar);
+
             //- Set the non-orthogonality warning threshold in degrees
-            static scalar setOrthWarn(const scalar);
+            static scalar setNonOrthThreshold(const scalar);
 
             //- Set the skewness warning threshold as percentage
             //  of the face area vector
-            static scalar setSkewWarn(const scalar);
-
-            //- Set the aspect ratio warning threshold
-            static scalar setAspectWarn(const scalar);
+            static scalar setSkewThreshold(const scalar);
 
 
         // Useful derived info
-
-            //- Return mesh bounding box
-            boundBox bounds() const
-            {
-                return boundBox(points());
-            }
 
             //- Is the point in the cell bounding box
             bool pointInCellBB(const point& p, label celli) const;

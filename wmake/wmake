@@ -159,7 +159,7 @@ if [ "$makeOption" = "all" ]
 then
     if [ -e Allwmake ]
     then
-        Allwmake
+        ./Allwmake
         exit $?
     elif [ ! -d $MakeDir ]
     then

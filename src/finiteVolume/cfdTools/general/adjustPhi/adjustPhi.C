@@ -50,7 +50,7 @@ bool Foam::adjustPhi
         forAll (phi.boundaryField(), patchi)
         {
             const fvPatchVectorField& Up = U.boundaryField()[patchi];
-            const fvPatchScalarField& phip = phi.boundaryField()[patchi];
+            const fvsPatchScalarField& phip = phi.boundaryField()[patchi];
 
             if (!isType<processorFvPatchScalarField>(phip))
             {
@@ -121,7 +121,7 @@ bool Foam::adjustPhi
         forAll (phi.boundaryField(), patchi)
         {
             const fvPatchVectorField& Up = U.boundaryField()[patchi];
-            fvPatchScalarField& phip = phi.boundaryField()[patchi];
+            fvsPatchScalarField& phip = phi.boundaryField()[patchi];
 
             if (!isType<processorFvPatchScalarField>(phip))
             {

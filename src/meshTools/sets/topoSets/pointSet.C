@@ -27,7 +27,7 @@ License
 #include "pointSet.H"
 #include "mapPolyMesh.H"
 #include "polyMesh.H"
-//#include "directPolyTopoChange.H"
+#include "syncTools.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -98,6 +98,41 @@ pointSet::~pointSet()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void pointSet::sync(const polyMesh& mesh)
+{
+    // Convert to boolList
+
+    boolList contents(mesh.nPoints(), false);
+
+    forAllConstIter(pointSet, *this, iter)
+    {
+        contents[iter.key()] = true;
+    }
+    syncTools::syncPointList
+    (
+        mesh,
+        contents,
+        orEqOp<bool>(),
+        false,          // null value
+        false           // no separation
+    );
+
+    // Convert back to labelHashSet
+
+    labelHashSet newContents(size());
+
+    forAll(contents, pointI)
+    {
+        if (contents[pointI])
+        {
+            newContents.insert(pointI);
+        }
+    }
+
+    transfer(newContents);
+}
+
+
 label pointSet::maxSize(const polyMesh& mesh) const
 {
     return mesh.nPoints();
@@ -108,12 +143,6 @@ void pointSet::updateMesh(const mapPolyMesh& morphMap)
 {
     updateLabels(morphMap.reversePointMap());
 }
-
-
-//void pointSet::updateMesh(const directPolyTopoChange& meshMod)
-//{
-//    updateLabels(meshMod.pointMap());
-//}
 
 
 void pointSet::writeDebug

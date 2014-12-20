@@ -64,7 +64,7 @@ public:
 
     scalar limiter
     (
-        const scalar cdWeight,
+        const scalar,
         const scalar faceFlux,
         const typename LimiterFunc::phiType& phiP,
         const typename LimiterFunc::phiType& phiN,
@@ -75,10 +75,10 @@ public:
     {
         scalar r = LimiterFunc::r
         (
-            cdWeight, faceFlux, phiP, phiN, gradcP, gradcN, d
+            faceFlux, phiP, phiN, gradcP, gradcN, d
         );
 
-        return min(max((r + mag(r))/(mag(r) + 1), 0), 2);
+        return (r + mag(r))/(1 + mag(r));
     }
 };
 

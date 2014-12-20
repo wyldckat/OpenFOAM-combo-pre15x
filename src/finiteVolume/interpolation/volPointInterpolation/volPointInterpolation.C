@@ -28,7 +28,6 @@ License
 #include "fvMesh.H"
 #include "volFields.H"
 #include "pointFields.H"
-#include "emptyFvPatch.H"
 #include "demandDrivenData.H"
 #include "coupledPointPatchFields.H"
 #include "pointConstraint.H"

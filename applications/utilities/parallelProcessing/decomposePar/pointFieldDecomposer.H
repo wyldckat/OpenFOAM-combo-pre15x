@@ -38,7 +38,7 @@ SourceFiles
 #define pointFieldDecomposer_H
 
 #include "pointMesh.H"
-#include "PointPatchFieldMapperPatchRef.H"
+#include "pointPatchFieldMapperPatchRef.H"
 #include "pointFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -58,7 +58,7 @@ public:
         //- Point patch field decomposer class
         class patchFieldDecomposer
         :
-            public PointPatchFieldMapperPatchRef<pointPatch>
+            public pointPatchFieldMapperPatchRef
         {
             // Private data
 

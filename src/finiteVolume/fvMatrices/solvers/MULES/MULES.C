@@ -22,7 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-\*----------------------------------------------------------------------------*/
+\*---------------------------------------------------------------------------*/
 
 #include "MULES.H"
 #include "upwind.H"
@@ -42,13 +42,13 @@ License
 void Foam::MULES::explicitSolve
 (
     volScalarField& psi,
-    const surfaceScalarField& phiBD,
+    const surfaceScalarField& phi,
     surfaceScalarField& phiPsi,
     const scalar psiMax,
     const scalar psiMin
 )
 {
-    explicitSolve(psi, phiBD, phiPsi, zero, zero, psiMax, psiMin);
+    explicitSolve(psi, phi, phiPsi, zero, zero, psiMax, psiMin);
 }
 
 

@@ -132,7 +132,7 @@ bool domainDecomposition::writeDecomposition()
     // for the duplicate elements
 
     // Point zones
-    labelList pointToZone(nPoints(), -1);
+    labelList pointToZone(allPoints().size(), -1);
 
     forAll(pointZones(), zoneI)
     {
@@ -140,7 +140,7 @@ bool domainDecomposition::writeDecomposition()
     }
 
     // Face zones
-    labelList faceToZone(nFaces(), -1);
+    labelList faceToZone(allFaces().size(), -1);
 
     forAll(faceZones(), zoneI)
     {

@@ -48,10 +48,10 @@ void Foam::nearWallDistNoSearch::doAll()
             const fvPatchVectorField& patchCentres
                 = cellCentres.boundaryField()[patchI];
 
-            const fvPatchVectorField& Apatch
+            const fvsPatchVectorField& Apatch
                 = mesh_.Sf().boundaryField()[patchI];
 
-            const fvPatchScalarField& magApatch
+            const fvsPatchScalarField& magApatch
                 = mesh_.magSf().boundaryField()[patchI];
 
             forAll(patchCentres, facei)
@@ -76,13 +76,12 @@ void Foam::nearWallDistNoSearch::doAll()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::nearWallDistNoSearch::nearWallDistNoSearch(const Foam::fvMesh& mesh)
 :
     volScalarField::GeometricBoundaryField
     (
         mesh.boundary(),
-        scalarField(mesh.nCells(), 0.0),
+        mesh.V(),           // Dummy internal field
         calculatedFvPatchScalarField::typeName
     ),
     mesh_(mesh)
@@ -99,7 +98,6 @@ Foam::nearWallDistNoSearch::~nearWallDistNoSearch()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Correct for mesh geom/topo changes
 void Foam::nearWallDistNoSearch::correct()
 {
     if (mesh_.moving())

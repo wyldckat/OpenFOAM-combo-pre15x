@@ -91,7 +91,10 @@ fvMeshBandCompression::renumber
         patchFields.set
         (
             patchI,
-            vf.boundaryField()[patchI].clone(internalField)
+            vf.boundaryField()[patchI].clone
+            (
+                DimensionedField<Type, volMesh>::null()
+            )
         );
     }
 

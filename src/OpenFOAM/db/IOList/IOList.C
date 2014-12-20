@@ -22,10 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    An IOList of a given type is a List of that type which supports automated
-    input and output.
-
 \*---------------------------------------------------------------------------*/
 
 #include "IOList.H"
@@ -57,22 +53,43 @@ IOList<T>::IOList(const IOobject& io)
 template<class T>
 IOList<T>::IOList(const IOobject& io, const label size)
 :
-    regIOobject(io),
-    List<T>(size)
-{}
+    regIOobject(io)
+{
+    if
+    (
+        io.readOpt() == IOobject::MUST_READ
+     || (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+    )
+    {
+        readStream(typeName) >> *this;
+        close();
+    }
+    else
+    {
+        List<T>::setSize(size);
+    }
+}
 
 
 template<class T>
 IOList<T>::IOList(const IOobject& io, const List<T>& list)
 :
-    regIOobject(io),
-    List<T>(list)
+    regIOobject(io)
 {
-    if (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+    if
+    (
+        io.readOpt() == IOobject::MUST_READ
+     || (io.readOpt() == IOobject::READ_IF_PRESENT && headerOk())
+    )
     {
         readStream(typeName) >> *this;
         close();
     }
+    else
+    {
+        List<T>::operator=(list);
+    }
+
 }
 
 

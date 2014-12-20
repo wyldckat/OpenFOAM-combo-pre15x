@@ -325,7 +325,7 @@ int FoamX::ProcessControl::system
     }
     else
     {
-        char *argp[] =
+        char* const argp[] =
         {
             "/bin/sh",
             "-c",

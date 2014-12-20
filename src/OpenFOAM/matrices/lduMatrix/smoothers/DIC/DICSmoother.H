@@ -26,8 +26,9 @@ Class
     DICSmoother
 
 Description
-    DICSmoother smoother for symmetric matrices.  In order to improve efficiency
-    the residual is evaluated after every nSweeps sweeps.
+    Simplified diagonal-based incomplete Cholesky smoother for symmetric
+    matrices.  In order to improve efficiency the residual is evaluated after
+    every nSweeps sweeps.
 
 SourceFiles
     DICSmoother.C

@@ -68,6 +68,8 @@ public:
     //- Runtime type information
     virtual const word& type() const = 0;
 
+    static int debug;
+
 
     // Declare run-time constructor selection tables
 

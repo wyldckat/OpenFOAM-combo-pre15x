@@ -63,14 +63,14 @@ public:
         mixedUnburntEnthalpyFvPatchScalarField
         (
             const fvPatch&,
-            const scalarField&
+            const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct from patch, internal field and dictionary
         mixedUnburntEnthalpyFvPatchScalarField
         (
             const fvPatch&,
-            const scalarField&,
+            const DimensionedField<scalar, volMesh>&,
             const dictionary&
         );
 
@@ -80,7 +80,7 @@ public:
         (
             const mixedUnburntEnthalpyFvPatchScalarField&,
             const fvPatch&,
-            const scalarField&,
+            const DimensionedField<scalar, volMesh>&,
             const fvPatchFieldMapper&
         );
 
@@ -103,11 +103,14 @@ public:
         mixedUnburntEnthalpyFvPatchScalarField
         (
             const mixedUnburntEnthalpyFvPatchScalarField&,
-            const scalarField&
+            const DimensionedField<scalar, volMesh>&
         );
 
         //- Construct and return a clone setting internal field reference
-        virtual tmp<fvPatchScalarField> clone(const scalarField& iF) const
+        virtual tmp<fvPatchScalarField> clone
+        (
+            const DimensionedField<scalar, volMesh>& iF
+        ) const
         {
             return tmp<fvPatchScalarField>
             (

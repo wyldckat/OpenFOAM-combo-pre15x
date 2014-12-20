@@ -64,13 +64,14 @@ lduMatrix::solverPerformance fvMatrix<scalar>::fvSolver::solve(Istream&);
 template<>
 lduMatrix::solverPerformance fvMatrix<scalar>::solve(Istream&);
 
-// Return the matrix residual
 template<>
 tmp<scalarField> fvMatrix<scalar>::residual() const;
 
-// H operator
 template<>
 tmp<volScalarField> fvMatrix<scalar>::H() const;
+
+template<>
+tmp<volScalarField> fvMatrix<scalar>::H1() const;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

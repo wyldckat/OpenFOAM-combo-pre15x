@@ -49,6 +49,7 @@ SourceFiles
 #include "UList.H"
 #include "Pstream.H"
 #include "tensorField.H"
+#include "PackedList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -97,13 +98,25 @@ public:
 
     // Static data members
 
-        //- Synchronize values on all mesh points. Returns number of changed
-        //  values (not accurate for shared points)
+        //- Synchronize values on all mesh points.
         //  Applies rotation and optionally separation for parallel cyclics
         template <class T, class CombineOp>
         static void syncPointList
         (
             const polyMesh&,
+            UList<T>&,
+            const CombineOp& bop,
+            const T& nullValue,
+            const bool applySeparation
+        );
+
+        //- Synchronize values on selected mesh points.
+        //  Applies rotation and optionally separation for parallel cyclics
+        template <class T, class CombineOp>
+        static void syncPointList
+        (
+            const polyMesh&,
+            const labelList& meshPoints,
             UList<T>&,
             const CombineOp& bop,
             const T& nullValue,
@@ -165,6 +178,14 @@ public:
             UList<T>&,
             const bool applySeparation
         );
+
+        //- Get per point whether is it master (of a coupled set of points)
+        static PackedList<1> getMasterPoints(const polyMesh&);
+
+        //- Get per edge whether is it master (of a coupled set of edge)
+        static PackedList<1> getMasterEdges(const polyMesh&);
+
+
 };
 
 
@@ -179,6 +200,8 @@ inline void syncTools::transformList(const tensorField&, UList<scalar>&)
 template <>
 void syncTools::separateList(const vectorField&, UList<vector>&);
 
+template <class T>
+List<T> transform(const tensor& rotTensor, UList<T>& field);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

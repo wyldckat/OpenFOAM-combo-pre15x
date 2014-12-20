@@ -79,7 +79,7 @@ bool IOobject::readHeader(Istream& is)
         }
         else if
         (
-            firstToken.wordToken() == "version" 
+            firstToken.wordToken() == "version"
          || firstToken.wordToken() == "format"
         )
         {
@@ -115,51 +115,59 @@ bool IOobject::readHeader(Istream& is)
     is.setVersion(headerDict.lookup("version"));
     is.setFormat(headerDict.lookup("format"));
 
-    fileName headerRoot(headerDict.lookup("root"));
-    if (IOobject::debug && headerRoot != rootPath())
+    // For backward compatibility,
+    // the root, case, local and instance paths and form are optional.
+    if (IOobject::debug)
     {
-        IOWarningIn("IOobject::readHeader(Istream&)", is)
-            << " root moved from " << headerRoot
-            << " to " << rootPath()
-            << " for file " << is.name() << endl;
-    }
-
-    fileName headerCase(headerDict.lookup("case"));
-    if (IOobject::debug && headerCase != caseName())
-    {
-        IOWarningIn("IOobject::readHeader(Istream&)", is)
-            << " case moved from " << headerCase
-            << " to " << caseName()
-            << " for file " << is.name() << endl;
-    }
-
-    // For backward compatibility, the local and instance paths and form
-    // are optional.
-    if (headerDict.found("instance"))
-    {
-        fileName headerInstance(headerDict.lookup("instance"));
-
-        if (IOobject::debug && headerInstance != instance())
+        if (headerDict.found("root"))
         {
-            IOWarningIn("IOobject::readHeader(Istream&)", is)
-                << " instance moved from " << headerInstance
-                << " to " << instance()
-                << " for file " << is.name() << endl;
+            fileName value(headerDict.lookup("root"));
+            if (value != rootPath())
+            {
+                IOWarningIn("IOobject::readHeader(Istream&)", is)
+                    << " root moved from " << value
+                    << " to " << rootPath()
+                    << " for file " << is.name() << endl;
+            }
+        }
+
+        if (headerDict.found("case"))
+        {
+            fileName value(headerDict.lookup("case"));
+            if (value != caseName())
+            {
+                IOWarningIn("IOobject::readHeader(Istream&)", is)
+                    << " case moved from " << value
+                    << " to " << caseName()
+                    << " for file " << is.name() << endl;
+            }
+        }
+
+        if (headerDict.found("instance"))
+        {
+            fileName value(headerDict.lookup("instance"));
+            if (value != instance())
+            {
+                IOWarningIn("IOobject::readHeader(Istream&)", is)
+                    << " instance moved from " << value
+                    << " to " << instance()
+                    << " for file " << is.name() << endl;
+            }
+        }
+
+        if (headerDict.found("local"))
+        {
+            fileName value(headerDict.lookup("local"));
+            if (value != local())
+            {
+                IOWarningIn("IOobject::readHeader(Istream&)", is)
+                    << " local moved from " << value
+                    << " to " << local()
+                    << " for file " << is.name() << endl;
+            }
         }
     }
 
-    if (headerDict.found("local"))
-    {
-        fileName headerLocal(headerDict.lookup("local"));
-
-        if (IOobject::debug && headerLocal != local())
-        {
-            IOWarningIn("IOobject::readHeader(Istream&)", is)
-                << " local moved from " << headerLocal
-                << " to " << local()
-                << " for file " << is.name() << endl;
-        }
-    }
 
     if (headerDict.found("form"))
     {

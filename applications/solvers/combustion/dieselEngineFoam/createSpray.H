@@ -38,4 +38,5 @@ if (dieselSpray.twoD())
 
 reduce(gasMass0, sumOp<scalar>());
 
-gasMass0 -= dieselSpray.injectedMass(runTime.value()) - dieselSpray.liquidMass();
+gasMass0 -=
+    dieselSpray.injectedMass(runTime.value()) - dieselSpray.liquidMass();

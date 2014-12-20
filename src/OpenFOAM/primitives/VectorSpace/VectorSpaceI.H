@@ -409,6 +409,19 @@ inline Form min
 
 
 template<class Form, class Cmpt, int nCmpt>
+inline Form minMod
+(
+    const VectorSpace<Form, Cmpt, nCmpt>& vs1,
+    const VectorSpace<Form, Cmpt, nCmpt>& vs2
+)
+{
+    Form v;
+    VectorSpaceOps<nCmpt,0>::op(v, vs1, vs2, minModOp<Cmpt>());
+    return v;
+}
+
+
+template<class Form, class Cmpt, int nCmpt>
 inline VectorSpace<Form, Cmpt, nCmpt> scale
 (
     const VectorSpace<Form, Cmpt, nCmpt>& vs1,

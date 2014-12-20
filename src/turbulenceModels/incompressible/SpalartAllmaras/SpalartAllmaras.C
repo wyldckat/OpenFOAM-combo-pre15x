@@ -240,7 +240,8 @@ void SpalartAllmaras::correct()
       - fvm::laplacian(DnuTildaEff(), nuTilda_)
       - alphaNut*Cb2*magSqr(fvc::grad(nuTilda_))
      ==
-        Cb1*Stilda*nuTilda_ - fvm::Sp(Cw1*fw(Stilda)*nuTilda_/sqr(d_), nuTilda_)
+        Cb1*Stilda*nuTilda_
+      - fvm::Sp(Cw1*fw(Stilda)*nuTilda_/sqr(d_), nuTilda_)
     );
 
     nuTildaEqn().relax();

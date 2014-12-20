@@ -89,6 +89,19 @@ public:
         static dlLibraryTable loadedLibraries;
 
 
+    // Public classes
+
+        //- Class whose construction causes the reading of dynamic libraries
+        class readDlLibrary
+        {
+        public:
+
+            //- Read all the libraries listed in the 'libsEntry' entry in the
+            //  given dictionary if present
+            readDlLibrary(const dictionary&, const word& libsEntry);
+        };
+
+
     // Constructors
 
         //- Construct null
@@ -102,13 +115,21 @@ public:
 
     // Member Functions
 
+        //- Open the named library
         static bool open(const fileName& name);
 
+        //- Open all the libraries listed in the 'libsEntry' entry in the
+        //  given dictionary if present
+        static bool open(const dictionary&, const word& libsEntry);
+
+        //- Open all the libraries listed in the 'libsEntry' entry in the
+        //  given dictionary if present and check the additions
+        //  to the give constructor table
         template<class TablePtr>
         static bool open
         (
             const dictionary&,
-            const word&,
+            const word& libsEntry,
             const TablePtr& tablePtr
         );
 };
