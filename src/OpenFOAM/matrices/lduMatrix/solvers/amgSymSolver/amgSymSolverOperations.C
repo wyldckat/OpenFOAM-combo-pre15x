@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "amgSymSolver.H"
+#include "vector2D.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -36,7 +37,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-// restrict the fine mesh field to coarse mesh
 void amgSymSolver::restrictField
 (
     scalarField& result,
@@ -44,12 +44,8 @@ void amgSymSolver::restrictField
     const label fineLevelIndex
 ) const
 {
-    // Restriction operator is zero-order (summation)
-
-    // Get addressing
     const labelField& fineToCoarse = restrictAddressing_[fineLevelIndex];
 
-    // Debugging
     if (fineField.size() != fineToCoarse.size())
     {
         FatalErrorIn
@@ -64,7 +60,7 @@ void amgSymSolver::restrictField
 
     result = 0.0;
 
-    forAll (fineField, i)
+    forAll(fineField, i)
     {
         result[fineToCoarse[i]] += fineField[i];
     }
@@ -78,9 +74,6 @@ void amgSymSolver::prolongField
     const label coarseLevelIndex
 ) const
 {
-    // Prolongation operator is zero order
-
-    // Get addressing
     const labelField& fineToCoarse = restrictAddressing_[coarseLevelIndex];
 
     forAll(fineToCoarse, i)
@@ -92,7 +85,7 @@ void amgSymSolver::prolongField
 
 scalar amgSymSolver::scalingFactor
 (
-    const scalarField& field,
+    scalarField& field,
     const scalarField& source,
     const scalarField& A
 ) const
@@ -106,9 +99,9 @@ scalar amgSymSolver::scalingFactor
         scalingFactorDenom += A[i]*field[i];
     }
 
-    vector scalingVector(scalingFactorNum, scalingFactorDenom, 0);
-    reduce(scalingVector, sumOp<vector>());    
-    return scalingVector[0]/stabilise(scalingVector[1], VSMALL);
+    vector2D scalingVector(scalingFactorNum, scalingFactorDenom);
+    reduce(scalingVector, sumOp<vector2D>());
+    return scalingVector.x()/stabilise(scalingVector.y(), VSMALL);
 }
 
 

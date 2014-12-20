@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -51,13 +51,19 @@ defineTemplateRunTimeSelectionTable
 
 defineTemplateRunTimeSelectionTable
 (
-    multivariateSurfaceInterpolationScheme<tensor>,
+    multivariateSurfaceInterpolationScheme<sphericalTensor>,
     Istream
 );
 
 defineTemplateRunTimeSelectionTable
 (
-    multivariateSurfaceInterpolationScheme<sphericalTensor>,
+    multivariateSurfaceInterpolationScheme<symmTensor>,
+    Istream
+);
+
+defineTemplateRunTimeSelectionTable
+(
+    multivariateSurfaceInterpolationScheme<tensor>,
     Istream
 );
 

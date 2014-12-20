@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,7 +27,7 @@ License
 #include "pointBoundaryMesh.H"
 #include "polyBoundaryMesh.H"
 #include "facePointPatch.H"
-#include "globalProcessorPointPatch.H"
+#include "globalPointPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -36,7 +36,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from polyBoundaryMesh
 pointBoundaryMesh::pointBoundaryMesh
 (
     const pointMesh& m,
@@ -46,39 +45,43 @@ pointBoundaryMesh::pointBoundaryMesh
     pointPatchList(basicBdry.size()),
     mesh_(m)
 {
-    // hook boundary patches
+    // Set boundary patches
     pointPatchList& Patches = *this;
 
     forAll(Patches, patchI)
     {
-        Patches.hook(facePointPatch::New(basicBdry[patchI], *this).ptr());
+        Patches.set
+        (
+            patchI,
+            facePointPatch::New(basicBdry[patchI], *this).ptr()
+        );
     }
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-const pointPatch& pointBoundaryMesh::globalPointPatch() const
+const globalPointPatch& pointBoundaryMesh::globalPatch() const
 {
     const pointPatchList& patches = *this;
 
     forAll (patches, patchI)
     {
-        if (isType<globalProcessorPointPatch>(patches[patchI]))
+        if (isType<globalPointPatch>(patches[patchI]))
         {
-            return patches[patchI];
+            return refCast<const globalPointPatch>(patches[patchI]);
         }
     }
 
     FatalErrorIn
     (
         "const pointBoundaryMesh::"
-        "globalProcessorPointPatch& globalPointPatch() const"
-    )   << "patch not found.  Is this case running in parallel?"
+        "globalPointPatch& globalPatch() const"
+    )   << "patch not found."
         << abort(FatalError);
 
     // Dummy return
-    return patches[0];
+    return refCast<const globalPointPatch>(patches[0]);
 }
 
 

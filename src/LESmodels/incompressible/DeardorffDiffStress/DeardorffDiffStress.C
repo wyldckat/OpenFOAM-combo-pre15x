@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -67,9 +65,9 @@ void DeardorffDiffStress::correct(const tmp<volTensorField>& tgradU)
 
     GenSGSStress::correct(gradU);
 
-    volTensorField D = symm(gradU);
+    volSymmTensorField D = symm(gradU);
 
-    volTensorField P = -((B_ & gradU) + ((gradU.T()) & B_));
+    volSymmTensorField P = -twoSymm(B_ & gradU);
 
     volScalarField K = 0.5*tr(B_);
     volScalarField Epsilon = 2*nuEff()*magSqr(D);
@@ -79,10 +77,10 @@ void DeardorffDiffStress::correct(const tmp<volTensorField>& tgradU)
         fvm::ddt(B_)
       + fvm::div(phi(), B_)
       - fvm::laplacian(DBEff(), B_)
+      + fvm::Sp(cm_*sqrt(K)/delta(), B_)
      ==
         P
       + 0.8*K*D
-      - fvm::Sp(cm_*sqrt(K)/delta(), B_)
       - (2*ce_ - 0.667*cm_)*I*Epsilon
     );
 

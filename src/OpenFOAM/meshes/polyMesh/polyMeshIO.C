@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -100,15 +100,17 @@ polyMesh::readUpdateState polyMesh::readUpdate()
 
         clearOut();
 
-        // Set instance to new instance
+        // Set instance to new instance. Note that points instance can differ
+        // from from faces instance.
         setInstance(facesInst);
+        points_.instance() = pointsInst;
 
         points_ = pointIOField
         (
             IOobject
             (
                 "points",
-                facesInst,
+                pointsInst,
                 meshSubDir,
                 *this,
                 IOobject::MUST_READ,
@@ -215,7 +217,7 @@ polyMesh::readUpdateState polyMesh::readUpdate()
 
             forAll (newBoundary, patchI)
             {
-                boundary_.hook(newBoundary[patchI].clone(boundary_));
+                boundary_.set(patchI, newBoundary[patchI].clone(boundary_));
             }
         }
         else
@@ -237,7 +239,7 @@ polyMesh::readUpdateState polyMesh::readUpdate()
         // Boundary is set so can use initMesh now (uses boundary_ to
         // determine internal and active faces)
 
-        if (allOwner_.size())
+        if (exists(allOwner_.objectPath()))
         {
             initMesh();
         }

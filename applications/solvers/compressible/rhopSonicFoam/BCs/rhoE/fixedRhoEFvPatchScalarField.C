@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,8 +23,6 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "fixedRhoEFvPatchScalarField.H"
 #include "addToRunTimeSelectionTable.H"
@@ -73,6 +71,15 @@ fixedRhoEFvPatchScalarField::fixedRhoEFvPatchScalarField
 
 fixedRhoEFvPatchScalarField::fixedRhoEFvPatchScalarField
 (
+    const fixedRhoEFvPatchScalarField& tppsf
+)
+:
+    fixedValueFvPatchScalarField(tppsf)
+{}
+
+
+fixedRhoEFvPatchScalarField::fixedRhoEFvPatchScalarField
+(
     const fixedRhoEFvPatchScalarField& tppsf,
     const scalarField& iF
 )
@@ -99,13 +106,13 @@ void fixedRhoEFvPatchScalarField::updateCoeffs()
     dimensionedScalar Cv(thermodynamicProperties.lookup("Cv"));
 
     const fvPatchScalarField& rhop =
-        lookupPatchField<volScalarField, scalar>("rho");
+        patch().lookupPatchField<volScalarField, scalar>("rho");
 
     const fvPatchVectorField& rhoUp =
-        lookupPatchField<volVectorField, vector>("rhoU");
+        patch().lookupPatchField<volVectorField, vector>("rhoU");
 
     const fvPatchScalarField& Tp =
-        lookupPatchField<volScalarField, scalar>("T");
+        patch().lookupPatchField<volScalarField, scalar>("T");
 
     operator==(rhop*(Cv.value()*Tp + 0.5*magSqr(rhoUp/rhop)));
 

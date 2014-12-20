@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,6 +44,8 @@ namespace Foam
 
 typedef surfaceWriter<scalar> scalarWriter;
 typedef surfaceWriter<vector> vectorWriter;
+typedef surfaceWriter<sphericalTensor> sphericalTensorWriter;
+typedef surfaceWriter<symmTensor> symmTensorWriter;
 typedef surfaceWriter<tensor> tensorWriter;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

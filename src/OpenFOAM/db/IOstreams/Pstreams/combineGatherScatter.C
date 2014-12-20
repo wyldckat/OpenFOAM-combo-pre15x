@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ Description
 #include "OPstream.H"
 #include "IPstream.H"
 #include "IOstreams.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -63,30 +64,62 @@ void Pstream::combineGather
         {
             label belowID = myComm.below()[belowI];
 
-            //IPstream fromBelow(belowID, sizeof(T));
-            IPstream fromBelow(belowID);
-            T value(fromBelow);
-
-            if (debug)
+            if (contiguous<T>())
             {
-                Pout<< " received from "
-                    << belowID << " data:" << value << endl;
+                T value;
+                IPstream::read
+                (
+                    belowID,
+                    reinterpret_cast<char*>(&value),
+                    sizeof(T)
+                );
+
+                if (debug & 2)
+                {
+                    Pout<< " received from "
+                        << belowID << " data:" << value << endl;
+                }
+
+                cop(Value, value);
             }
-            cop(Value, value);
+            else
+            {
+                IPstream fromBelow(belowID);
+                T value(fromBelow);
+
+                if (debug & 2)
+                {
+                    Pout<< " received from "
+                        << belowID << " data:" << value << endl;
+                }
+
+                cop(Value, value);
+            }
         }
 
         // Send up Value
         if (myComm.above() != -1)
         {
-            //OPstream toAbove(myComm.above(), sizeof(T), false);
-            OPstream toAbove(myComm.above(), 0, false);
-
-            if (debug)
+            if (debug & 2)
             {
                 Pout<< " sending to " << myComm.above()
                     << " data:" << Value << endl;
             }
-            toAbove << Value;
+
+            if (contiguous<T>())
+            {
+                OPstream::write
+                (
+                    myComm.above(),
+                    reinterpret_cast<const char*>(&Value),
+                    sizeof(T)
+                );
+            }
+            else
+            {
+                OPstream toAbove(myComm.above(), 0, false);
+                toAbove << Value;
+            }
         }
     }
 }
@@ -117,11 +150,22 @@ void Pstream::combineScatter(const List<Pstream::commsStruct>& comms, T& Value)
         // Reveive from up
         if (myComm.above() != -1)
         {
-            //IPstream fromAbove(myComm.above(), sizeof(T));
-            IPstream fromAbove(myComm.above());
-            Value = T(fromAbove);
+            if (contiguous<T>())
+            {
+                IPstream::read
+                (
+                    myComm.above(),
+                    reinterpret_cast<char*>(&Value),
+                    sizeof(T)
+                );
+            }
+            else
+            {
+                IPstream fromAbove(myComm.above());
+                Value = T(fromAbove);
+            }
 
-            if (debug)
+            if (debug & 2)
             {
                 Pout<< " received from "
                     << myComm.above() << " data:" << Value << endl;
@@ -133,14 +177,24 @@ void Pstream::combineScatter(const List<Pstream::commsStruct>& comms, T& Value)
         {
             label belowID = myComm.below()[belowI];
 
-            //OPstream toBelow(belowID, sizeof(T), false);
-            OPstream toBelow(belowID, 0, false);
-
-            toBelow << Value;
-
-            if (debug)
+            if (debug & 2)
             {
-                Pout<< " sent to " << belowID << " data:" << Value << endl;
+                Pout<< " sending to " << belowID << " data:" << Value << endl;
+            }
+
+            if (contiguous<T>())
+            {
+                OPstream::write
+                (
+                    belowID,
+                    reinterpret_cast<const char*>(&Value),
+                    sizeof(T)
+                );
+            }
+            else
+            {
+                OPstream toBelow(belowID, 0, false);
+                toBelow << Value;
             }
         }
     }
@@ -183,33 +237,69 @@ void Pstream::listCombineGather
         {
             label belowID = myComm.below()[belowI];
 
-            //IPstream fromBelow(belowID, sizeof(T));
-            IPstream fromBelow(belowID);
-            List<T> receivedValues(fromBelow);
+            if (contiguous<T>())
+            {
+                List<T> receivedValues(Values.size());
 
-            if (debug)
-            {
-                Pout<< " received from "
-                    << belowID << " data:" << receivedValues << endl;
+                IPstream::read
+                (
+                    belowID,
+                    reinterpret_cast<char*>(receivedValues.begin()),
+                    receivedValues.byteSize()
+                );
+
+                if (debug & 2)
+                {
+                    Pout<< " received from "
+                        << belowID << " data:" << receivedValues << endl;
+                }
+
+                forAll(Values, i)
+                {
+                    cop(Values[i], receivedValues[i]);
+                }
             }
-            forAll(Values, i)
+            else
             {
-                cop(Values[i], receivedValues[i]);
+                IPstream fromBelow(belowID);
+                List<T> receivedValues(fromBelow);
+
+                if (debug & 2)
+                {
+                    Pout<< " received from "
+                        << belowID << " data:" << receivedValues << endl;
+                }
+
+                forAll(Values, i)
+                {
+                    cop(Values[i], receivedValues[i]);
+                }
             }
         }
 
         // Send up Value
         if (myComm.above() != -1)
         {
-            //OPstream toAbove(myComm.above(), sizeof(T), false);
-            OPstream toAbove(myComm.above(), 0, false);
-
-            if (debug)
+            if (debug & 2)
             {
                 Pout<< " sending to " << myComm.above()
                     << " data:" << Values << endl;
             }
-            toAbove << Values;
+
+            if (contiguous<T>())
+            {
+                OPstream::write
+                (
+                    myComm.above(),
+                    reinterpret_cast<const char*>(Values.begin()),
+                    Values.byteSize()
+                );
+            }
+            else
+            {
+                OPstream toAbove(myComm.above(), 0, false);
+                toAbove << Values;
+            }
         }
     }
 }
@@ -244,11 +334,22 @@ void Pstream::listCombineScatter
         // Reveive from up
         if (myComm.above() != -1)
         {
-            //IPstream fromAbove(myComm.above(), sizeof(T));
-            IPstream fromAbove(myComm.above());
-            Values = List<T>(fromAbove);
+            if (contiguous<T>())
+            {
+                IPstream::read
+                (
+                    myComm.above(),
+                    reinterpret_cast<char*>(Values.begin()),
+                    Values.byteSize()
+                );
+            }
+            else
+            {
+                IPstream fromAbove(myComm.above());
+                fromAbove >> Values;
+            }
 
-            if (debug)
+            if (debug & 2)
             {
                 Pout<< " received from "
                     << myComm.above() << " data:" << Values << endl;
@@ -260,14 +361,24 @@ void Pstream::listCombineScatter
         {
             label belowID = myComm.below()[belowI];
 
-            //OPstream toBelow(belowID, sizeof(T), false);
-            OPstream toBelow(belowID, 0, false);
-
-            toBelow << Values;
-
-            if (debug)
+            if (debug & 2)
             {
-                Pout<< " sent to " << belowID << " data:" << Values << endl;
+                Pout<< " sending to " << belowID << " data:" << Values << endl;
+            }
+
+            if (contiguous<T>())
+            {
+                OPstream::write
+                (
+                    belowID,
+                    reinterpret_cast<const char*>(Values.begin()),
+                    Values.byteSize()
+                );
+            }
+            else
+            {
+                OPstream toBelow(belowID, 0, false);
+                toBelow << Values;
             }
         }
     }

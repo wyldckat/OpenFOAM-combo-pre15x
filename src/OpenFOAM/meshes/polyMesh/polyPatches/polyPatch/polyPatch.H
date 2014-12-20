@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -81,6 +81,9 @@ class polyPatch
 
         // Demand-driven private data
 
+            //- face-cell addressing
+            mutable labelList::subList* faceCellsPtr_;
+
             //- Global edge addressing
             mutable labelList* mePtr_;
 
@@ -117,7 +120,7 @@ protected:
         virtual void movePoints(const pointField& p);
 
         //- Initialise the update of the patch topology
-        virtual void initUpdateTopology()
+        virtual void initUpdateMesh()
         {}
 
         //- Update of the patch topology
@@ -333,7 +336,7 @@ public:
         // Addressing into mesh
 
             //- Return face-cell addressing
-            const labelList::subList faceCells() const;
+            const unallocLabelList& faceCells() const;
 
             //- Return global edge index for local edges
             const labelList& meshEdges() const;

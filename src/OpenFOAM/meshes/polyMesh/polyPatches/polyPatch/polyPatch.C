@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,13 +60,12 @@ void polyPatch::movePoints(const pointField& p)
 
 void polyPatch::updateMesh()
 {
-    deleteDemandDrivenData(mePtr_);
+    clearAddressing();
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 polyPatch::polyPatch
 (
     const word& name,
@@ -84,11 +83,11 @@ polyPatch::polyPatch
     ),
     start_(start),
     boundaryMesh_(bm),
+    faceCellsPtr_(NULL),
     mePtr_(NULL)
 {}
 
 
-// Construct from Istream
 polyPatch::polyPatch
 (
     Istream& is,
@@ -104,6 +103,7 @@ polyPatch::polyPatch
     ),
     start_(-1),
     boundaryMesh_(bm),
+    faceCellsPtr_(NULL),
     mePtr_(NULL)
 {
     label size = readLabel(is);
@@ -115,7 +115,6 @@ polyPatch::polyPatch
 }
 
 
-// Construct from dictionary
 polyPatch::polyPatch
 (
     const word& name,
@@ -137,13 +136,11 @@ polyPatch::polyPatch
     ),
     start_(readLabel(dict.lookup("startFace"))),
     boundaryMesh_(bm),
+    faceCellsPtr_(NULL),
     mePtr_(NULL)
 {}
 
 
-// Construct as copy. Resets the reference to polyBoundaryMesh but the start
-// and size of the patch remain the same
-// Used in clone function
 polyPatch::polyPatch
 (
     const polyPatch& pp,
@@ -163,13 +160,11 @@ polyPatch::polyPatch
     ),
     start_(pp.start()),
     boundaryMesh_(bm),
+    faceCellsPtr_(NULL),
     mePtr_(NULL)
 {}
 
 
-// Construct as copy. Resets the reference to face list and polyBoundaryMesh
-// Start and size of the patch can be changed as well
-// Used in clone function
 polyPatch::polyPatch
 (
     const polyPatch& pp,
@@ -192,6 +187,7 @@ polyPatch::polyPatch
     ),
     start_(newStart),
     boundaryMesh_(bm),
+    faceCellsPtr_(NULL),
     mePtr_(NULL)
 {}
 
@@ -202,6 +198,7 @@ polyPatch::polyPatch(const polyPatch& p)
     primitivePatch(p),
     start_(p.start_),
     boundaryMesh_(p.boundaryMesh_),
+    faceCellsPtr_(NULL),
     mePtr_(NULL)
 {}
 
@@ -280,20 +277,29 @@ tmp<vectorField> polyPatch::faceCellCentres() const
 
     // get reference to global cell centres
     const vectorField& gcc = boundaryMesh_.mesh().cellCentres();
-    const labelList::subList cellLabels = faceCells();
 
-    forAll (cellLabels, faceI)
+    const unallocLabelList& faceCells = this->faceCells();
+
+    forAll (faceCells, facei)
     {
-        cc[faceI] = gcc[cellLabels[faceI]];
+        cc[facei] = gcc[faceCells[facei]];
     }
 
     return tcc;
 }
 
 
-const labelList::subList polyPatch::faceCells() const
+const unallocLabelList& polyPatch::faceCells() const
 {
-    return patchSlice(boundaryMesh().mesh().faceOwner());
+    if (!faceCellsPtr_)
+    {
+        faceCellsPtr_ = new labelList::subList
+        (
+            patchSlice(boundaryMesh().mesh().faceOwner())
+        );
+    }
+
+    return *faceCellsPtr_;
 }
 
 
@@ -319,6 +325,7 @@ const labelList& polyPatch::meshEdges() const
 
 void polyPatch::clearAddressing()
 {
+    deleteDemandDrivenData(faceCellsPtr_);
     deleteDemandDrivenData(mePtr_);
 }
 

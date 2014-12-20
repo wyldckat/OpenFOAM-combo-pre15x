@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,12 +31,7 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-bool lduMatrix::solverPerformance::checkConvergence
+bool Foam::lduMatrix::solverPerformance::checkConvergence
 (
     const scalar Tolerance,
     const scalar RelTolerance
@@ -71,7 +66,7 @@ bool lduMatrix::solverPerformance::checkConvergence
 }
 
 
-bool lduMatrix::solverPerformance::checkSingularity
+bool Foam::lduMatrix::solverPerformance::checkSingularity
 (
     const scalar residual
 )
@@ -89,7 +84,7 @@ bool lduMatrix::solverPerformance::checkSingularity
 }
 
 
-void lduMatrix::solverPerformance::print() const
+void Foam::lduMatrix::solverPerformance::print() const
 {
     if (debug)
     {
@@ -109,9 +104,5 @@ void lduMatrix::solverPerformance::print() const
     }
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

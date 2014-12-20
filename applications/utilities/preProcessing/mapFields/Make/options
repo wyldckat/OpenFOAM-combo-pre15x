@@ -4,5 +4,4 @@ EXE_INC = \
 
 EXE_LIBS = \
      -lsampling \
-     $(WM_DECOMP_LIBS) \
      -lfoamUtil

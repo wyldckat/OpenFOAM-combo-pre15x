@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -113,7 +113,7 @@ Foam::label Foam::regionSide::otherEdge
     )   << "Cannot find other edge on face " << faceI << " that uses point "
         << pointI << " but not point " << freePointI << endl
         << "Edges on face:" << fEdges
-        << " verts:" << IndirectList<edge>(mesh.edges(), fEdges)
+        << " verts:" << IndirectList<edge>(mesh.edges(), fEdges)()
         << " Vertices on face:"
         << mesh.faces()[faceI]
         << " Vertices on original edge:" << e << abort(FatalError);

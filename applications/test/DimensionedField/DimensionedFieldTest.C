@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,10 @@ License
 
 #include "argList.H"
 #include "Time.H"
-#include "DimensionedField.H"
+#include "DimensionedFields.H"
+#include "DimensionedSphericalTensorField.H"
+#include "vector.H"
+#include "tensor.H"
 #include "GeoMesh.H"
 
 using namespace Foam;
@@ -54,6 +57,24 @@ template<>
 const word Foam::DimensionedField<scalar, GeoMesh<vMesh> >::typeName
 (
     "dimenionedScalarField"
+);
+
+template<>
+const word Foam::DimensionedField<vector, GeoMesh<vMesh> >::typeName
+(
+    "dimenionedVectorField"
+);
+
+template<>
+const word Foam::DimensionedField<tensor, GeoMesh<vMesh> >::typeName
+(
+    "dimenionedTensorField"
+);
+
+template<>
+const word Foam::DimensionedField<sphericalTensor, GeoMesh<vMesh> >::typeName
+(
+    "dimenionedSphericalTensorField"
 );
 
 
@@ -85,6 +106,23 @@ int main(int argc, char *argv[])
     dsf += dsf;
     dsf -= dimensionedScalar("5", dsf.dimensions(), 5.0);
     Info<< dsf << endl;
+
+    Info<< sqr(dsf + dsf) - sqr(dsf + dsf) << endl;
+
+    DimensionedField<vector, GeoMesh<vMesh> > dvf
+    (
+        IOobject
+        (
+            "dvf",
+            runTime.timeName(),
+            runTime,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        ),
+        vm
+    );
+
+    Info<< (dvf ^ (dvf ^ dvf)) << endl;
 
     Info << "End\n" << endl;
 

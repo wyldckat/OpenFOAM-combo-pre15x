@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,16 +22,134 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "motionSmoother.H"
 #include "meshTools.H"
 #include "processorPointPatchFields.H"
-#include "globalProcessorPointPatchFields.H"
+#include "globalPointPatchFields.H"
+#include "pointConstraint.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+template<class Type>
+void Foam::motionSmoother::checkConstraints
+(
+    GeometricField<Type, pointPatchField, pointMesh>& pf
+) const
+{
+    typedef GeometricField<Type, pointPatchField, pointMesh> FldType;
+
+    const polyBoundaryMesh& bm = mesh_.boundaryMesh();
+
+    // first count the total number of patch-patch points
+
+    label nPatchPatchPoints = 0;
+
+    forAll(bm, patchi)
+    {
+        if(!isA<emptyPolyPatch>(bm[patchi]))
+        {
+            nPatchPatchPoints += bm[patchi].boundaryPoints().size();
+        }
+    }
+
+
+    typename FldType::GeometricBoundaryField& bFld = pf.boundaryField();
+
+
+    // Evaluate in reverse order
+
+    forAllReverse(bFld, patchi)
+    {
+        bFld[patchi].initEvaluate(true);   // buffered
+    }
+
+    forAllReverse(bFld, patchi)
+    {
+        bFld[patchi].evaluate();
+    }
+
+
+    // Save the values
+
+    Field<Type> boundaryPointValues(nPatchPatchPoints);
+    nPatchPatchPoints = 0;
+
+    forAll(bm, patchi)
+    {
+        if(!isA<emptyPolyPatch>(bm[patchi]))
+        {
+            const labelList& bp = bm[patchi].boundaryPoints();
+            const labelList& meshPoints = bm[patchi].meshPoints();
+
+            forAll(bp, pointi)
+            {
+                label ppp = meshPoints[bp[pointi]];
+                boundaryPointValues[nPatchPatchPoints++] = pf[ppp];
+            }
+        }
+    }
+    
+
+    // Forward evaluation
+
+    bFld.evaluate();
+
+
+    // Check
+
+    nPatchPatchPoints = 0;
+
+    forAll(bm, patchi)
+    {
+        if(!isA<emptyPolyPatch>(bm[patchi]))
+        {
+            const labelList& bp = bm[patchi].boundaryPoints();
+            const labelList& meshPoints = bm[patchi].meshPoints();
+
+            forAll(bp, pointi)
+            {
+                label ppp = meshPoints[bp[pointi]];
+
+                const Type& savedVal = boundaryPointValues[nPatchPatchPoints++];
+
+                if (savedVal != pf[ppp])
+                {
+                    FatalErrorIn
+                    (
+                        "motionSmoother::checkConstraints"
+                        "(GeometricField<Type, pointPatchField, pointMesh>&)"
+                    )   << "Patch fields are not consistent on mesh point "
+                        << ppp << " coordinate " << mesh_.points()[ppp]
+                        << " at patch " << bm[patchi].name() << '.'
+                        << endl
+                        << "Reverse evaluation gives value " << savedVal
+                        << " , forward evaluation gives value " << pf[ppp]
+                        << abort(FatalError);
+                }
+            }
+        }
+    }
+}
+
+
+template<class Type>
+void Foam::motionSmoother::applyCornerConstraints
+(
+    GeometricField<Type, pointPatchField, pointMesh>& pf
+) const
+{
+    forAll(patchPatchPointConstraintPoints_, pointi)
+    {
+        pf[patchPatchPointConstraintPoints_[pointi]] = transform
+        (
+            patchPatchPointConstraintTensors_[pointi],
+            pf[patchPatchPointConstraintPoints_[pointi]]
+        );
+    }
+}
+
 
 // Average of connected points. Unweighted.
 template <class Type>
@@ -113,7 +231,8 @@ void Foam::motionSmoother::smooth
               + 0.5*avg(fld, edges, points, pointEdges[pointI], pointI);
         }
     }
-    fld.correctBoundaryConditions();    
+    fld.correctBoundaryConditions();
+    applyCornerConstraints(fld);
 }
 
 
@@ -150,6 +269,7 @@ void Foam::motionSmoother::smooth
         }
     }
     newFld.correctBoundaryConditions();
+    applyCornerConstraints(newFld);
 }
 
 
@@ -169,7 +289,7 @@ void Foam::motionSmoother::syncField
         <pointPatchField, pointPatch, processorPointPatch, Type>
         ProcessorField;
 
-    if (Pstream::parRun() && mesh.parallelData().parallel())
+    if (Pstream::parRun() && mesh.globalData().parallel())
     {
         forAll(fld.boundaryField(), patchI)
         {
@@ -250,31 +370,31 @@ void Foam::motionSmoother::syncField
     }
 
 
-    typedef GlobalProcessorPointPatchField
-        <pointPatchField, pointPatch, globalProcessorPointPatch, Type>
-        GlobalProcessorField;
+    typedef GlobalPointPatchField
+        <pointPatchField, pointPatch, globalPointPatch, Type>
+        GlobalField;
 
     // Shared points.
-    if (Pstream::parRun() && mesh.parallelData().parallel())
+    if (Pstream::parRun() && mesh.globalData().parallel())
     {
         forAll(fld.boundaryField(), patchI)
         {
             if
             (
-                isA<GlobalProcessorField>
+                isA<GlobalField>
                 (
                     fld.boundaryField()[patchI]
                 )
             )
             {
-                const GlobalProcessorField& pFld =
-                    refCast<const GlobalProcessorField>
+                const GlobalField& pFld =
+                    refCast<const GlobalField>
                     (
                         fld.boundaryField()[patchI]
                     );
 
-                const globalProcessorPointPatch& procPatch =
-                    refCast<const globalProcessorPointPatch>
+                const globalPointPatch& procPatch =
+                    refCast<const globalPointPatch>
                     (
                         pFld.patch()
                     );

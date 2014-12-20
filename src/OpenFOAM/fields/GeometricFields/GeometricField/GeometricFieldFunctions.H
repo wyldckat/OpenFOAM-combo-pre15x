@@ -1,8 +1,8 @@
 /*---------------------------------------------------------------------------*\
-  =========                 |
+  =========                 | 
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,10 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Generic field type.
-
 \*---------------------------------------------------------------------------*/
+
+#include "GeometricScalarField.H"
+
+#define TEMPLATE \
+    template<class Type, template<class> class PatchField, class GeoMesh>
+#include "GeometricFieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -62,7 +65,11 @@ void pow
 );
 
 template<class Type, template<class> class PatchField, class GeoMesh, int r>
-tmp<GeometricField<typename powProduct<Type, r>::type, PatchField, GeoMesh> >
+tmp
+<
+    GeometricField
+    <typename powProduct<Type, r>::type, PatchField, GeoMesh>
+>
 pow
 (
     const GeometricField<Type, PatchField, GeoMesh>& gf,
@@ -70,7 +77,11 @@ pow
 );
 
 template<class Type, template<class> class PatchField, class GeoMesh, int r>
-tmp<GeometricField<typename powProduct<Type, r>::type, PatchField, GeoMesh> >
+tmp
+<
+    GeometricField
+    <typename powProduct<Type, r>::type, PatchField, GeoMesh>
+>
 pow
 (
     const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf,
@@ -183,88 +194,8 @@ tmp
 >
 cmptAv(const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf);
 
-#define BINARY_FUNCTION(func)                                                 \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-void func                                                                     \
-(                                                                             \
-    GeometricField<Type, PatchField, GeoMesh>& gf,                            \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const GeometricField<Type, PatchField, GeoMesh>& gf2                      \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > func                          \
-(                                                                             \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const GeometricField<Type, PatchField, GeoMesh>& gf2                      \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > func                          \
-(                                                                             \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf2               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > func                          \
-(                                                                             \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1,              \
-    const GeometricField<Type, PatchField, GeoMesh>& gf2                      \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > func                          \
-(                                                                             \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1,              \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf2               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-void func                                                                     \
-(                                                                             \
-    GeometricField<Type, PatchField, GeoMesh>& gf,                            \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const dimensioned<Type>& dt                                               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > func                          \
-(                                                                             \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const dimensioned<Type>& dt                                               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > func                          \
-(                                                                             \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const Type& t                                                             \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > func                          \
-(                                                                             \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1,              \
-    const dimensioned<Type>& dt                                               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > func                          \
-(                                                                             \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1,              \
-    const Type& t                                                             \
-);
 
-BINARY_FUNCTION(max)
-BINARY_FUNCTION(min)
-BINARY_FUNCTION(scale)
-
-#undef BINARY_FUNCTION
-
-
-#define UNARY_FUNCTION_WITH_BOUNDARY(returnType, func, gFunc)                 \
+#define UNARY_REDUCTION_FUNCTION_WITH_BOUNDARY(returnType, func, gFunc)       \
                                                                               \
 template<class Type, template<class> class PatchField, class GeoMesh>         \
 dimensioned<returnType> func                                                  \
@@ -278,13 +209,13 @@ dimensioned<returnType> func                                                  \
     const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1               \
 );
 
-UNARY_FUNCTION_WITH_BOUNDARY(Type, max, gMax)
-UNARY_FUNCTION_WITH_BOUNDARY(Type, min, gMin)
+UNARY_REDUCTION_FUNCTION_WITH_BOUNDARY(Type, max, gMax)
+UNARY_REDUCTION_FUNCTION_WITH_BOUNDARY(Type, min, gMin)
 
-#undef UNARY_FUNCTION_WITH_BOUNDARY
+#undef UNARY_REDUCTION_FUNCTION_WITH_BOUNDARY
 
 
-#define UNARY_FUNCTION(returnType, func, gFunc)                               \
+#define UNARY_REDUCTION_FUNCTION(returnType, func, gFunc)                     \
                                                                               \
 template<class Type, template<class> class PatchField, class GeoMesh>         \
 dimensioned<returnType> func                                                  \
@@ -298,228 +229,39 @@ dimensioned<returnType> func                                                  \
     const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1               \
 );
 
-UNARY_FUNCTION(Type, sum, gSum)
-UNARY_FUNCTION(scalar, sumMag, gSumMag)
-UNARY_FUNCTION(Type, average, gAverage)
+UNARY_REDUCTION_FUNCTION(Type, sum, gSum)
+UNARY_REDUCTION_FUNCTION(scalar, sumMag, gSumMag)
+UNARY_REDUCTION_FUNCTION(Type, average, gAverage)
 
-#undef UNARY_FUNCTION
+#undef UNARY_REDUCTION_FUNCTION
+
+
+BINARY_FUNCTION(Type, Type, Type, max)
+BINARY_FUNCTION(Type, Type, Type, min)
+BINARY_FUNCTION(Type, Type, Type, scale)
+
+BINARY_TYPE_FUNCTION(Type, Type, Type, max)
+BINARY_TYPE_FUNCTION(Type, Type, Type, min)
+BINARY_TYPE_FUNCTION(Type, Type, Type, scale)
 
 
 // * * * * * * * * * * * * * * * Global operators  * * * * * * * * * * * * * //
 
-#define UNARY_OPERATOR(op, opFunc)                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-void opFunc                                                                   \
-(                                                                             \
-    GeometricField<Type, PatchField, GeoMesh>& gf,                            \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1                      \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1                      \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1               \
-);
+UNARY_OPERATOR(Type, Type, -, negate, transform)
 
-UNARY_OPERATOR(-, negate)
-
-#undef UNARY_OPERATOR
-
-
-#define BINARY_OPERATOR_FF(Type1, Type2, op, opFunc)                          \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-void opFunc                                                                   \
-(                                                                             \
-    GeometricField<Type, PatchField, GeoMesh>& gf,                            \
-    const GeometricField<Type1, PatchField, GeoMesh>& gf1,                    \
-    const GeometricField<Type2, PatchField, GeoMesh>& gf2                     \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const GeometricField<Type1, PatchField, GeoMesh>& gf1,                    \
-    const GeometricField<Type2, PatchField, GeoMesh>& gf2                     \
-);
-
-#define BINARY_OPERATOR_FTR(Type1, Type2, op, opFunc)                         \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const GeometricField<Type1, PatchField, GeoMesh>& gf1,                    \
-    const tmp<GeometricField<Type2, PatchField, GeoMesh> >& tgf2              \
-);
-
-#define BINARY_OPERATOR_FT(Type1, Type2, op, opFunc)                          \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const GeometricField<Type1, PatchField, GeoMesh>& gf1,                    \
-    const tmp<GeometricField<Type2, PatchField, GeoMesh> >& tgf2              \
-);
-
-#define BINARY_OPERATOR_TRF(Type1, Type2, op, opFunc)                         \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const tmp<GeometricField<Type1, PatchField, GeoMesh> >& tgf1,             \
-    const GeometricField<Type2, PatchField, GeoMesh>& gf2                     \
-);
-
-#define BINARY_OPERATOR_TF(Type1, Type2, op, opFunc)                          \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const tmp<GeometricField<Type1, PatchField, GeoMesh> >& tgf1,             \
-    const GeometricField<Type2, PatchField, GeoMesh>& gf2                     \
-);
-
-#define BINARY_OPERATOR_TRT(Type1, Type2, op, opFunc)                         \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const tmp<GeometricField<Type1, PatchField, GeoMesh> >& tgf1,             \
-    const tmp<GeometricField<Type2, PatchField, GeoMesh> >& tgf2              \
-);
-
-#define BINARY_OPERATOR_TTR(Type1, Type2, op, opFunc)                         \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const tmp<GeometricField<Type1, PatchField, GeoMesh> >& tgf1,             \
-    const tmp<GeometricField<Type2, PatchField, GeoMesh> >& tgf2              \
-);
-
-#define BINARY_OPERATOR_R(Type1, Type2, op, opFunc)                           \
-    BINARY_OPERATOR_FF(Type1, Type2, op, opFunc)                              \
-    BINARY_OPERATOR_FTR(Type1, Type2, op, opFunc)                             \
-    BINARY_OPERATOR_TRF(Type1, Type2, op, opFunc)                             \
-    BINARY_OPERATOR_TRT(Type1, Type2, op, opFunc)
-
-BINARY_OPERATOR_R(Type, Type, +, add)
-BINARY_OPERATOR_R(Type, Type, -, subtract)
-
-#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
-BINARY_OPERATOR_FF(scalar, Type, *, multiply)
-BINARY_OPERATOR_FTR(scalar, Type, *, multiply)
-BINARY_OPERATOR_TF(scalar, Type, *, multiply)
-BINARY_OPERATOR_TTR(scalar, Type, *, multiply)
+#ifndef __INTEL_COMPILER
+BINARY_OPERATOR(Type, Type, scalar, *, '*', multiply)
+BINARY_OPERATOR(Type, scalar, Type, *, '*', multiply)
 #endif
+BINARY_OPERATOR(Type, Type, scalar, /, '|', divide)
 
-BINARY_OPERATOR_FF(Type, scalar, /, divide)
-BINARY_OPERATOR_FT(Type, scalar, /, divide)
-BINARY_OPERATOR_TRF(Type, scalar, /, divide)
-BINARY_OPERATOR_TRT(Type, scalar, /, divide)
+BINARY_TYPE_OPERATOR_SF(Type, scalar, Type, *, '*', multiply)
+BINARY_TYPE_OPERATOR_FS(Type, Type, scalar, *, '*', multiply)
 
-#undef BINARY_OPERATOR_R
-#undef BINARY_OPERATOR_FF
-#undef BINARY_OPERATOR_FTR
-#undef BINARY_OPERATOR_TF
-#undef BINARY_OPERATOR_TTR
-#undef BINARY_OPERATOR_FT
-#undef BINARY_OPERATOR_TRF
-#undef BINARY_OPERATOR_TRT
+BINARY_TYPE_OPERATOR_FS(Type, Type, scalar, /, '|', divide)
 
 
-#define BINARY_TYPE_OPERATOR_TF(TYPE, op, opFunc)                             \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-void opFunc                                                                   \
-(                                                                             \
-    GeometricField<Type, PatchField, GeoMesh>& gf,                            \
-    const dimensioned<TYPE>& dt,                                              \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1                      \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const dimensioned<TYPE>& dt,                                              \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1                      \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const TYPE& t,                                                            \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1                      \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const dimensioned<TYPE>& dt,                                              \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const TYPE& t,                                                            \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1               \
-);
-
-
-#define BINARY_TYPE_OPERATOR_FT(TYPE, op, opFunc)                             \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-void opFunc                                                                   \
-(                                                                             \
-    GeometricField<Type, PatchField, GeoMesh>& gf,                            \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const dimensioned<TYPE>& dt                                               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const dimensioned<TYPE>& dt                                               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
-    const TYPE& t                                                             \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1,              \
-    const dimensioned<TYPE>& dt                                               \
-);                                                                            \
-                                                                              \
-template<class Type, template<class> class PatchField, class GeoMesh>         \
-tmp<GeometricField<Type, PatchField, GeoMesh> > operator op                   \
-(                                                                             \
-    const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1,              \
-    const TYPE& t                                                             \
-);
-
-#define BINARY_TYPE_OPERATOR(TYPE, op, opFunc)                                \
-    BINARY_TYPE_OPERATOR_TF(TYPE, op, opFunc)                                 \
-    BINARY_TYPE_OPERATOR_FT(TYPE, op, opFunc)
-
-BINARY_TYPE_OPERATOR(Type, +, add)
-BINARY_TYPE_OPERATOR(Type, -, subtract)
-
-BINARY_TYPE_OPERATOR(scalar, *, multiply)
-BINARY_TYPE_OPERATOR_FT(scalar, /, divide)
-
-#undef BINARY_TYPE_OPERATOR
-#undef BINARY_TYPE_OPERATOR_TF
-#undef BINARY_TYPE_OPERATOR_FT
-
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #define PRODUCT_OPERATOR(product, op, opFunc)                                 \
                                                                               \
@@ -537,7 +279,8 @@ template                                                                      \
 <class Type1, class Type2, template<class> class PatchField, class GeoMesh>   \
 tmp                                                                           \
 <                                                                             \
-    GeometricField<typename product<Type1, Type2>::type, PatchField, GeoMesh> \
+    GeometricField                                                            \
+        <typename product<Type1, Type2>::type, PatchField, GeoMesh>           \
 >                                                                             \
 operator op                                                                   \
 (                                                                             \
@@ -549,7 +292,8 @@ template                                                                      \
 <class Type1, class Type2, template<class> class PatchField, class GeoMesh>   \
 tmp                                                                           \
 <                                                                             \
-    GeometricField<typename product<Type1, Type2>::type, PatchField, GeoMesh> \
+    GeometricField                                                            \
+    <typename product<Type1, Type2>::type, PatchField, GeoMesh>               \
 >                                                                             \
 operator op                                                                   \
 (                                                                             \
@@ -561,7 +305,8 @@ template                                                                      \
 <class Type1, class Type2, template<class> class PatchField, class GeoMesh>   \
 tmp                                                                           \
 <                                                                             \
-    GeometricField<typename product<Type1, Type2>::type, PatchField, GeoMesh> \
+    GeometricField                                                            \
+    <typename product<Type1, Type2>::type, PatchField, GeoMesh>               \
 >                                                                             \
 operator op                                                                   \
 (                                                                             \
@@ -573,7 +318,8 @@ template                                                                      \
 <class Type1, class Type2, template<class> class PatchField, class GeoMesh>   \
 tmp                                                                           \
 <                                                                             \
-    GeometricField<typename product<Type1, Type2>::type, PatchField, GeoMesh> \
+    GeometricField                                                            \
+    <typename product<Type1, Type2>::type, PatchField, GeoMesh>               \
 >                                                                             \
 operator op                                                                   \
 (                                                                             \
@@ -593,7 +339,11 @@ void opFunc                                                                   \
                                                                               \
 template                                                                      \
 <class Form, class Type, template<class> class PatchField, class GeoMesh>     \
-tmp<GeometricField<typename product<Type, Form>::type, PatchField, GeoMesh> > \
+tmp                                                                           \
+<                                                                             \
+    GeometricField                                                            \
+    <typename product<Type, Form>::type, PatchField, GeoMesh>                 \
+>                                                                             \
 operator op                                                                   \
 (                                                                             \
     const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
@@ -608,7 +358,11 @@ template                                                                      \
     class Type, template<class> class PatchField,                             \
     class GeoMesh                                                             \
 >                                                                             \
-tmp<GeometricField<typename product<Form, Type>::type, PatchField, GeoMesh> > \
+tmp                                                                           \
+<                                                                             \
+    GeometricField                                                            \
+    <typename product<Form, Type>::type, PatchField, GeoMesh>                 \
+>                                                                             \
 operator op                                                                   \
 (                                                                             \
     const GeometricField<Type, PatchField, GeoMesh>& gf1,                     \
@@ -617,7 +371,11 @@ operator op                                                                   \
                                                                               \
 template                                                                      \
 <class Form, class Type, template<class> class PatchField, class GeoMesh>     \
-tmp<GeometricField<typename product<Type, Form>::type, PatchField, GeoMesh> > \
+tmp                                                                           \
+<                                                                             \
+    GeometricField                                                            \
+    <typename product<Type, Form>::type, PatchField, GeoMesh>                 \
+>                                                                             \
 operator op                                                                   \
 (                                                                             \
     const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1,              \
@@ -632,7 +390,11 @@ template                                                                      \
     class Type, template<class> class PatchField,                             \
     class GeoMesh                                                             \
 >                                                                             \
-tmp<GeometricField<typename product<Form, Type>::type, PatchField, GeoMesh> > \
+tmp                                                                           \
+<                                                                             \
+    GeometricField                                                            \
+    <typename product<Form, Type>::type, PatchField, GeoMesh>                 \
+>                                                                             \
 operator op                                                                   \
 (                                                                             \
     const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1,              \
@@ -651,7 +413,11 @@ void opFunc                                                                   \
                                                                               \
 template                                                                      \
 <class Form, class Type, template<class> class PatchField, class GeoMesh>     \
-tmp<GeometricField<typename product<Form, Type>::type, PatchField, GeoMesh> > \
+tmp                                                                           \
+<                                                                             \
+    GeometricField                                                            \
+    <typename product<Form, Type>::type, PatchField, GeoMesh>                 \
+>                                                                             \
 operator op                                                                   \
 (                                                                             \
     const dimensioned<Form>& dvs,                                             \
@@ -666,7 +432,11 @@ template                                                                      \
     class Type, template<class> class PatchField,                             \
     class GeoMesh                                                             \
 >                                                                             \
-tmp<GeometricField<typename product<Form, Type>::type, PatchField, GeoMesh> > \
+tmp                                                                           \
+<                                                                             \
+    GeometricField                                                            \
+    <typename product<Form, Type>::type, PatchField, GeoMesh>                 \
+>                                                                             \
 operator op                                                                   \
 (                                                                             \
     const VectorSpace<Form,Cmpt,nCmpt>& vs,                                   \
@@ -675,7 +445,11 @@ operator op                                                                   \
                                                                               \
 template                                                                      \
 <class Form, class Type, template<class> class PatchField, class GeoMesh>     \
-tmp<GeometricField<typename product<Form, Type>::type, PatchField, GeoMesh> > \
+tmp                                                                           \
+<                                                                             \
+    GeometricField                                                            \
+    <typename product<Form, Type>::type, PatchField, GeoMesh>                 \
+>                                                                             \
 operator op                                                                   \
 (                                                                             \
     const dimensioned<Form>& dvs,                                             \
@@ -690,12 +464,19 @@ template                                                                      \
     class Type, template<class> class PatchField,                             \
     class GeoMesh                                                             \
 >                                                                             \
-tmp<GeometricField<typename product<Form, Type>::type, PatchField, GeoMesh> > \
+tmp                                                                           \
+<                                                                             \
+    GeometricField                                                            \
+    <typename product<Form, Type>::type, PatchField, GeoMesh>                 \
+>                                                                             \
 operator op                                                                   \
 (                                                                             \
     const VectorSpace<Form,Cmpt,nCmpt>& vs,                                   \
     const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1               \
 );
+
+PRODUCT_OPERATOR(typeOfSum, +, add)
+PRODUCT_OPERATOR(typeOfSum, -, subtract)
 
 PRODUCT_OPERATOR(outerProduct, *, outer)
 PRODUCT_OPERATOR(crossProduct, ^, cross)
@@ -710,3 +491,7 @@ PRODUCT_OPERATOR(scalarProduct, &&, dotdot)
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
+
+// ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -46,7 +46,6 @@ addToRunTimeSelectionTable(fvPatch, fvPatch, polyPatch);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from polyPatch
 fvPatch::fvPatch(const polyPatch& p, const fvBoundaryMesh& bm)
 :
     polyPatch_(p),
@@ -94,60 +93,55 @@ wordList fvPatch::constraintTypes()
 }
 
 
-// Return the patch faceCells
-const labelList::subList fvPatch::faceCells() const
+const unallocLabelList& fvPatch::faceCells() const
 {
-    return patchSlice(boundaryMesh().mesh().faceOwner());
+    return polyPatch_.faceCells();
 }
 
-// Return the patch face centres
-const vectorField::subField fvPatch::Cf() const
+
+const vectorField& fvPatch::Cf() const
 {
-    //return patch().faceCentres();
-    return patchSlice(boundaryMesh().mesh().faceCentres());
+    return boundaryMesh().mesh().Cf().boundaryField()[index()];
 }
 
-// Return the patch face neighbour cell centres
+
 tmp<vectorField> fvPatch::Cn() const
 {
-    //return patch().faceCellCentres();
-
     tmp<vectorField> tcc(new vectorField(size()));
     vectorField& cc = tcc();
 
+    const unallocLabelList& faceCells = this->faceCells();
+
     // get reference to global cell centres
     const vectorField& gcc = boundaryMesh().mesh().cellCentres();
-    const labelList::subList cellLabels = faceCells();
 
-    forAll (cellLabels, faceI)
+    forAll (faceCells, faceI)
     {
-        cc[faceI] = gcc[cellLabels[faceI]];
+        cc[faceI] = gcc[faceCells[faceI]];
     }
 
     return tcc;
 }
 
-// Return the patch face area magnitudes
-const vectorField& fvPatch::nf() const
+
+tmp<vectorField> fvPatch::nf() const
 {
-    return patch().faceNormals();
+    return Sf()/magSf();
 }
 
 
-// Return the patch face unit normals
-const vectorField::subField fvPatch::Sf() const
+const vectorField& fvPatch::Sf() const
 {
-    return patchSlice(boundaryMesh().mesh().faceAreas());
+    return boundaryMesh().mesh().Sf().boundaryField()[index()];
 }
 
-// Return the patch face area magnitudes
+
 const scalarField& fvPatch::magSf() const
 {
     return boundaryMesh().mesh().magSf().boundaryField()[index()];
 }
 
 
-// Return cell-centre to face-centre vector
 tmp<vectorField> fvPatch::delta() const
 {
     return Cf() - Cn();
@@ -159,7 +153,7 @@ void fvPatch::makeWeights(scalarField& w) const
     w = 1.0;
 }
 
-// Make delta coefficients as patch face - neighbour cell distances
+
 void fvPatch::makeDeltaCoeffs(scalarField& dc) const
 {
     dc = 1.0/(nf() & delta());
@@ -169,11 +163,11 @@ void fvPatch::makeDeltaCoeffs(scalarField& dc) const
 void fvPatch::initMovePoints()
 {}
 
+
 void fvPatch::movePoints()
 {}
 
 
-// Return delta coefficients
 const scalarField& fvPatch::deltaCoeffs() const
 {
     return boundaryMesh().mesh().deltaCoeffs().boundaryField()[index()];

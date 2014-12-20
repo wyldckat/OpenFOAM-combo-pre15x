@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #------------------------------------------------------------------------------
 # License
@@ -112,6 +112,14 @@ HOSTPORT=`getValue "$FOAMX_CONFIG/FoamXClient.cfg" 'org.omg.CORBA.ORBInitialPort
 if [ $? -ne 0 ]; then
     HOSTPORT=1234
 fi
+
+if [ "$HOSTNAME" = 'localhost' ]; then
+    echo 'Your hostname is set to localhost. This tends to give problems in FoamX.'
+    echo 'Either change your hostname or specify a fully resolved ip address in'
+    echo 'the ORBInitialHost setting in the $FOAMX_CONFIG/FoamXClient.cfg'
+    exit 1
+fi
+
 myIOP="inet:$HOSTNAME:$HOSTPORT"
 
 #- Cleanup processes started by me

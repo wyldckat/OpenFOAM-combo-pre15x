@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -337,6 +337,28 @@ dimensionSet pos(const dimensionSet&)
 dimensionSet neg(const dimensionSet&)
 {
     return dimless;
+}
+
+dimensionSet inv(const dimensionSet& ds)
+{
+    return dimless/ds;
+}
+
+dimensionSet trans(const dimensionSet& ds)
+{
+    if (dimensionSet::debug && !ds.dimensionless())
+    {
+        FatalErrorIn("trans(const dimensionSet& ds)")
+            << "Argument of trancendental function not dimensionless"
+            << abort(FatalError);
+    }
+
+    return ds;
+}
+
+dimensionSet transform(const dimensionSet& ds)
+{
+    return ds;
 }
 
 

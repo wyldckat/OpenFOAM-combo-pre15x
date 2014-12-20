@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,6 +48,7 @@ namespace Foam
 // Class forward declarations
 
 class pointBoundaryMesh;
+class pointConstraint;
 
 /*---------------------------------------------------------------------------*\
                       Class pointPatch Declaration
@@ -128,9 +129,9 @@ public:
         //- Return  point normals
         virtual const vectorField& pointNormals() const = 0;
 
-        //- Face decomposition into triangle
-        //  Used for implementation of FEM boundary conditions
-        virtual triFaceList faceTriangles(const label faceID) const = 0;
+        //- Accumulate the effect of constraint direction of this patch
+        virtual void applyConstraint(const label pointi, pointConstraint&) const
+        {}
 };
 
 

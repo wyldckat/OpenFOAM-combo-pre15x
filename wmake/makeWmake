@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -33,28 +33,15 @@
 
 cd src ; make ; cd ..
 
-rm -rf tcshScripts
-mkdir tcshScripts
+rm -rf kshScripts
+mkdir kshScripts
 
-cd cshScripts
-
-for file in *
-do
-    cat $file | sed s/csh/tcsh/ > ../tcshScripts/$file
-    chmod ugo+rx ../tcshScripts/$file
-done
-
-cd ..
-
-rm -rf bashScripts
-mkdir bashScripts
-
-cd kshScripts
+cd bashScripts
 
 for file in *
 do
-    cat $file | sed s/ksh/bash/ > ../bashScripts/$file
-    chmod ugo+rx ../bashScripts/$file
+    cat $file | sed s/bash/ksh/ > ../kshScripts/$file
+    chmod ugo+rx ../kshScripts/$file
 done
 
 cd ..

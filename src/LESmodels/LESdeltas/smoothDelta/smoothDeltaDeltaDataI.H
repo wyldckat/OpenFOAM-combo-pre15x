@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -94,8 +94,9 @@ inline bool smoothDelta::deltaData::valid() const
 // Checks for cyclic faces
 inline bool smoothDelta::deltaData::sameGeometry
 (
-    const smoothDelta::deltaData&,
-    const scalar&
+    const polyMesh&,
+    const deltaData&,
+    const scalar
 ) const
 {
     return true;
@@ -104,6 +105,7 @@ inline bool smoothDelta::deltaData::sameGeometry
 
 inline void smoothDelta::deltaData::leaveDomain
 (
+    const polyMesh&,
     const polyPatch&,
     const label,
     const point&
@@ -111,13 +113,18 @@ inline void smoothDelta::deltaData::leaveDomain
 {}
 
 
-inline void smoothDelta::deltaData::transform(const tensor&)
+inline void smoothDelta::deltaData::transform
+(
+    const polyMesh&,
+    const tensor&
+)
 {}
 
 
 // Update absolute geometric quantities.
 inline void smoothDelta::deltaData::enterDomain
 (
+    const polyMesh&,
     const polyPatch&,
     const label,
     const point&
@@ -131,7 +138,7 @@ inline bool smoothDelta::deltaData::updateCell
     const polyMesh&,
     const label,
     const label,
-    const smoothDelta::deltaData& neighbourWallInfo,
+    const deltaData& neighbourWallInfo,
     const scalar tol
 )
 {
@@ -146,7 +153,7 @@ inline bool smoothDelta::deltaData::updateFace
     const polyMesh&,
     const label,
     const label,
-    const smoothDelta::deltaData& neighbourWallInfo,
+    const deltaData& neighbourWallInfo,
     const scalar tol
 )
 {
@@ -160,7 +167,7 @@ inline bool smoothDelta::deltaData::updateFace
 (
     const polyMesh&,
     const label,
-    const smoothDelta::deltaData& neighbourWallInfo,
+    const deltaData& neighbourWallInfo,
     const scalar tol
 )
 {
@@ -173,7 +180,7 @@ inline bool smoothDelta::deltaData::updateFace
 
 inline bool smoothDelta::deltaData::operator==
 (
-    const smoothDelta::deltaData& rhs
+    const deltaData& rhs
 ) const
 {
     return delta_ == rhs.delta();
@@ -182,7 +189,7 @@ inline bool smoothDelta::deltaData::operator==
 
 inline bool smoothDelta::deltaData::operator!=
 (
-    const smoothDelta::deltaData& rhs
+    const deltaData& rhs
 ) const
 {
     return !(*this == rhs);

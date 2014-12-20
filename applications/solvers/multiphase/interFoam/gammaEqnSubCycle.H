@@ -1,3 +1,13 @@
+label nGammaCorr
+(
+    readLabel(piso.lookup("nGammaCorr"))
+);
+
+label nGammaSubCycles
+(
+    readLabel(piso.lookup("nGammaSubCycles"))
+);
+
 if (nGammaSubCycles > 1)
 {
     dimensionedScalar totalDeltaT = runTime.deltaT();

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,14 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    processorPointPatchFields
-
-Description
-
-SourceFiles
-    processorPointPatchFields.C
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef processorPointPatchFields_H
@@ -47,17 +39,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-typedef ProcessorPointPatchField
-    <pointPatchField, pointPatch, processorPointPatch, scalar>
-    processorPointPatchScalarField;
-
-typedef ProcessorPointPatchField
-    <pointPatchField, pointPatch, processorPointPatch, vector>
-    processorPointPatchVectorField;
-
-typedef ProcessorPointPatchField
-    <pointPatchField, pointPatch, processorPointPatch, tensor>
-    processorPointPatchTensorField;
+makeTypePointPatchFieldTypedefs(processor, Processor, pointPatch, PointPatch, processorPointPatch);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

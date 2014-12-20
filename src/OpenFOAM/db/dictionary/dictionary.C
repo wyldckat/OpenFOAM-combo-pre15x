@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,23 +28,17 @@ License
 #include "primitiveEntry.H"
 #include "dictionaryEntry.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
-defineTypeNameAndDebug(dictionary, 0);
+defineTypeNameAndDebug(Foam::dictionary, 0);
 
 //- Null dictionary
-const dictionary dictionary::null;
+const Foam::dictionary Foam::dictionary::null;
 
 
 // * * * * * * * * * * * * * Private member functions  * * * * * * * * * * * //
 
-// Add a new entry
-void dictionary::add(entry* ePtr)
+void Foam::dictionary::add(entry* ePtr)
 {
     if (!hashedEntries_.found(ePtr->keyword()))
     {
@@ -65,11 +59,11 @@ void dictionary::add(entry* ePtr)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-dictionary::dictionary()
+Foam::dictionary::dictionary()
 {}
 
 
-dictionary::dictionary(const dictionary& dict)
+Foam::dictionary::dictionary(const dictionary& dict)
 :
     IDLList<entry>(dict),
     name_(dict.name())
@@ -86,7 +80,7 @@ dictionary::dictionary(const dictionary& dict)
 }
 
 
-autoPtr<dictionary> dictionary::clone() const
+Foam::autoPtr<Foam::dictionary> Foam::dictionary::clone() const
 {
     return autoPtr<dictionary>(new dictionary(*this));
 }
@@ -94,7 +88,7 @@ autoPtr<dictionary> dictionary::clone() const
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-dictionary::~dictionary()
+Foam::dictionary::~dictionary()
 {
     //cerr<< "~dictionary() " << name() << " " << long(this) << std::endl;
 }
@@ -103,7 +97,7 @@ dictionary::~dictionary()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
     
 // Return line number of first token in dictionary
-label dictionary::startLineNumber() const
+Foam::label Foam::dictionary::startLineNumber() const
 {
     if (size())
     {
@@ -117,7 +111,7 @@ label dictionary::startLineNumber() const
 
 
 // Return line number of last token in dictionary
-label dictionary::endLineNumber() const
+Foam::label Foam::dictionary::endLineNumber() const
 {
     if (size())
     {
@@ -131,14 +125,14 @@ label dictionary::endLineNumber() const
 
 
 // Find and return entry
-bool dictionary::found(const word& keyword) const
+bool Foam::dictionary::found(const word& keyword) const
 {
     return hashedEntries_.found(keyword);
 }
 
 
 // Find and return an entry
-const entry& dictionary::lookupEntry(const word& keyword) const
+const Foam::entry& Foam::dictionary::lookupEntry(const word& keyword) const
 {
     HashTable<entry*>::const_iterator iter = hashedEntries_.find(keyword);
 
@@ -159,28 +153,28 @@ const entry& dictionary::lookupEntry(const word& keyword) const
 
 
 // Find and return an entry
-ITstream& dictionary::lookup(const word& keyword) const
+Foam::ITstream& Foam::dictionary::lookup(const word& keyword) const
 {
     return lookupEntry(keyword).stream();
 }
 
 
 // Check if entry is a sub-dictionary
-bool dictionary::isDict(const word& keyword) const
+bool Foam::dictionary::isDict(const word& keyword) const
 {
     return lookupEntry(keyword).isDict();
 }
 
 
 // Find and return a sub-dictionary
-const dictionary& dictionary::subDict(const word& keyword) const
+const Foam::dictionary& Foam::dictionary::subDict(const word& keyword) const
 {
     return lookupEntry(keyword).dict();
 }
 
 
 // Return the table of contents
-wordList dictionary::toc() const
+Foam::wordList Foam::dictionary::toc() const
 {
     wordList keywords(size());
 
@@ -200,63 +194,62 @@ wordList dictionary::toc() const
 
 
 // Add an entry
-void dictionary::add(const entry& e)
+void Foam::dictionary::add(const entry& e)
 {
     add(e.clone().ptr());
 }
 
 
 // Add a token entry
-void dictionary::add(const word& keyword, const token& t)
+void Foam::dictionary::add(const word& keyword, const token& t)
 {
     add(new primitiveEntry(keyword, t));
 }
 
 // Add a word entry
-void dictionary::add(const word& keyword, const word& w)
+void Foam::dictionary::add(const word& keyword, const word& w)
 {
     add(new primitiveEntry(keyword, token(w)));
 }
 
 // Add a string entry
-void dictionary::add(const word& keyword, const Foam::string& s)
+void Foam::dictionary::add(const word& keyword, const Foam::string& s)
 {
     add(new primitiveEntry(keyword, token(s)));
 }
 
 // Add a label entry
-void dictionary::add(const word& keyword, const label l)
+void Foam::dictionary::add(const word& keyword, const label l)
 {
     add(new primitiveEntry(keyword, token(l)));
 }
 
 // Add a word entry
-void dictionary::add(const word& keyword, const scalar s)
+void Foam::dictionary::add(const word& keyword, const scalar s)
 {
     add(new primitiveEntry(keyword, token(s)));
 }
 
 // Add an entry constructed from ITstream
-void dictionary::add(const word& keyword, const ITstream& tokens)
+void Foam::dictionary::add(const word& keyword, const ITstream& tokens)
 {
     add(new primitiveEntry(keyword, tokens));
 }
 
 // Add an entry constructed from tokenList
-void dictionary::add(const word& keyword, const tokenList& tokens)
+void Foam::dictionary::add(const word& keyword, const tokenList& tokens)
 {
     add(new primitiveEntry(keyword, tokens));
 }
 
 // Add a dictionary entry
-void dictionary::add(const word& keyword, const dictionary& dict)
+void Foam::dictionary::add(const word& keyword, const dictionary& dict)
 {
     add(new dictionaryEntry(keyword, dict));
 }
 
 
-
-bool dictionary::remove(const word& Keyword)
+bool Foam::dictionary::remove(const word& Keyword)
 {
     HashTable<entry*>::iterator iter = hashedEntries_.find(Keyword);
 
@@ -275,16 +268,66 @@ bool dictionary::remove(const word& Keyword)
 }
 
 
+// Change the keyword for an entry,
+// optionally forcing overwrite of an existing entry
+bool Foam::dictionary::changeKeyword
+(
+    const word& oldKeyword,
+    const word& newKeyword,
+    bool forceOverwrite
+)
+{
+    // no change
+    if (oldKeyword == newKeyword)
+    {
+        return false;
+    }
+
+    HashTable<entry*>::iterator iter = hashedEntries_.find(oldKeyword);
+
+    // oldKeyword not found - do nothing
+    if (iter == hashedEntries_.end())
+    {
+        return false;
+    }
+
+    HashTable<entry*>::iterator iter2 = hashedEntries_.find(newKeyword);
+
+    // newKeyword already exists
+    if (iter2 != hashedEntries_.end())
+    {
+        if (forceOverwrite)
+        {
+            IDLList<entry>::remove(iter2());
+            delete iter2();
+            hashedEntries_.erase(iter2);
+        }
+        else
+        {
+            // could issue warning if desired
+            return false;
+        }
+    }
+
+    // change name and HashTable, but leave DL-List untouched
+    iter()->keyword() = newKeyword;
+    iter()->name() = name_ + "::" + newKeyword;
+    hashedEntries_.erase(oldKeyword);
+    hashedEntries_.insert(newKeyword, iter());
+
+    return true;
+}
+
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-// Find and return entry
-ITstream& dictionary::operator[](const word& keyword) const
+Foam::ITstream& Foam::dictionary::operator[](const word& keyword) const
 {
     return lookup(keyword);
 }
 
 
-void dictionary::operator=(const dictionary& dict)
+void Foam::dictionary::operator=(const dictionary& dict)
 {
     // Check for assignment to self
     if (this == &dict)
@@ -311,7 +354,7 @@ void dictionary::operator=(const dictionary& dict)
 }
 
 
-void dictionary::operator+=(const dictionary& dict)
+void Foam::dictionary::operator+=(const dictionary& dict)
 {
     // Check for assignment to self
     if (this == &dict)
@@ -333,7 +376,61 @@ void dictionary::operator+=(const dictionary& dict)
 }
 
 
-dictionary operator+(const dictionary& dict1, const dictionary& dict2)
+void Foam::dictionary::operator|=(const dictionary& dict)
+{
+    // Check for assignment to self
+    if (this == &dict)
+    {
+        FatalErrorIn("dictionary::operator|=(const dictionary&)")
+            << "attempted assignment to self for dictionary " << name()
+            << abort(FatalError);
+    }
+
+    for
+    (
+        IDLList<entry>::const_iterator iter = dict.begin();
+        iter != dict.end();
+        ++iter
+    )
+    {
+        if (!found(iter().keyword()))
+        {
+            add((*iter).clone()());
+        }
+    }
+}
+
+
+void Foam::dictionary::operator<<=(const dictionary& dict)
+{
+    // Check for assignment to self
+    if (this == &dict)
+    {
+        FatalErrorIn("dictionary::operator<<=(const dictionary&)")
+            << "attempted assignment to self for dictionary " << name()
+            << abort(FatalError);
+    }
+
+    for
+    (
+        IDLList<entry>::const_iterator iter = dict.begin();
+        iter != dict.end();
+        ++iter
+    )
+    {
+        remove(iter().keyword());
+        add((*iter).clone()());
+    }
+}
+
+
+/* * * * * * * * * * * * * * * * Global operators  * * * * * * * * * * * * * */
+
+Foam::dictionary Foam::operator+
+(
+    const dictionary& dict1,
+    const dictionary& dict2
+)
 {
     dictionary sum(dict1);
     sum += dict2;
@@ -341,8 +438,16 @@ dictionary operator+(const dictionary& dict1, const dictionary& dict2)
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Foam::dictionary Foam::operator|
+(
+    const dictionary& dict1,
+    const dictionary& dict2
+)
+{
+    dictionary sum(dict1);
+    sum |= dict2;
+    return sum;
+}
 
-} // End namespace Foam
 
 // ************************************************************************* //

@@ -17,7 +17,7 @@ SET(PVFoamReader_LIBS
 )
 
 INCLUDE_DIRECTORIES($ENV{FOAM_SRC}/OpenFOAM/lnInclude $ENV{FOAM_SRC}/finiteVolume/lnInclude)
-INCLUDE_DIRECTORIES($ENV{ParaView_INST_DIR}/include ../../../vtkFoam/lnInclude)
+INCLUDE_DIRECTORIES($ENV{ParaView_INST_DIR}/include ../vtkFoam/lnInclude)
 ADD_DEFINITIONS(-D$ENV{WM_PRECISION_OPTION})
 
 #-----------------------------------------------------------------------------
@@ -48,6 +48,10 @@ CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/PVFoamReaderConfigure.h.in
                ${PROJECT_BINARY_DIR}/vtk${PROJECT_NAME}Configure.h
                @ONLY IMMEDIATE)
 
+# Must be defined before ADD_LIBRARY  for cmake version 2.3.4-20060317
+LINK_DIRECTORIES($ENV{FOAM_LIBBIN})
+LINK_DIRECTORIES($ENV{FOAM_USER_LIBBIN})
+
 # Create vtk client/server wrappers for the classes.
 VTK_WRAP_ClientServer(${PROJECT_NAME} PVFoamReaderCS_SRCS "${PVFoamReader_SRCS}")
 
@@ -67,5 +71,4 @@ CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/PVFoamReader.xml.in
 CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/PVFoamReader.pvsm.in
                ${PROJECT_BINARY_DIR}/../${PROJECT_NAME}.pvsm @ONLY IMMEDIATE)
 
-LINK_DIRECTORIES($ENV{FOAM_LIBBIN})
 TARGET_LINK_LIBRARIES(${PROJECT_NAME} OpenFOAM finiteVolume vtkFoam)

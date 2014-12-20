@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -45,7 +43,7 @@ void Foam::nearWallDistNoSearch::doAll()
 
         if (patches[patchI].type() == wallFvPatch::typeName)
         {
-            const labelList::subList FaceCells = patches[patchI].faceCells();
+            const unallocLabelList& faceCells = patches[patchI].faceCells();
 
             const fvPatchVectorField& patchCentres
                 = cellCentres.boundaryField()[patchI];
@@ -63,7 +61,7 @@ void Foam::nearWallDistNoSearch::doAll()
                     Apatch[facei] &
                     (
                         patchCentres[facei]
-                      - cellCentres[FaceCells[facei]]
+                      - cellCentres[faceCells[facei]]
                     )
                 )/magApatch[facei];
             }

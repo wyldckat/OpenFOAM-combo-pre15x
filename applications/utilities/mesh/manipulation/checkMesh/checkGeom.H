@@ -5,7 +5,7 @@
 
     if (Pstream::parRun())
     {
-        const boundBox& bb = mesh.parallelData().bb();
+        const boundBox& bb = mesh.globalData().bb();
 
         Info<< "Overall domain bounding box: min = "
             << bb.min() << "    max = " << bb.max() << " meters. " << endl;

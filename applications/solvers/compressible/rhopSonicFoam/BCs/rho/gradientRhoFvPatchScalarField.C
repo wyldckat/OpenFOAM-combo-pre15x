@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -84,6 +84,15 @@ gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 
 gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
 (
+    const gradientRhoFvPatchScalarField& wbppsf
+)
+:
+    fixedGradientFvPatchScalarField(wbppsf)
+{}
+
+
+gradientRhoFvPatchScalarField::gradientRhoFvPatchScalarField
+(
     const gradientRhoFvPatchScalarField& wbppsf,
     const scalarField& iF
 )
@@ -104,10 +113,10 @@ void gradientRhoFvPatchScalarField::updateCoeffs()
     }
 
     const fvPatchField<scalar>& psip =
-        lookupPatchField<volScalarField, scalar>("psi");
+        patch().lookupPatchField<volScalarField, scalar>("psi");
 
     const fvPatchField<scalar>& pp =
-        lookupPatchField<volScalarField, scalar>("p");
+        patch().lookupPatchField<volScalarField, scalar>("p");
 
     gradient() = psip*pp.snGrad() + psip.snGrad()*pp;
 

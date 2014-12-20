@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,18 +60,6 @@ class multivariateGaussConvectionScheme
     // Private data
 
         tmp<multivariateSurfaceInterpolationScheme<Type> > tinterpScheme_;
-
-
-    // Private Member Functions
-
-        //- Disallow default bitwise copy construct
-        multivariateGaussConvectionScheme
-        (
-            const multivariateGaussConvectionScheme&
-        );
-
-        //- Disallow default bitwise assignment
-        void operator=(const multivariateGaussConvectionScheme&);
 
 
 public:

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,8 @@ SourceFiles
 #ifndef PrimitivePatchInterpolation_H
 #define PrimitivePatchInterpolation_H
 
-#include "primitiveFields.H"
+#include "scalarList.H"
+#include "Field.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -59,8 +60,11 @@ class PrimitivePatchInterpolation
 
     // Demand-driven data
 
+        //- Face-to-point weights
+        mutable scalarListList* faceToPointWeightsPtr_;
+
         //- Face-to-edge weights
-        mutable scalarField* faceToEdgeWeightsPtr_;
+        mutable scalarList* faceToEdgeWeightsPtr_;
 
 
     // Private Member Functions
@@ -72,8 +76,14 @@ class PrimitivePatchInterpolation
         void operator=(const PrimitivePatchInterpolation&);
 
 
+        //- Face-to-point weights
+        const scalarListList& faceToPointWeights() const;
+
+        //- Make face-to-point weights
+        void makeFaceToPointWeights() const;
+
         //- Face-to-edge weights
-        const scalarField& faceToEdgeWeights() const;
+        const scalarList& faceToEdgeWeights() const;
 
         //- Make face-to-edge weights
         void makeFaceToEdgeWeights() const;
@@ -87,14 +97,7 @@ public:
     // Constructors
 
         //- Construct from PrimitivePatch
-        PrimitivePatchInterpolation
-        (
-            const Patch& p
-        )
-        :
-            patch_(p),
-            faceToEdgeWeightsPtr_(NULL)
-        {}
+        PrimitivePatchInterpolation(const Patch& p);
 
 
     // Destructor

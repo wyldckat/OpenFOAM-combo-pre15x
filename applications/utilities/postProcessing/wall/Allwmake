@@ -1,9 +1,0 @@
-#!/bin/sh
-
-set -x
-
-wmake checkYPlus
-wmake wallGradU
-wmake wallShearStress
-wmake wallHeatFlux
-wmake yPlusLES

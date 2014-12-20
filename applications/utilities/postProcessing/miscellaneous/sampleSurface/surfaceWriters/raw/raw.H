@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -92,9 +92,28 @@ class raw
             const fileName& fieldName,
             const pointField& points,
             const faceList& faces,
+            const sphericalTensorField& values,
+            Ostream& os
+        ) const;
+
+        void writeData
+        (
+            const fileName& fieldName,
+            const pointField& points,
+            const faceList& faces,
+            const symmTensorField& values,
+            Ostream& os
+        ) const;
+
+        void writeData
+        (
+            const fileName& fieldName,
+            const pointField& points,
+            const faceList& faces,
             const tensorField& values,
             Ostream& os
         ) const;
+
 
 public:
 

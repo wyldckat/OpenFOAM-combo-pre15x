@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,8 +38,9 @@ namespace Foam
 
 defineTemplateTypeNameAndDebug(fvScalarMatrix, 0);
 defineTemplateTypeNameAndDebug(fvVectorMatrix, 0);
-defineTemplateTypeNameAndDebug(fvTensorMatrix, 0);
 defineTemplateTypeNameAndDebug(fvSphericalTensorMatrix, 0);
+defineTemplateTypeNameAndDebug(fvSymmTensorMatrix, 0);
+defineTemplateTypeNameAndDebug(fvTensorMatrix, 0);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

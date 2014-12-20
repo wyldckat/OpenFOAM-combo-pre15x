@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -68,6 +68,16 @@ transformFvPatchField<Type>::transformFvPatchField
 )
 :
     fvPatchField<Type>(p, iF, dict)
+{}
+
+
+template<class Type>
+transformFvPatchField<Type>::transformFvPatchField
+(
+    const transformFvPatchField<Type>& ptf
+)
+:
+    fvPatchField<Type>(ptf)
 {}
 
 

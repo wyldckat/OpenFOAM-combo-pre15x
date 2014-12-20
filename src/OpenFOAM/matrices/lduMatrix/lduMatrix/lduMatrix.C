@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,57 +22,36 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    lduMatrix is a general matrix class in which the coefficients are
-    stored as three arrays, one for the upper triangle, one for the
-    lower triangle and a third for the diagonal.  Addressing arrays must
-    be supplied for the upper and lower triangles.  Diagonal, ICCG and BCG
-    solvers are supplied and selected automatically by the solve member
-    function according the the particular matrix structure.
-
-    It would be better if this class were organised as a hierachy starting
-    from an empty matrix, then deriving diagonal, symmetric and asymmetric
-    matrices.  A job for the future.
-
 \*---------------------------------------------------------------------------*/
 
 #include "lduMatrix.H"
 #include "IOstreams.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
+    defineTypeNameAndDebug(lduMatrix, 1);
+}
+
+const Foam::scalar Foam::lduMatrix::great_ = 1.0e+20;
+const Foam::scalar Foam::lduMatrix::small_ = 1.0e-20;
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// declare static members
-
-defineTypeNameAndDebug(lduMatrix, 1);
-
-const scalar lduMatrix::great_ = 1.0e+20;
-const scalar lduMatrix::small_ = 1.0e-20;
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-lduMatrix::lduMatrix
-(
-    const lduAddressing& ldu,
-    const patchScheduleList& lduCoupledInterfaceSchedule
-)
+Foam::lduMatrix::lduMatrix(const lduMesh& mesh)
 :
-    lduAddr_(ldu),
-    lduCoupledInterfaceSchedule_(lduCoupledInterfaceSchedule),
+    lduMesh_(mesh),
     lowerPtr_(NULL),
     diagPtr_(NULL),
     upperPtr_(NULL)
 {}
 
 
-lduMatrix::lduMatrix(const lduMatrix& A)
+Foam::lduMatrix::lduMatrix(const lduMatrix& A)
 :
-    lduAddr_(A.lduAddr_),
-    lduCoupledInterfaceSchedule_(A.lduCoupledInterfaceSchedule_),
+    lduMesh_(A.lduMesh_),
     lowerPtr_(NULL),
     diagPtr_(NULL),
     upperPtr_(NULL)
@@ -94,10 +73,9 @@ lduMatrix::lduMatrix(const lduMatrix& A)
 }
 
 
-lduMatrix::lduMatrix(lduMatrix& A, bool reUse)
+Foam::lduMatrix::lduMatrix(lduMatrix& A, bool reUse)
 :
-    lduAddr_(A.lduAddr_),
-    lduCoupledInterfaceSchedule_(A.lduCoupledInterfaceSchedule_),
+    lduMesh_(A.lduMesh_),
     lowerPtr_(NULL),
     diagPtr_(NULL),
     upperPtr_(NULL)
@@ -142,22 +120,20 @@ lduMatrix::lduMatrix(lduMatrix& A, bool reUse)
 }
 
 
-lduMatrix::lduMatrix
+Foam::lduMatrix::lduMatrix
 (
-    const lduAddressing& ldu,
-    const patchScheduleList& lduCoupledInterfaceSchedule,
+    const lduMesh& mesh,
     Istream& is
 )
 :
-    lduAddr_(ldu),
-    lduCoupledInterfaceSchedule_(lduCoupledInterfaceSchedule),
+    lduMesh_(mesh),
     lowerPtr_(new scalarField(is)),
     diagPtr_(new scalarField(is)),
     upperPtr_(new scalarField(is))
 {}
 
 
-lduMatrix::~lduMatrix()
+Foam::lduMatrix::~lduMatrix()
 {
     if (lowerPtr_)
     {
@@ -176,7 +152,7 @@ lduMatrix::~lduMatrix()
 }
 
 
-scalarField& lduMatrix::lower()
+Foam::scalarField& Foam::lduMatrix::lower()
 {
     if (!lowerPtr_)
     {
@@ -186,7 +162,7 @@ scalarField& lduMatrix::lower()
         }
         else
         {
-            lowerPtr_ = new scalarField(lduAddr_.lowerAddr().size(), 0.0);
+            lowerPtr_ = new scalarField(lduAddr().lowerAddr().size(), 0.0);
         }
     }
 
@@ -194,18 +170,18 @@ scalarField& lduMatrix::lower()
 }
 
 
-scalarField& lduMatrix::diag()
+Foam::scalarField& Foam::lduMatrix::diag()
 {
     if (!diagPtr_)
     {
-        diagPtr_ = new scalarField(lduAddr_.size(), 0.0);
+        diagPtr_ = new scalarField(lduAddr().size(), 0.0);
     }
 
     return *diagPtr_;
 }
 
 
-scalarField& lduMatrix::upper()
+Foam::scalarField& Foam::lduMatrix::upper()
 {
     if (!upperPtr_)
     {
@@ -215,7 +191,7 @@ scalarField& lduMatrix::upper()
         }
         else
         {
-            upperPtr_ = new scalarField(lduAddr_.lowerAddr().size(), 0.0);
+            upperPtr_ = new scalarField(lduAddr().lowerAddr().size(), 0.0);
         }
     }
 
@@ -223,7 +199,7 @@ scalarField& lduMatrix::upper()
 }
 
 
-const scalarField& lduMatrix::lower() const
+const Foam::scalarField& Foam::lduMatrix::lower() const
 {
     if (!lowerPtr_ && !upperPtr_)
     {
@@ -243,7 +219,7 @@ const scalarField& lduMatrix::lower() const
 }
 
 
-const scalarField& lduMatrix::diag() const
+const Foam::scalarField& Foam::lduMatrix::diag() const
 {
     if (!diagPtr_)
     {
@@ -256,7 +232,7 @@ const scalarField& lduMatrix::diag() const
 }
 
 
-const scalarField& lduMatrix::upper() const
+const Foam::scalarField& Foam::lduMatrix::upper() const
 {
     if (!lowerPtr_ && !upperPtr_)
     {
@@ -278,7 +254,7 @@ const scalarField& lduMatrix::upper() const
 
 // * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
-Ostream& operator<<(Ostream& os, const lduMatrix& ldum)
+Foam::Ostream& Foam::operator<<(Ostream& os, const lduMatrix& ldum)
 {
     if (ldum.lowerPtr_)
     {
@@ -306,9 +282,5 @@ Ostream& operator<<(Ostream& os, const lduMatrix& ldum)
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

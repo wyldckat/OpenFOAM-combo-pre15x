@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -66,13 +66,20 @@ public:
             const dictionary&
         );
 
-        //- Construct by mapping given fixedRhoUFvPatchVectorField onto a new patch
+        //- Construct by mapping given fixedRhoUFvPatchVectorField 
+        //  onto a new patch
         fixedRhoUFvPatchVectorField
         (
             const fixedRhoUFvPatchVectorField&,
             const fvPatch&,
             const vectorField&,
             const fvPatchFieldMapper&
+        );
+
+        //- Construct as copy
+        fixedRhoUFvPatchVectorField
+        (
+            const fixedRhoUFvPatchVectorField&
         );
 
         //- Construct and return a clone

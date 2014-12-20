@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,6 +26,7 @@ License
 
 #include "ProcessorTopology.H"
 #include "ListOps.H"
+#include "Pstream.H"
 #include "commSchedule.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -40,7 +41,7 @@ Foam::labelList Foam::ProcessorTopology<Patch, ProcPatch>::procNeighbours
 
     label nNeighbours = 0;
 
-    label maxNb = labelMin;
+    label maxNb = 0;
 
     forAll(patches, patchi)
     {
@@ -84,122 +85,6 @@ Foam::labelList Foam::ProcessorTopology<Patch, ProcPatch>::procNeighbours
 }
 
 
-template<class Patch, class ProcPatch>
-void Foam::ProcessorTopology<Patch, ProcPatch>::calcAddressing()
-{
-    cellFaces_.setSize(size());
-
-    // Size and set to -1.
-    forAll(*this, procI)
-    {
-        cellFaces_[procI].setSize(operator[](procI).size());
-        cellFaces_[procI] = -1;
-    }
-
-    label nFaces = 0;
-
-    forAll(*this, procI)
-    {
-        // Sort my list of neighbours
-        labelList myNbs(operator[](procI));
-        sort(myNbs);
-
-        // Introduce face to lower numbered cell. (note: since myNbs already
-        // sorted this is equivalent to upper-triangular order)
-        forAll(myNbs, nbI)
-        {
-            label nb = myNbs[nbI];
-
-            if (nb < procI)
-            {
-                // Insert into first free spot in cellFaces_[procI]
-                labelList& procFaces = cellFaces_[procI];
-
-                label pos = findIndex(procFaces, -1);
-
-                if (pos == -1)
-                {
-                    FatalErrorIn
-                    (
-                        "ProcessorTopology<Patch, ProcPatch>::"
-                        "calcAddressing()"
-                    )   << "Cannot find empty slot (-1) in faces "
-                        << procFaces << " of processor " << procI << endl
-                        << "when trying to insert new face for connection to"
-                        << " processor " << nb << endl
-                        << abort(FatalError);
-                }
-
-                procFaces[pos] = nFaces;
-
-                // Insert into first free spot in cellFaces_[nb]
-                labelList& nbFaces = cellFaces_[nb];
-
-                pos = findIndex(nbFaces, -1);
-
-                if (pos == -1)
-                {
-                    FatalErrorIn
-                    (
-                        "ProcessorTopology<Patch, ProcPatch>::"
-                        "calcAddressing()"
-                    )   << "Cannot find empty slot (-1) in faces "
-                        << nbFaces << " of processor " << nb << endl
-                        << "when trying to insert new face for connection to"
-                        << " processor " << procI << endl
-                        << abort(FatalError);
-                }
-
-                nbFaces[pos] = nFaces;
-
-                nFaces++;
-            }
-        }
-
-    }
-
-    // Do faceCells
-
-    faceCells_.setSize(nFaces);
-
-    // Size and set to -1 (needed to recognize unfilled slots)
-    forAll(faceCells_, faceI)
-    {
-        faceCells_[faceI].setSize(2);
-        faceCells_[faceI] = -1;
-    }
-
-    forAll(*this, procI)
-    {
-        const labelList& myFaces = cellFaces_[procI];
-    
-        forAll(myFaces, i)
-        {
-            label faceI = myFaces[i];
-
-            if (faceCells_[faceI][0] == -1)
-            {
-                faceCells_[faceI][0] = procI;
-            }
-            else if (faceCells_[faceI][1] == -1)
-            {
-                faceCells_[faceI][1] = procI;
-            }
-            else
-            {
-                FatalErrorIn
-                (
-                    "ProcessorTopology<Patch, ProcPatch>::calcAddressing()"
-                )   << "More than two processors using face " << faceI << endl
-                    << "Processor1:" << faceCells_[faceI][0] << endl
-                    << "Processor3:" << faceCells_[faceI][1] << endl
-                    << abort(FatalError);
-            }
-        }
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
@@ -220,17 +105,14 @@ Foam::ProcessorTopology<Patch, ProcPatch>::ProcessorTopology
         // Distribute to all processors
         Pstream::gatherList(*this);
         Pstream::scatterList(*this);
-
-        calcAddressing();
     }
 
-    if 
-    (
-        Pstream::parRun()
-     && debug::optimisationSwitch("scheduledTransfer", false)
-    )
+    if (Pstream::parRun() && Pstream::scheduledTransfer)
     {
         label patchEvali = 0;
+
+        // 1. All non-processor patches
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         forAll(patches, patchi)
         {
@@ -245,18 +127,53 @@ Foam::ProcessorTopology<Patch, ProcPatch>::ProcessorTopology
             }
         }
 
-        labelList schedule
+        // 2. All processor patches
+        // ~~~~~~~~~~~~~~~~~~~~~~~~
+
+        // Determine the schedule for all. Insert processor pair once
+        // to determine the schedule. Each processor pair stands for both
+        // send and receive.
+        label nComms = 0;
+        forAll(*this, procI)
+        {
+            nComms += operator[](procI).size();
+        }
+        DynamicList<labelPair> comms(nComms);
+
+        forAll(*this, procI)
+        {
+            const labelList& nbrs = operator[](procI);
+
+            forAll(nbrs, i)
+            {
+                if (procI < nbrs[i])
+                {
+                    comms.append(labelPair(procI, nbrs[i]));
+                }
+            }
+        }
+        comms.shrink();
+
+        // Determine a schedule.
+        labelList mySchedule
         (
             commSchedule
             (
-                this->cellFaces(),
-                this->faceCells()
-            )[Pstream::myProcNo()]
+                Pstream::nProcs(),
+                comms
+            ).procSchedule()[Pstream::myProcNo()]
         );
 
-        forAll(schedule, iter)
+        forAll(mySchedule, iter)
         {
-            label nb = schedule[iter];
+            label commI = mySchedule[iter];
+
+            // Get the other processor
+            label nb = comms[commI][0];
+            if (nb == Pstream::myProcNo())
+            {
+                nb = comms[commI][1];
+            }
             label patchi = procPatchMap_[nb];
 
             if (Pstream::myProcNo() > nb)
@@ -283,76 +200,53 @@ Foam::ProcessorTopology<Patch, ProcPatch>::ProcessorTopology
     {
         label patchEvali = 0;
 
-        forAll(patches, patchi)
-        {
-            patchSchedule_[patchEvali].patch = patchi;
-            patchSchedule_[patchEvali].init = true;
-            patchSchedule_[patchEvali++].bufferedTransfer = true;
-        }
+        // 1. All non-processor patches
+        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+        // Have evaluate directly after initEvaluate. Could have them separated
+        // as long as they're not intermingled with processor patches since
+        // then e.g. any reduce parallel traffic would interfere with the
+        // processor swaps.
 
         forAll(patches, patchi)
         {
-            patchSchedule_[patchEvali].patch = patchi;
-            patchSchedule_[patchEvali].init = false;
-            patchSchedule_[patchEvali++].bufferedTransfer = true;
+            if (!isType<ProcPatch>(patches[patchi]))
+            {
+                patchSchedule_[patchEvali].patch = patchi;
+                patchSchedule_[patchEvali].init = true;
+                patchSchedule_[patchEvali++].bufferedTransfer = false;
+                patchSchedule_[patchEvali].patch = patchi;
+                patchSchedule_[patchEvali].init = false;
+                patchSchedule_[patchEvali++].bufferedTransfer = false;
+            }
         }
-    }
-}
 
+        // 2. All processor patches
+        // ~~~~~~~~~~~~~~~~~~~~~~~~
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-template<class Patch, class ProcPatch>
-Foam::label Foam::ProcessorTopology<Patch, ProcPatch>::getFace
-(
-    const label myProcID,
-    const label nbrProcID
-) const
-{
-    const labelList& myFaces = cellFaces_[myProcID];
-
-    forAll(myFaces, myFaceI)
-    {
-        label faceI = myFaces[myFaceI];
-
-        const labelList& fCells = faceCells_[faceI];
-
-        if ((fCells[0] == nbrProcID) || (fCells[1] == nbrProcID))
+        // 2a. initEvaluate
+        forAll(patches, patchi)
         {
-            return faceI;
+            if (isType<ProcPatch>(patches[patchi]))
+            {
+                patchSchedule_[patchEvali].patch = patchi;
+                patchSchedule_[patchEvali].init = true;
+                patchSchedule_[patchEvali++].bufferedTransfer = true;
+            }
+        }
+
+        // 2b. evaluate
+        forAll(patches, patchi)
+        {
+            if (isType<ProcPatch>(patches[patchi]))
+            {
+                patchSchedule_[patchEvali].patch = patchi;
+                patchSchedule_[patchEvali].init = false;
+                patchSchedule_[patchEvali++].bufferedTransfer = true;
+            }
         }
     }
-
-    FatalErrorIn
-    (
-        "ProcessorTopology<Patch, ProcPatch>::getFace(const label, "
-        "const label)"
-    )   << "Cannot find connection (face) between processor " << myProcID
-        << " and " << nbrProcID
-        << abort(FatalError);
-
-    return -1;
 }
-
-
-template<class Patch, class ProcPatch>
-Foam::label
-Foam::ProcessorTopology<Patch, ProcPatch>::getFace
-(
-    const label nbrProcID
-) const
-{
-    return getFace(Pstream::myProcNo(), nbrProcID);
-}
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
 
 // ************************************************************************* //

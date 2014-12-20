@@ -1,21 +1,19 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-
-// FoamX Case Dictionary.
 
 FoamFile
 {
     version         2.0;
     format          ascii;
 
-    root            "/home/dm2/henry/OpenFOAM/OpenFOAM-1.0.3/tutorials/rhoTurbFoam";
-    case            "cavity";
-    instance        "system";
+    root            "";
+    case            "";
+    instance        "";
     local           "";
 
     class           dictionary;
@@ -27,19 +25,54 @@ FoamFile
 solvers
 {
     // Solver for the rho equation
-    rho             ICCG 1e-05 0;
+    rho PCG
+    {
+        preconditioner   DIC;
+        tolerance        1e-05;
+        relTol           0;
+    };
     // Solver for the U equation
-    U               BICCG 1e-05 0;
+    U PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-05;
+        relTol           0;
+    };
     // Solver for the p equation
-    p               ICCG 1e-06 0;
+    p PCG
+    {
+        preconditioner   DIC;
+        tolerance        1e-06;
+        relTol           0;
+    };
     // Solver for the h equation
-    h               BICCG 1e-05 0;
+    h PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-05;
+        relTol           0;
+    };
     // Solver for the R equation
-    R               BICCG 1e-05 0;
+    R PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-05;
+        relTol           0;
+    };
     // Solver for the k equation
-    k               BICCG 1e-05 0;
+    k PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-05;
+        relTol           0;
+    };
     // Solver for the epsilon equation
-    epsilon         BICCG 1e-05 0;
+    epsilon PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-05;
+        relTol           0;
+    };
 }
 
 PISO
@@ -50,8 +83,6 @@ PISO
     nNonOrthogonalCorrectors 0;
     // momentumPredictor?
     momentumPredictor yes;
-    // fluxGradp?
-    fluxGradp       no;
 }
 
 

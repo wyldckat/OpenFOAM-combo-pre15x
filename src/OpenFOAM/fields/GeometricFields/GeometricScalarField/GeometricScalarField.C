@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,13 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Scalar specific part of the implementation of GeometricField.
-
 \*---------------------------------------------------------------------------*/
 
 #include "GeometricScalarField.H"
-#include "FieldFields.H"
+
+#define TEMPLATE template<template<class> class PatchField, class GeoMesh>
+#include "GeometricFieldFunctionsM.C"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -91,123 +90,33 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > stabilise
 
     tmp<GeometricField<scalar, PatchField, GeoMesh> > tRes
     (
-        GeometricField<scalar, PatchField, GeoMesh>::New
+        reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::New
         (
-            IOobject
-            (
-                "stabilise(" + gsf.name() + ',' + ds.name() + ')',
-                gsf.instance(),
-                gsf.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
             tgsf,
+            "stabilise(" + gsf.name() + ',' + ds.name() + ')',
             ds.dimensions() + gsf.dimensions()
         )
     );
 
-    stabilise(tRes(), tRes(), ds);
+    stabilise(tRes(), gsf, ds);
+
+    reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::clear(tgsf);
 
     return tRes;
 }
 
 
-template<template<class> class PatchField, class GeoMesh>
-void divide
-(
-    GeometricField<scalar, PatchField, GeoMesh>& result,
-    const dimensioned<scalar>& ds,
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf
-)
-{
-    divide(result.internalField(), ds.value(), gsf.internalField());
-    divide(result.boundaryField(), ds.value(), gsf.boundaryField());
-}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, +, '+', add)
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, -, '-', subtract)
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
-(
-    const dimensioned<scalar>& ds,
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf
-)
-{
-    tmp<GeometricField<scalar, PatchField, GeoMesh> > tRes
-    (
-        new GeometricField<scalar, PatchField, GeoMesh>
-        (
-            IOobject
-            (
-                ds.name() + '|' + gsf.name(),
-                gsf.instance(),
-                gsf.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            gsf.mesh(),
-            ds.dimensions()/gsf.dimensions()
-        )
-    );
+BINARY_OPERATOR(scalar, scalar, scalar, *, '*', multiply)
+BINARY_OPERATOR(scalar, scalar, scalar, /, '|', divide)
 
-    divide(tRes(), ds, gsf);
+BINARY_TYPE_OPERATOR_SF(scalar, scalar, scalar, /, '|', divide)
 
-    return tRes;
-}
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
-(
-    const dimensioned<scalar>& ds,
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >& tgsf
-)
-{
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf = tgsf();
-
-    tmp<GeometricField<scalar, PatchField, GeoMesh> > tRes
-    (
-        GeometricField<scalar, PatchField, GeoMesh>::New
-        (
-            IOobject
-            (
-                ds.name() + '|' + gsf.name(),
-                gsf.instance(),
-                gsf.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            tgsf,
-            ds.dimensions()/gsf.dimensions()
-        )
-    );
-
-    divide(tRes(), ds, tRes());
-
-    return tRes;
-}
-
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
-(
-    const scalar& s,
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf
-)
-{
-    return dimensionedScalar(s)/gsf;
-}
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
-(
-    const scalar& s,
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >& tgsf
-)
-{
-    return dimensionedScalar(s)/tgsf;
-}
-
-
-// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<template<class> class PatchField, class GeoMesh>
 void pow
@@ -267,17 +176,10 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
 
     tmp<GeometricField<scalar, PatchField, GeoMesh> > tPow
     (
-        GeometricField<scalar, PatchField, GeoMesh>::New
+        reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::New
         (
-            IOobject
-            (
-                "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
-                gsf1.instance(),
-                gsf1.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
             tgsf1,
+            "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
             pow
             (
                 gsf1.dimensions(),
@@ -286,7 +188,9 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         )
     );
 
-    pow(tPow(), tPow(), gsf2);
+    pow(tPow(), gsf1, gsf2);
+
+    reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::clear(tgsf1);
 
     return tPow;
 }
@@ -303,17 +207,10 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
 
     tmp<GeometricField<scalar, PatchField, GeoMesh> > tPow
     (
-        GeometricField<scalar, PatchField, GeoMesh>::New
+        reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::New
         (
-            IOobject
-            (
-                "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
-                gsf1.instance(),
-                gsf1.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
             tgsf2,
+            "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
             pow
             (
                 gsf1.dimensions(),
@@ -322,7 +219,9 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         )
     );
 
-    pow(tPow(), gsf1, tPow());
+    pow(tPow(), gsf1, gsf2);
+
+    reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::clear(tgsf2);
 
     return tPow;
 }
@@ -339,17 +238,12 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
 
     tmp<GeometricField<scalar, PatchField, GeoMesh> > tPow
     (
-        GeometricField<scalar, PatchField, GeoMesh>::New
+        reuseTmpTmpGeometricField
+            <scalar, scalar, scalar, scalar, PatchField, GeoMesh>::New
         (
-            IOobject
-            (
-                "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
-                gsf1.instance(),
-                gsf1.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
             tgsf1,
+            tgsf2,
+            "pow(" + gsf1.name() + ',' + gsf2.name() + ')',
             pow
             (
                 gsf1.dimensions(),
@@ -358,9 +252,11 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
         )
     );
 
-    pow(tPow(), tPow(), gsf2);
+    pow(tPow(), gsf1, gsf2);
 
-    tgsf2.clear();
+    reuseTmpTmpGeometricField
+        <scalar, scalar, scalar, scalar, PatchField, GeoMesh>
+        ::clear(tgsf1, tgsf2);
 
     return tPow;
 }
@@ -419,22 +315,17 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
 
     tmp<GeometricField<scalar, PatchField, GeoMesh> > tPow
     (
-        GeometricField<scalar, PatchField, GeoMesh>::New
+        reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::New
         (
-            IOobject
-            (
-                "pow(" + gsf.name() + ',' + ds.name() + ')',
-                gsf.instance(),
-                gsf.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
             tgsf,
+            "pow(" + gsf.name() + ',' + ds.name() + ')',
             pow(gsf.dimensions(), ds)
         )
     );
 
-    pow(tPow(), tPow(), ds);
+    pow(tPow(), gsf, ds);
+
+    reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::clear(tgsf);
 
     return tPow;
 }
@@ -514,22 +405,17 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
 
     tmp<GeometricField<scalar, PatchField, GeoMesh> > tPow
     (
-        GeometricField<scalar, PatchField, GeoMesh>::New
+        reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::New
         (
-            IOobject
-            (
-                "pow(" + ds.name() + ',' + gsf.name() + ')',
-                gsf.instance(),
-                gsf.db(),
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
             tgsf,
+            "pow(" + ds.name() + ',' + gsf.name() + ')',
             pow(ds, gsf.dimensions())
         )
     );
 
     pow(tPow(), ds, gsf);
+
+    reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::clear(tgsf);
 
     return tPow;
 }
@@ -555,201 +441,42 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
 }
 
 
-#define transFunc(func)                                                     \
-                                                                            \
-template<template<class> class PatchField, class GeoMesh>                   \
-void func                                                                   \
-(                                                                           \
-    GeometricField<scalar, PatchField, GeoMesh>& gsf,                       \
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf1                 \
-)                                                                           \
-{                                                                           \
-    func(gsf.internalField(), gsf1.internalField());                        \
-    func(gsf.boundaryField(), gsf1.boundaryField());                        \
-}                                                                           \
-                                                                            \
-template<template<class> class PatchField, class GeoMesh>                   \
-tmp<GeometricField<scalar, PatchField, GeoMesh> > func                      \
-(                                                                           \
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf                  \
-)                                                                           \
-{                                                                           \
-    tmp<GeometricField<scalar, PatchField, GeoMesh> > tFunc                 \
-    (                                                                       \
-        new GeometricField<scalar, PatchField, GeoMesh>                     \
-        (                                                                   \
-            IOobject                                                        \
-            (                                                               \
-                #func "(" + gsf.name() + ')',                               \
-                gsf.instance(),                                             \
-                gsf.db(),                                                   \
-                IOobject::NO_READ,                                          \
-                IOobject::NO_WRITE                                          \
-            ),                                                              \
-            gsf.mesh(),                                                     \
-            func(gsf.dimensions())                                          \
-        )                                                                   \
-    );                                                                      \
-                                                                            \
-    func(tFunc(), gsf);                                                     \
-                                                                            \
-    return tFunc;                                                           \
-}                                                                           \
-                                                                            \
-template<template<class> class PatchField, class GeoMesh>                   \
-tmp<GeometricField<scalar, PatchField, GeoMesh> > func                      \
-(                                                                           \
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >& tgsf           \
-)                                                                           \
-{                                                                           \
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf = tgsf();        \
-                                                                            \
-    tmp<GeometricField<scalar, PatchField, GeoMesh> > tFunc                 \
-    (                                                                       \
-        GeometricField<scalar, PatchField, GeoMesh>::New                    \
-        (                                                                   \
-            IOobject                                                        \
-            (                                                               \
-                #func "(" + gsf.name() + ')',                               \
-                gsf.instance(),                                             \
-                gsf.db(),                                                   \
-                IOobject::NO_READ,                                          \
-                IOobject::NO_WRITE                                          \
-            ),                                                              \
-            tgsf,                                                           \
-            func(gsf.dimensions())                                          \
-        )                                                                   \
-    );                                                                      \
-                                                                            \
-    func(tFunc(), tFunc());                                                 \
-                                                                            \
-    return tFunc;                                                           \
-}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-transFunc(pow3)
-transFunc(pow4)
-transFunc(sqrt)
-transFunc(sign)
-transFunc(pos)
-transFunc(neg)
+UNARY_FUNCTION(scalar, scalar, pow3, pow3)
+UNARY_FUNCTION(scalar, scalar, pow4, pow4)
+UNARY_FUNCTION(scalar, scalar, sqrt, sqrt)
+UNARY_FUNCTION(scalar, scalar, sign, sign)
+UNARY_FUNCTION(scalar, scalar, pos, pos)
+UNARY_FUNCTION(scalar, scalar, neg, neg)
 
-#undef transFunc
+UNARY_FUNCTION(scalar, scalar, exp, trans)
+UNARY_FUNCTION(scalar, scalar, log, trans)
+UNARY_FUNCTION(scalar, scalar, log10, trans)
+UNARY_FUNCTION(scalar, scalar, sin, trans)
+UNARY_FUNCTION(scalar, scalar, cos, trans)
+UNARY_FUNCTION(scalar, scalar, tan, trans)
+UNARY_FUNCTION(scalar, scalar, asin, trans)
+UNARY_FUNCTION(scalar, scalar, acos, trans)
+UNARY_FUNCTION(scalar, scalar, atan, trans)
+UNARY_FUNCTION(scalar, scalar, sinh, trans)
+UNARY_FUNCTION(scalar, scalar, cosh, trans)
+UNARY_FUNCTION(scalar, scalar, tanh, trans)
+UNARY_FUNCTION(scalar, scalar, asinh, trans)
+UNARY_FUNCTION(scalar, scalar, acosh, trans)
+UNARY_FUNCTION(scalar, scalar, atanh, trans)
+UNARY_FUNCTION(scalar, scalar, erf, trans)
+UNARY_FUNCTION(scalar, scalar, erfc, trans)
+UNARY_FUNCTION(scalar, scalar, lgamma, trans)
+UNARY_FUNCTION(scalar, scalar, j0, trans)
+UNARY_FUNCTION(scalar, scalar, j1, trans)
+UNARY_FUNCTION(scalar, scalar, y0, trans)
+UNARY_FUNCTION(scalar, scalar, y1, trans)
 
 
-#define transFunc(func)                                                     \
-                                                                            \
-template<template<class> class PatchField, class GeoMesh>                   \
-void func                                                                   \
-(                                                                           \
-    GeometricField<scalar, PatchField, GeoMesh>& gsf,                       \
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf1                 \
-)                                                                           \
-{                                                                           \
-    func(gsf.internalField(), gsf1.internalField());                        \
-    func(gsf.boundaryField(), gsf1.boundaryField());                        \
-}                                                                           \
-                                                                            \
-template<template<class> class PatchField, class GeoMesh>                   \
-tmp<GeometricField<scalar, PatchField, GeoMesh> > func                      \
-(                                                                           \
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf                  \
-)                                                                           \
-{                                                                           \
-    if (!gsf.dimensions().dimensionless())                                  \
-    {                                                                       \
-        FatalErrorIn                                                        \
-        (#func"(const GeometricField<scalar, PatchField, GeoMesh>& gsf)")   \
-            << "gsf not dimensionless"                                      \
-            << abort(FatalError);                                           \
-    }                                                                       \
-                                                                            \
-    tmp<GeometricField<scalar, PatchField, GeoMesh> > tFunc                 \
-    (                                                                       \
-        new GeometricField<scalar, PatchField, GeoMesh>                     \
-        (                                                                   \
-            IOobject                                                        \
-            (                                                               \
-                #func "(" + gsf.name() + ')',                               \
-                gsf.instance(),                                             \
-                gsf.db(),                                                   \
-                IOobject::NO_READ,                                          \
-                IOobject::NO_WRITE                                          \
-            ),                                                              \
-            gsf.mesh(),                                                     \
-            dimless                                                         \
-        )                                                                   \
-    );                                                                      \
-                                                                            \
-    func(tFunc(), gsf);                                                     \
-                                                                            \
-    return tFunc;                                                           \
-}                                                                           \
-                                                                            \
-template<template<class> class PatchField, class GeoMesh>                   \
-tmp<GeometricField<scalar, PatchField, GeoMesh> > func                      \
-(                                                                           \
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >& tgsf           \
-)                                                                           \
-{                                                                           \
-    const GeometricField<scalar, PatchField, GeoMesh>& gsf = tgsf();        \
-                                                                            \
-    if (!gsf.dimensions().dimensionless())                                  \
-    {                                                                       \
-        FatalErrorIn                                                        \
-        (#func"(const tmp<GeometricField<scalar, PatchField, GeoMesh> >& gsf)")\
-            << " : gsf not dimensionless"                                   \
-            << abort(FatalError);                                           \
-    }                                                                       \
-                                                                            \
-    tmp<GeometricField<scalar, PatchField, GeoMesh> > tFunc                 \
-    (                                                                       \
-        GeometricField<scalar, PatchField, GeoMesh>::New                    \
-        (                                                                   \
-            IOobject                                                        \
-            (                                                               \
-                #func "(" + gsf.name() + ')',                               \
-                gsf.instance(),                                             \
-                gsf.db(),                                                   \
-                IOobject::NO_READ,                                          \
-                IOobject::NO_WRITE                                          \
-            ),                                                              \
-            tgsf,                                                           \
-            dimless                                                         \
-        )                                                                   \
-    );                                                                      \
-                                                                            \
-    func(tFunc(), tFunc());                                                 \
-                                                                            \
-    return tFunc;                                                           \
-}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-transFunc(exp)
-transFunc(log)
-transFunc(log10)
-transFunc(sin)
-transFunc(cos)
-transFunc(tan)
-transFunc(asin)
-transFunc(acos)
-transFunc(atan)
-transFunc(sinh)
-transFunc(cosh)
-transFunc(tanh)
-transFunc(asinh)
-transFunc(acosh)
-transFunc(atanh)
-transFunc(erf)
-transFunc(erfc)
-transFunc(lgamma)
-transFunc(j0)
-transFunc(j1)
-transFunc(y0)
-transFunc(y1)
-
-#undef transFunc
-
-
-#define transFunc(func)                                                     \
+#define BesselFunc(func)                                                     \
                                                                             \
 template<template<class> class PatchField, class GeoMesh>                   \
 void func                                                                   \
@@ -823,34 +550,34 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > func                      \
                                                                             \
     tmp<GeometricField<scalar, PatchField, GeoMesh> > tFunc                 \
     (                                                                       \
-        GeometricField<scalar, PatchField, GeoMesh>::New                    \
+        reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>::New    \
         (                                                                   \
-            IOobject                                                        \
-            (                                                               \
-                #func "(" + gsf.name() + ')',                               \
-                gsf.instance(),                                             \
-                gsf.db(),                                                   \
-                IOobject::NO_READ,                                          \
-                IOobject::NO_WRITE                                          \
-            ),                                                              \
             tgsf,                                                           \
+            #func "(" + gsf.name() + ')',                                   \
             dimless                                                         \
         )                                                                   \
     );                                                                      \
                                                                             \
-    func(tFunc(), n, tFunc());                                              \
+    func(tFunc(), n, gsf);                                                  \
+                                                                            \
+    reuseTmpGeometricField<scalar, scalar, PatchField, GeoMesh>             \
+    ::clear(tgsf);                                                          \
                                                                             \
     return tFunc;                                                           \
 }
 
-transFunc(jn)
-transFunc(yn)
+BesselFunc(jn)
+BesselFunc(yn)
 
-#undef transFunc
+#undef BesselFunc
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 // ************************************************************************* //

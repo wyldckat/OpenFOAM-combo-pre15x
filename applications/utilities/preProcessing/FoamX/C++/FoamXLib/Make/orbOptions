@@ -1,7 +1,7 @@
-#if defined(linux)
+#if defined(linux) || defined(linuxAMD64)
 
-    ORB_SYS_INC = 
-    ORB_SYS_LIB = -ldl
+    ORB_SYS_INC = -Wno-old-style-cast
+    ORB_SYS_LIB = -lssl -lcrypto -ldl -lpthread
 
 #elif defined(solaris)
 
@@ -9,21 +9,6 @@
     ORB_SYS_LIB = -ldl
 
 #elif defined(sgiN32) || defined(sgi64)
-
-    ORB_SYS_INC = 
-    ORB_SYS_LIB = 
-
-#elif defined(decAlpha)
-
-    ORB_SYS_INC = -O1
-    ORB_SYS_LIB = 
-
-#elif defined(ibm)
-
-    ORB_SYS_INC = 
-    ORB_SYS_LIB = -ldl
-
-#elif defined(hpux)
 
     ORB_SYS_INC = 
     ORB_SYS_LIB = 
@@ -44,23 +29,3 @@ ORB_LIBS = \
     -lmicocoss$(MICO_VERSION) \
     -lmico$(MICO_VERSION) \
     $(ORB_SYS_LIB)
-
-/*
-// MICO sample command line.
-// -O
-// -fpermissive
-// -fno-exceptions
-// -fexceptions
-// -O0
-// -L../../../libs
-// -L/usr/local/lib
-// -rdynamic account.o server.o
-// -lmicocoss2.3.4
-// -lmico2.3.4
-// -lreadline
-// -lncurses
-// -ldl
-// -lelf
-// -lm
-// -o server  
-*/

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     treeBoundBox meshBb(mesh.points());
 
     // Calculate typical cell releated size to shift bb by.
-    scalar typDim = meshBb.avgDim()/(2.0*pow(mesh.nCells(), 1.0/3.0));
+    scalar typDim = meshBb.avgDim()/(2.0*Foam::cbrt(scalar(mesh.nCells())));
 
     treeBoundBox shiftedBb
     (

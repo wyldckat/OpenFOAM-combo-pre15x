@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -167,8 +167,7 @@ public:
 
 
         //- Application class for this case (read only).
-        virtual FoamXServer::CaseServer::IApplication_ptr
-            application();
+        virtual FoamXServer::CaseServer::IApplication_ptr application();
 
         //- Foam system properties (read only).
         virtual FoamXServer::CaseServer::IFoamProperties_ptr foamProperties();

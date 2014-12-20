@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,7 +29,7 @@ Description
 
 #include "amgSymSolver.H"
 #include "ICCG.H"
-#include "GaussSeidel.H"
+#include "GaussSeidelSmoother.H"
 #include "SubField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -39,7 +39,12 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-lduMatrix::solverPerformance amgSymSolver::solve()
+lduMatrix::solverPerformance amgSymSolver::solve
+(
+    scalarField& psi,
+    const scalarField& source,
+    const direction cmpt
+) const
 {
     // If no levels are created, bail out by calling ICCG
     if (matrixLevels_.size() < 1)
@@ -55,46 +60,32 @@ lduMatrix::solverPerformance amgSymSolver::solve()
         return ICCG
         (
             fieldName_,
-            psi_,
             matrix_,
-            source_,
-            coupleBouCoeffs_,
-            coupleIntCoeffs_,
+            interfaceBouCoeffs_,
+            interfaceIntCoeffs_,
             interfaces_,
-            cmpt_,
             tolerance_,
             relTol_
-        ).solve();
+        ).solve(psi, source, cmpt);
     }
 
 
     // Setup class containing solver performance data
     lduMatrix::solverPerformance solverPerf(typeName, fieldName_);
 
-    // Calculate reference value of psi
-    scalar psiRef = gAverage(psi_);
-
     // Calculate A.psi and A.psiRef
-    scalarField Apsi(psi_.size());
-    matrix_.Amul(Apsi, psi_, coupleBouCoeffs_, interfaces_, cmpt_);
+    scalarField Apsi(psi.size());
+    matrix_.Amul(Apsi, psi, interfaceBouCoeffs_, interfaces_, cmpt);
 
-    scalarField ApsiRef(psi_.size());
-    matrix_.Amul
-    (
-        ApsiRef,
-        scalarField(psi_.size(), psiRef),
-        coupleBouCoeffs_,
-        interfaces_,
-        cmpt_
-    );
-        
+    // Create the storage for the fineCorrection which may be used as a
+    // temporary in normFactor
+    scalarField fineCorrection(psi.size());
+
     // Calculate normalisation factor
-    scalar normFactor =
-        gSum(mag(Apsi - ApsiRef) + mag(source_ - ApsiRef))
-      + lduMatrix::small_;
+    scalar normFactor = this->normFactor(psi, source, Apsi, fineCorrection);
 
     // Calculate initial residual field
-    scalarField fineResidual(source_ - Apsi);
+    scalarField fineResidual(source - Apsi);
 
     // Calculate residual magnitude
     solverPerf.initialResidual() = gSumMag(fineResidual)/normFactor;
@@ -118,14 +109,16 @@ lduMatrix::solverPerformance amgSymSolver::solve()
 
         forAll (matrixLevels_, levelI)
         {
-            coarseFields.hook
+            coarseFields.set
             (
-                new scalarField(addrLevels_[levelI].size(), 0.0)
+                levelI,
+                new scalarField(meshLevels_[levelI].size(), 0.0)
             );
 
-            coarseSources.hook
+            coarseSources.set
             (
-                new scalarField(addrLevels_[levelI].size(), 0.0)
+                levelI,
+                new scalarField(meshLevels_[levelI].size(), 0.0)
             );
         }
 
@@ -170,16 +163,13 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                 lduMatrix::solverPerformance coarseSolverPerf = ICCG
                 (
                     "topLevelCorr",
-                    coarseFields[topLevel],
                     matrixLevels_[topLevel],
-                    coarseSources[topLevel],
                     interfaceCoeffs_[topLevel],
                     interfaceCoeffs_[topLevel],
                     interfaceLevels_[topLevel],
-                    cmpt_,
                     tolerance_,
                     relTol_
-                ).solve();
+                ).solve(coarseFields[topLevel], coarseSources[topLevel], cmpt);
 
                 if (debug >= 2)
                 {
@@ -221,7 +211,7 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                         coarseFields[levelI],
                         interfaceCoeffs_[levelI],
                         interfaceLevels_[levelI],
-                        cmpt_
+                        cmpt
                     );
 
                     scalar sf = scalingFactor
@@ -244,7 +234,7 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                     }
 
                     // Smooth the solution
-                    GaussSeidel::smooth
+                    GaussSeidelSmoother::smooth
                     (
                         fieldName_,
                         coarseFields[levelI],
@@ -252,7 +242,7 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                         coarseSources[levelI],
                         interfaceCoeffs_[levelI],
                         interfaceLevels_[levelI],
-                        cmpt_,
+                        cmpt,
                         nPostSweeps_
                     );
 
@@ -263,7 +253,6 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                 }
 
                 // Prolong the finest level correction
-                scalarField& fineCorrection = ApsiRef;
                 prolongField(fineCorrection, coarseFields[0], 0);
 
                 if (debug >= 3)
@@ -277,9 +266,9 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                 (
                     Apsi,
                     fineCorrection,
-                    coupleBouCoeffs_,
+                    interfaceBouCoeffs_,
                     interfaces_,
-                    cmpt_
+                    cmpt
                 );
 
                 scalar fsf = scalingFactor
@@ -294,9 +283,9 @@ lduMatrix::solverPerformance amgSymSolver::solve()
                     Pout<< fsf << " ";
                 }
 
-                forAll(psi_, i)
+                forAll(psi, i)
                 {
-                    psi_[i] += fsf*fineCorrection[i];
+                    psi[i] += fsf*fineCorrection[i];
                 }
             }
 
@@ -306,15 +295,15 @@ lduMatrix::solverPerformance amgSymSolver::solve()
             }
 
             // smooth fine matrix
-            GaussSeidel::smooth
+            GaussSeidelSmoother::smooth
             (
                 fieldName_,
-                psi_,
+                psi,
                 matrix_,
-                source_,
-                coupleBouCoeffs_,
+                source,
+                interfaceBouCoeffs_,
                 interfaces_,
-                cmpt_,
+                cmpt,
                 nBottomSweeps_
             );
 
@@ -324,8 +313,8 @@ lduMatrix::solverPerformance amgSymSolver::solve()
             }
 
             // Calculate fine residual
-            matrix_.Amul(Apsi, psi_, coupleBouCoeffs_, interfaces_, cmpt_);
-            fineResidual = source_;
+            matrix_.Amul(Apsi, psi, interfaceBouCoeffs_, interfaces_, cmpt);
+            fineResidual = source;
             fineResidual -= Apsi;
 
             solverPerf.finalResidual() = gSumMag(fineResidual)/normFactor;
@@ -336,7 +325,7 @@ lduMatrix::solverPerformance amgSymSolver::solve()
             }
         } while
         (
-            solverPerf.nIterations()++ < maxCycles_
+            ++solverPerf.nIterations() < maxCycles_
          && !(solverPerf.checkConvergence(tolerance_, relTol_))
         );
     }

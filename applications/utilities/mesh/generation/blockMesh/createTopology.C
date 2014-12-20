@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -182,8 +182,9 @@ Foam::polyMesh* Foam::blockMesh::createTopology(IOdictionary& meshDescription)
 
             edgesStream.putBack(lastToken);
 
-            edges_.hook
+            edges_.set
             (
+                nEdges,
                 curvedEdge::New(tmpBlockPoints, edgesStream)
             );
             
@@ -242,8 +243,9 @@ Foam::polyMesh* Foam::blockMesh::createTopology(IOdictionary& meshDescription)
 
             blockDescriptorStream.putBack(lastToken);
 
-            blocks.hook
+            blocks.set
             (
+                nBlocks,
                 new block
                 (
                     blockDescriptor
@@ -328,6 +330,22 @@ Foam::polyMesh* Foam::blockMesh::createTopology(IOdictionary& meshDescription)
                 >> patchNames[nPatches]
                 >> tmpBlocksPatches[nPatches];
 
+
+            // Catch multiple patches asap.
+            for (label i = 0; i < nPatches; i++)
+            {
+                if (patchNames[nPatches] == patchNames[i])
+                {
+                    FatalErrorIn
+                    (
+                        "blockMesh::createTopology(IOdictionary&)"
+                    )   << "Duplicate patch " << patchNames[nPatches]
+                        << " at line " << patchStream.lineNumber()
+                        << ". Exiting !" << nl
+                        << exit(FatalError);
+                }
+            }
+
             topologyOK = topologyOK && patchLabelsOK
             (
                 nPatches,
@@ -359,8 +377,9 @@ Foam::polyMesh* Foam::blockMesh::createTopology(IOdictionary& meshDescription)
     PtrList<cellShape> tmpBlockCells(blocks.size());
     forAll(blocks, blockLabel)
     {
-        tmpBlockCells.hook
+        tmpBlockCells.set
         (
+            blockLabel,
             new cellShape(blocks[blockLabel].blockDef().blockShape())
         );
 

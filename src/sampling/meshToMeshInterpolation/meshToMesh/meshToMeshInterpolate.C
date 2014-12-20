@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -108,10 +108,11 @@ void meshToMesh::interpolateField
 ) const
 {
     // Cell-Point interpolation
+    volPointInterpolation vpi(fromMesh_, fromPointMesh_);
 
     interpolationCellPoint<Type> interpolator
     (
-        volPointInterpolation(fromMesh_, fromPointMesh_),
+        vpi,
         fromVf
     );
 
@@ -272,10 +273,7 @@ void meshToMesh::interpolate
                         << exit(FatalError);
             }
 
-            if 
-            (
-                isA<mixedFvPatchField<Type> >(toVf.boundaryField()[patchi])
-            )
+            if (isA<mixedFvPatchField<Type> >(toVf.boundaryField()[patchi]))
             {
                 refCast<mixedFvPatchField<Type> >
                 (
@@ -360,8 +358,9 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > meshToMesh::interpolate
 
     forAll (boundaryAddressing_, patchI)
     {
-        patchFields.hook
+        patchFields.set
         (
+            patchI,
             fvPatchField<Type>::New
             (
                 fromVf.boundaryField()[patchI],

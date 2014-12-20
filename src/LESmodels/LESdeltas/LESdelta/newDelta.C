@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
-
 \*---------------------------------------------------------------------------*/
 
 #include "LESdelta.H"
@@ -38,6 +35,7 @@ namespace Foam
 
 autoPtr<LESdelta> LESdelta::New
 (
+    const word& name,
     const fvMesh& mesh,
     const dictionary& LESdeltaDict
 )
@@ -61,7 +59,7 @@ autoPtr<LESdelta> LESdelta::New
             << exit(FatalError);
     }
 
-    return autoPtr<LESdelta>(cstrIter()(mesh, LESdeltaDict));
+    return autoPtr<LESdelta>(cstrIter()(name, mesh, LESdeltaDict));
 }
 
 

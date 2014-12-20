@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,20 +22,14 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    syncTools
-
-Description
-
 \*----------------------------------------------------------------------------*/
 
 #include "syncTools.H"
-#include "PstreamReduceOps.H"
-#include "PstreamCombineReduceOps.H"
 #include "polyMesh.H"
 #include "processorPolyPatch.H"
 #include "cyclicPolyPatch.H"
-#include "parallelInfo.H"
+#include "globalMeshData.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -64,7 +58,7 @@ void Foam::syncTools::transformList
     {
         FatalErrorIn
         (
-            "syncTools::separateList(const vectorField&, UList<T>&)"
+            "syncTools::transformList(const vectorField&, UList<T>&)"
         )   << "Sizes of field and transformation not equal. field:"
             << field.size() << " transformation:" << rotTensor.size()
             << abort(FatalError);
@@ -82,7 +76,7 @@ void Foam::syncTools::separateList
 
 
 template <class T, class CombineOp>
-Foam::label Foam::syncTools::syncPointList
+void Foam::syncTools::syncPointList
 (
     const polyMesh& mesh,
     UList<T>& pointValues,
@@ -107,10 +101,8 @@ Foam::label Foam::syncTools::syncPointList
 
     if (!hasCouples(patches))
     {
-        return 0;
+        return;
     }
-
-    label nChanged = 0;
 
     // Is there any coupled patch with transformation?
     bool hasTransformation = false;
@@ -121,9 +113,7 @@ Foam::label Foam::syncTools::syncPointList
 
         forAll(patches, patchI)
         {
-            const polyPatch& patch = patches[patchI];
-
-            if (isA<processorPolyPatch>(patch))
+            if (isA<processorPolyPatch>(patches[patchI]))
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patches[patchI]);
@@ -139,25 +129,47 @@ Foam::label Foam::syncTools::syncPointList
                     patchInfo[nbrPts[pointI]] = pointValues[meshPts[pointI]];
                 }
 
-                OPstream toNeighb(procPatch.neighbProcNo());
-                toNeighb << patchInfo;
+                if (contiguous<T>())
+                {
+                    OPstream::write
+                    (
+                        procPatch.neighbProcNo(),
+                        reinterpret_cast<const char*>(patchInfo.begin()),
+                        patchInfo.byteSize(),
+                        true                    // buffered
+                    );
+                }
+                else
+                {
+                    OPstream toNeighb(procPatch.neighbProcNo());
+                    toNeighb << patchInfo;
+                }
             }
         }
+
 
         // Receive and combine.
 
         forAll(patches, patchI)
         {
-            const polyPatch& patch = patches[patchI];
-
-            if (isA<processorPolyPatch>(patch))
+            if (isA<processorPolyPatch>(patches[patchI]))
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patches[patchI]);
-
                 checkTransform(procPatch, applySeparation);
 
                 List<T> nbrPatchInfo(procPatch.nPoints());
+
+                if (contiguous<T>())
+                {
+                    IPstream::read
+                    (
+                        procPatch.neighbProcNo(),
+                        reinterpret_cast<char*>(nbrPatchInfo.begin()),
+                        nbrPatchInfo.byteSize()
+                    );
+                }
+                else
                 {
                     IPstream fromNeighb(procPatch.neighbProcNo());
                     fromNeighb >> nbrPatchInfo;
@@ -179,15 +191,7 @@ Foam::label Foam::syncTools::syncPointList
                 forAll(meshPts, pointI)
                 {
                     label meshPointI = meshPts[pointI];
-
-                    const T oldVal(pointValues[meshPointI]);
-
                     cop(pointValues[meshPointI], nbrPatchInfo[pointI]);
-
-                    if (oldVal != pointValues[meshPointI])
-                    {
-                        nChanged++;
-                    }
                 }
             }
         }
@@ -229,7 +233,8 @@ Foam::label Foam::syncTools::syncPointList
             {
                 hasTransformation = true;
 
-                const vectorField& v = cycPatch.coupledPolyPatch::separation();
+                const vectorField& v =
+                    cycPatch.coupledPolyPatch::separation();
                 separateList(v, half0Values);
                 separateList(-v, half1Values);
             }
@@ -241,22 +246,18 @@ Foam::label Foam::syncTools::syncPointList
                 label point0 = meshPts[e[0]];
                 label point1 = meshPts[e[1]];
 
-                const T oldVal(pointValues[point0]);
-
                 cop(pointValues[point0], half1Values[i]);
                 cop(pointValues[point1], half0Values[i]);
-
-                if (oldVal != pointValues[point0])
-                {
-                    nChanged++;
-                }
             }
         }
     }
 
+    //- Note: hasTransformation is only used for warning messages so
+    //  reduction not strictly nessecary.
+    //reduce(hasTransformation, orOp<bool>());
 
     // Synchronize multiple shared points.
-    const parallelInfo& pd = mesh.parallelData();
+    const globalMeshData& pd = mesh.globalData();
 
     if (pd.nGlobalPoints() > 0)
     {
@@ -294,26 +295,15 @@ Foam::label Foam::syncTools::syncPointList
             forAll(pd.sharedPointLabels(), i)
             {
                 label meshPointI = pd.sharedPointLabels()[i];
-
-                const T& sharedVal = sharedPts[pd.sharedPointAddr()[i]];
-
-                if (sharedVal != pointValues[meshPointI])
-                {
-                    pointValues[meshPointI] = sharedVal;
-                    nChanged++;
-                }
+                pointValues[meshPointI] = sharedPts[pd.sharedPointAddr()[i]];
             }
         }
     }
-
-    reduce(nChanged, sumOp<label>());
-
-    return nChanged;
 }
 
 
 template <class T, class CombineOp>
-Foam::label Foam::syncTools::syncEdgeList
+void Foam::syncTools::syncEdgeList
 (
     const polyMesh& mesh,
     UList<T>& edgeValues,
@@ -338,18 +328,16 @@ Foam::label Foam::syncTools::syncEdgeList
 
     if (!hasCouples(patches))
     {
-        return 0;
+        return;
     }
-
-    label nChanged = 0;
 
     // Is there any coupled patch with transformation?
     bool hasTransformation = false;
 
     if (Pstream::parRun())
     {
-        // Collect and send information.
-        // Send region info for all patch edges
+        // Send
+
         forAll(patches, patchI)
         {
             if (isA<processorPolyPatch>(patches[patchI]))
@@ -369,12 +357,25 @@ Foam::label Foam::syncTools::syncEdgeList
                         edgeValues[meshEdges[edgeI]];
                 }
 
-                OPstream toNeighb(procPatch.neighbProcNo());
-                toNeighb << patchInfo;
+                if (contiguous<T>())
+                {
+                    OPstream::write
+                    (
+                        procPatch.neighbProcNo(),
+                        reinterpret_cast<const char*>(patchInfo.begin()),
+                        patchInfo.byteSize(),
+                        true                    // buffered
+                    );
+                }
+                else
+                {
+                    OPstream toNeighb(procPatch.neighbProcNo());
+                    toNeighb << patchInfo;
+                }
             }
         }
 
-        // Receive and merge.
+        // Receive and combine.
 
         forAll(patches, patchI)
         {
@@ -390,6 +391,17 @@ Foam::label Foam::syncTools::syncEdgeList
                 // Receive from neighbour. Is per patch edge the region of the
                 // neighbouring patch edge. 
                 List<T> nbrPatchInfo(procPatch.nEdges());
+
+                if (contiguous<T>())
+                {
+                    IPstream::read
+                    (
+                        procPatch.neighbProcNo(),
+                        reinterpret_cast<char*>(nbrPatchInfo.begin()),
+                        nbrPatchInfo.byteSize()
+                    );
+                }
+                else
                 {
                     IPstream fromNeighb(procPatch.neighbProcNo());
                     fromNeighb >> nbrPatchInfo;
@@ -411,14 +423,7 @@ Foam::label Foam::syncTools::syncEdgeList
                 {
                     label meshEdgeI = meshEdges[edgeI];
 
-                    const T oldVal(edgeValues[meshEdgeI]);
-
                     cop(edgeValues[meshEdgeI], nbrPatchInfo[edgeI]);
-
-                    if (oldVal != edgeValues[meshEdgeI])
-                    {
-                        nChanged++;
-                    }
                 }
             }
         }
@@ -460,7 +465,8 @@ Foam::label Foam::syncTools::syncEdgeList
             {
                 hasTransformation = true;
 
-                const vectorField& v = cycPatch.coupledPolyPatch::separation();
+                const vectorField& v =
+                    cycPatch.coupledPolyPatch::separation();
                 separateList(v, half0Values);
                 separateList(-v, half1Values);
             }
@@ -472,21 +478,18 @@ Foam::label Foam::syncTools::syncEdgeList
                 label meshEdge0 = meshEdges[e[0]];
                 label meshEdge1 = meshEdges[e[1]];
 
-                const T oldVal(edgeValues[meshEdge0]);
-
                 cop(edgeValues[meshEdge0], half1Values[i]);
                 cop(edgeValues[meshEdge1], half0Values[i]);
-
-                if (oldVal != edgeValues[meshEdge0])
-                {
-                    nChanged++;
-                }
             }
         }
     }
 
+    //- Note: hasTransformation is only used for warning messages so
+    //  reduction not strictly nessecary.
+    //reduce(hasTransformation, orOp<bool>());
+
     // Do the multiple shared edges
-    const parallelInfo& pd = mesh.parallelData();
+    const globalMeshData& pd = mesh.globalData();
 
     if (pd.nGlobalEdges() > 0)
     {
@@ -524,26 +527,174 @@ Foam::label Foam::syncTools::syncEdgeList
             forAll(pd.sharedEdgeLabels(), i)
             {
                 label meshEdgeI = pd.sharedEdgeLabels()[i];
+                edgeValues[meshEdgeI] = sharedPts[pd.sharedEdgeAddr()[i]];
+            }
+        }
+    }
+}
 
-                const T& sharedVal = sharedPts[pd.sharedEdgeAddr()[i]];
 
-                if (sharedVal != edgeValues[meshEdgeI])
+template <class T, class CombineOp>
+void Foam::syncTools::syncBoundaryFaceList
+(
+    const polyMesh& mesh,
+    UList<T>& faceValues,
+    const CombineOp& cop,
+    const bool applySeparation
+)
+{
+    const label nBFaces = mesh.nFaces() - mesh.nInternalFaces();
+
+    if (faceValues.size() != nBFaces)
+    {
+        FatalErrorIn
+        (
+            "syncTools<class T, class CombineOp>::syncBoundaryFaceList"
+            "(const polyMesh&, UList<T>&, const CombineOp&"
+            ", const bool)"
+        )   << "Number of values " << faceValues.size()
+            << " is not equal to the number of boundary faces in the mesh "
+            << nBFaces << abort(FatalError);
+    }
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    if (!hasCouples(patches))
+    {
+        return;
+    }
+
+
+    if (Pstream::parRun())
+    {
+        // Send
+
+        forAll(patches, patchI)
+        {
+            if (isA<processorPolyPatch>(patches[patchI]))
+            {
+                const processorPolyPatch& procPatch =
+                    refCast<const processorPolyPatch>(patches[patchI]);
+
+                label patchStart = procPatch.start()-mesh.nInternalFaces();
+
+                if (contiguous<T>())
                 {
-                    edgeValues[meshEdgeI] = sharedVal;
-                    nChanged++;
+                    OPstream::write
+                    (
+                        procPatch.neighbProcNo(),
+                        reinterpret_cast<const char*>
+                        (
+                            &faceValues[patchStart]
+                        ),
+                        procPatch.size()*sizeof(T),
+                        true                    // buffered
+
+                    );
+                }
+                else
+                {
+                    OPstream toNeighb(procPatch.neighbProcNo());
+                    toNeighb << 
+                        SubList<T>(faceValues, procPatch.size(), patchStart);
+                }
+            }
+        }
+
+
+        // Receive and combine.
+
+        forAll(patches, patchI)
+        {
+            if (isA<processorPolyPatch>(patches[patchI]))
+            {
+                const processorPolyPatch& procPatch =
+                    refCast<const processorPolyPatch>(patches[patchI]);
+
+                List<T> nbrPatchInfo(procPatch.size());
+
+                if (contiguous<T>())
+                {
+                    IPstream::read
+                    (
+                        procPatch.neighbProcNo(),
+                        reinterpret_cast<char*>(nbrPatchInfo.begin()),
+                        nbrPatchInfo.byteSize()
+                    );
+                }
+                else
+                {
+                    IPstream fromNeighb(procPatch.neighbProcNo());
+                    fromNeighb >> nbrPatchInfo;
+                }
+
+                if (!procPatch.parallel())
+                {
+                    transformList(procPatch.reverseT(), nbrPatchInfo);
+                }
+                else if (applySeparation && procPatch.separated())
+                {
+                    separateList(procPatch.separation(), nbrPatchInfo);
+                }
+
+
+                label bFaceI = procPatch.start()-mesh.nInternalFaces();
+
+                forAll(nbrPatchInfo, i)
+                {
+                    cop(faceValues[bFaceI++], nbrPatchInfo[i]);
                 }
             }
         }
     }
 
-    reduce(nChanged, sumOp<label>());
+    // Do the cyclics.
+    forAll(patches, patchI)
+    {
+        if (isA<cyclicPolyPatch>(patches[patchI]))
+        {
+            const cyclicPolyPatch& cycPatch =
+                refCast<const cyclicPolyPatch>(patches[patchI]);
 
-    return nChanged;
+            label patchStart = cycPatch.start()-mesh.nInternalFaces();
+
+            label half = cycPatch.size()/2;
+            label half1Start = patchStart+half;
+
+            List<T> half0Values(SubList<T>(faceValues, half, patchStart));
+            List<T> half1Values(SubList<T>(faceValues, half, half1Start));
+
+            if (!cycPatch.parallel())
+            {
+                transformList(cycPatch.reverseT(), half1Values);
+                transformList(cycPatch.forwardT(), half0Values);
+            }
+            else if (applySeparation && cycPatch.separated())
+            {
+                const vectorField& v =
+                    cycPatch.coupledPolyPatch::separation();
+                separateList(v, half0Values);
+                separateList(-v, half1Values);
+            }
+
+            label i0 = patchStart;
+            forAll(half1Values, i)
+            {
+                cop(faceValues[i0++], half1Values[i]);
+            }
+
+            label i1 = half1Start;
+            forAll(half0Values, i)
+            {
+                cop(faceValues[i1++], half0Values[i]);
+            }
+        }
+    }
 }
 
 
 template <class T, class CombineOp>
-Foam::label Foam::syncTools::syncFaceList
+void Foam::syncTools::syncFaceList
 (
     const polyMesh& mesh,
     UList<T>& faceValues,
@@ -563,132 +714,32 @@ Foam::label Foam::syncTools::syncFaceList
             << mesh.nFaces() << abort(FatalError);
     }
 
-    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+    SubList<T> bndValues
+    (
+        faceValues,
+        mesh.nFaces()-mesh.nInternalFaces(),
+        mesh.nInternalFaces()
+    );
 
-    if (!hasCouples(patches))
-    {
-        return 0;
-    }
+    syncBoundaryFaceList
+    (
+        mesh,
+        bndValues,
+        cop,
+        applySeparation
+    );
+}
 
 
-    label nChanged = 0;
-
-    if (Pstream::parRun())
-    {
-        // Send
-
-        forAll(patches, patchI)
-        {
-            const polyPatch& patch = patches[patchI];
-
-            if (isA<processorPolyPatch>(patch))
-            {
-                const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
-
-                OPstream toNeighb(procPatch.neighbProcNo());
-                toNeighb <<
-                    SubList<T>(faceValues, procPatch.size(), procPatch.start());
-            }
-        }
-
-        // Receive and combine.
-
-        forAll(patches, patchI)
-        {
-            const polyPatch& patch = patches[patchI];
-
-            if (isA<processorPolyPatch>(patch))
-            {
-                const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
-
-                List<T> nbrPatchInfo(procPatch.size());
-                {
-                    IPstream fromNeighb(procPatch.neighbProcNo());
-                    fromNeighb >> nbrPatchInfo;
-                }
-
-                if (!procPatch.parallel())
-                {
-                    transformList(procPatch.reverseT(), nbrPatchInfo);
-                }
-                else if (applySeparation && procPatch.separated())
-                {
-                    separateList(procPatch.separation(), nbrPatchInfo);
-                }
-
-                label meshFaceI = procPatch.start();
-
-                forAll(nbrPatchInfo, faceI)
-                {
-                    const T oldVal(faceValues[meshFaceI]);
-
-                    cop(faceValues[meshFaceI], nbrPatchInfo[faceI]);
-
-                    if (oldVal != faceValues[meshFaceI])
-                    {
-                        nChanged++;
-                    }
-                    meshFaceI++;
-                }
-            }
-        }
-    }
-
-    // Do the cyclics.
-    forAll(patches, patchI)
-    {
-        if (isA<cyclicPolyPatch>(patches[patchI]))
-        {
-            const cyclicPolyPatch& cycPatch =
-                refCast<const cyclicPolyPatch>(patches[patchI]);
-
-            label half = cycPatch.size()/2;
-            label half1Start = cycPatch.start()+half;
-
-            List<T> half0Values(SubList<T>(faceValues, half, cycPatch.start()));
-            List<T> half1Values(SubList<T>(faceValues, half, half1Start));
-
-            // Save old values.
-            const List<T> oldVal(half0Values);
-
-            if (!cycPatch.parallel())
-            {
-                transformList(cycPatch.reverseT(), half1Values);
-                transformList(cycPatch.forwardT(), half0Values);
-            }
-            else if (applySeparation && cycPatch.separated())
-            {
-                const vectorField& v = cycPatch.coupledPolyPatch::separation();
-                separateList(v, half0Values);
-                separateList(-v, half1Values);
-            }
-
-            label mesh0FaceI = cycPatch.start();
-            label mesh1FaceI = cycPatch.start() + half;
-
-            forAll(half0Values, faceI)
-            {
-                cop(faceValues[mesh0FaceI++], half1Values[faceI]);
-                cop(faceValues[mesh1FaceI++], half0Values[faceI]);
-            }
-
-            mesh0FaceI = cycPatch.start();
-
-            forAll(oldVal, faceI)
-            {
-                if (faceValues[mesh0FaceI++] != oldVal[faceI])
-                {
-                    nChanged++;
-                }
-            }
-        }
-    }
-
-    reduce(nChanged, sumOp<label>());
-
-    return nChanged;
+template <class T>
+void Foam::syncTools::swapBoundaryFaceList
+(
+    const polyMesh& mesh,
+    UList<T>& faceValues,
+    const bool applySeparation
+)
+{
+    syncBoundaryFaceList(mesh, faceValues, eqOp<T>(), applySeparation);
 }
 
 
@@ -700,121 +751,7 @@ void Foam::syncTools::swapFaceList
     const bool applySeparation
 )
 {
-    if (faceValues.size() != mesh.nFaces())
-    {
-        FatalErrorIn
-        (
-            "syncTools<class T, class CombineOp>::swapFaceList"
-            "(const polyMesh&, UList<T>&, const bool)"
-        )   << "Number of values " << faceValues.size()
-            << " is not equal to the number of faces in the mesh "
-            << mesh.nFaces() << abort(FatalError);
-    }
-
-    const polyBoundaryMesh& patches = mesh.boundaryMesh();
-
-    if (!hasCouples(patches))
-    {
-        return;
-    }
-
-
-    if (Pstream::parRun())
-    {
-        // Send
-
-        forAll(patches, patchI)
-        {
-            const polyPatch& patch = patches[patchI];
-
-            if (isA<processorPolyPatch>(patch))
-            {
-                const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
-
-                OPstream toNeighb(procPatch.neighbProcNo());
-                toNeighb <<
-                    SubList<T>(faceValues, procPatch.size(), procPatch.start());
-            }
-        }
-
-        // Receive.
-
-        forAll(patches, patchI)
-        {
-            const polyPatch& patch = patches[patchI];
-
-            if (isA<processorPolyPatch>(patch))
-            {
-                const processorPolyPatch& procPatch =
-                    refCast<const processorPolyPatch>(patches[patchI]);
-
-                List<T> nbrPatchInfo(procPatch.size());
-                {
-                    IPstream fromNeighb(procPatch.neighbProcNo());
-                    fromNeighb >> nbrPatchInfo;
-                }
-
-                if (!procPatch.parallel())
-                {
-                    transformList(procPatch.reverseT(), nbrPatchInfo);
-                }
-                else if (applySeparation && procPatch.separated())
-                {
-                    separateList(procPatch.separation(), nbrPatchInfo);
-                }
-
-
-                label meshFaceI = procPatch.start();
-
-                forAll(nbrPatchInfo, i)
-                {
-                    faceValues[meshFaceI++] = nbrPatchInfo[i];
-                }
-
-            }
-        }
-    }
-
-    // Do the cyclics.
-    forAll(patches, patchI)
-    {
-        if (isA<cyclicPolyPatch>(patches[patchI]))
-        {
-            const cyclicPolyPatch& cycPatch =
-                refCast<const cyclicPolyPatch>(patches[patchI]);
-
-            label half = cycPatch.size()/2;
-
-            SubList<T> half0(faceValues, half, cycPatch.start());
-            SubList<T> half1(faceValues, half, cycPatch.start()+half);
-
-            List<T> half0Values(half0);
-            List<T> half1Values(half1);
-
-            if (!cycPatch.parallel())
-            {
-                transformList(cycPatch.forwardT(), half0Values);
-                transformList(cycPatch.reverseT(), half1Values);
-            }
-            else if (applySeparation && cycPatch.separated())
-            {
-                const vectorField& v = cycPatch.coupledPolyPatch::separation();
-                separateList(v, half0Values);
-                separateList(-v, half1Values);
-            }
-
-            // Swap values
-            label mesh0FaceI = cycPatch.start();
-            label mesh1FaceI = cycPatch.start()+half;
-
-            forAll(half0Values, i)
-            {
-                faceValues[mesh0FaceI++] = half1Values[i];
-                faceValues[mesh1FaceI++] = half0Values[i];
-            }
-        }
-    }
+    syncFaceList(mesh, faceValues, eqOp<T>(), applySeparation);
 }
 
 

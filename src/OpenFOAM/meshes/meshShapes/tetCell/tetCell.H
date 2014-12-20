@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,8 @@ Class
     tetCell
 
 Description
-    A tetrahedral cell primitive used for tetra FEM and post-processing.
+    A tetrahedral cell primitive.
+
     It is important that the ordering of edges is the same for a tetrahedron
     class, a tetrahedron cell shape model and a tetCell
 

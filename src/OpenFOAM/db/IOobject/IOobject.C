@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -143,46 +143,24 @@ fileName IOobject::path(const word& instance, const fileName& local) const
 }
 
 
-Istream* IOobject::objectStream(const fileName& fName)
-{
-    IFstream* isPtr = new IFstream(fName);
-    
-    if (isPtr->good())
-    {
-        return isPtr;
-    }
-    else
-    {
-        delete isPtr;
-        return NULL;
-    }
-}
-
-
-Istream* IOobject::objectStream()
+fileName IOobject::filePath() const
 {
     if (file(objectPath()))
     {
-        return objectStream(objectPath());
-    }
-    else if (file(rootPath()/caseName()/instance()/local()/name()))
-    {
-        return objectStream(rootPath()/caseName()/instance()/local()/name());
+        return objectPath();
     }
     else if
     (
-        db_.time().processorCase()
+        time().processorCase()
      && (
-            instance() == db_.time().system()
-         || instance() == db_.time().constant()
+            instance() == time().system()
+         || instance() == time().constant()
         )
      && !db_.dbDir().size()
-     && !local().size()
-     && file(rootPath()/caseName()/".."/instance()/db_.dbDir()/local()/name())
+     && file(rootPath()/caseName()/".."/instance()/local()/name())
     )
     {
-        instance_ = ".."/instance();
-        return objectStream(objectPath());
+        return rootPath()/caseName()/".."/instance()/local()/name();
     }
     else if (!dir(path()))
     {
@@ -192,18 +170,42 @@ Istream* IOobject::objectStream()
         {
             fileName fName
             (
-                rootPath()/caseName()/newInstancePath
-               /db_.dbDir()/local()/name()
+                rootPath()/caseName()/newInstancePath/db_.dbDir()/local()/name()
             );
 
             if (file(fName))
             {
-                return objectStream(fName);
+                return fName;
             }
         }
     }
 
-    return NULL;
+    return fileName::null;
+}
+
+
+Istream* IOobject::objectStream()
+{
+    fileName fName = filePath();
+
+    if (fName != fileName::null)
+    {
+        IFstream* isPtr = new IFstream(fName);
+    
+        if (isPtr->good())
+        {
+            return isPtr;
+        }
+        else
+        {
+            delete isPtr;
+            return NULL;
+        }
+    }
+    else
+    {
+        return NULL;
+    }
 }
 
 

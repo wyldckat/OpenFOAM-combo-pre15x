@@ -1,4 +1,6 @@
 #!/bin/sh
+set -x
+
 case $WM_ARCH in
   linux*)
     CMD="wmake libso"

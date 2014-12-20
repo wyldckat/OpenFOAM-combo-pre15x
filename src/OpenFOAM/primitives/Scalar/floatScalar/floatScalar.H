@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,24 +44,66 @@ SourceFiles
 
 namespace Foam
 {
-    typedef float floatScalar;
 
-    // Largest and smallest scalar values allowed in certain parts of the code
-    // (6 is the number of significant figures in an
-    //  IEEE single precision number.  See limits.h or float.h)
-    static const floatScalar floatScalarGREAT = 1.0e+6;
-    static const floatScalar floatScalarVGREAT = 1.0e+37;
-    static const floatScalar floatScalarSMALL = 1.0e-6;
-    static const floatScalar floatScalarVSMALL = 1.0e-37;
-}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+typedef float floatScalar;
+
+// Largest and smallest scalar values allowed in certain parts of the code
+// (6 is the number of significant figures in an
+//  IEEE single precision number.  See limits.h or float.h)
+static const floatScalar floatScalarGREAT = 1.0e+6;
+static const floatScalar floatScalarVGREAT = 1.0e+37;
+static const floatScalar floatScalarSMALL = 1.0e-6;
+static const floatScalar floatScalarVSMALL = 1.0e-37;
+
 
 #define Scalar floatScalar
 #define ScalarVSMALL floatScalarVSMALL
 #define readScalar readFloatScalar
+
+inline Scalar mag(const Scalar s)
+{
+    return ::fabsf(s);
+}
+
+#define transFunc(func)            \
+inline Scalar func(const Scalar s) \
+{                                  \
+    return ::func##f(s);           \
+}
+
 #include "Scalar.H"
+
+inline Scalar hypot(const Scalar x, const Scalar y)
+{
+    return ::hypotf(x, y);
+}
+
+inline Scalar atan2(const Scalar y, const Scalar x)
+{
+    return ::atan2f(y, x);
+}
+
+inline Scalar jn(const int n, const Scalar s)
+{
+    return ::jnf(n, s);
+}
+
+inline Scalar yn(const int n, const Scalar s)
+{
+    return ::ynf(n, s);
+}
+
 #undef Scalar
 #undef ScalarVSMALL
 #undef readScalar
+#undef transFunc
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -21,6 +21,7 @@ derivedFvPatches = $(fvPatches)/derivedFvPatches
 $(derivedFvPatches)/cyclicFvPatch/cyclicFvPatch.C
 $(derivedFvPatches)/processorFvPatch/processorFvPatch.C
 $(derivedFvPatches)/wallFvPatch/wallFvPatch.C
+$(derivedFvPatches)/directMappedFvPatch/directMappedFvPatch.C
 
 wallDist = fvMesh/wallDist
 $(wallDist)/wallPointYPlus/wallPointYPlus.C
@@ -46,6 +47,7 @@ $(basicFvPatchFields)/fixedGradient/fixedGradientFvPatchFields.C
 $(basicFvPatchFields)/mixed/mixedFvPatchFields.C
 $(basicFvPatchFields)/transform/transformFvPatchFields.C
 $(basicFvPatchFields)/transform/transformFvPatchScalarField.C
+$(basicFvPatchFields)/directionMixed/directionMixedFvPatchFields.C
 $(basicFvPatchFields)/basicSymmetry/basicSymmetryFvPatchFields.C
 $(basicFvPatchFields)/basicSymmetry/basicSymmetryFvPatchScalarField.C
 $(basicFvPatchFields)/calculated/calculatedFvPatchFields.C
@@ -61,9 +63,9 @@ $(derivedFvPatchFields)/cyclic/cyclicFvPatchFields.C
 $(derivedFvPatchFields)/wedge/wedgeFvPatchFields.C
 $(derivedFvPatchFields)/wedge/wedgeFvPatchScalarField.C
 $(derivedFvPatchFields)/uniformFixedValue/uniformFixedValueFvPatchFields.C
-$(derivedFvPatchFields)/directionMixed/directionMixedFvPatchFields.C
 $(derivedFvPatchFields)/slip/slipFvPatchFields.C
 $(derivedFvPatchFields)/partialSlip/partialSlipFvPatchFields.C
+$(derivedFvPatchFields)/fixedNormalSlip/fixedNormalSlipFvPatchFields.C
 $(derivedFvPatchFields)/surfaceNormalFixedValue/surfaceNormalFixedValueFvPatchVectorField.C
 $(derivedFvPatchFields)/inletOutlet/inletOutletFvPatchFields.C
 $(derivedFvPatchFields)/outletInlet/outletInletFvPatchFields.C
@@ -76,22 +78,32 @@ $(derivedFvPatchFields)/pressureInletVelocity/pressureInletVelocityFvPatchVector
 $(derivedFvPatchFields)/pressureInletUniformVelocity/pressureInletUniformVelocityFvPatchVectorField.C
 $(derivedFvPatchFields)/pressureDirectedInletVelocity/pressureDirectedInletVelocityFvPatchVectorField.C
 $(derivedFvPatchFields)/pressureInletOutletVelocity/pressureInletOutletVelocityFvPatchVectorField.C
+$(derivedFvPatchFields)/rotatingPressureInletOutletVelocity/rotatingPressureInletOutletVelocityFvPatchVectorField.C
 $(derivedFvPatchFields)/pressureDirectedInletOutletVelocity/pressureDirectedInletOutletVelocityFvPatchVectorField.C
 $(derivedFvPatchFields)/totalPressure/totalPressureFvPatchScalarField.C
-$(derivedFvPatchFields)/wallBuoyantPressure/wallBuoyantPressureFvPatchScalarField.C
-$(derivedFvPatchFields)/pressureTransmissive/pressureTransmissiveFvPatchScalarField.C
+$(derivedFvPatchFields)/rotatingTotalPressure/rotatingTotalPressureFvPatchScalarField.C
+$(derivedFvPatchFields)/totalTemperature/totalTemperatureFvPatchScalarField.C
+$(derivedFvPatchFields)/fixedFluxBuoyantPressure/fixedFluxBuoyantPressureFvPatchScalarField.C
+$(derivedFvPatchFields)/waveTransmissive/waveTransmissiveFvPatchFields.C
 $(derivedFvPatchFields)/supersonicFreestream/supersonicFreestreamFvPatchVectorField.C
 $(derivedFvPatchFields)/turbulentInlet/turbulentInletFvPatchFields.C
 $(derivedFvPatchFields)/timeVaryingUniformFixedValue/timeVaryingUniformFixedValueFvPatchFields.C
+$(derivedFvPatchFields)/timeVaryingMappedFixedValue/timeVaryingMappedFixedValueFvPatchFields.C
+$(derivedFvPatchFields)/timeVaryingMappedFixedValue/AverageIOFields.C
 $(derivedFvPatchFields)/oscillatingFixedValue/oscillatingFixedValueFvPatchFields.C
 $(derivedFvPatchFields)/syringePressure/syringePressureFvPatchScalarField.C
-
+$(derivedFvPatchFields)/directMappedFixedValue/directMappedFixedValueFvPatchFields.C
+$(derivedFvPatchFields)/massFluxInletVelocity/massFluxInletVelocityFvPatchVectorField.C
+$(derivedFvPatchFields)/turbulentIntensityKineticEnergyInlet/turbulentIntensityKineticEnergyInletFvPatchScalarField.C
+$(derivedFvPatchFields)/turbulentMixingLengthDissipationRateInlet/turbulentMixingLengthDissipationRateInletFvPatchScalarField.C
 
 fields/volFields/volFields.C
 fields/surfaceFields/surfaceFields.C
 
 fvMatrices/fvMatrices.C
 fvMatrices/fvScalarMatrix/fvScalarMatrix.C
+fvMatrices/solvers/MULES/MULES.C
+fvMatrices/solvers/gamgSymSolver/gamgAgglomerations/faceAreaPairGamgAgglomeration/faceAreaPairGamgAgglomeration.C
 
 interpolation = interpolation/interpolation
 $(interpolation)/interpolation/interpolations.C
@@ -101,8 +113,8 @@ $(interpolation)/interpolationCellPoint/cellPointWeight/cellPointWeight.C
 $(interpolation)/interpolationCellPoint/makeInterpolationCellPoint.C
 $(interpolation)/interpolationCellPointFace/makeInterpolationCellPointFace.C
 
+interpolation/volPointInterpolation/pointPatchInterpolation/pointPatchInterpolation.C
 interpolation/volPointInterpolation/volPointInterpolation.C
-interpolation/volPointInterpolation/edgeCorrectedVolPointInterpolation/edgeCorrectedVolPointInterpolation.C
 
 surfaceInterpolation = interpolation/surfaceInterpolation
 $(surfaceInterpolation)/surfaceInterpolation/surfaceInterpolation.C
@@ -114,9 +126,11 @@ $(schemes)/midPoint/midPoint.C
 $(schemes)/downwind/downwind.C
 $(schemes)/weighted/weighted.C
 $(schemes)/cubic/cubic.C
-$(schemes)/skewLinear/skewCorrectionVectors.C
-$(schemes)/skewLinear/skewLinear.C
+$(schemes)/skewCorrected/skewCorrectionVectors.C
+$(schemes)/skewCorrected/skewCorrected.C
+$(schemes)/outletStabilised/outletStabilised.C
 $(schemes)/reverseLinear/reverseLinear.C
+$(schemes)/clippedLinear/clippedLinear.C
 $(schemes)/harmonic/harmonic.C
 $(schemes)/localBlended/localBlended.C
 $(schemes)/localMax/localMax.C
@@ -127,6 +141,7 @@ $(limitedSchemes)/limitedSurfaceInterpolationScheme/limitedSurfaceInterpolationS
 $(limitedSchemes)/upwind/upwind.C
 $(limitedSchemes)/blended/blended.C
 $(limitedSchemes)/linearUpwind/linearUpwind.C
+$(limitedSchemes)/linearUpwindV/linearUpwindV.C
 $(limitedSchemes)/Gamma/Gamma.C
 $(limitedSchemes)/SFCD/SFCD.C
 $(limitedSchemes)/vanLeer/vanLeer.C
@@ -137,6 +152,7 @@ $(limitedSchemes)/QUICK/QUICK.C
 $(limitedSchemes)/MUSCL/MUSCL.C
 $(limitedSchemes)/UMIST/UMIST.C
 $(limitedSchemes)/Phi/Phi.C
+$(limitedSchemes)/filteredLinear/filteredLinear.C
 
 multivariateSchemes = $(surfaceInterpolation)/multivariateSchemes
 $(multivariateSchemes)/multivariateSurfaceInterpolationScheme/multivariateSurfaceInterpolationSchemes.C
@@ -176,8 +192,15 @@ $(gradSchemes)/gradScheme/gradSchemes.C
 $(gradSchemes)/gaussGrad/gaussGrads.C
 $(gradSchemes)/leastSquaresGrad/leastSquaresVectors.C
 $(gradSchemes)/leastSquaresGrad/leastSquaresGrads.C
-$(gradSchemes)/limitedGrad/limitedGrads.C
+$(gradSchemes)/extendedLeastSquaresGrad/extendedLeastSquaresVectors.C
+$(gradSchemes)/extendedLeastSquaresGrad/extendedLeastSquaresGrads.C
 $(gradSchemes)/fourthGrad/fourthGrads.C
+
+limitedGradSchemes = $(gradSchemes)/limitedGradSchemes
+$(limitedGradSchemes)/faceLimitedGrad/faceLimitedGrads.C
+$(limitedGradSchemes)/cellLimitedGrad/cellLimitedGrads.C
+$(limitedGradSchemes)/faceMDLimitedGrad/faceMDLimitedGrads.C
+$(limitedGradSchemes)/cellMDLimitedGrad/cellMDLimitedGrads.C
 
 snGradSchemes = finiteVolume/snGradSchemes
 $(snGradSchemes)/snGradScheme/snGradSchemes.C
@@ -194,11 +217,15 @@ laplacianSchemes = finiteVolume/laplacianSchemes
 $(laplacianSchemes)/laplacianScheme/laplacianSchemes.C
 $(laplacianSchemes)/gaussLaplacianScheme/gaussLaplacianSchemes.C
 
+finiteVolume/fvc/fvcMeshPhi.C
 
 cfdTools/general/findRefCell/findRefCell.C
 cfdTools/general/adjustPhi/adjustPhi.C
 cfdTools/general/bound/bound.C
-
+cfdTools/general/porousMedia/porousZone.C
+cfdTools/general/porousMedia/porousZones.C
+cfdTools/general/MRF/MRFZone.C
+cfdTools/general/MRF/MRFZones.C
 
 fvMeshCutSurface = fvMesh/fvMeshCutSurface
 
@@ -210,6 +237,5 @@ edgeCuts = $(fvMeshCutSurface)/edgeCuts
 $(edgeCuts)/meshEdgeCuts.C
 $(edgeCuts)/faceDecompIsoSurfaceCuts.C
 $(edgeCuts)/cellDecompIsoSurfaceCuts.C
-
 
 LIB = $(FOAM_LIBBIN)/libfiniteVolume

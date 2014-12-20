@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -130,7 +130,7 @@ cellShape extrudedTriangleCellShape
     // Create a label list for the model
     if (localFaces[0][1] == localFaces[1][0])
     {
-        // Hook front and back plane faces
+        // Set front and back plane faces
         labelList missingPlaneFace(3);
 
         // front plane
@@ -162,7 +162,7 @@ cellShape extrudedTriangleCellShape
     }
     else if (localFaces[0][1] == localFaces[2][0])
     {
-        // Hook front and back plane faces
+        // Set front and back plane faces
         labelList missingPlaneFace(3);
 
         // front plane

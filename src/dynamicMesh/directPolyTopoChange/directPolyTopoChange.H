@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -376,7 +376,8 @@ private:
 
         void resetZones
         (
-            polyMesh&,
+            const polyMesh&,        // mesh to get existing info from
+            polyMesh&,              // mesh to change zones on
             labelListList&,
             labelListList&,
             labelListList&
@@ -384,7 +385,7 @@ private:
 
         void calcFaceZonePointMap
         (
-            polyMesh&,
+            const polyMesh&,
             const List<Map<label> >&,
             labelListList&
         ) const;
@@ -398,11 +399,30 @@ private:
             //- Do all coupled patch face reordering
             void reorderCoupledFaces
             (
+                const bool syncParallel,
                 const polyBoundaryMesh&,
                 const labelList& patchStarts,
                 const labelList& patchSizes,
                 const pointField& points
             );
+
+        void compactAndReorder
+        (
+            const polyMesh&,
+            const bool syncParallel,
+            pointField& newPoints,
+            labelList& patchSizes,
+            labelList& patchStarts,
+            List<objectMap>& facesFromPoints,
+            List<objectMap>& facesFromEdges,
+            List<objectMap>& cellsFromPoints,
+            List<objectMap>& cellsFromEdges,
+            List<objectMap>& cellsFromFaces,
+            List<Map<label> >& oldPatchMeshPointMaps,
+            labelList& oldPatchNMeshPoints,
+            labelList& oldPatchStarts,
+            List<Map<label> >& oldFaceZoneMeshPointMaps
+        );
 
 public:
 
@@ -546,9 +566,28 @@ public:
         // Other
 
             //- Inplace changes mesh without change of patches.
-            //  Adapts patch start/end and does reorderCoupledFaces.
+            //  Adapts patch start/end and by default does parallel matching.
             //  Clears all data. Returns map.
-            autoPtr<mapPolyMesh> changeMesh(polyMesh& mesh);
+            //  inflate = true : keep old mesh points. Put new points into the
+            //  returned map (preMotionPoints) so we can use inflation. Any
+            //  points out of nothing (appended points) are vector::zero.
+            //  inflate = false: set mesh points directly. Empty preMotionPoints
+            //  in the map.
+            autoPtr<mapPolyMesh> changeMesh
+            (
+                polyMesh& mesh,
+                const bool inflate,
+                const bool syncParallel = true
+            );
+
+            //- Create new mesh with old mesh patches
+            autoPtr<mapPolyMesh> makeMesh
+            (
+                autoPtr<fvMesh>& newMesh,
+                const IOobject& io,
+                const fvMesh& mesh,
+                const bool syncParallel = true
+            );
 };
 
 

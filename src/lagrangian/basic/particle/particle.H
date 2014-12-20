@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,6 +48,12 @@ namespace Foam
 template<class particle>
 class Cloud;
 
+class wedgePolyPatch;
+class symmetryPolyPatch;
+class cyclicPolyPatch;
+class processorPolyPatch;
+class wallPolyPatch;
+class polyPatch;
 
 // * * * * * * Forward declaration of template friend fuctions * * * * * * * //
 
@@ -82,8 +88,11 @@ class particle
         //- Index of the cell it is
         label celli_;
 
-        //- is particle on boundary/outside domain
-        bool onBoundary_;
+        //- Face index if the particle is on a face otherwise -1
+        label facei_;
+
+        //- Fraction of time-step completed
+        scalar stepFraction_;
 
 
     // Private member functions
@@ -96,7 +105,7 @@ class particle
             const vector& from,
             const vector& to,
             const label facei,
-            const scalar fraction
+            const scalar stepFraction
         );
 
         //- Return the 'lambda' value for the position, p, on the face,
@@ -120,26 +129,81 @@ class particle
         (
             const vector& position,
             const label celli,
-            const scalar fraction
+            const scalar stepFraction
         );
+
 
 protected:
 
+        //- Overridable function to handle the particle hitting a wedgePatch
+        template<class TrackingData>
+        void hitWedgePatch
+        (
+            const wedgePolyPatch&,
+            TrackingData& td
+        );
+
+        //- Overridable function to handle the particle hitting a symmetryPatch
+        template<class TrackingData>
+        void hitSymmetryPatch
+        (
+            const symmetryPolyPatch&,
+            TrackingData& td
+        );
+
+        //- Overridable function to handle the particle hitting a cyclicPatch
+        template<class TrackingData>
+        void hitCyclicPatch
+        (
+            const cyclicPolyPatch&,
+            TrackingData& td
+        );
+
+        //- Overridable function to handle the particle hitting a processorPatch
+        template<class TrackingData>
+        void hitProcessorPatch
+        (
+            const processorPolyPatch&,
+            TrackingData& td
+        );
+
+        //- Overridable function to handle the particle hitting a wallPatch
+        template<class TrackingData>
+        void hitWallPatch
+        (
+            const wallPolyPatch&,
+            TrackingData& td
+        );
+
+        //- Overridable function to handle the particle hitting a general patch
+        template<class TrackingData>
+        void hitPatch
+        (
+            const polyPatch&,
+            TrackingData& td
+        );
+
+        //- Transform the position the particle
+        //  according to the given transformation tensor
+        void transformPosition(const tensor& T);
+
+        //- Transform the physical properties of the particle
+        //  according to the given transformation tensor
+        void transformProperties(const tensor& T);
+
+        //- Transform the physical properties of the particle
+        //  according to the given separation vector
+        void transformProperties(const vector& separation);
+
         //- Convert global addressing to the processor patch
         //  local equivalents
-        void prepareForParallelTransfer
-        (
-            const label patchi,
-            const label facei
-        );
+        template<class TrackingData>
+        void prepareForParallelTransfer(const label patchi, TrackingData& td);
 
         //- Convert processor patch addressing to the global equivalents
         //  and set the celli to the face-neighbour
-        void correctAfterParallelTransfer
-        (
-            const label patchi,
-            const label facei
-        );
+        template<class TrackingData>
+        void correctAfterParallelTransfer(const label patchi, TrackingData& td);
 
 
 public:
@@ -165,8 +229,27 @@ public:
         particle
         (
             const Cloud<particleType>&,
-            Istream&
+            Istream&,
+            bool readFields = true
         );
+
+        //- Factory class to read-construct particles used for parallel transfer
+        class iNew
+        {
+            const Cloud<particleType>& cloud_;
+
+        public:
+
+            iNew(const Cloud<particleType>& cloud)
+            :
+                cloud_(cloud)
+            {}
+
+            autoPtr<particleType> operator()(Istream& is) const
+            {
+                return autoPtr<particleType>(new particleType(cloud_, is));
+            }
+        };
 
 
     // Destructor
@@ -187,7 +270,7 @@ public:
             (
                 const vector& position,
                 const label celli,
-                const scalar fraction
+                const scalar stepFraction
             );
 
             //- Return current particle position
@@ -196,8 +279,14 @@ public:
             //- Return current cell particle is in
             inline label cell() const;
 
+            //- Return current face particle is on otherwise -1
+            inline label face() const;
+
             //- Return reference to the particle cloud
             inline const Cloud<particleType>& cloud() const;
+
+            //- Return the impact model to be used, soft or hard (default).
+            inline bool softImpact() const;
 
 
         // Check
@@ -212,48 +301,50 @@ public:
             inline label patchFace(const label patchi, const label facei) const;
     
             //- The nearest distance to a wall that 
-            // the particle can be in the n direction
-            virtual scalar wallImpactDistance(const vector& n) const;
+            //  the particle can be in the n direction
+            inline scalar wallImpactDistance(const vector& n) const;
+
+            //- Return the fraction of time-step completed
+            inline scalar& stepFraction();
+
+            //-  Return the fraction of time-step completed
+            inline scalar stepFraction() const;
 
 
         // Track
 
             //- Track particle to end of trajectory
-            //  or until it hits the boundary,
-            // on entry 'fraction' is the fraction of the integration step
-            // at which the tracking starts (only used for moving meshes)
-            // and on exit it contains the fraction of the traveled trajectory
+            //  or until it hits the boundary.
+            //  On entry 'stepFraction()' should be set to the fraction of the
+            //  time-step at which the tracking starts and on exit it contains
+            //  the fraction of the time-step completed.
+            //  Returns the boundary face index if the track stops at the
+            //  boundary, -1 otherwise.
+            template<class TrackingData>
             label track
             (
                 const vector& endPosition,
-                scalar& fraction,
-                const bool softAlgorithm = false
+                TrackingData& td
             );
 
-            //- Track particle to a given position
-            // If particle reaches that position without hitting a face
-            // we return -1, otherwise track to face and return face index
-            // on entry 'fraction' is the fraction of the integration step
-            // at which the tracking starts (only used for moving meshes)
-            // upon exit fraction contains the fraction of the actual
-            // distance moved
-            label trackToFace
+            //- Calls the templated track with dummy TrackingData
+            label track(const vector& endPosition);
+
+            //- Track particle to a given position and returns 1.0 if the 
+            //  trajectory is completed without hitting a face otherwise
+            //  stops at the face and returns the fraction of the trajectory
+            //  completed.
+            //  on entry 'stepFraction()' should be set to the fraction of the
+            //  time-step at which the tracking starts.
+            template<class TrackingData>
+            scalar trackToFace
             (
                 const vector& endPosition,
-                scalar& fraction,
-                const bool softAlgorithm = false
+                TrackingData& td
             );
 
-
-        // Particle operations
-
-            //- Transform the position the particle
-            //  according to the given transformation tensor
-            void transformPosition(const tensor& T);
-
-            //- Transform the physical properties of the particle
-            //  according to the given transformation tensor
-            virtual void transformProperties(const tensor& T);
+            //- calls the templated trackToFace with dummy TrackingData
+            scalar trackToFace(const vector& endPosition);
 
 
     // Ostream Operator

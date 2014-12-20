@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -140,7 +140,7 @@ FieldField<Field, Type>::FieldField
 {
     forAll(*this, i)
     {
-        hook(Field<Type>::New(type, ff[i]));
+        set(i, Field<Type>::New(type, ff[i]));
     }
 }
 
@@ -197,7 +197,8 @@ tmp<FieldField<Field, Type> > FieldField<Field, Type>::clone() const
     return tmp<FieldField<Field, Type> >(new FieldField<Field, Type>(*this));
 }
 
-/*
+
+#ifndef __INTEL_COMPILER
 template<template<class> class Field, class Type>
 template<class Type2>
 tmp<FieldField<Field, Type> > FieldField<Field, Type>::NewCalculatedType
@@ -205,16 +206,20 @@ tmp<FieldField<Field, Type> > FieldField<Field, Type>::NewCalculatedType
     const FieldField<Field, Type2>& ff
 )
 {
-    FieldField<Field, Type>* nffPtr(new FieldField<Field, Type>(ff.size()));
+    FieldField<Field, Type>* nffPtr
+    (
+        new FieldField<Field, Type>(ff.size())
+    );
 
     forAll(*nffPtr, i)
-    {
-        nffPtr->hook(Field<Type>::NewCalculatedType(ff[i]));
+    { 
+        nffPtr->set(i, Field<Type>::NewCalculatedType(ff[i]).ptr());
     }
 
     return tmp<FieldField<Field, Type> >(nffPtr);
 }
-*/
+#endif
+
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 

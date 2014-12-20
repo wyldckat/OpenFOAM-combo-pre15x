@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,22 +33,17 @@ Description
     opposite directions.  This is achieved by calling the reverseFace
     function in the decomposition.  It is therefore possible to
     re-create the ordering of patch points on the slave side by
-    reversing all the patch faces of the owner.  Warning: this will
-    work only with the FOAM parallel decomposition tools - enforce the
-    same in all other decomposition tools.
-    
+    reversing all the patch faces of the owner.
 
 SourceFiles
     processorPointPatch.C
-    calcProcessorPointPatchAddr.C
-    calcProcessorPointPatchPointAddr.C
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef processorPointPatch_H
 #define processorPointPatch_H
 
-#include "facePointPatch.H"
+#include "coupledFacePointPatch.H"
 #include "processorPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -62,20 +57,11 @@ namespace Foam
 
 class processorPointPatch
 :
-    public facePointPatch
+    public coupledFacePointPatch
 {
     // Private data
 
         const processorPolyPatch& procPolyPatch_;
-
-
-        // Calculation of point addressing is based on the master
-        // patch.  
-
-    // Demand driven private data
-
-        //- Mesh points
-        mutable labelList* meshPointsPtr_;
 
 
     // Private Member Functions
@@ -90,11 +76,12 @@ class processorPointPatch
         // Construction of demand-driven data
 
             //- Calculate mesh points
-            void calcMeshPoints() const;
+            virtual void calcMeshPoints() const;
 
 
 public:
 
+    typedef coupledPointPatch CoupledPointPatch;
     typedef pointBoundaryMesh BoundaryMesh;
 
 
@@ -118,12 +105,6 @@ public:
 
 
     // Member functions
-
-        //- Return size
-        virtual label size() const
-        {
-            return meshPoints().size();
-        }
 
         //- Return true if running parallel
         virtual bool coupled() const
@@ -162,53 +143,11 @@ public:
             return !isMaster();
         }
 
-        // Access functions for demand driven data
-
-            //- Return mesh points
-            virtual const labelList& meshPoints() const;
-
-            //- Return pointField of points in patch.  Not impelemented.
-            virtual const pointField& localPoints() const;
-
-            //- Return point unit normals.  Not impelemented.
-            virtual const vectorField& pointNormals() const;
-
-            //- Return list of edge indices for edges local to the patch
-            //  (i.e. connecting points within the patch)
-            virtual const labelList& localEdgeIndices() const;
-
-            //- Return list of edge indices for cut edges
-            //  (i.e. connecting points within the patch ot points outside it)
-            virtual const labelList& cutEdgeIndices() const;
-
-
-            // Cut edge addressing
-
-                //- Return cut edge owner edge indices
-                const labelList& cutEdgeOwnerIndices() const;
-
-                //- Return cut edge owner edge starts
-                const labelList& cutEdgeOwnerStart() const;
-
-                //- Return cut edge neighbour edge indices
-                const labelList& cutEdgeNeighbourIndices() const;
-
-                //- Return cut edge neighbour edge starts
-                const labelList& cutEdgeNeighbourStart() const;
-
-                //- Return doubly cut edge indices
-                const labelList& doubleCutEdgeIndices() const;
-
-               //- Return doubly cut edge owner addressing
-               //  into current patch
-               const labelList& doubleCutOwner() const;
-
-               //- Return doubly cut edge neighbour addressing
-               //  into current patch
-               const labelList& doubleCutNeighbour() const;
-
-              //- Return cut edge multiplication mask
-              const scalarField& ownNeiDoubleMask() const;
+        //- Return the underlying processorPolyPatch
+        const processorPolyPatch& procPolyPatch() const
+        {
+            return procPolyPatch_;
+        }
 };
 
 

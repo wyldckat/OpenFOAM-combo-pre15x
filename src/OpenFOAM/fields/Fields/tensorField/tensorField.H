@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,7 +38,11 @@ SourceFiles
 
 #include "scalarField.H"
 #include "vectorField.H"
+#include "sphericalTensorField.H"
+#include "symmTensorField.H"
 #include "tensor.H"
+
+#define TEMPLATE
 #include "FieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,19 +54,26 @@ typedef Field<tensor> tensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-UNARY_FUNCTION_N(scalar, tensor, tr)
-UNARY_FUNCTION_R(tensor, tensor, dev)
-UNARY_FUNCTION_R(tensor, tensor, dev2)
-UNARY_FUNCTION_N(scalar, tensor, det)
-UNARY_FUNCTION_R(tensor, tensor, inv)
-UNARY_FUNCTION_R(tensor, tensor, hinv)
-UNARY_FUNCTION_R(tensor, tensor, symm)
-UNARY_FUNCTION_R(tensor, tensor, skew)
-UNARY_FUNCTION_N(vector, tensor, eigenValues)
-UNARY_FUNCTION_R(tensor, tensor, eigenVectors)
+UNARY_FUNCTION(scalar, tensor, tr)
+UNARY_FUNCTION(sphericalTensor, tensor, sph)
+UNARY_FUNCTION(symmTensor, tensor, symm)
+UNARY_FUNCTION(symmTensor, tensor, twoSymm)
+UNARY_FUNCTION(tensor, tensor, skew)
+UNARY_FUNCTION(tensor, tensor, dev)
+UNARY_FUNCTION(tensor, tensor, dev2)
+UNARY_FUNCTION(scalar, tensor, det)
+UNARY_FUNCTION(tensor, tensor, inv)
+UNARY_FUNCTION(vector, tensor, eigenValues)
+UNARY_FUNCTION(tensor, tensor, eigenVectors)
 
-UNARY_OPERATOR_N(vector, tensor, *, hdual)
-UNARY_OPERATOR_N(tensor, vector, *, hdual)
+UNARY_FUNCTION(vector, symmTensor, eigenValues)
+UNARY_FUNCTION(tensor, symmTensor, eigenVectors)
+
+
+// * * * * * * * * * * * * * * * global operators  * * * * * * * * * * * * * //
+
+UNARY_OPERATOR(vector, tensor, *, hdual)
+UNARY_OPERATOR(tensor, vector, *, hdual)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

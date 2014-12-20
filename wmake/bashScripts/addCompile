@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -65,7 +65,7 @@ then
 
     echo '$(CLASSES_DIR)/'$sourceDir/$className': $(EXE_DEP)' >> $depName
     echo '$(CLASSES_DIR)/'$sourceDir/$className':' >> $depName
-    echo '	SOURCE_DIR='$sourceDir '\' >> $depName
+    echo '	@SOURCE_DIR='$sourceDir '\' >> $depName
     echo '	SOURCE='$1' ; $('$sub'toclass)' >> $depName
 
 else
@@ -76,7 +76,7 @@ else
 
     echo '$(OBJECTS_DIR)/'$objectName': $(EXE_DEP)' >> $depName
     echo '$(OBJECTS_DIR)/'$objectName':' >> $depName
-    echo '	SOURCE_DIR='$sourceDir >> $depName
+    echo '	@SOURCE_DIR='$sourceDir >> $depName
     echo '	SOURCE='$1' ; $('$sub'too)' >> $depName
 
 fi

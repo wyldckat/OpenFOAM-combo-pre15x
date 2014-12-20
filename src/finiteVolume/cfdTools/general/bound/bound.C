@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,10 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Bound the given scalar field if it has gone unbounded.  Used extensively
-    in RAS and LES turbulence models.
-
 \*---------------------------------------------------------------------------*/
 
 #include "bound.H"
@@ -36,7 +32,7 @@ Description
 
 void Foam::bound(volScalarField& vsf, const dimensionedScalar& vsf0)
 {
-    if (gMin(vsf.internalField()) < VSMALL)
+    if (min(vsf).value() < vsf0.value())
     {
         Info<< "bounding " << vsf.name()
             << ", min: " << gMin(vsf.internalField())

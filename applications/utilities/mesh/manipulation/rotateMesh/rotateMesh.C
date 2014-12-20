@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anispulation  |
 -------------------------------------------------------------------------------
 License
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
     vector n2(IStringStream(args.args()[4])());
     n2 /= mag(n2);
 
-    tensor T = transformationTensor(n1, n2);
+    tensor T = rotationTensor(n1, n2);
 
     {
         pointIOField points
@@ -125,9 +125,13 @@ int main(int argc, char *argv[])
         IOobjectList objects(mesh, runTime.timeName());
 
         RotateFields<volVectorField>(mesh, objects, T);
+        RotateFields<volSphericalTensorField>(mesh, objects, T);
+        RotateFields<volSymmTensorField>(mesh, objects, T);
         RotateFields<volTensorField>(mesh, objects, T);
 
         RotateFields<surfaceVectorField>(mesh, objects, T);
+        RotateFields<surfaceSphericalTensorField>(mesh, objects, T);
+        RotateFields<surfaceSymmTensorField>(mesh, objects, T);
         RotateFields<surfaceTensorField>(mesh, objects, T);
     }
 

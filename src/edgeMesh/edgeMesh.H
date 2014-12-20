@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,6 +26,7 @@ Class
     edgeMesh
 
 Description
+    points connected by edges.
 
 SourceFiles
     edgeMeshI.H
@@ -59,10 +60,20 @@ class edgeMesh
         //- The edges defining the boundary
         edgeList edges_;
 
+        //- From point to edges
+        mutable autoPtr<labelListList> pointEdgesPtr_;
+
+    // Private Member Functions
+
+        //- Calculate point-edge addressing (inverse of edges)
+        void calcPointEdges() const;
 
 public:
 
     // Constructors
+
+        //- Construct from components
+        edgeMesh(const pointField&, const edgeList&);
 
         //- Construct from file
         edgeMesh(const fileName&);
@@ -70,26 +81,34 @@ public:
         //- Construct from Istream
         edgeMesh(Istream&);
 
+        //- Construct as copy
+        edgeMesh(const edgeMesh&);
+
+
 
     // Member Functions
 
-        // Access
+        inline const pointField& points() const;
 
-            inline const pointField& points() const;
+        inline const edgeList& edges() const;
 
-            inline const edgeList& edges() const;
+        inline const labelListList& pointEdges() const;
 
+        //- Find connected regions. Set region number per edge.
+        //  Returns number of regions.
+        label regions(labelList& edgeRegion) const;
 
-        // Check
+        //- Merge common points (points within mergeDist)
+        void mergePoints(const scalar mergeDist);
 
-        // Edit
+    // Member Operators
 
-        // Write
-
+        inline void operator=(const edgeMesh&);
 
     // Ostream Operator
 
         friend Ostream& operator<<(Ostream&, const edgeMesh&);
+        friend Istream& operator>>(Istream&, edgeMesh&);
 };
 
 

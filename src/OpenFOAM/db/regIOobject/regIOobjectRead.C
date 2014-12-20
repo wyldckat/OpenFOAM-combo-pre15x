@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,13 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "regIOobject.H"
 #include "IFstream.H"
 #include "Time.H"
+#include "PstreamReduceOps.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -81,7 +80,7 @@ Istream& regIOobject::readStream()
 
     if (!lastModified_)
     {
-        lastModified_ = lastModified(objectPath());
+        lastModified_ = lastModified(filePath());
     }
 
     return *isPtr_;
@@ -131,7 +130,7 @@ void regIOobject::close()
     if (IFstream::debug)
     {
         Info<< "regIOobject::close() : "
-            << "finished reading " << objectPath()
+            << "finished reading " << filePath()
             << endl;
     }
 
@@ -157,26 +156,62 @@ bool regIOobject::read()
 }
 
 
+bool regIOobject::modified() const
+{
+    return
+    (
+        lastModified_
+     && lastModified(filePath()) > (lastModified_ + fileModificationSkew)
+    );
+}
+
+
 bool regIOobject::readIfModified()
 {
-    bool modified = false;
-
     if (lastModified_)
     {
-        time_t newTimeStamp = lastModified(objectPath());
+        time_t newTimeStamp = lastModified(filePath());
 
-        if (newTimeStamp > lastModified_ + fileModificationSkew)
+        bool readFile = false;
+
+        if (newTimeStamp > (lastModified_ + fileModificationSkew))
+        {
+            readFile = true;
+        }
+
+        if (Pstream::parRun())
+        {
+            bool readFileOnThisProc = readFile;
+            reduce(readFile, andOp<bool>());
+
+            if (readFileOnThisProc && !readFile)
+            {
+                WarningIn("regIOobject::readIfModified()")
+                    << "Delaying reading " << name()
+                    << " of class " << headerClassName()
+                    << " due to inconsistent "
+                       "file time-stamps between processors"
+                    << endl;
+            }
+        }
+
+        if (readFile)
         {
             lastModified_ = newTimeStamp;
-            modified = read();
+            Info<< "regIOobject::readIfModified() : " << nl
+                << "    Reading object " << name()
+                << " from file " << filePath() << endl;
+            return read();
         }
         else
         {
-            modified = false;
+            return false;
         }
     }
-
-    return modified;
+    else
+    {
+        return false;
+    }
 }
 
 

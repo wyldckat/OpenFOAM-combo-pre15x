@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,18 +22,11 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-inline void fileName::stripInvalid()
+inline void Foam::fileName::stripInvalid()
 {
     if (debug && string::stripInvalid<fileName>(*this))
     {
@@ -45,29 +38,32 @@ inline void fileName::stripInvalid()
         {
             std::abort();
         }
+
+        removeRepeated('/');
+        removeTrailing('/');
     }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-inline fileName::fileName()
+inline Foam::fileName::fileName()
 :
     string()
 {}
 
-inline fileName::fileName(const fileName& fn)
+inline Foam::fileName::fileName(const fileName& fn)
 :
     string(fn)
 {}
 
-inline fileName::fileName(const word& w)
+inline Foam::fileName::fileName(const word& w)
 :
     string(w)
 {}
 
 
-inline fileName::fileName(const string& str)
+inline Foam::fileName::fileName(const string& str)
 :
     string(str)
 {
@@ -75,7 +71,7 @@ inline fileName::fileName(const string& str)
 }
 
 
-inline fileName::fileName(const std::string& stdStr)
+inline Foam::fileName::fileName(const std::string& stdStr)
 :
     string(stdStr)
 {
@@ -83,7 +79,7 @@ inline fileName::fileName(const std::string& stdStr)
 }
 
 
-inline fileName::fileName(const char* chars)
+inline Foam::fileName::fileName(const char* chars)
 :
     string(chars)
 {
@@ -93,14 +89,10 @@ inline fileName::fileName(const char* chars)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-inline bool fileName::valid(char c)
+inline bool Foam::fileName::valid(char c)
 {
     return(!isspace(c) && c != '"');
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

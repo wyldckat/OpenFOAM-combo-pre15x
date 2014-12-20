@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,6 +38,8 @@ namespace Foam
 
 defineTemplateRunTimeSelectionTable(interpolation<scalar>, dictionary);
 defineTemplateRunTimeSelectionTable(interpolation<vector>, dictionary);
+defineTemplateRunTimeSelectionTable(interpolation<sphericalTensor>, dictionary);
+defineTemplateRunTimeSelectionTable(interpolation<symmTensor>, dictionary);
 defineTemplateRunTimeSelectionTable(interpolation<tensor>, dictionary);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

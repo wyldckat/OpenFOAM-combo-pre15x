@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,20 +45,31 @@ boundBox::boundBox(const pointField& points, const bool doReduce)
 {
     if (points.size() == 0)
     {
-        WarningIn("boundBox::boundBox(const pointField& points)")
-            << "cannot find bounding box for zero sized pointField"
-            << "returning zero" << endl;
+        if (Pstream::parRun() && doReduce)
+        {
+            // Use values which get overwritten by reduce minOp,maxOp below
+            min_ = point(VGREAT, VGREAT, VGREAT);
+            max_ = point(-VGREAT, -VGREAT, -VGREAT);
+        }
+        else
+        {
+            WarningIn("boundBox::boundBox(const pointField& points)")
+                << "cannot find bounding box for zero sized pointField"
+                << "returning zero" << endl;
 
-        return;
+            return;
+        }
     }
-
-    min_ = points[0];
-    max_ = points[0];
-
-    forAll(points, i)
+    else
     {
-        min_ = ::Foam::min(min_, points[i]);
-        max_ = ::Foam::max(max_, points[i]);
+        min_ = points[0];
+        max_ = points[0];
+
+        forAll(points, i)
+        {
+            min_ = ::Foam::min(min_, points[i]);
+            max_ = ::Foam::max(max_, points[i]);
+        }
     }
 
     if (doReduce)

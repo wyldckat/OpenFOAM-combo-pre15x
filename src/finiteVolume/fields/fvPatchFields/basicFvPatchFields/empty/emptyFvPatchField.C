@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -102,6 +102,16 @@ emptyFvPatchField<Type>::emptyFvPatchField
             << exit(FatalIOError);
     }
 }
+
+
+template<class Type>
+emptyFvPatchField<Type>::emptyFvPatchField
+(
+    const emptyFvPatchField<Type>& ptf
+)
+:
+    fvPatchField<Type>(ptf.patch(), ptf.internalField(), Field<Type>(0))
+{}
 
 
 template<class Type>

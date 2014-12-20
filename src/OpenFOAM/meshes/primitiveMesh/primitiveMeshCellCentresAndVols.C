@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,7 +32,6 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "primitiveMesh.H"
-//#include "IFstream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -97,59 +96,59 @@ void primitiveMesh::makeCellCentresAndVols
     // first estimate the approximate cell centre as the average of face centres
 
     vectorField cEst(nCells(), vector::zero);
-    scalarField nCellFaces(nCells(), 0.0);
+    labelField nCellFaces(nCells(), 0);
 
-    forAll (own, faceI)
+    forAll (own, facei)
     {
-        cEst[own[faceI]] += fCtrs[faceI];
-        nCellFaces[own[faceI]] += 1;
+        cEst[own[facei]] += fCtrs[facei];
+        nCellFaces[own[facei]] += 1;
     }
 
-    forAll (nei, faceI)
+    forAll (nei, facei)
     {
-        cEst[nei[faceI]] += fCtrs[faceI];
-        nCellFaces[nei[faceI]] += 1;
+        cEst[nei[facei]] += fCtrs[facei];
+        nCellFaces[nei[facei]] += 1;
     }
 
-    cEst /= nCellFaces;
+    forAll(cEst, celli)
+    {
+        cEst[celli] /= nCellFaces[celli];
+    }
 
-    forAll (own, faceI)
+    forAll (own, facei)
     {
         // Calculate 3*face-pyramid volume
         scalar pyr3Vol =
-            max(fAreas[faceI] & (fCtrs[faceI] - cEst[own[faceI]]), VSMALL);
+            max(fAreas[facei] & (fCtrs[facei] - cEst[own[facei]]), VSMALL);
 
         // Calculate face-pyramid centre
-        vector pc = (3.0/4.0)*fCtrs[faceI] + (1.0/4.0)*cEst[own[faceI]];
+        vector pc = (3.0/4.0)*fCtrs[facei] + (1.0/4.0)*cEst[own[facei]];
 
         // Accumulate volume-weighted face-pyramid centre
-        cellCtrs[own[faceI]] += pyr3Vol*pc;
+        cellCtrs[own[facei]] += pyr3Vol*pc;
 
         // Accumulate face-pyramid volume
-        cellVols[own[faceI]] += pyr3Vol;
+        cellVols[own[facei]] += pyr3Vol;
     }
 
-    forAll (nei, faceI)
+    forAll (nei, facei)
     {
         // Calculate 3*face-pyramid volume
         scalar pyr3Vol =
-            max(fAreas[faceI] & (cEst[nei[faceI]] - fCtrs[faceI]), VSMALL);
+            max(fAreas[facei] & (cEst[nei[facei]] - fCtrs[facei]), VSMALL);
 
         // Calculate face-pyramid centre
-        vector pc = (3.0/4.0)*fCtrs[faceI] + (1.0/4.0)*cEst[nei[faceI]];
+        vector pc = (3.0/4.0)*fCtrs[facei] + (1.0/4.0)*cEst[nei[facei]];
 
         // Accumulate volume-weighted face-pyramid centre
-        cellCtrs[nei[faceI]] += pyr3Vol*pc;
+        cellCtrs[nei[facei]] += pyr3Vol*pc;
 
         // Accumulate face-pyramid volume
-        cellVols[nei[faceI]] += pyr3Vol;
+        cellVols[nei[facei]] += pyr3Vol;
     }
 
     cellCtrs /= cellVols;
     cellVols *= (1.0/3.0);
-
-    //vectorField p(IFstream("points")());
-    //cellCtrs = p;
 }
 
 

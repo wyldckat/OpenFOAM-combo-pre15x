@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -143,7 +143,7 @@ Foam::mirrorFvMesh::mirrorFvMesh(const IOobject& io)
     // Distribute internal faces
     labelListList newCellFaces(oldCells.size());
 
-    const unallocLabelList& oldOwnerStart = ldu().ownerStartAddr();
+    const unallocLabelList& oldOwnerStart = lduAddr().ownerStartAddr();
 
     forAll (newCellFaces, cellI)
     {
@@ -173,7 +173,7 @@ Foam::mirrorFvMesh::mirrorFvMesh(const IOobject& io)
         curInsBouFace = false;
 
         // Get faceCells for face insertion
-        const labelList::subList curFaceCells = curPatch.faceCells();
+        const unallocLabelList& curFaceCells = curPatch.faceCells();
         const label curStart = curPatch.start();
 
         forAll (curPatch, faceI)

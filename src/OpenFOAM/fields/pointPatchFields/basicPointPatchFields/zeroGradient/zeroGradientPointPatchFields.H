@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -46,14 +46,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-typedef ZeroGradientPointPatchField<pointPatchField, pointPatch, scalar>
-    zeroGradientPointPatchScalarField;
-
-typedef ZeroGradientPointPatchField<pointPatchField, pointPatch, vector>
-    zeroGradientPointPatchVectorField;
-
-typedef ZeroGradientPointPatchField<pointPatchField, pointPatch, tensor>
-    zeroGradientPointPatchTensorField;
+makePointPatchFieldTypedefs(zeroGradient, ZeroGradient, pointPatch, PointPatch);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

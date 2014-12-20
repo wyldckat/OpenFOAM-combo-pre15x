@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -172,8 +172,6 @@ Foam::faceMapper::faceMapper(const mapPolyMesh& mpm)
     weightsPtr_(NULL),
     insertedFaceLabelsPtr_(NULL)
 {
-    const label minFaceMap = min(mpm_.faceMap());
-
     // Check for possibility of direct mapping
     if
     (
@@ -189,7 +187,7 @@ Foam::faceMapper::faceMapper(const mapPolyMesh& mpm)
     }
 
     // Check for inserted faces
-    if (direct_ && minFaceMap > -1 && mpm_.faceMap().size() == mesh_.nFaces())
+    if (direct_ && (mpm_.faceMap().size() == 0 || min(mpm_.faceMap()) > -1))
     {
         insertedFaces_ = false;
     }

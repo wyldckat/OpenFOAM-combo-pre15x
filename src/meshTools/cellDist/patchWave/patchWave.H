@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ Class
     patchWave
 
 Description
-    Takes a set of patches to start meshWave from. After construction holds
+    Takes a set of patches to start MeshWave from. After construction holds
     distance at cells and distance at patches. Is e.g. used by wallDist to
     construct volScalarField with correct distance to wall.
 
@@ -50,7 +50,7 @@ namespace Foam
 // Class forward declarations
 class polyMesh;
 class wallPoint;
-template<class Type> class meshWave;
+template<class Type> class MeshWave;
 
 /*---------------------------------------------------------------------------*\
                            Class patchWave Declaration
@@ -68,7 +68,7 @@ class patchWave
         //- Do accurate distance calculation for near-wall cells.
         bool correctWalls_;
 
-        //- Number of cells/faces unset after meshWave has finished
+        //- Number of cells/faces unset after MeshWave has finished
         label nUnset_;
 
         //- Distance at cell centres
@@ -90,9 +90,9 @@ class patchWave
             List<wallPoint>& changedInfo
         ) const;
 
-        //- Copy meshWave cell values. Return number of illegal/unset
+        //- Copy MeshWave cell values. Return number of illegal/unset
         //  cells.
-        label getValues(const meshWave<wallPoint>&);
+        label getValues(const MeshWave<wallPoint>&);
 
 
 public:

@@ -1,6 +1,6 @@
 .SUFFIXES: .C .cxx .cc .cpp
 
-c++WARN     = -Wall -W -Wno-unused-parameter
+c++WARN     = -Wall -Wno-strict-aliasing -Wextra -Wno-unused-parameter
 
 CC          = g++
 
@@ -10,7 +10,7 @@ ptFLAGS     = -DNoRepository -ftemplate-depth-30
 
 c++FLAGS    = $(GFLAGS) $(c++WARN) $(c++OPT) $(c++DBUG) $(ptFLAGS) $(LIB_HEADER_DIRS) -fPIC
 
-Ctoo        = $(CC) $(c++FLAGS) -c $$SOURCE -o $@
+Ctoo        = $(WM_SCHEDULER) $(CC) $(c++FLAGS) -c $$SOURCE -o $@
 cxxtoo      = $(Ctoo)
 cctoo       = $(Ctoo)
 cpptoo      = $(Ctoo)

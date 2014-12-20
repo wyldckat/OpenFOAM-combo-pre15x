@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -51,6 +51,8 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
+    argList::noParallel();
+
 #   include "addOptions.H"
 #   include "setRootCase.H"
 #   include "createTime.H"
@@ -100,7 +102,7 @@ int main(int argc, char *argv[])
     if (!meshDescriptionIOobject.headerOk())
     {
         FatalErrorIn(args.executable())
-            << "Cannot find mesh description file " << nl
+            << "Cannot open mesh description file " << nl
             << runTime.constant()/"polyMesh"/"blockMeshDict" << " or " << nl
             << runTime.constant()/"polyMesh"/"meshDescription" << " or " << nl
             << runTime.constant()/"mesh"/"meshDescription"
@@ -281,8 +283,9 @@ int main(int argc, char *argv[])
                 );
 
                 // Add the sliding interface mesh modifier
-                polyMeshAttacher.hook
+                polyMeshAttacher.set
                 (
+                    pairI,
                     new slidingInterface
                     (
                         "couple" + name(pairI),

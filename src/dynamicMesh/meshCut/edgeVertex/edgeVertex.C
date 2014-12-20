@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -191,32 +191,43 @@ void Foam::edgeVertex::updateLabels
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::point Foam::edgeVertex::coord(const label cut, const scalar weight) const
+Foam::point Foam::edgeVertex::coord
+(
+    const primitiveMesh& mesh,
+    const label cut,
+    const scalar weight
+)
 {
-    const pointField& pts = mesh().points();
+    const pointField& pts = mesh.points();
 
-    if (isEdge(cut))
+    if (isEdge(mesh, cut))
     {
-        const edge& e = mesh().edges()[getEdge(cut)];
+        const edge& e = mesh.edges()[getEdge(mesh, cut)];
 
         return weight*pts[e.end()] + (1-weight)*pts[e.start()];
     }
     else
     {
-        return pts[getVertex(cut)];
+        return pts[getVertex(mesh, cut)];
     }
 }
 
 
 Foam::label Foam::edgeVertex::cutPairToEdge
 (
+    const primitiveMesh& mesh,
     const label cut0,
     const label cut1
-) const
+)
 {
-    if (!isEdge(cut0) && !isEdge(cut1))
+    if (!isEdge(mesh, cut0) && !isEdge(mesh, cut1))
     {
-        return meshTools::findEdge(mesh(), getVertex(cut0), getVertex(cut1));
+        return meshTools::findEdge
+        (
+            mesh,
+            getVertex(mesh, cut0),
+            getVertex(mesh, cut1)
+        );
     }
     else
     {

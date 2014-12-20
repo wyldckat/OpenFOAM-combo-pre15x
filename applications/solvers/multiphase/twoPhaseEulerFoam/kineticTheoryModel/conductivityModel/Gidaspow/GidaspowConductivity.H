@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,9 +28,7 @@ Class
 Description
 
 SourceFiles
-    GidaspowConductivityI.H
     GidaspowConductivity.C
-    GidaspowConductivityIO.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -58,8 +56,8 @@ public:
         //- Runtime type information
         TypeName("Gidaspow");
 
-    // Constructors
 
+    // Constructors
 
         //- Construct from components
         GidaspowConductivity(const dictionary& dict);
@@ -69,7 +67,10 @@ public:
 
         ~GidaspowConductivity();
 
-        volScalarField kappa
+
+    // Member Functions
+
+        tmp<volScalarField> kappa
         (
             const volScalarField& alpha,
             const volScalarField& Theta,
@@ -78,17 +79,12 @@ public:
             const dimensionedScalar& da,
             const dimensionedScalar& e
         ) const;
-
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-//#include "GidaspowConductivityI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

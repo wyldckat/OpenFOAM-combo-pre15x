@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,7 @@ Description
 #include "argList.H"
 #include "Time.H"
 #include "polyMesh.H"
-#include "parallelInfo.H"
+#include "globalMeshData.H"
 #include "topoSetSource.H"
 #include "topoSet.H"
 #include "IStringStream.H"
@@ -284,7 +284,7 @@ bool doCommand
 )
 {
     // Get some size estimate for set.
-    const parallelInfo& parData = mesh.parallelData();
+    const globalMeshData& parData = mesh.globalData();
 
     label typSize = 
         max

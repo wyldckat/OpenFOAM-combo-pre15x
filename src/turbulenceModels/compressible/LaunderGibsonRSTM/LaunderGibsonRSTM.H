@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,7 +80,7 @@ class LaunderGibsonRSTM
 
         wallDistReflection y_;
 
-        volTensorField R_;
+        volSymmTensorField R_;
         volScalarField k_;
         volScalarField epsilon_;
         volScalarField mut_;
@@ -155,7 +155,7 @@ public:
         }
 
 
-        tmp<volTensorField> R() const
+        tmp<volSymmTensorField> R() const
         {
             return R_;
         }

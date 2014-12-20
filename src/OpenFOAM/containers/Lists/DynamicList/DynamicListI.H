@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -87,6 +87,25 @@ inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::setSize
 
 
 template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::setSize
+(
+    const label s,
+    const T& t
+)
+{
+    if (s < nextFree_)
+    {
+        nextFree_ = s;
+    }
+    else
+    {
+        List<T>::setSize(s, t);
+        nextFree_ = s;
+    }
+}
+
+
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
 inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::clear()
 {
     nextFree_ = 0;
@@ -99,6 +118,41 @@ Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::shrink()
 {
     List<T>::setSize(nextFree_);
     return *this;
+}
+
+
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline void
+Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::transfer(List<T>& l)
+{
+    if (l.size() < nextFree_)
+    {
+        FatalErrorIn
+        (
+            "void DynamicList<T, SizeInc, SizeMult"
+            ", SizeDiv>::transfer(List<T>&)"
+        )   << "Cannot replace the underlying storage of this DynamicList"
+            << " of which " << nextFree_ << " elements are used" << nl
+            << "with a List of size " << l.size() << abort(FatalError);
+    }
+    else
+    {
+        List<T>::transfer(l);   // take over storage
+        l.clear();              // set nextFree of l to 0
+    }
+}
+
+
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline void
+Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::transfer
+(
+    DynamicList<T, SizeInc, SizeMult, SizeDiv>& l
+)
+{
+    List<T>::transfer(l);       // take over storage
+    nextFree_ = l.size();       // take over used size
+    l.clear();                  // set nextFree of l to 0
 }
 
 
@@ -160,6 +214,18 @@ inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::operator=
 )
 {
     List<T>::operator=(t);
+    nextFree_ = List<T>::size();
+}
+
+
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::operator=
+(
+    const List<T>& l
+)
+{
+    List<T>::operator=(l);
+    nextFree_ = l.size();
 }
 
 

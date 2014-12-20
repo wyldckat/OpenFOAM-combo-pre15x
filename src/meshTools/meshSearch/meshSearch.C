@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -528,8 +528,7 @@ Foam::label Foam::meshSearch::findCell
                         << " nearCellI:" << nearCellI;
                 }
 
-                scalar frac = 0.0;
-                label facei = tracker.track(location, frac);
+                tracker.track(location);
 
                 if (debug)
                 {
@@ -537,7 +536,7 @@ Foam::label Foam::meshSearch::findCell
                         << " need:" << location
                         << " onB:" << tracker.onBoundary()
                         << " cell:" << tracker.cell()
-                        << " face:" << facei << endl;
+                        << " face:" << tracker.face() << endl;
                 }
 
                 if (!tracker.onBoundary())
@@ -547,7 +546,7 @@ Foam::label Foam::meshSearch::findCell
                 }
 
                 // stopped on boundary face. Compare positions
-                scalar typDim = sqrt(mag(mesh_.faceAreas()[facei]));
+                scalar typDim = sqrt(mag(mesh_.faceAreas()[tracker.face()]));
 
                 if ((mag(tracker.position() - location)/typDim) < SMALL)
                 {
@@ -560,7 +559,7 @@ Foam::label Foam::meshSearch::findCell
 
                 curPoint =
                     tracker.position()
-                  + offset(tracker.position(), facei, edgeVec);
+                  + offset(tracker.position(), tracker.face(), edgeVec);
 
                 if (debug)
                 {

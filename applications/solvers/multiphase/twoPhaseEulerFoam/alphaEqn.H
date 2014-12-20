@@ -35,6 +35,8 @@
         alphaEqn.relax();
         alphaEqn.solve();
 
+#       include "packingLimiter.H"
+
         beta = scalar(1) - alpha;
 
         Info<< "Dispersed phase volume fraction = "

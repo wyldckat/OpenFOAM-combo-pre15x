@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -127,16 +127,22 @@ public:
 
         // Edit
 
-            //- Return and remove head
+            //- Remove and return head
             T* removeHead()
             {
                 return static_cast<T*>(LListBase::removeHead());
             }
 
-            //- Return and remove element
+            //- Remove and return element
             T* remove(T* p)
             {
                 return static_cast<T*>(LListBase::remove(p));
+            }
+
+            //- Remove and return specified by iterator
+            T* remove(iterator& it)
+            {
+                return static_cast<T*>(LListBase::remove(it));
             }
 
 
@@ -253,6 +259,17 @@ public:
                     return *this;
                 }
         };
+
+
+    // STL member operators
+
+        //- Equality operation on ULists of the same type.
+        //  Returns true when the ULists are elementwise equal
+        //  (using UList::value_type::operator==).  Takes linear time.
+        bool operator==(const UILList<LListBase, T>&) const;
+
+        //- The opposite of the equality operation. Takes linear time.
+        bool operator!=(const UILList<LListBase, T>&) const;
 
 
     // Ostream operator

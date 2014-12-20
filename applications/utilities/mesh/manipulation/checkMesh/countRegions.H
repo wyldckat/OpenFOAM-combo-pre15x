@@ -27,8 +27,7 @@
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            rs.cellToRegion()
+            rs
         );
         ctr.write();
     }
-

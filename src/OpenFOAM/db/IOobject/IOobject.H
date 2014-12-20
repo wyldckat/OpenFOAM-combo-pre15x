@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -150,10 +150,6 @@ private:
 protected:
 
     // Protected member functions
-
-        //- Construct and return an IFstream for the given file.
-        //  The results is NULL if the stream constuction failed
-        Istream* objectStream(const fileName&);
 
         //- Construct and return an IFstream for the object.
         //  The results is NULL if the stream constuction failed
@@ -313,6 +309,10 @@ public:
             {
                 return path()/name();
             }
+
+            //- Return complete path + object name if the file exists 
+            //  either in the case/processor or case otherwise null
+            fileName filePath() const;
 
 
         // Reading

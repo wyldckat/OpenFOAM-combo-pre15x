@@ -41,6 +41,9 @@
                         << '\t' << pp.nPoints()
                         << "\tok (closed singly connected surface)" << endl;
                 }
+
+                // Add points on non-manifold edges to make set complete
+                pp.checkTopology(false, &points);
             }
             else
             {

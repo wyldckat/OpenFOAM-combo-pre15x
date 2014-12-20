@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -544,6 +544,10 @@ bool triSurface::read(const fileName& name, const word& ext)
     {
         return readAC(name);
     }
+    else if (ext == "nas")
+    {
+        return readNAS(name);
+    }
     else
     {
         FatalErrorIn
@@ -551,7 +555,7 @@ bool triSurface::read(const fileName& name, const word& ext)
             "triSurface::read(const fileName&, const word&)"
         )   << "unknown file extension " << ext
             << ". Supported extensions are '.ftr', '.stl', '.stlb', '.gts'"
-            << ", '.obj', '.ac', '.off' and '.tri'"
+            << ", '.obj', '.ac', '.off', '.nas' and '.tri'"
             << exit(FatalError);
 
         return false;
@@ -727,10 +731,9 @@ void triSurface::setDefaultPatches()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct null
 triSurface::triSurface()
 :
-    PrimitivePatch<labelledTri, List, pointField>
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>
     (
         List<labelledTri>(0),
         pointField(0)
@@ -742,7 +745,6 @@ triSurface::triSurface()
 
 
 
-// Construct from triangles, patches and points
 triSurface::triSurface
 (
     const List<labelledTri>& triangles,
@@ -750,21 +752,20 @@ triSurface::triSurface
     const pointField& points
 )
 :
-    PrimitivePatch<labelledTri, List, pointField>(triangles, points),
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>(triangles, points),
     patches_(patches),
     sortedEdgeFacesPtr_(NULL),
     edgeOwnerPtr_(NULL)
 {}
 
 
-// Construct from triangles and points
 triSurface::triSurface
 (
     const List<labelledTri>& triangles,
     const pointField& points
 )
 :
-    PrimitivePatch<labelledTri, List, pointField>(triangles, points),
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>(triangles, points),
     patches_(),
     sortedEdgeFacesPtr_(NULL),
     edgeOwnerPtr_(NULL)
@@ -773,14 +774,13 @@ triSurface::triSurface
 }
 
 
-// Construct from triangles and points
 triSurface::triSurface
 (
     const triFaceList& triangles,
     const pointField& points
 )
 :
-    PrimitivePatch<labelledTri, List, pointField>
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>
     (
         convertToTri(triangles, 0),
         points
@@ -793,10 +793,9 @@ triSurface::triSurface
 }
 
 
-// Construct from file name and type
 triSurface::triSurface(const fileName& name)
 :
-    PrimitivePatch<labelledTri, List, pointField>
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>
     (
         List<labelledTri>(0),
         pointField(0)
@@ -813,10 +812,9 @@ triSurface::triSurface(const fileName& name)
 }
 
 
-// Construct from Istream
 triSurface::triSurface(Istream& is)
 :
-    PrimitivePatch<labelledTri, List, pointField>
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>
     (
         List<labelledTri>(0),
         pointField(0)
@@ -831,10 +829,9 @@ triSurface::triSurface(Istream& is)
 }
 
 
-//- Construct from objectRegistry
 triSurface::triSurface(const Time& d)
 :
-    PrimitivePatch<labelledTri, List, pointField>
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>
     (
         List<labelledTri>(0),
         pointField(0)
@@ -855,10 +852,9 @@ triSurface::triSurface(const Time& d)
 }
 
 
-//- Construct as copy
 triSurface::triSurface(const triSurface& ts)
 :
-    PrimitivePatch<labelledTri, List, pointField>(ts, ts.points()),
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>(ts, ts.points()),
     patches_(ts.patches()),
     sortedEdgeFacesPtr_(NULL),
     edgeOwnerPtr_(NULL)
@@ -877,7 +873,7 @@ triSurface::~triSurface()
 
 void triSurface::clearTopology()
 {
-    PrimitivePatch<labelledTri, List, pointField>::clearTopology();
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>::clearTopology();
     deleteDemandDrivenData(sortedEdgeFacesPtr_);
     deleteDemandDrivenData(edgeOwnerPtr_);
 }
@@ -885,13 +881,13 @@ void triSurface::clearTopology()
 
 void triSurface::clearPatchMeshAddr()
 {
-    PrimitivePatch<labelledTri, List, pointField>::clearPatchMeshAddr();
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>::clearPatchMeshAddr();
 }
 
 
 void triSurface::clearOut()
 {
-    PrimitivePatch<labelledTri, List, pointField>::clearOut();
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>::clearOut();
 
     clearTopology();
     clearPatchMeshAddr();
@@ -927,7 +923,7 @@ void triSurface::movePoints(const pointField& newPoints)
     deleteDemandDrivenData(sortedEdgeFacesPtr_);
 
     // Adapt for new point position
-    PrimitivePatch<labelledTri, List, pointField>::movePoints(newPoints);
+    PrimitivePatch<labelledTri, ::Foam::List, pointField>::movePoints(newPoints);
 
     // Copy new points
     const_cast<pointField&>(points()) = newPoints;

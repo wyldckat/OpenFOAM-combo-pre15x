@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,7 +55,8 @@ class emptyFvPatch
 {
     // Private data
 
-        static const vectorField emptyNf_;
+        //- face-cell addressing
+        const labelList::subList faceCells_;
 
 
 public:
@@ -67,22 +68,20 @@ public:
     // Constructors
 
         //- Construct from polyPatch
-        emptyFvPatch(const polyPatch& patch, const fvBoundaryMesh& bm)
-        :
-            fvPatch(patch, bm)
-        {}
+        emptyFvPatch(const polyPatch& patch, const fvBoundaryMesh& bm);
 
 
     // Member Functions
 
-        virtual label size() const
-        {
-            return 0;
-        }
+        // Access
 
-        //- Return face normals. Over-riding base class return to get zero size
-        // 
-        virtual const vectorField& nf() const;
+            virtual label size() const
+            {
+                return 0;
+            }
+
+            //- Return faceCells
+            virtual const unallocLabelList& faceCells() const;
 };
 
 

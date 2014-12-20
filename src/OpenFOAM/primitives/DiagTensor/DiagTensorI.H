@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,6 +23,8 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
+
+#include "SphericalTensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -181,10 +183,10 @@ operator&(const DiagTensor<Cmpt>& dt1, const DiagTensor<Cmpt>& dt2)
 
 //- Inner-product between a diagonal tensor and a tensor
 template <class Cmpt>
-inline DiagTensor<Cmpt>
+inline Tensor<Cmpt>
 operator&(const DiagTensor<Cmpt>& dt1, const Tensor<Cmpt>& t2)
 {
-    return DiagTensor<Cmpt>
+    return Tensor<Cmpt>
     (
         dt1.xx()*t2.xx(),
         dt1.xx()*t2.xy(),
@@ -203,10 +205,10 @@ operator&(const DiagTensor<Cmpt>& dt1, const Tensor<Cmpt>& t2)
 
 //- Inner-product between a tensor and a diagonal tensor
 template <class Cmpt>
-inline DiagTensor<Cmpt>
+inline Tensor<Cmpt>
 operator&(const Tensor<Cmpt>& t1, const DiagTensor<Cmpt>& dt2)
 {
-    return DiagTensor<Cmpt>
+    return Tensor<Cmpt>
     (
         t1.xx()*dt2.xx(),
                           t1.xy()*dt2.yy(),
@@ -262,15 +264,23 @@ operator/(const scalar s, const DiagTensor<Cmpt>& dt)
 
 //- Return the trace of a diagonal tensor
 template <class Cmpt>
-inline scalar tr(const DiagTensor<Cmpt>& dt)
+inline Cmpt tr(const DiagTensor<Cmpt>& dt)
 {
     return dt.xx() + dt.yy() + dt.zz();
 }
 
 
+//- Return the spherical part of a diagonal tensor
+template <class Cmpt>
+inline SphericalTensor<Cmpt> sph(const DiagTensor<Cmpt>& dt)
+{
+    return 0.5*tr(dt);
+}
+
+
 //- Return the determinant of a diagonal tensor
 template <class Cmpt>
-inline scalar det(const DiagTensor<Cmpt>& t)
+inline Cmpt det(const DiagTensor<Cmpt>& t)
 {
     return t.xx()*t.yy()*t.zz();
 }

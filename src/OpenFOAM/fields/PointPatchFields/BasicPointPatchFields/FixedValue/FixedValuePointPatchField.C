@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,7 +42,7 @@ FixedValuePointPatchField
     const Field<Type>& iF
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF)
+    ValuePointPatchField<PatchField, PointPatch, Type>(p, iF)
 {}
 
 
@@ -55,7 +55,7 @@ FixedValuePointPatchField
     const Field<Type>& f
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF, f)
+    ValuePointPatchField<PatchField, PointPatch, Type>(p, iF, f)
 {}
 
 
@@ -68,7 +68,7 @@ FixedValuePointPatchField
     const dictionary& dict
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF, dict)
+    ValuePointPatchField<PatchField, PointPatch, Type>(p, iF, dict)
 {}
 
 
@@ -82,7 +82,7 @@ FixedValuePointPatchField
     const PointPatchFieldMapper& mapper
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(ptf, p, iF, mapper)
+    ValuePointPatchField<PatchField, PointPatch, Type>(ptf, p, iF, mapper)
 {}
 
 
@@ -94,50 +94,8 @@ FixedValuePointPatchField
     const Field<Type>& iF
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(ptf, iF)
+    ValuePointPatchField<PatchField, PointPatch, Type>(ptf, iF)
 {}
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-// Force an assignment
-template<template<class> class PatchField, class PointPatch, class Type>
-void FixedValuePointPatchField<PatchField, PointPatch, Type>::operator==
-(
-    const ValueStoredPointPatchField<PatchField, PointPatch, Type>& ptf
-)
-{
-    Field<Type>::operator=(ptf);
-
-    // insert the result into the internal field
-    initEvaluate();
-}
-
-
-template<template<class> class PatchField, class PointPatch, class Type>
-void FixedValuePointPatchField<PatchField, PointPatch, Type>::operator==
-(
-    const Field<Type>& tf
-)
-{
-    Field<Type>::operator=(tf);
-
-    // insert the result into the internal field
-    initEvaluate();
-}
-
-
-template<template<class> class PatchField, class PointPatch, class Type>
-void FixedValuePointPatchField<PatchField, PointPatch, Type>::operator==
-(
-    const Type& t
-)
-{
-    Field<Type>::operator=(t);
-
-    // insert the result into the internal field
-    initEvaluate();
-}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

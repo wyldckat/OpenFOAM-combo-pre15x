@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,8 +35,6 @@ SourceFiles
 #ifndef BasicSymmetryPointPatchField_H
 #define BasicSymmetryPointPatchField_H
 
-#include "ValueStoredPointPatchField.H"
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -49,13 +47,8 @@ namespace Foam
 template<template<class> class PatchField, class PointPatch, class Type>
 class BasicSymmetryPointPatchField
 :
-    public ValueStoredPointPatchField<PatchField, PointPatch, Type>
+    public PatchField<Type>
 {
-    // Private memeber functions
-
-        //- Calculate implicitness matrix
-        Type fixFlagMatrix(const vector&) const;
-
 
 public:
 
@@ -129,11 +122,7 @@ public:
     // Member functions
 
         //- Update the patch field
-        virtual void updateBoundaryField();
-
-
-        //- Write
-        virtual void write(Ostream&) const;
+        virtual void evaluate();
 };
 
 

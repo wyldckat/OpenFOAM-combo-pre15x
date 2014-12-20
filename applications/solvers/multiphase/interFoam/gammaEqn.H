@@ -1,4 +1,5 @@
 {
+    word gammaScheme("div(phi,gamma)");
     word gammarScheme("div(phirb,gamma)");
 
     surfaceScalarField phic = mag(phi/mesh.magSf());
@@ -7,21 +8,23 @@
 
     for (int gCorr=0; gCorr<nGammaCorr; gCorr++)
     {
-        fvScalarMatrix gammaEqn
-        (
-            fvm::ddt(gamma)
-          + fvm::div(phi, gamma)
-          + fvm::div
+        surfaceScalarField phiGamma = 
+            fvc::flux
+            (
+                phi,
+                gamma,
+                gammaScheme
+            )
+          + fvc::flux
             (
                 -fvc::flux(-phir, scalar(1) - gamma, gammarScheme),
                 gamma,
                 gammarScheme
-            )
-        );
+            );
 
-        gammaEqn.solve();
+        MULES::explicitSolve01(gamma, phi, phiGamma);
 
-        rhoPhi = gammaEqn.flux()*(rho1 - rho2) + phi*rho2;
+        rhoPhi = phiGamma*(rho1 - rho2) + phi*rho2;
     }
 
     Info<< "Liquid phase volume fraction = "

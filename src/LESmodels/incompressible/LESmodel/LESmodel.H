@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -204,7 +204,7 @@ public:
 
 
         //- Return B.
-        virtual tmp<volTensorField> B() const = 0;
+        virtual tmp<volSymmTensorField> B() const = 0;
 
         //- Return the SGS turbulent kinetic energy.
         virtual tmp<volScalarField> k() const = 0;

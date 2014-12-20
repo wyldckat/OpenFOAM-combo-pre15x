@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,7 @@ License
 #include "Istream.H"
 #include "Ostream.H"
 #include "token.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -69,7 +70,7 @@ Istream& operator>>(Istream& is, Matrix<T>& M)
         T* v = M.v_[0];
 
         // Read list contents depending on data format
-        if (is.format() == IOstream::ASCII || !writeBinary(v))
+        if (is.format() == IOstream::ASCII || !contiguous<T>())
         {
             // Read beginning of contents
             char listDelimiter = is.readBeginList("Matrix");
@@ -148,14 +149,14 @@ template<class T>
 Ostream& operator<<(Ostream& os, const Matrix<T>& M)
 {
     // Write list contents depending on data format
-    if (os.format() == IOstream::ASCII || !writeBinary(M.v_))
+    if (os.format() == IOstream::ASCII || !contiguous<T>())
     {
         bool uniform = false;
 
         label nm = M.n_*M.m_;
         const T* v = M.v_[0];
 
-        if (nm > 1 && writeBinary(v))
+        if (nm > 1 && contiguous<T>())
         {
             uniform = true;
 
@@ -181,7 +182,7 @@ Ostream& operator<<(Ostream& os, const Matrix<T>& M)
             // Write end of contents delimiter
             os << token::END_BLOCK;
         }
-        else if (nm < 10 && writeBinary(v))
+        else if (nm < 10 && contiguous<T>())
         {
             // Write size of list and start contents delimiter
             os  << M.n() << token::SPACE << M.m() << token::SPACE 

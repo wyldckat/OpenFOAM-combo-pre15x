@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,9 +26,9 @@ Class
     Tensor
 
 Description
-    Templated 3D Tensor derived from VectorSpace adding construction from
+    Templated 3D tensor derived from VectorSpace adding construction from
     9 components, element access using xx(), xy() etc. member functions and
-    the iner-product (dot-product) and outer-product of two Vectors
+    the inner-product (dot-product) and outer-product of two Vectors
     (tensor-product) operators.
 
 SourceFiles
@@ -40,6 +40,8 @@ SourceFiles
 #define Tensor_H
 
 #include "Vector.H"
+#include "SphericalTensor.H"
+#include "SymmTensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,6 +60,10 @@ class Tensor
 
 public:
 
+    //- Equivalent type of labels used for valid component indexing
+    typedef Tensor<label> labelType;
+
+
     // Member constants
 
         enum
@@ -73,7 +79,7 @@ public:
 
         static const Tensor zero;
         static const Tensor one;
-        static const Tensor I;
+
 
     //- Component labeling enumeration
     enum components { XX, XY, XZ, YX, YY, YZ, ZX, ZY, ZZ };
@@ -86,6 +92,12 @@ public:
 
         //- Construct given VectorSpace
         inline Tensor(const VectorSpace<Tensor<Cmpt>, Cmpt, 9>&);
+
+        //- Construct given SphericalTensor
+        inline Tensor(const SphericalTensor<Cmpt>&);
+
+        //- Construct given SymmTensor
+        inline Tensor(const SymmTensor<Cmpt>&);
 
         //- Construct given the nine components
         inline Tensor
@@ -133,6 +145,15 @@ public:
 
         //- Transpose
         inline Tensor<Cmpt> T() const;
+
+
+    // Member Operators
+
+        //- Assign to a SphericalTensor
+        inline void operator=(const SphericalTensor<Cmpt>&);
+
+        //- Assign to a SymmTensor
+        inline void operator=(const SymmTensor<Cmpt>&);
 };
 
 

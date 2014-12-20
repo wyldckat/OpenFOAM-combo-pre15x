@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -78,7 +78,7 @@ class Matrix
         label n_, m_;
 
         //- Row pointers
-        T** restrict v_;
+        T** __restrict__ v_;
 
         //- Allocate the storage for the row-pointers and the data
         //  and set the row pointers

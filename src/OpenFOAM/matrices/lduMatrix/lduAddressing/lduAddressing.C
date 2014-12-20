@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,14 +27,9 @@ License
 #include "lduAddressing.H"
 #include "demandDrivenData.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void lduAddressing::calcLosort() const
+void Foam::lduAddressing::calcLosort() const
 {
     if (losortPtr_)
     {
@@ -95,7 +90,7 @@ void lduAddressing::calcLosort() const
 }
 
 
-void lduAddressing::calcOwnerStart() const
+void Foam::lduAddressing::calcOwnerStart() const
 {
     if (ownerStartPtr_)
     {
@@ -132,7 +127,7 @@ void lduAddressing::calcOwnerStart() const
 }
 
 
-void lduAddressing::calcLosortStart() const
+void Foam::lduAddressing::calcLosortStart() const
 {
     if (losortStartPtr_)
     {
@@ -177,7 +172,7 @@ void lduAddressing::calcLosortStart() const
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-lduAddressing::~lduAddressing()
+Foam::lduAddressing::~lduAddressing()
 {
     deleteDemandDrivenData(losortPtr_);
     deleteDemandDrivenData(ownerStartPtr_);
@@ -187,7 +182,7 @@ lduAddressing::~lduAddressing()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-const unallocLabelList& lduAddressing::losortAddr() const
+const Foam::unallocLabelList& Foam::lduAddressing::losortAddr() const
 {
     if (!losortPtr_)
     {
@@ -198,7 +193,7 @@ const unallocLabelList& lduAddressing::losortAddr() const
 }
 
 
-const unallocLabelList& lduAddressing::ownerStartAddr() const
+const Foam::unallocLabelList& Foam::lduAddressing::ownerStartAddr() const
 {
     if (!ownerStartPtr_)
     {
@@ -209,7 +204,7 @@ const unallocLabelList& lduAddressing::ownerStartAddr() const
 }
 
 
-const unallocLabelList& lduAddressing::losortStartAddr() const
+const Foam::unallocLabelList& Foam::lduAddressing::losortStartAddr() const
 {
     if (!losortStartPtr_)
     {
@@ -221,7 +216,7 @@ const unallocLabelList& lduAddressing::losortStartAddr() const
 
 
 // Return edge index given owner and neighbour label
-label lduAddressing::triIndex(const label a, const label b) const
+Foam::label Foam::lduAddressing::triIndex(const label a, const label b) const
 {
     label own = min(a, b);
 
@@ -253,9 +248,5 @@ label lduAddressing::triIndex(const label a, const label b) const
     return -1;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

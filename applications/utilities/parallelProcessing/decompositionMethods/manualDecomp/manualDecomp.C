@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,6 +30,7 @@ Description
 #include "manualDecomp.H"
 #include "addToRunTimeSelectionTable.H"
 #include "IFstream.H"
+#include "labelIOList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,22 +58,20 @@ namespace Foam
 
 Foam::manualDecomp::manualDecomp(const dictionary& decompositionDict)
 :
-    decompositionMethod(decompositionDict),
-    decompDataFile_
-    (
-        decompositionDict.subDict(word(decompositionDict.lookup("method"))
-      + "Coeffs").lookup("dataFile")
-    )
-{}
+    decompositionMethod(decompositionDict)
+{
+    notImplemented("manualDecomp(const dictionary&)");
+}
 
 
 Foam::manualDecomp::manualDecomp
 (
     const dictionary& decompositionDict, 
-    const primitiveMesh& mesh
+    const polyMesh& mesh
 )
 :
     decompositionMethod(decompositionDict),
+    meshPtr_(&mesh),
     decompDataFile_
     (
         decompositionDict.subDict(word(decompositionDict.lookup("method"))
@@ -85,23 +84,26 @@ Foam::manualDecomp::manualDecomp
 
 Foam::labelList Foam::manualDecomp::decompose(const pointField& points)
 {
-    IFstream decompStream(decompDataFile_);
+    const polyMesh& mesh = *meshPtr_;
 
-    if (!decompStream)
-    {
-        FatalIOErrorIn("manualDecomp::decompose()", decompStream)
-            << "Cannot read manual decomposition data file "
-            << decompDataFile_ << "." << endl
-            << exit(FatalIOError);
-    }
-
-    labelList finalDecomp(decompStream);
+    labelIOList finalDecomp
+    (
+        IOobject
+        (
+            decompDataFile_,
+            mesh.facesInstance(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE,
+            false
+        )
+    );
 
     // check if the final decomposition is OK
 
     if (finalDecomp.size() != points.size())
     {
-        FatalErrorIn("manualDecomp::decompose()")
+        FatalErrorIn("manualDecomp::decompose(const pointField&)")
             << "Size of decomposition list does not correspond "
             << "to the number of points.  Size: "
             << finalDecomp.size() << " Number of points: "
@@ -113,7 +115,7 @@ Foam::labelList Foam::manualDecomp::decompose(const pointField& points)
 
     if (min(finalDecomp) < 0 || max(finalDecomp) > nProcessors_ - 1)
     {
-        FatalErrorIn("labelList manualDecomp::decompose()")
+        FatalErrorIn("labelList manualDecomp::decompose(const pointField&)")
             << "According to the decomposition, cells assigned to "
             << "impossible processor numbers.  Min processor = "
             << min(finalDecomp) << " Max processor = " << max(finalDecomp)

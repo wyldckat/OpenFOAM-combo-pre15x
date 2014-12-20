@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -89,6 +89,17 @@ pressureInletVelocityFvPatchVectorField::pressureInletVelocityFvPatchVectorField
 
 pressureInletVelocityFvPatchVectorField::pressureInletVelocityFvPatchVectorField
 (
+    const pressureInletVelocityFvPatchVectorField& pivpvf
+)
+:
+    fixedValueFvPatchVectorField(pivpvf),
+    phiName_(pivpvf.phiName_),
+    rhoName_(pivpvf.rhoName_)
+{}
+
+
+pressureInletVelocityFvPatchVectorField::pressureInletVelocityFvPatchVectorField
+(
     const pressureInletVelocityFvPatchVectorField& pivpvf,
     const vectorField& iF
 )
@@ -115,9 +126,9 @@ void pressureInletVelocityFvPatchVectorField::updateCoeffs()
     );
 
     const fvPatchField<scalar>& phip =
-        patchField<surfaceScalarField, scalar>(phi);
+        patch().patchField<surfaceScalarField, scalar>(phi);
 
-    const vectorField& n = patch().nf();
+    vectorField n = patch().nf();
     const Field<scalar>& magS = patch().magSf();
 
     if (phi.dimensions() == dimVelocity*dimArea)
@@ -127,7 +138,7 @@ void pressureInletVelocityFvPatchVectorField::updateCoeffs()
     else if (phi.dimensions() == dimDensity*dimVelocity*dimArea)
     {
         const fvPatchField<scalar>& rhop =
-            lookupPatchField<volScalarField, scalar>(rhoName_);
+            patch().lookupPatchField<volScalarField, scalar>(rhoName_);
 
         operator==(n*phip/(rhop*magS));
     }
@@ -146,12 +157,11 @@ void pressureInletVelocityFvPatchVectorField::updateCoeffs()
 void pressureInletVelocityFvPatchVectorField::write(Ostream& os) const
 {
     fvPatchVectorField::write(os);
-    os.writeKeyword("phi")
-        << phiName_ << token::END_STATEMENT << nl;
-    os.writeKeyword("rho")
-        << rhoName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("phi") << phiName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("rho") << rhoName_ << token::END_STATEMENT << nl;
     writeEntry("value", os);
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

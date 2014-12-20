@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -45,7 +43,6 @@ addToRunTimeSelectionTable(fvPatch, processorFvPatch, polyPatch);
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-// Make patch weighting factors
 void processorFvPatch::makeWeights(scalarField& w) const
 {
     if (Pstream::parRun())
@@ -71,7 +68,6 @@ void processorFvPatch::makeWeights(scalarField& w) const
 }
 
 
-// Make patch face - neighbour cell distances
 void processorFvPatch::makeDeltaCoeffs(scalarField& dc) const
 {
     if (Pstream::parRun())
@@ -85,7 +81,6 @@ void processorFvPatch::makeDeltaCoeffs(scalarField& dc) const
 }
 
 
-// Return delta (P to N) vectors across coupled patch
 tmp<vectorField> processorFvPatch::delta() const
 {
     if (Pstream::parRun())
@@ -118,6 +113,53 @@ tmp<vectorField> processorFvPatch::delta() const
     {
         return fvPatch::delta();
     }
+}
+
+
+tmp<labelField> processorFvPatch::interfaceInternalField
+(
+    const unallocLabelList& internalData
+) const
+{
+    return patchInternalField(internalData);
+}
+
+
+void processorFvPatch::initTransfer
+(
+    const unallocLabelList& interfaceData,
+    const bool bufferdTransfer
+) const
+{
+    send(interfaceData, bufferdTransfer);
+}
+
+
+tmp<labelField> processorFvPatch::transfer
+(
+    const unallocLabelList&
+) const
+{
+    return receive<label>(this->size());
+}
+
+
+void processorFvPatch::initInternalFieldTransfer
+(
+    const unallocLabelList& iF,
+    const bool bufferdTransfer
+) const
+{
+    send(patchInternalField(iF)(), bufferdTransfer);
+}
+
+
+tmp<labelField> processorFvPatch::internalFieldTransfer
+(
+    const unallocLabelList&
+) const
+{
+    return receive<label>(this->size());
 }
 
 

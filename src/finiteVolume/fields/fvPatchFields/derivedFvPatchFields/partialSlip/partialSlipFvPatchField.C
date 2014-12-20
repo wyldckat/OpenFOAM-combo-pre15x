@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,13 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    partialSlipFvPatchField
-
 \*---------------------------------------------------------------------------*/
 
 #include "partialSlipFvPatchField.H"
-#include "transformField.H"
+#include "symmTransformField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -86,6 +83,19 @@ partialSlipFvPatchField<Type>::partialSlipFvPatchField
 template<class Type>
 partialSlipFvPatchField<Type>::partialSlipFvPatchField
 (
+    const partialSlipFvPatchField<Type>& ptf
+)
+:
+    transformFvPatchField<Type>(ptf),
+    valueFraction_(ptf.valueFraction_)
+{
+    this->checkVolField();
+}
+
+
+template<class Type>
+partialSlipFvPatchField<Type>::partialSlipFvPatchField
+(
     const partialSlipFvPatchField<Type>& ptf,
     const Field<Type>& iF
 )
@@ -132,12 +142,12 @@ void partialSlipFvPatchField<Type>::rmap
 template<class Type>
 tmp<Field<Type> > partialSlipFvPatchField<Type>::snGrad() const
 {
-    const vectorField& nHat = this->patch().nf();
+    vectorField nHat = this->patch().nf();
     Field<Type> pif = this->patchInternalField();
 
     return
     (
-        (1.0 - valueFraction_)*transform(I - nHat*nHat, pif) - pif
+        (1.0 - valueFraction_)*transform(I - sqr(nHat), pif) - pif
     )*this->patch().deltaCoeffs();
 }
 
@@ -151,12 +161,12 @@ void partialSlipFvPatchField<Type>::evaluate()
         this->updateCoeffs();
     }
 
-    const vectorField& nHat = this->patch().nf();
+    vectorField nHat = this->patch().nf();
 
     Field<Type>::operator=
     (
         (1.0 - valueFraction_)
-       *transform(I - nHat*nHat, this->patchInternalField())
+       *transform(I - sqr(nHat), this->patchInternalField())
     );
 
     transformFvPatchField<Type>::evaluate();
@@ -167,7 +177,7 @@ void partialSlipFvPatchField<Type>::evaluate()
 template<class Type>
 tmp<Field<Type> > partialSlipFvPatchField<Type>::snGradTransformDiag() const
 {
-    const vectorField& nHat = this->patch().nf();
+    vectorField nHat = this->patch().nf();
     vectorField diag(nHat.size());
 
     diag.replace(vector::X, mag(nHat.component(vector::X)));

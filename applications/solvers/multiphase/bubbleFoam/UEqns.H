@@ -3,7 +3,7 @@ fvVectorMatrix UbEqn(Ub, Ub.dimensions()*dimVol/dimTime);
 
 {
     volTensorField Rca = -nuEffa*(fvc::grad(Ua)().T());
-    Rca += (2.0/3.0)*sqr(Ct)*I*k - (2.0/3.0)*I*tr(Rca);
+    Rca = Rca + (2.0/3.0)*sqr(Ct)*I*k - (2.0/3.0)*I*tr(Rca);
 
     surfaceScalarField phiRa =
       - fvc::interpolate(nuEffa)
@@ -35,7 +35,7 @@ fvVectorMatrix UbEqn(Ub, Ub.dimensions()*dimVol/dimTime);
 
 
     volTensorField Rcb = -nuEffb*fvc::grad(Ub)().T();
-    Rcb += (2.0/3.0)*I*k - (2.0/3.0)*I*tr(Rcb);
+    Rcb = Rcb + (2.0/3.0)*I*k - (2.0/3.0)*I*tr(Rcb);
 
     surfaceScalarField phiRb =
        - fvc::interpolate(nuEffb)

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -123,7 +121,12 @@ inline bool Foam::cellInfo::valid() const
 
 
 // No geometric data so never any problem on cyclics
-inline bool Foam::cellInfo::sameGeometry(const cellInfo& w2, const scalar tol)
+inline bool Foam::cellInfo::sameGeometry
+(
+    const polyMesh&,
+    const cellInfo& w2,
+    const scalar tol
+)
  const
 {
     return true;
@@ -133,6 +136,7 @@ inline bool Foam::cellInfo::sameGeometry(const cellInfo& w2, const scalar tol)
 // No geometric data.
 inline void Foam::cellInfo::leaveDomain
 (
+    const polyMesh&,
     const polyPatch& patch,
     const label patchFaceI,
     const point& faceCentre
@@ -141,13 +145,18 @@ inline void Foam::cellInfo::leaveDomain
 
 
 // No geometric data.
-inline void Foam::cellInfo::transform(const tensor& rotTensor)
+inline void Foam::cellInfo::transform
+(
+    const polyMesh&,
+    const tensor& rotTensor
+)
 {}
 
 
 // No geometric data.
 inline void Foam::cellInfo::enterDomain
 (
+    const polyMesh&,
     const polyPatch& patch,
     const label patchFaceI,
     const point& faceCentre
@@ -158,7 +167,7 @@ inline void Foam::cellInfo::enterDomain
 // Update this with neighbour information
 inline bool Foam::cellInfo::updateCell
 (
-    const polyMesh& mesh,
+    const polyMesh&,
     const label thisCellI,
     const label neighbourFaceI,
     const cellInfo& neighbourInfo,
@@ -179,7 +188,7 @@ inline bool Foam::cellInfo::updateCell
 // Update this with neighbour information
 inline bool Foam::cellInfo::updateFace
 (
-    const polyMesh& mesh,
+    const polyMesh&,
     const label thisFaceI,
     const label neighbourCellI,
     const cellInfo& neighbourInfo,
@@ -199,7 +208,7 @@ inline bool Foam::cellInfo::updateFace
 // Update this with neighbour information
 inline bool Foam::cellInfo::updateFace
 (
-    const polyMesh& mesh,
+    const polyMesh&,
     const label thisFaceI,
     const cellInfo& neighbourInfo,
     const scalar tol

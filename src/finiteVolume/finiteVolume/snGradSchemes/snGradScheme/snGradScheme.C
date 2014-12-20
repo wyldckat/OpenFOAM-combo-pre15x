@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Abstract base class for snGrad schemes.
 
 \*---------------------------------------------------------------------------*/
 
@@ -103,14 +100,13 @@ snGradScheme<Type>::~snGradScheme()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-//- Return the face-snGrad of the given cell field
-//  with the given weigting factors
 template<class Type>
 tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
 snGradScheme<Type>::snGrad
 (
     const GeometricField<Type, fvPatchField, volMesh>& vf,
-    const tmp<surfaceScalarField>& tdeltaCoeffs
+    const tmp<surfaceScalarField>& tdeltaCoeffs,
+    const word& snGradName
 )
 {
     const fvMesh& mesh = vf.mesh();
@@ -122,7 +118,7 @@ snGradScheme<Type>::snGrad
         (
             IOobject
             (
-                "snGrad("+vf.name()+')',
+                snGradName + "("+vf.name()+')',
                 vf.instance(),
                 vf.mesh(),
                 IOobject::NO_READ,

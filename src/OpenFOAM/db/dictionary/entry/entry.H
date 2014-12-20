@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -97,6 +97,12 @@ public:
             return keyword_;
         }
 
+        //- Return non-const access to keyword
+        word& keyword()
+        {
+            return keyword_;
+        }
+
         //- Return the dictionary name
         virtual const fileName& name() const = 0;
 
@@ -134,6 +140,9 @@ public:
     // Member operators
 
         void operator=(const entry&);
+
+        bool operator==(const entry&) const;
+        bool operator!=(const entry&) const;
 
 
     // Ostream operator

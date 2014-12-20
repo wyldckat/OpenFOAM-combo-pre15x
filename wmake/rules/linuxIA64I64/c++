@@ -2,7 +2,7 @@
 
 c++WARN     = -wd654,819,1125,1476,1505,1572
 
-CC          = icpc -gcc-version=330
+CC          = icpc
 
 include $(RULES)/c++$(WM_COMPILE_OPTION)
 
@@ -10,7 +10,7 @@ ptFLAGS     = -DNoRepository
 
 c++FLAGS    = $(GFLAGS) $(c++WARN) $(c++OPT) $(c++DBUG) $(ptFLAGS) $(LIB_HEADER_DIRS) -KPIC
 
-Ctoo        = $(CC) $(c++FLAGS) -c $$SOURCE -o $@
+Ctoo        = $(WM_SCHEDULER) $(CC) $(c++FLAGS) -c $$SOURCE -o $@
 cxxtoo      = $(Ctoo)
 cctoo       = $(Ctoo)
 cpptoo      = $(Ctoo)

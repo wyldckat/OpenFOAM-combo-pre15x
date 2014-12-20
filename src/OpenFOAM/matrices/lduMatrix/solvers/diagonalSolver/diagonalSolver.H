@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -71,20 +71,26 @@ public:
         diagonalSolver
         (
             const word& fieldName,
-            scalarField& psi,
             const lduMatrix& matrix,
-            const scalarField& source,
-            const FieldField<Field, scalar>& coupleBouCoeffs,
-            const FieldField<Field, scalar>& coupleIntCoeffs,
-            const lduCoupledInterfacePtrsList& interfaces,
-            const direction cmpt
+            const FieldField<Field, scalar>& interfaceBouCoeffs,
+            const FieldField<Field, scalar>& interfaceIntCoeffs,
+            const lduInterfaceFieldPtrsList& interfaces,
+            Istream& solverData
         );
 
 
     // Member Functions
 
+        //- Read and reset the solver parameters from the given stream
+        void read(Istream& solverData);
+
         //- Solve the matrix with this solver
-        lduMatrix::solverPerformance solve();
+        lduMatrix::solverPerformance solve
+        (
+            scalarField& psi,
+            const scalarField& source,
+            const direction cmpt=0
+        ) const;
 };
 
 

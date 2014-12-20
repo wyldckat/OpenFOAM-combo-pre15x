@@ -2,197 +2,233 @@
 
     IFstream nAveragingStepsFile
     (
-        runTime.path()/runTime.timeName()/"nAveragingSteps.raw"
+        runTime.path()/runTime.timeName()/"uniform"/"nAveragingSteps.raw"
     );
 
 
-    volVectorField* UmeanPtr;
-    volTensorField* RPtr;
-    volTensorField* BmeanPtr;
-    volScalarField* epsilonMeanPtr;
+    autoPtr<volVectorField> UmeanPtr;
+    autoPtr<volSymmTensorField> RPtr;
+    autoPtr<volSymmTensorField> BmeanPtr;
+    autoPtr<volScalarField> epsilonMeanPtr;
 
-    volScalarField* pMeanPtr;
-    volScalarField* pPrime2MeanPtr;
+    autoPtr<volScalarField> pMeanPtr;
+    autoPtr<volScalarField> pPrime2MeanPtr;
 
     if (nAveragingStepsFile.good())
     {
         nAveragingStepsFile >> nAveragingSteps;
 
         Info<< "Reading field Umean\n" << endl;
-        UmeanPtr = new volVectorField
+        UmeanPtr.reset
         (
-            IOobject
+            new volVectorField
             (
-                "Umean",
-                runTime.timeName(),
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            mesh
+                IOobject
+                (
+                    "Umean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh
+            )
         );
 
         Info<< "\nReading field R\n" << endl;
-        RPtr = new volTensorField
+        RPtr.reset
         (
-            IOobject
+            new volSymmTensorField
             (
-                "R",
-                runTime.timeName(),
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            mesh
+                IOobject
+                (
+                    "R",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh
+            )
         );
 
         Info<< "\nReading field Bmean\n" << endl;
-        BmeanPtr = new volTensorField
+        BmeanPtr.reset
         (
-            IOobject
+            new volSymmTensorField
             (
-                "Bmean",
-                runTime.timeName(),
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            mesh
+                IOobject
+                (
+                    "Bmean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh
+            )
         );
 
         Info<< "\nReading field epsilonMean\n" << endl;
-        epsilonMeanPtr = new volScalarField
+        epsilonMeanPtr.reset
         (
-            IOobject
+            new volScalarField
             (
-                "epsilonMean",
-                runTime.timeName(),
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            mesh
+                IOobject
+                (
+                    "epsilonMean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh
+            )
         );
 
         Info<< "Reading field pMean\n" << endl;
-        pMeanPtr = new volScalarField
+        pMeanPtr.reset
         (
-            IOobject
+            new volScalarField
             (
-                "pMean",
-                runTime.timeName(),
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            mesh
+                IOobject
+                (
+                    "pMean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh
+            )
         );
 
         Info<< "Reading field pPrime2Mean\n" << endl;
-        pPrime2MeanPtr = new volScalarField
+        pPrime2MeanPtr.reset
         (
-            IOobject
+            new volScalarField
             (
-                "pPrime2Mean",
-                runTime.timeName(),
-                mesh,
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            mesh
+                IOobject
+                (
+                    "pPrime2Mean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh
+            )
         );
     }
     else
     {
         Info<< "Creating field Umean\n" << endl;
-        UmeanPtr = new volVectorField
+        UmeanPtr.reset
         (
-            IOobject
+            new volVectorField
             (
-                "Umean",
-                runTime.timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::AUTO_WRITE
-            ),
-            U
+                IOobject
+                (
+                    "Umean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                U
+            )
         );
 
         Info<< "Creating field R\n" << endl;
-        RPtr = new volTensorField
+        RPtr.reset
         (
-            IOobject
+            new volSymmTensorField
             (
-                "R",
-                runTime.timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::AUTO_WRITE
-            ),
-            sqr(U) - sqr(*UmeanPtr)
+                IOobject
+                (
+                    "R",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                sqr(U) - sqr(UmeanPtr())
+            )
         );
 
         Info<< "Creating field Bmean\n" << endl;
-        BmeanPtr = new volTensorField
+        BmeanPtr.reset
         (
-            IOobject
+            new volSymmTensorField
             (
-                "Bmean",
-                runTime.timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::AUTO_WRITE
-            ),
-            sgsModel->B()
+                IOobject
+                (
+                    "Bmean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                sgsModel->B()
+            )
         );
 
         Info<< "Creating field epsilonMean\n" << endl;
-        epsilonMeanPtr = new volScalarField
+        epsilonMeanPtr.reset
         (
-            IOobject
+            new volScalarField
             (
-                "epsilonMean",
-                runTime.timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::AUTO_WRITE
-            ),
-            sgsModel->epsilon()
+                IOobject
+                (
+                    "epsilonMean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                sgsModel->epsilon()
+            )
         );
 
         Info<< "Creating field pMean\n" << endl;
-        pMeanPtr = new volScalarField
+        pMeanPtr.reset
         (
-            IOobject
+            new volScalarField
             (
-                "pMean",
-                runTime.timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::AUTO_WRITE
-            ),
-            p
+                IOobject
+                (
+                    "pMean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                p
+            )
         );
 
         Info<< "Creating field pPrime2Mean\n" << endl;
-        pPrime2MeanPtr = new volScalarField
+        pPrime2MeanPtr.reset
         (
-            IOobject
+            new volScalarField
             (
-                "pPrime2Mean",
-                runTime.timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::AUTO_WRITE
-            ),
-            sqr(p) - sqr(*pMeanPtr)
+                IOobject
+                (
+                    "pPrime2Mean",
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                sqr(p) - sqr(pMeanPtr())
+            )
         );
     }
 
-    volVectorField& Umean = *UmeanPtr;
-    volTensorField& R = *RPtr;
-    volTensorField& Bmean = *BmeanPtr;
-    volScalarField& epsilonMean = *epsilonMeanPtr;
+    volVectorField& Umean = UmeanPtr();
+    volSymmTensorField& R = RPtr();
+    volSymmTensorField& Bmean = BmeanPtr();
+    volScalarField& epsilonMean = epsilonMeanPtr();
 
-    volScalarField& pMean = *pMeanPtr;
-    volScalarField& pPrime2Mean = *pPrime2MeanPtr;
+    volScalarField& pMean = pMeanPtr();
+    volScalarField& pPrime2Mean = pPrime2MeanPtr();

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,14 +38,16 @@ SourceFiles
 #define treeBoundBox_H
 
 #include "boundBox.H"
+#include "direction.H"
 #include "pointField.H"
-#include "vectorList.H"
 #include "edgeList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+class Random;
 
 /*---------------------------------------------------------------------------*\
                            Class treeBoundBox Declaration
@@ -55,14 +57,6 @@ class treeBoundBox
 :
     public boundBox
 {
-    // Private data
-
-        //- Static data
-
-            // Bits used for octant coding
-            static const label RIGHTHALF   = 0x1 << 0;
-            static const label TOPHALF     = 0x1 << 1;
-            static const label FRONTHALF   = 0x1 << 2;
 
 public:
 
@@ -70,17 +64,22 @@ public:
 
         static treeBoundBox greatBox;
 
+        // Bits used for octant coding
+        static const direction RIGHTHALF   = 0x1 << 0;
+        static const direction TOPHALF     = 0x1 << 1;
+        static const direction FRONTHALF   = 0x1 << 2;
+
         // Bits used for face coding
-        static const label NOFACE     = 0;
-        static const label LEFTBIT    = 0x1 << 0;
-        static const label RIGHTBIT   = 0x1 << 1;
-        static const label BELOWBIT   = 0x1 << 2;
-        static const label ABOVEBIT   = 0x1 << 3;
-        static const label BEHINDBIT  = 0x1 << 4;
-        static const label INFRONTBIT = 0x1 << 5;
+        static const direction NOFACE     = 0;
+        static const direction LEFTBIT    = 0x1 << 0;
+        static const direction RIGHTBIT   = 0x1 << 1;
+        static const direction BELOWBIT   = 0x1 << 2;
+        static const direction ABOVEBIT   = 0x1 << 3;
+        static const direction BEHINDBIT  = 0x1 << 4;
+        static const direction INFRONTBIT = 0x1 << 5;
 
         //- Face on which neighbour is
-        static label neighbourFaceBits(const label&);
+        static direction neighbourFaceBits(const label&);
 
 
     // Constructors
@@ -119,7 +118,7 @@ public:
             scalar typDim() const;
 
             //- vertex coordinates
-            vectorList points() const;
+            pointField points() const;
 
             //- edges expressed in terms of points()
             edgeList edges() const;
@@ -131,46 +130,53 @@ public:
             point mid() const;
 
             //- Sub box given by octant number. Midpoint calculated.
-            treeBoundBox subBbox(const label) const;
+            treeBoundBox subBbox(const direction) const;
 
             //- Sub box given by octant number. Midpoint provided.
-            treeBoundBox subBbox(const point& mid, const label) const;
+            treeBoundBox subBbox(const point& mid, const direction) const;
 
             //- Returns octant number given point. Midpoint calculated.
-            label subOctant
+            inline direction subOctant
             (
                 const point& sample
             ) const;
 
+            //- Returns octant number given point. Midpoint provided.
+            static inline direction subOctant
+            (
+                const point& mid,
+                const point& sample
+            );
+
             //- Returns octant number given point. Midpoint calculated.
             //  onEdge set if sample on edge of subOctant
-            label subOctant
+            inline direction subOctant
             (
-                const point& sample,
-                bool onEdge
+                const point& mid,
+                bool& onEdge
             ) const;
 
             //- Returns octant number given point. Midpoint provided.
             //  onEdge set if sample on edge of subOctant
-            label subOctant
+            static inline direction subOctant
             (
                 const point& mid,
                 const point& sample,
-                bool onEdge
-            ) const;
+                bool& onEdge
+            );
 
             //- Returns octant number given intersection. Midpoint provided.
             //  onEdge set if sample on edge of subOctant. If onEdge
             // the direction vector determines which octant to use
             // (acc. to which octant the sample would be if it were moved 
             //  along dir)
-            label subOctant
+            static inline direction subOctant
             (
                 const point& mid,
                 const vector& dir,
                 const point& sample,
-                bool onEdge
-            ) const;
+                bool& onEdge
+            );
 
             //- Intersects other boundingbox?
             inline bool intersects(const treeBoundBox&) const;
@@ -184,7 +190,7 @@ public:
             bool contains(const treeBoundBox& bb) const;
 
             //- Contains point? (inside or on edge)
-            bool contains(const point&) const;
+            inline bool contains(const point&) const;
 
             //- Contains point? (only inside)
             bool containsNarrow(const point&) const;
@@ -195,7 +201,7 @@ public:
             bool contains(const vector& dir, const point&) const;
 
             //- Position of point relative to bb
-            label posBits(const point&) const;
+            direction posBits(const point&) const;
 
             //- Calculate nearest and furthest (to sample) vertex coords of
             //  bounding box
@@ -218,6 +224,9 @@ public:
             //   0 : none of the above.
             label distanceCmp(const point&, const treeBoundBox& other) const;
 
+            //- Return slightly wider bounding box
+            //  Extends all dimensions with s*span*Random::scalar01()
+            inline treeBoundBox extend(Random&, const scalar s) const;
 
     // Friend Operators
 

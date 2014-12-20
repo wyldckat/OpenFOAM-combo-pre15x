@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -65,7 +65,7 @@ laplacianSchemes
     laplacian(muEff,U) Gauss linear corrected;
     laplacian(DkEff,k) Gauss linear corrected;
     laplacian(DBEff,B) Gauss linear corrected;
-    laplacian((rho*1|A(U)),p) Gauss linear corrected;
+    laplacian((rho*(1|A(U))),p) Gauss linear corrected;
     laplacian(muEff,b) Gauss linear corrected;
     laplacian(muEff,ft) Gauss linear corrected;
     laplacian(alphaEff,h) Gauss linear corrected;

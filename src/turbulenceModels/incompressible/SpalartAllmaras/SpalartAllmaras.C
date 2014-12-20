@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,29 +42,40 @@ addToRunTimeSelectionTable(turbulenceModel, SpalartAllmaras, dictionary);
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
-tmp<volScalarField> SpalartAllmaras::fv1() const
+tmp<volScalarField> SpalartAllmaras::chi() const
 {
-    volScalarField chi3 = pow3(nuTilda_/nu());
+    return nuTilda_/nu();
+}
+
+
+tmp<volScalarField> SpalartAllmaras::fv1(const volScalarField& chi) const
+{
+    volScalarField chi3 = pow3(chi);
     return chi3/(chi3 + pow3(Cv1));
 }
 
 
-tmp<volScalarField> SpalartAllmaras::fv2() const
+tmp<volScalarField> SpalartAllmaras::fv2
+(
+    const volScalarField& chi,
+    const volScalarField& fv1
+) const
 {
-    volScalarField chi = nuTilda_/nu();
-
-    //return 1.0 - chi/(1.0 + chi*fv1());
-    return pow(scalar(1) + chi/Cv2, -3);
+    return 1.0 - chi/(1.0 + chi*fv1);
+    //return pow(scalar(1) + chi/Cv2, -3);
 }
 
 
-tmp<volScalarField> SpalartAllmaras::fv3() const
+tmp<volScalarField> SpalartAllmaras::fv3
+(
+    const volScalarField& chi,
+    const volScalarField& fv1
+) const
 {
-    volScalarField chi = nuTilda_/nu();
     volScalarField chiByCv2 = (1/Cv2)*chi;
 
     return
-        (scalar(1) + chi*fv1())
+        (scalar(1) + chi*fv1)
        *(1/Cv2)
        *(3*(scalar(1) + chiByCv2) + sqr(chiByCv2))
        /pow(scalar(1) + chiByCv2, 3);
@@ -143,11 +154,11 @@ SpalartAllmaras::SpalartAllmaras
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-tmp<volTensorField> SpalartAllmaras::R() const
+tmp<volSymmTensorField> SpalartAllmaras::R() const
 {
-    return tmp<volTensorField>
+    return tmp<volSymmTensorField>
     (
-        new volTensorField
+        new volSymmTensorField
         (
             IOobject
             (
@@ -214,9 +225,12 @@ void SpalartAllmaras::correct()
         d_.correct();
     }
 
+    volScalarField chi = this->chi();
+    volScalarField fv1 = this->fv1(chi);
+
     volScalarField Stilda =
-        fv3()*::sqrt(2.0)*mag(skew(fvc::grad(U_)))
-      + fv2()*nuTilda_/sqr(kappa_*d_);
+        fv3(chi, fv1)*::sqrt(2.0)*mag(skew(fvc::grad(U_)))
+      + fv2(chi, fv1)*nuTilda_/sqr(kappa_*d_);
 
     tmp<fvScalarMatrix> nuTildaEqn
     (
@@ -234,7 +248,7 @@ void SpalartAllmaras::correct()
     bound(nuTilda_, dimensionedScalar("0", nuTilda_.dimensions(), 0.0));
     nuTilda_.correctBoundaryConditions();
 
-    nut_.internalField() = fv1()*nuTilda_.internalField();
+    nut_.internalField() = fv1*nuTilda_.internalField();
     nut_.correctBoundaryConditions();
 }
 

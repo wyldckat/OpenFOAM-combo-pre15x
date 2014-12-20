@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,6 +36,7 @@ SourceFiles
 #define fvBoundaryMesh_H
 
 #include "fvPatchList.H"
+#include "lduInterfacePtrsList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -102,11 +103,18 @@ public:
 
     // Member functions
 
-        //- Return the mesh reference
-        const fvMesh& mesh() const
-        {
-            return mesh_;
-        }
+        // Access
+
+            //- Return the mesh reference
+            const fvMesh& mesh() const
+            {
+                return mesh_;
+            }
+
+            //- Return a list of pointers for each patch
+            //  with only those pointing to interfaces being set
+            lduInterfacePtrsList interfaces() const;
+
 
         //- Correct patches after moving points
         void movePoints();

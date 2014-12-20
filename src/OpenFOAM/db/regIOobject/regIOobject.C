@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,6 +29,7 @@ Description
 
 #include "regIOobject.H"
 #include "Time.H"
+#include "polyMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,7 +53,7 @@ regIOobject::regIOobject(const IOobject& io)
 :
     IOobject(io),
     registered_(false),
-    registries_(false),
+    ownedByRegistry_(false),
     lastModified_(0),
     isPtr_(NULL)
 {
@@ -69,7 +70,7 @@ regIOobject::regIOobject(const regIOobject& rio)
 :
     IOobject(rio),
     registered_(false),
-    registries_(false),
+    ownedByRegistry_(false),
     lastModified_(rio.lastModified_),
     isPtr_(NULL)
 {
@@ -83,7 +84,7 @@ regIOobject::regIOobject(const regIOobject& rio, bool registerCopy)
 :
     IOobject(rio),
     registered_(false),
-    registries_(false),
+    ownedByRegistry_(false),
     lastModified_(rio.lastModified_),
     isPtr_(NULL)
 {
@@ -115,7 +116,7 @@ regIOobject::~regIOobject()
 
     // Check out of objectRegistry if not owned by the registry
 
-    if (!registries_)
+    if (!ownedByRegistry_)
     {
         checkOut();
     }
@@ -131,10 +132,15 @@ void regIOobject::checkIn()
         // Attempt to register object with objectRegistry
         if (!db().checkIn(*this))
         {
-            if (objectRegistry::debug)
+            // Disallow checkin of same object twice since would mess up
+            // any mapping.
+            // Check on defaultRegion is needed to prevent subsetted meshes
+            // (which are created with same name as their originating mesh)
+            // from upsetting this.
+            if (debug && name() != polyMesh::defaultRegion)
             {
                 WarningIn("regIOobject::checkIn()")
-                    << "failed to register object " << name()
+                    << "failed to register object " << objectPath()
                     << " the name already exists in the objectRegistry"
                     << endl;
             }

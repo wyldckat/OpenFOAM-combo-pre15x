@@ -1,6 +1,8 @@
 cellClassification/cellClassification.C
 cellClassification/cellInfo.C
 
+cellQuality/cellQuality.C
+
 cellDist/cellDistFuncs.C
 cellDist/patchWave/patchWave.C
 cellDist/wallPoint/wallPoint.C
@@ -15,9 +17,10 @@ coordinateSystems/newCoordinateSystem.C
 coordinateSystems/cylindricalCS.C
 coordinateSystems/sphericalCS.C
 coordinateSystems/coordinateRotation/coordinateRotation.C
+coordinateSystems/coordinateRotation/EulerCoordinateRotation.C
+coordinateSystems/coordinateRotation/STARCDCoordinateRotation.C
 
 polyMeshAdder/faceCoupleInfo.C
-polyMeshAdder/mapAddedPolyMesh.C
 polyMeshAdder/polyMeshAdder.C
 
 polyMeshZipUpCells/polyMeshZipUpCells.C
@@ -30,7 +33,6 @@ PointEdgeWave/PointEdgeWaveName.C
 PointEdgeWave/pointEdgePoint.C
 
 regionSplit/regionSplit.C
-regionSplit/regionInfo/regionInfo.C
 
 octree/octreeName.C
 octree/octreeDataPoint.C
@@ -41,6 +43,10 @@ octree/octreeDataFace.C
 octree/treeBoundBox.C
 octree/treeNodeName.C
 octree/treeLeafName.C
+octree/pointIndexHitIOList.C
+
+indexedOctree/indexedOctreeName.C
+indexedOctree/treeDataTriSurface.C
 
 topoSets = sets/topoSets
 $(topoSets)/cellSet.C
@@ -82,6 +88,7 @@ $(pointSources)/cellToPoint/cellToPoint.C
 $(pointSources)/faceToPoint/faceToPoint.C
 $(pointSources)/boxToPoint/boxToPoint.C
 $(pointSources)/surfaceToPoint/surfaceToPoint.C
+$(pointSources)/zoneToPoint/zoneToPoint.C
 
 surfaceSets/surfaceSets.C
 
@@ -110,6 +117,11 @@ triSurface/triangleFuncs/triangleFuncs.C
 
 triSurface/surfaceFeatures/surfaceFeatures.C
 
+triSurface/triSurfaceMeshes/triSurfaceMeshes.C
+
 twoDPointCorrector/twoDPointCorrector.C
+
+directMapped/directMappedPolyPatch/directMappedPolyPatch.C
+directMapped/directMappedPointPatch/directMappedPointPatch.C
 
 LIB = $(FOAM_LIBBIN)/libmeshTools

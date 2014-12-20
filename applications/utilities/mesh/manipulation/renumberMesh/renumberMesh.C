@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anispulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,7 +72,8 @@ void RenumberFields
                 mesh.time().timeName(),
                 mesh,
                 IOobject::NO_READ,
-                IOobject::AUTO_WRITE
+                IOobject::AUTO_WRITE,
+                false
             ),
             mesh.renumber(newMesh, theta)
         );
@@ -133,7 +134,7 @@ int main(int argc, char *argv[])
     fvMesh* newMeshPtr = mesh.renumberedMesh();
     fvMesh& newMesh = *newMeshPtr;
 
-    newMesh.write();
+    newMesh.objectRegistry::write();
 
     // check the new bandwidth
     band = 0;
@@ -163,6 +164,8 @@ int main(int argc, char *argv[])
 
         RenumberFields<volScalarField>(mesh, newMesh, objects);
         RenumberFields<volVectorField>(mesh, newMesh, objects);
+        RenumberFields<volSphericalTensorField>(mesh, newMesh, objects);
+        RenumberFields<volSymmTensorField>(mesh, newMesh, objects);
         RenumberFields<volTensorField>(mesh, newMesh, objects);
     }
 

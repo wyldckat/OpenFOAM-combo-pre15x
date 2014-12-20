@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,8 +39,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-Foam::noneViscosity::noneViscosity(const Foam::dictionary& dict)
+Foam::noneViscosity::noneViscosity(const dictionary& dict)
 :
     viscosityModel(dict)
 {}
@@ -54,19 +53,19 @@ Foam::noneViscosity::~noneViscosity()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::volScalarField Foam::noneViscosity::mua
+Foam::tmp<Foam::volScalarField> Foam::noneViscosity::mua
 (
-    const Foam::volScalarField& alpha,
-    const Foam::volScalarField& Theta,
-    const Foam::volScalarField& g0,
-    const Foam::dimensionedScalar& rhoa,
-    const Foam::dimensionedScalar& da,
-    const Foam::dimensionedScalar& e
+    const volScalarField& alpha,
+    const volScalarField& Theta,
+    const volScalarField& g0,
+    const dimensionedScalar& rhoa,
+    const dimensionedScalar& da,
+    const dimensionedScalar& e
 ) const
 {
     return dimensionedScalar
     (
-        "SMALL",
+        "0",
         dimensionSet(1, -1, -1, 0, 0, 0, 0),
         0.0
     )*alpha;

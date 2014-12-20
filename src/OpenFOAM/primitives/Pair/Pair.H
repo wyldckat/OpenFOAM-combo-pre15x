@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -76,7 +76,7 @@ public:
     // Member Functions
 
         //- Return first
-        inline Type first() const
+        inline const Type& first() const
         {
             return this->operator[](0);
         }
@@ -88,7 +88,7 @@ public:
         }
 
         //- Return second
-        inline Type second() const
+        inline const Type& second() const
         {
             return this->operator[](1);
         }
@@ -103,6 +103,31 @@ public:
         inline Pair<Type> reversePair() const
         {
             return Pair<Type>(second(), first());
+        }
+
+        //- Return other
+        inline const Type& other(const Type& a) const
+        {
+            if (first() == second())
+            {
+                FatalErrorIn("Pair<Type>::other(const Type&) const")
+                    << "Call to other only valid for Pair with differing"
+                    << " elements:" << *this << abort(FatalError);
+            }
+            else if (first() == a)
+            {
+                return second();
+            }
+            else
+            {
+                if (second() != a)
+                {
+                    FatalErrorIn("Pair<Type>::other(const Type&) const")
+                        << "Pair " << *this
+                        << " does not contain " << a << abort(FatalError);
+                }
+                return first();
+            }
         }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,9 +27,9 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "IPstream.H"
-
 #include <mpi.h>
+
+#include "IPstream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,36 +48,40 @@ IPstream::IPstream
 :
     Pstream(bufSize),
     Istream(format, version),
-    fromProcNo_(fromProcNo)
+    fromProcNo_(fromProcNo),
+    messageSize_(0)
 {
     setOpened();
     setGood();
 
     MPI_Status status;
-    int messageSize;
 
-    // If the buffer size is not specified then probe the incomming message
-
+    // If the buffer size is not specified probe the incomming message
+    // and set it
     if (!bufSize)
     {
         MPI_Probe(procID(fromProcNo_), msgType(), MPI_COMM_WORLD, &status);
-        MPI_Get_count(&status, MPI_BYTE, &messageSize);
+        MPI_Get_count(&status, MPI_BYTE, &messageSize_);
 
-        buf_.setSize(messageSize);
+        buf_.setSize(messageSize_);
     }
 
-    if (!read(fromProcNo_, buf_.begin(), buf_.size()))
+    messageSize_ = read(fromProcNo_, buf_.begin(), buf_.size());
+
+    if (!messageSize_)
     {
-        FatalErrorIn("IPstream::IPstream(const int fromProcNo)")
-            << "read failed";
-        abort();
+        FatalErrorIn
+        (
+            "IPstream::IPstream(const int fromProcNo, "
+            "const label bufSize, streamFormat format, versionNumber version)"
+        )   << "read failed" << Foam::abort(FatalError);
     }
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool IPstream::read
+label IPstream::read
 (
     const int fromProcNo,
     char* buf,
@@ -85,7 +89,6 @@ bool IPstream::read
 )
 {
     MPI_Status status;
-    int messageSize;
 
     if
     (
@@ -105,14 +108,16 @@ bool IPstream::read
         (
             "IPstream::read"
             "(const int fromProcNo, char* buf, std::streamsize bufSize)"
-        )   << "MPI_Recv cannot receive incomming message" << endl;
+        )   << "MPI_Recv cannot receive incomming message"
+            << Foam::abort(FatalError);
 
-        return false;
+        return 0;
     }
 
 
     // Check size of message read
 
+    label messageSize;
     MPI_Get_count(&status, MPI_BYTE, &messageSize);
 
     if (messageSize > bufSize)
@@ -121,14 +126,13 @@ bool IPstream::read
         (
             "IPstream::read"
             "(const int fromProcNo, char* buf, std::streamsize bufSize)"
-        )   << "buffer (" << int(bufSize)
+        )   << "buffer (" << label(bufSize)
             << ") not large enough for incomming message ("
-            << messageSize << ')' << endl;
-
-        return false;
+            << messageSize << ')'
+            << Foam::abort(FatalError);
     }
 
-    return true;
+    return messageSize;
 }
 
 

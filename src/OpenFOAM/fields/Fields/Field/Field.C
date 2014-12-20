@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,6 +27,7 @@ License
 #include "FieldMapper.H"
 #include "FieldM.H"
 #include "dictionary.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -173,9 +174,9 @@ Field<Type>::Field(const UList<Type>& tl)
 template<class Type>
 Field<Type>::Field(const tmp<Field<Type> >& tf)
 :
-    List<Type>(const_cast<Field&>(tf()), tf.isTmp())
+    List<Type>(const_cast<Field<Type>&>(tf()), tf.isTmp())
 {
-    const_cast<Field&>(tf()).resetRefCount();
+    const_cast<Field<Type>&>(tf()).resetRefCount();
 }
 #endif
 
@@ -306,11 +307,20 @@ void Field<Type>::map
         f.setSize(mapAddressing.size());
     }
 
-    forAll(f, i)
+    if (mapF.size() > 0)
     {
-        f[i] = mapF[mapAddressing[i]];
+        forAll(f, i)
+        {
+            label mapI = mapAddressing[i];
+
+            if (mapI >= 0)
+            { 
+                f[i] = mapF[mapI];
+            }
+        }
     }
 }
+
 
 template<class Type>
 void Field<Type>::map
@@ -452,7 +462,12 @@ void Field<Type>::rmap
 
     forAll(mapF, i)
     {
-        f[mapAddressing[i]] = mapF[i];
+        label mapI = mapAddressing[i];
+
+        if (mapI >= 0)
+        {
+            f[mapI] = mapF[i];
+        }
     }
 }
 
@@ -531,6 +546,30 @@ void Field<Type>::replace
 
 
 template<class Type>
+void Field<Type>::replace
+(
+    const direction d,
+    const tmp<Field<cmptType> >& tsf
+)
+{
+    replace(d, tsf());
+    tsf.clear();
+}
+
+
+template<class Type>
+void Field<Type>::replace
+(
+    const direction d,
+    const cmptType& c
+)
+{
+    TFOR_ALL_F_OP_FUNC_S_S(Type, *this, ., replace, const direction, d,
+        cmptType, c)
+}
+
+
+template<class Type>
 tmp<Field<Type> > Field<Type>::T() const
 {
     tmp<Field<Type> > transpose(new Field<Type>(this->size()));
@@ -546,7 +585,7 @@ void Field<Type>::writeEntry(const word& keyword, Ostream& os) const
 
     bool uniform = false;
 
-    if (this->size() && writeBinary(this->begin()))
+    if (this->size() && contiguous<Type>())
     {
         uniform = true;
 
@@ -626,6 +665,15 @@ template<class Type>
 void Field<Type>::operator=(const Type& t)
 {
     List<Type>::operator=(t);
+}
+
+
+template<class Type>
+template<class Form, class Cmpt, int nCmpt>
+void Field<Type>::operator=(const VectorSpace<Form,Cmpt,nCmpt>& vs)
+{
+    typedef VectorSpace<Form,Cmpt,nCmpt> VSType;
+    TFOR_ALL_F_OP_S(Type, *this, =, VSType, vs)
 }
 
 

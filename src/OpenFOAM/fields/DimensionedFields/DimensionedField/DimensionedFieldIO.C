@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,6 +32,22 @@ License
 namespace Foam
 {
 
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+template<class Type, class GeoMesh>
+void DimensionedField<Type, GeoMesh>::readField
+(
+    const dictionary& fieldDict,
+    const word& fieldDictEntry
+)
+{
+    dimensions_.reset(dimensionSet(fieldDict.lookup("dimensions")));
+
+    Field<Type> f(fieldDictEntry, fieldDict, GeoMesh::size(mesh_));
+    transfer(f);
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type, class GeoMesh>
@@ -47,14 +63,7 @@ DimensionedField<Type, GeoMesh>::DimensionedField
     mesh_(mesh),
     dimensions_(dimless)
 {
-    Istream& is = readStream(typeName);
-
-    dictionary fieldDict(is);
-
-    dimensions_.reset(dimensionSet(fieldDict.lookup("dimensions")));
-
-    Field<Type> f(fieldDictEntry, fieldDict, GeoMesh::size(mesh_));
-    transfer(f);
+    readField(dictionary(readStream(typeName)), fieldDictEntry);
 }
 
 

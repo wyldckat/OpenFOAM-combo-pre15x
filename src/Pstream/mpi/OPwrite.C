@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,9 +27,9 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "OPstream.H"
-
 #include <mpi.h>
+
+#include "OPstream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,8 +52,8 @@ OPstream::~OPstream()
     )
     {
         FatalErrorIn("OPstream::~OPstream()")
-            << "MPI_Bsend cannot send outgoing message";
-        abort();
+            << "MPI_Bsend cannot send outgoing message"
+            << Foam::abort(FatalError);
     }
 }
 

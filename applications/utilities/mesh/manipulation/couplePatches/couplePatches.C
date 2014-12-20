@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -93,7 +93,10 @@ int main(int argc, char *argv[])
 
         faceList oldFaces(mesh.faces());
 
-        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh);
+        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh, false);
+
+        // Update fields
+        mesh.updateMesh(morphMap);
 
         // Move mesh (since morphing does not do this)
         if (morphMap().hasMotionPoints())

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -126,6 +126,7 @@ public:
         (
             const FieldField<Field, Type2>& ff
         )
+#       ifdef __INTEL_COMPILER
         {
             FieldField<Field, Type>* nffPtr
             (
@@ -134,12 +135,14 @@ public:
 
             forAll(*nffPtr, i)
             { 
-                nffPtr->hook(Field<Type>::NewCalculatedType(ff[i]).ptr());
+                nffPtr->set(i, Field<Type>::NewCalculatedType(ff[i]).ptr());
             }
 
             return tmp<FieldField<Field, Type> >(nffPtr);
         }
-
+#       else
+        ;
+#       endif
 
     // Member functions
 

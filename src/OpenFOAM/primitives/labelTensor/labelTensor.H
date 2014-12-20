@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ SourceFiles
 #define labelTensor_H
 
 #include "Tensor.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -55,11 +56,10 @@ static const labelTensor labelI
     0, 0, 1
 );
 
-//- Allow binary writing for arrays of labelTensors
-inline bool writeBinary(const labelTensor*)
-{
-    return true;
-}
+
+//- Specify data associated with labelTensor type is contiguous
+template<>
+inline bool contiguous<labelTensor>() {return true;}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

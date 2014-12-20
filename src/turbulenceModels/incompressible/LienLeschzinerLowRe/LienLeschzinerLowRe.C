@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -102,13 +102,13 @@ LienLeschzinerLowRe::LienLeschzinerLowRe
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-tmp<volTensorField> LienLeschzinerLowRe::R() const
+tmp<volSymmTensorField> LienLeschzinerLowRe::R() const
 {
     volTensorField gradU = fvc::grad(U_);
 
-    return tmp<volTensorField>
+    return tmp<volSymmTensorField>
     (
-        new volTensorField
+        new volSymmTensorField
         (
             IOobject
             (
@@ -118,7 +118,7 @@ tmp<volTensorField> LienLeschzinerLowRe::R() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            ((2.0/3.0)*I)*k_ - nut_*(gradU + gradU.T()),
+            ((2.0/3.0)*I)*k_ - nut_*twoSymm(gradU),
             k_.boundaryField().types()
         )
     );

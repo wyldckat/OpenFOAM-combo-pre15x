@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -87,14 +87,14 @@ int main(int argc, char *argv[])
                     IOobject::NO_READ,
                     IOobject::NO_WRITE
                 ),
-                0.5*((tr(gradU)*tr(gradU)) - tr(((gradU)&(gradU))))
+                0.5*(sqr(tr(gradU)) - tr(((gradU)&(gradU))))
             );
 
             /*
             // This is a second way of calculating Q, that delivers results
             // very close, but not identical to the first approach.
 
-            volTensorField S = symm(gradU);  // symmetric part of tensor
+            volSymmTensorField S = symm(gradU);  // symmetric part of tensor
             volTensorField W = skew(gradU);  // anti-symmetric part
 
             volScalarField SS =  S&&S;

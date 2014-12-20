@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,8 +30,8 @@ Description
 SourceFiles
     vtkFoam.C
     vtkFoamInsertNextPoint.H
-    interpolatePointToCell.H
     vtkFoamAddFields.H
+    vtkFoamAddInternalMesh.H
     vtkFoamConvertFields.H
     vtkFoamConvertVolField.H
     vtkFoamConvertPatchFaceField.H
@@ -98,7 +98,10 @@ class vtkFoam
     // Private Member Functions
 
         //- Pad-out the time name to avoid bug in the GUI redraw
-        static string padTimeString(const string& ts);
+        static string padTimeString(const string&);
+
+        //- Pad-out the patch name
+        static string padPatchString(const string&);
 
         //- Find and set the selected time from all the methods of selection
         static void setSelectedTime

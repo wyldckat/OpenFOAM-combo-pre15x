@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -100,6 +100,12 @@ public:
 
         //- Construct from Istream.
         dimensioned(Istream&);
+
+        //- Construct from an Istream with a given name
+        dimensioned(const word&, Istream&);
+
+        //- Construct from an Istream with a given name and dimensions
+        dimensioned(const word&, const dimensionSet&, Istream&);
 
 
     // Member functions

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -282,10 +282,8 @@ void PrimitivePatch<Face, FaceList, PointField>::calcFaceNormals() const
     forAll (n, faceI)
     {
         n[faceI] = this->operator[](faceI).normal(points_);
+        n[faceI] /= mag(n[faceI]) + VSMALL;
     }
-
-    // Normalize the normals
-    n /= mag(n) + VSMALL;
 
     if (debug)
     {

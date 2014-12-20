@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -82,7 +82,6 @@ Description
     list. Thus, for every point the losort start gives the address of the
     first face to neighbour this point.
 
-
 SourceFiles
     lduAddressing.C
 
@@ -92,6 +91,7 @@ SourceFiles
 #define lduAddressing_H
 
 #include "labelList.H"
+#include "lduSchedule.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -108,6 +108,7 @@ class lduAddressing
 
         //- Number of equations
         label size_;
+
 
     //- Demand-driven data
 
@@ -175,6 +176,9 @@ public:
         (
             const label patchNo
         ) const = 0;
+
+        // Return patch field evaluation schedule
+        virtual const lduSchedule& patchSchedule() const = 0;
 
         //- Return losort addressing
         const unallocLabelList& losortAddr() const;

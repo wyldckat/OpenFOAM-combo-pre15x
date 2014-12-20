@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,6 +43,26 @@ inline Tensor<Cmpt>::Tensor(const VectorSpace<Tensor<Cmpt>, Cmpt, 9>& vs)
 :
     VectorSpace<Tensor<Cmpt>, Cmpt, 9>(vs)
 {}
+
+
+//- Construct given SphericalTensor
+template <class Cmpt>
+inline Tensor<Cmpt>::Tensor(const SphericalTensor<Cmpt>& st)
+{
+    this->v_[XX] = st.ii(); this->v_[XY] = 0; this->v_[XZ] = 0;
+    this->v_[YX] = 0; this->v_[YY] = st.ii(); this->v_[YZ] = 0;
+    this->v_[ZX] = 0; this->v_[ZY] = 0; this->v_[ZZ] = st.ii();
+}
+
+
+//- Construct given SymmTensor
+template <class Cmpt>
+inline Tensor<Cmpt>::Tensor(const SymmTensor<Cmpt>& st)
+{
+    this->v_[XX] = st.xx(); this->v_[XY] = st.xy(); this->v_[XZ] = st.xz();
+    this->v_[YX] = st.xy(); this->v_[YY] = st.yy(); this->v_[YZ] = st.yz();
+    this->v_[ZX] = st.xz(); this->v_[ZY] = st.yz(); this->v_[ZZ] = st.zz();
+}
 
 
 //- Construct from components
@@ -235,6 +255,26 @@ inline Tensor<Cmpt> Tensor<Cmpt>::T() const
 }
 
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template <class Cmpt>
+inline void Tensor<Cmpt>::operator=(const SphericalTensor<Cmpt>& st)
+{
+    this->v_[XX] = st.ii(); this->v_[XY] = 0; this->v_[XZ] = 0;
+    this->v_[YX] = 0; this->v_[YY] = st.ii(); this->v_[YZ] = 0;
+    this->v_[ZX] = 0; this->v_[ZY] = 0; this->v_[ZZ] = st.ii();
+}
+
+
+template <class Cmpt>
+inline void Tensor<Cmpt>::operator=(const SymmTensor<Cmpt>& st)
+{
+    this->v_[XX] = st.xx(); this->v_[XY] = st.xy(); this->v_[XZ] = st.xz();
+    this->v_[YX] = st.xy(); this->v_[YY] = st.yy(); this->v_[YZ] = st.yz();
+    this->v_[ZX] = st.xz(); this->v_[ZY] = st.yz(); this->v_[ZZ] = st.zz();
+}
+
+
 // * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
 
 //- Hodge Dual operator (tensor -> vector)
@@ -279,6 +319,7 @@ operator&(const Tensor<Cmpt>& t1, const Tensor<Cmpt>& t2)
     );
 }
 
+
 //- Inner-product between a tensor and a vector
 template <class Cmpt>
 inline typename innerProduct<Tensor<Cmpt>, Vector<Cmpt> >::type
@@ -292,6 +333,7 @@ operator&(const Tensor<Cmpt>& t, const Vector<Cmpt>& v)
     );
 }
 
+
 //- Inner-product between a vector and a tensor
 template <class Cmpt>
 inline typename innerProduct<Vector<Cmpt>, Tensor<Cmpt> >::type
@@ -304,6 +346,7 @@ operator&(const Vector<Cmpt>& v, const Tensor<Cmpt>& t)
         v.x()*t.xz() + v.y()*t.yz() + v.z()*t.zz()
     );
 }
+
 
 //- Outer-product between two vectors
 template <class Cmpt>
@@ -319,24 +362,49 @@ operator*(const Vector<Cmpt>& v1, const Vector<Cmpt>& v2)
 }
 
 
+// * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
+
 //- Return the trace of a tensor
 template <class Cmpt>
-inline scalar tr(const Tensor<Cmpt>& t)
+inline Cmpt tr(const Tensor<Cmpt>& t)
 {
     return t.xx() + t.yy() + t.zz();
 }
 
+
+//- Return the spherical part of a tensor
+template <class Cmpt>
+inline SphericalTensor<Cmpt> sph(const Tensor<Cmpt>& t)
+{
+    return (1.0/3.0)*tr(t);
+}
+
+
 //- Return the symmetric part of a tensor
 template <class Cmpt>
-inline Tensor<Cmpt> symm(const Tensor<Cmpt>& t)
+inline SymmTensor<Cmpt> symm(const Tensor<Cmpt>& t)
 {
-    return Tensor<Cmpt>
+    return SymmTensor<Cmpt>
     (
         t.xx(), 0.5*(t.xy() + t.yx()), 0.5*(t.xz() + t.zx()),
-        0.5*(t.yx() + t.xy()), t.yy(), 0.5*(t.yz() + t.zy()),
-        0.5*(t.zx() + t.xz()), 0.5*(t.zy() + t.yz()), t.zz()
+                t.yy(),                0.5*(t.yz() + t.zy()),
+                                       t.zz()
     );
 }
+
+
+//- Return the twice the symmetric part of a tensor
+template <class Cmpt>
+inline SymmTensor<Cmpt> twoSymm(const Tensor<Cmpt>& t)
+{
+    return SymmTensor<Cmpt>
+    (
+        2*t.xx(), (t.xy() + t.yx()), (t.xz() + t.zx()),
+                  2*t.yy(),          (t.yz() + t.zy()),
+                                     2*t.zz()
+    );
+}
+
 
 //- Return the skew-symmetric part of a tensor
 template <class Cmpt>
@@ -350,9 +418,34 @@ inline Tensor<Cmpt> skew(const Tensor<Cmpt>& t)
     );
 }
 
+
+//- Return the skew-symmetric part of a symmetric tensor
+template <class Cmpt>
+inline const Tensor<Cmpt>& skew(const SymmTensor<Cmpt>& st)
+{
+    return Tensor<Cmpt>::zero;
+}
+
+
+//- Return the deviatoric part of a tensor
+template <class Cmpt>
+inline Tensor<Cmpt> dev(const Tensor<Cmpt>& t)
+{
+    return t - SphericalTensor<Cmpt>::oneThirdI*tr(t);
+}
+
+
+//- Return the deviatoric part of a tensor
+template <class Cmpt>
+inline Tensor<Cmpt> dev2(const Tensor<Cmpt>& t)
+{
+    return t - SphericalTensor<Cmpt>::twoThirdsI*tr(t);
+}
+
+
 //- Return the determinant of a tensor
 template <class Cmpt>
-inline scalar det(const Tensor<Cmpt>& t)
+inline Cmpt det(const Tensor<Cmpt>& t)
 {
     return
     (
@@ -362,7 +455,8 @@ inline scalar det(const Tensor<Cmpt>& t)
     );
 }
 
-//- Return the cofactor tensor of a symmetric tensor
+
+//- Return the cofactor tensor of a tensor
 template <class Cmpt>
 inline Tensor<Cmpt> cofactors(const Tensor<Cmpt>& t)
 {
@@ -382,9 +476,10 @@ inline Tensor<Cmpt> cofactors(const Tensor<Cmpt>& t)
     );
 }
 
-//- Return the inverse of a symmetric tensor
+
+//- Return the inverse of a tensor give the determinant
 template <class Cmpt>
-inline Tensor<Cmpt> inv(const Tensor<Cmpt>& t)
+inline Tensor<Cmpt> inv(const Tensor<Cmpt>& t, const Cmpt dett)
 {
     return Tensor<Cmpt>
     (
@@ -399,13 +494,21 @@ inline Tensor<Cmpt> inv(const Tensor<Cmpt>& t)
         t.yx()*t.zy() - t.yy()*t.zx(),
         t.xy()*t.zx() - t.xx()*t.zy(),
         t.xx()*t.yy() - t.yx()*t.xy()
-    )/det(t);
+    )/dett;
+}
+
+
+//- Return the inverse of a tensor
+template <class Cmpt>
+inline Tensor<Cmpt> inv(const Tensor<Cmpt>& t)
+{
+    return inv(t, det(t));
 }
 
 
 //- Return the 1st invariant of a tensor
 template <class Cmpt>
-inline scalar invariantI(const Tensor<Cmpt>& t)
+inline Cmpt invariantI(const Tensor<Cmpt>& t)
 {
     return tr(t);
 }
@@ -413,7 +516,7 @@ inline scalar invariantI(const Tensor<Cmpt>& t)
 
 //- Return the 2nd invariant of a tensor
 template <class Cmpt>
-inline scalar invariantII(const Tensor<Cmpt>& t)
+inline Cmpt invariantII(const Tensor<Cmpt>& t)
 {
     return
     (
@@ -430,10 +533,336 @@ inline scalar invariantII(const Tensor<Cmpt>& t)
 
 //- Return the 3rd invariant of a tensor
 template <class Cmpt>
-inline scalar invariantIII(const Tensor<Cmpt>& t)
+inline Cmpt invariantIII(const Tensor<Cmpt>& t)
 {
     return det(t);
 }
+
+
+// * * * * * * * * * Mixed Tensor SphericalTensor Operators  * * * * * * * * //
+
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator+(const SphericalTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
+{
+    return Tensor<Cmpt>
+    (
+        st1.ii() + t2.xx(), t2.xy(),            t2.xz(),
+        t2.yx(),            st1.ii() + t2.yy(), t2.yz(),
+        t2.zx(),            t2.zy(),            st1.ii() + t2.zz()
+    );
+}
+
+
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator+(const Tensor<Cmpt>& t1, const SphericalTensor<Cmpt>& st2)
+{
+    return Tensor<Cmpt>
+    (
+        t1.xx() + st2.ii(), t1.xy(),            t1.xz(),
+        t1.yx(),            t1.yy() + st2.ii(), t1.yz(),
+        t1.zx(),            t1.zy(),            t1.zz() + st2.ii()
+    );
+}
+
+
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator-(const SphericalTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
+{
+    return Tensor<Cmpt>
+    (
+        st1.ii() - t2.xx(), -t2.xy(),            -t2.xz(),
+       -t2.yx(),             st1.ii() - t2.yy(), -t2.yz(),
+       -t2.zx(),            -t2.zy(),             st1.ii() - t2.zz()
+    );
+}
+
+
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator-(const Tensor<Cmpt>& t1, const SphericalTensor<Cmpt>& st2)
+{
+    return Tensor<Cmpt>
+    (
+        t1.xx() - st2.ii(), t1.xy(),            t1.xz(),
+        t1.yx(),            t1.yy() - st2.ii(), t1.yz(),
+        t1.zx(),            t1.zy(),            t1.zz() - st2.ii()
+    );
+}
+
+
+//- Inner-product between a spherical tensor and a tensor
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator&(const SphericalTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
+{
+    return Tensor<Cmpt>
+    (
+        st1.ii()*t2.xx(),
+        st1.ii()*t2.xy(),
+        st1.ii()*t2.xz(),
+
+                          st1.ii()*t2.yx(),
+                          st1.ii()*t2.yy(),
+                          st1.ii()*t2.yz(),
+
+                                            st1.ii()*t2.zx(),
+                                            st1.ii()*t2.zy(),
+                                            st1.ii()*t2.zz()
+    );
+}
+
+
+//- Inner-product between a tensor and a spherical tensor
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator&(const Tensor<Cmpt>& t1, const SphericalTensor<Cmpt>& st2)
+{
+    return Tensor<Cmpt>
+    (
+        t1.xx()*st2.ii(),
+                          t1.xy()*st2.ii(),
+                                            t1.xz()*st2.ii(),
+
+        t1.yx()*st2.ii(),
+                          t1.yy()*st2.ii(),
+                                            t1.yz()*st2.ii(),
+
+        t1.zx()*st2.ii(),
+                          t1.zy()*st2.ii(),
+                                            t1.zz()*st2.ii()
+    );
+}
+
+
+//- Double-dot-product between a spherical tensor and a tensor
+template <class Cmpt>
+inline Cmpt
+operator&&(const SphericalTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
+{
+    return(st1.ii()*t2.xx() + st1.ii()*t2.yy() + st1.ii()*t2.zz());
+}
+
+
+//- Double-dot-product between a tensor and a spherical tensor
+template <class Cmpt>
+inline Cmpt
+operator&&(const Tensor<Cmpt>& t1, const SphericalTensor<Cmpt>& st2)
+{
+    return(t1.xx()*st2.ii() + t1.yy()*st2.ii() + t1.zz()*st2.ii());
+}
+
+
+template<class Cmpt>
+class typeOfSum<SphericalTensor<Cmpt>, Tensor<Cmpt> >
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
+
+template<class Cmpt>
+class typeOfSum<Tensor<Cmpt>, SphericalTensor<Cmpt> >
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
+
+
+template<class Cmpt>
+class innerProduct<SphericalTensor<Cmpt>, Tensor<Cmpt> >
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
+
+template<class Cmpt>
+class innerProduct<Tensor<Cmpt>, SphericalTensor<Cmpt> >
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
+
+
+// * * * * * * * * * * Mixed Tensor SymmTensor Operators * * * * * * * * * * //
+
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator+(const SymmTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
+{
+    return Tensor<Cmpt>
+    (
+        st1.xx() + t2.xx(), st1.xy() + t2.xy(), st1.xz() + t2.xz(),
+        st1.xy() + t2.yx(), st1.yy() + t2.yy(), st1.yz() + t2.yz(),
+        st1.xz() + t2.zx(), st1.yz() + t2.zy(), st1.zz() + t2.zz()
+    );
+}
+
+
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator+(const Tensor<Cmpt>& t1, const SymmTensor<Cmpt>& st2)
+{
+    return Tensor<Cmpt>
+    (
+        t1.xx() + st2.xx(), t1.xy() + st2.xy(), t1.xz() + st2.xz(),
+        t1.yx() + st2.xy(), t1.yy() + st2.yy(), t1.yz() + st2.yy(),
+        t1.zx() + st2.xz(), t1.zy() + st2.yz(), t1.zz() + st2.zz()
+    );
+}
+
+
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator-(const SymmTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
+{
+    return Tensor<Cmpt>
+    (
+        st1.xx() - t2.xx(), st1.xy() - t2.xy(), st1.xz() - t2.xz(),
+        st1.xy() - t2.yx(), st1.yy() - t2.yy(), st1.yz() - t2.yz(),
+        st1.xz() - t2.zx(), st1.yz() - t2.zy(), st1.zz() - t2.zz()
+    );
+}
+
+
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator-(const Tensor<Cmpt>& t1, const SymmTensor<Cmpt>& st2)
+{
+    return Tensor<Cmpt>
+    (
+        t1.xx() - st2.xx(), t1.xy() - st2.xy(), t1.xz() - st2.xz(),
+        t1.yx() - st2.xy(), t1.yy() - st2.yy(), t1.yz() - st2.yy(),
+        t1.zx() - st2.xz(), t1.zy() - st2.yz(), t1.zz() - st2.zz()
+    );
+}
+
+
+//- Inner-product between a spherical tensor and a tensor
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator&(const SymmTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
+{
+    return Tensor<Cmpt>
+    (
+        st1.xx()*t2.xx() + st1.xy()*t2.yx() + st1.xz()*t2.zx(),
+        st1.xx()*t2.xy() + st1.xy()*t2.yy() + st1.xz()*t2.zy(),
+        st1.xx()*t2.xz() + st1.xy()*t2.yz() + st1.xz()*t2.zz(),
+
+        st1.xy()*t2.xx() + st1.yy()*t2.yx() + st1.yz()*t2.zx(),
+        st1.xy()*t2.xy() + st1.yy()*t2.yy() + st1.yz()*t2.zy(),
+        st1.xy()*t2.xz() + st1.yy()*t2.yz() + st1.yz()*t2.zz(),
+
+        st1.xz()*t2.xx() + st1.yz()*t2.yx() + st1.zz()*t2.zx(),
+        st1.xz()*t2.xy() + st1.yz()*t2.yy() + st1.zz()*t2.zy(),
+        st1.xz()*t2.xz() + st1.yz()*t2.yz() + st1.zz()*t2.zz()
+    );
+}
+
+
+//- Inner-product between a tensor and a spherical tensor
+template <class Cmpt>
+inline Tensor<Cmpt>
+operator&(const Tensor<Cmpt>& t1, const SymmTensor<Cmpt>& st2)
+{
+    return Tensor<Cmpt>
+    (
+        t1.xx()*st2.xx() + t1.xy()*st2.xy() + t1.xz()*st2.xz(),
+        t1.xx()*st2.xy() + t1.xy()*st2.yy() + t1.xz()*st2.yz(),
+        t1.xx()*st2.xz() + t1.xy()*st2.yz() + t1.xz()*st2.zz(),
+
+        t1.yx()*st2.xx() + t1.yy()*st2.xy() + t1.yz()*st2.xz(),
+        t1.yx()*st2.xy() + t1.yy()*st2.yy() + t1.yz()*st2.yz(),
+        t1.yx()*st2.xz() + t1.yy()*st2.yz() + t1.yz()*st2.zz(),
+
+        t1.zx()*st2.xx() + t1.zy()*st2.xy() + t1.zz()*st2.xz(),
+        t1.zx()*st2.xy() + t1.zy()*st2.yy() + t1.zz()*st2.yz(),
+        t1.zx()*st2.xz() + t1.zy()*st2.yz() + t1.zz()*st2.zz()
+    );
+}
+
+
+//- Double-dot-product between a spherical tensor and a tensor
+template <class Cmpt>
+inline Cmpt
+operator&&(const SymmTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
+{
+    return
+    (
+        st1.xx()*t2.xx() + st1.xy()*t2.yx() + st1.xz()*t2.zx() +
+        st1.xx()*t2.xy() + st1.xy()*t2.yy() + st1.xz()*t2.zy() +
+        st1.xx()*t2.xz() + st1.xy()*t2.yz() + st1.xz()*t2.zz() +
+
+        st1.xy()*t2.xx() + st1.yy()*t2.yx() + st1.yz()*t2.zx() +
+        st1.xy()*t2.xy() + st1.yy()*t2.yy() + st1.yz()*t2.zy() +
+        st1.xy()*t2.xz() + st1.yy()*t2.yz() + st1.yz()*t2.zz() +
+
+        st1.xz()*t2.xx() + st1.yz()*t2.yx() + st1.zz()*t2.zx() +
+        st1.xz()*t2.xy() + st1.yz()*t2.yy() + st1.zz()*t2.zy() +
+        st1.xz()*t2.xz() + st1.yz()*t2.yz() + st1.zz()*t2.zz()
+    );
+}
+
+
+//- Double-dot-product between a tensor and a spherical tensor
+template <class Cmpt>
+inline Cmpt
+operator&&(const Tensor<Cmpt>& t1, const SymmTensor<Cmpt>& st2)
+{
+    return
+    (
+        t1.xx()*st2.xx() + t1.xy()*st2.xy() + t1.xz()*st2.xz() +
+        t1.xx()*st2.xy() + t1.xy()*st2.yy() + t1.xz()*st2.yz() +
+        t1.xx()*st2.xz() + t1.xy()*st2.yz() + t1.xz()*st2.zz() +
+
+        t1.yx()*st2.xx() + t1.yy()*st2.xy() + t1.yz()*st2.xz() +
+        t1.yx()*st2.xy() + t1.yy()*st2.yy() + t1.yz()*st2.yz() +
+        t1.yx()*st2.xz() + t1.yy()*st2.yz() + t1.yz()*st2.zz() +
+
+        t1.zx()*st2.xx() + t1.zy()*st2.xy() + t1.zz()*st2.xz() +
+        t1.zx()*st2.xy() + t1.zy()*st2.yy() + t1.zz()*st2.yz() +
+        t1.zx()*st2.xz() + t1.zy()*st2.yz() + t1.zz()*st2.zz()
+    );
+}
+
+
+template<class Cmpt>
+class typeOfSum<SymmTensor<Cmpt>, Tensor<Cmpt> >
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
+
+template<class Cmpt>
+class typeOfSum<Tensor<Cmpt>, SymmTensor<Cmpt> >
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
+
+
+template<class Cmpt>
+class innerProduct<SymmTensor<Cmpt>, Tensor<Cmpt> >
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
+
+template<class Cmpt>
+class innerProduct<Tensor<Cmpt>, SymmTensor<Cmpt> >
+{
+public:
+
+    typedef Tensor<Cmpt> type;
+};
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

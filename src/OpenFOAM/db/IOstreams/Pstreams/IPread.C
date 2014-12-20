@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,13 +39,23 @@ namespace Foam
 
 // * * * * * * * * * * * * * Private member functions  * * * * * * * * * * * //
 
+inline void IPstream::checkEof()
+{
+    if (bufPosition_ == messageSize_)
+    {
+        setEof();
+    }
+}
+
+
 template<class T>
 inline void IPstream::readFromBuffer(T& t)
 {
-    //t = (T&)(buf_[bufPosition_]);
-    //bufPosition_ += sizeof(T);
+    t = reinterpret_cast<T&>(buf_[bufPosition_]);
+    bufPosition_ += sizeof(T);
+    checkEof();
 
-    readFromBuffer(&t, sizeof(T));
+    //readFromBuffer(&t, sizeof(T));
 }
 
 
@@ -55,8 +65,8 @@ inline void IPstream::readFromBuffer(void* data, size_t count)
     register char* dataPtr = reinterpret_cast<char*>(data);
     register size_t i = count;
     while (i--) *dataPtr++ = *bufPtr++;
-
     bufPosition_ += count;
+    checkEof();
 }
 
 
@@ -70,6 +80,7 @@ Istream& IPstream::read(char& c)
 {
     c = buf_[bufPosition_];
     bufPosition_++;
+    checkEof();
     return *this;
 }
 
@@ -80,6 +91,7 @@ Istream& IPstream::read(word& w)
     readFromBuffer(ws);
     w = &buf_[bufPosition_];
     bufPosition_ += ws + 1;
+    checkEof();
     return *this;
 }
 
@@ -90,6 +102,7 @@ Istream& IPstream::read(string& s)
     readFromBuffer(ss);
     s = &buf_[bufPosition_];
     bufPosition_ += ss + 1;
+    checkEof();
     return *this;
 }
 
@@ -121,8 +134,8 @@ Istream& IPstream::read(char* data, std::streamsize count)
     if (format() != BINARY)
     {
         FatalErrorIn("IPstream::read(char*, std::streamsize)")
-            << "stream format not binary";
-        abort();
+            << "stream format not binary"
+            << Foam::abort(FatalError);
     }
 
     readFromBuffer(data, count);

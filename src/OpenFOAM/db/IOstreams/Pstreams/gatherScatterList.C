@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,6 +36,7 @@ Description
 
 #include "IPstream.H"
 #include "OPstream.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -72,34 +73,50 @@ void Pstream::gatherList
         forAll(myComm.below(), belowI)
         {
             label belowID = myComm.below()[belowI];
-
-            //IPstream fromBelow(belowID, Pstream::nProcs()*sizeof(T));
-            IPstream fromBelow(belowID);
-
-            // Receive from belowID first and put in correct slot in Values
-            fromBelow >> Values[belowID];
-
-            if (debug)
-            {
-                Pout<< " received through "
-                    << belowID << " data from:" << belowID
-                    << " data:" << Values[belowID] << endl;
-            }
-
-            // Receive from all other processors below belowID
             const labelList& belowLeaves = comms[belowID].allBelow();
 
-            forAll(belowLeaves, leafI)
+            if (contiguous<T>())
             {
-                label leafID = belowLeaves[leafI];
+                List<T> receivedValues(belowLeaves.size() + 1);
 
-                fromBelow >> Values[leafID];
+                IPstream::read
+                (
+                    belowID,
+                    reinterpret_cast<char*>(receivedValues.begin()),
+                    receivedValues.byteSize()
+                );
 
-                if (debug)
+                Values[belowID] = receivedValues[0];
+
+                forAll(belowLeaves, leafI)
+                {
+                    Values[belowLeaves[leafI]] = receivedValues[leafI + 1];
+                }
+            }
+            else
+            {
+                IPstream fromBelow(belowID);
+                fromBelow >> Values[belowID];
+
+                if (debug & 2)
                 {
                     Pout<< " received through "
-                        << belowID << " data from:" << leafID
-                        << " data:" << Values[leafID] << endl;
+                        << belowID << " data from:" << belowID
+                        << " data:" << Values[belowID] << endl;
+                }
+
+                // Receive from all other processors below belowID
+                forAll(belowLeaves, leafI)
+                {
+                    label leafID = belowLeaves[leafI];
+                    fromBelow >> Values[leafID];
+
+                    if (debug & 2)
+                    {
+                        Pout<< " received through "
+                            << belowID << " data from:" << leafID
+                            << " data:" << Values[leafID] << endl;
+                    }
                 }
             }
         }
@@ -109,28 +126,49 @@ void Pstream::gatherList
         // - all belowLeaves next
         if (myComm.above() != -1)
         {
-            //OPstream toAbove(myComm.above(), Pstream::nProcs()*sizeof(T), false);
-            OPstream toAbove(myComm.above(), 0, false);
+            const labelList& belowLeaves = myComm.allBelow();
 
-            if (debug)
+            if (debug & 2)
             {
                 Pout<< " sending to " << myComm.above()
                     << " data from me:" << Pstream::myProcNo()
                     << " data:" << Values[Pstream::myProcNo()] << endl;
             }
-            toAbove << Values[Pstream::myProcNo()];
 
-            forAll(myComm.allBelow(), leafI)
+            if (contiguous<T>())
             {
-                label leafID = myComm.allBelow()[leafI];
+                List<T> sendingValues(belowLeaves.size() + 1);
+                sendingValues[0] = Values[Pstream::myProcNo()];
 
-                if (debug)
+                forAll(belowLeaves, leafI)
                 {
-                    Pout<< " sending to "
-                        << myComm.above() << " data from:" << leafID
-                        << " data:" << Values[leafID] << endl;
+                    sendingValues[leafI + 1] = Values[belowLeaves[leafI]];
                 }
-                toAbove << Values[leafID];
+
+                OPstream::write
+                (
+                    myComm.above(),
+                    reinterpret_cast<const char*>(sendingValues.begin()),
+                    sendingValues.byteSize()
+                );
+            }
+            else
+            {
+                OPstream toAbove(myComm.above(), 0, false);
+                toAbove << Values[Pstream::myProcNo()];
+
+                forAll(belowLeaves, leafI)
+                {
+                    label leafID = belowLeaves[leafI];
+
+                    if (debug & 2)
+                    {
+                        Pout<< " sending to "
+                            << myComm.above() << " data from:" << leafID
+                            << " data:" << Values[leafID] << endl;
+                    }
+                    toAbove << Values[leafID];
+                }
             }
         }
     }
@@ -178,20 +216,39 @@ void Pstream::scatterList
         // Reveive from up
         if (myComm.above() != -1)
         {
-            //IPstream fromAbove(myComm.above(), Pstream::nProcs()*sizeof(T));
-            IPstream fromAbove(myComm.above());
+            const labelList& notBelowLeaves = myComm.allNotBelow();
 
-            forAll(myComm.allNotBelow(), leafI)
+            if (contiguous<T>())
             {
-                label leafID = myComm.allNotBelow()[leafI];
+                List<T> receivedValues(notBelowLeaves.size());
 
-                fromAbove >> Values[leafID];
+                IPstream::read
+                (
+                    myComm.above(),
+                    reinterpret_cast<char*>(receivedValues.begin()),
+                    receivedValues.byteSize()
+                );
 
-                if (debug)
+                forAll(notBelowLeaves, leafI)
                 {
-                    Pout<< " received through "
-                        << myComm.above() << " data for:" << leafID
-                        << " data:" << Values[leafID] << endl;
+                    Values[notBelowLeaves[leafI]] = receivedValues[leafI];
+                }
+            }
+            else
+            {
+                IPstream fromAbove(myComm.above());
+
+                forAll(notBelowLeaves, leafI)
+                {
+                    label leafID = notBelowLeaves[leafI];
+                    fromAbove >> Values[leafID];
+
+                    if (debug)
+                    {
+                        Pout<< " received through "
+                            << myComm.above() << " data for:" << leafID
+                            << " data:" << Values[leafID] << endl;
+                    }
                 }
             }
         }
@@ -200,24 +257,40 @@ void Pstream::scatterList
         forAll(myComm.below(), belowI)
         {
             label belowID = myComm.below()[belowI];
+            const labelList& notBelowLeaves = comms[belowID].allNotBelow();
 
-            //OPstream toBelow(belowID, Pstream::nProcs()*sizeof(T), false);
-            OPstream toBelow(belowID, 0, false);
-
-            // Send data destined for all other processors below belowID
-            const labelList& belowLeaves = comms[belowID].allNotBelow();
-
-            forAll(belowLeaves, leafI)
+            if (contiguous<T>())
             {
-                label leafID = belowLeaves[leafI];
+                List<T> sendingValues(notBelowLeaves.size());
 
-                toBelow << Values[leafID];
-
-                if (debug)
+                forAll(notBelowLeaves, leafI)
                 {
-                    Pout<< " sent through "
-                        << belowID << " data for:" << leafID
-                        << " data:" << Values[leafID] << endl;
+                    sendingValues[leafI] = Values[notBelowLeaves[leafI]];
+                }
+
+                OPstream::write
+                (
+                    belowID,
+                    reinterpret_cast<const char*>(sendingValues.begin()),
+                    sendingValues.byteSize()
+                );
+            }
+            else
+            {
+                OPstream toBelow(belowID, 0, false);
+
+                // Send data destined for all other processors below belowID
+                forAll(notBelowLeaves, leafI)
+                {
+                    label leafID = notBelowLeaves[leafI];
+                    toBelow << Values[leafID];
+
+                    if (debug)
+                    {
+                        Pout<< " sent through "
+                            << belowID << " data for:" << leafID
+                            << " data:" << Values[leafID] << endl;
+                    }
                 }
             }
         }

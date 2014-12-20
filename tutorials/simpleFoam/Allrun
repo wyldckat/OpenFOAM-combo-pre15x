@@ -2,11 +2,10 @@
 
 currDir=`pwd`
 application=`basename $currDir`
-case="pitzDaily pitzDaily3Blocks"
+case="pitzDaily pitzDailyExptInlet pitzDaily3Blocks"
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/RunFunctions
 
 runApplication blockMesh $case
 runApplication $application $case
-

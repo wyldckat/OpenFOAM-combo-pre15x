@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -74,6 +74,15 @@ movingWallVelocityFvPatchVectorField::movingWallVelocityFvPatchVectorField
 
 movingWallVelocityFvPatchVectorField::movingWallVelocityFvPatchVectorField
 (
+    const movingWallVelocityFvPatchVectorField& pivpvf
+)
+:
+    fixedValueFvPatchVectorField(pivpvf)
+{}
+
+
+movingWallVelocityFvPatchVectorField::movingWallVelocityFvPatchVectorField
+(
     const movingWallVelocityFvPatchVectorField& pivpvf,
     const vectorField& iF
 )
@@ -109,9 +118,10 @@ void movingWallVelocityFvPatchVectorField::updateCoeffs()
     vectorField Up = (pp.faceCentres() - oldFc)/mesh.time().deltaT().value();
 
     const volVectorField& U = db().lookupObject<volVectorField>("U");
-    scalarField phip = patchField<surfaceScalarField, scalar>(fvc::meshPhi(U));
+    scalarField phip = 
+        patch().patchField<surfaceScalarField, scalar>(fvc::meshPhi(U));
 
-    const vectorField& n = p.nf();
+    vectorField n = p.nf();
     const scalarField& magSf = p.magSf();
     scalarField Un = phip/(magSf + VSMALL);
 

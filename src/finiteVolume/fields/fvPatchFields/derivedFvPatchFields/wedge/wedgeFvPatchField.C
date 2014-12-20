@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,6 +27,7 @@ License
 #include "wedgeFvPatch.H"
 #include "wedgeFvPatchField.H"
 #include "transformField.H"
+#include "symmTransform.H"
 #include "diagTensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -113,6 +114,16 @@ wedgeFvPatchField<Type>::wedgeFvPatchField
 template<class Type>
 wedgeFvPatchField<Type>::wedgeFvPatchField
 (
+    const wedgeFvPatchField<Type>& ptf
+)
+:
+    transformFvPatchField<Type>(ptf)
+{}
+
+
+template<class Type>
+wedgeFvPatchField<Type>::wedgeFvPatchField
+(
     const wedgeFvPatchField<Type>& ptf,
     const Field<Type>& iF
 )
@@ -129,8 +140,9 @@ tmp<Field<Type> > wedgeFvPatchField<Type>::snGrad() const
 {
     Field<Type> pif = this->patchInternalField();
     return
-        (transform(refCast<const wedgeFvPatch>(this->patch()).cellT(), pif) - pif)
-       *(0.5*this->patch().deltaCoeffs());
+    (
+        transform(refCast<const wedgeFvPatch>(this->patch()).cellT(), pif) - pif
+    )*(0.5*this->patch().deltaCoeffs());
 }
 
 
@@ -171,7 +183,8 @@ tmp<Field<Type> > wedgeFvPatchField<Type>::snGradTransformDiag() const
                 pow
                 (
                     reinterpret_cast<const vector&>(diagT),
-                    pTraits<typename powProduct<vector, pTraits<Type>::rank>::type>::zero
+                    pTraits<typename powProduct<vector, pTraits<Type>::rank>
+                    ::type>::zero
                 )
             )
         )

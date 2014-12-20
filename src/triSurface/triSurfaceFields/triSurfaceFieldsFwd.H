@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,21 +45,18 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<class Mesh>
-class GeoMesh;
-
 template<class Type, class GeoMesh>
 class DimensionedField;
 
 class triSurfaceGeoMesh;
 
-typedef Foam::DimensionedField<scalar, GeoMesh<triSurfaceGeoMesh> >
+typedef Foam::DimensionedField<scalar, triSurfaceGeoMesh>
     triSurfaceScalarField;
-typedef Foam::DimensionedField<vector, GeoMesh<triSurfaceGeoMesh> >
+typedef Foam::DimensionedField<vector, triSurfaceGeoMesh>
     triSurfaceVectorField;
-typedef Foam::DimensionedField<tensor, GeoMesh<triSurfaceGeoMesh> >
+typedef Foam::DimensionedField<tensor, triSurfaceGeoMesh>
     triSurfaceTensorField;
-typedef Foam::DimensionedField<sphericalTensor, GeoMesh<triSurfaceGeoMesh> >
+typedef Foam::DimensionedField<sphericalTensor, triSurfaceGeoMesh>
     triSurfaceSphericalTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

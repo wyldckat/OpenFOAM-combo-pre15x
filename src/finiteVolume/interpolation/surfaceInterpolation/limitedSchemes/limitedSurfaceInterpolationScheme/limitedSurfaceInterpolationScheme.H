@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -175,6 +175,13 @@ public:
         (
             const GeometricField<Type, fvPatchField, volMesh>&
         ) const;
+
+        //- Return the interpolation weighting factors
+        virtual tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
+        flux
+        (
+            const GeometricField<Type, fvPatchField, volMesh>&
+        ) const;
 };
 
 
@@ -206,8 +213,9 @@ limitedSurfaceInterpolationScheme<Type>::addMeshFluxConstructorToTable<SS<Type> 
                                                                                \
 makelimitedSurfaceInterpolationTypeScheme(SS, scalar)                          \
 makelimitedSurfaceInterpolationTypeScheme(SS, vector)                          \
-makelimitedSurfaceInterpolationTypeScheme(SS, tensor)                          \
-makelimitedSurfaceInterpolationTypeScheme(SS, sphericalTensor)
+makelimitedSurfaceInterpolationTypeScheme(SS, sphericalTensor)                 \
+makelimitedSurfaceInterpolationTypeScheme(SS, symmTensor)                      \
+makelimitedSurfaceInterpolationTypeScheme(SS, tensor)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

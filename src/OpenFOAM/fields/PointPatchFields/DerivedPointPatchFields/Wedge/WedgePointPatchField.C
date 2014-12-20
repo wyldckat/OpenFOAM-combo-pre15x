@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -187,18 +187,11 @@ evaluate()
 
     tmp<Field<Type> > tvalues =
         transform(I - nHat*nHat, this->patchInternalField());
-    const Field<Type>& values = tvalues();
 
     // Get internal field to insert values into
     Field<Type>& iF = const_cast<Field<Type>&>(this->internalField());
 
-    // Get addressing
-    const labelList& meshPoints = this->patch().meshPoints();
-
-    forAll (meshPoints, pointI)
-    {
-        iF[meshPoints[pointI]] = values[pointI];
-    }
+    setInInternalField(iF, tvalues());
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,7 +36,7 @@ SourceFiles
 #define pressureInletOutletVelocityFvPatchVectorField_H
 
 #include "fvPatchFields.H"
-#include "mixedFvPatchFields.H"
+#include "directionMixedFvPatchFields.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,12 +49,11 @@ namespace Foam
 
 class pressureInletOutletVelocityFvPatchVectorField
 :
-    public mixedFvPatchVectorField
+    public directionMixedFvPatchVectorField
 {
     // Private data
 
         word phiName_;
-        word rhoName_;
 
         //- Optional tangential velocity component
         vectorField tangentialVelocity_;
@@ -93,6 +92,12 @@ public:
             const fvPatchFieldMapper&
         );
 
+        //- Construct as copy
+        pressureInletOutletVelocityFvPatchVectorField
+        (
+            const pressureInletOutletVelocityFvPatchVectorField&
+        );
+
         //- Construct and return a clone
         virtual tmp<fvPatchVectorField> clone() const
         {
@@ -123,17 +128,26 @@ public:
 
         // Access
 
+            //- Return the name of phi
+            const word& phiName() const
+            {
+                return phiName_;
+            }
+
+            //- Return reference to the name of phi to allow adjustment
+            word& phiName()
+            {
+                return phiName_;
+            }
+
             //- Return the tangential velocity
             const vectorField& tangentialVelocity() const
             {
                 return tangentialVelocity_;
             }
 
-            //- Return reference to the tangential velocity to allow adjustment
-            vectorField& tangentialVelocity()
-            {
-                return tangentialVelocity_;
-            }
+            //- Reset the tangential velocity
+            void setTangentialVelocity(const vectorField& tangentialVelocity);
 
 
         // Mapping functions
@@ -161,10 +175,7 @@ public:
 
     // Member operators
 
-        virtual void operator=(const fvPatchField<vector>& pvf)
-        {
-            fvPatchField<vector>::operator=(pvf);
-        }
+        virtual void operator=(const fvPatchField<vector>& pvf);
 };
 
 

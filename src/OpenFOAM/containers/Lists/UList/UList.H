@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,10 +45,6 @@ SourceFiles
 #include "label.H"
 #include "bool.H"
 
-#ifndef cray
-#    define restrict
-#endif
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -82,7 +78,7 @@ class UList
         label size_;
 
         //- Vector of values of type T.
-        T* restrict v_;
+        T* __restrict__ v_;
 
 
 public:
@@ -102,7 +98,7 @@ public:
         inline UList();
 
         //- Construct from components
-        inline UList(T* restrict v, label size);
+        inline UList(T* __restrict__ v, label size);
 
 
     // Member functions
@@ -121,6 +117,11 @@ public:
             //  which returns to the last at the begining of the list
             inline label rcIndex(const label i) const;
 
+            //- Return the binary size in number of characters of the UList
+            //  if the element is a primitive type 
+            //  i.e. contiguous<T>() == true
+            label byteSize() const;
+
 
         // Check
 
@@ -134,11 +135,14 @@ public:
             inline void checkIndex(const label i) const;
 
 
-        //- Write the UList as a dictionary entry
+        //- Write the UList as a dictionary entry.
         void writeEntry(Ostream& os) const;
 
-        //- Write the UList as a dictionary entry with keyword
+        //- Write the UList as a dictionary entry with keyword.
         void writeEntry(const word& keyword, Ostream& os) const;
+
+        //- Assign elements to those from UList.
+        void assign(const UList<T>&);
 
 
     // Member operators
@@ -276,21 +280,6 @@ public:
 };
 
 
-// Allow binary copying and writing of arrays of primitive types
-inline bool writeBinary(const bool*)        {return true;}
-inline bool writeBinary(const char*)        {return true;}
-inline bool writeBinary(const short*)       {return true;}
-inline bool writeBinary(const int*)         {return true;}
-inline bool writeBinary(const long*)        {return true;}
-inline bool writeBinary(const float*)       {return true;}
-inline bool writeBinary(const double*)      {return true;}
-inline bool writeBinary(const long double*) {return true;}
-
-// Disallow binary copying and writing of arrays of everything else
-template<class T>
-inline bool writeBinary(const T*)           {return false;}
-
-
 // Reverse the first n elements of the list
 template<class T>
 inline void reverse(UList<T>& ul, const label n);
@@ -318,8 +307,11 @@ inline void reverse(UList<T>& ul);
     }
 */
 
-#define forAll(list, i) for (Foam::label i=0; i<(list).size(); i++)
-#define forAllReverse(list, i) for (Foam::label i=(list).size()-1; i>=0; i--)
+#define forAll(list, i) \
+    for (Foam::label i=0; i<(list).size(); i++)
+
+#define forAllReverse(list, i) \
+    for (Foam::label i=(list).size()-1; i>=0; i--)
 
 
 /*  Usage of forAllIter macro :

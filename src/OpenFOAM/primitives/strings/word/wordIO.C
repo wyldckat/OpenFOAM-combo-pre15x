@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,19 +27,12 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "word.H"
 #include "IOstreams.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-word::word(Istream& is)
+Foam::word::word(Istream& is)
 :
     string()
 {
@@ -47,7 +40,7 @@ word::word(Istream& is)
 }
 
 
-Istream& operator>>(Istream& is, word& w)
+Foam::Istream& Foam::operator>>(Istream& is, word& w)
 {
     token t(is);
 
@@ -78,16 +71,12 @@ Istream& operator>>(Istream& is, word& w)
 }
 
 
-Ostream& operator<<(Ostream& os, const word& w)
+Foam::Ostream& Foam::operator<<(Ostream& os, const word& w)
 {
     os.write(w);
     os.check("Ostream& operator<<(Ostream&, const word&)");
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

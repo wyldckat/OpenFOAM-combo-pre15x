@@ -26,7 +26,17 @@
 
     surfaceScalarField phiDragb =
         fvc::interpolate(alpha/rhob*K*rUbA)*phia + rUbAf*(g & mesh.Sf());
-    
+
+    // Fix for gravity on outlet boundary.
+    forAll(p.boundaryField(), patchi)
+    {
+        if (isA<zeroGradientFvPatchScalarField>(p.boundaryField()[patchi]))
+        {
+            phiDraga.boundaryField()[patchi] = 0.0;
+            phiDragb.boundaryField()[patchi] = 0.0;
+        }
+    }
+
     phia = (fvc::interpolate(Ua) & mesh.Sf()) + fvc::ddtPhiCorr(rUaA, Ua, phia)
          + phiDraga;
 
@@ -35,7 +45,7 @@
     
     phi = alphaf*phia + betaf*phib;
 
-    surfaceScalarField Dp("(rho*1|A(U))", alphaf*rUaAf/rhoa + betaf*rUbAf/rhob);
+    surfaceScalarField Dp("(rho*(1|A(U)))", alphaf*rUaAf/rhoa + betaf*rUbAf/rhob);
 
     for(int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     {

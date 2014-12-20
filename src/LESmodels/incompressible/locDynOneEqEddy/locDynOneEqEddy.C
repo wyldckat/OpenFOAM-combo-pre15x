@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,19 +43,19 @@ addToRunTimeSelectionTable(LESmodel, locDynOneEqEddy, dictionary);
 
 volScalarField locDynOneEqEddy::ck
 (
-    const volTensorField& D,
+    const volSymmTensorField& D,
     const volScalarField& KK
 ) const
 {
-    volTensorField LL =
-        simpleFilter_(dev(filter_(U() * U()) - (filter_(U()) * filter_(U()))));
+    volSymmTensorField LL =
+        simpleFilter_(dev(filter_(sqr(U())) - (sqr(filter_(U())))));
 
-    volTensorField MM = simpleFilter_(-2.0*delta()*pow(KK, 0.5)*filter_(D));
+    volSymmTensorField MM = simpleFilter_(-2.0*delta()*pow(KK, 0.5)*filter_(D));
 
     volScalarField ck = 
         simpleFilter_(0.5*(LL && MM))
        /(
-            simpleFilter_(MM && MM)
+            simpleFilter_(magSqr(MM))
           + dimensionedScalar("small", sqr(MM.dimensions()), VSMALL)
         );
 
@@ -65,12 +65,12 @@ volScalarField locDynOneEqEddy::ck
 
 volScalarField locDynOneEqEddy::ce
 (
-    const volTensorField& D,
+    const volSymmTensorField& D,
     const volScalarField& KK
 ) const
 {
     volScalarField ce =
-        simpleFilter_(nuEff()*(filter_(D && D) - (filter_(D) && filter_(D))))
+        simpleFilter_(nuEff()*(filter_(magSqr(D)) - magSqr(filter_(D))))
        /simpleFilter_(pow(KK, 1.5)/(2.0*delta()));
 
     return 0.5*(mag(ce) + ce);
@@ -120,13 +120,12 @@ void locDynOneEqEddy::correct(const tmp<volTensorField>& gradU)
 {
     LESmodel::correct(gradU);
 
-    volTensorField D = symm(gradU);
+    volSymmTensorField D = symm(gradU);
 
-    volScalarField KK = 
-        0.5*(filter_(U() & U()) - (filter_(U()) & filter_(U())));
+    volScalarField KK = 0.5*(filter_(magSqr(U())) - magSqr(filter_(U())));
     KK.max(dimensionedScalar("small", KK.dimensions(), SMALL));
 
-    volScalarField P = 2.0*nuSgs_*(D && D);
+    volScalarField P = 2.0*nuSgs_*magSqr(D);
 
     solve
     (

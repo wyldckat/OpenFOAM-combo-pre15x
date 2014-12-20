@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,8 +26,7 @@ Class
     cyclicPointPatch
 
 Description
-    Dummy cyclic patch for post-processing.  No cyclic functionality built in!
-    
+    Cyclic patch for post-processing.
 
 SourceFiles
     cyclicPointPatch.C
@@ -37,8 +36,7 @@ SourceFiles
 #ifndef cyclicPointPatch_H
 #define cyclicPointPatch_H
 
-#include "facePointPatch.H"
-#include "faceList.H"
+#include "coupledFacePointPatch.H"
 #include "cyclicPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -52,8 +50,14 @@ namespace Foam
 
 class cyclicPointPatch
 :
-    public facePointPatch
+    public coupledFacePointPatch
 {
+    // Private data
+
+        //- Local reference cast into the cyclic patch
+        const cyclicPolyPatch& cyclicPolyPatch_;
+
+
     // Private Member Functions
 
         //- Disallow default construct as copy
@@ -63,8 +67,22 @@ class cyclicPointPatch
         void operator=(const cyclicPointPatch&);
 
 
+    // Demand driven private data
+
+        //- The set of pairs of points that require transformation
+        //  and/or mapping
+        mutable edgeList* transformPairsPtr_;
+
+
+        // Construction of demand-driven data
+
+            //- Calculate mesh points
+            virtual void calcMeshPoints() const;
+
+
 public:
 
+    typedef coupledPointPatch CoupledPointPatch;
     typedef pointBoundaryMesh BoundaryMesh;
 
 
@@ -91,11 +109,36 @@ public:
 
         // Access
 
-            //- Return true because this patch is coupled
-            virtual bool coupled() const
+            //- Return the underlying cyclicPolyPatch
+            const cyclicPolyPatch& cyclicPatch() const
             {
-                return true;
+                return cyclicPolyPatch_;
             }
+
+            //- Are the cyclic planes parallel
+            bool parallel() const
+            {
+                return cyclicPolyPatch_.parallel();
+            }
+
+            //- Return face transformation tensor
+            const tensorField& forwardT() const
+            {
+                return cyclicPolyPatch_.forwardT();
+            }
+
+            //- Return neighbour-cell transformation tensor
+            const tensorField& reverseT() const
+            {
+                return cyclicPolyPatch_.reverseT();
+            }
+
+
+        // Access functions for demand driven data
+
+            //- Return the set of pairs of points that require transformation
+            //  and/or mapping
+            virtual const edgeList& transformPairs() const;
 };
 
 

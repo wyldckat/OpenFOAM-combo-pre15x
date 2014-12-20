@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,6 +40,7 @@ SourceFiles
 
 #include "polyMeshAdder.H"
 #include "fvPatchFieldsFwd.H"
+#include "fvPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -52,6 +53,8 @@ class faceCoupleInfo;
 class IOobjectList;
 class fvMesh;
 class volMesh;
+class surfaceMesh;
+class mapAddedPolyMesh;
 
 /*---------------------------------------------------------------------------*\
                            Class fvMeshAdder Declaration
@@ -63,10 +66,67 @@ class fvMeshAdder
 {
 
 private:
-    // Private data
+
+
+    // Private class
+
+    class directFvPatchFieldMapper
+    :
+        public fvPatchFieldMapper
+    {
+        // Private data
+
+            const labelList& directAddressing_;
+
+    public:
+
+        // Constructors
+
+            //- Construct from components
+            directFvPatchFieldMapper(const labelList& directAddressing)
+            :
+                fvPatchFieldMapper(),
+                directAddressing_(directAddressing)
+            {}
+
+
+        // Destructor
+
+            virtual ~directFvPatchFieldMapper()
+            {}
+
+
+        // Member Functions
+
+            label size() const
+            {
+                return directAddressing_.size();
+            }
+
+            bool direct() const
+            {
+                return true;
+            }
+
+            const unallocLabelList& directAddressing() const
+            {
+                return directAddressing_;
+            }
+    };
 
 
     // Private Member Functions
+
+        //- Calculate map from new patch faces to old patch faces. -1 where
+        //  could not map.
+        static labelList calcPatchMap
+        (
+            const label oldStart,
+            const label oldSize,
+            const labelList& oldToNew,
+            const polyPatch& newPatch,
+            const label unmappedIndex
+        );
 
         //- Map from old to new according to map. Handles map = -1.
         template<class Type>
@@ -77,49 +137,55 @@ private:
             Field<Type>&
         );
 
-        //- Map from old to new fvPatchField. Handles map = -1.
-        template<class Type>
-        static void mapPatchField
-        (
-            const Field<Type>& oldFld,
-            const label oldStart,
-            const labelList& oldToNew,
-            fvPatchField<Type>& fld
-        );
-
         //- Update single volField.
         template<class Type>
-        void MapVolField
+        static void MapVolField
         (
-            const labelList& oldPatchStarts,
+            const mapAddedPolyMesh& meshMap,
+
             GeometricField<Type, fvPatchField, volMesh>& fld,
             const GeometricField<Type, fvPatchField, volMesh>& fldToAdd
-        ) const;
+        );
 
+        //- Update single surfaceField.
         template<class Type>
-        void MapVolFields
+        static void MapSurfaceField
         (
-            const labelList& oldPatchStarts,
-            const fvMesh& mesh,
-            const fvMesh& meshToAdd
-        ) const;
+            const mapAddedPolyMesh& meshMap,
+
+            GeometricField<Type, fvPatchField, surfaceMesh>& fld,
+            const GeometricField<Type, fvPatchField, surfaceMesh>& fldToAdd
+        );
 
 public:
 
-    // Constructors
-
-        //- Construct null
-        fvMeshAdder();
-
-
     // Member Functions
 
-        //- Inplace add mesh to fvMesh. Maps all stored fields.
-        void add
+        //- Inplace add mesh to fvMesh. Maps all stored fields. Returns map.
+        static autoPtr<mapAddedPolyMesh> add
         (
             fvMesh& mesh0,
             const fvMesh& mesh1,
-            const faceCoupleInfo& coupleInfo
+            const faceCoupleInfo& coupleInfo,
+            const bool validBoundary = true
+        );
+
+        //- Map all volFields of Type
+        template<class Type>
+        static void MapVolFields
+        (
+            const mapAddedPolyMesh&,
+            const fvMesh& mesh,
+            const fvMesh& meshToAdd
+        );
+
+        //- Map all surfaceFields of Type
+        template<class Type>
+        static void MapSurfaceFields
+        (
+            const mapAddedPolyMesh&,
+            const fvMesh& mesh,
+            const fvMesh& meshToAdd
         );
 };
 

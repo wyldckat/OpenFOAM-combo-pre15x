@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,11 +72,11 @@ void* Foam::sigFpe::my_malloc_hook(size_t size, const void *caller)
     // initialize to signalling nan
 #   ifdef SP
 
-    const uint32_t sNAN = 0x7ff7fffflu; 
+    const unsigned long sNAN = 0x7ff7fffflu; 
 
     int nScalars = size / sizeof(scalar);
 
-    uint32_t* dPtr = reinterpret_cast<uint32_t*>(result);
+    unsigned long* dPtr = reinterpret_cast<unsigned long*>(result);
 
     for (int i = 0; i < nScalars; i++)
     {
@@ -85,11 +85,11 @@ void* Foam::sigFpe::my_malloc_hook(size_t size, const void *caller)
 
 #   else
 
-    const uint64_t sNAN = 0x7ff7ffffffffffffllu; 
+    const unsigned long long sNAN = 0x7ff7ffffffffffffllu; 
 
     int nScalars = size/sizeof(scalar);
 
-    uint64_t* dPtr = reinterpret_cast<uint64_t*>(result);
+    unsigned long long* dPtr = reinterpret_cast<unsigned long long*>(result);
 
     for (int i = 0; i < nScalars; i++)
     {
@@ -111,11 +111,6 @@ void* Foam::sigFpe::my_malloc_hook(size_t size, const void *caller)
 
 void Foam::sigFpe::sigFpeHandler(int)
 {
-    // Update jobInfo file
-    jobInfo.signalEnd();
-
-    error::printStack(Perr);
-
     // Reset old handling
     if (sigaction(SIGFPE, &oldAction_, NULL) < 0)
     {
@@ -125,6 +120,13 @@ void Foam::sigFpe::sigFpeHandler(int)
         )   << "Cannot reset SIGFPE trapping"
             << abort(FatalError);    
     }
+
+    // Update jobInfo file
+    jobInfo.signalEnd();
+
+    error::printStack(Perr);
+
+    // Throw signal (to old handler)
     raise(SIGFPE);
 }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,7 +35,7 @@ namespace Foam
 
 labelList blockMesh::createMergeList()
 {
-    Info<< nl << "Creating merge list ";
+    Info<< nl << "Creating merge list " << flush;
 
     labelList MergeList(nPoints_, -1);
 
@@ -79,7 +79,7 @@ labelList blockMesh::createMergeList()
 
         if (!foundFace)
         {
-            FatalErrorIn("blockMesh::blockMesh(IOdictionary& meshDescription)")
+            FatalErrorIn("blockMesh::createMergeList()")
                 << "Cannot find merge face for block " << blockPlabel
                 << exit(FatalError);
         };
@@ -145,8 +145,7 @@ labelList blockMesh::createMergeList()
                                 minPP2 = min(minPP2, MergeList[PpointLabel2]);
                             }
 
-                            MergeList[PpointLabel]
-                                = MergeList[PpointLabel2]
+                            MergeList[PpointLabel] = MergeList[PpointLabel2]
                                 = minPP2;
                         }
                         else
@@ -189,7 +188,7 @@ labelList blockMesh::createMergeList()
 
         if (!foundFace)
         {
-            FatalErrorIn("blockMesh::blockMesh(IOdictionary& meshDescription)")
+            FatalErrorIn("blockMesh::createMergeList()")
                 << "Cannot find merge face for block " << blockNlabel
                 << exit(FatalError);
         };
@@ -199,14 +198,14 @@ labelList blockMesh::createMergeList()
 
         if (blockPfaceFaces.size() != blockNfaceFaces.size())
         {
-            FatalErrorIn("blockMesh::blockMesh(IOdictionary& meshDescription)")
+            FatalErrorIn("blockMesh::createMergeList()")
                 << "Inconsistent number of faces between block pair "
                 << blockPlabel << " and " << blockNlabel
                 << exit(FatalError);
         }
 
 
-        register bool found = false;
+        bool found = false;
 
         // N-squared point search over all points of all faces of
         // master block over all point of all faces of slave block
@@ -217,68 +216,74 @@ labelList blockMesh::createMergeList()
 
             labelList& cp = curPairs[blockPfaceFaceLabel];
             cp.setSize(blockPfaceFacePoints.size());
+            cp = -1;
 
-        forAll(blockPfaceFacePoints, blockPfaceFacePointLabel)
-        {
-            found = false;
-
-            forAll(blockNfaceFaces, blockNfaceFaceLabel)
+            forAll(blockPfaceFacePoints, blockPfaceFacePointLabel)
             {
-                const labelList& blockNfaceFacePoints
-                    = blockNfaceFaces[blockNfaceFaceLabel];
+                found = false;
 
-            forAll(blockNfaceFacePoints, blockNfaceFacePointLabel)
-            {
-                if
-                (
-                    magSqr
-                    (
-                        blockPpoints
-                            [blockPfaceFacePoints[blockPfaceFacePointLabel]]
-                      - blockNpoints
-                            [blockNfaceFacePoints[blockNfaceFacePointLabel]]
-                    )
-                    <
-                    sqrMergeTol
-                )
+                forAll(blockNfaceFaces, blockNfaceFaceLabel)
                 {
-                    // Found a new pair
-                    found = true;
+                    const labelList& blockNfaceFacePoints
+                        = blockNfaceFaces[blockNfaceFaceLabel];
 
-                    cp[blockPfaceFacePointLabel] =
-                        blockNfaceFacePoints[blockNfaceFacePointLabel];
-
-                    label PpointLabel =
-                        blockPfaceFacePoints[blockPfaceFacePointLabel]
-                      + blockOffsets_[blockPlabel];
-
-                    label NpointLabel =
-                        blockNfaceFacePoints[blockNfaceFacePointLabel]
-                      + blockOffsets_[blockNlabel];
-
-                    label minPN = min(PpointLabel, NpointLabel);
-
-                    if (MergeList[PpointLabel] != -1)
+                    forAll(blockNfaceFacePoints, blockNfaceFacePointLabel)
                     {
-                        minPN = min(minPN, MergeList[PpointLabel]);
-                    }
+                        if
+                        (
+                            magSqr
+                            (
+                                blockPpoints
+                                [blockPfaceFacePoints[blockPfaceFacePointLabel]]
+                              - blockNpoints
+                                [blockNfaceFacePoints[blockNfaceFacePointLabel]]
+                            ) < sqrMergeTol
+                        )
+                        {
+                            // Found a new pair
+                            found = true;
 
-                    if (MergeList[NpointLabel] != -1)
-                    {
-                        minPN = min(minPN, MergeList[NpointLabel]);
-                    }
+                            cp[blockPfaceFacePointLabel] =
+                                blockNfaceFacePoints[blockNfaceFacePointLabel];
 
-                    MergeList[PpointLabel]
-                  = MergeList[NpointLabel]
-                  = minPN;
+                            label PpointLabel =
+                                blockPfaceFacePoints[blockPfaceFacePointLabel]
+                              + blockOffsets_[blockPlabel];
+
+                            label NpointLabel =
+                                blockNfaceFacePoints[blockNfaceFacePointLabel]
+                              + blockOffsets_[blockNlabel];
+
+                            label minPN = min(PpointLabel, NpointLabel);
+
+                            if (MergeList[PpointLabel] != -1)
+                            {
+                                minPN = min(minPN, MergeList[PpointLabel]);
+                            }
+
+                            if (MergeList[NpointLabel] != -1)
+                            {
+                                minPN = min(minPN, MergeList[NpointLabel]);
+                            }
+
+                            MergeList[PpointLabel] = MergeList[NpointLabel]
+                                = minPN;
+                        }
+                    }
                 }
             }
+            forAll(blockPfaceFacePoints, blockPfaceFacePointLabel)
+            {
+                if (cp[blockPfaceFacePointLabel] == -1)
+                {
+                    FatalErrorIn("blockMesh::createMergeList()")
+                        << "Inconsistent point locations between block pair " 
+                        << blockPlabel << " and " << blockNlabel << nl
+                        << "    probably due to inconsistent grading."
+                        << exit(FatalError);
+                }
             }
         }
-        }
-        }
-        else
-        {
         }
     }
 
@@ -289,7 +294,7 @@ labelList blockMesh::createMergeList()
         topology().nInternalFaces()
     );
 
-    register bool changedPointMerge = false;
+    bool changedPointMerge = false;
     label nPasses = 0;
 
     do
@@ -390,7 +395,7 @@ labelList blockMesh::createMergeList()
 
         if (nPasses > 100)
         {
-            FatalErrorIn("labelList blockMesh::createMergeList()")
+            FatalErrorIn("blockMesh::createMergeList()")
                 << "Point merging failed after max number of passes."
                 << abort(FatalError);
         }
@@ -431,7 +436,7 @@ labelList blockMesh::createMergeList()
 
         if (!foundFace)
         {
-            FatalErrorIn("blockMesh::blockMesh(IOdictionary& meshDescription)")
+            FatalErrorIn("blockMesh::createMergeList()")
                 << "Cannot find merge face for block " << blockPlabel
                 << exit(FatalError);
         };
@@ -458,7 +463,7 @@ labelList blockMesh::createMergeList()
 
         if (!foundFace)
         {
-            FatalErrorIn("blockMesh::blockMesh(IOdictionary& meshDescription)")
+            FatalErrorIn("blockMesh::createMergeList()")
                 << "Cannot find merge face for block " << blockNlabel
                 << exit(FatalError);
         };
@@ -482,10 +487,8 @@ labelList blockMesh::createMergeList()
 
                 if (MergeList[PpointLabel] == -1)
                 {
-                    FatalErrorIn
-                    (
-                        "blockMesh::blockMesh(IOdictionary& meshDescription)"
-                    )   << "Unable to merge point "
+                    FatalErrorIn("blockMesh::createMergeList()")
+                        << "Unable to merge point "
                         << blockPfaceFacePointLabel
                         << ' ' << blockPpoints[blockPfaceFacePointLabel]
                         << " of face "
@@ -510,10 +513,8 @@ labelList blockMesh::createMergeList()
 
                 if (MergeList[NpointLabel] == -1)
                 {
-                    FatalErrorIn
-                    (
-                        "blockMesh::blockMesh(IOdictionary& meshDescription)"
-                    )   << "unable to merge point "
+                    FatalErrorIn("blockMesh::createMergeList()")
+                        << "unable to merge point "
                         << blockNfaceFacePointLabel
                         << ' ' << blockNpoints[blockNfaceFacePointLabel]
                         << " of face "
@@ -535,7 +536,7 @@ labelList blockMesh::createMergeList()
     {
         if (MergeList[pointLabel] > pointLabel)
         {
-            FatalErrorIn("blockMesh::blockMesh(IOdictionary& meshDescription)")
+            FatalErrorIn("blockMesh::createMergeList()")
                 << "ouch" << exit(FatalError);
         }
 

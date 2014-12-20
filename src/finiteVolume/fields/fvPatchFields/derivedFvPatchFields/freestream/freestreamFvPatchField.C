@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -86,6 +86,16 @@ freestreamFvPatchField<Type>::freestreamFvPatchField
         dict.lookup("phi") >> this->phiName_;
     }
 }
+
+
+template<class Type>
+freestreamFvPatchField<Type>::freestreamFvPatchField
+(
+    const freestreamFvPatchField<Type>& ptf
+)
+:
+    inletOutletFvPatchField<Type>(ptf)
+{}
 
 
 template<class Type>

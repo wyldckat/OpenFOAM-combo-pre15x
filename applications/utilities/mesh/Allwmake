@@ -1,8 +1,0 @@
-#!/bin/sh
-
-set -x
-
-(cd generation ; ./Allwmake)
-(cd manipulation ; ./Allwmake)
-(cd conversion ; ./Allwmake)
-(cd advanced ; ./Allwmake)

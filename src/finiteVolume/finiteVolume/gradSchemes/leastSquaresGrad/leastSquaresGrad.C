@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -88,57 +88,53 @@ leastSquaresGrad<Type>::grad
 
     // Get reference to least square vectors
     const leastSquaresVectors& lsv = leastSquaresVectors::New(mesh);
+
     const surfaceVectorField& ownLs = lsv.pVectors();
     const surfaceVectorField& neiLs = lsv.nVectors();
 
-    // Owner/neighbour addressing
     const unallocLabelList& own = mesh.owner();
     const unallocLabelList& nei = mesh.neighbour();
 
-    forAll(own, faceI)
+    forAll(own, facei)
     {
-        register label ownFaceI = own[faceI];
-        register label neiFaceI = nei[faceI];
+        register label ownFaceI = own[facei];
+        register label neiFaceI = nei[facei];
 
         Type deltaVsf = vsf[neiFaceI] - vsf[ownFaceI];
 
-        lsGrad[ownFaceI] += ownLs[faceI]*deltaVsf;
-        lsGrad[neiFaceI] -= neiLs[faceI]*deltaVsf;
+        lsGrad[ownFaceI] += ownLs[facei]*deltaVsf;
+        lsGrad[neiFaceI] -= neiLs[facei]*deltaVsf;
     }
 
     // Boundary faces
-    forAll(vsf.boundaryField(), patchI)
+    forAll(vsf.boundaryField(), patchi)
     {
-        const fvPatchVectorField& patchOwnLs =
-            ownLs.boundaryField()[patchI];
+        const fvPatchVectorField& patchOwnLs = ownLs.boundaryField()[patchi];
 
-        const labelList::subList FaceCells =
-            lsGrad.boundaryField()[patchI].patch().faceCells();
+        const unallocLabelList& faceCells =
+            lsGrad.boundaryField()[patchi].patch().faceCells();
 
-        if (vsf.boundaryField()[patchI].coupled())
+        if (vsf.boundaryField()[patchi].coupled())
         {
-            Field<Type> neiVsf =
-                refCast<const coupledFvPatchField<Type> >
-                (
-                    vsf.boundaryField()[patchI]
-                ).patchNeighbourField();
+            Field<Type> neiVsf = 
+                vsf.boundaryField()[patchi].patchNeighbourField();
 
             forAll(neiVsf, patchFaceI)
             {
-                lsGrad[FaceCells[patchFaceI]] +=
+                lsGrad[faceCells[patchFaceI]] +=
                     patchOwnLs[patchFaceI]
-                   *(neiVsf[patchFaceI] - vsf[FaceCells[patchFaceI]]);
+                   *(neiVsf[patchFaceI] - vsf[faceCells[patchFaceI]]);
             }
         }
         else
         {
-            const fvPatchField<Type>& patchVsf = vsf.boundaryField()[patchI];
+            const fvPatchField<Type>& patchVsf = vsf.boundaryField()[patchi];
 
             forAll(patchVsf, patchFaceI)
             {
-                lsGrad[FaceCells[patchFaceI]] +=
+                lsGrad[faceCells[patchFaceI]] +=
                      patchOwnLs[patchFaceI]
-                    *(patchVsf[patchFaceI] - vsf[FaceCells[patchFaceI]]);
+                    *(patchVsf[patchFaceI] - vsf[faceCells[patchFaceI]]);
             }
         }
     }

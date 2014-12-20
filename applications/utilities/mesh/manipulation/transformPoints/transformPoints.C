@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -98,8 +98,9 @@ int main(int argc, char *argv[])
     if (args.options().found("rotate"))
     {
         Pair<vector> n1n2(IStringStream(args.options()["rotate"])());
-
-        tensor T = transformationTensor(n1n2[0], n1n2[1]);
+        n1n2[0] /= mag(n1n2[0]);
+        n1n2[1] /= mag(n1n2[1]);
+        tensor T = rotationTensor(n1n2[0], n1n2[1]);
 
         Info<< "Rotating points by " << T << endl;
 

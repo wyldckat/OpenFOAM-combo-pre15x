@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,6 +38,8 @@ SourceFiles
 
 #include "tensorField.H"
 #include "diagTensor.H"
+
+#define TEMPLATE
 #include "FieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -49,19 +51,18 @@ typedef Field<diagTensor> diagTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-UNARY_FUNCTION_N(diagTensor, tensor, diag)
-UNARY_FUNCTION_N(scalar, diagTensor, tr)
-UNARY_FUNCTION_N(scalar, diagTensor, det)
-UNARY_FUNCTION_R(diagTensor, diagTensor, inv)
+UNARY_FUNCTION(diagTensor, tensor, diag)
+UNARY_FUNCTION(scalar, diagTensor, tr)
+UNARY_FUNCTION(sphericalTensor, diagTensor, sph)
+UNARY_FUNCTION(scalar, diagTensor, det)
+UNARY_FUNCTION(diagTensor, diagTensor, inv)
 
 
-BINARY_OPERATOR_NR(tensor, diagTensor, tensor, +, add)
-BINARY_OPERATOR_RN(tensor, tensor, diagTensor, +, add)
-BINARY_OPERATOR_NR(tensor, diagTensor, tensor, -, subtract)
-BINARY_OPERATOR_RN(tensor, tensor, diagTensor, -, subtract)
+BINARY_OPERATOR(tensor, diagTensor, tensor, +, add)
+BINARY_OPERATOR(tensor, diagTensor, tensor, -, subtract)
 
-BINARY_TYPE_OPERATOR_NR(tensor, diagTensor, tensor, +, add)
-BINARY_TYPE_OPERATOR_NR(tensor, diagTensor, tensor, -, subtract)
+BINARY_TYPE_OPERATOR(tensor, diagTensor, tensor, +, add)
+BINARY_TYPE_OPERATOR(tensor, diagTensor, tensor, -, subtract)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

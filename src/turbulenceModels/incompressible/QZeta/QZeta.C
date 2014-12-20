@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -143,11 +143,11 @@ QZeta::QZeta
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-tmp<volTensorField> QZeta::R() const
+tmp<volSymmTensorField> QZeta::R() const
 {
-    return tmp<volTensorField>
+    return tmp<volSymmTensorField>
     (
-        new volTensorField
+        new volSymmTensorField
         (
             IOobject
             (

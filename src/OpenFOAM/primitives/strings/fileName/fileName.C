@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,13 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    A class for handling file names.
-    A fileName can be  constructed from a char* or a word.
-    FileNames may be concaternated by adding a '/' separator.
-    FileNames may be decomposed into the path, name or component
-    list. FileNames may be interogated for type and access mode.
-
 \*---------------------------------------------------------------------------*/
 
 #include "fileName.H"
@@ -36,20 +29,15 @@ Description
 #include "debug.H"
 #include "OSspecific.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-int fileName::debug(debug::debugSwitch("fileName", 0));
-const fileName fileName::null;
+int Foam::fileName::debug(debug::debugSwitch("fileName", 0));
+const Foam::fileName Foam::fileName::null;
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-fileName::fileName(const wordList& wrdList)
+Foam::fileName::fileName(const wordList& wrdList)
 {
     if (wrdList.size() != 0)
     {
@@ -63,44 +51,68 @@ fileName::fileName(const wordList& wrdList)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return file name extension
-word fileName::name() const
+//  Return file name (part beyond last /)
+//
+//  behaviour compared to /usr/bin/basename:
+//    input           name()          basename
+//    -----           ------          --------
+//    "foo"           "foo"           "foo"
+//    "/foo"          "foo"           "foo"
+//    "foo/bar"       "bar"           "bar"
+//    "/foo/bar"      "bar"           "bar"
+//    "/foo/bar/"     ""              "bar"
+//
+Foam::word Foam::fileName::name() const
 {
     size_type i = rfind('/');
 
-    if (i > 0)
+    if (i == npos)
     {
-        return substr(i+1, size()-i);
+        return *this;
     }
     else
     {
-        return word::null;
+        return substr(i+1, npos);
     }
 }
 
 
-// Return file name extension
-fileName fileName::path() const
+//- Return directory path name (part before last /)
+//
+//  behaviour compared to /usr/bin/dirname:
+//    input           path()          dirname
+//    -----           ------          -------
+//    "foo"           "."             "."
+//    "/foo"          "/"             "foo"
+//    "foo/bar"       "foo"           "foo"
+//    "/foo/bar"      "/foo"          "/foo"
+//    "/foo/bar/"     "/foo/bar/"     "/foo"
+//
+Foam::fileName Foam::fileName::path() const
 {
     size_type i = rfind('/');
 
-    if (i > 0)
+    if (i == npos)
+    {
+        return ".";
+    }
+    else if (i == 0)
+    {
+        return "/";
+    }
+    else
     {
         return substr(0, i);
     }
-    else
-    {
-        return fileName::null;
-    }
 }
 
 
-// Return file name less extension (part before last .)
-fileName fileName::lessExt() const
+//  Return file name without extension (part before last .)
+Foam::fileName Foam::fileName::lessExt() const
 {
     size_type i = find_last_of("./");
 
-    if (i <= 0 || operator[](i) == '/')
+    if (i == npos || i == 0 || operator[](i) == '/')
     {
         return *this;
     }
@@ -111,24 +123,36 @@ fileName fileName::lessExt() const
 }
 
 
-// Return file name extension
-word fileName::ext() const
+//  Return file name extension (part after last .)
+Foam::word Foam::fileName::ext() const
 {
     size_type i = find_last_of("./");
 
-    if (i <= 0 || operator[](i) == '/')
+    if (i == npos || i == 0 || operator[](i) == '/')
     {
         return word::null;
     }
     else
     {
-        return substr(i+1, size()-i);
+        return substr(i+1, npos);
     }
 }
 
 
 // Return the components of the file name as a wordList
-wordList fileName::components(const char delimiter) const
+// note that concatenating the components will not necessarily retrieve
+// the original input fileName
+//
+//  behaviour
+//    input           components()
+//    -----           ------
+//    "foo"           1("foo")
+//    "/foo"          1("foo")
+//    "foo/bar"       2("foo", "foo")
+//    "/foo/bar"      2("foo", "foo")
+//    "/foo/bar/"     2("foo", "bar")
+//
+Foam::wordList Foam::fileName::components(const char delimiter) const
 {
     wordList wrdList(20);
 
@@ -137,17 +161,24 @@ wordList fileName::components(const char delimiter) const
 
     while ((end = find(delimiter, start)) != npos)
     {
-        wrdList[nWords++] = substr(start, end-start);
-
-        if (nWords == wrdList.size())
+        // avoid empty element (caused by doubled slashes)
+        if (start < end)
         {
-            wrdList.setSize(2*wrdList.size());
-        }
+            wrdList[nWords++] = substr(start, end-start);
 
-        start = end+1;
+            if (nWords == wrdList.size())
+            {
+                wrdList.setSize(2*wrdList.size());
+            }
+        }
+        start = end + 1;
     }
 
-    wrdList[nWords++] = substr(start, size()-start);
+    // avoid empty trailing element
+    if (start < size())
+    {
+        wrdList[nWords++] = substr(start, npos);
+    }
 
     wrdList.setSize(nWords);
 
@@ -156,13 +187,17 @@ wordList fileName::components(const char delimiter) const
 
 
 // Return a component of the file name
-word fileName::component(const size_type cmpt, const char delimiter) const
+Foam::word Foam::fileName::component
+(
+    const size_type cmpt,
+    const char delimiter
+) const
 {
     return components(delimiter)[cmpt];
 }
 
 
-fileName::Type fileName::type() const
+Foam::fileName::Type Foam::fileName::type() const
 {
     return ::Foam::type(*this);
 }
@@ -170,33 +205,33 @@ fileName::Type fileName::type() const
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-void fileName::operator=(const fileName& q)
+void Foam::fileName::operator=(const fileName& q)
 {
     string::operator=(q);
 }
 
 
-void fileName::operator=(const word& q)
+void Foam::fileName::operator=(const word& q)
 {
     string::operator=(q);
 }
 
 
-void fileName::operator=(const string& q)
-{
-    string::operator=(q);
-    stripInvalid();
-}
-
-
-void fileName::operator=(const std::string& q)
+void Foam::fileName::operator=(const string& q)
 {
     string::operator=(q);
     stripInvalid();
 }
 
 
-void fileName::operator=(const char* q)
+void Foam::fileName::operator=(const std::string& q)
+{
+    string::operator=(q);
+    stripInvalid();
+}
+
+
+void Foam::fileName::operator=(const char* q)
 {
     string::operator=(q);
     stripInvalid();
@@ -205,7 +240,7 @@ void fileName::operator=(const char* q)
 
 // * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
-fileName operator/(const string& a, const string& b)
+Foam::fileName Foam::operator/(const string& a, const string& b)
 {
     if (a.size() > 0)       // First string non-null
     {
@@ -231,9 +266,5 @@ fileName operator/(const string& a, const string& b)
     }
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

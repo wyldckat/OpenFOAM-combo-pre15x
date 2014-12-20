@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,6 +31,7 @@ Description
 SourceFiles
     fvMatrix.C
     fvMatrixSolve.C
+    fvScalarMatrix.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -43,6 +44,7 @@ SourceFiles
 #include "tmp.H"
 #include "autoPtr.H"
 #include "dimensionedTypes.H"
+#include "Zero.H"
 #include "className.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -169,16 +171,47 @@ class fvMatrix
 
             void addCmptAvBoundaryDiag(scalarField& diag) const;
 
-            void addBoundarySource(Field<Type>& source) const;
-
             void addBoundarySource
             (
-                scalarField& source,
-                const direction cmpt
+                Field<Type>& source,
+                const bool couples=true
             ) const;
 
 
 public:
+
+    //- Solver class returned by the solver function
+    //  used for systems in which it is useful to cache the solver for reuse
+    //  e.g. is the solver is potentialy expensive to construct (AMG) and can
+    //  be used several times (PISO)
+    class fvSolver
+    {
+        fvMatrix<Type>& fvMat_;
+
+        autoPtr<lduMatrix::solver> solver_;
+
+    public:
+
+        // Constructors
+
+            fvSolver(fvMatrix<Type>& fvMat, autoPtr<lduMatrix::solver> sol)
+            :
+                fvMat_(fvMat),
+                solver_(sol)
+            {}
+
+
+        // Member functions
+
+            //- Solve returning the solution statistics.
+            //  Solver controls read from Istream
+            lduMatrix::solverPerformance solve(Istream&);
+
+            //- Solve returning the solution statistics.
+            //  Solver controls read from fvSolution
+            lduMatrix::solverPerformance solve();
+    };
+
 
     ClassName("fvMatrix");
 
@@ -301,8 +334,16 @@ public:
             //  alpha is read from controlDict
             void relax();
 
+            //- Construct and return the solver
+            //  Solver controls read from Istream
+            autoPtr<fvSolver> solver(Istream&);
+
+            //- Construct and return the solver
+            //  Solver controls read from fvSolution
+            autoPtr<fvSolver> solver();
+
             //- Solve returning the solution statistics.
-            //  Solver controls read Istream
+            //  Solver controls read from Istream
             lduMatrix::solverPerformance solve(Istream&);
 
             //- Solve returning the solution statistics.
@@ -346,6 +387,9 @@ public:
 
         void operator+=(const dimensioned<Type>&);
         void operator-=(const dimensioned<Type>&);
+
+        void operator+=(const Zero&);
+        void operator-=(const Zero&);
 
         void operator*=(const volScalarField&);
         void operator*=(const tmp<volScalarField>&);
@@ -653,6 +697,14 @@ tmp<fvMatrix<Type> > operator-
     const tmp<fvMatrix<Type> >&
 );
 
+
+template<class Type>
+tmp<fvMatrix<Type> > operator+
+(
+    const fvMatrix<Type>&,
+    const dimensioned<Type>&
+);
+
 template<class Type>
 tmp<fvMatrix<Type> > operator+
 (
@@ -664,7 +716,21 @@ template<class Type>
 tmp<fvMatrix<Type> > operator+
 (
     const dimensioned<Type>&,
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator+
+(
+    const dimensioned<Type>&,
     const tmp<fvMatrix<Type> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const fvMatrix<Type>&,
+    const dimensioned<Type>&
 );
 
 template<class Type>
@@ -678,8 +744,16 @@ template<class Type>
 tmp<fvMatrix<Type> > operator-
 (
     const dimensioned<Type>&,
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const dimensioned<Type>&,
     const tmp<fvMatrix<Type> >&
 );
+
 
 template<class Type>
 tmp<fvMatrix<Type> > operator==
@@ -721,6 +795,21 @@ tmp<fvMatrix<Type> > operator==
 (
     const tmp<fvMatrix<Type> >&,
     const dimensioned<Type>&
+);
+
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const fvMatrix<Type>&,
+    const Zero&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const tmp<fvMatrix<Type> >&,
+    const Zero&
 );
 
 
@@ -777,6 +866,9 @@ tmp<fvMatrix<Type> > operator*
 #ifdef NoRepository
 #   include "fvMatrix.C"
 #endif
+
+// Specialisation for scalars
+#include "fvScalarMatrix.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

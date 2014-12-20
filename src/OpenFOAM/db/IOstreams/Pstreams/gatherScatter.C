@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,6 +32,7 @@ Description
 
 #include "OPstream.H"
 #include "IPstream.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,17 +57,43 @@ void Pstream::gather
         // Receive from my downstairs neighbours
         forAll(myComm.below(), belowI)
         {
-            IPstream fromBelow(myComm.below()[belowI], sizeof(T));
             T value;
-            fromBelow >> value;
+
+            if (contiguous<T>())
+            {
+                IPstream::read
+                (
+                    myComm.below()[belowI],
+                    reinterpret_cast<char*>(&value),
+                    sizeof(T)
+                );
+            }
+            else
+            {
+                IPstream fromBelow(myComm.below()[belowI]);
+                fromBelow >> value;
+            }
+
             Value = bop(Value, value);
         }
 
         // Send up Value
         if (myComm.above() != -1)
         {
-            OPstream toAbove(myComm.above(), sizeof(T), false);
-            toAbove << Value;
+            if (contiguous<T>())
+            {
+                OPstream::write
+                (
+                    myComm.above(),
+                    reinterpret_cast<const char*>(&Value),
+                    sizeof(T)
+                );
+            }
+            else
+            {
+                OPstream toAbove(myComm.above(), 0, false);
+                toAbove << Value;
+            }
         }
     }
 }
@@ -97,15 +124,39 @@ void Pstream::scatter(const List<Pstream::commsStruct>& comms, T& Value)
         // Reveive from up
         if (myComm.above() != -1)
         {
-            IPstream fromAbove(myComm.above(), sizeof(T));
-            fromAbove >> Value;
+            if (contiguous<T>())
+            {
+                IPstream::read
+                (
+                    myComm.above(),
+                    reinterpret_cast<char*>(&Value),
+                    sizeof(T)
+                );
+            }
+            else
+            {
+                IPstream fromAbove(myComm.above());
+                fromAbove >> Value;
+            }
         }
 
         // Send to my downstairs neighbours
         forAll(myComm.below(), belowI)
         {
-            OPstream toBelow(myComm.below()[belowI], sizeof(T), false);
-            toBelow << Value;
+            if (contiguous<T>())
+            {
+                OPstream::write
+                (
+                    myComm.below()[belowI],
+                    reinterpret_cast<const char*>(&Value),
+                    sizeof(T)
+                );
+            }
+            else
+            {
+                OPstream toBelow(myComm.below()[belowI], 0, false);
+                toBelow << Value;
+            }
         }
     }
 }

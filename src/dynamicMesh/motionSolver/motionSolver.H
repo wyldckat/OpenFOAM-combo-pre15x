@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,6 +38,7 @@ SourceFiles
 
 #include "IOdictionary.H"
 #include "pointField.H"
+#include "twoDPointCorrector.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,7 +47,6 @@ namespace Foam
 
 // Forward class declarations
 class polyMesh;
-class twoDPointCorrector;
 
 /*---------------------------------------------------------------------------*\
                            Class motionSolver Declaration
@@ -64,7 +64,7 @@ private:
         const polyMesh& mesh_;
 
         //- 2-D motion corrector pointer
-        twoDPointCorrector* correct2DPtr_;
+        twoDPointCorrector twoDPointCorrector_;
 
 
 public:
@@ -80,8 +80,8 @@ public:
             autoPtr,
             motionSolver,
             dictionary,
-            (const polyMesh& mesh),
-            (mesh)
+            (const polyMesh& mesh, Istream& msData),
+            (mesh, msData)
         );
 
 

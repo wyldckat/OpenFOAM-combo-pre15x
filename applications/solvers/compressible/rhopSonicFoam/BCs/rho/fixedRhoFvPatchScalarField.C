@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,8 +23,6 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "fixedRhoFvPatchScalarField.H"
 #include "addToRunTimeSelectionTable.H"
@@ -73,6 +71,15 @@ fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 
 fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
 (
+    const fixedRhoFvPatchScalarField& tppsf
+)
+:
+    fixedValueFvPatchScalarField(tppsf)
+{}
+
+
+fixedRhoFvPatchScalarField::fixedRhoFvPatchScalarField
+(
     const fixedRhoFvPatchScalarField& tppsf,
     const scalarField& iF
 )
@@ -92,10 +99,10 @@ void fixedRhoFvPatchScalarField::updateCoeffs()
     }
 
     const fvPatchField<scalar>& psip =
-        lookupPatchField<volScalarField, scalar>("psi");
+        patch().lookupPatchField<volScalarField, scalar>("psi");
 
     const fvPatchField<scalar>& pp =
-        lookupPatchField<volScalarField, scalar>("p");
+        patch().lookupPatchField<volScalarField, scalar>("p");
 
     operator==(psip*pp);
 

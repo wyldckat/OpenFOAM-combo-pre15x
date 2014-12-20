@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -73,8 +73,6 @@ namespace Foam
 \*---------------------------------------------------------------------------*/
 
 class fvMeshSubset
-:
-    public fvMesh
 {
 
 public:
@@ -104,13 +102,19 @@ public:
                             ms.subMesh().boundary()[patchNo].patch().start()
                         )
                     )
-                  - ms.boundary()[ms.patchMap()[patchNo]].patch().start()
+                  - ms.baseMesh().boundary()
+                    [
+                        ms.patchMap()[patchNo]
+                    ].patch().start()
                 )
             {
                 // If patchID supplied so exposed internal faces or uncoupled
                 // patch faces get into existing patch what to do with
                 // mapping? Truncate to 0 for now.
-                const label sz = ms.subMesh().boundary()[patchNo].size();
+                const label sz = ms.baseMesh().boundary()
+                    [
+                        ms.patchMap()[patchNo]
+                    ].patch().size();
 
                 forAll(directAddressing_, i)
                 {
@@ -153,6 +157,9 @@ private:
 
     // Private data
 
+        //- Mesh to subset from
+        const fvMesh& baseMesh_;
+
         //- Subset mesh pointer
         fvMesh* fvMeshSubsetPtr_;
 
@@ -171,12 +178,6 @@ private:
 
     // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        fvMeshSubset(const fvMeshSubset&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const fvMeshSubset&);
-
         //- Check if subset has been performed
         bool checkCellSubset() const;
 
@@ -187,14 +188,31 @@ private:
         static void markPoints(const labelList&, labelList&); 
 
         //- Adapt nCellsUsingFace for coupled faces becoming 'uncoupled'.
-        void doCoupledPatches(labelList& nCellsUsingFace) const;
+        void doCoupledPatches(const bool, labelList& nCellsUsingFace) const;
+
+        //- Subset of subset
+        static labelList subset
+        (
+            const label nElems,
+            const labelList& selectedElements,
+            const labelList& subsetMap
+        );
+
+        //- Create zones for submesh
+        void subsetZones();
+
+        //- Disallow default bitwise copy construct
+        fvMeshSubset(const fvMeshSubset&);
+
+        //- Disallow default bitwise assignment
+        void operator=(const fvMeshSubset&);
 
 public:
 
     // Constructors
 
-        //- Construct given a mesh and the map of cells to subset
-        explicit fvMeshSubset(const IOobject& io);
+        //- Construct given a mesh to subset
+        explicit fvMeshSubset(const fvMesh&);
 
 
     // Destructor
@@ -225,21 +243,30 @@ public:
             (
                 const labelList& region,
                 const label currentRegion,
-                const label patchID = -1
+                const label patchID = -1,
+                const bool syncCouples = true
             );
 
             //- setLargeCellSubset but with labelHashSet.
             void setLargeCellSubset
             (
                 const labelHashSet& globalCellMap,
-                const label patchID = -1
+                const label patchID = -1,
+                const bool syncPar = true
             );
 
 
         // Access
 
+            //- Original mesh
+            const fvMesh& baseMesh() const
+            {
+                return baseMesh_;
+            }
+
             //- Return reference to subset mesh
             const fvMesh& subMesh() const;
+            fvMesh& subMesh();
 
             //- Return point map
             const labelList& pointMap() const;

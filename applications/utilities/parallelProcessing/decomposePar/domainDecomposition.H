@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,6 +63,9 @@ class domainDecomposition
         //- Number of processors in decomposition
         label nProcs_;
 
+        //- Is the decomposition data to be distributed for each processor
+        bool distributed_;
+
         //- Processor label for each cell
         labelList cellToProc_;
 
@@ -106,7 +109,6 @@ class domainDecomposition
         labelList globallySharedPoints_;
 
         //- Are there cyclic-parallel faces
-        //  (interpolation/FEM problem in foam2.2).  
         bool cyclicParallel_;
 
 
@@ -114,6 +116,13 @@ class domainDecomposition
 
         void distributeCells();
 
+        //- Mark all elements with value or -2 if occur twice
+        static void mark
+        (
+            const labelList& zoneElems,
+            const label zoneI,
+            labelList& elementToZone
+        );
 
 public:
 
@@ -134,6 +143,12 @@ public:
         label nProcs() const
         {
             return nProcs_;
+        }
+
+        //- Is the decomposition data to be distributed for each processor
+        bool distributed() const
+        {
+            return distributed_;
         }
 
         //- Decompose mesh. Optionally remove zero-sized patches.

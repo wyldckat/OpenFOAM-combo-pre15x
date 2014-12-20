@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -329,7 +329,7 @@ Foam::graph Foam::noiseFFT::Ldelta
     scalarField ldelta(Lf.size(), 0.0);
     scalarField fm(ldelta.size());
 
-    scalar fratio = pow(2, 1.0/3.0);
+    scalar fratio = cbrt(2.0);
     scalar deltaf = 1.0/(2*Lf.size()*deltat_);
 
     scalar fl = f1/sqrt(fratio);
@@ -385,7 +385,7 @@ Foam::graph Foam::noiseFFT::Pdelta
     scalarField pdelta(Pf.size(), 0.0);
     scalarField fm(pdelta.size());
 
-    scalar fratio = pow(2, 1.0/3.0);
+    scalar fratio = cbrt(2.0);
     scalar deltaf = 1.0/(2*Pf.size()*deltat_);
 
     scalar fl = f1/sqrt(fratio);

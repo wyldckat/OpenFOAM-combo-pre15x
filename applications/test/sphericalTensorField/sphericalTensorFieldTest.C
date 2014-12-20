@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,11 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
-    sphericalTensorField
+    sphericalTensorFieldTest
 
 \*---------------------------------------------------------------------------*/
 
-#include "sphericalTensorField.H"
+#include "tensorField.H"
 
 using namespace Foam;
 
@@ -35,13 +35,14 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
+    scalarField f1(1, 1);
     sphericalTensorField sf1(1, 1);
     sphericalTensorField sf2(1, 2);
     tensorField tf1(1, tensor::one);
 
     Info<< (tf1 & sf2) << endl;
 
-    Info<< 3*sf1 << " " << sf1*3 << endl;
+    Info<< f1*sf1 << " " << sf1*3 << endl;
 
     Info<< ((sf1 + sf2) & (sf1 + sf2)) << endl;
 

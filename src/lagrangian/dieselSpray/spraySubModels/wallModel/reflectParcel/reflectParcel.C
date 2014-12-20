@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -84,7 +84,7 @@ bool reflectParcel::wallTreatment
 
     const polyMesh& mesh = spray_.mesh();
 
-    if (typeid(mesh_.boundaryMesh()[patchi]) == typeid(wallPolyPatch))
+    if (isType<wallPolyPatch>(mesh_.boundaryMesh()[patchi]))
     {
         // wallNormal defined to point outwards of domain
         vector Sf = mesh_.Sf().boundaryField()[patchi][facei];
@@ -108,13 +108,12 @@ bool reflectParcel::wallTreatment
             vector Ub0 = U_.oldTime().boundaryField()[patchi][facei];
 
             scalar dt = spray_.runTime().deltaT().value();
-            scalar fraction = p.t0()/dt;
             const vectorField& oldPoints = mesh.oldPoints();
 
             const vector& Cf1 = mesh.faceCentres()[globalFacei];
 
             vector Cf0 = mesh.faces()[globalFacei].centre(oldPoints);
-            vector Cf = Cf0 + fraction*(Cf1 - Cf0);
+            vector Cf = Cf0 + p.stepFraction()*(Cf1 - Cf0);
             vector Sf0 = mesh.faces()[globalFacei].normal(oldPoints);
 
             // for layer addition Sf0 = vector::zero and we use Sf
@@ -129,12 +128,12 @@ bool reflectParcel::wallTreatment
 
             scalar magSfDiff = mag(Sf - Sf0);
 
-            vector Ub = Ub0 + fraction*(Ub1 - Ub0);
+            vector Ub = Ub0 + p.stepFraction()*(Ub1 - Ub0);
                 
             if (magSfDiff > SMALL)
             {
                 // rotation + translation
-                vector Sfp = Sf0 + fraction*(Sf - Sf0);
+                vector Sfp = Sf0 + p.stepFraction()*(Sf - Sf0);
 
                 vector omega = Sf0 ^ Sf;
                 scalar magOmega = mag(omega);

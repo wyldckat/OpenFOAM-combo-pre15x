@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,6 +36,7 @@ SourceFiles
 #define faceMesh_H
 
 #include "PrimitivePatch.H"
+#include "faceList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -54,7 +55,7 @@ class faceMesh
     {
         pointField points(is);
         faceList faces(is);
-        return PrimitivePatch<face, List, pointField>(faces, points);
+        return PrimitivePatch<face, Foam::List, pointField>(faces, points);
     }
 
 
@@ -65,13 +66,13 @@ public:
         //- Construct from components
         faceMesh(const faceList& faces, const pointField& points)
         :
-            PrimitivePatch<face, List, pointField>(faces, points)
+            PrimitivePatch<face, Foam::List, pointField>(faces, points)
         {}
 
         //- Construct from Istream
         faceMesh(Istream& is)
         :
-            PrimitivePatch<face, List, pointField>(read(is))
+            PrimitivePatch<face, Foam::List, pointField>(read(is))
         {}
 
 
@@ -82,7 +83,7 @@ public:
             return os
                 << fm.points()
                 << token::NL
-                << static_cast<PrimitivePatch<face, List, pointField> >(fm);
+                << static_cast<PrimitivePatch<face, Foam::List, pointField> >(fm);
         }
 };
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -306,7 +306,7 @@ label findEdge
 
     FatalErrorIn("findEdge") << "Cannot find edge with labels " << v0
         << ' ' << v1 << " in candidates " << edgeLabels
-        << " with vertices:" << IndirectList<edge>(surf.edges(), edgeLabels)
+        << " with vertices:" << IndirectList<edge>(surf.edges(), edgeLabels)()
         << abort(FatalError);
 
     return -1;
@@ -346,7 +346,7 @@ label otherEdge
     FatalErrorIn("otherEdge") << "Cannot find other edge on face " << faceI
         << " verts:" << surf.localPoints()[faceI]
         << " connected to point " << pointI
-        << " faceEdges:" << IndirectList<edge>(surf.edges(), fEdges)
+        << " faceEdges:" << IndirectList<edge>(surf.edges(), fEdges)()
         << abort(FatalError);
 
     return -1;

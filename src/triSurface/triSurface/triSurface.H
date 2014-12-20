@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -117,6 +117,7 @@ class triSurface
         bool readOFF(const fileName&);
         bool readTRI(const fileName&);
         bool readAC(const fileName&);
+        bool readNAS(const fileName&);
 
         //- Generic write routine. Chooses writer based on extension.
         void write(const fileName&, const word& ext, const bool sort) const;

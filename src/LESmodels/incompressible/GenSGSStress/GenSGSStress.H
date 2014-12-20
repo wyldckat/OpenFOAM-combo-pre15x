@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -69,7 +69,7 @@ protected:
 
         scalar couplingFactor_;
 
-        volTensorField B_;
+        volSymmTensorField B_;
         volScalarField nuSgs_;
 
 
@@ -95,7 +95,7 @@ public:
     // Member Functions
 
         //- Return the SGS stress.
-        virtual tmp<volTensorField> B() const
+        virtual tmp<volSymmTensorField> B() const
         {
             return B_;
         }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,18 +35,18 @@ namespace Foam
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class T>
-inline UList<T>::UList(T* restrict v, label size)
-:
-    size_(size),
-    v_(v)
-{}
-
-
-template<class T>
 inline UList<T>::UList()
 :
     size_(0),
     v_(0)
+{}
+
+
+template<class T>
+inline UList<T>::UList(T* __restrict__ v, label size)
+:
+    size_(size),
+    v_(v)
 {}
 
 

@@ -1,2 +1,7 @@
-wmake libso vtkFoam
-(cd PVFoamReader; mkdir -p Make/$WM_OPTIONS > /dev/null 2>&1; cd Make/$WM_OPTIONS; cmake ../..; make)
+#!/bin/sh
+set -x
+
+if [ "$ParaView_DIR" -a -r $ParaView_DIR ] ; then
+    wmake libso vtkFoam
+    (cd PVFoamReader; mkdir -p Make/$WM_OPTIONS > /dev/null 2>&1; cd Make/$WM_OPTIONS; cmake ../..; make)
+fi

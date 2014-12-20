@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -150,7 +150,11 @@ public:
         //- Return patch index for a given face label
         label whichPatch(const label faceIndex) const;
 
-        //- Check boundary definition
+        //- Check whether all procs have all patches and in same order. Return
+        //  true if in error.
+        bool checkParallelSync(const bool report = false) const;
+
+        //- Check boundary definition. Return true if in error.
         bool checkDefinition(const bool report = false) const;
 
         //- Correct polyBoundaryMesh after moving points
@@ -159,11 +163,17 @@ public:
         //- Correct polyBoundaryMesh after topology update
         void updateMesh();
 
+        //- Reorders patches. Ordering does not have to be done in
+        //  ascending or descending order. Reordering has to be unique.
+        //  (is shuffle) Calls updateMesh() after reordering to recalculate
+        //  data.
+        void reorder(const UList<label>&);
+
         //- writeData member function required by regIOobject
         bool writeData(Ostream&) const;
 
         //- Write using given format, version and form uncompression
-        bool write
+        bool writeObject
         (
             IOstream::streamFormat fmt,
             IOstream::versionNumber ver,

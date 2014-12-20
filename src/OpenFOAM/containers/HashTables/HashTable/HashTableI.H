@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -97,154 +97,137 @@ inline const T& HashTable<T, Key, Hash>::operator[](const Key& key) const
 }
 
 
+template<class T, class Key, class Hash>
+inline T& HashTable<T, Key, Hash>::operator()(const Key& key)
+{
+    iterator iter = find(key);
+
+    if (iter == end())
+    {
+        insert(key, T());
+        return *find(key);
+    }
+    else
+    {
+        return *iter;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * STL iterator  * * * * * * * * * * * * * * //
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-Iterator
+inline HashTable<T, Key, Hash>::iterator::iterator
 (
-    TableRef curHashTable,
-    HashedEntryPtr elmt,
-    HashedEntryPtr prev,
+    HashTable<T, Key, Hash>& curHashTable,
+    hashedEntry* elmt,
     label hashIndex
 )
 :
     curHashTable_(curHashTable),
     elmtPtr_(elmt),
-    prevElmtPtr_(prev),
     hashIndex_(hashIndex)
 {}
 
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-Iterator(const iterator& iter)
-:
-    curHashTable_(iter.curHashTable_),
-    elmtPtr_(iter.elmtPtr_),
-    prevElmtPtr_(iter.prevElmtPtr_),
-    hashIndex_(iter.hashIndex_)
-{}
-
-
-template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline void HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-operator=(const iterator& iter)
+inline void HashTable<T, Key, Hash>::iterator::operator=(const iterator& iter)
 {
-    this->elmtPtr_ = iter.elmtPtr_;
-    this->prevElmtPtr_ = iter.prevElmtPtr_;
-    this->hashIndex_ = iter.hashIndex_;
+    elmtPtr_ = iter.elmtPtr_;
+    hashIndex_ = iter.hashIndex_;
 }
 
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline bool HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-operator==(const iterator& iter) const
-{
-    return elmtPtr_ == iter.elmtPtr_;
-}
-
-template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline bool HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-operator==(const const_iterator& iter) const
+inline bool HashTable<T, Key, Hash>::iterator::operator==
+(
+    const iterator& iter
+) const
 {
     return elmtPtr_ == iter.elmtPtr_;
 }
 
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline bool HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-operator!=(const iterator& iter) const
-{
-    return elmtPtr_ != iter.elmtPtr_;
-}
-
-template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline bool HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-operator!=(const const_iterator& iter) const
+inline bool HashTable<T, Key, Hash>::iterator::operator!=
+(
+    const iterator& iter
+) const
 {
     return elmtPtr_ != iter.elmtPtr_;
 }
 
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline TRef HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-operator*()
+inline bool HashTable<T, Key, Hash>::iterator::operator==
+(
+    const const_iterator& iter
+) const
+{
+    return elmtPtr_ == iter.elmtPtr_;
+}
+
+
+template<class T, class Key, class Hash>
+inline bool HashTable<T, Key, Hash>::iterator::operator!=
+(
+    const const_iterator& iter
+) const
+{
+    return elmtPtr_ != iter.elmtPtr_;
+}
+
+
+template<class T, class Key, class Hash>
+inline T& HashTable<T, Key, Hash>::iterator::operator*()
 {
     return elmtPtr_->obj_;
 }
 
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline TRef HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-operator()()
+inline T& HashTable<T, Key, Hash>::iterator::operator()()
 {
     return operator*();
 }
 
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
 inline
-typename HashTable<T, Key, Hash>::template Iterator
-<
-    TRef,
-    TableRef,
-    HashedEntryPtr
->&
-HashTable<T, Key, Hash>::Iterator
-<
-    TRef,
-    TableRef,
-    HashedEntryPtr
->::operator++()
+typename HashTable<T, Key, Hash>::iterator&
+HashTable<T, Key, Hash>::iterator::operator++()
 {
-    prevElmtPtr_ = elmtPtr_;
-
-    if
-    (
-        !(elmtPtr_ = elmtPtr_->next_)
-     && ++hashIndex_ < curHashTable_.tableSize_
-     && !(elmtPtr_ = curHashTable_.table_[hashIndex_])
-    )
+    // Check for special value from erase. (sets hashIndex to -1)
+    if (hashIndex_ >= 0)
     {
-        prevElmtPtr_ = 0;
-
-        while
-        (
-            ++hashIndex_ < curHashTable_.tableSize_
-         && !(elmtPtr_ = curHashTable_.table_[hashIndex_])
-        );
+        // Do we have additional elements on the singly linked list?
+        if (elmtPtr_ && elmtPtr_->next_)
+        {
+            elmtPtr_ = elmtPtr_->next_;
+            return *this;
+        }
     }
 
+    // Step to the next table entry
+    while
+    (
+        ++hashIndex_ < curHashTable_.tableSize_
+     && !(elmtPtr_ = curHashTable_.table_[hashIndex_])
+    );
+
+    if (hashIndex_ == curHashTable_.tableSize_)
+    {
+        // make end iterator
+        hashIndex_ = 0;
+        elmtPtr_ = 0;
+    }
     return *this;
 }
 
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
-inline
-typename HashTable<T, Key, Hash>::template Iterator
-<
-    TRef,
-    TableRef,
-    HashedEntryPtr
->
-HashTable<T, Key, Hash>::Iterator
-<
-    TRef,
-    TableRef,
-    HashedEntryPtr
->::operator++
+inline typename HashTable<T, Key, Hash>::iterator
+HashTable<T, Key, Hash>::iterator::operator++
 (
     int
 )
@@ -256,10 +239,8 @@ HashTable<T, Key, Hash>::Iterator
 
 
 template<class T, class Key, class Hash>
-template<class TRef, class TableRef, class HashedEntryPtr>
 inline
-const Key& HashTable<T, Key, Hash>::Iterator<TRef, TableRef, HashedEntryPtr>::
-key()
+const Key& HashTable<T, Key, Hash>::iterator::key()
 {
     return elmtPtr_->key_;
 }
@@ -286,7 +267,7 @@ HashTable<T, Key, Hash>::begin()
     }
     else
     {
-        return iterator(*this, table_[i], 0, i);
+        return iterator(*this, table_[i], i);
     }
 }
 
@@ -296,6 +277,143 @@ inline const typename HashTable<T, Key, Hash>::iterator&
 HashTable<T, Key, Hash>::end()
 {
     return HashTable<T, Key, Hash>::endIter_;
+}
+
+
+// * * * * * * * * * * * * * * * STL const_iterator * * * * * * * * * * * * * //
+
+template<class T, class Key, class Hash>
+inline HashTable<T, Key, Hash>::const_iterator::const_iterator
+(
+    const HashTable<T, Key, Hash>& curHashTable,
+    const hashedEntry* elmt,
+    label hashIndex
+)
+:
+    curHashTable_(curHashTable),
+    elmtPtr_(elmt),
+    hashIndex_(hashIndex)
+{}
+
+
+template<class T, class Key, class Hash>
+inline HashTable<T, Key, Hash>::const_iterator::const_iterator
+(   
+    const iterator& iter
+)
+:
+    curHashTable_(iter.curHashTable_),
+    elmtPtr_(iter.elmtPtr_),
+    hashIndex_(iter.hashIndex_)
+{}
+
+
+template<class T, class Key, class Hash>
+inline void HashTable<T, Key, Hash>::const_iterator::operator=
+(
+    const const_iterator& iter
+)
+{
+    elmtPtr_ = iter.elmtPtr_;
+    hashIndex_ = iter.hashIndex_;
+}
+
+
+template<class T, class Key, class Hash>
+inline bool HashTable<T, Key, Hash>::const_iterator::operator==
+(
+    const const_iterator& iter
+) const
+{
+    return elmtPtr_ == iter.elmtPtr_;
+}
+
+
+template<class T, class Key, class Hash>
+inline bool HashTable<T, Key, Hash>::const_iterator::operator!=
+(
+    const const_iterator& iter
+) const
+{
+    return elmtPtr_ != iter.elmtPtr_;
+}
+
+
+template<class T, class Key, class Hash>
+inline bool HashTable<T, Key, Hash>::const_iterator::operator==
+(
+    const iterator& iter
+) const
+{
+    return elmtPtr_ == iter.elmtPtr_;
+}
+
+
+template<class T, class Key, class Hash>
+inline bool HashTable<T, Key, Hash>::const_iterator::operator!=
+(
+    const iterator& iter
+) const
+{
+    return elmtPtr_ != iter.elmtPtr_;
+}
+
+
+template<class T, class Key, class Hash>
+inline const T& HashTable<T, Key, Hash>::const_iterator::operator*()
+{
+    return elmtPtr_->obj_;
+}
+
+
+template<class T, class Key, class Hash>
+inline const T& HashTable<T, Key, Hash>::const_iterator::operator()()
+{
+    return operator*();
+}
+
+
+template<class T, class Key, class Hash>
+inline
+typename HashTable<T, Key, Hash>::const_iterator&
+HashTable<T, Key, Hash>::const_iterator::operator++()
+{
+    if
+    (
+        !(elmtPtr_ = elmtPtr_->next_)
+     && ++hashIndex_ < curHashTable_.tableSize_
+     && !(elmtPtr_ = curHashTable_.table_[hashIndex_])
+    )
+    {
+        while
+        (
+            ++hashIndex_ < curHashTable_.tableSize_
+         && !(elmtPtr_ = curHashTable_.table_[hashIndex_])
+        );
+    }
+
+    return *this;
+}
+
+
+template<class T, class Key, class Hash>
+inline typename HashTable<T, Key, Hash>::const_iterator
+HashTable<T, Key, Hash>::const_iterator::operator++
+(
+    int
+)
+{
+    const_iterator tmp = *this;
+    ++*this;
+    return tmp;
+}
+
+
+template<class T, class Key, class Hash>
+inline
+const Key& HashTable<T, Key, Hash>::const_iterator::key()
+{
+    return elmtPtr_->key_;
 }
 
 
@@ -320,7 +438,7 @@ HashTable<T, Key, Hash>::begin() const
     }
     else
     {
-        return const_iterator(*this, table_[i], 0, i);
+        return const_iterator(*this, table_[i], i);
     }
 }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,13 +25,10 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "spray.H"
-#include "atomizationModel.H"
 #include "breakupModel.H"
 #include "collisionModel.H"
 #include "dispersionModel.H"
 #include "injectorModel.H"
-#include "interpolationCellPoint.H"
-#include "processorPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -81,10 +78,8 @@ void spray::inject()
 
             for(label j=0; j<Np; j++)
             {
-
                 // calculate the time of injection for parcel 'j'
-                scalar toi =
-                    time0 + constT + deltaT*j/scalar(Np);
+                scalar toi = time0 + constT + deltaT*j/scalar(Np);
 
                 // calculate the velocity of the injected parcel
                 vector injectionPosition = it.position
@@ -115,7 +110,7 @@ void spray::inject()
 #               include "findInjectorCell.H"
 
                 if (injectorCell >= 0)
-		{
+                {
                     scalar liquidCore = 1.0;
                 
                     // construct the parcel that is to be injected
@@ -142,12 +137,13 @@ void spray::inject()
                         fuels_->components()
                     );
 
-                    injectedLiquidKE_ +=
-                        0.5*pPtr->m()*pow(mag(U), 2.0);
+                    injectedLiquidKE_ += 0.5*pPtr->m()*pow(mag(U), 2.0);
                     
                     scalar dt = time - toi;
-                    pPtr->t0() = runTime_.deltaT().value() - dt;;
-                    pPtr->tEnd() = dt;
+
+                    pPtr->stepFraction() =
+                        (runTime_.deltaT().value() - dt)
+                       /runTime_.deltaT().value();
 
                     bool keepParcel = pPtr->move
                     (
@@ -162,12 +158,14 @@ void spray::inject()
                     {
                         delete pPtr;
                     }
-		}
+                }
             }
         }
     }
+
     time0_ = time;
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

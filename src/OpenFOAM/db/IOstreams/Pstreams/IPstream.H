@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -58,9 +58,12 @@ class IPstream
     // Private data
 
         int fromProcNo_;
-
+        label messageSize_;
 
     // Private member functions
+
+        //- Check the bufferPosition_ against messageSize_ for EOF
+        inline void checkEof();
 
         //- Read a T from the transfer buffer
         template<class T>
@@ -103,8 +106,9 @@ public:
 
         // Read functions
 
-            //- Read into given buffer from given processor
-            static bool read
+            //- Read into given buffer from given processor and return the
+            //  message size
+            static label read
             (
                 const int fromProcNo,
                 char* buf,

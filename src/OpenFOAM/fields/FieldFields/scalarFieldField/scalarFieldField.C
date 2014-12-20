@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,12 +29,16 @@ Description
 
 #include "scalarFieldField.H"
 
+#define TEMPLATE template<template<class> class Field>
+#include "FieldFieldFunctionsM.C"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
 template<template<class> class Field>
 void stabilise
 (
@@ -77,289 +81,68 @@ tmp<FieldField<Field, scalar> > stabilise
 }
 
 
-template<template<class> class Field>
-void divide
-(
-    FieldField<Field, scalar>& f,
-    const scalar s,
-    const FieldField<Field, scalar>& f1
-)
-{
-    forAll(f, i)
-    {
-        divide(f[i], s, f1[i]);
-    }
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > operator/
-(
-    const scalar s,
-    const FieldField<Field, scalar>& f1
-)
-{
-    tmp<FieldField<Field, scalar> > tf
-    (
-        FieldField<Field, scalar>::NewCalculatedType(f1)
-    );
-    divide(tf(), s, f1);
-    return tf;
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > operator/
-(
-    const scalar s,
-    const tmp<FieldField<Field, scalar> >& tf1
-)
-{
-    tmp<FieldField<Field, scalar> > tf(tf1.ptr());
-    divide(tf(), s, tf());
-    return tf;
-}
-
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// Global functions, result returned in first argument
 
-template<template<class> class Field>
-void pow
-(
-    FieldField<Field, scalar>& Pow,
-    const FieldField<Field, scalar>& sf1,
-    const FieldField<Field, scalar>& sf2
-)
-{
-    forAll(Pow, i)
-    {
-        pow(Pow[i], sf1[i], sf2[i]);
-    }
-}
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, +, add)
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, -, subtract)
 
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const FieldField<Field, scalar>& sf1,
-    const FieldField<Field, scalar>& sf2
-)
-{
-    tmp<FieldField<Field, scalar> > Pow
-    (
-        FieldField<Field, scalar>::NewCalculatedType(sf1)
-    );
-    pow(Pow(), sf1, sf2);
-    return Pow;
-}
+BINARY_OPERATOR(scalar, scalar, scalar, *, multiply)
+BINARY_OPERATOR(scalar, scalar, scalar, /, divide)
 
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const FieldField<Field, scalar>& sf1,
-    const tmp<FieldField<Field, scalar> >& sf2
-)
-{
-    tmp<FieldField<Field, scalar> > Pow(sf2.ptr());
-    pow(Pow(), sf1, Pow());
-    return Pow;
-}
+BINARY_TYPE_OPERATOR_SF(scalar, scalar, scalar, /, divide)
 
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const tmp<FieldField<Field, scalar> >& sf1,
-    const FieldField<Field, scalar>& sf2
-)
-{
-    tmp<FieldField<Field, scalar> > Pow(sf1.ptr());
-    pow(Pow(), Pow(), sf2);
-    return Pow;
-}
+BINARY_FUNCTION(scalar, scalar, scalar, pow)
+BINARY_TYPE_FUNCTION(scalar, scalar, scalar, pow)
 
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const tmp<FieldField<Field, scalar> >& sf1,
-    const tmp<FieldField<Field, scalar> >& sf2
-)
-{
-    tmp<FieldField<Field, scalar> > Pow(sf1.ptr());
-    pow(Pow(), Pow(), sf2());
-    sf2.clear();
-    return Pow;
-}
-
-
-template<template<class> class Field>
-void pow
-(
-    FieldField<Field, scalar>& Pow,
-    const FieldField<Field, scalar>& sf,
-    const scalar& s
-)
-{
-    forAll(Pow, i)
-    {
-        pow(Pow[i], sf[i], s);
-    }
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const FieldField<Field, scalar>& sf,
-    const scalar& s
-)
-{
-    tmp<FieldField<Field, scalar> > Pow
-    (
-        FieldField<Field, scalar>::NewCalculatedType(sf)
-    );
-    pow(Pow(), sf, s);
-    return Pow;
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const tmp<FieldField<Field, scalar> >& sf,
-    const scalar& s
-)
-{
-    tmp<FieldField<Field, scalar> > Pow(sf.ptr());
-    pow(Pow(), Pow(), s);
-    return Pow;
-}
-
-
-template<template<class> class Field>
-void pow
-(
-    FieldField<Field, scalar>& Pow,
-    const scalar& s,
-    const FieldField<Field, scalar>& sf
-)
-{
-    forAll(Pow, i)
-    {
-        pow(Pow[i], s, sf[i]);
-    }
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const scalar& s,
-    const FieldField<Field, scalar>& sf
-)
-{
-    tmp<FieldField<Field, scalar> > Pow
-    (
-        FieldField<Field, scalar>::NewCalculatedType(sf)
-    );
-    pow(Pow(), s, sf);
-    return Pow;
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const scalar& s,
-    const tmp<FieldField<Field, scalar> >& sf
-)
-{
-    tmp<FieldField<Field, scalar> > Pow(sf.ptr());
-    pow(Pow(), s, Pow());
-    return Pow;
-}
+BINARY_FUNCTION(scalar, scalar, scalar, atan2)
+BINARY_TYPE_FUNCTION(scalar, scalar, scalar, atan2)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-#define transFunc(func)                                                       \
-                                                                              \
-template<template<class> class Field>                                         \
-void func(FieldField<Field, scalar>& Res, const FieldField<Field, scalar>& sf)\
-{                                                                             \
-    forAll(Res, i)                                                            \
-    {                                                                         \
-        func(Res[i], sf[i]);                                                  \
-    }                                                                         \
-}                                                                             \
-                                                                              \
-template<template<class> class Field>                                         \
-tmp<FieldField<Field, scalar> > func(const FieldField<Field, scalar>& sf)     \
-{                                                                             \
-    tmp<FieldField<Field, scalar> > Res                                       \
-    (                                                                         \
-        FieldField<Field, scalar>::NewCalculatedType(sf)                      \
-    );                                                                        \
-    forAll(Res, i)                                                            \
-    {                                                                         \
-        func(Res[i], sf[i]);                                                  \
-    }                                                                         \
-    return Res;                                                               \
-}                                                                             \
-                                                                              \
-template<template<class> class Field>                                         \
-tmp<FieldField<Field, scalar> > func                                          \
-(                                                                             \
-    const tmp<FieldField<Field, scalar> >& sf                                 \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, scalar> > tRes(sf.ptr());                           \
-    FieldField<Field, scalar>& Res = tRes();                                  \
-    forAll(Res, i)                                                            \
-    {                                                                         \
-        func(Res[i], Res[i]);                                                 \
-    }                                                                         \
-    return tRes;                                                              \
-}
-
-transFunc(pow3)
-transFunc(pow4)
-transFunc(sqrt)
-transFunc(sign)
-transFunc(pos)
-transFunc(neg)
-transFunc(exp)
-transFunc(log)
-transFunc(log10)
-transFunc(sin)
-transFunc(cos)
-transFunc(tan)
-transFunc(asin)
-transFunc(acos)
-transFunc(atan)
-transFunc(sinh)
-transFunc(cosh)
-transFunc(tanh)
-transFunc(asinh)
-transFunc(acosh)
-transFunc(atanh)
-transFunc(erf)
-transFunc(erfc)
-transFunc(lgamma)
-transFunc(j0)
-transFunc(j1)
-transFunc(y0)
-transFunc(y1)
-
-#undef transFunc
+UNARY_FUNCTION(scalar, scalar, pow3)
+UNARY_FUNCTION(scalar, scalar, pow4)
+UNARY_FUNCTION(scalar, scalar, sqrt)
+UNARY_FUNCTION(scalar, scalar, sign)
+UNARY_FUNCTION(scalar, scalar, pos)
+UNARY_FUNCTION(scalar, scalar, neg)
+UNARY_FUNCTION(scalar, scalar, exp)
+UNARY_FUNCTION(scalar, scalar, log)
+UNARY_FUNCTION(scalar, scalar, log10)
+UNARY_FUNCTION(scalar, scalar, sin)
+UNARY_FUNCTION(scalar, scalar, cos)
+UNARY_FUNCTION(scalar, scalar, tan)
+UNARY_FUNCTION(scalar, scalar, asin)
+UNARY_FUNCTION(scalar, scalar, acos)
+UNARY_FUNCTION(scalar, scalar, atan)
+UNARY_FUNCTION(scalar, scalar, sinh)
+UNARY_FUNCTION(scalar, scalar, cosh)
+UNARY_FUNCTION(scalar, scalar, tanh)
+UNARY_FUNCTION(scalar, scalar, asinh)
+UNARY_FUNCTION(scalar, scalar, acosh)
+UNARY_FUNCTION(scalar, scalar, atanh)
+UNARY_FUNCTION(scalar, scalar, erf)
+UNARY_FUNCTION(scalar, scalar, erfc)
+UNARY_FUNCTION(scalar, scalar, lgamma)
+UNARY_FUNCTION(scalar, scalar, j0)
+UNARY_FUNCTION(scalar, scalar, j1)
+UNARY_FUNCTION(scalar, scalar, y0)
+UNARY_FUNCTION(scalar, scalar, y1)
 
 
-#define transFunc(func)                                                       \
+#define BesselFunc(func)                                                      \
                                                                               \
 template<template<class> class Field>                                         \
 void func                                                                     \
 (                                                                             \
-    FieldField<Field, scalar>& Res,                                           \
+    FieldField<Field, scalar>& res,                                           \
     const int n,                                                              \
     const FieldField<Field, scalar>& sf                                       \
 )                                                                             \
 {                                                                             \
-    forAll(Res, i)                                                            \
+    forAll(res, i)                                                            \
     {                                                                         \
-        func(Res[i], n, sf[i]);                                               \
+        func(res[i], n, sf[i]);                                               \
     }                                                                         \
 }                                                                             \
                                                                               \
@@ -370,41 +153,42 @@ tmp<FieldField<Field, scalar> > func                                          \
     const FieldField<Field, scalar>& sf                                       \
 )                                                                             \
 {                                                                             \
-    tmp<FieldField<Field, scalar> > Res                                       \
+    tmp<FieldField<Field, scalar> > tRes                                      \
     (                                                                         \
         FieldField<Field, scalar>::NewCalculatedType(sf)                      \
     );                                                                        \
-    forAll(Res, i)                                                            \
-    {                                                                         \
-        func(Res[i], n, sf[i]);                                               \
-    }                                                                         \
-    return Res;                                                               \
+    func(tRes(), n, sf);                                                      \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
 template<template<class> class Field>                                         \
 tmp<FieldField<Field, scalar> > func                                          \
 (                                                                             \
     const int n,                                                              \
-    const tmp<FieldField<Field, scalar> >& sf                                 \
+    const tmp<FieldField<Field, scalar> >& tsf                                \
 )                                                                             \
 {                                                                             \
-    tmp<FieldField<Field, scalar> > tRes(sf.ptr());                           \
-    FieldField<Field, scalar>& Res = tRes();                                  \
-    forAll(Res, i)                                                            \
-    {                                                                         \
-        func(Res[i], n, Res[i]);                                              \
-    }                                                                         \
+    tmp<FieldField<Field, scalar> > tRes                                      \
+    (                                                                         \
+        reuseTmpFieldField<Field, scalar, scalar>::New(tsf)                   \
+    );                                                                        \
+    func(tRes(), n, tsf());                                                   \
+    reuseTmpFieldField<Field, scalar, scalar>::clear(tsf);                    \
     return tRes;                                                              \
 }
 
-transFunc(jn)
-transFunc(yn)
+BesselFunc(jn)
+BesselFunc(yn)
 
-#undef transFunc
+#undef BesselFunc
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 // ************************************************************************* //

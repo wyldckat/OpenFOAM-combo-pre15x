@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,9 +26,8 @@ Class
     coordinateRotation
 
 Description
-    Virtual base class for coordinate rotation.  Allows multiple definitions of
-    rotations of coordinate sytems.
-
+    Virtual base class for coordinate rotation.
+    Allows multiple definitions of rotations of coordinate sytems.
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,11 +36,14 @@ Description
 
 #include "vector.H"
 #include "tensor.H"
+#include "runTimeSelectionTables.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+class dictionary;
 
 /*---------------------------------------------------------------------------*\
                        Class coordinateRotation Declaration
@@ -49,7 +51,32 @@ namespace Foam
 
 class coordinateRotation
 {
+
+protected:
+
+    // Protected data members
+
+        //- Local-to-global transformation tensor
+        tensor R_;
+
+
+    // Protected Member Functions
+
+        //- Calculate transformation tensors
+        virtual void calcTransformations
+        (
+            const scalar,
+            const scalar,
+            const scalar,
+            const bool inDegrees
+        ) = 0;
+
+
 public:
+
+    //- Runtime type information
+    TypeName("coordinateRotation");
+
 
     // Static data members
 
@@ -58,6 +85,35 @@ public:
 
         //- Direction
         static const vector x;
+
+
+    // Constructors
+
+        //- Construct null
+        coordinateRotation();
+
+
+    // Declare run-time constructor selection table
+
+        declareRunTimeSelectionTable
+        (
+            autoPtr,
+            coordinateRotation,
+            dictionary,
+            (
+                const dictionary& dict
+            ),
+            (dict)
+        );
+
+
+    // Selectors
+
+        //- Select constructed from Istream
+        static autoPtr<coordinateRotation> New
+        (
+            const dictionary& dict
+        );
 
 
     // Destructor
@@ -69,18 +125,21 @@ public:
     // Member Functions
 
         //- Return local-to-global transformation tensor
-        virtual const tensor& R() const = 0;
+        const tensor& R() const
+        {
+            return R_;
+        }
 
         //- Return local axis
         vector axis() const
         {
-            return R() & z;
+            return R_ & z;
         }
 
         //- Return local direction
         vector direction() const
         {
-            return R() & x;
+            return R_ & x;
         }
 };
 

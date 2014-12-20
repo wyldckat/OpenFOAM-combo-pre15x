@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
     
 \*---------------------------------------------------------------------------*/
 
@@ -80,8 +78,24 @@ inline T* autoPtr<T>::ptr()
 }
 
 
-// If object pointer points to valid object:
-// delete object and set pointer to NULL
+// Set pointer to that given.
+// If object pointer already set issue a FatalError.
+template<class T>
+inline void autoPtr<T>::set(T* p)
+{
+    if (ptr_)
+    {
+        FatalErrorIn("void autoPtr<T>::set(T* p)")
+            << "object already allocated"
+            << abort(FatalError);
+    }
+
+    ptr_ = p;
+}
+
+
+// If object pointer already set delete object and
+// set pointer to that given
 template<class T>
 inline void autoPtr<T>::reset(T* p)
 {
@@ -133,13 +147,6 @@ inline const T& autoPtr<T>::operator()() const
 }
 
 
-template<class T>
-inline autoPtr<T>::operator const T&() const
-{
-    return operator()();
-}
-
-
 /*
 template<class T>
 inline T& autoPtr<T>::operator*()
@@ -154,6 +161,13 @@ inline const T& autoPtr<T>::operator*() const
     return operator()();
 }
 */
+
+
+template<class T>
+inline autoPtr<T>::operator const T&() const
+{
+    return operator()();
+}
 
 
 // Return object pointer

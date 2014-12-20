@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,18 +39,17 @@ void PointPatchField<PatchField, PointPatch, Type>::checkInternalField() const
 {
     const label iFs = internalField_.size();
 
-    const label nPoints = patch_.boundaryMesh().mesh().nPoints();
-    const label nCells = patch_.boundaryMesh().mesh().nCells();
+    const label nPoints = patch_.boundaryMesh().mesh().size();
 
-    if (iFs != nPoints && iFs != nCells)
+    if (iFs != nPoints)
     {
         FatalErrorIn
         (
             "void PointPatchField<PatchField, PointPatch, Type>::"
             "checkInternalField() const"
-        )   << "internal field is not point or element field." << nl
+        )   << "internal field is not a point field." << nl
             << "Size of internal field: " << iFs << ".  Number of points: "
-            << nPoints << ".  Number of cells: " << nCells << "."
+            << nPoints << '.'
             << abort(FatalError);
     }
 }
@@ -78,7 +77,6 @@ PointPatchField<PatchField, PointPatch, Type>::PointPatchField
     const PointPatchField<PatchField, PointPatch, Type>& ptf
 )
 :
-    lduCoupledInterface(),
     patch_(ptf.patch_),
     internalField_(ptf.internalField_)
 {}
@@ -161,33 +159,6 @@ patchInternalField
     }
 
     return tvalues;
-}
-
-
-// Does this patchField correspond to a pointTypeField
-template<template<class> class PatchField, class PointPatch, class Type>
-bool PointPatchField<PatchField, PointPatch, Type>::isPointField() const
-{
-    return
-        internalField().size()
-     == patch().boundaryMesh().mesh().nPoints();
-}
-
-// Does this patchField correspond to a pointTypeField
-template<template<class> class PatchField, class PointPatch, class Type>
-void PointPatchField<PatchField, PointPatch, Type>::checkPointField() const
-{
-    if (!isPointField())
-    {
-        FatalErrorIn
-        (
-            "void PointPatchField<PatchField, PointPatch, Type>::"
-            "::checkPointField() const"
-        )   << "This " << type() << " patchField"
-            << " is not part of a pointTypeField which may cause "
-            << "undefined behaviour from the evaluate and other functions"
-            << abort(FatalError);
-    }
 }
 
 

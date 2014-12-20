@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -87,17 +87,18 @@ public:
             LESdelta,
             dictionary,
             (
+                const word& name,
                 const fvMesh& mesh,
                 const dictionary& LESdeltaDict
             ),
-            (mesh, LESdeltaDict)
+            (name, mesh, LESdeltaDict)
         );
 
 
     // Constructors
 
-        //- Construct from components
-        LESdelta(const fvMesh& mesh);
+        //- Construct from name and mesh
+        LESdelta(const word& name, const fvMesh& mesh);
 
 
     // Selectors
@@ -105,6 +106,7 @@ public:
         //- Return a reference to the selected LES delta
         static autoPtr<LESdelta> New
         (
+            const word& name,
             const fvMesh& mesh,
             const dictionary& LESdeltaDict
         );

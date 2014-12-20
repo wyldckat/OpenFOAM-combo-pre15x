@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,7 +65,7 @@ void Smagorinsky::correct(const tmp<volTensorField>& gradU)
 {
     GenEddyVisc::correct(gradU);
 
-    volTensorField D = symm(gradU);
+    volSymmTensorField D = symm(gradU);
 
     volScalarField a = ce_/delta();
     volScalarField b = (2.0/3.0)*tr(D);

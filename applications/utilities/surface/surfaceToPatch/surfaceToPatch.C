@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,7 +35,7 @@ Description
 #include "faceSet.H"
 #include "directPolyTopoChange.H"
 #include "polyModifyFace.H"
-#include "parallelInfo.H"
+#include "globalMeshData.H"
 
 using namespace Foam;
 
@@ -201,7 +201,7 @@ int main(int argc, char *argv[])
     }
 
     // Get search box. Anything not within this box will not be considered.
-    const boundBox& meshBb = mesh.parallelData().bb();
+    const boundBox& meshBb = mesh.globalData().bb();
 
     const vector searchSpan(searchTol*(meshBb.max() - meshBb.min()));
 
@@ -300,7 +300,7 @@ int main(int argc, char *argv[])
 
     if (nChanged > 0)
     {
-        meshMod.changeMesh(mesh);
+        meshMod.changeMesh(mesh, false);
 
         Info<< "After patching:" << nl
             << "    patch\tsize" << endl;

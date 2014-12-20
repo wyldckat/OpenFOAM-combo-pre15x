@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,6 +41,43 @@ namespace fvc
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
+void surfaceIntegrate
+(
+    Field<Type>& ivf,
+    const GeometricField<Type, fvPatchField, surfaceMesh>& ssf
+)
+{
+    const fvMesh& mesh = ssf.mesh();
+
+    const unallocLabelList& owner = mesh.owner();
+    const unallocLabelList& neighbour = mesh.neighbour();
+
+    const Field<Type>& issf = ssf;
+
+    forAll(owner, facei)
+    {
+        ivf[owner[facei]] += issf[facei];
+        ivf[neighbour[facei]] -= issf[facei];
+    }
+
+    forAll(mesh.boundary(), patchi)
+    {
+        const unallocLabelList& pFaceCells =
+            mesh.boundary()[patchi].faceCells();
+
+        const fvPatchField<Type>& pssf = ssf.boundaryField()[patchi];
+
+        forAll(mesh.boundary()[patchi], facei)
+        {
+            ivf[pFaceCells[facei]] += pssf[facei];
+        }
+    }
+
+    ivf /= mesh.V();
+}
+
+
+template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 surfaceIntegrate
 (
@@ -73,33 +110,7 @@ surfaceIntegrate
     );
     GeometricField<Type, fvPatchField, volMesh>& vf = tvf();
 
-    const unallocLabelList& owner = mesh.owner();
-    const unallocLabelList& neighbour = mesh.neighbour();
-
-    Field<Type>& ivf = vf;
-    const Field<Type>& issf = ssf;
-
-    forAll(owner, facei)
-    {
-        ivf[owner[facei]] += issf[facei];
-        ivf[neighbour[facei]] -= issf[facei];
-    }
-
-    forAll(mesh.boundary(), patchi)
-    {
-        const labelList::subList pFaceCells =
-            mesh.boundary()[patchi].faceCells();
-
-        const fvPatchField<Type>& pssf = ssf.boundaryField()[patchi];
-
-        forAll(mesh.boundary()[patchi], facei)
-        {
-            ivf[pFaceCells[facei]] += pssf[facei];
-        }
-    }
-
-    ivf /= mesh.V();
-
+    surfaceIntegrate(vf.internalField(), ssf);
     vf.correctBoundaryConditions();
 
     return tvf;
@@ -161,7 +172,7 @@ surfaceSum
 
     forAll(mesh.boundary(), patchi)
     {
-        const labelList::subList pFaceCells =
+        const unallocLabelList& pFaceCells =
             mesh.boundary()[patchi].faceCells();
 
         const fvPatchField<Type>& pssf = ssf.boundaryField()[patchi];

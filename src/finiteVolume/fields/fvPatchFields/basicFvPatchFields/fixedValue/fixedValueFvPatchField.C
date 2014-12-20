@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -74,6 +72,16 @@ fixedValueFvPatchField<Type>::fixedValueFvPatchField
 template<class Type>
 fixedValueFvPatchField<Type>::fixedValueFvPatchField
 (
+    const fixedValueFvPatchField<Type>& ptf
+)
+:
+    fvPatchField<Type>(ptf)
+{}
+
+
+template<class Type>
+fixedValueFvPatchField<Type>::fixedValueFvPatchField
+(
     const fixedValueFvPatchField<Type>& ptf,
     const Field<Type>& iF
 )
@@ -114,7 +122,7 @@ tmp<Field<Type> > fixedValueFvPatchField<Type>::valueBoundaryCoeffs
 template<class Type>
 tmp<Field<Type> > fixedValueFvPatchField<Type>::gradientInternalCoeffs() const
 {
-    return -Type(pTraits<Type>::one)*this->patch().deltaCoeffs();
+    return -pTraits<Type>::one*this->patch().deltaCoeffs();
 }
 
 //- Return the matrix source coefficients corresponding to the

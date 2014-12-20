@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -109,6 +109,9 @@ public:
 
 
     // Member Functions
+
+        //- Return the number of elements in the FixedList.
+        inline label size() const;
 
         inline const Cmpt& component(const direction) const;
         inline Cmpt& component(const direction);

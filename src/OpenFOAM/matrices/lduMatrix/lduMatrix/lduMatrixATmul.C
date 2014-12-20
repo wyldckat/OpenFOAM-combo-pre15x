@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,61 +32,80 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-void lduMatrix::Amul
+void Foam::lduMatrix::Amul
 (
     scalarField& Apsi,
     const tmp<scalarField>& tpsi,
-    const FieldField<Field, scalar>& coupleBouCoeffs,
-    const lduCoupledInterfacePtrsList& interfaces,
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
     const direction cmpt
 ) const
 {
-    scalar* restrict ApsiPtr = Apsi.begin();
+    scalar* __restrict__ ApsiPtr = Apsi.begin();
 
     const scalarField& psi = tpsi();
-    const scalar* restrict psiPtr = psi.begin();
+    const scalar* const __restrict__ psiPtr = psi.begin();
 
-    const scalar* restrict diagPtr = diag().begin();
+    const scalar* const __restrict__ diagPtr = diag().begin();
 
-    const label* restrict uPtr = lduAddr_.upperAddr().begin();
-    const label* restrict lPtr = lduAddr_.lowerAddr().begin();
+    const label* const __restrict__ uPtr = lduAddr().upperAddr().begin();
+    const label* const __restrict__ lPtr = lduAddr().lowerAddr().begin();
 
-    const scalar* restrict lowerPtr = lower().begin();
-    const scalar* restrict upperPtr = upper().begin();
+    const scalar* const __restrict__ upperPtr = upper().begin();
+    const scalar* const __restrict__ lowerPtr = lower().begin();
+
+    // Initialise the update of interfaced interfaces
+    initMatrixInterfaces
+    (
+        interfaceBouCoeffs,
+        interfaces,
+        psi,
+        Apsi, 
+        cmpt
+    );
 
     register const label nCells = diag().size();
-    register const label nFaces = upper().size();
-
     for (register label cell=0; cell<nCells; cell++)
     {
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&psiPtr[cell+96],0,1);
+        __builtin_prefetch (&diagPtr[cell+96],0,1);
+        __builtin_prefetch (&ApsiPtr[cell+96],1,1);
+        #endif
+
         ApsiPtr[cell] = diagPtr[cell]*psiPtr[cell];
     }
 
-    // Initialise the update of coupled interfaces
-    initMatrixInterfaces
-    (
-        coupleBouCoeffs,
-        interfaces,
-        psi,
-        Apsi,
-        cmpt
-    );
+    #ifdef ICC_IA64_PREFETCH
+    #pragma swp  
+    #endif
 
+    register const label nFaces = upper().size();
     for (register label face=0; face<nFaces; face++)
     {
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&uPtr[face+32],0,0);
+        __builtin_prefetch (&lPtr[face+32],0,0);
+        __builtin_prefetch (&lowerPtr[face+32],0,1);
+        __builtin_prefetch (&psiPtr[lPtr[face+32]],0,1);
+        __builtin_prefetch (&ApsiPtr[uPtr[face+32]],0,1);
+        #endif
+
         ApsiPtr[uPtr[face]] += lowerPtr[face]*psiPtr[lPtr[face]];
+
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&upperPtr[face+32],0,1);
+        __builtin_prefetch (&psiPtr[uPtr[face+32]],0,1);
+        __builtin_prefetch (&ApsiPtr[lPtr[face+32]],0,1);
+        #endif
+
         ApsiPtr[lPtr[face]] += upperPtr[face]*psiPtr[uPtr[face]];
     }
 
-    // Update couple interfaces
+    // Update interface interfaces
     updateMatrixInterfaces
     (
-        coupleBouCoeffs,
+        interfaceBouCoeffs,
         interfaces,
         psi,
         Apsi,
@@ -97,68 +116,274 @@ void lduMatrix::Amul
 }
 
 
-void lduMatrix::Tmul
+void Foam::lduMatrix::Tmul
 (
     scalarField& Tpsi,
     const tmp<scalarField>& tpsi,
-    const FieldField<Field, scalar>& coupleIntCoeffs,
-    const lduCoupledInterfacePtrsList& interfaces,
+    const FieldField<Field, scalar>& interfaceIntCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
     const direction cmpt
 ) const
 {
-    scalar* restrict TpsiPtr = Tpsi.begin();
+    scalar* __restrict__ TpsiPtr = Tpsi.begin();
 
     const scalarField& psi = tpsi();
-    const scalar* restrict psiPtr = psi.begin();
+    const scalar* const __restrict__ psiPtr = psi.begin();
 
-    const scalar* restrict diagPtr = diag().begin();
+    const scalar* const __restrict__ diagPtr = diag().begin();
 
-    const label* restrict uPtr = lduAddr_.upperAddr().begin();
-    const label* restrict lPtr = lduAddr_.lowerAddr().begin();
+    const label* const __restrict__ uPtr = lduAddr().upperAddr().begin();
+    const label* const __restrict__ lPtr = lduAddr().lowerAddr().begin();
 
-    const scalar* restrict lowerPtr = lower().begin();
-    const scalar* restrict upperPtr = upper().begin();
+    const scalar* const __restrict__ lowerPtr = lower().begin();
+    const scalar* const __restrict__ upperPtr = upper().begin();
+
+    // Initialise the update of interfaced interfaces
+    initMatrixInterfaces
+    (
+        interfaceIntCoeffs,
+        interfaces,
+        psi,
+        Tpsi,
+        cmpt
+    );
+
+    register const label nCells = diag().size();
+    for (register label cell=0; cell<nCells; cell++)
+    {
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&psiPtr[cell+96],0,1);
+        __builtin_prefetch (&diagPtr[cell+96],0,1);
+        __builtin_prefetch (&TpsiPtr[cell+96],1,1);
+        #endif
+
+        TpsiPtr[cell] = diagPtr[cell]*psiPtr[cell];
+    }
+
+    register const label nFaces = upper().size();
+    for (register label face=0; face<nFaces; face++)
+    {
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&uPtr[face+32],0,0);
+        __builtin_prefetch (&lPtr[face+32],0,0);
+        __builtin_prefetch (&upperPtr[face+32],0,1);
+        __builtin_prefetch (&psiPtr[lPtr[face+32]],0,1);
+        __builtin_prefetch (&TpsiPtr[uPtr[face+32]],0,1);
+        #endif
+
+        TpsiPtr[uPtr[face]] += upperPtr[face]*psiPtr[lPtr[face]];
+
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&lowerPtr[face+32],0,1);
+        __builtin_prefetch (&psiPtr[uPtr[face+32]],0,1);
+        __builtin_prefetch (&TpsiPtr[lPtr[face+32]],0,1);
+        #endif
+
+        TpsiPtr[lPtr[face]] += lowerPtr[face]*psiPtr[uPtr[face]];
+    }
+
+    // Update interface interfaces
+    updateMatrixInterfaces
+    (
+        interfaceIntCoeffs,
+        interfaces,
+        psi,
+        Tpsi,
+        cmpt
+    );
+
+    tpsi.clear();
+}
+
+
+void Foam::lduMatrix::sumA
+(
+    scalarField& sumA,
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces
+) const
+{
+    scalar* __restrict__ sumAPtr = sumA.begin();
+
+    const scalar* __restrict__ diagPtr = diag().begin();
+
+    const label* __restrict__ uPtr = lduAddr().upperAddr().begin();
+    const label* __restrict__ lPtr = lduAddr().lowerAddr().begin();
+
+    const scalar* __restrict__ lowerPtr = lower().begin();
+    const scalar* __restrict__ upperPtr = upper().begin();
 
     register const label nCells = diag().size();
     register const label nFaces = upper().size();
 
     for (register label cell=0; cell<nCells; cell++)
     {
-        TpsiPtr[cell] = diagPtr[cell]*psiPtr[cell];
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&diagPtr[cell+96],0,1);
+        __builtin_prefetch (&sumAPtr[cell+96],1,1);
+        #endif
+
+        sumAPtr[cell] = diagPtr[cell];
     }
 
-    // Initialise the update of coupled interfaces
-    initMatrixInterfaces
-    (
-        coupleIntCoeffs,
-        interfaces,
-        psi,
-        Tpsi,
-        cmpt
-    );
+    #ifdef ICC_IA64_PREFETCH
+    #pragma swp  
+    #endif
 
     for (register label face=0; face<nFaces; face++)
     {
-        TpsiPtr[uPtr[face]] += upperPtr[face]*psiPtr[lPtr[face]];
-        TpsiPtr[lPtr[face]] += lowerPtr[face]*psiPtr[uPtr[face]];
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&uPtr[face+32],0,0);
+        __builtin_prefetch (&lPtr[face+32],0,0);
+        __builtin_prefetch (&lowerPtr[face+32],0,1);
+        __builtin_prefetch (&sumAPtr[uPtr[face+32]],0,1);
+        #endif
+
+        sumAPtr[uPtr[face]] += lowerPtr[face];
+
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&upperPtr[face+32],0,1);
+        __builtin_prefetch (&sumAPtr[lPtr[face+32]],0,1);
+        #endif
+
+        sumAPtr[lPtr[face]] += upperPtr[face];
     }
 
-    // Update couple interfaces
-    updateMatrixInterfaces
-    (
-        coupleIntCoeffs,
-        interfaces,
-        psi,
-        Tpsi,
-        cmpt
-    );
+    // Add the interface internal coefficients to diagonal
+    // and the interface boundary coefficients to the sum-off-diagonal
+    forAll(interfaces, patchI)
+    {
+        if (interfaces.set(patchI))
+        {
+            const unallocLabelList& pa = lduAddr().patchAddr(patchI);
+            const scalarField& pCoeffs = interfaceBouCoeffs[patchI];
 
-    tpsi.clear();
+            forAll(pa, face)
+            {
+                sumAPtr[pa[face]] -= pCoeffs[face];
+            }
+        }
+    }
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+void Foam::lduMatrix::residual
+(
+    scalarField& rA,
+    const scalarField& psi,
+    const scalarField& source,
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
+    const direction cmpt
+) const
+{
+    scalar* __restrict__ rAPtr = rA.begin();
 
-} // End namespace Foam
+    const scalar* const __restrict__ psiPtr = psi.begin();
+    const scalar* const __restrict__ diagPtr = diag().begin();
+    const scalar* const __restrict__ sourcePtr = source.begin();
+
+    const label* const __restrict__ uPtr = lduAddr().upperAddr().begin();
+    const label* const __restrict__ lPtr = lduAddr().lowerAddr().begin();
+
+    const scalar* const __restrict__ upperPtr = upper().begin();
+    const scalar* const __restrict__ lowerPtr = lower().begin();
+
+    // Parallel boundary initialisation.
+    // Note: there is a change of sign in the coupled
+    // interface update.  The reason for this is that the
+    // internal coefficients are all located at the l.h.s. of
+    // the matrix whereas the "implicit" coefficients on the
+    // coupled boundaries are all created as if the
+    // coefficient contribution is of a source-kind (i.e. they
+    // have a sign as if they are on the r.h.s. of the matrix.
+    // To compensate for this, it is necessary to turn the
+    // sign of the contribution.
+
+    FieldField<Field, scalar> mBouCoeffs(interfaceBouCoeffs.size());
+
+    forAll(mBouCoeffs, patchi)
+    {
+        if (interfaces.set(patchi))
+        {
+            mBouCoeffs.set(patchi, -interfaceBouCoeffs[patchi]);
+        }
+    }
+
+    // Initialise the update of interfaced interfaces
+    initMatrixInterfaces
+    (
+        mBouCoeffs,
+        interfaces,
+        psi,
+        rA, 
+        cmpt
+    );
+
+    register const label nCells = diag().size();
+    for (register label cell=0; cell<nCells; cell++)
+    {
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&psiPtr[cell+96],0,1);
+        __builtin_prefetch (&diagPtr[cell+96],0,1);
+        __builtin_prefetch (&sourcePtr[cell+96],0,1);
+        __builtin_prefetch (&rAPtr[cell+96],1,1);
+        #endif
+
+        rAPtr[cell] = sourcePtr[cell] - diagPtr[cell]*psiPtr[cell];
+    }
+
+    #ifdef ICC_IA64_PREFETCH
+    #pragma swp  
+    #endif
+
+    register const label nFaces = upper().size();
+    for (register label face=0; face<nFaces; face++)
+    {
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&uPtr[face+32],0,0);
+        __builtin_prefetch (&lPtr[face+32],0,0);
+        __builtin_prefetch (&lowerPtr[face+32],0,1);
+        __builtin_prefetch (&psiPtr[lPtr[face+32]],0,1);
+        __builtin_prefetch (&rAPtr[uPtr[face+32]],0,1);
+        #endif
+
+        rAPtr[uPtr[face]] -= lowerPtr[face]*psiPtr[lPtr[face]];
+
+        #ifdef ICC_IA64_PREFETCH
+        __builtin_prefetch (&upperPtr[face+32],0,1);
+        __builtin_prefetch (&psiPtr[uPtr[face+32]],0,1);
+        __builtin_prefetch (&rAPtr[lPtr[face+32]],0,1);
+        #endif
+
+        rAPtr[lPtr[face]] -= upperPtr[face]*psiPtr[uPtr[face]];
+    }
+
+    // Update interface interfaces
+    updateMatrixInterfaces
+    (
+        mBouCoeffs,
+        interfaces,
+        psi,
+        rA,
+        cmpt
+    );
+}
+
+
+Foam::tmp<Foam::scalarField> Foam::lduMatrix::residual
+(
+    const scalarField& psi,
+    const scalarField& source,
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
+    const direction cmpt
+) const
+{
+    tmp<scalarField> trA(new scalarField(psi.size()));
+    residual(trA(), psi, source, interfaceBouCoeffs, interfaces, cmpt);
+    return trA;
+}
+
 
 // ************************************************************************* //

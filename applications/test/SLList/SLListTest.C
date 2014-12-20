@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,26 +32,8 @@ Description
 
 #include "IOstreams.H"
 #include "SLList.H"
-//#include "ISLList.H"
 
 using namespace Foam;
-
-/*
-class Scalar
-:
-    public ISLink
-{
-public:
-
-    scalar data_;
-
-    Scalar()
-    :
-        data_(0)
-    {}
-};
-*/
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 //  Main program:
@@ -96,8 +78,26 @@ int main(int argc, char *argv[])
         Info<< "element:" << *iter2 << endl;
     }
 
-    //ISLList<Scalar> myOtherList;
+    for
+    (
+        SLList<scalar>::iterator iter = myList.begin();
+        iter != myList.end();
+        ++iter
+    )
+    {
+        Info<< "Removing element:" << *iter << endl;
+        myList.remove(iter);
+    }
 
+    for
+    (
+        SLList<scalar>::const_iterator iter2 = const_myList.begin();
+        iter2 != const_myList.end();
+        ++iter2
+    )
+    {
+        Info<< "element:" << *iter2 << endl;
+    }
 
     Info<< nl << "Bye." << endl;
     return 0;

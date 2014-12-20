@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,6 +33,7 @@ Description
 #define parcel_H
 
 #include "particle.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -84,7 +85,8 @@ class parcel
             scalar liquidCore_;
 
             //- injected from injector 
-            // NN. should really be a label, but is scalar due to post-processing reasons
+            //  Should really be a label, but is scalar due to
+            //  post-processing reasons
             scalar injector_;
 
             //- Velocity of parcel
@@ -93,7 +95,8 @@ class parcel
             //- Turbulent velocity fluctuation
             vector Uturb_;
 
-            //- Normal n_ and axis describe the 2D plane in which the particle moves
+            //- Normal n_ and axis describe the 2D plane
+            //  in which the particle moves
             vector n_;
 
             //- Liquid fuel molar fractions
@@ -103,12 +106,6 @@ class parcel
 
             //- Momentum relaxation time of droplets in parcel
             scalar tMom_;
-
-            //- Time at start of tracking 
-            scalar t0_;
-
-            //- remaing time to reach end of trajectory
-            scalar tEnd_;
 
 
     // Private member functions
@@ -179,27 +176,6 @@ public:
             bool readFields = true
         );
 
-
-        class iNew
-        {
-            const Cloud<parcel>& cloud_;
-
-        public:
-
-            iNew(const Cloud<parcel>& cloud)
-            :
-                cloud_(cloud)
-            {}
-
-            autoPtr<parcel> operator()(Istream& is) const
-            {
-                return autoPtr<parcel>(new parcel(cloud_, is));
-            }
-        };
-
-
-    // Destructor
-        virtual ~parcel();
 
     // Member Functions
 
@@ -300,17 +276,6 @@ public:
             //- Return the momentum relaxation time of droplets in parcel
             inline scalar tMom() const;
 
-            //- Return the time at start of tracking
-            inline scalar& t0();
-
-            //- Return the time at start of tracking
-            inline scalar t0() const;
-
-            //- Return the time remaining to reach end of trajectory
-            inline scalar& tEnd();
-
-            //- Return the time remaining to reach end of trajectory
-            inline scalar tEnd() const;
 
         // Derived information
 
@@ -384,11 +349,15 @@ public:
             //  according to the given transformation tensor
             void transformProperties(const tensor& T);
 
+            //- Transform the position and physical properties of the particle
+            //  according to the given separation vector
+            void transformProperties(const vector& separation);
 
             //- fix the 2D plane normal,
             // when particle hits a face it is slightly perturbed 
             // towards the face centre and n_ will no longer be valid
             inline void correctNormal(const vector& sym);
+
 
     // Ostream Operator
 
@@ -396,10 +365,15 @@ public:
 };
 
 
-inline bool writeBinary(const parcel*)
+template<>
+inline bool contiguous<parcel>()
 {
     return true;
 }
+
+
+template<>
+void Cloud<parcel>::readFields();
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

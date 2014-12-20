@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "emptyFvPatch.H"
+#include "fvBoundaryMesh.H"
+#include "fvMesh.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -34,24 +36,30 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-const vectorField emptyFvPatch::emptyNf_(0);
-
-// Patch name
 defineTypeNameAndDebug(emptyFvPatch, 0);
-
-// Add the patch constructor functions to the hash tables
 addToRunTimeSelectionTable(fvPatch, emptyFvPatch, polyPatch);
 
-// Over-riding the face normals return from the underlying patch
-// This is the only piece of info used out of the underlying primitivePatch
-// I choose to store it there because it is used in primitive patch operations
-// and it should not be duplicated as before.  However, to ensure everything
-// in the empty patch is sized to zero, we shall here return a reference to
-// a zero-sized field (it does not matter what the field is
-// 
-const vectorField& emptyFvPatch::nf() const
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+emptyFvPatch::emptyFvPatch(const polyPatch& patch, const fvBoundaryMesh& bm)
+:
+    fvPatch(patch, bm),
+    faceCells_
+    (
+        labelList::subList
+        (
+            boundaryMesh().mesh().faceOwner(), 0, patch.start()
+        )
+    )
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+const unallocLabelList& emptyFvPatch::faceCells() const
 {
-    return emptyNf_;
+    return faceCells_;
 }
 
 

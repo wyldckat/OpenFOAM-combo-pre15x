@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,10 +28,22 @@ License
 #ifndef PackedList_I
 #define PackedList_I
 
+#include "IOstreams.H"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+// Calculate underlying list size
+template<int nBits>
+inline label PackedList<nBits>::intSize(const label sz)
+{
+    const label nElemsPerLabel = sizeof(unsigned int)*8/nBits;
+
+    return (sz+nElemsPerLabel-1)/nElemsPerLabel;
+}
+
 
 // Convert index into index in integer array
 template<int nBits>
@@ -94,7 +106,7 @@ inline PackedList<nBits>::PackedList()
 template<int nBits>
 inline PackedList<nBits>::PackedList(const label size)
 :
-    List<unsigned int>(intIndex(size-1)+1, 0u),
+    List<unsigned int>(intSize(size), 0u),
     size_(size)
 {}
 

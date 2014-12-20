@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,29 +36,29 @@ bool checkEdges
 (
     const primitiveMesh& mesh,
     const bool report,
-    const scalar tol,
+    const scalar reportLenSqr,
     labelHashSet* setPtr
 )
 {
     const pointField& pts = mesh.points();
     const edgeList& edges = mesh.edges();
 
-    scalar minLen = GREAT;
+    scalar minLenSqr = sqr(GREAT);
     label nSmall = 0;
-    scalar maxLen = -GREAT;
+    scalar maxLenSqr = -sqr(GREAT);
 
     forAll (edges, edgeI)
     {
         const edge& e = edges[edgeI];
-        scalar magE = e.mag(pts);
+        scalar magSqrE = magSqr(pts[e[1]] - pts[e[0]]);
 
-        if (magE < tol)
+        if (magSqrE < reportLenSqr)
         {
             if (report)
             {
                 Pout<< "Zero size or very small edge size detected for "
                     << "edge " << edgeI << " vertices " << e
-                    << ".  Length = " << magE << endl;
+                    << ".  Length = " << Foam::sqrt(magSqrE) << endl;
             }
 
             if (setPtr)
@@ -69,18 +69,18 @@ bool checkEdges
             nSmall++;
         }
 
-        minLen = min(minLen, magE);
-        maxLen = max(maxLen, magE);
+        minLenSqr = min(minLenSqr, magSqrE);
+        maxLenSqr = max(maxLenSqr, magSqrE);
     }
 
-    reduce(minLen, minOp<scalar>());
-    reduce(maxLen, maxOp<scalar>());
+    reduce(minLenSqr, minOp<scalar>());
+    reduce(maxLenSqr, maxOp<scalar>());
     reduce(nSmall, sumOp<label>());
 
     if (report)
     {
-        Info<< "Minumum edge length = " << minLen
-            << ". Maximum edge length = " << maxLen
+        Info<< "Minumum edge length = " << Foam::sqrt(minLenSqr)
+            << ". Maximum edge length = " << Foam::sqrt(maxLenSqr)
             << '.' << nl << endl;
     }
 
@@ -90,10 +90,10 @@ bool checkEdges
         {
             WarningIn
             (
-                "checkEdges"
-                "(const primitiveMesh& mesh, const bool report,"
-                "const scalar tol, labelHashSet* setPtr"
-            )  << nSmall  << " small edges found" << nl << endl;
+                "checkEdges(const primitiveMesh&, const bool,"
+                "const scalar, labelHashSet*)"
+            )  << nSmall << " small (< " << Foam::sqrt(reportLenSqr)
+                << ") edges found" << nl << endl;
         }
 
         return true;

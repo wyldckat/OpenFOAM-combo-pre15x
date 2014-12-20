@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -88,17 +88,6 @@ defaultFvPatchField<Type>::defaultFvPatchField
 
     for
     (
-        HashPtrTable<tensorField>::const_iterator iter =
-            ptf.tensorFields_.begin();
-        iter != ptf.tensorFields_.end();
-        ++iter
-    )
-    {
-        tensorFields_.insert(iter.key(), new tensorField(*iter(), mapper));
-    }
-
-    for
-    (
         HashPtrTable<sphericalTensorField>::const_iterator iter =
             ptf.sphericalTensorFields_.begin();
         iter != ptf.sphericalTensorFields_.end();
@@ -110,6 +99,32 @@ defaultFvPatchField<Type>::defaultFvPatchField
             iter.key(),
             new sphericalTensorField(*iter(), mapper)
         );
+    }
+
+    for
+    (
+        HashPtrTable<symmTensorField>::const_iterator iter =
+            ptf.symmTensorFields_.begin();
+        iter != ptf.symmTensorFields_.end();
+        ++iter
+    )
+    {
+        symmTensorFields_.insert
+        (
+            iter.key(),
+            new symmTensorField(*iter(), mapper)
+        );
+    }
+
+    for
+    (
+        HashPtrTable<tensorField>::const_iterator iter =
+            ptf.tensorFields_.begin();
+        iter != ptf.tensorFields_.end();
+        ++iter
+    )
+    {
+        tensorFields_.insert(iter.key(), new tensorField(*iter(), mapper));
     }
 }
 
@@ -268,38 +283,6 @@ defaultFvPatchField<Type>::defaultFvPatchField
                     else if
                     (
                         fieldToken.compoundToken().type()
-                     == token::Compound<List<tensor> >::typeName
-                    )
-                    {
-                        tensorField* fPtr = new tensorField;
-                        fPtr->transfer
-                        (
-                            dynamicCast<token::Compound<List<tensor> > >
-                            (
-                                fieldToken.transferCompoundToken()
-                            )
-                        );
-
-                        if (fPtr->size() != this->size())
-                        {
-                            FatalIOErrorIn
-                            (
-                                "defaultFvPatchField<Type>::defaultFvPatchField"
-                                "(const fvPatch&, const Field<Type>&, "
-                                "const dictionary&)",
-                                dict
-                            )   << "\nsize of field " << iter().keyword()
-                                << " (" << fPtr->size() << ')'
-                                << " is not the same size as the patch ("
-                                << this->size() << ')'
-                                << exit(FatalIOError);
-                        }
-
-                        tensorFields_.insert(iter().keyword(), fPtr);
-                    }
-                    else if
-                    (
-                        fieldToken.compoundToken().type()
                      == token::Compound<List<sphericalTensor> >::typeName
                     )
                     {
@@ -332,6 +315,73 @@ defaultFvPatchField<Type>::defaultFvPatchField
 
                         sphericalTensorFields_.insert(iter().keyword(), fPtr);
                     }
+                    else if
+                    (
+                        fieldToken.compoundToken().type()
+                     == token::Compound<List<symmTensor> >::typeName
+                    )
+                    {
+                        symmTensorField* fPtr = new symmTensorField;
+                        fPtr->transfer
+                        (
+                            dynamicCast
+                            <
+                                token::Compound<List<symmTensor> >
+                            >
+                            (
+                                fieldToken.transferCompoundToken()
+                            )
+                        );
+
+                        if (fPtr->size() != this->size())
+                        {
+                            FatalIOErrorIn
+                            (
+                                "defaultFvPatchField<Type>::defaultFvPatchField"
+                                "(const fvPatch&, const Field<Type>&, "
+                                "const dictionary&)",
+                                dict
+                            )   << "\nsize of field " << iter().keyword()
+                                << " (" << fPtr->size() << ')'
+                                << " is not the same size as the patch ("
+                                << this->size() << ')'
+                                << exit(FatalIOError);
+                        }
+
+                        symmTensorFields_.insert(iter().keyword(), fPtr);
+                    }
+                    else if
+                    (
+                        fieldToken.compoundToken().type()
+                     == token::Compound<List<tensor> >::typeName
+                    )
+                    {
+                        tensorField* fPtr = new tensorField;
+                        fPtr->transfer
+                        (
+                            dynamicCast<token::Compound<List<tensor> > >
+                            (
+                                fieldToken.transferCompoundToken()
+                            )
+                        );
+
+                        if (fPtr->size() != this->size())
+                        {
+                            FatalIOErrorIn
+                            (
+                                "defaultFvPatchField<Type>::defaultFvPatchField"
+                                "(const fvPatch&, const Field<Type>&, "
+                                "const dictionary&)",
+                                dict
+                            )   << "\nsize of field " << iter().keyword()
+                                << " (" << fPtr->size() << ')'
+                                << " is not the same size as the patch ("
+                                << this->size() << ')'
+                                << exit(FatalIOError);
+                        }
+
+                        tensorFields_.insert(iter().keyword(), fPtr);
+                    }
                     else
                     {
                         FatalIOErrorIn
@@ -354,6 +404,23 @@ defaultFvPatchField<Type>::defaultFvPatchField
 template<class Type>
 defaultFvPatchField<Type>::defaultFvPatchField
 (
+    const defaultFvPatchField<Type>& ptf
+)
+:
+    calculatedFvPatchField<Type>(ptf),
+    actualTypeName_(ptf.actualTypeName_),
+    dict_(ptf.dict_),
+    scalarFields_(ptf.scalarFields_),
+    vectorFields_(ptf.vectorFields_),
+    sphericalTensorFields_(ptf.sphericalTensorFields_),
+    symmTensorFields_(ptf.symmTensorFields_),
+    tensorFields_(ptf.tensorFields_)
+{}
+
+
+template<class Type>
+defaultFvPatchField<Type>::defaultFvPatchField
+(
     const defaultFvPatchField<Type>& ptf,
     const Field<Type>& iF
 )
@@ -363,8 +430,9 @@ defaultFvPatchField<Type>::defaultFvPatchField
     dict_(ptf.dict_),
     scalarFields_(ptf.scalarFields_),
     vectorFields_(ptf.vectorFields_),
-    tensorFields_(ptf.tensorFields_),
-    sphericalTensorFields_(ptf.sphericalTensorFields_)
+    sphericalTensorFields_(ptf.sphericalTensorFields_),
+    symmTensorFields_(ptf.symmTensorFields_),
+    tensorFields_(ptf.tensorFields_)
 {}
 
 
@@ -479,14 +547,19 @@ void defaultFvPatchField<Type>::write(Ostream& os) const
                     vectorFields_.find(iter().keyword())()
                         ->writeEntry(iter().keyword(), os);
                 }
-                else if (tensorFields_.found(iter().keyword()))
-                {
-                    tensorFields_.find(iter().keyword())()
-                        ->writeEntry(iter().keyword(), os);
-                }
                 else if (sphericalTensorFields_.found(iter().keyword()))
                 {
                     sphericalTensorFields_.find(iter().keyword())()
+                        ->writeEntry(iter().keyword(), os);
+                }
+                else if (symmTensorFields_.found(iter().keyword()))
+                {
+                    symmTensorFields_.find(iter().keyword())()
+                        ->writeEntry(iter().keyword(), os);
+                }
+                else if (tensorFields_.found(iter().keyword()))
+                {
+                    tensorFields_.find(iter().keyword())()
                         ->writeEntry(iter().keyword(), os);
                 }
             }

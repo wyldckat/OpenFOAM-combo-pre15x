@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -369,7 +369,7 @@ Foam::meshTriangulation::meshTriangulation
                     WarningIn("meshTriangulation::meshTriangulation")
                         << "Could not find triangulation for face " << faceI
                         << " vertices " << faces[faceI] << " coords "
-                        << IndirectList<point>(points, faces[faceI]) << endl;
+                        << IndirectList<point>(points, faces[faceI])() << endl;
                 }
                 else
                 {
@@ -432,7 +432,7 @@ Foam::meshTriangulation::meshTriangulation
                     WarningIn("meshTriangulation::meshTriangulation")
                         << "Could not find triangulation for face " << faceI
                         << " vertices " << faces[faceI] << " coords "
-                        << IndirectList<point>(points, faces[faceI]) << endl;
+                        << IndirectList<point>(points, faces[faceI])() << endl;
                 }
                 else
                 {

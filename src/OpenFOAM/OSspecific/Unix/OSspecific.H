@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,10 +85,10 @@ fileName dotFoam(const fileName& name);
 
 //- Make a directory and return an error if it could not be created
 //  and does not already exist
-bool mkDir(const fileName&, mode_t=0754);
+bool mkDir(const fileName&, mode_t=0777);
 
 //- Set the file mode
-bool chmod(const fileName&, const mode_t=0640);
+bool chmod(const fileName&, const mode_t);
 
 //- Return the file mode
 mode_t mode(const fileName&);
@@ -121,6 +121,9 @@ fileNameList readDir
 
 //- Copy, recursively if necessary, the source to the destination
 bool cp(const fileName& srcFile, const fileName& destFile);
+
+//- Create a softlink. destFile should not exist. Returns true if successful.
+bool ln(const fileName& srcFile, const fileName& destFile);
 
 //- Rename srcFile destFile
 bool mv(const fileName& srcFile, const fileName& destFile);

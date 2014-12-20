@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -66,6 +66,13 @@ namespace fvm
             GeometricField<Type, fvPatchField, volMesh>&
         );
 
+        template<class Type>
+        Zero Su
+        (
+            const Zero&,
+            GeometricField<Type, fvPatchField, volMesh>&
+        );
+
 
     // Implicit source
 
@@ -92,6 +99,14 @@ namespace fvm
         );
 
 
+        template<class Type>
+        Zero Sp
+        (
+            const Zero&,
+            GeometricField<Type, fvPatchField, volMesh>&
+        );
+
+
     // Implicit/Explicit source depending on sign of coefficient
 
         template<class Type>
@@ -105,6 +120,13 @@ namespace fvm
         tmp<fvMatrix<Type> > SuSp
         (
             const tmp<volScalarField>&,
+            GeometricField<Type, fvPatchField, volMesh>&
+        );
+
+        template<class Type>
+        Zero SuSp
+        (
+            const Zero&,
             GeometricField<Type, fvPatchField, volMesh>&
         );
 }

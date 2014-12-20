@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -104,6 +104,20 @@ oscillatingFixedValueFvPatchField<Type>::oscillatingFixedValueFvPatchField
         fixedValueFvPatchField<Type>::operator==(refValue_*currentScale());
     }
 }
+
+
+template<class Type>
+oscillatingFixedValueFvPatchField<Type>::oscillatingFixedValueFvPatchField
+(
+    const oscillatingFixedValueFvPatchField<Type>& ptf
+)
+:
+    fixedValueFvPatchField<Type>(ptf),
+    refValue_(ptf.refValue_),
+    amplitude_(ptf.amplitude_),
+    frequency_(ptf.frequency_),
+    curTimeIndex_(-1)
+{}
 
 
 template<class Type>

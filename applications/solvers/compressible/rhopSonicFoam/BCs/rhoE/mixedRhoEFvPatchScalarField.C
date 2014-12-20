@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -93,6 +91,15 @@ mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 
 mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
 (
+    const mixedRhoEFvPatchScalarField& ptpsf
+)
+:
+    mixedFvPatchScalarField(ptpsf)
+{}
+
+
+mixedRhoEFvPatchScalarField::mixedRhoEFvPatchScalarField
+(
     const mixedRhoEFvPatchScalarField& ptpsf,
     const scalarField& iF
 )
@@ -133,11 +140,11 @@ void mixedRhoEFvPatchScalarField::updateCoeffs()
     }
 
     const fvPatchField<scalar>& rhop =
-        lookupPatchField<volScalarField, scalar>("rho");
+        patch().lookupPatchField<volScalarField, scalar>("rho");
     const fvPatchField<vector>& rhoUp =
-        lookupPatchField<volVectorField, vector>("rhoU");
+        patch().lookupPatchField<volVectorField, vector>("rhoU");
 //    fvPatchField<scalar>& Tp =
-//        lookupPatchField<volScalarField, scalar>("T");
+//        patch().lookupPatchField<volScalarField, scalar>("T");
 
     const volScalarField& T = db().lookupObject<volScalarField>("T");
     const label patchi = patch().index();

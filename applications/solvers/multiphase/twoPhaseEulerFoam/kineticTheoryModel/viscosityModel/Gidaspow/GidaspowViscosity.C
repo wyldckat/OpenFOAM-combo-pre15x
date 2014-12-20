@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "GidaspowViscosity.H"
+#include "mathematicalConstants.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -39,8 +40,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-Foam::GidaspowViscosity::GidaspowViscosity(const Foam::dictionary& dict)
+Foam::GidaspowViscosity::GidaspowViscosity(const dictionary& dict)
 :
     viscosityModel(dict)
 {}
@@ -54,24 +54,25 @@ Foam::GidaspowViscosity::~GidaspowViscosity()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::volScalarField Foam::GidaspowViscosity::mua
+Foam::tmp<Foam::volScalarField> Foam::GidaspowViscosity::mua
 (
-    const Foam::volScalarField& alpha,
-    const Foam::volScalarField& Theta,
-    const Foam::volScalarField& g0,
-    const Foam::dimensionedScalar& rhoa,
-    const Foam::dimensionedScalar& da,
-    const Foam::dimensionedScalar& e
+    const volScalarField& alpha,
+    const volScalarField& Theta,
+    const volScalarField& g0,
+    const dimensionedScalar& rhoa,
+    const dimensionedScalar& da,
+    const dimensionedScalar& e
 ) const
 {
-    const scalar piSqrt = pow(M_PI, 0.5);
-    volScalarField ThetaSqrt = pow(Theta, 0.5);
+    const scalar sqrtPi = sqrt(mathematicalConstant::pi);
 
-    return
-        (4.0/5.0)*pow(alpha, 2.0)*rhoa*da*g0*(1.0+e)*ThetaSqrt/piSqrt
-      + (1.0/15.0)*ThetaSqrt*piSqrt*rhoa*da*g0*(1.0+e)*pow(alpha, 2.0)
-      + (1.0/6.0)*ThetaSqrt*piSqrt*rhoa*da*alpha
-      + (10.0/96.0)*ThetaSqrt*piSqrt*rhoa*da/((1.0+e)*g0);
+    return rhoa*da*sqrt(Theta)*
+    (
+        (4.0/5.0)*sqr(alpha)*g0*(1.0 + e)/sqrtPi
+      + (1.0/15.0)*sqrtPi*g0*(1.0 + e)*sqr(alpha)
+      + (1.0/6.0)*sqrtPi*alpha
+      + (10.0/96.0)*sqrtPi/((1.0 + e)*g0)
+    );
 }
 
 

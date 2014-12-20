@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,8 +36,8 @@ SourceFiles
 #define processorFvPatchField_H
 
 #include "coupledFvPatchField.H"
+#include "processorLduInterfaceField.H"
 #include "processorFvPatch.H"
-#include "processorLduCoupledInterface.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,7 +51,7 @@ namespace Foam
 template<class Type>
 class processorFvPatchField
 :
-    virtual public processorLduCoupledInterface,
+    public processorLduInterfaceField,
     public coupledFvPatchField<Type>
 {
     // Private data
@@ -163,15 +163,8 @@ public:
             //- Evaluate the patch field
             virtual void evaluate();
 
-            //- Initialise neighbour colouring transfer
-            virtual void initNbrColour
-            (
-                const labelField&,
-                const bool bufferdTransfer
-            ) const;
-
-            //- Return neighbour colouring
-            virtual tmp<labelField> nbrColour(const labelField&) const;
+            //- Return patch-normal gradient
+            virtual tmp<Field<Type> > snGrad() const;
 
             //- Initialise neighbour matrix update
             virtual void initInterfaceMatrixUpdate

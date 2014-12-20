@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,7 +44,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::Ergun::Ergun
 (
     const dictionary& interfaceDict,
@@ -74,7 +73,7 @@ Foam::tmp<Foam::volScalarField> Foam::Ergun::K
 
     return
         150.0*alpha_*phaseb_.nu()*phaseb_.rho()
-       /(pow(beta*phasea_.d(), 2.0))
+       /sqr(beta*phasea_.d())
       + 1.75*phaseb_.rho()*Ur/(beta*phasea_.d());
 }
 

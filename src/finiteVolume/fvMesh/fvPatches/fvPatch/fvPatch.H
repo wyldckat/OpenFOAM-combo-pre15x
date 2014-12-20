@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -138,78 +138,77 @@ public:
 
     // Member Functions
 
-        //- Return the polyPatch
-        const polyPatch& patch() const
-        {
-            return polyPatch_;
-        }
+    // Access
 
-        //- Return name
-        const word& name() const
-        {
-            return polyPatch_.name();
-        }
+            //- Return the polyPatch
+            const polyPatch& patch() const
+            {
+                return polyPatch_;
+            }
 
-        //- Return size
-        virtual label size() const
-        {
-            return polyPatch_.size();
-        }
+            //- Return name
+            const word& name() const
+            {
+                return polyPatch_.name();
+            }
 
-        //- Return true if this patch is coupled
-        bool coupled() const
-        {
-            return polyPatch_.coupled();
-        }
+            //- Return size
+            virtual label size() const
+            {
+                return polyPatch_.size();
+            }
 
-        //- Return true if the given type is a constraint type
-        static bool constraintType(const word& pt);
+            //- Return true if this patch is coupled
+            bool coupled() const
+            {
+                return polyPatch_.coupled();
+            }
 
-        //- Return a list of all the constraint patch types
-        static wordList constraintTypes();
+            //- Return true if the given type is a constraint type
+            static bool constraintType(const word& pt);
 
-        //- Return the index of this patch in the fvBoundaryMesh
-        label index() const
-        {
-            return polyPatch_.index();
-        }
+            //- Return a list of all the constraint patch types
+            static wordList constraintTypes();
 
-        //- Return boundaryMesh reference
-        const fvBoundaryMesh& boundaryMesh() const
-        {
-            return boundaryMesh_;
-        }
+            //- Return the index of this patch in the fvBoundaryMesh
+            label index() const
+            {
+                return polyPatch_.index();
+            }
 
-        //- Slice list to patch
-        template<class T>
-        const typename List<T>::subList patchSlice(const List<T>& l) const
-        {
-            return typename List<T>::subList(l, size(), polyPatch_.start());
-        }
+            //- Return boundaryMesh reference
+            const fvBoundaryMesh& boundaryMesh() const
+            {
+                return boundaryMesh_;
+            }
+
+            //- Slice list to patch
+            template<class T>
+            const typename List<T>::subList patchSlice(const List<T>& l) const
+            {
+                return typename List<T>::subList(l, size(), polyPatch_.start());
+            }
+
+            //- Return faceCells
+            virtual const unallocLabelList& faceCells() const;
 
 
         // Access functions for geometrical data
 
-            //- Return faceCells
-            const labelList::subList faceCells() const;
-
             //- Return face centres
-            const vectorField::subField Cf() const;
+            const vectorField& Cf() const;
 
             //- Return neighbour cell centres
             tmp<vectorField> Cn() const;
 
-            //- Return face normals
-            //  Virtual because of re-use of primitive patch data
-            //  (see emptyFvPatch)
-            virtual const vectorField& nf() const;
-
-
             //- Return face area vectors
-            const vectorField::subField Sf() const;
+            const vectorField& Sf() const;
 
             //- Return face area magnitudes
             const scalarField& magSf() const;
+
+            //- Return face normals
+            tmp<vectorField> nf() const;
 
             //- Return cell-centre to face-centre vector
             //  except for coupled patches for which the cell-centre
@@ -226,12 +225,42 @@ public:
             //  except for coupled patches for which the cell-centre
             //  to coupled-cell-centre distance coeffient is returned
             const scalarField& deltaCoeffs() const;
+
+
+        // Evaluation functions
+
+            //- Return given internal field next to patch as patch field
+            template<class Type>
+            tmp<Field<Type> > patchInternalField(const UList<Type>&) const;
+
+            //- Return the corresponding patchField of the named field
+            template<class GeometricField, class Type>
+            const fvPatchField<Type>& patchField(const GeometricField&) const;
+
+            //- Lookup and return the patchField of the named field from the
+            //  local objectRegistry.
+            //  N.B.  The dummy pointer arguments are used if this function is 
+            //  instantiated within a templated function to avoid a bug in gcc.
+            //  See inletOutletFvPatchField.C and outletInletFvPatchField.C
+            template<class GeometricField, class Type>
+            const fvPatchField<Type>& lookupPatchField
+            (
+                const word& name,
+                const GeometricField* = NULL,
+                const Type* = NULL
+            ) const;
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "fvPatchTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

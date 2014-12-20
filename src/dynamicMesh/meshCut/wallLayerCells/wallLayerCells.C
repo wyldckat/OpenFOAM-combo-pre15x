@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,7 @@ Description
 
 #include "wallLayerCells.H"
 #include "DynamicList.H"
-#include "meshWave.H"
+#include "MeshWave.H"
 #include "wallNormalInfo.H"
 #include "OFstream.H"
 
@@ -144,7 +144,7 @@ Foam::wallLayerCells::wallLayerCells
     // (cannot use local patchIDs since we might get info from neighbouring
     //  processor)
 
-    meshWave<wallNormalInfo> regionCalc
+    MeshWave<wallNormalInfo> regionCalc
     (
         mesh,
         changedFaces,

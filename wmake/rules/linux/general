@@ -1,7 +1,7 @@
-CPP        = /lib/cpp -D$(WM_ARCH)
+CPP        = /lib/cpp $(GFLAGS)
 LD         = ld -melf_i386
 
-GLIBS      = -liberty
+PROJECT_LIBS = -l$(WM_PROJECT) -liberty -ldl
 
 include $(RULES)/X
 

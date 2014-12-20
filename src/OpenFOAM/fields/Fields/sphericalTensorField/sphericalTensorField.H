@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,8 +36,10 @@ SourceFiles
 #ifndef sphericalTensorField_H
 #define sphericalTensorField_H
 
-#include "tensorField.H"
+#include "scalarField.H"
 #include "sphericalTensor.H"
+
+#define TEMPLATE
 #include "FieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -49,12 +51,13 @@ typedef Field<sphericalTensor> sphericalTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-UNARY_FUNCTION_N(scalar, sphericalTensor, tr)
-UNARY_FUNCTION_N(scalar, sphericalTensor, det)
-UNARY_FUNCTION_R(sphericalTensor, sphericalTensor, inv)
+UNARY_FUNCTION(scalar, sphericalTensor, tr)
+UNARY_FUNCTION(sphericalTensor, sphericalTensor, sph)
+UNARY_FUNCTION(scalar, sphericalTensor, det)
+UNARY_FUNCTION(sphericalTensor, sphericalTensor, inv)
 
-BINARY_OPERATOR_NR(sphericalTensor, scalar, sphericalTensor, /, divide)
-BINARY_TYPE_OPERATOR_NR(sphericalTensor, scalar, sphericalTensor, /, divide)
+BINARY_OPERATOR(sphericalTensor, scalar, sphericalTensor, /, divide)
+BINARY_TYPE_OPERATOR(sphericalTensor, scalar, sphericalTensor, /, divide)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

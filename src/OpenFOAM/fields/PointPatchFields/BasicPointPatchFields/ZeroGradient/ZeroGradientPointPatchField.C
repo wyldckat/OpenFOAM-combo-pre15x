@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,9 +42,7 @@ ZeroGradientPointPatchField
 )
 :
     PatchField<Type>(p, iF)
-{
-    this->checkPointField();
-}
+{}
 
 
 template<template<class> class PatchField, class PointPatch, class Type>
@@ -71,9 +69,7 @@ ZeroGradientPointPatchField
 )
 :
     PatchField<Type>(p, iF)
-{
-    this->checkPointField();
-}
+{}
 
 
 template<template<class> class PatchField, class PointPatch, class Type>
@@ -85,9 +81,7 @@ ZeroGradientPointPatchField
 )
 :
     PatchField<Type>(ptf, iF)
-{
-    this->checkPointField();
-}
+{}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

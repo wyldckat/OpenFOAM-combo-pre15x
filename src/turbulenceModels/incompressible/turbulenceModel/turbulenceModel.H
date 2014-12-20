@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -242,7 +242,7 @@ public:
         virtual tmp<volScalarField> epsilon() const = 0;
 
         //- Return the Reynolds stress tensor
-        virtual tmp<volTensorField> R() const = 0;
+        virtual tmp<volSymmTensorField> R() const = 0;
 
         //- Return the source term for the momentum equation
         virtual tmp<fvVectorMatrix> divR(volVectorField& U) const = 0;

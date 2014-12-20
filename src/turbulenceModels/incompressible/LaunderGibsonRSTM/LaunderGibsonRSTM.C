@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -205,9 +205,7 @@ void LaunderGibsonRSTM::correct()
         yr_.correct();
     }
 
-    volTensorField P = -(R_ & fvc::grad(U_));
-    P += P.T();
-
+    volSymmTensorField P = -twoSymm(R_ & fvc::grad(U_));
     volScalarField G = 0.5*tr(P);
 
 #   include "wallFunctionsI.H"
@@ -251,22 +249,23 @@ void LaunderGibsonRSTM::correct()
         }
     }
 
-    volTensorField reflect = C1Ref*epsilon_/k_*R_ - C2Ref*Clg2*dev(P);
+    volSymmTensorField reflect = C1Ref*epsilon_/k_*R_ - C2Ref*Clg2*dev(P);
 
-    tmp<fvTensorMatrix> REqn
+    tmp<fvSymmTensorMatrix> REqn
     (
         fvm::ddt(R_)
       + fvm::div(phi_, R_)
     //- fvm::laplacian(Cs*(k_/epsilon_)*R_, R_)
       - fvm::laplacian(DREff(), R_)
+      + fvm::Sp(Clg1*epsilon_/k_, R_)
       ==
         P
-      - fvm::Sp(Clg1*epsilon_/k_, R_)
       + (2.0/3.0*(Clg1 - 1)*I)*epsilon_
       - Clg2*dev(P)
 
         // wall reflection terms
-      + (
+      + symm
+        (
             I*((yr_.n() & reflect) & yr_.n())
           - 1.5*(yr_.n()*(reflect & yr_.n())
           + (yr_.n() & reflect)*yr_.n())
@@ -278,15 +277,15 @@ void LaunderGibsonRSTM::correct()
 
     R_.max
     (
-        dimensionedTensor
+        dimensionedSymmTensor
         (
             "zero",
             R_.dimensions(),
-            tensor
+            symmTensor
             (
                 k0_.value(), -GREAT, -GREAT,
-                -GREAT, k0_.value(), -GREAT,
-                -GREAT, -GREAT, k0_.value()
+                             k0_.value(), -GREAT,
+                                          k0_.value()
             )
         )
     );
@@ -310,7 +309,7 @@ void LaunderGibsonRSTM::correct()
 
         if (typeid(curPatch) == typeid(wallFvPatch))
         {
-            tensorField& Rw = R_.boundaryField()[patchi];
+            symmTensorField& Rw = R_.boundaryField()[patchi];
 
             const scalarField& nutw = nut_.boundaryField()[patchi];
 
@@ -332,9 +331,9 @@ void LaunderGibsonRSTM::correct()
                 tensor tauw = -nutw[facei]*2*symm(gradUw);
 
                 // Reset the shear components of the stress tensor
-                Rw[facei].xy() = Rw[facei].yx() = tauw.xy();
-                Rw[facei].xz() = Rw[facei].zx() = tauw.xz();
-                Rw[facei].yz() = Rw[facei].zy() = tauw.yz();
+                Rw[facei].xy() = tauw.xy();
+                Rw[facei].xz() = tauw.xz();
+                Rw[facei].yz() = tauw.yz();
             }
         }
     }

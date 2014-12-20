@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -221,7 +221,7 @@ spray::spray
     // create the evaporation source fields
     forAll(srhos_, i)
     {
-        srhos_.hook(new scalarField(mesh_.nCells(), 0.0));
+        srhos_.set(i, new scalarField(mesh_.nCells(), 0.0));
     }
 
     // Write some information about injection parameters
@@ -249,11 +249,11 @@ spray::spray
     // check for the type of boundary condition
     forAll(bMesh, patchi)
     {
-        if (typeid(bMesh[patchi]) == typeid(symmetryPolyPatch))
+        if (isType<symmetryPolyPatch>(bMesh[patchi]))
         {
             symPlaneExist = true;
         }
-        else if (typeid(bMesh[patchi]) == typeid(wedgePolyPatch))
+        else if (isType<wedgePolyPatch>(bMesh[patchi]))
         {
             wedgeExist = true;
             patches[n++] = patchi;
@@ -353,7 +353,6 @@ spray::spray
                 << abort(FatalError);
         }
     }
-
 }
 
 

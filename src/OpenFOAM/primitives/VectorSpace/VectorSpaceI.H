@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,6 +52,13 @@ inline VectorSpace<Form, Cmpt, nCmpt>::VectorSpace
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Form, class Cmpt, int nCmpt>
+inline label VectorSpace<Form, Cmpt, nCmpt>::size() const
+{
+    return nCmpt;
+}
+
 
 template<class Form, class Cmpt, int nCmpt>
 inline const Cmpt& VectorSpace<Form, Cmpt, nCmpt>::component
@@ -281,15 +288,6 @@ inline typename powProduct<Form, 1>::type pow
     return static_cast<const Form&>(v);
 }
 
-// sqr(Form) = Form*Form
-template<class Form, class Cmpt, int nCmpt>
-inline typename powProduct<Form, 2>::type sqr
-(
-    const VectorSpace<Form, Cmpt, nCmpt>& v
-)
-{
-    return static_cast<const Form&>(v)*static_cast<const Form&>(v);
-}
 
 // Form^2 = sqr(Form)
 template<class Form, class Cmpt, int nCmpt>
@@ -300,32 +298,8 @@ inline typename powProduct<Form, 2>::type pow
   = pTraits<typename powProduct<Form, 2>::type>::zero
 )
 {
-    return sqr(v);
+    return sqr(static_cast<const Form&>(v));
 }
-
-/* Form^3 = Form*sqr(Form)
-template<class Form, class Cmpt, int nCmpt>
-inline typename powProduct<Form, 3>::type pow
-(
-    const VectorSpace<Form, Cmpt, nCmpt>& v,
-    typename powProduct<Form, 3>::type
-  = pTraits<typename powProduct<Form, 3>::type>::zero
-)
-{
-    return ((const Form&)v)*sqr(v);
-}*/
-
-/* Form^4 = sqr(sqr(Form))
-template<class Form, class Cmpt, int nCmpt>
-inline typename powProduct<Form, 4>::type pow
-(
-    const VectorSpace<Form, Cmpt, nCmpt>& v,
-    typename powProduct<Form, 4>::type
-  = pTraits<typename powProduct<Form, 4>::type>::zero
-)
-{
-    return sqr(sqr(v));
-}*/
 
 
 template<class Form, class Cmpt, int nCmpt>
@@ -346,7 +320,7 @@ inline scalar mag
     const VectorSpace<Form, Cmpt, nCmpt>& vs
 )
 {
-    return ::sqrt(magSqr(vs));
+    return ::sqrt(magSqr(static_cast<const Form&>(vs)));
 }
 
 

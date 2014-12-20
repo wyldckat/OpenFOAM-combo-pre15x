@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,6 +40,12 @@ defineTemplateRunTimeSelectionTable(scalarWriter, word);
 
 defineNamedTemplateTypeNameAndDebug(vectorWriter, 0);
 defineTemplateRunTimeSelectionTable(vectorWriter, word);
+
+defineNamedTemplateTypeNameAndDebug(sphericalTensorWriter, 0);
+defineTemplateRunTimeSelectionTable(sphericalTensorWriter, word);
+
+defineNamedTemplateTypeNameAndDebug(symmTensorWriter, 0);
+defineTemplateRunTimeSelectionTable(symmTensorWriter, word);
 
 defineNamedTemplateTypeNameAndDebug(tensorWriter, 0);
 defineTemplateRunTimeSelectionTable(tensorWriter, word);

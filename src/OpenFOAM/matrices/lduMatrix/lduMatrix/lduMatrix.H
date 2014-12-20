@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,13 +29,11 @@ Description
     lduMatrix is a general matrix class in which the coefficients are
     stored as three arrays, one for the upper triangle, one for the
     lower triangle and a third for the diagonal.  Addressing arrays must
-    be supplied for the upper and lower triangles.  Diagonal, ICCG and BCG
-    solvers are supplied and selected automatically by the solve member
-    function according the the particular matrix structure.
+    be supplied for the upper and lower triangles.
 
-    It would be better if this class were organised as a hierachy starting
+    It might be better if this class were organised as a hierachy starting
     from an empty matrix, then deriving diagonal, symmetric and asymmetric
-    matrices.  A job for the future.
+    matrices.
 
 SourceFiles
     lduMatrixATmul.C
@@ -43,19 +41,20 @@ SourceFiles
     lduMatrixHoperations.C
     lduMatrixOperations.C
     lduMatrixSolver.C
+    lduMatrixPreconditioner.C
     lduMatrixTests.C
-    lduMatrixUpdateCoupledInterfaces.C
+    lduMatrixUpdateMatrixInterfaces.C
+    lduMatrixBufferedUpdateMatrixInterfaces.C
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef lduMatrix_H
 #define lduMatrix_H
 
-#include "primitiveFields.H"
+#include "lduMesh.H"
+#include "primitiveFieldsFwd.H"
 #include "FieldField.H"
-#include "lduAddressing.H"
-#include "processorTopology.H"
-#include "lduCoupledInterfacePtrsList.H"
+#include "lduInterfaceFieldPtrsList.H"
 #include "typeInfo.H"
 #include "autoPtr.H"
 #include "runTimeSelectionTables.H"
@@ -71,6 +70,14 @@ namespace Foam
 
 class lduMatrix
 {
+    // private data
+
+        // LDU mesh reference
+        const lduMesh& lduMesh_;
+
+        //- Coefficients (not including interfaces
+        scalarField *lowerPtr_, *diagPtr_, *upperPtr_;
+
 
 public:
 
@@ -196,21 +203,46 @@ public:
     };
 
 
+    //- Abstract base-class for lduMatrix solvers
     class solver
     {
-
     protected:
 
         // Protected data
 
             word fieldName_;
-            scalarField& psi_;
             const lduMatrix& matrix_;
-            const scalarField& source_;
-            const FieldField<Field, scalar>& coupleBouCoeffs_;
-            const FieldField<Field, scalar>& coupleIntCoeffs_;
-            const lduCoupledInterfacePtrsList& interfaces_;
-            const direction cmpt_;
+            const FieldField<Field, scalar>& interfaceBouCoeffs_;
+            const FieldField<Field, scalar>& interfaceIntCoeffs_;
+            lduInterfaceFieldPtrsList interfaces_;
+
+            //- dictionary of controls
+            dictionary controlDict_;
+
+            //- Maximum number of iterations in the solver
+            label maxIter_;
+
+            //- Final convergence tolerance
+            scalar tolerance_;
+
+            //- Convergence tolerance relative to the initial
+            scalar relTol_;
+
+
+        // Protected Member Functions
+
+            //- Read a control parameter from controlDict
+            template<class T>
+            inline void readControl
+            (
+                const dictionary& controlDict,
+                T& control,
+                const word& controlName
+            );
+
+
+            //- Read the control parameters from the controlDict_
+            virtual void readControls();
 
 
     public:
@@ -228,24 +260,18 @@ public:
                 symMatrix,
                 (
                     const word& fieldName,
-                    scalarField& psi,
-                    lduMatrix& matrix,
-                    const scalarField& source,
-                    const FieldField<Field, scalar>& coupleBouCoeffs,
-                    const FieldField<Field, scalar>& coupleIntCoeffs,
-                    const lduCoupledInterfacePtrsList& interfaces,
-                    const direction cmpt,
+                    const lduMatrix& matrix,
+                    const FieldField<Field, scalar>& interfaceBouCoeffs,
+                    const FieldField<Field, scalar>& interfaceIntCoeffs,
+                    const lduInterfaceFieldPtrsList& interfaces,
                     Istream& solverData
                 ),
                 (
                     fieldName,
-                    psi,
                     matrix,
-                    source,
-                    coupleBouCoeffs,
-                    coupleIntCoeffs,
+                    interfaceBouCoeffs,
+                    interfaceIntCoeffs,
                     interfaces,
-                    cmpt,
                     solverData
                 )
             );
@@ -257,24 +283,18 @@ public:
                 asymMatrix,
                 (
                     const word& fieldName,
-                    scalarField& psi,
-                    lduMatrix& matrix,
-                    const scalarField& source,
-                    const FieldField<Field, scalar>& coupleBouCoeffs,
-                    const FieldField<Field, scalar>& coupleIntCoeffs,
-                    const lduCoupledInterfacePtrsList& interfaces,
-                    const direction cmpt,
+                    const lduMatrix& matrix,
+                    const FieldField<Field, scalar>& interfaceBouCoeffs,
+                    const FieldField<Field, scalar>& interfaceIntCoeffs,
+                    const lduInterfaceFieldPtrsList& interfaces,
                     Istream& solverData
                 ),
                 (
                     fieldName,
-                    psi,
                     matrix,
-                    source,
-                    coupleBouCoeffs,
-                    coupleIntCoeffs,
+                    interfaceBouCoeffs,
+                    interfaceIntCoeffs,
                     interfaces,
-                    cmpt,
                     solverData
                 )
             );
@@ -285,24 +305,12 @@ public:
             solver
             (
                 const word& fieldName,
-                scalarField& psi,
                 const lduMatrix& matrix,
-                const scalarField& source,
-                const FieldField<Field, scalar>& coupleBouCoeffs,
-                const FieldField<Field, scalar>& coupleIntCoeffs,
-                const lduCoupledInterfacePtrsList& interfaces,
-                const direction cmpt
-            )
-            :
-                fieldName_(fieldName),
-                psi_(psi),
-                matrix_(matrix),
-                source_(source),
-                coupleBouCoeffs_(coupleBouCoeffs),
-                coupleIntCoeffs_(coupleIntCoeffs),
-                interfaces_(interfaces),
-                cmpt_(cmpt)
-            {}
+                const FieldField<Field, scalar>& interfaceBouCoeffs,
+                const FieldField<Field, scalar>& interfaceIntCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
+                Istream& solverData
+            );
 
 
         // Selectors
@@ -311,13 +319,10 @@ public:
             static autoPtr<solver> New
             (
                 const word& fieldName,
-                scalarField& psi,
-                lduMatrix& matrix,
-                const scalarField& source,
-                const FieldField<Field, scalar>& coupleBouCoeffs,
-                const FieldField<Field, scalar>& coupleIntCoeffs,
-                const lduCoupledInterfacePtrsList& interfaces,
-                const direction cmpt,
+                const lduMatrix& matrix,
+                const FieldField<Field, scalar>& interfaceBouCoeffs,
+                const FieldField<Field, scalar>& interfaceIntCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
                 Istream& solverData
             );
 
@@ -330,25 +335,299 @@ public:
 
         // Member functions
 
-            virtual solverPerformance solve() = 0;
+            // Access
+
+                const word& fieldName() const
+                {
+                    return fieldName_;
+                }
+
+                const lduMatrix& matrix() const
+                {
+                    return matrix_;
+                }
+
+                 const FieldField<Field, scalar>& interfaceBouCoeffs() const
+                 {
+                     return interfaceBouCoeffs_;
+                 }
+
+                 const FieldField<Field, scalar>& interfaceIntCoeffs() const
+                 {
+                     return interfaceIntCoeffs_;
+                 }
+
+                 const lduInterfaceFieldPtrsList& interfaces() const
+                 {
+                     return interfaces_;
+                 }
+
+
+            //- Read and reset the solver parameters from the given stream
+            virtual void read(Istream& solverData);
+
+            virtual solverPerformance solve
+            (
+                scalarField& psi,
+                const scalarField& source,
+                const direction cmpt=0
+            ) const = 0;
+
+            //- Return the matrix norm used to normalise the residual for the
+            //  stopping criterion
+            scalar normFactor
+            (
+                const scalarField& psi,
+                const scalarField& source,
+                const scalarField& Apsi,
+                scalarField& tmpField
+            ) const;
     };
 
 
-private:
+    //- Abstract base-class for lduMatrix smoothers
+    class smoother
+    {
+    protected:
 
-    // private data
+        // Protected data
 
-        // L-U addressing
-        const lduAddressing& lduAddr_;
-
-        // lduCoupledInterface evaluation schedule
-        const patchScheduleList& lduCoupledInterfaceSchedule_;
-
-        //- Face matrix elements
-        scalarField *lowerPtr_, *diagPtr_, *upperPtr_;
+            word fieldName_;
+            const lduMatrix& matrix_;
+            const FieldField<Field, scalar>& interfaceBouCoeffs_;
+            const FieldField<Field, scalar>& interfaceIntCoeffs_;
+            const lduInterfaceFieldPtrsList& interfaces_;
 
 
-public:
+    public:
+
+        //- Runtime type information
+        virtual const word& type() const = 0;
+
+
+        // Declare run-time constructor selection tables
+
+            declareRunTimeSelectionTable
+            (
+                autoPtr,
+                smoother,
+                symMatrix,
+                (
+                    const word& fieldName,
+                    const lduMatrix& matrix,
+                    const FieldField<Field, scalar>& interfaceBouCoeffs,
+                    const FieldField<Field, scalar>& interfaceIntCoeffs,
+                    const lduInterfaceFieldPtrsList& interfaces
+                ),
+                (
+                    fieldName,
+                    matrix,
+                    interfaceBouCoeffs,
+                    interfaceIntCoeffs,
+                    interfaces
+                )
+            );
+
+            declareRunTimeSelectionTable
+            (
+                autoPtr,
+                smoother,
+                asymMatrix,
+                (
+                    const word& fieldName,
+                    const lduMatrix& matrix,
+                    const FieldField<Field, scalar>& interfaceBouCoeffs,
+                    const FieldField<Field, scalar>& interfaceIntCoeffs,
+                    const lduInterfaceFieldPtrsList& interfaces
+                ),
+                (
+                    fieldName,
+                    matrix,
+                    interfaceBouCoeffs,
+                    interfaceIntCoeffs,
+                    interfaces
+                )
+            );
+
+
+        // Constructors
+
+            smoother
+            (
+                const word& fieldName,
+                const lduMatrix& matrix,
+                const FieldField<Field, scalar>& interfaceBouCoeffs,
+                const FieldField<Field, scalar>& interfaceIntCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces
+            );
+
+
+        // Selectors
+
+            //- Return a new smoother
+            static autoPtr<smoother> New
+            (
+                const word& fieldName,
+                const lduMatrix& matrix,
+                const FieldField<Field, scalar>& interfaceBouCoeffs,
+                const FieldField<Field, scalar>& interfaceIntCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
+                Istream& smootherData
+            );
+
+
+        // Destructor
+
+            virtual ~smoother()
+            {}
+
+
+        // Member functions
+
+            // Access
+
+                const word& fieldName() const
+                {
+                    return fieldName_;
+                }
+
+                const lduMatrix& matrix() const
+                {
+                    return matrix_;
+                }
+
+                 const FieldField<Field, scalar>& interfaceBouCoeffs() const
+                 {
+                     return interfaceBouCoeffs_;
+                 }
+
+                 const FieldField<Field, scalar>& interfaceIntCoeffs() const
+                 {
+                     return interfaceIntCoeffs_;
+                 }
+
+                 const lduInterfaceFieldPtrsList& interfaces() const
+                 {
+                     return interfaces_;
+                 }
+
+
+            //- Smooth the solution for a given number of sweeps
+            virtual void smooth
+            (
+                scalarField& psi,
+                const scalarField& source,
+                const direction cmpt,
+                const label nSweeps
+            ) const = 0;
+    };
+
+
+    //- Abstract base-class for lduMatrix preconditioners
+    class preconditioner
+    {
+    protected:
+
+        // Protected data
+
+            //- Reference to the base-solver this preconditioner is used with
+            const solver& solver_;
+
+
+    public:
+
+        //- Runtime type information
+        virtual const word& type() const = 0;
+
+
+        // Declare run-time constructor selection tables
+
+            declareRunTimeSelectionTable
+            (
+                autoPtr,
+                preconditioner,
+                symMatrix,
+                (
+                    const solver& sol,
+                    Istream& preconditionerData
+                ),
+                (sol, preconditionerData)
+            );
+
+            declareRunTimeSelectionTable
+            (
+                autoPtr,
+                preconditioner,
+                asymMatrix,
+                (
+                    const solver& sol,
+                    Istream& preconditionerData
+                ),
+                (sol, preconditionerData)
+            );
+
+
+        // Constructors
+
+            preconditioner
+            (
+                const solver& sol
+            )
+            :
+                solver_(sol)
+            {}
+
+
+        // Selectors
+
+            //- Return a new preconditioner
+            static autoPtr<preconditioner> New
+            (
+                const solver& sol,
+                Istream& preconditionerData
+            );
+
+
+        // Destructor
+
+            virtual ~preconditioner()
+            {}
+
+
+        // Member functions
+
+            //- Read and reset the preconditioner parameters
+            //  from the given stream
+            virtual void read(Istream& preconditionerData)
+            {}
+
+            //- Return wA the preconditioned form of residual rA
+            virtual void precondition
+            (
+                scalarField& wA,
+                const scalarField& rA,
+                const direction cmpt=0
+            ) const = 0;
+
+            //- Return wT the transpose-matrix preconditioned form of
+            //  residual rT.
+            //  This is only required for preconditioning asymmetric matrices.
+            virtual void preconditionT
+            (
+                scalarField& wT,
+                const scalarField& rT,
+                const direction cmpt=0
+            ) const
+            {
+                notImplemented
+                (
+                    type() +"::preconditionT"
+                    "(scalarField& wT, const scalarField& rT, "
+                    "const direction cmpt)"
+                );
+            }
+    };
+
 
     // Static data
 
@@ -364,13 +643,9 @@ public:
 
     // Constructors
 
-        //- Construct given a field to solve, L-U matrix addressing
-        //  and tolerence
-        lduMatrix
-        (
-            const lduAddressing& ldu,
-            const patchScheduleList& lduCoupledInterfaceSchedule
-        );
+        //- Construct given an LDU addressed mesh.
+        //  The coefficients are initially empty for subsequent setting.
+        lduMatrix(const lduMesh&);
 
         //- Construct as copy
         lduMatrix(const lduMatrix&);
@@ -378,13 +653,9 @@ public:
         //- Construct as copy or re-use as specified.
         lduMatrix(lduMatrix&, bool reUse);
 
-        //- Construct from Istream
-        lduMatrix
-        (
-            const lduAddressing& ldu,
-            const patchScheduleList& lduCoupledInterfaceSchedule,
-            Istream&
-        );
+        //- Construct given an LDU addressed mesh and an Istream
+        //  from which the coefficients are read
+        lduMatrix(const lduMesh&, Istream&);
 
 
     // Destructor
@@ -394,7 +665,28 @@ public:
 
     // Member functions
 
-        // Access
+        // Access to addressing
+
+            //- Return the LDU mesh from which the addressing is obtained
+            const lduMesh& mesh() const
+            {
+                return lduMesh_;
+            }
+
+            //- Return the LDU addressing
+            const lduAddressing& lduAddr() const
+            {
+                return lduMesh_.lduAddr();
+            }
+
+            //- Return the patch evaluation schedule
+            const lduSchedule& patchSchedule() const
+            {
+                return lduAddr().patchSchedule();
+            }
+
+
+        // Access to coefficients
 
             scalarField& lower();
             scalarField& diag();
@@ -403,16 +695,6 @@ public:
             const scalarField& lower() const;
             const scalarField& diag() const;
             const scalarField& upper() const;
-
-            const lduAddressing& lduAddr() const
-            {
-                return lduAddr_;
-            }
-
-            const patchScheduleList& lduCoupledInterfaceSchedule() const
-            {
-                return lduCoupledInterfaceSchedule_;
-            }
 
             bool hasDiag() const
             {
@@ -456,60 +738,49 @@ public:
             void relax
             (
                 const FieldField<Field, scalar>& intCoeffsCmptAvg,
-                const FieldField<Field, scalar>& magCoupleBouCoeffs,
-                const lduCoupledInterfacePtrsList& interfaces,
+                const FieldField<Field, scalar>& magInterfaceBouCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
                 const scalar alpha=1.0
             );
 
 
-            //- Matrix multiplication with updated coupled interfaces.
+            //- Matrix multiplication with updated interfaces.
             void Amul
             (
                 scalarField&,
                 const tmp<scalarField>&,
                 const FieldField<Field, scalar>&,
-                const lduCoupledInterfacePtrsList&,
+                const lduInterfaceFieldPtrsList&,
                 const direction cmpt
             ) const;
     
-            //- Matrix transpose multiplication with updated coupled interfaces.
+            //- Matrix transpose multiplication with updated interfaces.
             void Tmul
             (
                 scalarField&,
                 const tmp<scalarField>&,
                 const FieldField<Field, scalar>&,
-                const lduCoupledInterfacePtrsList&,
+                const lduInterfaceFieldPtrsList&,
                 const direction cmpt
             ) const;
 
 
-            //- Initialise the update of coupled interfaces
-            //  for matrix operations
-            void initMatrixInterfaces
+            //- Sum the coefficients on each row of the matrix
+            void sumA
             (
-                const FieldField<Field, scalar>& coupleCoeffs,
-                const lduCoupledInterfacePtrsList& interfaces,
-                const scalarField& psiif,
-                scalarField& result,
-                const direction cmpt
+                scalarField&,
+                const FieldField<Field, scalar>&,
+                const lduInterfaceFieldPtrsList&
             ) const;
-    
-            //- Update coupled interfaces for matrix operations
-            void updateMatrixInterfaces
-            (
-                const FieldField<Field, scalar>& coupleCoeffs,
-                const lduCoupledInterfacePtrsList& interfaces,
-                const scalarField& psiif,
-                scalarField& result,
-                const direction cmpt
-            ) const;
-    
 
-            tmp<scalarField> residual
+
+            void residual
             (
+                scalarField& rA,
                 const scalarField& psi,
-                const FieldField<Field, scalar>& coupleBouCoeffs,
-                const lduCoupledInterfacePtrsList& interfaces,
+                const scalarField& source,
+                const FieldField<Field, scalar>& interfaceBouCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
                 const direction cmpt
             ) const;
 
@@ -517,8 +788,52 @@ public:
             (
                 const scalarField& psi,
                 const scalarField& source,
-                const FieldField<Field, scalar>& coupleBouCoeffs,
-                const lduCoupledInterfacePtrsList& interfaces,
+                const FieldField<Field, scalar>& interfaceBouCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
+                const direction cmpt
+            ) const;
+
+
+            //- Initialise the update of interfaced interfaces
+            //  for matrix operations
+            void initMatrixInterfaces
+            (
+                const FieldField<Field, scalar>& interfaceCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
+                const scalarField& psiif,
+                scalarField& result,
+                const direction cmpt
+            ) const;
+    
+            //- Update interfaced interfaces for matrix operations
+            void updateMatrixInterfaces
+            (
+                const FieldField<Field, scalar>& interfaceCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
+                const scalarField& psiif,
+                scalarField& result,
+                const direction cmpt
+            ) const;
+    
+            //- Initialise the update of interfaced interfaces
+            //  for matrix operations using buffered unscheduled transfer
+            void bufferedInitMatrixInterfaces
+            (
+                const FieldField<Field, scalar>& interfaceCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
+                const scalarField& psiif,
+                scalarField& result,
+                const direction cmpt
+            ) const;
+    
+            //- Update interfaced interfaces for matrix operations
+            //  using buffered unscheduled transfer
+            void bufferedUpdateMatrixInterfaces
+            (
+                const FieldField<Field, scalar>& interfaceCoeffs,
+                const lduInterfaceFieldPtrsList& interfaces,
+                const scalarField& psiif,
+                scalarField& result,
                 const direction cmpt
             ) const;
 

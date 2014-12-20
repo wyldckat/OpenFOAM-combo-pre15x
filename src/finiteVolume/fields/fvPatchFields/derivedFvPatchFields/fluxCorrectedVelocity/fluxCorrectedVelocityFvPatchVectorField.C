@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,8 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-fluxCorrectedVelocityFvPatchVectorField::fluxCorrectedVelocityFvPatchVectorField
+fluxCorrectedVelocityFvPatchVectorField::
+fluxCorrectedVelocityFvPatchVectorField
 (
     const fvPatch& p,
     const vectorField& iF
@@ -49,7 +50,8 @@ fluxCorrectedVelocityFvPatchVectorField::fluxCorrectedVelocityFvPatchVectorField
 {}
 
 
-fluxCorrectedVelocityFvPatchVectorField::fluxCorrectedVelocityFvPatchVectorField
+fluxCorrectedVelocityFvPatchVectorField::
+fluxCorrectedVelocityFvPatchVectorField
 (
     const fluxCorrectedVelocityFvPatchVectorField& ptf,
     const fvPatch& p,
@@ -63,7 +65,8 @@ fluxCorrectedVelocityFvPatchVectorField::fluxCorrectedVelocityFvPatchVectorField
 {}
 
 
-fluxCorrectedVelocityFvPatchVectorField::fluxCorrectedVelocityFvPatchVectorField
+fluxCorrectedVelocityFvPatchVectorField::
+fluxCorrectedVelocityFvPatchVectorField
 (
     const fvPatch& p,
     const vectorField& iF,
@@ -88,7 +91,8 @@ fluxCorrectedVelocityFvPatchVectorField::fluxCorrectedVelocityFvPatchVectorField
 }
 
 
-fluxCorrectedVelocityFvPatchVectorField::fluxCorrectedVelocityFvPatchVectorField
+fluxCorrectedVelocityFvPatchVectorField::
+fluxCorrectedVelocityFvPatchVectorField
 (
     const fluxCorrectedVelocityFvPatchVectorField& fcvpvf,
     const vectorField& iF
@@ -118,9 +122,9 @@ void fluxCorrectedVelocityFvPatchVectorField::evaluate()
     );
 
     const fvPatchField<scalar>& phip =
-        patchField<surfaceScalarField, scalar>(phi);
+        patch().patchField<surfaceScalarField, scalar>(phi);
 
-    const vectorField& n = patch().nf();
+    vectorField n = patch().nf();
     const Field<scalar>& magS = patch().magSf();
 
     if (phi.dimensions() == dimVelocity*dimArea)
@@ -130,7 +134,7 @@ void fluxCorrectedVelocityFvPatchVectorField::evaluate()
     else if (phi.dimensions() == dimDensity*dimVelocity*dimArea)
     {
         const fvPatchField<scalar>& rhop =
-            lookupPatchField<volScalarField, scalar>(rhoName_);
+            patch().lookupPatchField<volScalarField, scalar>(rhoName_);
 
         operator==(*this - n*(n & *this) + n*phip/(rhop*magS));
     }
@@ -147,10 +151,8 @@ void fluxCorrectedVelocityFvPatchVectorField::evaluate()
 void fluxCorrectedVelocityFvPatchVectorField::write(Ostream& os) const
 {
     fvPatchVectorField::write(os);
-    os.writeKeyword("phi")
-        << phiName_ << token::END_STATEMENT << nl;
-    os.writeKeyword("rho")
-        << rhoName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("phi") << phiName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("rho") << rhoName_ << token::END_STATEMENT << nl;
     writeEntry("value", os);
 }
 

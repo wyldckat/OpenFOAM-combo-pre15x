@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -71,15 +71,14 @@ bool Foam::faceOnlySet::trackToBoundary
     {
         point oldPoint = trackPt;
 
-        scalar frac = 0.0;
-        label facei = singleParticle.trackToFace(end_, frac);
+        singleParticle.trackToFace(end_);
 
-        if (facei != -1 && mag(oldPoint - trackPt) > smallDist)
+        if (singleParticle.face() != -1 && mag(oldPoint - trackPt) > smallDist)
         {
             // Reached face. Sample.
             samplingPts.append(trackPt);
             samplingCells.append(singleParticle.cell());
-            samplingFaces.append(facei);
+            samplingFaces.append(singleParticle.face());
             samplingCurveDist.append(mag(trackPt - start_));
         }
 

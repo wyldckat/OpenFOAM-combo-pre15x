@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,6 +32,26 @@ namespace Foam
 {
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+wordList objectRegistry::names() const
+{
+    wordList objectNames(size());
+
+    label count=0;
+    for (const_iterator iter = begin(); iter != end(); ++iter)
+    {
+        if (isA<Type>(*iter()))
+        {
+            objectNames[count++] = iter()->name();
+        }
+    }
+
+    objectNames.setSize(count);
+
+    return objectNames;
+}
+
 
 template<class Type>
 HashTable<const Type*> objectRegistry::lookupClass() const
@@ -124,7 +144,7 @@ const Type& objectRegistry::lookupObject(const word& name) const
                 << " " << name << " from objectRegistry " << this->name()
                 << " failed\n    available objects of type " << Type::typeName
                 << " are" << nl
-                << names(Type::typeName)
+                << names<Type>()
                 << abort(FatalError);
         }
     }

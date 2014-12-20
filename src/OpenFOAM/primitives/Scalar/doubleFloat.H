@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,6 +44,15 @@ namespace Foam
 
 template<class Cmpt>
 class typeOfRank<Cmpt, 0>
+{
+public:
+
+    typedef Cmpt type;
+};
+
+
+template<class Cmpt>
+class symmTypeOfRank<Cmpt, 0>
 {
 public:
 

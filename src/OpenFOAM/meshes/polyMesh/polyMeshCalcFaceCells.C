@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,24 +45,6 @@ void polyMesh::initMesh()
             << "calculating faceCells" << endl;
     }
 
-    if (!allOwner_.size() || !allNeighbour_.size())
-    {
-        FatalErrorIn
-        (
-            "void polyMesh::initMesh() const"
-        )   << "No owner or neighbour addressing provided"
-            << abort(FatalError);
-    }
-
-    if (!boundary_.size())
-    {
-        FatalErrorIn
-        (
-            "void polyMesh::initMesh() const"
-        )   << "No patches provided"
-            << abort(FatalError);
-    }
-
     label nCells = -1;
 
     forAll(allOwner_, facei)
@@ -72,9 +54,36 @@ void polyMesh::initMesh()
 
     nCells++;
 
-    label nUsedFaces =
-        boundary_[boundary_.size()-1].start()
-      + boundary_[boundary_.size()-1].size();
+
+    label nUsedFaces = 0;
+    label nInternalFaces = 0;
+
+    // Use patch info if provided, use all faces otherwise
+    if (boundary_.size())
+    {
+        nUsedFaces =
+            boundary_[boundary_.size()-1].start()
+          + boundary_[boundary_.size()-1].size();
+        nInternalFaces = boundary_[0].start();
+    }
+    else
+    {
+        // No patch info. Assume all faces are used.
+        nUsedFaces = allOwner_.size();
+
+        forAll(allNeighbour_, faceI)
+        {
+            if (allNeighbour_[faceI] == -1)
+            {
+                break;
+            }
+            else
+            {
+                nInternalFaces++;
+            }
+        }
+    }
+
 
     label nUsedPoints = points_.size();
 
@@ -95,10 +104,8 @@ void polyMesh::initMesh()
         {
             if (allOwner_[i] >= 0)
             {
-                FatalErrorIn
-                (
-                    "void polyMesh::initMesh() const"
-                )   << "Error in face ordering: mixed used and unused "
+                FatalErrorIn("void polyMesh::initMesh()")
+                    << "Error in face ordering: mixed used and unused "
                     << "faces at the end of face list." << nl
                     << "Number of used faces: " << nUsedFaces
                     << "  and face " << i << " is owned by cell "
@@ -143,10 +150,8 @@ void polyMesh::initMesh()
             {
                 if (usedPoints[i])
                 {
-                    FatalErrorIn
-                    (
-                        "void polyMesh::initMesh(cellList& c) const"
-                    )   << "Error in point ordering: mixed used and unused "
+                    FatalErrorIn("void polyMesh::initMesh()")
+                        << "Error in point ordering: mixed used and unused "
                         << "points at the end of point list." << nl
                         << "Number of used points: " << nUsedPoints
                         << "  and point " << i << " is used by a live face."
@@ -156,12 +161,11 @@ void polyMesh::initMesh()
         }
     }
 
-
     // Reset the primitiveMesh
     primitiveMesh::reset
     (
         nUsedPoints,
-        boundary_[0].start(),
+        nInternalFaces,
         nUsedFaces,
         nCells,
         points_,
@@ -260,10 +264,8 @@ void polyMesh::initMesh(cellList& c)
         {
             if (own[i] >= 0)
             {
-                FatalErrorIn
-                (
-                    "void polyMesh::initMesh(cellList& c) const"
-                )   << "Error in face ordering: mixed used and unused "
+                FatalErrorIn("void polyMesh::initMesh(cellList& c)")
+                    << "Error in face ordering: mixed used and unused "
                     << "faces at the end of face list." << nl
                     << "Number of used faces: " << nUsedFaces
                     << "  and face " << i << " is owned by cell " << own[i]
@@ -307,10 +309,8 @@ void polyMesh::initMesh(cellList& c)
             {
                 if (usedPoints[i])
                 {
-                    FatalErrorIn
-                    (
-                        "void polyMesh::initMesh(cellList& c) const"
-                    )   << "Error in point ordering: mixed used and unused "
+                    FatalErrorIn("void polyMesh::initMesh(cellList& c)")
+                        << "Error in point ordering: mixed used and unused "
                         << "points at the end of point list." << nl
                         << "Number of used points: " << nUsedPoints
                         << "  and point " << i << " is used by a live face."

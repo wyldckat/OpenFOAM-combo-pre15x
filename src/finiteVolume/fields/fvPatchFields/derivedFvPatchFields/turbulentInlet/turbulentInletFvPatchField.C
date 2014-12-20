@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -91,6 +91,20 @@ turbulentInletFvPatchField<Type>::turbulentInletFvPatchField
         fixedValueFvPatchField<Type>::operator==(referenceField_);
     }
 }
+
+
+template<class Type>
+turbulentInletFvPatchField<Type>::turbulentInletFvPatchField
+(
+    const turbulentInletFvPatchField<Type>& ptf
+)
+:
+    fixedValueFvPatchField<Type>(ptf),
+    ranGen_(ptf.ranGen_),
+    fluctuationScale_(ptf.fluctuationScale_),
+    referenceField_(ptf.referenceField_),
+    curTimeIndex_(-1)
+{}
 
 
 template<class Type>

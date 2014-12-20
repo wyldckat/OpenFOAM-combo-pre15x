@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,7 +42,6 @@ Description
 #include "primitiveMesh.H"
 #include "mapPolyMesh.H"
 #include "objectMap.H"
-#include "parallelInfo.H"
 #include "ListOps.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -1862,7 +1861,7 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::polyTopoChanger::changeMesh
         // the index will be -1.
         // The problem is that the renumbering cannot be built at this stage
         // as the order of points in the new face zone is not yet known:
-        // (the new zone needs to be hooked onto the updated list of faces to
+        // (the new zone needs to be set on the updated list of faces to
         // be able to create the mapping).  Therefore, the old meshPoint maps
         // will be copied here and will be used later to re-create the
         // addressing.  

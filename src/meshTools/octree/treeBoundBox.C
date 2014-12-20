@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -131,9 +131,9 @@ point treeBoundBox::mid() const
 }
 
 
-vectorList treeBoundBox::points() const
+pointField treeBoundBox::points() const
 {
-    vectorList points(8);
+    pointField points(8);
     label pointI = 0;
 
     points[pointI++] = min();
@@ -178,13 +178,13 @@ edgeList treeBoundBox::edges() const
 
 
 // Octant to bounding box
-treeBoundBox treeBoundBox::subBbox(const label octant) const
+treeBoundBox treeBoundBox::subBbox(const direction octant) const
 {
-    if ((octant < 0) || (octant > 7))
+    if (octant > 7)
     {
         FatalErrorIn
         (
-            "treeBoundBox::subCube(const label)"
+            "treeBoundBox::subCube(const direction)"
         )   << "octant should be [0..7]"
             << abort(FatalError);
     }
@@ -241,46 +241,54 @@ treeBoundBox treeBoundBox::subBbox(const label octant) const
 
 
 // Octant to bounding box using permutation only.
-treeBoundBox treeBoundBox::subBbox(const point& mid, const label octant) const
+treeBoundBox treeBoundBox::subBbox(const point& mid, const direction octant)
+ const
 {
-    if ((octant < 0) || (octant > 7))
+    if (octant > 7)
     {
         FatalErrorIn
         (
-            "treeBoundBox::subCube(const point&, const label)"
+            "treeBoundBox::subCube(const point&, const direction)"
         )   << "octant should be [0..7]"
             << abort(FatalError);
     }
 
-    scalar leftx=min().x();
-    scalar lefty=min().y();
-    scalar leftz=min().z();
-
-    scalar rightx=mid.x();
-    scalar righty=mid.y();
-    scalar rightz=mid.z();
+    treeBoundBox subBb;
+    point& subMin = subBb.min();
+    point& subMax = subBb.max();
 
     if (octant & treeBoundBox::RIGHTHALF)
     {
-        leftx = mid.x();
-        rightx = max().x();
+        subMin.x() = mid.x();
+        subMax.x() = max().x();
+    }
+    else
+    {
+        subMin.x() = min().x();
+        subMax.x() = mid.x();
     }
     if (octant & treeBoundBox::TOPHALF)
     {
-        lefty = mid.y();
-        righty = max().y();
+        subMin.y() = mid.y();
+        subMax.y() = max().y();
+    }
+    else
+    {
+        subMin.y() = min().y();
+        subMax.y() = mid.y();
     }
     if (octant & treeBoundBox::FRONTHALF)
     {
-        leftz = mid.z();
-        rightz = max().z();
+        subMin.z() = mid.z();
+        subMax.z() = max().z();
+    }
+    else
+    {
+        subMin.z() = min().z();
+        subMax.z() = mid.z();
     }
 
-    return treeBoundBox
-    (
-        point(leftx, lefty, leftz),
-        point(rightx, righty, rightz)
-    );
+    return subBb;
 }
 
 
@@ -309,15 +317,15 @@ bool treeBoundBox::intersects
     point& pt
 ) const
 {
-    vector direction(end - start);
+    vector vec(end - start);
 
     pt = start;
 
-    const label endBits = posBits(end);
+    const direction endBits = posBits(end);
 
     while(true)
     {
-        label ptBits = posBits(pt);
+        direction ptBits = posBits(pt);
 
         if (ptBits == 0)
         {
@@ -334,68 +342,68 @@ bool treeBoundBox::intersects
         if (ptBits & LEFTBIT)
         {
             // Intersect with plane V=min, n=-1,0,0
-            if (Foam::mag(direction.x()) > VSMALL)
+            if (Foam::mag(vec.x()) > VSMALL)
             {
-                scalar s = (min().x() - pt.x())/direction.x();
+                scalar s = (min().x() - pt.x())/vec.x();
                 pt.x() = min().x();
-                pt.y() = pt.y() + direction.y()*s;
-                pt.z() = pt.z() + direction.z()*s;
+                pt.y() = pt.y() + vec.y()*s;
+                pt.z() = pt.z() + vec.z()*s;
             }
         }
         if (ptBits & RIGHTBIT)
         {
             // Intersect with plane V=max, n=1,0,0
-            if (Foam::mag(direction.x()) > VSMALL)
+            if (Foam::mag(vec.x()) > VSMALL)
             {
-                scalar s = (max().x() - pt.x())/direction.x();
+                scalar s = (max().x() - pt.x())/vec.x();
                 pt.x() = max().x();
-                pt.y() = pt.y() + direction.y()*s;
-                pt.z() = pt.z() + direction.z()*s;
+                pt.y() = pt.y() + vec.y()*s;
+                pt.z() = pt.z() + vec.z()*s;
             }
         }
 
         if (ptBits & BELOWBIT)
         {
             // Intersect with plane V=min, n=0,-1,0
-            if (Foam::mag(direction.y()) > VSMALL)
+            if (Foam::mag(vec.y()) > VSMALL)
             {
-                scalar s = (min().y() - pt.y())/direction.y();
-                pt.x() = pt.x() + direction.x()*s;
+                scalar s = (min().y() - pt.y())/vec.y();
+                pt.x() = pt.x() + vec.x()*s;
                 pt.y() = min().y();
-                pt.z() = pt.z() + direction.z()*s;
+                pt.z() = pt.z() + vec.z()*s;
             }
         }
         if (ptBits & ABOVEBIT)
         {
             // Intersect with plane V=max, n=0,1,0
-            if (Foam::mag(direction.y()) > VSMALL)
+            if (Foam::mag(vec.y()) > VSMALL)
             {
-                scalar s = (max().y() - pt.y())/direction.y();
-                pt.x() = pt.x() + direction.x()*s;
+                scalar s = (max().y() - pt.y())/vec.y();
+                pt.x() = pt.x() + vec.x()*s;
                 pt.y() = max().y();
-                pt.z() = pt.z() + direction.z()*s;
+                pt.z() = pt.z() + vec.z()*s;
             }
         }
 
         if (ptBits & BEHINDBIT)
         {
             // Intersect with plane V=min, n=0,0,-1
-            if (Foam::mag(direction.z()) > VSMALL)
+            if (Foam::mag(vec.z()) > VSMALL)
             {
-                scalar s = (min().z() - pt.z())/direction.z();
-                pt.x() = pt.x() + direction.x()*s;
-                pt.y() = pt.y() + direction.y()*s;
+                scalar s = (min().z() - pt.z())/vec.z();
+                pt.x() = pt.x() + vec.x()*s;
+                pt.y() = pt.y() + vec.y()*s;
                 pt.z() = min().z();
             }
         }
         if (ptBits & INFRONTBIT)
         {
             // Intersect with plane V=max, n=0,0,1
-            if (Foam::mag(direction.z()) > VSMALL)
+            if (Foam::mag(vec.z()) > VSMALL)
             {
-                scalar s = (max().z() - pt.z())/direction.z();
-                pt.x() = pt.x() + direction.x()*s;
-                pt.y() = pt.y() + direction.y()*s;
+                scalar s = (max().z() - pt.z())/vec.z();
+                pt.x() = pt.x() + vec.x()*s;
+                pt.y() = pt.y() + vec.y()*s;
                 pt.z() = max().z();
             }
         }
@@ -464,9 +472,9 @@ bool treeBoundBox::contains(const vector& dir, const point& sample) const
 
 
 // Code position of point relative to box
-label treeBoundBox::posBits(const point& pt) const
+direction treeBoundBox::posBits(const point& pt) const
 {
-    label posBits = 0;
+    direction posBits = 0;
 
     if (pt.x() < min().x())
     {
@@ -560,7 +568,11 @@ scalar treeBoundBox::maxDist(const point& sample) const
 // Distance comparator
 // Compare all vertices of bounding box against all of other bounding
 // box to see if all vertices of one are nearer
-label treeBoundBox::distanceCmp(const point& sample, const treeBoundBox& other) const
+label treeBoundBox::distanceCmp
+(
+    const point& sample,
+    const treeBoundBox& other
+) const
 {
     //
     // Distance sample <-> nearest and furthest away vertex of this
@@ -640,12 +652,6 @@ Istream& operator>>(Istream& is, treeBoundBox& bb)
     is >> bb.min() >> bb.max();
     return is;
 }
-
-
-//Ostream& operator<<(Ostream& os, const treeBoundBox& bb)
-//{
-//    return os << bb.min() << token::SPACE << bb.max();
-//}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -216,6 +216,7 @@ polyMesh::polyMesh
         *this,
         boundaryFaces.size() + 1    // add room for a default patch
     ),
+    directions_(Vector<label>::zero),
     pointZones_
     (
         IOobject
@@ -258,7 +259,7 @@ polyMesh::polyMesh
         *this,
         0
     ),
-    parallelDataPtr_(NULL),
+    globalMeshDataPtr_(NULL),
     moving_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
@@ -542,8 +543,9 @@ polyMesh::polyMesh
     forAll (boundaryFaces, patchI)
     {
         // add the patch to the list
-        boundary_.hook
+        boundary_.set
         (
+            patchI,
             polyPatch::New
             (
                 boundaryPatchTypes[patchI],
@@ -574,10 +576,9 @@ polyMesh::polyMesh
             << "Found " << nFaces - defaultPatchStart
             << " undefined faces in mesh; adding to default patch." << endl;
 
-        nAllPatches++;
-
-        boundary_.hook
+        boundary_.set
         (
+            nAllPatches,
             polyPatch::New
             (
                 defaultBoundaryPatchType,
@@ -588,6 +589,8 @@ polyMesh::polyMesh
                 boundary_
             )
         );
+
+        nAllPatches++;
     }
 
     // Reset the size of the boundary

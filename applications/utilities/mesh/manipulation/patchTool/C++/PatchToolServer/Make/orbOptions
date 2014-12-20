@@ -1,7 +1,7 @@
 #if defined(linux)
 
     ORB_SYS_INC = 
-    ORB_SYS_LIB = -ldl
+    ORB_SYS_LIB = -lssl -lcrypto -ldl
 
 #elif defined(solaris)
 
@@ -12,16 +12,6 @@
 
     ORB_SYS_INC = 
     ORB_SYS_LIB = 
-
-#elif defined(decAlpha)
-
-    ORB_SYS_INC = -O1
-    ORB_SYS_LIB = 
-
-#elif defined(ibm)
-
-    ORB_SYS_INC = 
-    ORB_SYS_LIB = -ldl
 
 #else
 

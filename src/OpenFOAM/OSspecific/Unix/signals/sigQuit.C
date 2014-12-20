@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,11 +40,6 @@ struct sigaction Foam::sigQuit::oldAction_;
 
 void Foam::sigQuit::sigQuitHandler(int)
 {
-    // Update jobInfo file
-    jobInfo.signalEnd();
-
-    error::printStack(Perr);
-
     // Reset old handling
     if (sigaction(SIGQUIT, &oldAction_, NULL) < 0)
     {
@@ -54,6 +49,13 @@ void Foam::sigQuit::sigQuitHandler(int)
         )   << "Cannot reset SIGQUIT trapping"
             << abort(FatalError);    
     }
+
+    // Update jobInfo file
+    jobInfo.signalEnd();
+
+    error::printStack(Perr);
+
+    // Throw signal (to old handler)
     raise(SIGQUIT);
 }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    staticTopoFvMesh
+    linearValveLayersFvMesh
 
 Description
 
@@ -42,8 +42,6 @@ SourceFiles
 
 namespace Foam
 {
-
-// Class forward declarations
 
 /*---------------------------------------------------------------------------*\
                        Class linearValveLayersFvMesh Declaration
@@ -68,7 +66,7 @@ class linearValveLayersFvMesh
         void operator=(const linearValveLayersFvMesh&);
 
 
-        //- Add valve and piston zones and modifiers
+        //- Add linearValveLayers zones and modifiers
         void addZonesAndModifiers();
 
         //- Make layering modifiers live
@@ -104,7 +102,7 @@ public:
     // Member Functions
 
         //- Update the mesh for both mesh motion and topology change
-        virtual void update();
+        virtual bool update();
 };
 
 

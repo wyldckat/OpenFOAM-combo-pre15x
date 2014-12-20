@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -77,8 +77,10 @@ Foam::unitInjector::unitInjector
     forAll(massFlowRateProfile_, i)
     {
         massFlowRateProfile_[i][0] = t.userTimeToTime(massFlowRateProfile_[i][0]);
+        velocityProfile_[i][0] = massFlowRateProfile_[i][0];
+        injectionPressureProfile_[i][0] = massFlowRateProfile_[i][0];
     }
-
+    
     scalar integratedMFR = integrateTable(massFlowRateProfile_);
 
     forAll(massFlowRateProfile_, i)

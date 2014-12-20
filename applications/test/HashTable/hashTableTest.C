@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,32 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
-
 \*---------------------------------------------------------------------------*/
 
 #include <iostream>
 #include "HashTable.H"
 
 using namespace Foam;
-
-#define iterate(listType, list, iter)           \
-    for                                         \
-    (                                           \
-        listType::iterator iter = list.begin(); \
-        iter != list.end();                     \
-        ++iter                                  \
-    )
-
-#define constIterate(listType, list, iter)            \
-    for                                               \
-    (                                                 \
-        listType::const_iterator iter = list.begin(); \
-        iter != list.end();                           \
-        ++iter                                        \
-    )
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 //  Main program:
@@ -56,7 +36,7 @@ int main()
 {
     //for (;;)
     {
-    HashTable<double> myTable(0);
+    HashTable<double> myTable(100);
 
     myTable.insert("aaa", 1.0);
     myTable.insert("aba", 2.0);
@@ -69,16 +49,16 @@ int main()
     myTable.insert("adx", 9.0);
     myTable.insert("aec", 10.0);
 
-    //myTable.erase("aaw");
-    //myTable.erase("abs");
+    myTable.erase("aaw");
+    myTable.erase("abs");
 
     std::cerr << myTable.find("aaa")() << '\n';
     std::cerr << myTable.find("aba")() << '\n';
     std::cerr << myTable.find("aca")() << '\n';
     std::cerr << myTable.find("ada")() << '\n';
     std::cerr << myTable.find("aeq")() << '\n';
-    std::cerr << myTable.find("aaw")() << '\n';
-    std::cerr << myTable.find("abs")() << '\n';
+    //std::cerr << myTable.find("aaw")() << '\n';
+    //std::cerr << myTable.find("abs")() << '\n';
     std::cerr << myTable.find("acr")() << '\n';
     std::cerr << myTable.find("adx")() << '\n';
     std::cerr << myTable.find("aec")() << '\n';
@@ -97,7 +77,7 @@ int main()
 
     std::cerr << "\nprint table\n" << std::endl;
 
-    iterate(HashTable<double>, myTable, iter)
+    forAllIter(HashTable<double>, myTable, iter)
     {
         std::cerr << *iter << '\n';
     }
@@ -107,9 +87,23 @@ int main()
     HashTable<double> myTable2;
     myTable2 = myTable;
 
-    constIterate(HashTable<double>, myTable2, iter2)
+    forAllConstIter(HashTable<double>, myTable2, iter2)
     {
         std::cerr << *iter2 << '\n';
+    }
+
+    std::cerr << "\ndelete entries\n" << std::endl;
+
+    forAllIter(HashTable<double>, myTable, iter)
+    {
+        std::cerr << "deleting " << *iter << '\n';
+        myTable.erase(iter);
+        std::cerr << "deleted\n";
+    }
+
+    forAllConstIter(HashTable<double>, myTable, iter)
+    {
+        std::cerr << *iter << '\n';
     }
     }
 

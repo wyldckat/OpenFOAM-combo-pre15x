@@ -2,7 +2,7 @@
 
     IFstream nAveragingStepsFile
     (
-        runTime.path()/runTime.timeName()/"nAveragingSteps.raw"
+        runTime.path()/runTime.timeName()/"uniform"/"nAveragingSteps.raw"
     );
 
 

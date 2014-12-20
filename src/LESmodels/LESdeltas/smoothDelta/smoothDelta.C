@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,13 +22,11 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
-
 \*---------------------------------------------------------------------------*/
 
 #include "smoothDelta.H"
 #include "addToRunTimeSelectionTable.H"
+#include "FaceCellWave.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,13 +47,13 @@ scalar smoothDelta::deltaData::maxDeltaRatio = 1.2;
 // This is the initial set of faces from which to start the waves.
 // Since there might be lots of places with delta jumps we can follow various
 // strategies for this initial 'seed'.
-// - start from single cell/face and let meshWave pick up all other from there.
-//   might be quite a few waves before everything settles.
+// - start from single cell/face and let FaceCellWave pick up all others
+//   from there. might be quite a few waves before everything settles.
 // - start from all faces. Lots of initial transfers.
 // We do something inbetween:
 // - start from all faces where there is a jump. Since we cannot easily
 //   determine this across coupled patches (cyclic, processor) introduce
-//   all faces of these and let meshWave sort it out.
+//   all faces of these and let FaceCellWave sort it out.
 void smoothDelta::setChangedFaces
 (
     const polyMesh& mesh,
@@ -84,8 +82,8 @@ void smoothDelta::setChangedFaces
         }
     }
 
-    // Insert all faces of coupled patches no matter what. Let meshWave sort
-    // it out.
+    // Insert all faces of coupled patches no matter what. Let FaceCellWave
+    // sort it out.
     forAll(mesh.boundaryMesh(), patchI) 
     {
         const polyPatch& patch = mesh.boundaryMesh()[patchI];
@@ -128,31 +126,42 @@ void smoothDelta::calcDelta()
         cellDeltaData[cellI] = geometricDelta[cellI];
     }
 
+    // Set initial field on faces.
+    List<deltaData> faceDeltaData(mesh_.nFaces());
+
+
     // Propagate information over whole domain.
-    meshWave<deltaData> deltaCalc
+    FaceCellWave<deltaData> deltaCalc
     (
         mesh_,
         changedFaces,
         changedFacesInfo,
+        faceDeltaData,
         cellDeltaData,
         mesh_.nCells()  // max iterations
     );
 
-    const List<deltaData>& smoothCellDeltaData = deltaCalc.allCellInfo();
-
     forAll(delta_, cellI)
     {
-        delta_[cellI] = smoothCellDeltaData[cellI].delta();
+        delta_[cellI] = cellDeltaData[cellI].delta();
     }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-smoothDelta::smoothDelta(const fvMesh& mesh, const dictionary& dd)
+smoothDelta::smoothDelta
+(
+    const word& name,
+    const fvMesh& mesh,
+    const dictionary& dd
+)
 :
-    LESdelta(mesh),
-    geometricDelta_(LESdelta::New(mesh, dd.subDict(type() + "Coeffs"))),
+    LESdelta(name, mesh),
+    geometricDelta_
+    (
+        LESdelta::New("geometricDelta", mesh, dd.subDict(type() + "Coeffs"))
+    ),
     maxDeltaRatio_
     (
         readScalar(dd.subDict(type() + "Coeffs").lookup("maxDeltaRatio"))

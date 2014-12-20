@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,6 +80,26 @@ Description
     - all cutFaces that are connected through an internal edge have the same
       master face.
 
+
+    Note: say decomposition into 4
+
+    +--+--+
+    | C| D|
+    +--+--+
+    | A| B|
+    +--+--+
+
+    If the original case gets reconstructed by addition in order:
+
+    A = A+D
+    A = A+B
+    A = A+C
+
+    the shared mid point between A,B,C,D is not on the cut when doing the
+    first addition. So explicit provision is for points which are shared but
+    not on a face that is shared. (sharedToMasterPoints, sharedToSlavePoints)
+
+
 SourceFiles
     faceCoupleInfo.C
 
@@ -122,9 +142,11 @@ class faceCoupleInfo
         autoPtr<indirectPrimitivePatch> slavePatchPtr_;
 
 
-        //- Description of cut.
-        //  Consists of faces and points (note: could be expressed as some
-        //  kind  of PrimitivePatch which holds points instead of reference to
+        //- Description of cut. Cut is the matching area between the slave
+        //  and the master. All of the slave faces/edge/points will be present
+        //  in the cut, but master faces might be subdivided.
+        //  Cut consists of faces and points (note: could be expressed as some
+        //  kind of PrimitivePatch which holds points instead of reference to
         //  them)
         //  Orientation of cutFaces should be same as masterFaces!
         pointField cutPoints_;
@@ -152,14 +174,23 @@ class faceCoupleInfo
             labelList slaveToCutEdges_;
 
 
+        // Shared points (but not on shared faces i.e. not on cut)
+
+            //- pointlabels of master mesh that are shared with slave
+            labelList sharedToMasterPoints_;
+            //- pointlabels of slave mesh that are shared with master
+            labelList sharedToSlavePoints_;
+
+
     // Private Member Functions
 
         // Debugging
 
             //- Calculate face centres from (subset of) faces.
+            template<template<class> class FaceList>
             static pointField calcFaceCentres
             (
-                const faceList&,
+                const FaceList<face>&,
                 const pointField&,
                 const label start,
                 const label size
@@ -281,6 +312,24 @@ class faceCoupleInfo
             const scalar absTol
         );
 
+        //- Get all boundary points not in excludePoints.
+        static labelList getBoundaryPoints
+        (
+            const primitiveMesh&,
+            const labelList& excludePoints
+        );
+
+        //- Set sharedMasterPoints_/sharedSlavePoints_ to all the points
+        //  that are shared but not on a cut. Uses geometric matching with
+        //  absTol on all buondary points that are not on the cut.
+        void findNonCutSharedPoints
+        (
+            const primitiveMesh& masterMesh,
+            const primitiveMesh& slaveMesh,
+            const scalar absTol
+        );
+
+
 public:
 
     //- Runtime type information
@@ -371,6 +420,20 @@ public:
             }
 
 
+            //- Points which are not on cut but are shared between
+            //  master and slave.
+            const labelList& sharedToMasterPoints() const
+            {
+                return sharedToMasterPoints_;
+            }
+            const labelList& sharedToSlavePoints() const
+            {
+                return sharedToSlavePoints_;
+            }
+
+
+        // Addressing from meshes to cut and vice versa.
+
             //- Master face for every face on cut. Will always be at least
             //  one but there might be multiple cut faces pointing to the same
             //  master
@@ -401,8 +464,8 @@ public:
                 return cutToSlaveFaces_;
             }
 
-            //- Slave point for every point on cut. -1 means no equivalent
-            //  slave point. All slave points will be present though in cut.
+            //- Slave point for every point on cut. All slave points will
+            //  be present in cut.
             const labelList& cutToSlavePoints() const
             {
                 return cutToSlavePoints_;
@@ -415,19 +478,25 @@ public:
                 return cutToSlaveEdges_;
             }
  
-
+            //- Cut point for master point. All master points will be present.
             const labelList& masterToCutPoints() const
             {
                 return masterToCutPoints_;
             }
+            //- Cut edge for master edge. Might be -1 since not all
+            //  master edges will be present in cut.
             const labelList& masterToCutEdges() const
             {
                 return masterToCutEdges_;
             }
+            //- Cut point for slave point. All slave points will be present in
+            //  cut.
             const labelList& slaveToCutPoints() const
             {
                 return slaveToCutPoints_;
             }
+            //- Cut edge for slave edge. All slave edges will be present in
+            //  cut.
             const labelList& slaveToCutEdges() const
             {
                 return slaveToCutEdges_;
@@ -439,6 +508,12 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "faceCoupleInfoTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

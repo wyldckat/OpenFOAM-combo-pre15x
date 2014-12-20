@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,7 +52,7 @@ Description
 #include "cellClassification.H"
 #include "cellSet.H"
 #include "cellInfo.H"
-#include "meshWave.H"
+#include "MeshWave.H"
 #include "edgeStats.H"
 #include "octreeDataTriSurface.H"
 #include "octree.H"
@@ -302,7 +302,7 @@ label selectOutsideCells
     }
 
     // Floodfill starting from outsideFaces (of type meshInfo)
-    meshWave<cellInfo> regionCalc
+    MeshWave<cellInfo> regionCalc
     (
         mesh,
         outsideFaces.shrink(),

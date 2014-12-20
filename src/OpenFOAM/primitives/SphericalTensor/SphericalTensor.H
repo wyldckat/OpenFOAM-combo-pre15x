@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,8 +27,8 @@ Class
 
 Description
     Templated 3D SphericalTensor derived from VectorSpace adding construction
-    from 1 component, element access using xx(), yy() and zz() member functions
-    and the inner-product (dot-product) and outer-product operators.
+    from 1 component, element access using th ii() member function and the
+    inner-product (dot-product) and outer-product operators.
 
 SourceFiles
     SphericalTensorI.H
@@ -38,7 +38,7 @@ SourceFiles
 #ifndef SphericalTensor_H
 #define SphericalTensor_H
 
-#include "Tensor.H"
+#include "VectorSpace.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,6 +56,10 @@ class SphericalTensor
 {
 
 public:
+
+    //- Equivalent type of labels used for valid component indexing
+    typedef SphericalTensor<label> labelType;
+
 
     // Member constants
 
@@ -104,6 +108,10 @@ public:
 
             inline const Cmpt& ii() const;
             inline Cmpt& ii();
+
+
+        //- Transpose
+        inline const SphericalTensor<Cmpt>& T() const;
 };
 
 

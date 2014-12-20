@@ -16,6 +16,15 @@
     surfaceScalarField phiDragb =
         fvc::interpolate(alpha/rhob*dragCoef*rUbA)*phia + rUbAf*(g & mesh.Sf());
 
+    forAll(p.boundaryField(), patchi)
+    {
+        if (isA<zeroGradientFvPatchScalarField>(p.boundaryField()[patchi]))
+        {
+            phiDraga.boundaryField()[patchi] = 0.0;
+            phiDragb.boundaryField()[patchi] = 0.0;
+        }
+    }
+
     phia = (fvc::interpolate(Ua) & mesh.Sf()) + fvc::ddtPhiCorr(rUaA, Ua, phia)
         + phiDraga;
     phib = (fvc::interpolate(Ub) & mesh.Sf()) + fvc::ddtPhiCorr(rUbA, Ub, phib)
@@ -23,7 +32,7 @@
 
     phi = alphaf*phia + betaf*phib;
 
-    surfaceScalarField Dp("(rho*1|A(U))", alphaf*rUaAf/rhoa + betaf*rUbAf/rhob);
+    surfaceScalarField Dp("(rho*(1|A(U)))", alphaf*rUaAf/rhoa + betaf*rUbAf/rhob);
 
     for(int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     {

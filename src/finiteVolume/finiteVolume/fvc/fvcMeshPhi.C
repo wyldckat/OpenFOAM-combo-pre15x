@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,13 +40,12 @@ namespace fvc
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<class Type>
 tmp<surfaceScalarField> meshPhi
 (
-    const GeometricField<Type, fvPatchField, volMesh>& vf
+    const volVectorField& vf
 )
 {
-    return fv::ddtScheme<Type>::New
+    return fv::ddtScheme<vector>::New
     (
         vf.mesh(),
         vf.mesh().ddtScheme("ddt(" + vf.name() + ')')
@@ -54,14 +53,13 @@ tmp<surfaceScalarField> meshPhi
 }
 
 
-template<class Type>
 tmp<surfaceScalarField> meshPhi
 (
     const dimensionedScalar& rho,
-    const GeometricField<Type, fvPatchField, volMesh>& vf
+    const volVectorField& vf
 )
 {
-    return fv::ddtScheme<Type>::New
+    return fv::ddtScheme<vector>::New
     (
         vf.mesh(),
         vf.mesh().ddtScheme("ddt(" + rho.name() + ',' + vf.name() + ')')
@@ -69,18 +67,95 @@ tmp<surfaceScalarField> meshPhi
 }
 
 
-template<class Type>
 tmp<surfaceScalarField> meshPhi
 (
     const volScalarField& rho,
-    const GeometricField<Type, fvPatchField, volMesh>& vf
+    const volVectorField& vf
 )
 {
-    return fv::ddtScheme<Type>::New
+    return fv::ddtScheme<vector>::New
     (
         vf.mesh(),
         vf.mesh().ddtScheme("ddt(" + rho.name() + ',' + vf.name() + ')')
     )().meshPhi(vf);
+}
+
+
+void makeRelative
+(
+    surfaceScalarField& phi,
+    const volVectorField& U
+)
+{
+    if (phi.mesh().moving())
+    {
+        phi -= fvc::meshPhi(U);
+    }
+}
+
+void makeRelative
+(
+    surfaceScalarField& phi,
+    const dimensionedScalar& rho,
+    const volVectorField& U
+)
+{
+    if (phi.mesh().moving())
+    {
+        phi -= fvc::meshPhi(rho, U);
+    }
+}
+
+void makeRelative
+(
+    surfaceScalarField& phi,
+    const volScalarField& rho,
+    const volVectorField& U
+)
+{
+    if (phi.mesh().moving())
+    {
+        phi -= fvc::meshPhi(rho, U);
+    }
+}
+
+
+void makeAbsolute
+(
+    surfaceScalarField& phi,
+    const volVectorField& U
+)
+{
+    if (phi.mesh().moving())
+    {
+        phi += fvc::meshPhi(U);
+    }
+}
+
+void makeAbsolute
+(
+    surfaceScalarField& phi,
+    const dimensionedScalar& rho,
+    const volVectorField& U
+)
+{
+    if (phi.mesh().moving())
+    {
+        phi += fvc::meshPhi(rho, U);
+    }
+}
+
+void makeAbsolute
+(
+    surfaceScalarField& phi,
+    const volScalarField& rho,
+    const volVectorField& U
+)
+{
+    if (phi.mesh().moving())
+    {
+        phi += fvc::meshPhi(rho, U);
+    }
 }
 
 

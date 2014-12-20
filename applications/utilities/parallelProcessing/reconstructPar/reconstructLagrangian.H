@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,6 +36,14 @@ SourceFiles
 #ifndef reconstructLagrangian_H
 #define reconstructLagrangian_H
 
+#include "polyMesh.H"
+#include "IOobjectList.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 void reconstructLagrangianPositions
@@ -50,8 +58,8 @@ void reconstructLagrangianPositions
 template<class Type>
 tmp<IOField<Type> > reconstructLagrangianField
 (
-    const Time& runTime,
-    PtrList<Time>& databases,
+    const polyMesh& mesh,
+    PtrList<polyMesh>& meshes,
     const IOobject& fieldIoObject
 );
 
@@ -59,11 +67,15 @@ tmp<IOField<Type> > reconstructLagrangianField
 template<class Type>
 void reconstructLagrangianFields
 (
-    const Time& runTime,
-    PtrList<Time>& databases,
+    const polyMesh& mesh,
+    PtrList<polyMesh>& meshes,
     const IOobjectList& objects
 );
 
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

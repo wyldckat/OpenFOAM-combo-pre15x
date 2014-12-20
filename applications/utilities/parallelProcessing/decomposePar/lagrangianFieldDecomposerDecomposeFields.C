@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,6 +49,7 @@ void lagrangianFieldDecomposer::readFields
 
     lagrangianFields.setSize(lagrangianTypeObjects.size());
 
+    label lagrangianFieldi=0;
     for
     (
         IOobjectList::iterator iter = lagrangianTypeObjects.begin();
@@ -56,7 +57,7 @@ void lagrangianFieldDecomposer::readFields
         ++iter
     )
     {
-        lagrangianFields.hook(new IOField<Type>(*iter()));
+        lagrangianFields.set(lagrangianFieldi++, new IOField<Type>(*iter()));
     }
 }
 

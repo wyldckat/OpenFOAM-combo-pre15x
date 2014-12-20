@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,7 +40,6 @@ namespace Foam
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 //  Get next 'valid character': i.e. not white space or comment.
-// DOS carriage returns '\r' are ignored
 
 char ISstream::nextValid()
 {
@@ -49,7 +48,7 @@ char ISstream::nextValid()
     for (;;)
     {
         // Get next non-whitespace character
-        while (get(c) && (isspace(c) || c == '\r'));
+        while (get(c) && isspace(c));
 
         // Return if stream is bad
         if (bad() || isspace(c))

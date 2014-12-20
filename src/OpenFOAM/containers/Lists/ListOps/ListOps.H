@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,22 +44,24 @@ SourceFiles
 namespace Foam
 {
 
-//- Renumber the values (not the indices) of a list.
+//- Renumber the values (not the indices) of a list. List elements <= 0 are
+//  left as is.
 template<class List>
 List renumber(const labelList& oldToNew, const List&);
 
-//- Inplace renumber the values of a list.
+//- Inplace renumber the values of a list. List elements <= 0 are
+//  left as is.
 template<class List>
 void inplaceRenumber(const labelList& oldToNew, List&);
 
 
-//- Reorder the elements (indices, not values) of a list. Does not do any
-//  check for illegal indices (e.g. -1)
+//- Reorder the elements (indices, not values) of a list.
+//  List elements <= 0 are left as is.
 template<class List>
 List reorder(const labelList& oldToNew, const List&);
 
-//- Inplace reorder the elements of a list. Does not do any
-//  check for illegal indices.
+//- Inplace reorder the elements of a list.
+//  List elements <= 0 are left as is.
 template<class List>
 void inplaceReorder(const labelList& oldToNew, List&);
 
@@ -69,7 +71,6 @@ void inplaceReorder(const labelList& oldToNew, List&);
 //  extract<boolList, labelList>(selectedElems, true, lst);
 template<class T, class List>
 List extract(const UList<T>& regions, const T& region, const List&);
-
 
 //- Invert one-to-one map. Unmapped elements will be -1.
 labelList invert(const label len, const labelList& oldToNew);
@@ -85,6 +86,28 @@ labelList identity(const label len);
 template<class List>
 label findIndex(const List&, typename List::const_reference);
 
+//- Find all occurences of given element. Linear search.
+template<class List>
+labelList findIndices(const List&, typename List::const_reference);
+
+//- Opposite of findIndices: set values at indices to given value
+template<class List>
+void setValues
+(
+    List&,
+    const labelList& indices,
+    typename List::const_reference
+);
+
+//- Opposite of findIndices: set values at indices to given value
+template<class List>
+List createWithValues
+(
+    const label sz,
+    const typename List::const_reference initValue,
+    const labelList& indices,
+    typename List::const_reference setValue
+);
 
 //- Find index of max element (and larger than given element).
 //  return -1 if not found. Linear search.

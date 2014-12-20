@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,7 +27,7 @@ Class
 
 Description
     Second-oder CrankNicholson implicit ddt using the current and
-    two previous time-step as well as the previous time-step ddt.
+    previous time-step fields as well as the previous time-step ddt.
 
 SourceFiles
     CrankNicholsonDdtScheme.C
@@ -73,16 +73,19 @@ class CrankNicholsonDdtScheme
         void operator=(const CrankNicholsonDdtScheme&);
 
         template<class GeoField>
-        GeoField& ddt0_(const word& name, const dimensionSet& dims);
+        GeoField& ddt0_
+        (
+            const word& name,
+            const dimensionSet& dims,
+            bool& valid
+        );
 
         template<class GeoField>
         bool evaluate(const GeoField& ddt0) const;
 
-        template<class GeoField>
-        dimensionedScalar rDtCoef_(const GeoField& ddt0) const;
+        dimensionedScalar rDtCoef_(const bool ddt0Valid) const;
 
-        template<class GeoField>
-        dimensionedScalar rDtCoef0_(const GeoField& ddt0) const;
+        dimensionedScalar rDtCoef0_(const bool ddt0Valid) const;
 
         template<class GeoField>
         tmp<GeoField> offCentre_(const GeoField& ddt0) const;

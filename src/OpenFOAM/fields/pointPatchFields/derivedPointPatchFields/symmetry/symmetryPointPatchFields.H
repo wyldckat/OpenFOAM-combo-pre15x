@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,17 +47,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-typedef SymmetryPointPatchField
-    <pointPatchField, pointPatch, symmetryPointPatch, scalar>
-    symmetryPointPatchScalarField;
-
-typedef SymmetryPointPatchField
-    <pointPatchField, pointPatch, symmetryPointPatch, vector>
-    symmetryPointPatchVectorField;
-
-typedef SymmetryPointPatchField
-    <pointPatchField, pointPatch, symmetryPointPatch, tensor>
-    symmetryPointPatchTensorField;
+makeTypePointPatchFieldTypedefs(symmetry, Symmetry, pointPatch, PointPatch, symmetryPointPatch);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

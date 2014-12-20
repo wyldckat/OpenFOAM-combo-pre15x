@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -170,10 +170,28 @@ public:
                 LListBase::append(new link(a));
             }
 
-            //- Return and remove head
+            //- Remove and return head
             T removeHead()
             {
                 link* elmtPtr = static_cast<link*>(LListBase::removeHead());
+                T data = elmtPtr->obj_;
+                delete elmtPtr;
+                return data;
+            }
+
+            //- Remove and return element
+            T remove(link* l)
+            {
+                link* elmtPtr = static_cast<link*>(LListBase::remove(l));
+                T data = elmtPtr->obj_;
+                delete elmtPtr;
+                return data;
+            }
+
+            //- Remove and return element specified by iterator
+            T remove(iterator& it)
+            {
+                link* elmtPtr = static_cast<link*>(LListBase::remove(it));
                 T data = elmtPtr->obj_;
                 delete elmtPtr;
                 return data;

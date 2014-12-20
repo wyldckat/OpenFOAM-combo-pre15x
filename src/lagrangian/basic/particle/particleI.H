@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,12 +22,11 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 #include "polyMesh.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
@@ -40,7 +39,7 @@ inline scalar particle<particleType>::lambda
     const vector& from,
     const vector& to,
     const label facei,
-    const scalar fraction
+    const scalar stepFraction
 )
 {
     const polyMesh& mesh = cloud_.polyMesh_;
@@ -48,7 +47,6 @@ inline scalar particle<particleType>::lambda
 
     if (movingMesh)
     {
-
         vector Sf = mesh.faceAreas()[facei];
         Sf /= mag(Sf);
         vector Cf = mesh.faceCentres()[facei];
@@ -60,11 +58,17 @@ inline scalar particle<particleType>::lambda
             scalar CCf = mag((C - Cf) & Sf);
             // check if distance between cell centre and face centre
             // is larger than wallImpactDistance
-            if (CCf > wallImpactDistance(Sf))
+            if
+            (
+                CCf
+              > static_cast<const particleType&>(*this).wallImpactDistance(Sf)
+            )
             {
-                Cf -= wallImpactDistance(Sf)*Sf;
+                Cf -= static_cast<const particleType&>(*this)
+                    .wallImpactDistance(Sf)*Sf;
             }
         }
+
         // for a moving mesh we need to reconstruct the old
         // Sf and Cf from oldPoints (they aren't stored)
         // NN.
@@ -72,7 +76,7 @@ inline scalar particle<particleType>::lambda
         const vectorField& oldPoints = mesh.oldPoints();
 
         vector Cf00 = mesh.faces()[facei].centre(oldPoints);
-        vector Cf0 = Cf00 + fraction*(Cf - Cf00);
+        vector Cf0 = Cf00 + stepFraction*(Cf - Cf00);
 
         vector Sf00 = mesh.faces()[facei].normal(oldPoints);
 
@@ -91,7 +95,7 @@ inline scalar particle<particleType>::lambda
         // check if the face is rotating
         if (magSfDiff > SMALL)
         {
-            vector Sf0 = Sf00 + fraction*(Sf - Sf00);
+            vector Sf0 = Sf00 + stepFraction*(Sf - Sf00);
 
             // find center of rotation
             vector omega = Sf0 ^ Sf;
@@ -172,11 +176,11 @@ inline scalar particle<particleType>::lambda
     }
     else
     {
-        // mesh is static and fraction is not needed
+        // mesh is static and stepFraction is not needed
         return lambda(from, to, facei);
     }
-    
 }
+
 
 template<class particleType>
 inline scalar particle<particleType>::lambda
@@ -199,9 +203,14 @@ inline scalar particle<particleType>::lambda
         scalar CCf = mag((C - Cf) & Sf);
         // check if distance between cell centre and face centre
         // is larger than wallImpactDistance
-        if (CCf > wallImpactDistance(Sf))
+        if
+        (
+            CCf
+          > static_cast<const particleType&>(*this).wallImpactDistance(Sf)
+        )
         {
-            Cf -= wallImpactDistance(Sf)*Sf;
+            Cf -= static_cast<const particleType&>(*this)
+                .wallImpactDistance(Sf)*Sf;
         }
     }
 
@@ -224,6 +233,7 @@ inline scalar particle<particleType>::lambda
     return lambdaNominator/lambdaDenominator;
 }
 
+
 template<class particleType>
 inline bool particle<particleType>::inCell()
 {
@@ -232,18 +242,20 @@ inline bool particle<particleType>::inCell()
     return (!faces.size());
 }
 
+
 template<class particleType>
 inline bool particle<particleType>::inCell
 (
     const vector& position,
     const label celli,
-    const scalar fraction
+    const scalar stepFraction
 )
 {
-    labelList faces = findFaces(position, celli, fraction);
+    labelList faces = findFaces(position, celli, stepFraction);
 
     return (!faces.size());
 }
+
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -269,18 +281,48 @@ inline label particle<particleType>::cell() const
 }
 
 
+template<class particleType>
+inline label particle<particleType>::face() const
+{
+    return facei_;
+}
+
+
 //- Is the particle on a boundary face?
 template<class particleType>
 inline bool particle<particleType>::onBoundary() const
 {
-    return onBoundary_;
+    return facei_ != -1 && facei_ >= cloud_.pMesh().nInternalFaces();
 }
+
+
+template<class particleType>
+inline scalar& particle<particleType>::stepFraction()
+{
+    return stepFraction_;
+}
+
+
+template<class particleType>
+inline scalar particle<particleType>::stepFraction() const
+{
+    return stepFraction_;
+}
+
+
+template<class particleType>
+inline bool particle<particleType>::softImpact() const
+{
+    return false;
+}
+
 
 template<class particleType>
 inline label particle<particleType>::patch(const label facei) const
 {
     return cloud_.facePatch(facei);
 }
+
 
 template<class particleType>
 inline label particle<particleType>::patchFace
@@ -290,6 +332,13 @@ inline label particle<particleType>::patchFace
 ) const
 {
     return cloud_.patchFace(patchi, facei);
+}
+
+
+template<class particleType>
+inline scalar particle<particleType>::wallImpactDistance(const vector&) const
+{
+    return 0.0;
 }
 
 

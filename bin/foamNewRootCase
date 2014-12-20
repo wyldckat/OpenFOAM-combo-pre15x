@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -39,16 +39,14 @@ set case=$2
 set instance=$3
 set local=`echo $4:h | sed -e 's/^\.\///' -e 's/^\.//'`
 
-sed -f $WM_PROJECT_DIR/bin/foamNewRootCaseScr $4 > temp.$$
+sed -e 's/    version *\([0-9.]*\) *; *$/    version  \1;/' \
+    -e 's/    format *\([a-z]*\) *; *$/    format   \1;/' \
+    -e s%'    root.*; *$'%'    root     "'$root'";'% \
+    -e s%'    case.*; *$'%'    case     "'$case'";'% \
+    -e s%'    instance.*$'%'    instance "'$instance'";'% \
+    -e s%'    local.*$'%'    local    "'$local'";'% \
+    $4 > temp.$$
 
-sed -e 's/^version *\([0-9.]*\) *; *$/version  \1;/' \
-    -e 's/^format *\([a-z]*\) *; *$/format   \1;/' \
-    -e s%'^root.*; *$'%'root     "'$root'";'% \
-    -e s%'^case.*; *$'%'case     "'$case'";'% \
-    -e s%'^instance.*$'%'instance "'$instance'";'% \
-    -e s%'^local.*$'%'local    "'$local'";'% \
-    temp.$$ > $4
-
-rm temp.$$
+mv temp.$$ $4
 
 #------------------------------------------------------------------------------

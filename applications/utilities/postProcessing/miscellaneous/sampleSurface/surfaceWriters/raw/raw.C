@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -160,6 +158,106 @@ void Foam::raw<Type>::writeData
 }
 
 
+// Write sphericalTensorField in raw format
+template<class Type>
+void Foam::raw<Type>::writeData
+(
+    const fileName& fieldName,
+    const pointField& points,
+    const faceList& faces,
+    const sphericalTensorField& values,
+    Ostream& os
+) const
+{
+    // header
+    os << "# " << fieldName;
+
+    if (values.size() == points.size())
+    {
+        os  << "  POINT_DATA " << values.size()
+            << nl;
+    }
+    else
+    {
+        os  << "  FACE_DATA " << values.size()
+            << nl;
+    }
+
+    os  << "#  ii  ";
+    os << fieldName << "_ii" << endl;
+
+    // Write data
+    forAll(values, elemI)
+    {
+        const sphericalTensor& v = values[elemI];
+
+        if (values.size() == points.size())
+        {
+            writeGeometry(points, elemI, os);
+        }
+        else
+        {
+            writeGeometry(points, faces, elemI, os);
+        }
+
+        os  << v[0] << nl;
+    }
+}
+
+
+// Write symmTensorField in raw format
+template<class Type>
+void Foam::raw<Type>::writeData
+(
+    const fileName& fieldName,
+    const pointField& points,
+    const faceList& faces,
+    const symmTensorField& values,
+    Ostream& os
+) const
+{
+    // header
+    os << "# " << fieldName;
+
+    if (values.size() == points.size())
+    {
+        os  << "  POINT_DATA " << values.size()
+            << nl;
+    }
+    else
+    {
+        os  << "  FACE_DATA " << values.size()
+            << nl;
+    }
+
+    os  << "#  xx  xy  xz  yy  yz ";
+    for(int i=0; i<6; i++)
+    {
+        os << fieldName << "_" << i << "  ";
+    }
+    os << endl;
+
+    // Write data
+    forAll(values, elemI)
+    {
+        const symmTensor& v = values[elemI];
+
+        if (values.size() == points.size())
+        {
+            writeGeometry(points, elemI, os);
+        }
+        else
+        {
+            writeGeometry(points, faces, elemI, os);
+        }
+
+        os  << v[0] << ' ' << v[1] << ' ' << v[2]
+            << v[3] << ' ' << v[4] << ' ' << v[5]
+            << nl;
+    }
+}
+
+
 // Write tensorField in raw format
 template<class Type>
 void Foam::raw<Type>::writeData
@@ -185,7 +283,7 @@ void Foam::raw<Type>::writeData
             << nl;
     }
 
-    os  << "#  x  y  z  ";
+    os  << "#  xx  xy  xz  yx  yy  yz  zx  zy  zz";
     for(int i=0; i<9; i++)
     {
         os << fieldName << "_" << i << "  ";

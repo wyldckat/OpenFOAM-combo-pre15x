@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "processorFvPatchScalarField.H"
@@ -35,7 +33,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Initialise neighbour processor internal cell data
 template<>
 void processorFvPatchField<scalar>::initInterfaceMatrixUpdate
 (
@@ -47,7 +44,11 @@ void processorFvPatchField<scalar>::initInterfaceMatrixUpdate
     const bool bufferdTransfer
 ) const
 {
-    compressedSend(patchInternalField(psiInternal), bufferdTransfer);
+    procPatch_.compressedSend
+    (
+        patch().patchInternalField(psiInternal)(),
+        bufferdTransfer
+    );
 }
 
 
@@ -61,15 +62,13 @@ void processorFvPatchField<scalar>::updateInterfaceMatrix
     const direction
 ) const
 {
-    scalarField pnf(compressedReceive<scalar>(this->size()));
+    scalarField pnf(procPatch_.compressedReceive<scalar>(this->size())());
 
-    // Multiply the field by coefficients and add into the result
+    const unallocLabelList& faceCells = patch().faceCells();
 
-    const labelList::subList FaceCells = patch().faceCells();
-
-    forAll(FaceCells, elemI)
+    forAll(faceCells, facei)
     {
-        result[FaceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
+        result[faceCells[facei]] -= coeffs[facei]*pnf[facei];
     }
 }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,39 +26,34 @@ License
 
 #include <iostream>
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-inline string::string()
+inline Foam::string::string()
 {}
 
 
-inline string::string(const std::string& stdStr)
+inline Foam::string::string(const std::string& stdStr)
 :
     std::string(stdStr)
 {}
 
 
 // Copy character array
-inline string::string(const char* str)
+inline Foam::string::string(const char* str)
 :
     std::string(str)
 {}
 
 
 // Construct from a given number of characters in a character array
-inline string::string(const char* str, const size_type len)
+inline Foam::string::string(const char* str, const size_type len)
 :
     std::string(str, len)
 {}
 
 
 // Construct from a single character
-inline string::string(const char c)
+inline Foam::string::string(const char c)
 :
     std::string(1, c)
 {}
@@ -67,7 +62,7 @@ inline string::string(const char c)
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class String>
-inline bool string::valid(const string& s)
+inline bool Foam::string::valid(const string& s)
 {
     bool iv = false;
 
@@ -85,7 +80,7 @@ inline bool string::valid(const string& s)
 
 
 template<class String>
-inline bool string::stripInvalid(string& s)
+inline bool Foam::string::stripInvalid(string& s)
 {
     if (!valid<String>(s))
     {
@@ -119,7 +114,7 @@ inline bool string::stripInvalid(string& s)
 
 
 template<class String>
-inline String string::validate(const string& s)
+inline String Foam::string::validate(const string& s)
 {
     string ss = s;
     stripInvalid<String>(ss);
@@ -129,23 +124,30 @@ inline String string::validate(const string& s)
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-inline string string::operator()(const size_type i, const size_type n) const
+inline Foam::string Foam::string::operator()
+(
+    const size_type i,
+    const size_type n
+) const
 {
     return substr(i, n);
 }
 
 
-inline string string::operator()(const size_type n) const
+inline Foam::string Foam::string::operator()(const size_type n) const
 {
     return substr(0, n);
 }
 
 
-inline string::hash::hash()
+inline Foam::string::hash::hash()
 {}
 
 
-inline string::size_type string::hash::operator()(const string& key) const
+inline Foam::string::size_type Foam::string::hash::operator()
+(
+    const string& key
+) const
 {
     register size_type hashVal = 0;
 
@@ -158,7 +160,7 @@ inline string::size_type string::hash::operator()(const string& key) const
 }
 
 
-inline string::size_type string::hash::operator()
+inline Foam::string::size_type Foam::string::hash::operator()
 (
     const string& key,
     const size_type tableSize
@@ -167,9 +169,5 @@ inline string::size_type string::hash::operator()
     return ::abs(operator()(key)) % tableSize;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

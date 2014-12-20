@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,7 @@ License
 Description
     Calculate agglomeration clusters given a fine matrix.
     Agglomeration clusters give a coarse cluster label for each fine cell.
-    Hook and return true if the number of cell on coarse level is larger than
+    Set and return true if the number of cell on coarse level is larger than
     required minimum (nCellsInTopLevel_).
 
 \*---------------------------------------------------------------------------*/
@@ -46,7 +46,7 @@ bool amgSymSolver::calcAgglomeration(const label fineLevelIndex)
     //    to create the offset table.
     // 2) loop through all cells and for each cell find the best fit neighbour.
     //    If all neighbours are grouped, "group" the cell on its own.
-    // 4) If the number of coarse cells is greater than minimum, hook onto the
+    // 4) If the number of coarse cells is greater than minimum, set the
     //    list and return true; otherwise return false
 
     // Get addressing
@@ -217,7 +217,7 @@ bool amgSymSolver::calcAgglomeration(const label fineLevelIndex)
 
     if (moreAgglom)
     {
-        restrictAddressing_.hook(coarseCellMapPtr);
+        restrictAddressing_.set(fineLevelIndex, coarseCellMapPtr);
     }
     else
     {

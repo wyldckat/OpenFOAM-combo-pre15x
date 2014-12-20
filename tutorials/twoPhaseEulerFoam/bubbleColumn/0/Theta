@@ -1,11 +1,10 @@
 // ************************************************************************* //
-// Field Dictionary
 
 version             1.0;
 format              ascii;
-root                "/users/tfd/nordin/foam/nordin2.0/run/larsg";
-case                "5x50";
-instance            "0.000000e+00";
+root                "";
+case                "";
+instance            "";
 local               "";
 class               volScalarField;
 form                dictionary;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,17 +50,24 @@ defineTypeNameAndDebug(fvMesh, 0);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void fvMesh::clearGeomNotVol()
+void fvMesh::clearGeomNotOldVol()
 {
+    slicedVolScalarField::DimensionedInternalField* VPtr =
+        static_cast<slicedVolScalarField::DimensionedInternalField*>(VPtr_);
+    deleteDemandDrivenData(VPtr);
+    VPtr_ = NULL;
+
     deleteDemandDrivenData(SfPtr_);
     deleteDemandDrivenData(magSfPtr_);
     deleteDemandDrivenData(CPtr_);
     deleteDemandDrivenData(CfPtr_);
 }
 
+
 void fvMesh::clearGeom()
 {
-    clearGeomNotVol();
+    clearGeomNotOldVol();
+
     deleteDemandDrivenData(V0Ptr_);
     deleteDemandDrivenData(V00Ptr_);
 
@@ -68,10 +75,12 @@ void fvMesh::clearGeom()
     // needs to be saved.
 }
 
+
 void fvMesh::clearAddressing()
 {
     deleteDemandDrivenData(lduPtr_);
 }
+
 
 void fvMesh::clearOut()
 {
@@ -82,55 +91,8 @@ void fvMesh::clearOut()
 
     // Clear mesh motion flux
     deleteDemandDrivenData(phiPtr_);
-}
 
-
-Vector<label> fvMesh::makeDirections()
-{
-    Vector<label> dir;
-
-    for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
-    {
-        dir[cmpt] = 1;
-    }
-
-    label nEmptyPatches = 0;
-
-    vector dirVec = vector::zero;
-
-    forAll(boundaryMesh(), patchi)
-    {
-        if
-        (
-            isA<emptyPolyPatch>(boundaryMesh()[patchi])
-         && boundaryMesh()[patchi].size()
-        )
-        {
-            nEmptyPatches++;
-            dirVec += sum(cmptMag(boundaryMesh()[patchi].faceAreas()));
-        }
-    }
-
-    if (nEmptyPatches)
-    {
-        reduce(dirVec, sumOp<vector>());
-
-        dirVec /= mag(dirVec);
-
-        for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
-        {
-            if (dirVec[cmpt] > SMALL)
-            {
-                dir[cmpt] = -1;
-            }
-            else
-            {
-                dir[cmpt] = 1;
-            }
-        }
-    }
-
-    return dir;
+    polyMesh::clearOut();
 }
 
 
@@ -141,9 +103,9 @@ fvMesh::fvMesh(const IOobject& io)
     polyMesh(io),
     surfaceInterpolation(*this),
     boundary_(*this, boundaryMesh()),
-    directions_(makeDirections()),
     lduPtr_(NULL),
     curTimeIndex_(time().timeIndex()),
+    VPtr_(NULL),
     V0Ptr_(NULL),
     V00Ptr_(NULL),
     SfPtr_(NULL),
@@ -158,9 +120,11 @@ fvMesh::fvMesh(const IOobject& io)
             << endl;
     }
 
+    // Check the existance of the cell volumes and read if present
+    // and set the storage of V00
     if (file(time().timePath()/"V0"))
     {
-        V0Ptr_ = new scalarIOField
+        V0Ptr_ = new DimensionedField<scalar, volMesh>
         (
             IOobject
             (
@@ -168,14 +132,87 @@ fvMesh::fvMesh(const IOobject& io)
                 time().timeName(),
                 *this,
                 IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            )
+                IOobject::NO_WRITE
+            ),
+            *this
         );
+
+        V00();
+    }
+
+    // Check the existance of the mesh fluxes, read if present and set the 
+    // mesh to be moving
+    if (file(time().timePath()/"meshPhi"))
+    {
+        phiPtr_ = new surfaceScalarField
+        (
+            IOobject
+            (
+                "meshPhi",
+                time().timeName(),
+                *this,
+                IOobject::MUST_READ,
+                IOobject::AUTO_WRITE
+            ),
+            *this
+        );
+
+        // The mesh is now considered moving so the old-time cell volumes
+        // will be required for the time derivatives so if they haven't been
+        // read initialise to the current cell volumes
+        if (!V0Ptr_)
+        {
+            V0Ptr_ = new DimensionedField<scalar, volMesh>
+            (
+                IOobject
+                (
+                    "V0",
+                    time().timeName(),
+                    *this,
+                    IOobject::NO_READ,
+                    IOobject::NO_WRITE,
+                    false
+                ),
+                V()
+            );
+        }
+
+        setMoving();
     }
 }
 
 
-// Construct from components
+fvMesh::fvMesh
+(
+    const IOobject& io,
+    const pointField& points,
+    const faceList& faces,
+    const labelList& allOwner,
+    const labelList& allNeighbour
+)
+:
+    polyMesh(io, points, faces, allOwner, allNeighbour),
+    surfaceInterpolation(*this),
+    boundary_(*this),
+    lduPtr_(NULL),
+    curTimeIndex_(time().timeIndex()),
+    VPtr_(NULL),
+    V0Ptr_(NULL),
+    V00Ptr_(NULL),
+    SfPtr_(NULL),
+    magSfPtr_(NULL),
+    CPtr_(NULL),
+    CfPtr_(NULL),
+    phiPtr_(NULL)
+{
+    if (debug)
+    {
+        Info<< "Constructing fvMesh from components"
+            << endl;
+    }
+}
+
+
 fvMesh::fvMesh
 (
     const IOobject& io,
@@ -187,9 +224,9 @@ fvMesh::fvMesh
     polyMesh(io, points, faces, cells),
     surfaceInterpolation(*this),
     boundary_(*this),
-    directions_(makeDirections()),
     lduPtr_(NULL),
     curTimeIndex_(time().timeIndex()),
+    VPtr_(NULL),
     V0Ptr_(NULL),
     V00Ptr_(NULL),
     SfPtr_(NULL),
@@ -217,17 +254,19 @@ fvMesh::~fvMesh()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // Helper function for construction from pieces
-void fvMesh::addFvPatches(const List<polyPatch*> & p)
+void fvMesh::addFvPatches(const List<polyPatch*> & p, const bool validBoundary)
 {
     if (boundary().size() > 0)
     {
-        FatalErrorIn("fvMesh::addFvPatches(const List<polyPatch*>& p)")
-            << " boundary already exists"
+        FatalErrorIn
+        (
+            "fvMesh::addFvPatches(const List<polyPatch*>&, const bool)"
+        )   << " boundary already exists"
             << abort(FatalError);
     }
 
     // first add polyPatches
-    addPatches(p);
+    addPatches(p, validBoundary);
     boundary_.addPatches(boundaryMesh());
 }
 
@@ -308,7 +347,7 @@ const fvBoundaryMesh& fvMesh::boundary() const
 }
 
 
-const lduAddressing& fvMesh::ldu() const
+const lduAddressing& fvMesh::lduAddr() const
 {
     if (!lduPtr_)
     {
@@ -316,44 +355,6 @@ const lduAddressing& fvMesh::ldu() const
     }
 
     return *lduPtr_;
-}
-
-
-void fvMesh::constructAndClear() const
-{
-    // Construct all necessary data and clear all storage
-
-    static bool done = false;
-
-    if (!done)
-    {
-        if (debug)
-        {
-            Info<< "void fvMesh::constructAndClear()"
-                << endl;
-        }
-
-        // Force creation of geometric data
-        Cf();
-        Sf();
-        magSf();
-
-        C();
-        V();
-
-        // Force creation of interpolation weights
-        weights();
-        deltaCoeffs();
-
-        // Clear ldu addressing - it holds references to deleted data.
-        // It will be created on demand
-        deleteDemandDrivenData(lduPtr_);
-
-        //const_cast<fvMesh&>(*this).clearPrimitives();
-        //const_cast<fvMesh&>(*this).polyMesh::clearGeom();
-
-        done = true;
-    }
 }
 
 
@@ -410,7 +411,7 @@ void fvMesh::updateMesh(const mapPolyMesh& mpm)
     polyMesh::updateMesh(mpm);
 
     surfaceInterpolation::clearOut();
-    clearGeomNotVol();
+    clearGeomNotOldVol();
 
     // Map all fields
     mapFields(mpm);
@@ -439,7 +440,7 @@ tmp<scalarField> fvMesh::movePoints(const pointField& p)
         }
         else
         {
-            V0Ptr_ = new scalarIOField
+            V0Ptr_ = new DimensionedField<scalar, volMesh>
             (
                 IOobject
                 (
@@ -447,8 +448,7 @@ tmp<scalarField> fvMesh::movePoints(const pointField& p)
                     time().timeName(),
                     *this,
                     IOobject::NO_READ,
-                    IOobject::NO_WRITE,
-                    false
+                    IOobject::NO_WRITE
                 ),
                 V()
             );
@@ -459,24 +459,38 @@ tmp<scalarField> fvMesh::movePoints(const pointField& p)
 
 
     // delete out of date geometrical information
-    clearGeomNotVol();
+    clearGeomNotOldVol();
 
 
     if (!phiPtr_)
     {
-        makePhi();
+        // Create mesh motion flux
+        phiPtr_ = new surfaceScalarField
+        (
+            IOobject
+            (
+                "meshPhi",
+                this->time().timeName(),
+                *this,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+            *this,
+            dimVolume/dimTime
+        );
+    }
+    else
+    {
+        // Grab old time mesh motion fluxes if the time has been incremented
+        if (phiPtr_->timeIndex() != time().timeIndex())
+        {
+            phiPtr_->oldTime();
+        }
     }
 
     surfaceScalarField& phi = *phiPtr_;
 
-    // Grab old time mesh motion fluxes if the time has been incremented
-    if (phi.timeIndex() != time().timeIndex())
-    {
-        phi.oldTime();
-    }
-
-
-    // move the polyMesh and grab mesh motion fluxes
+    // Move the polyMesh and set the mesh motion fluxes to the swept-volumes
 
     scalar rDeltaT = 1.0/time().deltaT().value();
 
@@ -501,15 +515,14 @@ tmp<scalarField> fvMesh::movePoints(const pointField& p)
 }
 
 
-//- Write the underlying polyMesh and other data
-bool fvMesh::write
+bool fvMesh::writeObjects
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
     IOstream::compressionType cmp
 ) const
 {
-    return polyMesh::write(fmt, ver, cmp);
+    return polyMesh::writeObject(fmt, ver, cmp);
 }
 
 

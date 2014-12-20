@@ -146,7 +146,7 @@ nSurfFields = 0;
     }
 
 
-    // Hook on (componenents of) vector fields
+    // Set (componenents of) vector fields
     forAll(surfVectorNames, fieldI)
     {
         word fieldName = surfVectorNames[fieldI];

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "HrenyaSinclairConductivity.H"
+#include "mathematicalConstants.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -44,8 +45,10 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-Foam::HrenyaSinclairConductivity::HrenyaSinclairConductivity(const Foam::dictionary& dict)
+Foam::HrenyaSinclairConductivity::HrenyaSinclairConductivity
+(
+    const dictionary& dict
+)
 :
     conductivityModel(dict),
     coeffsDict_(dict.subDict(typeName + "Coeffs")),
@@ -61,26 +64,31 @@ Foam::HrenyaSinclairConductivity::~HrenyaSinclairConductivity()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::volScalarField Foam::HrenyaSinclairConductivity::kappa
+Foam::tmp<Foam::volScalarField> Foam::HrenyaSinclairConductivity::kappa
 (
-    const Foam::volScalarField& alpha,
-    const Foam::volScalarField& Theta,
-    const Foam::volScalarField& g0,
-    const Foam::dimensionedScalar& rhoa,
-    const Foam::dimensionedScalar& da,
-    const Foam::dimensionedScalar& e
+    const volScalarField& alpha,
+    const volScalarField& Theta,
+    const volScalarField& g0,
+    const dimensionedScalar& rhoa,
+    const dimensionedScalar& da,
+    const dimensionedScalar& e
 ) const
 {
-    const scalar piSqrt = pow(M_PI, 0.5);
-    volScalarField ThetaSqrt = pow(Theta, 0.5);
-    volScalarField lamda = 
-        scalar(1) + da/(6.0*sqrt(2.0)*(alpha+ scalar(1.0e-5)))/L_;
+    const scalar sqrtPi = sqrt(mathematicalConstant::pi);
 
-    return
-        2.0*pow(alpha, 2.0)*rhoa*da*g0*(1.0+e)*ThetaSqrt/piSqrt
-      + (9.0/8.0)*ThetaSqrt*piSqrt*rhoa*da*0.25*pow(1.0+e, 2.0)*(2.0*e-1.0)*pow(alpha, 2.0)/(49.0/16.0-33.0*e/16.0)
-      + (15.0/16.0)*ThetaSqrt*piSqrt*alpha*rhoa*da*(0.5*e*e+0.25*e-0.75+lamda)/((49.0/16.0-33.0*e/16.0)*lamda)
-      + (25.0/64.0)*ThetaSqrt*piSqrt*rhoa*da/((1.0+e)*(49.0/16.0-33.0*e/16.0)*lamda*g0);
+    volScalarField lamda = 
+        scalar(1) + da/(6.0*sqrt(2.0)*(alpha + scalar(1.0e-5)))/L_;
+
+    return rhoa*da*sqrt(Theta)*
+    (
+        2.0*sqr(alpha)*g0*(1.0 + e)/sqrtPi
+      + (9.0/8.0)*sqrtPi*0.25*sqr(1.0 + e)*(2.0*e - 1.0)*sqr(alpha)
+       /(49.0/16.0 - 33.0*e/16.0)
+      + (15.0/16.0)*sqrtPi*alpha*(0.5*sqr(e) + 0.25*e - 0.75 + lamda)
+       /((49.0/16.0 - 33.0*e/16.0)*lamda)
+      + (25.0/64.0)*sqrtPi
+       /((1.0 + e)*(49.0/16.0 - 33.0*e/16.0)*lamda*g0)
+    );
 }
 
 

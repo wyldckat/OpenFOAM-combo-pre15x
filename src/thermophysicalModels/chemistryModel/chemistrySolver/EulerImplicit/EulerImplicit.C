@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -46,7 +44,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::EulerImplicit::EulerImplicit
 (
     const Foam::dictionary& dict,
@@ -67,7 +64,6 @@ Foam::EulerImplicit::~EulerImplicit()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 
 Foam::scalar Foam::EulerImplicit::solve
 (
@@ -121,16 +117,16 @@ Foam::scalar Foam::EulerImplicit::solve
         {
             label si = R.lhs()[s].index;
             scalar sl = R.lhs()[s].stoichCoeff;
-            RR.matrix()[si][rRef] -= sl*pr*corr;
-            RR.matrix()[si][lRef] += sl*pf*corr;
+            RR[si][rRef] -= sl*pr*corr;
+            RR[si][lRef] += sl*pf*corr;
         }
             
         for(label s=0; s<R.rhs().size(); s++)
         {
             label si = R.rhs()[s].index;
             scalar sr = R.rhs()[s].stoichCoeff;
-            RR.matrix()[si][lRef] -= sr*pf*corr;
-            RR.matrix()[si][rRef] += sr*pr*corr;
+            RR[si][lRef] -= sr*pf*corr;
+            RR[si][rRef] += sr*pr*corr;
         }
         
     } // end for(label i...
@@ -138,7 +134,7 @@ Foam::scalar Foam::EulerImplicit::solve
     
     for(label i=0; i<Ns; i++)
     {
-        RR.matrix()[i][i] += 1.0/dt;
+        RR[i][i] += 1.0/dt;
     }
 
     c = RR.LUsolve();
@@ -161,18 +157,20 @@ Foam::scalar Foam::EulerImplicit::solve
 
     scalarField dcdt(n, 0.0);
     chemistry_.derivatives(0.0, c1, dcdt);
+    
+    scalar sumC = sum(c);
 
     for(label i=0; i<Ns; i++)
     {
         scalar d = dcdt[i];
-        if (d<-SMALL)
+        if (d < -SMALL)
         {
             tMin = min(tMin, -(c[i]+SMALL)/d);
         }
         else
         {
             d = max(d, SMALL);
-            scalar cm = max(1.0-c[i], 1.0e-5);
+            scalar cm = max(sumC - c[i], 1.0e-5);
             tMin = min(tMin, cm/d);
         }
     }    

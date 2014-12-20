@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -114,23 +114,34 @@ cyclicFvPatchField<Type>::cyclicFvPatchField
 template<class Type>
 cyclicFvPatchField<Type>::cyclicFvPatchField
 (
+    const cyclicFvPatchField<Type>& ptf
+)
+:
+    cyclicLduInterfaceField(),
+    coupledFvPatchField<Type>(ptf),
+    cyclicPatch_(ptf.cyclicPatch_)
+{}
+
+
+template<class Type>
+cyclicFvPatchField<Type>::cyclicFvPatchField
+(
     const cyclicFvPatchField<Type>& ptf,
     const Field<Type>& iF
 )
 :
     coupledFvPatchField<Type>(ptf, iF),
-    cyclicPatch_(refCast<const cyclicFvPatch>(ptf.patch()))
+    cyclicPatch_(ptf.cyclicPatch_)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return neighbour coupled given internal cell data
 template<class Type>
 tmp<Field<Type> > cyclicFvPatchField<Type>::patchNeighbourField() const
 {
     const Field<Type>& iField = this->internalField();
-    const labelList::subList FaceCells = cyclicPatch_.faceCells();
+    const unallocLabelList& faceCells = cyclicPatch_.faceCells();
 
     tmp<Field<Type> > tpnf(new Field<Type>(this->size()));
     Field<Type>& pnf = tpnf();
@@ -143,12 +154,12 @@ tmp<Field<Type> > cyclicFvPatchField<Type>::patchNeighbourField() const
         {
             pnf[facei] = transform
             (
-                cyclicPatch_.forwardT()[0], iField[FaceCells[facei + sizeby2]]
+                forwardT()[0], iField[faceCells[facei + sizeby2]]
             );
 
             pnf[facei + sizeby2] = transform
             (
-                cyclicPatch_.reverseT()[0], iField[FaceCells[facei]]
+                reverseT()[0], iField[faceCells[facei]]
             );
         }
     }
@@ -156,8 +167,8 @@ tmp<Field<Type> > cyclicFvPatchField<Type>::patchNeighbourField() const
     {
         for (label facei=0; facei<sizeby2; facei++)
         {
-            pnf[facei] = iField[FaceCells[facei + sizeby2]];
-            pnf[facei + sizeby2] = iField[FaceCells[facei]];
+            pnf[facei] = iField[faceCells[facei + sizeby2]];
+            pnf[facei + sizeby2] = iField[faceCells[facei]];
         }
     }
 
@@ -165,31 +176,6 @@ tmp<Field<Type> > cyclicFvPatchField<Type>::patchNeighbourField() const
 }
 
 
-// Return neighbour colouring
-template<class Type>
-tmp<labelField> cyclicFvPatchField<Type>::nbrColour
-(
-    const labelField& cField
-) const
-{
-    const labelList::subList FaceCells = this->patch().faceCells();
-
-    tmp<labelField> tpnf(new labelField(this->size()));
-    labelField& pnf = tpnf();
-
-    label sizeby2 = this->size()/2;
-
-    for (label facei=0; facei<sizeby2; facei++)
-    {
-        pnf[facei] = cField[FaceCells[facei + sizeby2]];
-        pnf[facei + sizeby2] = cField[FaceCells[facei]];
-    }
-
-    return tpnf;
-}
-
-
-// Return matrix product for coupled boundary
 template<class Type>
 void cyclicFvPatchField<Type>::updateInterfaceMatrix
 (
@@ -203,21 +189,21 @@ void cyclicFvPatchField<Type>::updateInterfaceMatrix
     scalarField pnf(this->size());
 
     label sizeby2 = this->size()/2;
-    const labelList::subList FaceCells = cyclicPatch_.faceCells();
+    const unallocLabelList& faceCells = cyclicPatch_.faceCells();
 
     for (label facei=0; facei<sizeby2; facei++)
     {
-        pnf[facei] = psiInternal[FaceCells[facei + sizeby2]];
-        pnf[facei + sizeby2] = psiInternal[FaceCells[facei]];
+        pnf[facei] = psiInternal[faceCells[facei + sizeby2]];
+        pnf[facei + sizeby2] = psiInternal[faceCells[facei]];
     }
 
     // Transform according to the transformation tensors
-    transformCyclicCoupleField(pnf, cmpt);
+    transformCoupleField(pnf, cmpt);
 
     // Multiply the field by coefficients and add into the result
-    forAll(FaceCells, elemI)
+    forAll(faceCells, elemI)
     {
-        result[FaceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
+        result[faceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
     }
 }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -169,7 +169,6 @@ void surfaceInterpolation::makeWeights() const
     const surfaceVectorField& areas = mesh_.Sf();
     const surfaceScalarField& magAreas = mesh_.magSf();
 
-
     // Setup temporary storage for cell center to face center distances
     scalarField ownerCellFaceDistances(areas.size());
     scalarField neighbourCellFaceDistances(areas.size());
@@ -212,6 +211,7 @@ void surfaceInterpolation::makeWeights() const
             weightingFactors.boundaryField()[patchI]
         );
     }
+
 
     if (debug)
     {

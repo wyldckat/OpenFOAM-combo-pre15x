@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -122,9 +122,7 @@ ComponentMixedPointPatchVectorField
     PatchField<vector>(p, iF),
     refValue_("refValue", dict, p.size()),
     valueFraction_("valueFraction", dict, p.size())
-{
-    this->updateBoundaryField();
-}
+{}
 
 
 template

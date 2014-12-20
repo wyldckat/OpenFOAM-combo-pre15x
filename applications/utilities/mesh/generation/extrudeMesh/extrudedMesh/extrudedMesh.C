@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,25 +61,19 @@ Foam::pointField Foam::extrudedMesh::extrudedPoints
 
     pointField ePoints((nLayers + 1)*surfacePoints.size());
 
-    forAll(surfacePoints, i)
+    for (label layer=0; layer<=nLayers; layer++)
     {
-        ePoints[i] = surfacePoints[i];
-    }
-
-    for (label layer=0; layer<nLayers; layer++)
-    {
-        label offset = (layer + 1)*surfacePoints.size();
+        label offset = layer*surfacePoints.size();
 
         forAll(surfacePoints, i)
         {
-            ePoints[offset + i] =
-                extruder
-                (
-                    surfacePoints[i],
-                    surfaceNormals[i],
-                    nLayers,
-                    layer
-                );
+            ePoints[offset + i] = extruder
+            (
+                surfacePoints[i],
+                surfaceNormals[i],
+                nLayers,
+                layer
+            );
         }
     }
 
@@ -292,7 +286,6 @@ Foam::cellList Foam::extrudedMesh::extrudedCells
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-//- Construct from the primitivePatch to extrude
 template
 <
     class Face,
@@ -355,9 +348,6 @@ Foam::extrudedMesh::extrudedMesh
 
     addPatches(patches);
 }
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
 // ************************************************************************* //

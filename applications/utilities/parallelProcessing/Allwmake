@@ -1,11 +1,8 @@
 #!/bin/sh
-
 set -x
 
-if [ "$WM_MPLIB" ]
-then
-    (cd decompositionMethods ; ./Allwmake)
-    wmake decomposePar
-    wmake reconstructPar
-    wmake reconstructParMesh
-fi
+(cd decompositionMethods; Allwmake)
+wmake decomposePar
+wmake reconstructPar
+wmake reconstructParMesh
+wmake redistributeMeshPar

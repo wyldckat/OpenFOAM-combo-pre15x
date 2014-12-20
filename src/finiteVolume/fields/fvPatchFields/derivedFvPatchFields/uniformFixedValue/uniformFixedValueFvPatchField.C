@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -71,6 +71,19 @@ uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
 :
     fixedValueFvPatchField<Type>(p, iF),
     uniformValue_(pTraits<Type>(dict.lookup("uniformValue")))
+{
+    fvPatchField<Type>::operator==(uniformValue_);
+}
+
+
+template<class Type>
+uniformFixedValueFvPatchField<Type>::uniformFixedValueFvPatchField
+(
+    const uniformFixedValueFvPatchField<Type>& ptf
+)
+:
+    fixedValueFvPatchField<Type>(ptf),
+    uniformValue_(ptf.uniformValue_)
 {
     fvPatchField<Type>::operator==(uniformValue_);
 }

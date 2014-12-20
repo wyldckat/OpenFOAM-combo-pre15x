@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,7 +55,6 @@ SourceFiles
 
 #include "point.H"
 #include "labelList.H"
-#include "scalar.H"
 #include "tensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -67,6 +66,7 @@ class polyMesh;
 class primitiveMesh;
 class edge;
 class face;
+class polyMesh;
 
 /*---------------------------------------------------------------------------*\
                            Class directionInfo Declaration
@@ -153,20 +153,26 @@ public:
                 return n_;
             }
 
-        // Needed by meshWave
+        // Needed by FaceCellWave
 
             //- Check whether origin has been changed at all or
             //  still contains original (invalid) value.
             inline bool valid() const;
 
             //- Check for identical geometrical data. Used for cyclics checking.
-            inline bool sameGeometry(const directionInfo&, const scalar) const;
+            inline bool sameGeometry
+            (
+                const polyMesh&,
+                const directionInfo&,
+                const scalar
+            ) const;
 
             //- Convert any absolute coordinates into relative to (patch)face
             //  centre
             inline void leaveDomain
             (
-                const polyPatch& patch,
+                const polyMesh&,
+                const polyPatch&,
                 const label patchFaceI,
                 const point& faceCentre
             );
@@ -174,18 +180,23 @@ public:
             //- Reverse of leaveDomain
             inline void enterDomain
             (
-                const polyPatch& patch,
+                const polyMesh&,
+                const polyPatch&,
                 const label patchFaceI,
                 const point& faceCentre
             );
 
             //- Apply rotation matrix to any coordinates
-            inline void transform(const tensor& rotTensor);
+            inline void transform
+            (
+                const polyMesh&,
+                const tensor&
+            );
 
             //- Influence of neighbouring face.
             bool updateCell
             (
-                const polyMesh& mesh,
+                const polyMesh&,
                 const label thisCellI,
                 const label neighbourFaceI,
                 const directionInfo& neighbourInfo,
@@ -193,9 +204,9 @@ public:
             );
 
             //- Influence of neighbouring cell.
-           bool updateFace
+            bool updateFace
             (
-                const polyMesh& mesh,
+                const polyMesh&,
                 const label thisFaceI,
                 const label neighbourCellI,
                 const directionInfo& neighbourInfo,
@@ -205,7 +216,7 @@ public:
             //- Influence of different value on same face.
             bool updateFace
             (
-                const polyMesh& mesh,
+                const polyMesh&,
                 const label thisFaceI,
                 const directionInfo& neighbourInfo,
                 const scalar tol
@@ -213,7 +224,7 @@ public:
 
     // Member Operators
 
-        //Note: Used to determine whether to call update.
+        // Needed for List IO
         inline bool operator==(const directionInfo&) const;
 
         inline bool operator!=(const directionInfo&) const;

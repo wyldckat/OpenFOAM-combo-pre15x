@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -188,6 +188,15 @@ public:
             //- Remove an entry specified by keyword
             bool remove(const word& keyword);
 
+            //- Change the keyword for an entry,
+            //  optionally forcing overwrite of an existing entry
+            bool changeKeyword
+            (
+                const word& oldKeyword,
+                const word& newKeyword,
+                bool forceOverwrite = false
+            );
+
 
         // Write 
 
@@ -201,7 +210,17 @@ public:
 
         void operator=(const dictionary&);
 
+        //- Include entries from the given dictionary.
+        //  Warn, but do not overwrite existing entries
         void operator+=(const dictionary&);
+
+        //- Conditionally include entries from the given dictionary.
+        //  Do not overwrite existing entries.
+        void operator|=(const dictionary&);
+
+        //- Unconditionally include entries from the given dictionary.
+        //  Overwrite existing entries.
+        void operator<<=(const dictionary&);
 
 
     // IOstream operators
@@ -216,7 +235,15 @@ public:
 
 // Global Operators
 
-dictionary operator+(const dictionary&, const dictionary&);
+// Combine dictionaries starting from the entries in dict one and then including
+// those from dict2.
+// Warn, but do not overwrite the entries from dict1.
+dictionary operator+(const dictionary& dict1, const dictionary& dict2);
+   
+// Combine dictionaries starting from the entries in dict one and then including
+// those from dict2.
+// Do not overwrite the entries from dict1.
+dictionary operator|(const dictionary& dict1, const dictionary& dict2);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

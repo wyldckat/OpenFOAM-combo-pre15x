@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,7 +33,7 @@ Description
 #include "meshSearch.H"
 #include "cellInfo.H"
 #include "polyMesh.H"
-#include "meshWave.H"
+#include "MeshWave.H"
 #include "ListOps.H"
 #include "meshTools.H"
 
@@ -322,7 +322,7 @@ void Foam::cellClassification::markCells
         cellInfo(cellClassification::OUTSIDE)
     );
 
-    meshWave<cellInfo> cellInfoCalc
+    MeshWave<cellInfo> cellInfoCalc
     (
         mesh_,
         changedFaces,       // Labels of changed faces

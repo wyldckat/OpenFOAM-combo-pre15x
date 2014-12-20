@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,31 +22,14 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    A class for handling words, derived from string.
-    A word is a string of characters containing no white space and
-    may be constructed from a string by removing white space.
-    Words are delimited be white space.
-
 \*---------------------------------------------------------------------------*/
 
 #include "word.H"
 #include "debug.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-int word::debug(debug::debugSwitch("word", 0));
-const word word::null;
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
+int Foam::word::debug(Foam::debug::debugSwitch("word", 0));
+const Foam::word Foam::word::null;
 
 // ************************************************************************* //
-

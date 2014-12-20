@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,6 +54,12 @@ void fvMatrix<scalar>::setComponentReference
     const direction,
     const scalar value
 );
+
+template<>
+autoPtr<fvMatrix<scalar>::fvSolver> fvMatrix<scalar>::solver(Istream&);
+
+template<>
+lduMatrix::solverPerformance fvMatrix<scalar>::fvSolver::solve(Istream&);
 
 template<>
 lduMatrix::solverPerformance fvMatrix<scalar>::solve(Istream&);

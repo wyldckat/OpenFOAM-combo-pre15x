@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,6 +35,7 @@ SourceFiles
 #ifndef coupledFvPatchField_H
 #define coupledFvPatchField_H
 
+#include "lduInterfaceField.H"
 #include "fvPatchField.H"
 #include "coupledFvPatch.H"
 
@@ -50,6 +51,7 @@ namespace Foam
 template<class Type>
 class coupledFvPatchField
 :
+    public lduInterfaceField,
     public fvPatchField<Type>
 {
 
@@ -93,6 +95,12 @@ public:
             const fvPatchFieldMapper&
         );
 
+        //- Construct as copy
+        coupledFvPatchField
+        (
+            const coupledFvPatchField<Type>&
+        );
+
         //- Construct and return a clone
         virtual tmp<fvPatchField<Type> > clone() const = 0;
 
@@ -118,7 +126,7 @@ public:
                 return true;
             }
 
-            //- Return neighbour field given internal field
+            //- Return neighbour field of internal field
             virtual tmp<Field<Type> > patchNeighbourField() const = 0;
 
 
@@ -157,12 +165,6 @@ public:
 
 
         // Coupled interface functionality
-
-            //- Return neighbour colouring
-            virtual tmp<labelField> nbrColour
-            (
-                const labelField&
-            ) const = 0;
 
             //- Update result field based on interface functionality
             virtual void updateInterfaceMatrix

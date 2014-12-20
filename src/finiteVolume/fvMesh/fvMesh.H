@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,16 +49,17 @@ SourceFiles
 #define fvMesh_H
 
 #include "polyMesh.H"
+#include "lduMesh.H"
 #include "primitiveMesh.H"
 #include "fvBoundaryMesh.H"
 #include "surfaceInterpolation.H"
-#include "scalarIOField.H"
+#include "DimensionedField.H"
 #include "volFieldsFwd.H"
 #include "surfaceFieldsFwd.H"
 #include "pointFieldsFwd.H"
+#include "SlicedGeometricField.H"
 #include "slicedVolFieldsFwd.H"
 #include "slicedSurfaceFieldsFwd.H"
-#include "lduAddressing.H"
 #include "className.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -67,6 +68,8 @@ namespace Foam
 {
 
 class fvMeshLduAddressing;
+class volMesh;
+
 
 /*---------------------------------------------------------------------------*\
                            Class fvMesh Declaration
@@ -75,16 +78,13 @@ class fvMeshLduAddressing;
 class fvMesh
 :
     public polyMesh,
+    public lduMesh,
     public surfaceInterpolation
 {
     // Private data
 
         //- Boundary mesh
         fvBoundaryMesh boundary_;
-
-        //- vector of valid directions in mesh
-        //  defined according to the presence of empty patches
-        Vector<label> directions_;
 
 
     // Demand-driven data
@@ -98,10 +98,13 @@ class fvMesh
         mutable label curTimeIndex_;
 
         //- Cell volumes old time level
-        mutable scalarIOField* V0Ptr_;
+        mutable void* VPtr_;
+
+        //- Cell volumes old time level
+        mutable DimensionedField<scalar, volMesh>* V0Ptr_;
 
         //- Cell volumes old-old time level
-        mutable scalarIOField* V00Ptr_;
+        mutable DimensionedField<scalar, volMesh>* V00Ptr_;
 
         //- Face area vectors
         mutable slicedSurfaceVectorField* SfPtr_;
@@ -123,8 +126,8 @@ class fvMesh
 
         // Storage management
 
-            //- Clear geometry but not the cell volumes
-            void clearGeomNotVol();
+            //- Clear geometry but not the old-time cell volumes
+            void clearGeomNotOldVol();
 
             //- Clear geometry
             void clearGeom();
@@ -132,16 +135,11 @@ class fvMesh
             //- Clear addressing
             void clearAddressing();
 
-            //- Clear all geometry and addressing
-            void clearOut();
-
 
        // Make geometric data
 
-            Vector<label> makeDirections();
             void makeSf() const;
             void makeMagSf() const;
-            void makePhi() const;
 
             void makeC() const;
             void makeCf() const;
@@ -178,6 +176,18 @@ public:
             const IOobject& io,
             const pointField& points,
             const faceList& faces,
+            const labelList& allOwner,
+            const labelList& allNeighbour
+        );
+
+        //- Construct from components with cells rather than owner
+        //  and neighbourwithout boundary.
+        //  Boundary is added using addPatches() member function
+        fvMesh
+        (
+            const IOobject& io,
+            const pointField& points,
+            const faceList& faces,
             const cellList& cells
         );
 
@@ -192,7 +202,11 @@ public:
         // Helpers
 
             //- Add boundary patches. Constructor helper
-            void addFvPatches(const List<polyPatch*>&);
+            void addFvPatches
+            (
+                const List<polyPatch*>&,
+                const bool validBoundary = true
+            );
 
             //- Update the mesh based on the mesh files saved in time
             //  directories
@@ -201,10 +215,16 @@ public:
 
         // Access
 
-            //- Return reference to DB
+            //- Return the top-level database
             const Time& time() const
             {
                 return polyMesh::time();
+            }
+
+            //- Return the object registry
+            virtual const objectRegistry& db() const
+            {
+                return *this;
             }
 
             //- Return reference to name 
@@ -218,44 +238,36 @@ public:
             //- Return reference to boundary mesh
             const fvBoundaryMesh& boundary() const;
 
-            //- Return the vector of valid directions in mesh
-            //  defined according to the presence of empty patches
-            const Vector<label>& directions() const
-            {
-                return directions_;
-            }
-
-            //- Return the number of valid dimensions in the mesh
-            label nD() const
-            {
-                return cmptSum(directions_ + Vector<label>::one)/2;
-            }
-
-
             //- Return ldu addressing
-            const lduAddressing& ldu() const;
+            virtual const lduAddressing& lduAddr() const;
+
+            //- Return a list of pointers for each patch
+            //  with only those pointing to interfaces being set
+            virtual lduInterfacePtrsList interfaces() const
+            {
+                return boundary().interfaces();
+            }
 
             //- Internal face owner
             const unallocLabelList& owner() const
             {
-                return ldu().lowerAddr();
+                return lduAddr().lowerAddr();
             }
 
             //- Internal face neighbour
             const unallocLabelList& neighbour() const
             {
-                return ldu().upperAddr();
+                return lduAddr().upperAddr();
             }
 
-
             //- Return cell volumes
-            const scalarField& V() const;
+            const DimensionedField<scalar, volMesh>& V() const;
 
             //- Return old-time cell volumes
-            const scalarField& V0() const;
+            const DimensionedField<scalar, volMesh>& V0() const;
 
             //- Return old-old-time cell volumes
-            const scalarField& V00() const;
+            const DimensionedField<scalar, volMesh>& V00() const;
 
             //- Return cell face area vectors
             const surfaceVectorField& Sf() const;
@@ -275,8 +287,8 @@ public:
 
         // Edit
 
-            //- Construct all optional data and clear basic info from basicMesh
-            void constructAndClear() const;
+            //- Clear all geometry and addressing
+            void clearOut();
 
             //- Update mesh corresponding to the given map
             virtual void updateMesh(const mapPolyMesh& mpm);
@@ -295,13 +307,13 @@ public:
             surfaceScalarField& setPhi();
 
             //- Return old-time cell volumes
-            scalarField& setV0();
+            DimensionedField<scalar, volMesh>& setV0();
 
 
         // Write
 
             //- Write the underlying polyMesh and other data
-            virtual bool write
+            virtual bool writeObjects
             (
                 IOstream::streamFormat fmt,
                 IOstream::versionNumber ver,
@@ -322,6 +334,12 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "fvPatchFvMeshTemplates.C"
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

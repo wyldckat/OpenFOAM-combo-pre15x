@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,8 +57,9 @@ void Foam::polyTopoChanger::readModifiers()
 
         forAll(modifiers, modifierI)
         {
-            modifiers.hook
+            modifiers.set
             (
+                modifierI,
                 polyMeshModifier::New
                 (
                     patchEntries[modifierI].keyword(),
@@ -276,7 +277,7 @@ void Foam::polyTopoChanger::addTopologyModifiers
             )   << "Mesh modifier created with different mesh reference."
                 << abort(FatalError);
         }
-        hook(tm[tmI]);
+        set(tmI, tm[tmI]);
     }
 
     writeOpt() = IOobject::AUTO_WRITE;

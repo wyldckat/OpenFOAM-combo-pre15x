@@ -8,7 +8,7 @@
 
     READLINELINK =\
         $(RL_ARCH_PATH)/lib/libreadline.a \
-        -ltermcap
+        -L/usr/lib/termcap -L/usr/lib64/termcap -ltermcap
 
 #endif
 

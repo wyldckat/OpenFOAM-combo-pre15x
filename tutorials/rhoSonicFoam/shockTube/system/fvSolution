@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -24,10 +24,30 @@ FoamFile
 
 solvers
 {
-    p               BICCG 1e-15 0;
-    rho             BICCG 1e-15 0;
-    rhoU            BICCG 1e-15 0;
-    rhoE            BICCG 1e-15 0;
+    p PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-15;
+        relTol           0;
+    };
+    rho PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-15;
+        relTol           0;
+    };
+    rhoU PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-15;
+        relTol           0;
+    };
+    rhoE PBiCG
+    {
+        preconditioner   DILU;
+        tolerance        1e-15;
+        relTol           0;
+    };
 }
 
 PISO

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,11 +55,6 @@ class SubList
 :
     public UList<T>
 {
-    // Private member functions
-
-        //- Dissalow non-const return subscript-checked element of SubList.
-        T& operator[](const label);
-
 
 public:
 
@@ -88,12 +83,6 @@ public:
 
 
     // Member operators
-
-        //- Return const subscript-checked element of SubList.
-        const T& operator[](const label l) const
-        {
-            return UList<T>::operator[](l);
-        }
 
         //- Allow cast to a const List<T>&
         inline operator const List<T>&() const;

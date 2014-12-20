@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,17 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Virtual base class for mesh motion solver.
-
 \*---------------------------------------------------------------------------*/
 
 #include "motionSolver.H"
 #include "Time.H"
 #include "polyMesh.H"
-#include "twoDPointCorrector.H"
-
-#include <dlfcn.h>
+#include "dlLibraryTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -55,83 +50,41 @@ Foam::motionSolver::motionSolver(const polyMesh& mesh)
             mesh,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
-	    )
+        )
     ),
     mesh_(mesh),
-    correct2DPtr_(NULL)
-{
-    // Set 2-D motion correction
-    Switch twoDMotion(lookup("twoDMotion"));
-
-    if (twoDMotion)
-    {
-        correct2DPtr_ = new twoDPointCorrector(mesh);
-    }
-}
+    twoDPointCorrector_(mesh)
+{}
 
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
-Foam::autoPtr<Foam::motionSolver> Foam::motionSolver::New
-(
-    const polyMesh& mesh
-)
+Foam::autoPtr<Foam::motionSolver> Foam::motionSolver::New(const polyMesh& mesh)
 {
-	IOdictionary solverDict
-	(
-	    IOobject
-	    (
+    IOdictionary solverDict
+    (
+        IOobject
+        (
             "dynamicMeshDict",
             mesh.time().constant(),
             mesh,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
-	    )
-	);
+        )
+    );
 
-    word solverTypeName(solverDict.lookup("solver"));
+    Istream& msData = solverDict.lookup("solver");
+
+    word solverTypeName(msData);
 
     Info << "Selecting motion solver: " << solverTypeName << endl;
 
-    if (solverDict.found("solverLib"))
-    {
-        string solverLibName = solverDict.lookup("solverLib");
-
-        if (solverLibName.size())
-        {
-            label nSolvers = 0;
-
-            if (dictionaryConstructorTablePtr_)
-            {
-                nSolvers = dictionaryConstructorTablePtr_->size();
-            }
-
-            void* solverLibPtr =
-                dlopen(solverLibName.c_str(), RTLD_LAZY|RTLD_GLOBAL);
-
-            if (!solverLibPtr)
-            {
-                FatalErrorIn
-                (
-                    "motionSolver::New(const polyMesh& mesh)"
-                )   << "could not load " << dlerror()
-                    << exit(FatalError);
-            }
-            else if 
-            (
-               !dictionaryConstructorTablePtr_
-             || dictionaryConstructorTablePtr_->size() <= nSolvers
-            )
-            {
-                WarningIn
-                (
-                    "motionSolver::New(const polyMesh& mesh)"
-                )   << "library " << solverLibName
-                    << " did not introduce any new solvers"
-                    << endl << endl;
-            }
-        }
-    }
+    dlLibraryTable::open
+    (
+        solverDict,
+        "motionSolverLibs",
+        dictionaryConstructorTablePtr_
+    );
 
     if (!dictionaryConstructorTablePtr_)
     {
@@ -157,16 +110,14 @@ Foam::autoPtr<Foam::motionSolver> Foam::motionSolver::New
             << exit(FatalError);
     }
 
-    return autoPtr<motionSolver>(cstrIter()(mesh));
+    return autoPtr<motionSolver>(cstrIter()(mesh, msData));
 }
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::motionSolver::~motionSolver()
-{
-    deleteDemandDrivenData(correct2DPtr_);
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -180,17 +131,13 @@ Foam::tmp<Foam::pointField> Foam::motionSolver::newPoints()
 
 void Foam::motionSolver::twoDCorrectPoints(pointField& p) const
 {
-    // Correct for 2-D motion
-    if (correct2DPtr_)
-    {
-        correct2DPtr_->correctPoints(p);
-    }
+    twoDPointCorrector_.correctPoints(p);
 }
 
 
 void Foam::motionSolver::updateMesh()
 {
-    if (correct2DPtr_) correct2DPtr_->updateMesh();
+    twoDPointCorrector_.updateMesh();
 }
 
 

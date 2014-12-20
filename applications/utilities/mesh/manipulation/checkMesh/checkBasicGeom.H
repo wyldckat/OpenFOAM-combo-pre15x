@@ -1,3 +1,9 @@
+    // Get a small relative length from the bounding box
+    const boundBox& globalBb = mesh.globalData().bb();
+
+    // Min length
+    scalar minDistSqr = magSqr(1E-6*(globalBb.max()-globalBb.min()));
+
     
     if (mesh.checkClosedBoundary(true)) noFailedChecks++;
 
@@ -95,7 +101,7 @@
     if (!args.options().found("noCoords"))
     {
         pointSet points(mesh, "nearPoints", mesh.nPoints()/100 + 1);
-        if (checkCoords(mesh, true, SMALL, &points))
+        if (checkCoords(mesh, true, minDistSqr, &points))
         {
             //noFailedChecks++;
 
@@ -110,7 +116,7 @@
 
     {
         pointSet points(mesh, "shortEdges", mesh.nEdges()/1000 + 1);
-        if (checkEdges(mesh, true, SMALL, &points))
+        if (checkEdges(mesh, true, minDistSqr, &points))
         {
             //noFailedChecks++;
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,15 +25,11 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "Time.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
+#include "PstreamReduceOps.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Time::readDict()
+void Foam::Time::readDict()
 {
     if (!deltaTchanged_)
     {
@@ -54,7 +50,7 @@ void Time::readDict()
 
         if (writeControl_ == wcTimeStep && label(writeInterval_) < 1)
         {
-            FatalIOErrorIn("Time::readDict(const dictionary&)", controlDict_)
+            FatalIOErrorIn("Time::readDict()", controlDict_)
                 << "writeInterval < 1 for writeControl timeStep"
                 << exit(FatalIOError);
         }
@@ -70,7 +66,7 @@ void Time::readDict()
 
         if (purgeWrite_ < 0)
         {
-            WarningIn("Time::readDict(const dictionary&)")
+            WarningIn("Time::readDict()")
                 << "invalid value for purgeWrite " << purgeWrite_
                 << ", should be >= 0, setting to 0"
                 << endl;
@@ -80,7 +76,7 @@ void Time::readDict()
 
         if (writeControl_ != wcTimeStep && purgeWrite_ > 0)
         {
-            FatalIOErrorIn("Time::readDict(const dictionary&)", controlDict_)
+            FatalIOErrorIn("Time::readDict()", controlDict_)
                 << "writeControl must be set to timeStep for purgeWrite "
                 << exit(FatalIOError);
         }
@@ -104,7 +100,7 @@ void Time::readDict()
         }
         else
         {
-            WarningIn("Time::readDict(const dictionary&)")
+            WarningIn("Time::readDict()")
                 << "unsupported time format " << formatName
                 << endl;
         }
@@ -115,6 +111,8 @@ void Time::readDict()
         precision_ = readLabel(controlDict_.lookup("timePrecision"));
     }
 
+    // stopAt at 'endTime' or a specified value
+    // if nothing is specified, the endTime is zero
     if (controlDict_.found("stopAt"))
     {
         stopAt_ = stopAtControlNames_.read(controlDict_.lookup("stopAt"));
@@ -128,9 +126,13 @@ void Time::readDict()
             endTime_ = GREAT;
         }
     }
-    else
+    else if (controlDict_.found("endTime"))
     {
         endTime_ = readScalar(controlDict_.lookup("endTime"));
+    }
+    else
+    {
+        endTime_ = 0;
     }
 
     dimensionedScalar::name() = timeName(value());
@@ -185,7 +187,7 @@ void Time::readDict()
 }
 
 
-bool Time::read()
+bool Foam::Time::read()
 {
     if (controlDict_.regIOobject::read())
     {
@@ -199,21 +201,46 @@ bool Time::read()
 }
 
 
-void Time::readModifiedObjects()
+void Foam::Time::readModifiedObjects()
 {
     if (runTimeModifiable_)
     {
-        if (controlDict_.readIfModified())
+        // For parallel runs check if any object's file has been modified
+        // and only call readIfModified on each object if this is the case
+        // to avoid unnecessary reductions in readIfModified for each object
+
+        bool anyModified = true;
+
+        if (Pstream::parRun())
         {
-            readDict();
+            anyModified = controlDict_.modified() || objectRegistry::modified();
+            bool anyModifiedOnThisProc = anyModified;
+            reduce(anyModified, andOp<bool>());
+
+            if (anyModifiedOnThisProc && !anyModified)
+            {
+                WarningIn("Time::readModifiedObjects()")
+                    << "Delaying reading objects due to inconsistent "
+                       "file time-stamps between processors"
+                    << endl;
+            }
         }
 
-        objectRegistry::readModifiedObjects();
+        if (anyModified)
+        {
+            if (controlDict_.readIfModified())
+            {
+                readDict();
+                functionObjects_.read();
+            }
+
+            objectRegistry::readModifiedObjects();
+        }
     }
 }
 
 
-bool Time::write
+bool Foam::Time::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
@@ -228,6 +255,7 @@ bool Time::write
             (
                 "time",
                 timeName(),
+                "uniform",
                 *this
             )
         );
@@ -236,14 +264,14 @@ bool Time::write
         timeDict.add("deltaT", deltaT_);
         timeDict.add("deltaT0", deltaT0_);
 
-        timeDict.regIOobject::write
+        timeDict.regIOobject::writeObject
         (
             fmt,
             ver,
             cmp
         );
 
-        bool writeOK = objectRegistry::write
+        bool writeOK = objectRegistry::writeObject
         (
             fmt,
             ver,
@@ -269,14 +297,20 @@ bool Time::write
 }
 
 
-bool Time::write() const
+bool Foam::Time::writeNow()
 {
-    return regIOobject::write();
+    outputTime_ = true;
+    return write();
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+bool Foam::Time::writeAndEnd()
+{
+    stopAt_ = saWriteNow;
+    endTime_ = value();
 
-} // End namespace Foam
+    return writeNow();
+}
+
 
 // ************************************************************************* //

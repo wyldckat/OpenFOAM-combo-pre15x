@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,9 +27,11 @@ License
 #include "volPointInterpolation.H"
 #include "volFields.H"
 #include "pointFields.H"
-#include "primitiveMesh.H"
 #include "emptyFvPatch.H"
-#include "parallelInfo.H"
+#include "CoupledPointPatchField.H"
+#include "coupledPointPatch.H"
+#include "globalPointPatch.H"
+#include "transform.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -37,6 +39,40 @@ namespace Foam
 {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+template<class Type>
+void volPointInterpolation::interpolateInternalField
+(
+    const GeometricField<Type, fvPatchField, volMesh>& vf,
+    GeometricField<Type, pointPatchField, pointMesh>& pf
+) const
+{
+    if (debug)
+    {
+        Info<< "volPointInterpolation::interpolateInternalField("
+            << "const GeometricField<Type, fvPatchField, volMesh>&, "
+            << "GeometricField<Type, pointPatchField, pointMesh>&) : "
+            << "interpolating field from cells to points"
+            << endl;
+    }
+
+    const labelListList& pointCells = vf.mesh().pointCells();
+
+    // Multiply volField by weighting factor matrix to create pointField
+    forAll(pointCells, pointi)
+    {
+        const scalarList& pw = pointWeights_[pointi];
+        const labelList& ppc = pointCells[pointi];
+
+        pf[pointi] = pTraits<Type>::zero;
+
+        forAll(ppc, pointCelli)
+        {
+            pf[pointi] += pw[pointCelli]*vf[ppc[pointCelli]];
+        }
+    }
+}
+
 
 template<class Type>
 void volPointInterpolation::interpolate
@@ -54,135 +90,10 @@ void volPointInterpolation::interpolate
             << endl;
     }
 
-    const FieldField<Field, scalar>& weights = pointWeights();
-    const labelListList& pointCells = vf.mesh().pointCells();
+    interpolateInternalField(vf, pf);
 
-    // Multiply volField by weighting factor matrix to create pointField
-    forAll(pointCells, pointi)
-    {
-        pf[pointi] = pTraits<Type>::zero;
-
-        forAll(pointCells[pointi], pointCelli)
-        {
-            pf[pointi] +=
-                weights[pointi][pointCelli]*vf[pointCells[pointi][pointCelli]];
-        }
-    }
-
-
-    // Interpolate patch values: over-ride the internal values for the points
-    // on the patch with the interpolated point values from the faces
-    const fvBoundaryMesh& bm = vMesh().boundary();
-
-    const PtrList<primitivePatchInterpolation>& pi = patchInterpolators();
-    forAll (bm, patchI)
-    {
-        // If the patch is empty, skip it
-        // If the patch is coupled, and there are no cyclic parallels, skip it
-        if
-        (
-            !isA<emptyFvPatch>(bm[patchI])
-        && !(
-                bm[patchI].coupled()
-             && Pstream::parRun()
-             && !vMesh().parallelData().cyclicParallel()
-            )
-        )
-        {
-            pf.boundaryField()[patchI].setInInternalField
-            (
-                pf.internalField(),
-                pi[patchI].faceToPointInterpolate
-                (
-                    vf.boundaryField()[patchI]
-                )()
-            );
-        }
-    }
-
-    // Do edge correction
-
-    const labelList& ptc = boundaryPoints();
-
-    const FieldField<Field, scalar>& pbw = pointBoundaryWeights();
-
-    const labelListList& PointFaces = vMesh().pointFaces();
-
-    forAll (ptc, pointI)
-    {
-        const label curPoint = ptc[pointI];
-
-        const labelList& curFaces = PointFaces[curPoint];
-
-        label fI = 0;
-
-        // Reset the boundary value before accumulation
-        pf[curPoint] = pTraits<Type>::zero;
-
-        // Go through all the faces
-        forAll (curFaces, faceI)
-        {
-            if (!vMesh().isInternalFace(curFaces[faceI]))
-            {
-                // This is a boundary face.  If not in the empty patch
-                // or coupled calculate the extrapolation vector
-                label patchID =
-                    vMesh().boundaryMesh().whichPatch(curFaces[faceI]);
-
-                if
-                (
-                    !isA<emptyFvPatch>(vMesh().boundary()[patchID])
-                && !(
-                        vMesh().boundary()[patchID].coupled()
-                     && Pstream::parRun()
-                     && !vMesh().parallelData().cyclicParallel()
-                    )
-                )
-                {
-                    label faceInPatchID =
-                        bm[patchID].patch().whichFace(curFaces[faceI]);
-
-                    pf[curPoint] +=
-                        pbw[pointI][fI]*
-                        vf.boundaryField()[patchID][faceInPatchID];
-
-                    fI++;
-                }
-            }
-        }
-    }
-
-    // Update coupled boundaries
-    // Work-around for cyclic parallels.  
-    if (Pstream::parRun() && !vMesh().parallelData().cyclicParallel())
-    {
-        forAll (pf.boundaryField(), patchI)
-        {
-            if (pf.boundaryField()[patchI].coupled())
-            {
-                pf.boundaryField()[patchI].initAddField();
-            }
-        }
-
-        forAll (pf.boundaryField(), patchI)
-        {
-            if (pf.boundaryField()[patchI].coupled())
-            {
-                pf.boundaryField()[patchI].addField(pf.internalField());
-            }
-        }
-    }
-
-    pf.correctBoundaryConditions();
-
-    if (debug)
-    {
-        Info<< "volPointInterpolation::interpolate("
-            << "const GeometricField<Type, fvPatchField, volMesh>&, "
-            << "GeometricField<Type, pointPatchField, pointMesh>&) : "
-            << "finished interpolating field from cells to points"
-            << endl;
-    }
+    // Interpolate to the patches preserving fixed value BCs
+    boundaryInterpolator_.interpolate(vf, pf, false);
 }
 
 
@@ -190,9 +101,26 @@ template<class Type>
 tmp<GeometricField<Type, pointPatchField, pointMesh> >
 volPointInterpolation::interpolate
 (
-    const GeometricField<Type, fvPatchField, volMesh>& vf
+    const GeometricField<Type, fvPatchField, volMesh>& vf,
+    const wordList& patchFieldTypes
 ) const
 {
+    wordList types(patchFieldTypes);
+
+    // If the last patch of the pointBoundaryMesh is the global patch
+    // it must be added to the list of patchField types
+    if
+    (
+        isType<globalPointPatch>
+        (
+            pMesh().boundary()[pMesh().boundary().size() - 1]
+        )
+    )
+    {
+        types.setSize(types.size() + 1);
+        types[types.size()-1] = pMesh().boundary()[types.size()-1].type();
+    }
+
     // Construct tmp<pointField>
     tmp<GeometricField<Type, pointPatchField, pointMesh> > tpf
     (
@@ -204,13 +132,61 @@ volPointInterpolation::interpolate
                 vf.instance(),
                 vf.db()
             ),
-            pointMesh_,
+            pMesh(),
+            vf.dimensions(),
+            types
+        )
+    );
+
+    interpolateInternalField(vf, tpf());
+
+    // Interpolate to the patches overriding fixed value BCs
+    boundaryInterpolator_.interpolate(vf, tpf(), true);
+
+    return tpf;
+}
+
+
+template<class Type>
+tmp<GeometricField<Type, pointPatchField, pointMesh> >
+volPointInterpolation::interpolate
+(
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >& tvf,
+    const wordList& patchFieldTypes
+) const
+{
+    // Construct tmp<pointField>
+    tmp<GeometricField<Type, pointPatchField, pointMesh> > tpf =
+        interpolate(tvf(), patchFieldTypes);
+    tvf.clear();
+    return tpf;
+}
+
+
+template<class Type>
+tmp<GeometricField<Type, pointPatchField, pointMesh> >
+volPointInterpolation::interpolate
+(
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+) const
+{
+    tmp<GeometricField<Type, pointPatchField, pointMesh> > tpf
+    (
+        new GeometricField<Type, pointPatchField, pointMesh>
+        (
+            IOobject
+            (
+                "volPointInterpolate(" + vf.name() + ')',
+                vf.instance(),
+                vf.db()
+            ),
+            pMesh(),
             vf.dimensions()
         )
     );
 
-    // Perform interpolation
-    interpolate(vf, tpf());
+    interpolateInternalField(vf, tpf());
+    boundaryInterpolator_.interpolate(vf, tpf(), false);
 
     return tpf;
 }

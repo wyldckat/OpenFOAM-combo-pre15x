@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Finite Volume matrix
 
 \*---------------------------------------------------------------------------*/
 
@@ -155,14 +152,22 @@ void fvMatrix<Type>::addCmptAvBoundaryDiag(scalarField& diag) const
 
 
 template<class Type>
-void fvMatrix<Type>::addBoundarySource(Field<Type>& source) const
+void fvMatrix<Type>::addBoundarySource
+(
+    Field<Type>& source,
+    const bool couples
+) const
 {
     forAll(psi_.boundaryField(), patchI)
     {
         const fvPatchField<Type>& ptf = psi_.boundaryField()[patchI];
         const Field<Type>& pbc = boundaryCoeffs_[patchI];
 
-        if (ptf.coupled())
+        if (!ptf.coupled())
+        {
+            addToInternalField(lduAddr().patchAddr(patchI), pbc, source);
+        }
+        else if (couples)
         {
             tmp<Field<Type> > tpnf = ptf.patchNeighbourField();
             const Field<Type>& pnf = tpnf();
@@ -173,32 +178,6 @@ void fvMatrix<Type>::addBoundarySource(Field<Type>& source) const
             {
                 source[addr[facei]] += scale(pbc[facei], pnf[facei]);
             }
-        }
-        else
-        {
-            addToInternalField(lduAddr().patchAddr(patchI), pbc, source);
-        }
-    }
-}
-
-
-template<class Type>
-void fvMatrix<Type>::addBoundarySource
-(
-    scalarField& source,
-    const direction solveCmpt
-) const
-{
-    forAll(psi_.boundaryField(), patchI)
-    {
-        if (!psi_.boundaryField()[patchI].coupled())
-        {
-            addToInternalField
-            (
-                lduAddr().patchAddr(patchI),
-                boundaryCoeffs_[patchI].component(solveCmpt),
-                source
-            );
         }
     }
 }
@@ -213,7 +192,7 @@ fvMatrix<Type>::fvMatrix
     const dimensionSet& ds
 )
 :
-    lduMatrix(psi.mesh().ldu(), psi.mesh().parallelData().patchSchedule()),
+    lduMatrix(psi.mesh()),
     psi_(psi),
     dimensions_(ds),
     source_(psi.size(), pTraits<Type>::zero),
@@ -232,8 +211,9 @@ fvMatrix<Type>::fvMatrix
     // Initialise coupling coefficients
     forAll (psi.mesh().boundary(), patchI)
     {
-        internalCoeffs_.hook
+        internalCoeffs_.set
         (
+            patchI,
             new Field<Type>
             (
                 psi.mesh().boundary()[patchI].size(),
@@ -241,8 +221,9 @@ fvMatrix<Type>::fvMatrix
             )
         );
 
-        boundaryCoeffs_.hook
+        boundaryCoeffs_.set
         (
+            patchI,
             new Field<Type>
             (
                 psi.mesh().boundary()[patchI].size(),
@@ -350,7 +331,7 @@ fvMatrix<Type>::fvMatrix
     Istream& is
 )
 :
-    lduMatrix(psi.mesh().ldu(), psi.mesh().parallelData().patchSchedule()),
+    lduMatrix(psi.mesh()),
     psi_(psi),
     dimensions_(is),
     source_(is),
@@ -369,8 +350,9 @@ fvMatrix<Type>::fvMatrix
     // Initialise coupling coefficients
     forAll (psi.mesh().boundary(), patchI)
     {
-        internalCoeffs_.hook
+        internalCoeffs_.set
         (
+            patchI,
             new Field<Type>
             (
                 psi.mesh().boundary()[patchI].size(),
@@ -378,8 +360,9 @@ fvMatrix<Type>::fvMatrix
             )
         );
 
-        boundaryCoeffs_.hook
+        boundaryCoeffs_.set
         (
+            patchI,
             new Field<Type>
             (
                 psi.mesh().boundary()[patchI].size(),
@@ -532,19 +515,12 @@ void fvMatrix<Type>::relax(const scalar alpha)
             cmptAv(cmptMag(boundaryCoeffs_))
         );
 
-        lduCoupledInterfacePtrsList interfaces(psi_.boundaryField().size());
-
-        forAll (bouCoeffsCmptAvgMag, patchI)
-        {
-            interfaces[patchI] = &psi_.boundaryField()[patchI];
-        }
-
         scalarField oldDiag(diag());
         lduMatrix::relax
         (
             intCoeffsCmptAvg,
             bouCoeffsCmptAvgMag,
-            interfaces,
+            psi_.boundaryField().interfaces(),
             alpha
         );
         source() += (diag() - oldDiag)*psi_.internalField();
@@ -554,9 +530,11 @@ void fvMatrix<Type>::relax(const scalar alpha)
     {
         const fvPatchField<Type>& ptf = psi_.boundaryField()[patchI];
 
-        if (!ptf.coupled())
+        if (!ptf.coupled() && ptf.size())
         {
             Field<Type> oldBoundaryDiag = internalCoeffs_[patchI];
+
+            internalCoeffs_[patchI] = cmptMag(internalCoeffs_[patchI]);
             internalCoeffs_[patchI] /= alpha;
 
             addToInternalField
@@ -935,6 +913,22 @@ void fvMatrix<Type>::operator-=
 {
     source() += psi().mesh().V()*su;
 }
+
+
+template<class Type>
+void fvMatrix<Type>::operator+=
+(
+    const Zero&
+)
+{}
+
+
+template<class Type>
+void fvMatrix<Type>::operator-=
+(
+    const Zero&
+)
+{}
 
 
 template<class Type>
@@ -1731,6 +1725,28 @@ tmp<fvMatrix<Type> > operator==
     tmp<fvMatrix<Type> > tC(tA.ptr());
     tC().source() += tC().psi().mesh().V()*su.value();
     return tC;
+}
+
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const fvMatrix<Type>& A,
+    const Zero&
+)
+{
+    return A;
+}
+
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const tmp<fvMatrix<Type> >& tA,
+    const Zero&
+)
+{
+    return tA;
 }
 
 

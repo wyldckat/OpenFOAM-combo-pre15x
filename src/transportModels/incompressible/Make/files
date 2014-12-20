@@ -7,4 +7,6 @@ viscosityModels/BirdCarreau/BirdCarreau.C
 transportModel/transportModel.C
 singlePhaseTransportModel/singlePhaseTransportModel.C
 
+incompressibleTwoPhaseMixture/twoPhaseMixture.C
+
 LIB = $(FOAM_LIBBIN)/libincompressibleTransportModels

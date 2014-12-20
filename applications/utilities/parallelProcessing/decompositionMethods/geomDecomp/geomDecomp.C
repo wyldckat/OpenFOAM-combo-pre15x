@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,7 +40,7 @@ Foam::geomDecomp::geomDecomp
     geomDecomDict_(decompositionDict.subDict(derivedType + "Coeffs")),
     n_(geomDecomDict_.lookup("n")),
     delta_(readScalar(geomDecomDict_.lookup("delta"))),
-    rotDelta_(tensor::I)
+    rotDelta_(I)
 {
     // check that the case makes sense :
 

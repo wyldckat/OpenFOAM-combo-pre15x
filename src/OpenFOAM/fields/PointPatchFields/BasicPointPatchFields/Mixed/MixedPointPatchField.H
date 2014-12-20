@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,7 @@ SourceFiles
 #ifndef MixedPointPatchField_H
 #define MixedPointPatchField_H
 
-#include "ValueStoredPointPatchField.H"
+#include "ValuePointPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,7 +51,7 @@ namespace Foam
 template<template<class> class PatchField, class PointPatch, class Type>
 class MixedPointPatchField
 :
-    public ValueStoredPointPatchField<PatchField, PointPatch, Type>
+    public ValuePointPatchField<PatchField, PointPatch, Type>
 {
     // Private data
 
@@ -60,6 +60,7 @@ class MixedPointPatchField
 
         //- Fraction (0-1) of value used for boundary condition
         scalarField valueFraction_;
+
 
     // Private member functions
 
@@ -184,10 +185,8 @@ public:
             );
 
 
-        // Evaluation functions
-
-            //- Update the patch field
-            virtual void updateBoundaryField();
+        //- Update the patch field
+        virtual void evaluate();
 
 
         //- Write

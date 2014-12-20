@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,13 +52,14 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > fvMeshSubset::interpolate
 
     forAll (patchFields, patchI)
     {
-        // Hook the first one by hand as it corresponds to the
-        // internal field.  Additional interpolation can be put here
+        // Set the first one by hand as it corresponds to the
+        // exposed internal faces.  Additional interpolation can be put here
         // as necessary.  
         if (pm[patchI] == -1)
         {
-            patchFields.hook
+            patchFields.set
             (
+                patchI,
                 new emptyFvPatchField<Type>
                 (
                     sMesh.boundary()[patchI],
@@ -68,8 +69,9 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > fvMeshSubset::interpolate
         }
         else
         {
-            patchFields.hook
+            patchFields.set
             (
+                patchI,
                 fvPatchField<Type>::New
                 (
                     vf.boundaryField()[pm[patchI]],
@@ -79,7 +81,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > fvMeshSubset::interpolate
                 )
             );
 
-            //?Want to do anything for internal faces added to this patch?
+            // What to do with exposed internal faces if put into this patch?
         }
     }
 
@@ -135,13 +137,14 @@ tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
 
     forAll (patchFields, patchI)
     {
-        // Hook the first one by hand as it corresponds to the
-        // internal field.  Additional interpolation can be put here
+        // Set the first one by hand as it corresponds to the
+        // exposed internal faces.  Additional interpolation can be put here
         // as necessary.  
         if (pm[patchI] == -1)
         {
-            patchFields.hook
+            patchFields.set
             (
+                patchI,
                 new emptyFvPatchField<Type>
                 (
                     sMesh.boundary()[patchI],
@@ -151,8 +154,9 @@ tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
         }
         else
         {
-            patchFields.hook
+            patchFields.set
             (
+                patchI,
                 fvPatchField<Type>::New
                 (
                     vf.boundaryField()[pm[patchI]],
@@ -161,11 +165,28 @@ tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvMeshSubset::interpolate
                     patchFieldSubset(*this, patchI)
                 )
             );
-
-            //?Want to do anything for internal faces added to this patch?
         }
     }
 
+
+    // Map exposed internal faces. Note: Only nessecary if exposed faces added
+    // into existing patch but since we don't know that at this point...
+    forAll(patchFields, patchI)
+    {
+        fvPatchField<Type>& pfld = patchFields[patchI];
+
+        label meshFaceI = pfld.patch().patch().start();
+
+        forAll(pfld, i)
+        {
+            label oldFaceI = faceMap_[meshFaceI++];
+
+            if (oldFaceI < vf.internalField().size())
+            {
+                pfld[i] = vf.internalField()[oldFaceI];
+            }
+        }
+    }
 
     // Create the complete field from the pieces
     tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tresF

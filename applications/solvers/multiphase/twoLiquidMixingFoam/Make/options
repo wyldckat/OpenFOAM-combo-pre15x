@@ -1,9 +1,10 @@
 EXE_INC = \
-    -I../interFoam/incompressibleTwoPhaseMixture \
-    -I$(LIB_SRC)/finiteVolume/lnInclude \
-    -I$(LIB_SRC)/transportModels
+    -I$(LIB_SRC)/transportModels \
+    -I$(LIB_SRC)/transportModels/incompressible/lnInclude \
+    -I$(LIB_SRC)/transportModels/interfaceProperties/lnInclude \
+    -I$(LIB_SRC)/finiteVolume/lnInclude
 
 EXE_LIBS = \
-    ../interFoam/Make/$(WM_OPTIONS)/twoPhaseMixture.o \
-    -lfiniteVolume \
-    -lincompressibleTransportModels
+    -linterfaceProperties \
+    -lincompressibleTransportModels \
+    -lfiniteVolume

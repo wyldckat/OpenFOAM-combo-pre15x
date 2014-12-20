@@ -13,6 +13,7 @@ do
     then
         mv $case/-180 temp180
         rm -rf $case/0
+        cp $case/system/controlDict.1st $case/system/controlDict
     fi
 
     cleanCase $case

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,11 +47,13 @@ using namespace Foam;
 template<class Type>
 void subsetVolFields
 (
-    const fvMeshSubset& mesh,
+    const fvMeshSubset& subsetter,
     const wordList& fieldNames,
     PtrList<GeometricField<Type, fvPatchField, volMesh> >& subFields
 )
 {
+    const fvMesh& baseMesh = subsetter.baseMesh();
+
     forAll(fieldNames, i)
     {
         const word& fieldName = fieldNames[i];
@@ -63,15 +65,15 @@ void subsetVolFields
             IOobject
             (
                 fieldName,
-                mesh.time().timeName(),
-                mesh,
+                baseMesh.time().timeName(),
+                baseMesh,
                 IOobject::MUST_READ,
                 IOobject::NO_WRITE
             ),
-            mesh
+            baseMesh
         );
 
-        subFields.hook(mesh.interpolate(volField));
+        subFields.set(i, subsetter.interpolate(volField));
     }
 }
 
@@ -79,11 +81,13 @@ void subsetVolFields
 template<class Type>
 void subsetSurfaceFields
 (
-    const fvMeshSubset& mesh,
+    const fvMeshSubset& subsetter,
     const wordList& fieldNames,
     PtrList<GeometricField<Type, fvPatchField, surfaceMesh> >& subFields
 )
 {
+    const fvMesh& baseMesh = subsetter.baseMesh();
+
     forAll(fieldNames, i)
     {
         const word& fieldName = fieldNames[i];
@@ -95,15 +99,15 @@ void subsetSurfaceFields
             IOobject
             (
                 fieldName,
-                mesh.time().timeName(),
-                mesh,
+                baseMesh.time().timeName(),
+                baseMesh,
                 IOobject::MUST_READ,
                 IOobject::NO_WRITE
             ),
-            mesh
+            baseMesh
         );
 
-        subFields.hook(mesh.interpolate(volField));
+        subFields.set(i, subsetter.interpolate(volField));
     }
 }
 
@@ -117,24 +121,15 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createMesh.H"
 
     word setName(args.args()[3]);
 
 
     Info<< "Reading cell set from " << setName << endl << endl;
 
-    Info<< "Reading mesh for time = " << runTime.value() << endl;
-
-    Info<< "Create mesh\n" << endl;
-    fvMeshSubset mesh
-    (
-        IOobject
-        (
-            fvMeshSubset::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
+    // Create mesh subsetting engine
+    fvMeshSubset subsetter(mesh);
 
     label patchI = -1;
 
@@ -164,7 +159,7 @@ int main(int argc, char *argv[])
 
     cellSet currentSet(mesh, setName);
 
-    mesh.setLargeCellSubset(currentSet, patchI);
+    subsetter.setLargeCellSubset(currentSet, patchI, true);
 
     IOobjectList objects(mesh, runTime.timeName());
 
@@ -172,39 +167,76 @@ int main(int argc, char *argv[])
 
     wordList scalarNames(objects.names(volScalarField::typeName));
     PtrList<volScalarField> scalarFlds(scalarNames.size());
-
-    subsetVolFields(mesh, scalarNames, scalarFlds);
+    subsetVolFields(subsetter, scalarNames, scalarFlds);
 
     wordList vectorNames(objects.names(volVectorField::typeName));
     PtrList<volVectorField> vectorFlds(vectorNames.size());
+    subsetVolFields(subsetter, vectorNames, vectorFlds);
 
-    subsetVolFields(mesh, vectorNames, vectorFlds);
+    wordList sphericalTensorNames
+    (
+        objects.names(volSphericalTensorField::typeName)
+    );
+    PtrList<volSphericalTensorField> sphericalTensorFlds
+    (
+        sphericalTensorNames.size()
+    );
+    subsetVolFields(subsetter, sphericalTensorNames, sphericalTensorFlds);
+
+    wordList symmTensorNames(objects.names(volSymmTensorField::typeName));
+    PtrList<volSymmTensorField> symmTensorFlds(symmTensorNames.size());
+    subsetVolFields(subsetter, symmTensorNames, symmTensorFlds);
 
     wordList tensorNames(objects.names(volTensorField::typeName));
     PtrList<volTensorField> tensorFlds(tensorNames.size());
-
-    subsetVolFields(mesh, tensorNames, tensorFlds);
+    subsetVolFields(subsetter, tensorNames, tensorFlds);
 
     // Read surface fields and subset.
 
     wordList surfScalarNames(objects.names(surfaceScalarField::typeName));
     PtrList<surfaceScalarField> surfScalarFlds(surfScalarNames.size());
-    subsetSurfaceFields(mesh, surfScalarNames, surfScalarFlds);
+    subsetSurfaceFields(subsetter, surfScalarNames, surfScalarFlds);
 
     wordList surfVectorNames(objects.names(surfaceVectorField::typeName));
     PtrList<surfaceVectorField> surfVectorFlds(surfVectorNames.size());
-    subsetSurfaceFields(mesh, surfVectorNames, surfVectorFlds);
+    subsetSurfaceFields(subsetter, surfVectorNames, surfVectorFlds);
+
+    wordList surfSphericalTensorNames
+    (
+        objects.names(surfaceSphericalTensorField::typeName)
+    );
+    PtrList<surfaceSphericalTensorField> surfSphericalTensorFlds
+    (
+        surfSphericalTensorNames.size()
+    );
+    subsetSurfaceFields
+    (
+        subsetter,
+        surfSphericalTensorNames,
+        surfSphericalTensorFlds
+    );
+
+    wordList surfSymmTensorNames
+    (
+        objects.names(surfaceSymmTensorField::typeName)
+    );
+    PtrList<surfaceSymmTensorField> surfSymmTensorFlds
+    (
+        surfSymmTensorNames.size()
+    );
+    subsetSurfaceFields(subsetter, surfSymmTensorNames, surfSymmTensorFlds);
 
     wordList surfTensorNames(objects.names(surfaceTensorField::typeName));
     PtrList<surfaceTensorField> surfTensorFlds(surfTensorNames.size());
-    subsetSurfaceFields(mesh, surfTensorNames, surfTensorFlds);
+    subsetSurfaceFields(subsetter, surfTensorNames, surfTensorFlds);
 
 
 
     runTime++;
 
-    Info << "Writing polyMesh to time " << runTime.value() << endl;
-    mesh.subMesh().write();
+    Info<< "Writing subsetted mesh and fields to time " << runTime.value()
+        << endl;
+    subsetter.subMesh().write();
 
 
     // Subsetting adds 'subset' prefix. Rename field to be like original.    

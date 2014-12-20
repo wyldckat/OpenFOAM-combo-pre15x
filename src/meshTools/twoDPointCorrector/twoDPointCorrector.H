@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,12 +42,17 @@ SourceFiles
 #ifndef twoDPointCorrector_H
 #define twoDPointCorrector_H
 
-#include "polyMesh.H"
+#include "pointField.H"
+#include "labelList.H"
+#include "vector.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+// Forward class declarations
+class polyMesh;
 
 /*---------------------------------------------------------------------------*\
                         Class twoDPointCorrector Declaration
@@ -59,6 +64,9 @@ class twoDPointCorrector
 
         //- Reference to moving mesh
         const polyMesh& mesh_;
+
+        //- Is 2D correction required, i.e. is the mesh
+        bool required_;
 
         //- 2-D plane unit normal
         mutable vector* planeNormalPtr_;
@@ -98,6 +106,12 @@ public:
 
 
     // Member Functions
+
+        //- Is 2D correction required, i.e. is the mesh a wedge or slab
+        bool required() const
+        {
+            return required_;
+        }
 
         //- Return plane normal
         const vector& planeNormal() const;

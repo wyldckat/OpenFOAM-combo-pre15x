@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -78,6 +78,7 @@ public:
 
     //- Append elements of labelList to DynamicList
     static void insert(const labelList&, DynamicList<label>&);
+
     //- Append elements of scalarList to DynamicList
     static void insert(const List<scalar>&, DynamicList<floatScalar>&);
 
@@ -91,6 +92,7 @@ public:
 
     //- Append points to DynamicList of floats
     static void insert(const List<point>& source, DynamicList<floatScalar>&);
+
     //- As above but using map
     static void insert
     (
@@ -107,6 +109,8 @@ public:
         const volScalarField& vsf,
         const vtkMesh& vMesh
     );
+
+    //- Write volVectorField with cell values (including decomposed cells)
     static void writeVVF
     (
         std::ostream& os,
@@ -124,6 +128,9 @@ public:
         const pointScalarField& psf,
         const vtkMesh& vMesh
     );
+
+    //- Write pointVectorField on all mesh points. Interpolate to cell centre
+    //  for decomposed cell centres.
     static void writePVF
     (
         std::ostream& os,

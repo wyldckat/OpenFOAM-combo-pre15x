@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -92,7 +92,7 @@ public:
         {
             return
                3.6059e-3*(pow(1.8*T, 1.75))*sqrt(1/wf_ + 1/wa_)
-               /(p*sqr((pow(a_, (1.0/3.0)) + pow(b_, (1.0/3.0)))));
+               /(p*sqr((cbrt(a_) + cbrt(b_))));
         }
 
 

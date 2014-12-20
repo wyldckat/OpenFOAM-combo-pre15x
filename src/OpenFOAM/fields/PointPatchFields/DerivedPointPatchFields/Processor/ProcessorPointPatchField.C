@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,160 +25,13 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "ProcessorPointPatchField.H"
-#include "lduMatrix.H"
+#include "transformField.H"
+#include "processorPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-// Raw field sending and receiving
-template
-<
-    template<class> class PatchField,
-    class PointPatch,
-    class ProcessorPointPatch,
-    class Type
->
-template<class Type2>
-void ProcessorPointPatchField
-<PatchField, PointPatch, ProcessorPointPatch, Type>::sendPointField
-(
-    const tmp<Field<Type2> >& tf
-) const
-{
-    OPstream::write
-    (
-        procPatch_.neighbProcNo(),
-        reinterpret_cast<const char*>(tf().begin()),
-        tf().size()*sizeof(Type2)
-    );
-    tf.clear();
-}
-
-
-template
-<
-    template<class> class PatchField,
-    class PointPatch,
-    class ProcessorPointPatch,
-    class Type
->
-template<class Type2>
-void ProcessorPointPatchField
-<PatchField, PointPatch, ProcessorPointPatch, Type>::sendEdgeField
-(
-    const tmp<Field<Type2> >& tf
-) const
-{
-    OPstream::write
-    (
-        procPatch_.neighbProcNo(),
-        reinterpret_cast<const char*>(tf().begin()),
-        procPatch_.localEdgeIndices().size()*sizeof(Type2)
-    );
-    tf.clear();
-}
-
-
-template
-<
-    template<class> class PatchField,
-    class PointPatch,
-    class ProcessorPointPatch,
-    class Type
->
-template<class Type2>
-tmp<Field<Type2> >
-ProcessorPointPatchField<PatchField, PointPatch, ProcessorPointPatch, Type>::
-receivePointField() const
-{
-    tmp<Field<Type2> > tf(new Field<Type2>(this->size()));
-    Field<Type2>& f = tf();
-
-    IPstream::read
-    (
-        procPatch_.neighbProcNo(),
-        reinterpret_cast<char*>(f.begin()),
-        this->size()*sizeof(Type2)
-    );
-
-    return tf;
-}
-
-
-template
-<
-    template<class> class PatchField,
-    class PointPatch,
-    class ProcessorPointPatch,
-    class Type
->
-template<class Type2>
-tmp<Field<Type2> >
-ProcessorPointPatchField<PatchField, PointPatch, ProcessorPointPatch, Type>::
-receiveEdgeField() const
-{
-    tmp<Field<Type2> > tf
-    (
-        new Field<Type2>(procPatch_.localEdgeIndices().size())
-    );
-    Field<Type2>& f = tf();
-
-    IPstream::read
-    (
-        procPatch_.neighbProcNo(),
-        reinterpret_cast<char*>(f.begin()),
-        procPatch_.localEdgeIndices().size()*sizeof(Type2)
-    );
-
-    return tf;
-}
-
-
-// Initialise diagonal/source update.
-template
-<
-    template<class> class PatchField,
-    class PointPatch,
-    class ProcessorPointPatch,
-    class Type
->
-template<class Type2>
-void ProcessorPointPatchField
-<PatchField, PointPatch, ProcessorPointPatch, Type>::
-initAddFieldTempl
-(
-    const Field<Type2>& pField
-) const
-{
-    sendPointField(patchInternalField(pField));
-}
-
-
-// Add the diagonal/source to the internal field.
-template
-<
-    template<class> class PatchField,
-    class PointPatch,
-    class ProcessorPointPatch,
-    class Type
->
-template<class Type2>
-void ProcessorPointPatchField
-<PatchField, PointPatch, ProcessorPointPatch, Type>::
-addFieldTempl
-(
-    Field<Type2>& pField
-) const
-{
-    // Get the neighbour side values
-    tmp<Field<Type2> > tpNeighbour = receivePointField<Type2>();
-    addToInternalField(pField, tpNeighbour());
-}
-
 
 // * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * //
 
@@ -196,7 +49,13 @@ ProcessorPointPatchField
     const Field<Type>& iF
 )
 :
-    CoupledPointPatchField<PatchField, PointPatch, Type>(p, iF),
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename ProcessorPointPatch::CoupledPointPatch,
+        Type
+    >(p, iF),
     procPatch_(refCast<const ProcessorPointPatch>(p))
 {}
 
@@ -216,27 +75,15 @@ ProcessorPointPatchField
     const dictionary& dict
 )
 :
-    CoupledPointPatchField<PatchField, PointPatch, Type>(p, iF),
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename ProcessorPointPatch::CoupledPointPatch,
+        Type
+    >(p, iF),
     procPatch_(refCast<const ProcessorPointPatch>(p))
-{
-    if (!isType<ProcessorPointPatch>(p))
-    {
-        FatalIOErrorIn
-        (
-            "ProcessorPointPatchField"
-            "<PatchField, PointPatch, ProcessorPointPatch, Type>::"
-            "ProcessorPointPatchField\n"
-            "(\n"
-            "    const PointPatch& p,\n"
-            "    const Field<Type>& field,\n"
-            "    const dictionary& dict\n"
-            ")\n",
-            dict
-        )   << "patch " << this->patch().index() << " not processor type. "
-            << "Patch type = " << p.type()
-            << exit(FatalIOError);
-    }
-}
+{}
 
 
 template
@@ -256,30 +103,15 @@ ProcessorPointPatchField
     const PointPatchFieldMapper&
 )
 :
-    CoupledPointPatchField<PatchField, PointPatch, Type>(p, iF),
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename ProcessorPointPatch::CoupledPointPatch,
+        Type
+    >(p, iF),
     procPatch_(refCast<const ProcessorPointPatch>(ptf.patch()))
-{
-    if (!isType<ProcessorPointPatch>(this->patch()))
-    {
-        FatalErrorIn
-        (
-            "ProcessorPointPatchField"
-            "<PatchField, PointPatch, ProcessorPointPatch, Type>::"
-            "ProcessorPointPatchField\n"
-            "(\n"
-            "    const ProcessorPointPatchField"
-                 "<PatchField, PointPatch, ProcessorPointPatch, Type>& ptf,\n"
-            "    const PointPatch& p,\n"
-            "    const Field<Type>& iF,\n"
-            "    const PointPatchFieldMapper& mapper\n"
-            ")\n"
-        )   << "Field type does not correspond to patch type for patch "
-            << this->patch().index() << "." << endl
-            << "Field type: " << typeName << endl
-            << "Patch type: " << this->patch().type()
-            << exit(FatalError);
-    }
-}
+{}
 
 
 template
@@ -297,7 +129,13 @@ ProcessorPointPatchField
     const Field<Type>& iF
 )
 :
-    CoupledPointPatchField<PatchField, PointPatch, Type>(ptf, iF),
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename ProcessorPointPatch::CoupledPointPatch,
+        Type
+    >(ptf, iF),
     procPatch_(refCast<const ProcessorPointPatch>(ptf.patch()))
 {}
 
@@ -318,7 +156,6 @@ ProcessorPointPatchField<PatchField, PointPatch, ProcessorPointPatch, Type>::
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Initialise field transfer
 template
 <
     template<class> class PatchField,
@@ -328,13 +165,19 @@ template
 >
 void
 ProcessorPointPatchField<PatchField, PointPatch, ProcessorPointPatch, Type>::
-initAddField() const
+initSwapAdd(Field<Type>& pField) const
 {
-    initAddFieldTempl(this->internalField());
+    Field<Type> pf(this->patchInternalField(pField));
+
+    OPstream::write
+    (
+        procPatch_.neighbProcNo(),
+        reinterpret_cast<const char*>(pf.begin()),
+        pf.byteSize()
+    );
 }
 
 
-// Add field
 template
 <
     template<class> class PatchField,
@@ -344,9 +187,44 @@ template
 >
 void
 ProcessorPointPatchField<PatchField, PointPatch, ProcessorPointPatch, Type>::
-addField(Field<Type>& f) const
+swapAdd(Field<Type>& pField) const
 {
-    addFieldTempl(f);
+    Field<Type> pnf(this->size());
+
+    IPstream::read
+    (
+        procPatch_.neighbProcNo(),
+        reinterpret_cast<char*>(pnf.begin()),
+        pnf.byteSize()
+    );
+
+    if (doTransform())
+    {
+        const labelList& nonGlobalPatchPoints =
+            procPatch_.nonGlobalPatchPoints();
+
+        const processorPolyPatch& ppp = procPatch_.procPolyPatch();
+        const labelListList& pointFaces = ppp.pointFaces();
+        const tensorField& forwardT = ppp.forwardT();
+
+        if (forwardT.size() == 1)
+        {
+            transform(pnf, forwardT[0], pnf);
+        }
+        else
+        {
+            forAll(nonGlobalPatchPoints, pfi)
+            {
+                pnf[pfi] = transform
+                (
+                    forwardT[pointFaces[nonGlobalPatchPoints[pfi]][0]],
+                    pnf[pfi]
+                );
+            }
+        }
+    }
+
+    addToInternalField(pField, pnf);
 }
 
 

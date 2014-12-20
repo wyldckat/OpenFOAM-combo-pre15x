@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,7 +40,7 @@ namespace Foam
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 //  Write object to Ostream according to read/write options
-bool regIOobject::write
+bool regIOobject::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
@@ -84,7 +84,7 @@ bool regIOobject::write
             << "writing file " << objectPath();
     }
 
-    // Try opening a Ostream on object
+    // Try opening an OFstream for object
     OFstream os(objectPath(), fmt, ver, cmp);
 
     // If this has failed, return (leave error handling to  Ostream class)
@@ -121,7 +121,7 @@ bool regIOobject::write
 //  Write using setting from DB
 bool regIOobject::write() const
 {
-    return write
+    return writeObject
     (
         time().writeFormat(),
         IOstream::currentVersion,

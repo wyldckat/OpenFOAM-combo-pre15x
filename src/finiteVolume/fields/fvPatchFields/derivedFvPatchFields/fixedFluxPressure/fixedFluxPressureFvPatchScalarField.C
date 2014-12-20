@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,7 +43,11 @@ fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
     const scalarField& iF
 )
 :
-    fixedGradientFvPatchScalarField(p, iF)
+    fixedGradientFvPatchScalarField(p, iF),
+    UName_("Undefined"),
+    phiName_("Undefined"),
+    rhoName_("Undefined"),
+    adjoint_(false)
 {}
 
 
@@ -55,7 +59,11 @@ fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
     const fvPatchFieldMapper& mapper
 )
 :
-    fixedGradientFvPatchScalarField(ptf, p, iF, mapper)
+    fixedGradientFvPatchScalarField(ptf, p, iF, mapper),
+    UName_(ptf.UName_),
+    phiName_(ptf.phiName_),
+    rhoName_(ptf.rhoName_),
+    adjoint_(ptf.adjoint_)
 {}
 
 
@@ -66,7 +74,11 @@ fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
     const dictionary& dict
 )
 :
-    fixedGradientFvPatchScalarField(p, iF)
+    fixedGradientFvPatchScalarField(p, iF),
+    UName_(dict.lookup("U")),
+    phiName_(dict.lookup("phi")),
+    rhoName_(dict.lookup("rho")),
+    adjoint_(dict.lookup("adjoint"))
 {
     if (dict.found("gradient"))
     {
@@ -84,18 +96,34 @@ fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
 
 fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
 (
+    const fixedFluxPressureFvPatchScalarField& wbppsf
+)
+:
+    fixedGradientFvPatchScalarField(wbppsf),
+    UName_(wbppsf.UName_),
+    phiName_(wbppsf.phiName_),
+    rhoName_(wbppsf.rhoName_),
+    adjoint_(wbppsf.adjoint_)
+{}
+
+
+fixedFluxPressureFvPatchScalarField::fixedFluxPressureFvPatchScalarField
+(
     const fixedFluxPressureFvPatchScalarField& wbppsf,
     const scalarField& iF
 )
 :
-    fixedGradientFvPatchScalarField(wbppsf, iF)
+    fixedGradientFvPatchScalarField(wbppsf, iF),
+    UName_(wbppsf.UName_),
+    phiName_(wbppsf.phiName_),
+    rhoName_(wbppsf.rhoName_),
+    adjoint_(wbppsf.adjoint_)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // Update the coefficients associated with the patch field
-
 void fixedFluxPressureFvPatchScalarField::updateCoeffs()
 {
     if (updated())
@@ -104,45 +132,46 @@ void fixedFluxPressureFvPatchScalarField::updateCoeffs()
     }
 
     const fvPatchField<vector>& Up =
-        lookupPatchField<volVectorField, vector>("U");
+        patch().lookupPatchField<volVectorField, vector>(UName_);
 
     const surfaceScalarField& phi = 
-        db().lookupObject<surfaceScalarField>("phi");
+        db().lookupObject<surfaceScalarField>(phiName_);
     fvPatchField<scalar> phip =
-        patchField<surfaceScalarField, scalar>(phi);
+        patch().patchField<surfaceScalarField, scalar>(phi);
 
     if (phi.dimensions() == dimDensity*dimVelocity*dimArea)
     {
         const fvPatchField<scalar>& rhop =
-            lookupPatchField<volScalarField, scalar>("rho");
+            patch().lookupPatchField<volScalarField, scalar>(rhoName_);
 
         phip /= rhop;
     }
 
     const fvPatchField<scalar>& rAp =
-        lookupPatchField<volScalarField, scalar>("1|A(U)");
+        patch().lookupPatchField<volScalarField, scalar>("(1|A("+UName_+"))");
 
-    gradient() =
-    (
-        phip - (patch().Sf() & Up)
-    )/patch().magSf()/rAp;
+    if (adjoint_)
+    {
+        gradient() = ((patch().Sf() & Up) - phip)/patch().magSf()/rAp;
+    }
+    else
+    {
+        gradient() = (phip - (patch().Sf() & Up))/patch().magSf()/rAp;
+    }
 
     fixedGradientFvPatchScalarField::updateCoeffs();
 }
 
 
-// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
-
-Ostream& operator<<(Ostream& os, const fixedFluxPressureFvPatchScalarField& ptf)
+// Write
+void fixedFluxPressureFvPatchScalarField::write(Ostream& os) const
 {
-    ptf.write(os);
-
-    os.check
-    (
-        "operator<<(Ostream&, const fixedFluxPressureFvPatchScalarField&)"
-    );
-
-    return os;
+    fvPatchScalarField::write(os);
+    os.writeKeyword("U") << UName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("phi") << phiName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("rho") << rhoName_ << token::END_STATEMENT << nl;
+    os.writeKeyword("adjoint") << adjoint_ << token::END_STATEMENT << nl;
+    gradient().writeEntry("gradient", os);
 }
 
 

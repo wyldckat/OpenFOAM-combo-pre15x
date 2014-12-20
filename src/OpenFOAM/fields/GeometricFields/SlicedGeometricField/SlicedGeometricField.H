@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -51,7 +51,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class SlicedGeometricField Declaration
+                     Class SlicedGeometricField Declaration
 \*---------------------------------------------------------------------------*/
 
 template
@@ -68,7 +68,9 @@ class SlicedGeometricField
 public:
 
     typedef typename GeoMesh::Mesh Mesh;
-    typedef typename Mesh::BoundaryMesh BoundaryMesh;
+    typedef typename GeoMesh::BoundaryMesh BoundaryMesh;
+
+    class DimensionedInternalField;
 
 
 private:
@@ -76,7 +78,7 @@ private:
     // Private Member Functions
 
         //- Slice the given field and a create a PtrList of SlicedPatchField
-        //  from which teh boundary field is built
+        //  from which the boundary field is built
         tmp<FieldField<PatchField, Type> >  slicedBoundaryField
         (
             const Mesh& mesh,
@@ -118,15 +120,43 @@ public:
     // Destructor
 
         ~SlicedGeometricField();
+};
 
 
-    // Member Functions
+/*---------------------------------------------------------------------------*\
+       Class SlicedGeometricField::DimensionedInternalField Declaration
+\*---------------------------------------------------------------------------*/
 
-        // Access
+template
+<
+    class Type,
+    template<class> class PatchField,
+    template<class> class SlicedPatchField,
+    class GeoMesh
+>
+class SlicedGeometricField<Type, PatchField, SlicedPatchField, GeoMesh>::
+DimensionedInternalField
+:
+    public GeometricField<Type, PatchField, GeoMesh>::DimensionedInternalField
+{
 
-        // Check
+public:
 
-        // Edit
+    // Constructors
+
+        //- Construct from components and field to slice
+        DimensionedInternalField
+        (
+            const IOobject&,
+            const Mesh&,
+            const dimensionSet&,
+            const Field<Type>& iField
+        );
+
+
+    // Destructor
+
+        ~DimensionedInternalField();
 };
 
 

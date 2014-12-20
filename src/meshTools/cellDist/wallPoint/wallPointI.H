@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -136,7 +136,12 @@ inline bool Foam::wallPoint::valid() const
 
 
 // Checks for cyclic faces
-inline bool Foam::wallPoint::sameGeometry(const wallPoint& w2, const scalar tol)
+inline bool Foam::wallPoint::sameGeometry
+(
+    const polyMesh&,
+    const wallPoint& w2,
+    const scalar tol
+)
  const
 {
     scalar diff = mag(distSqr() - w2.distSqr());
@@ -161,6 +166,7 @@ inline bool Foam::wallPoint::sameGeometry(const wallPoint& w2, const scalar tol)
 
 inline void Foam::wallPoint::leaveDomain
 (
+    const polyMesh&,
     const polyPatch&,
     const label,
     const point& faceCentre
@@ -172,6 +178,7 @@ inline void Foam::wallPoint::leaveDomain
 
 inline void Foam::wallPoint::transform
 (
+    const polyMesh&,
     const tensor& rotTensor
 )
 {
@@ -183,6 +190,7 @@ inline void Foam::wallPoint::transform
 // is not affected by leaving/entering domain.
 inline void Foam::wallPoint::enterDomain
 (
+    const polyMesh&,
     const polyPatch&,
     const label,
     const point& faceCentre
@@ -203,12 +211,10 @@ inline bool Foam::wallPoint::updateCell
     const scalar tol
 )
 {
-    const vectorField& cellCentres = mesh.primitiveMesh::cellCentres();
-
     return 
         update
         (
-            cellCentres[thisCellI],
+            mesh.cellCentres()[thisCellI],
             neighbourWallInfo,
             tol
         );
@@ -225,12 +231,10 @@ inline bool Foam::wallPoint::updateFace
     const scalar tol
 )
 {
-    const vectorField& faceCentres = mesh.faceCentres();
-
     return
         update
         (
-            faceCentres[thisFaceI],
+            mesh.faceCentres()[thisFaceI],
             neighbourWallInfo,
             tol
         );
@@ -245,12 +249,10 @@ inline bool Foam::wallPoint::updateFace
     const scalar tol
 )
 {
-    const vectorField& faceCentres = mesh.faceCentres();
-
     return
         update
         (
-            faceCentres[thisFaceI],
+            mesh.faceCentres()[thisFaceI],
             neighbourWallInfo,
             tol
         );

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,10 +72,12 @@ public:
         scalar scalar01();
         //- vector with every component scalar01
         vector vector01();
+        //- sphericalTensor with every component scalar01
+        sphericalTensor sphericalTensor01();
+        //- symmTensor with every component scalar01
+        symmTensor symmTensor01();
         //- tensor with every component scalar01
         tensor tensor01();
-        //- tensor with every component scalar01
-        sphericalTensor sphericalTensor01();
         //- label [lower..upper]
         label integer(const label lower, const label upper);
 
@@ -83,8 +85,9 @@ public:
 
         void randomise(scalar&);
         void randomise(vector&);
-        void randomise(tensor&);
         void randomise(sphericalTensor&);
+        void randomise(symmTensor&);
+        void randomise(tensor&);
 
         //- Return a normal Gaussian randon number
         //  with zero mean and unity variance N(0, 1)

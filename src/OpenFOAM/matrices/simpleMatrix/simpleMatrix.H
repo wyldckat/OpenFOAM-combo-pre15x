@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,18 +35,12 @@ SourceFiles
 #ifndef simpleMatrix_H
 #define simpleMatrix_H
 
-#include "Matrix.H"
-#include "Field.H"
-#include "scalar.H"
-#include "labelList.H"
+#include "scalarMatrix.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-class Istream;
-class Ostream;
 
 // * * * * * * Forward declaration of template friend fuctions * * * * * * * //
 
@@ -88,10 +82,11 @@ Ostream& operator<<
 
 template<class T>
 class simpleMatrix
+:
+    public scalarMatrix
 {
     // Private data
 
-        Matrix<scalar> matrix_;
         Field<T> source_;
 
 
@@ -103,7 +98,7 @@ public:
         simpleMatrix(const label);
 
         //- Construct from components
-        simpleMatrix(const Matrix<scalar>&, const Field<T>&);
+        simpleMatrix(const scalarMatrix&, const Field<T>&);
 
         //- Construct from Istream
         simpleMatrix(Istream&);
@@ -116,19 +111,9 @@ public:
 
         // Access
 
-            Matrix<scalar>& matrix()
-            {
-                return matrix_;
-            }
-
             Field<T>& source()
             {
                 return source_;
-            }
-
-            const Matrix<scalar>& matrix() const
-            {
-                return matrix_;
             }
 
             const Field<T>& source() const
@@ -138,32 +123,8 @@ public:
 
 
         //- Solve the matrix using Gaussian elimination with pivoting
-        static void solve(Matrix<scalar>& matrix, Field<T>& source);
-
-        //- Solve the matrix using Gaussian elimination with pivoting
         //  and return the solution
         Field<T> solve() const;
-
-
-        //- LU decompose the matrix with pivoting
-        static void LUDecompose
-        (
-            Matrix<scalar>& matrix,
-            labelList& pivotIndices
-        );
-
-        //- LU back-substitution with given source, returning the solution
-        //  in the source
-        static void LUBacksubstitute
-        (
-            const Matrix<scalar>& luMmatrix,
-            const labelList& pivotIndices,
-            Field<T>& source
-        );
-
-        //- Solve the matrix using LU decomposition with pivoting
-        //  returning the LU form of the matrix and the solution in the source
-        static void LUsolve(Matrix<scalar>& matrix, Field<T>& source);
 
         //- Solve the matrix using LU decomposition with pivoting
         //  and return the solution

@@ -17,6 +17,7 @@
             {
                 label faceCelli = currPatch.faceCells()[facei];
 
+                epsilon[faceCelli] = 0.0;
                 G[faceCelli] = 0.0;
             }
         }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,13 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    A PtrList<class T> is a 1D array of pointers to objects
-    of T 'T', where the size of the array is known and used for
-    subscript bounds checking, etc.
-    The element operator [] returns a reference to the object
-    rather than a pointer.
 
 \*---------------------------------------------------------------------------*/
 
@@ -51,22 +44,31 @@ inline label PtrList<T>::size() const
 
 
 template<class T>
-inline void PtrList<T>::hook(const autoPtr<T>& aptr)
+inline autoPtr<T> PtrList<T>::set(const label i, T* ptr)
 {
-    hook(const_cast<autoPtr<T>&>(aptr).ptr());
+    autoPtr<T> old(ptrs_[i]);
+
+    ptrs_[i] = ptr;
+
+    return old;
 }
 
 
 template<class T>
-inline void PtrList<T>::hook(const tmp<T>& t)
+inline autoPtr<T> PtrList<T>::set(const label i, const autoPtr<T>& aptr)
 {
-    hook(const_cast<tmp<T>&>(t).ptr());
+    return set(i, const_cast<autoPtr<T>&>(aptr).ptr());
+}
+
+
+template<class T>
+inline autoPtr<T> PtrList<T>::set(const label i, const tmp<T>& t)
+{
+    return set(i, const_cast<tmp<T>&>(t).ptr());
 }
 
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-// Return element const reference
 
 template<class T>
 const T& PtrList<T>::operator[](const label i) const
@@ -81,8 +83,6 @@ const T& PtrList<T>::operator[](const label i) const
     return *(ptrs_[i]);
 }
 
-
-// Return element reference
 
 template<class T>
 T& PtrList<T>::operator[](const label i)

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,7 +65,8 @@ PatchToPatchInterpolation<FromPatch, ToPatch>::pointInterpolate
 
     Field<Type>& result = tresult();
 
-    const faceList& fromPatchLocalFaces = fromPatch_.localFaces();
+    const List<typename FromPatch::FaceType>& fromPatchLocalFaces =
+        fromPatch_.localFaces();
 
     const FieldField<Field, scalar>& weights = pointWeights();
 

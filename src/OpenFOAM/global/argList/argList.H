@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -34,6 +34,7 @@ Description
 #define argList_H
 
 #include "stringList.H"
+#include "SubList.H"
 #include "SLList.H"
 #include "HashTable.H"
 #include "word.H"
@@ -75,7 +76,7 @@ class argList
 
     // Private member functions
 
-        int findArg(const string& arg);
+        int findArg(const string& arg) const;
 
 
 public:
@@ -96,8 +97,15 @@ public:
 
     // Constructors
 
-        //- Construct arom argc and argv
-        argList(int& argc, char**& argv);
+        //- Construct from argc and argv
+        //  checking the arguments and options as requested
+        argList
+        (
+            int& argc,
+            char**& argv,
+            bool checkArgs = true,
+            bool checkOpts = true
+        );
 
 
     // Destructor
@@ -113,6 +121,12 @@ public:
             const stringList& args() const
             {
                 return args_;
+            }
+
+            //- Return parameters - ie, arguments without args[0] (executable)
+            stringList::subList params() const
+            {
+                return stringList::subList(args_, args_.size() - 1, 1);
             }
 
             //- Return options
@@ -174,7 +188,7 @@ public:
         // Check
 
             //- Check argument list
-            bool check() const;
+            bool check(bool checkArgs = true, bool checkOpts = true) const;
 
             //- Check root path and case path
             bool checkRootCase() const;

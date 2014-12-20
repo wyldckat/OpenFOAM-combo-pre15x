@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,9 +28,7 @@ Class
 Description
 
 SourceFiles
-    SyamlalViscosityI.H
     SyamlalViscosity.C
-    SyamlalViscosityIO.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -60,7 +58,6 @@ public:
 
     // Constructors
 
-
         //- Construct from components
         SyamlalViscosity(const dictionary& dict);
 
@@ -69,7 +66,10 @@ public:
 
         ~SyamlalViscosity();
 
-        volScalarField mua
+
+    // Member functions
+
+        tmp<volScalarField> mua
         (
             const volScalarField& alpha,
             const volScalarField& Theta,
@@ -78,17 +78,12 @@ public:
             const dimensionedScalar& da,
             const dimensionedScalar& e
         ) const;
-
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-//#include "SyamlalViscosityI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -234,8 +234,9 @@ int main(int argc, char *argv[])
 
     // Add the sliding interface mesh modifier to start working at current
     // time
-    splitter.hook
+    splitter.set
     (
+        0,
         new attachDetach
         (
             "Splitter",

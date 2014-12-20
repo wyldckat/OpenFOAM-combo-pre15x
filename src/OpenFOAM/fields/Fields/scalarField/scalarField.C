@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "scalarField.H"
+
+#define TEMPLATE
 #include "FieldFunctionsM.C"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -54,99 +56,104 @@ void scalarField::replace(const direction, const UList<scalar>& sf)
     *this = sf;
 }
 
+template<>
+void scalarField::replace(const direction, const scalar& s)
+{
+    *this = s;
+}
 
-void stabilise(scalarField& Res, const UList<scalar>& sf, const scalar s)
+
+void stabilise(scalarField& res, const UList<scalar>& sf, const scalar s)
 {
     TFOR_ALL_F_OP_FUNC_S_F
-        (scalar, Res, =, ::Foam::stabilise, scalar, s, scalar, sf)
+    (
+        scalar, res, =, ::Foam::stabilise, scalar, s, scalar, sf
+    )
 }
 
 tmp<scalarField> stabilise(const UList<scalar>& sf, const scalar s)
 {
-    tmp<scalarField> Res(new scalarField(sf.size()));
-    TFOR_ALL_F_OP_FUNC_S_F
-        (scalar, Res(), =, ::Foam::stabilise, scalar, s, scalar, sf)
-    return Res;
+    tmp<scalarField> tRes(new scalarField(sf.size()));
+    stabilise(tRes(), sf, s);
+    return tRes;
 }
 
-tmp<scalarField> stabilise(const tmp<scalarField>& sf, const scalar s)
+tmp<scalarField> stabilise(const tmp<scalarField>& tsf, const scalar s)
 {
-    tmp<scalarField> Res(sf.ptr());
-    TFOR_ALL_F_OP_FUNC_S_F
-        (scalar, Res(), =, ::Foam::stabilise, scalar, s, scalar, Res())
-    return Res;
+    tmp<scalarField> tRes = reuseTmp<scalar, scalar>::New(tsf);
+    stabilise(tRes(), tsf(), s);
+    reuseTmp<scalar, scalar>::clear(tsf);
+    return tRes;
 }
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-BINARY_TYPE_OPERATOR_RR(scalar, scalar, scalar, +, add)
-BINARY_TYPE_OPERATOR_RR(scalar, scalar, scalar, -, subtract)
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, +, add)
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, -, subtract)
 
-BINARY_OPERATOR_RR(scalar, scalar, scalar, *, multiply)
-BINARY_OPERATOR_RR(scalar, scalar, scalar, /, divide)
+BINARY_OPERATOR(scalar, scalar, scalar, *, multiply)
+BINARY_OPERATOR(scalar, scalar, scalar, /, divide)
 
 BINARY_TYPE_OPERATOR_SF(scalar, scalar, scalar, /, divide)
-BINARY_TYPE_OPERATOR_SR(scalar, scalar, scalar, /, divide)
 
-BINARY_FUNCTION_RR(scalar, scalar, scalar, pow)
-BINARY_TYPE_FUNCTION_RR(scalar, scalar, scalar, pow)
+BINARY_FUNCTION(scalar, scalar, scalar, pow)
+BINARY_TYPE_FUNCTION(scalar, scalar, scalar, pow)
 
-BINARY_FUNCTION_RR(scalar, scalar, scalar, atan2)
-BINARY_TYPE_FUNCTION_RR(scalar, scalar, scalar, atan2)
-
+BINARY_FUNCTION(scalar, scalar, scalar, atan2)
+BINARY_TYPE_FUNCTION(scalar, scalar, scalar, atan2)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-UNARY_FUNCTION_R(scalar, scalar, pow3)
-UNARY_FUNCTION_R(scalar, scalar, pow4)
-UNARY_FUNCTION_R(scalar, scalar, sqrt)
-UNARY_FUNCTION_R(scalar, scalar, sign)
-UNARY_FUNCTION_R(scalar, scalar, pos)
-UNARY_FUNCTION_R(scalar, scalar, neg)
-UNARY_FUNCTION_R(scalar, scalar, exp)
-UNARY_FUNCTION_R(scalar, scalar, log)
-UNARY_FUNCTION_R(scalar, scalar, log10)
-UNARY_FUNCTION_R(scalar, scalar, sin)
-UNARY_FUNCTION_R(scalar, scalar, cos)
-UNARY_FUNCTION_R(scalar, scalar, tan)
-UNARY_FUNCTION_R(scalar, scalar, asin)
-UNARY_FUNCTION_R(scalar, scalar, acos)
-UNARY_FUNCTION_R(scalar, scalar, atan)
-UNARY_FUNCTION_R(scalar, scalar, sinh)
-UNARY_FUNCTION_R(scalar, scalar, cosh)
-UNARY_FUNCTION_R(scalar, scalar, tanh)
-UNARY_FUNCTION_R(scalar, scalar, asinh)
-UNARY_FUNCTION_R(scalar, scalar, acosh)
-UNARY_FUNCTION_R(scalar, scalar, atanh)
-UNARY_FUNCTION_R(scalar, scalar, erf)
-UNARY_FUNCTION_R(scalar, scalar, erfc)
-UNARY_FUNCTION_R(scalar, scalar, lgamma)
-UNARY_FUNCTION_R(scalar, scalar, j0)
-UNARY_FUNCTION_R(scalar, scalar, j1)
-UNARY_FUNCTION_R(scalar, scalar, y0)
-UNARY_FUNCTION_R(scalar, scalar, y1)
+UNARY_FUNCTION(scalar, scalar, pow3)
+UNARY_FUNCTION(scalar, scalar, pow4)
+UNARY_FUNCTION(scalar, scalar, sqrt)
+UNARY_FUNCTION(scalar, scalar, sign)
+UNARY_FUNCTION(scalar, scalar, pos)
+UNARY_FUNCTION(scalar, scalar, neg)
+UNARY_FUNCTION(scalar, scalar, exp)
+UNARY_FUNCTION(scalar, scalar, log)
+UNARY_FUNCTION(scalar, scalar, log10)
+UNARY_FUNCTION(scalar, scalar, sin)
+UNARY_FUNCTION(scalar, scalar, cos)
+UNARY_FUNCTION(scalar, scalar, tan)
+UNARY_FUNCTION(scalar, scalar, asin)
+UNARY_FUNCTION(scalar, scalar, acos)
+UNARY_FUNCTION(scalar, scalar, atan)
+UNARY_FUNCTION(scalar, scalar, sinh)
+UNARY_FUNCTION(scalar, scalar, cosh)
+UNARY_FUNCTION(scalar, scalar, tanh)
+UNARY_FUNCTION(scalar, scalar, asinh)
+UNARY_FUNCTION(scalar, scalar, acosh)
+UNARY_FUNCTION(scalar, scalar, atanh)
+UNARY_FUNCTION(scalar, scalar, erf)
+UNARY_FUNCTION(scalar, scalar, erfc)
+UNARY_FUNCTION(scalar, scalar, lgamma)
+UNARY_FUNCTION(scalar, scalar, j0)
+UNARY_FUNCTION(scalar, scalar, j1)
+UNARY_FUNCTION(scalar, scalar, y0)
+UNARY_FUNCTION(scalar, scalar, y1)
 
 
 #define BesselFunc(func)                                                      \
-void func(scalarField& Res, const int n, const UList<scalar>& sf)             \
+void func(scalarField& res, const int n, const UList<scalar>& sf)             \
 {                                                                             \
-    TFOR_ALL_F_OP_FUNC_S_F(scalar, Res, =, ::Foam::func, int, n, scalar, sf)  \
+    TFOR_ALL_F_OP_FUNC_S_F(scalar, res, =, ::Foam::func, int, n, scalar, sf)  \
 }                                                                             \
                                                                               \
 tmp<scalarField> func(const int n, const UList<scalar>& sf)                   \
 {                                                                             \
-    tmp<scalarField> Res(new scalarField(sf.size()));                         \
-    TFOR_ALL_F_OP_FUNC_S_F(scalar, Res(), =, ::Foam::func, int, n, scalar, sf)\
-    return Res;                                                               \
+    tmp<scalarField> tRes(new scalarField(sf.size()));                        \
+    func(tRes(), n, sf);                                                      \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
-tmp<scalarField> func(const int n, const tmp<scalarField>& sf)                \
+tmp<scalarField> func(const int n, const tmp<scalarField>& tsf)               \
 {                                                                             \
-    tmp<scalarField> Res(sf.ptr());                                           \
-    TFOR_ALL_F_OP_FUNC_S_F                                                    \
-        (scalar, Res(), =, ::Foam::func, int, n, scalar, Res())               \
-    return Res;                                                               \
+    tmp<scalarField> tRes = reuseTmp<scalar, scalar>::New(tsf);               \
+    func(tRes(), n, tsf());                                                   \
+    reuseTmp<scalar, scalar>::clear(tsf);                                     \
+    return tRes;                                                              \
 }
 
 BesselFunc(jn)

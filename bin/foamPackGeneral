@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -24,7 +24,7 @@
 #     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Script
-#     foamPack
+#     foamPackGeneral
 #
 # Description
 #     Packs and compresses the foam directory for release
@@ -57,36 +57,12 @@ fi
 echo $timeStamp > $foam/.timeStamp
 
 
-# Pack and compress the foamPackFile using GNU tar
-# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# Pack and compress the foamPackFile
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 echo finding and packing
 
-find $foam                     \
-    ! -type d                  \
-   \( -type f -o -type l \)    \
-    ! -name "*~"               \
- -a ! -name ".*~"              \
- -a ! -name "*.dep"            \
- -a ! -name "*.o"              \
- -a ! -name "*.so"             \
- -a ! -name "*.a"              \
- -a ! -name "core"             \
- -a ! -name "core.[1-9]*"      \
- -a ! -name "log[0-9]*"        \
-| sed                          \
- -e "/$foam\/lib\//d"          \
- -e "/$foam\/src\/mico-[0-9.]*\/platforms/d" \
- -e "/$foam\/src\/mpich-[0-9.]*\/platforms/d" \
- -e "/$foam\/src\/mpich-[0-9.]*\/lib/d" \
- -e "/$foam\/src\/lam-[0-9.]*\/platforms/d" \
- -e '/applications\/bin\//d'   \
- -e '/Make[.A-Za-z]*\/[^\/]*\//d'    \
- > foamFiles.$$
-
-tar czpf $foamPackFile --files-from foamFiles.$$
-
-rm foamFiles.$$
+foamPackSource $foam $foamPackFile
 
 echo Finished packing and compressing  $foam into file $foamPackFile
 

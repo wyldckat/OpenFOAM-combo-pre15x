@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -75,7 +75,7 @@ Foam::autoPtr<Foam::decompositionMethod> Foam::decompositionMethod::New
 Foam::autoPtr<Foam::decompositionMethod> Foam::decompositionMethod::New
 (
     const dictionary& decompositionDict,
-    const primitiveMesh& mesh
+    const polyMesh& mesh
 )
 {
     word decompositionMethodTypeName(decompositionDict.lookup("method"));
@@ -92,7 +92,7 @@ Foam::autoPtr<Foam::decompositionMethod> Foam::decompositionMethod::New
         (
             "decompositionMethod::New"
             "(const dictionary& decompositionDict, "
-            "const primitiveMesh& mesh)"
+            "const polyMesh& mesh)"
         )   << "Unknown decompositionMethod "
             << decompositionMethodTypeName << endl << endl
             << "Valid decompositionMethods are : " << endl

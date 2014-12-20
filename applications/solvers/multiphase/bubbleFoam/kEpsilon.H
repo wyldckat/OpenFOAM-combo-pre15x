@@ -43,7 +43,7 @@ if(turbulence)
     kEqn.relax();
     kEqn.solve();
 
-    k.max(dimensionedScalar("zero", k.dimensions(), 0.0));
+    k.max(dimensionedScalar("zero", k.dimensions(), 1.0e-8));
 
     //- Re-calculate turbulence viscosity
     nutb = Cmu*sqr(k)/epsilon;

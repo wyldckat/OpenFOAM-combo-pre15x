@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,63 +22,40 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "pointMesh.H"
-#include "parallelInfo.H"
-#include "globalProcessorPointPatch.H"
+#include "globalMeshData.H"
+#include "globalPointPatch.H"
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-void Foam::pointMesh::addParallelPointPatch()
+Foam::pointMesh::pointMesh
+(
+    const polyMesh& pMesh,
+    bool alwaysConstructGlobalPatch
+)
+:
+    GeoMesh<polyMesh>(pMesh),
+    boundary_(*this, pMesh.boundaryMesh())
 {
-    if (mesh_.parallelData().parallel())
+    // Add the globalPointPatch if there are global points
+    if (alwaysConstructGlobalPatch || mesh_.globalData().nGlobalPoints())
     {
         boundary_.setSize(boundary_.size() + 1);
 
-        boundary_.hook
+        boundary_.set
         (
-            new globalProcessorPointPatch
+            boundary_.size() - 1,
+            new globalPointPatch
             (
-                mesh_.parallelData(),
+                mesh_.globalData(),
                 boundary_,
                 boundary_.size() - 1
             )
         );
     }
 }
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-// Construct from polyMesh
-Foam::pointMesh::pointMesh(const polyMesh& pMesh)
-:
-    mesh_(pMesh),
-    boundary_(*this, pMesh.boundaryMesh())
-{
-    addParallelPointPatch();
-}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
 
 // ************************************************************************* //

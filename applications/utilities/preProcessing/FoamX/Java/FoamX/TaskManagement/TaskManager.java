@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,7 +48,7 @@ public class TaskManager
         statusBar_ = new TaskStatusBar();
         taskStack_ = new Stack();
 
-        defaultText_ = "OpenFoamX Version 1.3";
+        defaultText_ = "OpenFoamX Version 1.4";
 
         // Hide the progress bar initially.
         statusBar_.showProgress(false);

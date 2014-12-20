@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,6 +56,37 @@ void UILList<LListBase, T>::operator=(const UILList<LListBase, T>& slpl)
     {
         append(&iter());
     }
+}
+
+
+// Comparison for equality
+template<class LListBase, class T>
+bool UILList<LListBase, T>::operator==(const UILList<LListBase, T>& slpl) const
+{
+    if (this->size() != slpl.size())
+    {
+        return false;
+    }
+
+    bool equal = true;
+
+    const_iterator iter1 = this->begin();
+    const_iterator iter2 = slpl.begin();
+
+    for (; iter1 != this->end(); ++iter1, ++iter2)
+    {
+        equal = equal && iter1() == iter2();
+    }
+
+    return equal;
+}
+
+
+// Comparison for inequality
+template<class LListBase, class T>
+bool UILList<LListBase, T>::operator!=(const UILList<LListBase, T>& slpl) const
+{
+    return !operator==(slpl);
 }
 
 

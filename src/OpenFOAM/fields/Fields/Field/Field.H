@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,13 +29,20 @@ Description
     Generic field type.
 
 SourceFiles
+    FieldFunctions.H
+    FieldFunctionsM.H
+    FieldMapper.H
+    FieldM.H
     Field.C
+    FieldFunctions.C
+    FieldFunctionsM.C
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef Field_H
 #define Field_H
 
+#include "tmp.H"
 #include "direction.H"
 #include "VectorSpace.H"
 #include "scalarList.H"
@@ -175,10 +182,7 @@ public:
         //- Return a pointer to a new calculatedFvPatchFieldField created on
         //  freestore without setting patchField values
         template<class Type2>
-        static tmp<Field<Type> > NewCalculatedType
-        (
-            const Field<Type2>& f
-        )
+        static tmp<Field<Type> > NewCalculatedType(const Field<Type2>& f)
         {
             return tmp<Field<Type> >(new Field<Type>(f.size()));
         }
@@ -279,6 +283,12 @@ public:
         //- Replace a component field of the field
         void replace(const direction, const UList<cmptType>&);
 
+        //- Replace a component field of the field
+        void replace(const direction, const tmp<Field<cmptType> >&);
+
+        //- Replace a component field of the field
+        void replace(const direction, const cmptType&);
+
         //- Return the field transpose (only defined for second rank tensors)
         tmp<Field<Type> > T() const;
 
@@ -293,6 +303,9 @@ public:
         void operator=(const SubField<Type>&);
         void operator=(const tmp<Field<Type> >&);
         void operator=(const Type&);
+
+        template<class Form, class Cmpt, int nCmpt>
+        void operator=(const VectorSpace<Form,Cmpt,nCmpt>&);
 
         void operator+=(const UList<Type>&);
         void operator+=(const tmp<Field<Type> >&);

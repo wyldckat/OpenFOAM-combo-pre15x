@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -119,6 +119,20 @@ tmp<volVectorField> laplaceFilter::operator()
 ) const
 {
     tmp<volVectorField> filteredField =
+        unFilteredField() + fvc::laplacian(coeff_, unFilteredField());
+
+    unFilteredField.clear();
+
+    return filteredField;
+}
+
+
+tmp<volSymmTensorField> laplaceFilter::operator()
+(
+    const tmp<volSymmTensorField>& unFilteredField
+) const
+{
+    tmp<volSymmTensorField> filteredField =
         unFilteredField() + fvc::laplacian(coeff_, unFilteredField());
 
     unFilteredField.clear();

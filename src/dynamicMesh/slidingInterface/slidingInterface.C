@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -733,15 +731,12 @@ void Foam::slidingInterface::writeDict(Ostream& os) const
 
     if (attached_)
     {
-        os  << "    masterFaceCells " << masterFaceCells()
-            << token::END_STATEMENT << nl
-            << "    slaveFaceCells " << slaveFaceCells()
-            << token::END_STATEMENT << nl
-            << "    masterStickOutFaces " << masterStickOutFaces()
-            << token::END_STATEMENT << nl
-            << "    slaveStickOutFaces " << slaveStickOutFaces()
-            << token::END_STATEMENT << nl
-            << "    retiredPointMap " << retiredPointMap()
+        masterFaceCellsPtr_->writeEntry("masterFaceCells", os);
+        slaveFaceCellsPtr_->writeEntry("slaveFaceCells", os);
+        masterStickOutFacesPtr_->writeEntry("masterStickOutFaces", os);
+        slaveStickOutFacesPtr_->writeEntry("slaveStickOutFaces", os);
+
+         os << "    retiredPointMap " << retiredPointMap()
             << token::END_STATEMENT << nl
             << "    cutPointEdgePairMap " << cutPointEdgePairMap()
             << token::END_STATEMENT << nl;

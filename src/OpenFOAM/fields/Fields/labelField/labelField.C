@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "labelField.H"
+
+#define TEMPLATE
 #include "FieldFunctionsM.C"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -37,8 +39,8 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-BINARY_TYPE_OPERATOR_RR(label, label, label, +, add)
-BINARY_TYPE_OPERATOR_RR(label, label, label, -, subtract)
+BINARY_TYPE_OPERATOR(label, label, label, +, add)
+BINARY_TYPE_OPERATOR(label, label, label, -, subtract)
 
 
 template<>

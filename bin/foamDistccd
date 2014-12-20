@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -45,6 +45,7 @@ RSH='ssh'
 if [ ! "$DISTCC_HOSTS" ]; then
     echo "`basename $0`: variable DISTCC_HOSTS not set."
     echo "`basename $0`: please set DISTCC_HOSTS to the list of hosts to use."
+    echo "`basename $0`: the format is host1:port host2:port host3:port etc."
     echo ""
 
     exit 1
@@ -58,20 +59,47 @@ fi
 
 if [ "$1" = 'start' ]; then
 
+    grep -v '^#' /etc/hosts | awk '{print $1, $2 " "}' > ~/filteredHosts.txt
+
+    allowIPS=''
+    for host in $DISTCC_HOSTS
+    do
+        machine=`echo "$host" | awk -F: '{print $1}'`
+        iptest=`echo "$machine" | sed -e 's/[0-9.]//g'`
+        if [ ! "$iptest" ]; then
+            # address only contained 0-9 and '.'. Probably ip address.
+            ip=$machine
+        else
+            # address probably not ip address. Try searching /etc/hosts
+            ip=`egrep " $machine " ~/filteredHosts.txt | awk '{print $1}'`
+        fi
+
+        if [ ! "$ip" ]; then
+            echo "$0 : host specifier $host either is not an ip address or cannot be found in /etc/hosts."
+            echo "$0 : Exiting."
+            exit 1
+        fi
+
+        allowIPS="$allowIPS --allow $ip"
+    done
+    echo "allowIPS=$allowIPS"
+
     for host in $DISTCC_HOSTS
     do
         echo ""
         echo "Trying to start distccd on host $host ..."
 
-        machine=`echo "$host" | sed -e 's/:.*//'`
-        port=`echo "$host" | sed -e 's/.*://'`
+        machine=`echo "$host" | awk -F: '{print $1}'`
+        port=`echo "$host" | awk -F: '{print $2}'`
 
-        if [ "$machine" = "$port" ]; then
-            echo "No port specified. Possible conflict with running distccd"
-            $RSH $host 'distccd --daemon --jobs `getHostInfo -nCpus`'
-        else
+        if [ "$machine" -a "$port" ]; then
             #echo "Machine:$machine  port:$port"
-            $RSH $machine "distccd --daemon --port $port"' --jobs `getHostInfo -nCpus`'
+            echo "distccd --daemon $allowIPS --port $port"' --jobs `egrep "^processor" /proc/cpuinfo | wc -l`'
+            $RSH $machine "distccd --verbose --daemon $allowIPS --port $port"' --jobs `egrep "^processor" /proc/cpuinfo | wc -l`'
+        else
+            echo "$0 : host specifier $host not in correct form machine:port."
+            echo "$0 : Exiting."
+            exit 1
         fi
     done
 
@@ -82,7 +110,7 @@ elif [ "$1" = 'stop' ]; then
         echo ""
         echo "Trying to stop all distccd on host $host ..."
 
-        machine=`echo "$host" | sed -e 's/:.*//'`
+        machine=`echo "$host" | awk -F: '{print $1}'`
 
         $RSH $machine killall distccd
     done
@@ -95,7 +123,7 @@ elif [ "$1" = 'list' ]; then
         echo ""
         echo "Trying to find process distccd on host $host ..."
 
-        machine=`echo "$host" | sed -e 's/:.*//'`
+        machine=`echo "$host" | awk -F: '{print $1}'`
 
         $RSH $machine "ps -ef | grep distccd | grep -v grep"
     done

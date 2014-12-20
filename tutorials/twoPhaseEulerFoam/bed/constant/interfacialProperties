@@ -1,20 +1,30 @@
-// ******************************************************************************** //
-// FoamX Case Dictionary.
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 
-version             1.0;
-format              ascii;
-root                "/users/tfd/larsg/foam/larsg2.0/run/bubble";
-case                "test2D";
-local               "constant";
-class               dictionary;
-form                dictionary;
-object              interfacialProperties;
+FoamFile
+{
+    version         2.0;
+    format          ascii;
 
-// ******************************************************************************** //
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
 
-dragModela       		GidaspowSchillerNaumann;
-dragModelb       		GidaspowSchillerNaumann;
+    class           dictionary;
+    object          interfacialProperties;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dragModela  GidaspowSchillerNaumann;
+dragModelb  GidaspowSchillerNaumann;
 
 dragPhase	a;
 
-// ******************************************************************************** //
+// ************************************************************************* //

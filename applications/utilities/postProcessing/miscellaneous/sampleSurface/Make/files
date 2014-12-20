@@ -13,5 +13,6 @@ surfaceWriters/foamFile/foamFileWriters.C
 surfaceWriters/dx/dxWriters.C
 surfaceWriters/raw/rawWriters.C
 surfaceWriters/vtk/vtkWriters.C
+surfaceWriters/stl/stlWriters.C
 
 EXE = $(FOAM_APPBIN)/sampleSurface

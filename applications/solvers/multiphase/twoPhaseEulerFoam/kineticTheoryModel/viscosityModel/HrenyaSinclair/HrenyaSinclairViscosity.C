@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "HrenyaSinclairViscosity.H"
+#include "mathematicalConstants.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -44,10 +45,9 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::HrenyaSinclairViscosity::HrenyaSinclairViscosity
 (
-    const Foam::dictionary& dict
+    const dictionary& dict
 )
 :
     viscosityModel(dict),
@@ -64,26 +64,29 @@ Foam::HrenyaSinclairViscosity::~HrenyaSinclairViscosity()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::volScalarField Foam::HrenyaSinclairViscosity::mua
+Foam::tmp<Foam::volScalarField> Foam::HrenyaSinclairViscosity::mua
 (
-    const Foam::volScalarField& alpha,
-    const Foam::volScalarField& Theta,
-    const Foam::volScalarField& g0,
-    const Foam::dimensionedScalar& rhoa,
-    const Foam::dimensionedScalar& da,
-    const Foam::dimensionedScalar& e
+    const volScalarField& alpha,
+    const volScalarField& Theta,
+    const volScalarField& g0,
+    const dimensionedScalar& rhoa,
+    const dimensionedScalar& da,
+    const dimensionedScalar& e
 ) const
 {
-    const scalar piSqrt = pow(M_PI, 0.5);
-    volScalarField ThetaSqrt = pow(Theta, 0.5);
+    const scalar sqrtPi = sqrt(mathematicalConstant::pi);
+
     volScalarField lamda = 
         scalar(1) + da/(6.0*sqrt(2.0)*(alpha + scalar(1.0e-5)))/L_;
 
-    return
-        (4.0/5.0)*pow(alpha, 2.0)*rhoa*da*g0*(1.0+e)*ThetaSqrt/piSqrt
-      + (1.0/15.0)*ThetaSqrt*piSqrt*rhoa*da*g0*(1.0 + e)*(3.0*e-1)*pow(alpha, 2.0)/(3.0-e)
-      + (1.0/6.0)*ThetaSqrt*piSqrt*rhoa*da*alpha*(0.5*lamda+0.25*(3.0*e-1.0))/(0.5*(3.0-e)*lamda)
-      + (10/96.0)*ThetaSqrt*piSqrt*rhoa*da/((1.0+e)*0.5*(3.0-e)*g0*lamda);
+    return rhoa*da*sqrt(Theta)*
+    (
+        (4.0/5.0)*sqr(alpha)*g0*(1.0 + e)/sqrtPi
+      + (1.0/15.0)*sqrtPi*g0*(1.0 + e)*(3.0*e - 1)*sqr(alpha)/(3.0-e)
+      + (1.0/6.0)*sqrtPi*alpha*(0.5*lamda + 0.25*(3.0*e - 1.0))
+       /(0.5*(3.0 - e)*lamda)
+      + (10/96.0)*sqrtPi/((1.0 + e)*0.5*(3.0 - e)*g0*lamda)
+    );
 }
 
 

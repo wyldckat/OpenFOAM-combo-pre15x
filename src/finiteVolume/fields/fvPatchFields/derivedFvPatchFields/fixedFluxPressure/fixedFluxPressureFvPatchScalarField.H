@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ SourceFiles
 
 #include "fvPatchFields.H"
 #include "fixedGradientFvPatchFields.H"
+#include "Switch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,6 +52,21 @@ class fixedFluxPressureFvPatchScalarField
 :
     public fixedGradientFvPatchScalarField
 {
+    // Private data
+
+        //- Name of the velocity field
+        word UName_;
+
+        //- Name of the flux transporting the field
+        word phiName_;
+
+        //- Name of the density field used to normalise the mass flux
+        //  if neccessary
+        word rhoName_;
+
+        //- Is the pressure adjoint, i.e. has the opposite sign
+        Switch adjoint_;
+
 
 public:
 
@@ -85,6 +101,12 @@ public:
             const fvPatchFieldMapper&
         );
 
+        //- Construct as copy
+        fixedFluxPressureFvPatchScalarField
+        (
+            const fixedFluxPressureFvPatchScalarField&
+        );
+
         //- Construct and return a clone
         virtual tmp<fvPatchScalarField> clone() const
         {
@@ -116,14 +138,8 @@ public:
         //- Update the coefficients associated with the patch field
         virtual void updateCoeffs();
 
-
-    // Ostream operator
-
-        friend Ostream& operator<<
-        (
-            Ostream&,
-            const fixedFluxPressureFvPatchScalarField&
-        );
+        //- Write
+        virtual void write(Ostream&) const;
 };
 
 

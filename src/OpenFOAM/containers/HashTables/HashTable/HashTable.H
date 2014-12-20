@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,39 +132,11 @@ public:
 
     // Forward declaration of STL iterators
 
-        template<class TRef, class TableRef, class HashedEntryPtr>
-        class Iterator;
+        class iterator;
+        friend class iterator;
 
-        typedef Iterator
-        <
-            T&,
-            HashTable<T, Key, Hash>&,
-            hashedEntry*
-        > iterator;
-
-        typedef Iterator
-        <
-            const T&,
-            const HashTable<T, Key, Hash>&,
-            const hashedEntry*
-        > const_iterator;
-
-
-    // Declare friendship with the iterators
-
-        friend class Iterator
-        <
-            T&,
-            HashTable<T, Key, Hash>&,
-            hashedEntry*
-        >;
-
-        friend class Iterator
-        <
-            const T&,
-            const HashTable<T, Key, Hash>&,
-            const hashedEntry*
-        >;
+        class const_iterator;
+        friend class const_iterator;
 
 
     // Constructors
@@ -236,6 +208,10 @@ public:
         //- Find and return an hashedEntry
         inline const T& operator[](const Key& key) const;
 
+        //- Find and return an hashedEntry and
+        //  if it is not present create it null.
+        inline T& operator()(const Key& key);
+
         //- Assignment
         void operator=(const HashTable<T, Key, Hash>&);
 
@@ -260,26 +236,18 @@ public:
 
     // STL iterator
 
-        template<class TRef, class TableRef, class HashedEntryPtr>
-        class Iterator
+        class iterator
         {
             friend class HashTable;
-
-#           ifndef __INTEL_COMPILER
-            template<class TRef2, class TableRef2, class HashedEntryPtr2>
-            friend class Iterator;
-#           endif
+            friend class const_iterator;
 
             // Private data
 
                 //- Reference to the HashTable this is an iterator for
-                TableRef curHashTable_;
+                HashTable<T, Key, Hash>& curHashTable_;
 
                 //- Current element
-                HashedEntryPtr elmtPtr_;
-
-                //- Previous element
-                HashedEntryPtr prevElmtPtr_;
+                hashedEntry* elmtPtr_;
 
                 //- Current hash index
                 label hashIndex_;
@@ -290,16 +258,12 @@ public:
             // Constructors
 
                 //- Construct from hash table, element and hash index
-                inline Iterator
+                inline iterator
                 (
-                    TableRef curHashTable,
-                    HashedEntryPtr elmt,
-                    HashedEntryPtr prev,
+                    HashTable<T, Key, Hash>& curHashTable,
+                    hashedEntry* elmt,
                     label hashIndex
                 );
-
-                //- Construct from the non-const iterator
-                inline Iterator(const iterator&);
 
 
             // Member operators
@@ -307,16 +271,16 @@ public:
                 inline void operator=(const iterator& iter);
 
                 inline bool operator==(const iterator& iter) const;
-                inline bool operator==(const const_iterator& iter) const;
-
                 inline bool operator!=(const iterator& iter) const;
+
+                inline bool operator==(const const_iterator& iter) const;
                 inline bool operator!=(const const_iterator& iter) const;
 
-                inline TRef operator*();
-                inline TRef operator()();
+                inline T& operator*();
+                inline T& operator()();
 
-                inline Iterator& operator++();
-                inline Iterator operator++(int);
+                inline iterator& operator++();
+                inline iterator operator++(int);
 
                 inline const Key& key();
         };
@@ -327,6 +291,61 @@ public:
 
         //- iterator set to beyond the end of the HashTable
         inline const iterator& end();
+
+
+    // STL const_iterator
+
+        class const_iterator
+        {
+            friend class iterator;
+
+            // Private data
+
+                //- Reference to the HashTable this is an iterator for
+                const HashTable<T, Key, Hash>& curHashTable_;
+
+                //- Current element
+                const hashedEntry* elmtPtr_;
+
+                //- Current hash index
+                label hashIndex_;
+
+
+        public:
+
+            // Constructors
+
+                //- Construct from hash table, element and hash index
+                inline const_iterator
+                (
+                    const HashTable<T, Key, Hash>& curHashTable,
+                    const hashedEntry* elmt,
+                    label hashIndex
+                );
+
+                //- Construct from the non-const iterator
+                inline const_iterator(const iterator&);
+
+
+            // Member operators
+
+                inline void operator=(const const_iterator& iter);
+
+                inline bool operator==(const const_iterator& iter) const;
+                inline bool operator!=(const const_iterator& iter) const;
+
+                inline bool operator==(const iterator& iter) const;
+                inline bool operator!=(const iterator& iter) const;
+
+                inline const T& operator*();
+                inline const T& operator()();
+
+                inline const_iterator& operator++();
+                inline const_iterator operator++(int);
+
+                inline const Key& key();
+        };
+
 
         //- const_iterator set to the begining of the HashTable
         inline const_iterator begin() const;

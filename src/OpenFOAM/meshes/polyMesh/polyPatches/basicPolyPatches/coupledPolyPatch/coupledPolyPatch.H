@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -234,13 +234,6 @@ public:
             //  to the other
             const vectorField& separation() const
             {
-                if (!separation_.size())
-                {
-                    FatalErrorIn("coupledPolyPatch::separation() const")
-                        << "Coupled patches are not separated"
-                        << abort(FatalError);
-                }
-
                 return separation_;
             }
 
@@ -254,26 +247,12 @@ public:
             //- Return face transformation tensor
             const tensorField& forwardT() const
             {
-                if (!forwardT_.size())
-                {
-                    FatalErrorIn("coupledPolyPatch::forwardT() const")
-                        << "Coupled planes do not need transformation"
-                        << abort(FatalError);
-                }
-
                 return forwardT_;
             }
 
             //- Return neighbour-cell transformation tensor
             const tensorField& reverseT() const
             {
-                if (!reverseT_.size())
-                {
-                    FatalErrorIn("coupledPolyPatch::forwardT() const")
-                        << "Coupled planes do not need transformation"
-                        << abort(FatalError);
-                }
-
                 return reverseT_;
             }
 

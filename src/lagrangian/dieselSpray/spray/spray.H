@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,8 +32,6 @@ Description
 #ifndef spray_H
 #define spray_H
 
-#include "Random.H"
-
 #include "parcel.H"
 #include "injector.H"
 #include "IOPtrList.H"
@@ -43,6 +41,7 @@ Description
 #include "sprayThermoTypes.H"
 #include "autoPtr.H"
 #include "liquidMixture.H"
+#include "Random.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -76,7 +75,7 @@ class spray
             const Time& runTime_;
             scalar time0_;
             const fvMesh& mesh_;
-            volPointInterpolation volPointInterpolation_;
+            const volPointInterpolation& volPointInterpolation_;
 
             //- Random number generator
             Random rndGen_;
@@ -90,14 +89,12 @@ class spray
             const volScalarField& T_;
 
 
-        // The sprays
+        //- The spray properties
+        IOdictionary sprayProperties_;
 
-            IOdictionary sprayProperties_;
 
-
-        // The injectors
-
-            IOPtrList<injector> injectors_;
+        //- The injectors
+        IOPtrList<injector> injectors_;
 
 
         // References to the spray sub-models
@@ -113,8 +110,10 @@ class spray
             autoPtr<liquidMixture> fuels_;
             autoPtr<injectorModel> injectorModel_;
     
+
         //- Minimum number of lagrangian subcycles
         const label subCycles_;
+
 
         //- Acceleration due to gravity
         vector g_;
@@ -128,6 +127,7 @@ class spray
             List<label> liquidToGasIndex_;
             List<label> gasToLiquidIndex_;
             List<bool> isLiquidFuel_;
+
 
         // Necessary 2D-information
 
@@ -165,12 +165,10 @@ class spray
             //- The (total added) injected kinetic energy of the liquid
             scalar injectedLiquidKE_;
         
-        //  Ambient Pressure
-            
+            //- Ambient Pressure
             scalar ambientPressure_;
         
-        //  Ambient Temperature
-        
+            //- Ambient Temperature
             scalar ambientTemperature_;
         
 
@@ -215,8 +213,8 @@ public:
             //- Evolve the spray (move, inject and breakup)
             void evolve();
 
-            //- Track the spray parcels
-            void track();
+            //- Move the spray parcels
+            void move();
 
             //- Inject more parcels
             void inject();
@@ -292,6 +290,7 @@ public:
             
             inline const scalar& ambientTemperature() const;
 
+
         // Check
 
             //- Returns the liquid mass that has been injected
@@ -343,7 +342,6 @@ public:
             
             //- Return Ambient Temperature
             void calculateAmbientTemperature();
-
 };
 
 

@@ -26,7 +26,15 @@
         );
 
         pdEqn.setReference(pdRefCell, pdRefValue);
-        pdEqn.solve();
+
+        if (corr == nCorr-1 && nonOrth == nNonOrthCorr)
+        {
+            pdEqn.solve(mesh.solver(pd.name() + "Final"));
+        }
+        else
+        {
+            pdEqn.solve(mesh.solver(pd.name()));
+        }
 
         if (nonOrth == nNonOrthCorr)
         {
@@ -36,7 +44,4 @@
 
     U += rUA*fvc::reconstruct((phi - phiU)/rUAf);
     U.correctBoundaryConditions();
-
-    // Make the fluxes relative
-    phi -= fvc::meshPhi(rho, U);
 }

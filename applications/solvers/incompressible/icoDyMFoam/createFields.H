@@ -55,26 +55,18 @@
     setRefCell(p, mesh.solutionDict().subDict("PISO"), pRefCell, pRefValue);
 
 
-    volScalarField rUA
+    Info<< "Reading field rAU if present\n" << endl;
+    volScalarField rAU
     (
         IOobject
         (
-            "rUA",
+            "rAU",
             runTime.timeName(),
-            mesh
+            mesh,
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
         ),
         mesh,
-        dimensionedScalar("rUA", dimTime, 1),
+        runTime.deltaT(),
         zeroGradientFvPatchScalarField::typeName
     );
-
-{
-    bool momentumPredictorSave = momentumPredictor;
-    momentumPredictor = false;
-#   include "UEqn.H"
-    momentumPredictor = momentumPredictorSave;
-
-    rUA = 1.0/UEqn.A();
-}
-
-#   include "correctPhi.H"

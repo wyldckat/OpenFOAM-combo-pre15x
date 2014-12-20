@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,7 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
+Typedef
     dimensionedTensor
 
 Description
@@ -37,6 +37,7 @@ SourceFiles
 #define dimensionedTensor_H
 
 #include "dimensionedVector.H"
+#include "dimensionedSymmTensor.H"
 #include "tensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -49,22 +50,25 @@ namespace Foam
 typedef dimensioned<tensor> dimensionedTensor;
 
 
-// friend functions
+// global functions
 
 dimensionedScalar tr(const dimensionedTensor&);
 dimensionedTensor dev(const dimensionedTensor&);
 dimensionedTensor dev2(const dimensionedTensor&);
 dimensionedScalar det(const dimensionedTensor&);
 dimensionedTensor inv(const dimensionedTensor&);
-dimensionedTensor hinv(const dimensionedTensor&);
-dimensionedTensor symm(const dimensionedTensor&);
+dimensionedSymmTensor symm(const dimensionedTensor&);
+dimensionedSymmTensor twoSymm(const dimensionedTensor&);
 dimensionedTensor skew(const dimensionedTensor&);
 
 dimensionedVector eigenValues(const dimensionedTensor&);
 dimensionedTensor eigenVectors(const dimensionedTensor&);
 
+dimensionedVector eigenValues(const dimensionedSymmTensor&);
+dimensionedTensor eigenVectors(const dimensionedSymmTensor&);
 
-// friend operators
+
+// global operators
 
 //- Hodge Dual operator (tensor -> vector)
 dimensionedVector operator*(const dimensionedTensor&);

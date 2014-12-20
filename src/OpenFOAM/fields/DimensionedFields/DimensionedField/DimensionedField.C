@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -62,7 +62,7 @@ DimensionedField<Type, GeoMesh>::DimensionedField
     mesh_(mesh),
     dimensions_(dims)
 {
-    if (field.size() != mesh.size())
+    if (field.size() && field.size() != GeoMesh::size(mesh))
     {
         FatalErrorIn
         (
@@ -70,7 +70,8 @@ DimensionedField<Type, GeoMesh>::DimensionedField
             "(const IOobject& io,const Mesh& mesh, "
             "const dimensionSet& dims, const Field<Type>& field)"
         )   << "size of field = " << field.size()
-            << " is not the same as the size of mesh = " << mesh.size()
+            << " is not the same as the size of mesh = "
+            << GeoMesh::size(mesh)
             << abort(FatalError);
     }
 }
@@ -85,9 +86,24 @@ DimensionedField<Type, GeoMesh>::DimensionedField
 )
 :
     regIOobject(io),
-    Field<Type>(mesh.size()),
+    Field<Type>(GeoMesh::size(mesh)),
     mesh_(mesh),
     dimensions_(dims)
+{}
+
+
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>::DimensionedField
+(
+    const IOobject& io,
+    const Mesh& mesh,
+    const dimensioned<Type>& dt
+)
+:
+    regIOobject(io),
+    Field<Type>(GeoMesh::size(mesh), dt.value()),
+    mesh_(mesh),
+    dimensions_(dt.dimensions())
 {}
 
 
@@ -97,11 +113,118 @@ DimensionedField<Type, GeoMesh>::DimensionedField
     const DimensionedField<Type, GeoMesh>& df
 )
 :
+#   ifdef ConstructFromTmp
     regIOobject(df),
+#   else
+    regIOobject(df, true),
+#   endif
     Field<Type>(df),
     mesh_(df.mesh_),
     dimensions_(df.dimensions_)
 {}
+
+
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>::DimensionedField
+(
+    DimensionedField<Type, GeoMesh>& df,
+    bool reUse
+)
+:
+    regIOobject(df, true),
+    Field<Type>(df, reUse),
+    mesh_(df.mesh_),
+    dimensions_(df.dimensions_)
+{}
+
+
+#ifdef ConstructFromTmp
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>::DimensionedField
+(
+    const tmp<DimensionedField<Type, GeoMesh> >& tdf
+)
+:
+    regIOobject(tdf(), true),
+    Field<Type>(const_cast<Field<Type>&>(tdf()), tdf.isTmp()),
+    mesh_(tdf().mesh_),
+    dimensions_(tdf().dimensions_)
+{
+    tdf().clear();
+}
+#endif
+
+
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>::DimensionedField
+(
+    const IOobject& io,
+    const DimensionedField<Type, GeoMesh>& df
+)
+:
+    regIOobject(io),
+    Field<Type>(df),
+    mesh_(df.mesh_),
+    dimensions_(df.dimensions_)
+{}
+
+
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>::DimensionedField
+(
+    const word& newName,
+    const DimensionedField<Type, GeoMesh>& df
+)
+:
+    regIOobject(IOobject(newName, df.time().timeName(), df.db())),
+    Field<Type>(df),
+    mesh_(df.mesh_),
+    dimensions_(df.dimensions_)
+{}
+
+
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>::DimensionedField
+(
+    const word& newName,
+    DimensionedField<Type, GeoMesh>& df,
+    bool reUse
+)
+:
+    regIOobject(IOobject(newName, df.time().timeName(), df.db())),
+    Field<Type>(df, reUse),
+    mesh_(df.mesh_),
+    dimensions_(df.dimensions_)
+{}
+
+
+#ifdef ConstructFromTmp
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>::DimensionedField
+(
+    const word& newName,
+    const tmp<DimensionedField<Type, GeoMesh> >& tdf
+)
+:
+    regIOobject(IOobject(newName, tdf().time().timeName(), tdf().db())),
+    Field<Type>(const_cast<Field<Type>&>(tdf()), tdf.isTmp()),
+    mesh_(tdf().mesh_),
+    dimensions_(tdf().dimensions_)
+{
+    tdf().clear();
+}
+#endif
+
+
+template<class Type, class GeoMesh>
+tmp<DimensionedField<Type, GeoMesh> >
+DimensionedField<Type, GeoMesh>::clone() const
+{
+    return tmp<DimensionedField<Type, GeoMesh> >
+    (
+        new DimensionedField<Type, GeoMesh>(*this)
+    );
+}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
@@ -113,11 +236,21 @@ DimensionedField<Type, GeoMesh>::~DimensionedField()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+// Return a null Field
+template<class Type, class GeoMesh>
+DimensionedField<Type, GeoMesh>& DimensionedField<Type, GeoMesh>::null()
+{
+    DimensionedField<Type, GeoMesh>* nullPtr = 
+        reinterpret_cast<DimensionedField<Type, GeoMesh>*>(NULL);
+    return *nullPtr;
+}
+
+
 template<class Type, class GeoMesh>
 tmp
 <
     DimensionedField
-    <typename DimensionedField<Type, GeoMesh>::cmptType, GeoMesh> 
+        <typename DimensionedField<Type, GeoMesh>::cmptType, GeoMesh> 
 > 
 DimensionedField<Type, GeoMesh>::component
 (
@@ -150,13 +283,26 @@ void DimensionedField<Type, GeoMesh>::replace
 (
     const direction d,
     const DimensionedField
-    <
-        typename DimensionedField<Type, GeoMesh>::cmptType,
-        GeoMesh
-    >& df
+        <typename DimensionedField<Type, GeoMesh>::cmptType, GeoMesh>& df
 )
 {
     Field<Type>::replace(d, df);
+}
+
+
+template<class Type, class GeoMesh>
+void DimensionedField<Type, GeoMesh>::replace
+(
+    const direction d,
+    const tmp
+    <
+        DimensionedField
+            <typename DimensionedField<Type, GeoMesh>::cmptType, GeoMesh>
+    >& tdf
+)
+{
+    replace(d, tdf());
+    tdf.clear();
 }
 
 
@@ -182,6 +328,50 @@ DimensionedField<Type, GeoMesh>::T() const
     Foam::T(result(), *this);
 
     return result;
+}
+
+
+template<class Type, class GeoMesh>
+dimensioned<Type> DimensionedField<Type, GeoMesh>::average() const
+{
+    dimensioned<Type> Average
+    (
+        this->name() + ".average()",
+        this->dimensions(),
+        gAverage(field())
+    );
+
+    return Average;
+}
+
+
+template<class Type, class GeoMesh>
+dimensioned<Type> DimensionedField<Type, GeoMesh>::weightedAverage
+(
+    const DimensionedField<scalar, GeoMesh>& weightField
+) const
+{
+    return
+    (
+        dimensioned<Type>
+        (
+            this->name() + ".weightedAverage(weights)",
+            this->dimensions(),
+            gSum(weightField*field())/gSum(weightField)
+        )
+    );
+}
+
+
+template<class Type, class GeoMesh>
+dimensioned<Type> DimensionedField<Type, GeoMesh>::weightedAverage
+(
+    const tmp<DimensionedField<scalar, GeoMesh> >& tweightField
+) const
+{
+    dimensioned<Type> wa = weightedAverage(tweightField());
+    tweightField.clear();
+    return wa;
 }
 
 
@@ -302,5 +492,6 @@ COMPUTED_ASSIGNMENT(scalar, /=)
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "DimensionedFieldIO.C"
+#include "DimensionedFieldFunctions.C"
 
 // ************************************************************************* //

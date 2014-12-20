@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,18 +31,22 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
+#include "OSspecific.H"
 #include "fvCFD.H"
 #include "IOobjectList.H"
 #include "processorFvPatchFields.H"
 #include "domainDecomposition.H"
-#include "labelIOList.H"
-
-#include "geometricFvFieldDecomposer.H"
-
-#include "tetPointFields.H"
-#include "geometricTetPointFieldDecomposer.H"
-
+#include "labelIOField.H"
+#include "scalarIOField.H"
+#include "vectorIOField.H"
+#include "sphericalTensorIOField.H"
+#include "symmTensorIOField.H"
 #include "tensorIOField.H"
+#include "pointFields.H"
+
+#include "readFields.H"
+#include "fvFieldDecomposer.H"
+#include "pointFieldDecomposer.H"
 #include "lagrangianFieldDecomposer.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -53,6 +57,7 @@ int main(int argc, char *argv[])
     argList::validOptions.insert("fields", "");
     argList::validOptions.insert("cellDist", "");
     argList::validOptions.insert("filterPatches", "");
+    argList::validOptions.insert("copyUniform", "");
 
 #   include "setRootCase.H"
 
@@ -61,6 +66,8 @@ int main(int argc, char *argv[])
     bool writeCellDist(args.options().found("cellDist"));
 
     bool filterPatches(args.options().found("filterPatches"));
+
+    bool copyUniform(args.options().found("copyUniform"));
 
 #   include "createTime.H"
 
@@ -140,6 +147,7 @@ int main(int argc, char *argv[])
         }
     }
 
+    // Read lagrangian particles
     Cloud<indexedParticle> lagrangianPositions(mesh);
 
     if (lagrangianPositions.size())
@@ -148,10 +156,11 @@ int main(int argc, char *argv[])
             << endl;
     }
 
+    // Sort particles according to cell they are in
     List<SLList<indexedParticle*>*> cellParticles
     (
         mesh.nCells(),
-        reinterpret_cast<SLList<indexedParticle*>*>(NULL)
+        static_cast<SLList<indexedParticle*>*>(NULL)
     );
 
     label i = 0;
@@ -167,6 +176,20 @@ int main(int argc, char *argv[])
 
         label celli = iter().cell();
 
+        // Check
+        if (celli < 0 || celli >= mesh.nCells())
+        {
+            FatalErrorIn(args.executable())
+                << "Illegal cell number " << celli
+                << " for particle with index " << iter().index()
+                << " at position " << iter().position() << nl
+                << "Cell number should be between 0 and " << mesh.nCells()-1
+                << nl
+                << "On this mesh the particle should be in cell "
+                << mesh.findCell(iter().position())
+                << exit(FatalError);
+        }
+
         if (!cellParticles[celli])
         {
             cellParticles[celli] = new SLList<indexedParticle*>();
@@ -180,98 +203,59 @@ int main(int argc, char *argv[])
     IOobjectList objects(mesh, runTime.timeName());
 
     // Construct the vol fields
-
+    // ~~~~~~~~~~~~~~~~~~~~~~~~
     PtrList<volScalarField> volScalarFields;
-    geometricFvFieldDecomposer::readFields(mesh, objects, volScalarFields);
+    readFields(mesh, objects, volScalarFields);
 
     PtrList<volVectorField> volVectorFields;
-    geometricFvFieldDecomposer::readFields(mesh, objects, volVectorFields);
+    readFields(mesh, objects, volVectorFields);
+
+    PtrList<volSphericalTensorField> volSphericalTensorFields;
+    readFields(mesh, objects, volSphericalTensorFields);
+
+    PtrList<volSymmTensorField> volSymmTensorFields;
+    readFields(mesh, objects, volSymmTensorFields);
 
     PtrList<volTensorField> volTensorFields;
-    geometricFvFieldDecomposer::readFields(mesh, objects, volTensorFields);
+    readFields(mesh, objects, volTensorFields);
 
+
+    // Construct the surface fields
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     PtrList<surfaceScalarField> surfaceScalarFields;
-    geometricFvFieldDecomposer::readFields(mesh, objects, surfaceScalarFields);
+    readFields(mesh, objects, surfaceScalarFields);
 
 
-    // Search list of objects for tetPointTypeFields
-    IOobjectList tetPScalFields(objects.lookupClass("tetPointScalarField"));
-    IOobjectList tetPVecFields(objects.lookupClass("tetPointVectorField"));
-    IOobjectList tetPTensFields(objects.lookupClass("tetPointTensorField"));
+    // Construct the point fields
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pointMesh pMesh(mesh);
 
-    PtrList<tetPointScalarField> tetPointScalarFields(tetPScalFields.size());
-    PtrList<tetPointVectorField> tetPointVectorFields(tetPVecFields.size());
-    PtrList<tetPointTensorField> tetPointTensorFields(tetPTensFields.size());
+    PtrList<pointScalarField> pointScalarFields;
+    readFields(pMesh, objects, pointScalarFields);
 
-    tetPolyMesh* tetMeshPtr = NULL;
+    PtrList<pointVectorField> pointVectorFields;
+    readFields(pMesh, objects, pointVectorFields);
 
-    if
-    (
-        tetPScalFields.size()
-     || tetPVecFields.size()
-     || tetPTensFields.size()
-    )
-    {
-        tetMeshPtr = new tetPolyMesh(mesh);
-        tetPolyMesh& tetMesh = *tetMeshPtr;
+    PtrList<pointSphericalTensorField> pointSphericalTensorFields;
+    readFields(pMesh, objects, pointSphericalTensorFields);
 
-        // Construct the tet point scalar fields
-        for
-        (
-            IOobjectList::iterator tetPScalFieldIter = tetPScalFields.begin();
-            tetPScalFieldIter != tetPScalFields.end();
-            ++tetPScalFieldIter
-        )
-        {
-            tetPointScalarFields.hook
-            (
-                new tetPointScalarField
-                (
-                    *tetPScalFieldIter(),
-                    tetMesh
-                )
-            );
-        }
+    PtrList<pointSymmTensorField> pointSymmTensorFields;
+    readFields(pMesh, objects, pointSymmTensorFields);
 
-        // Construct the tet point vector fields
-        for
-        (
-            IOobjectList::iterator tetPVecFieldIter = tetPVecFields.begin();
-            tetPVecFieldIter != tetPVecFields.end();
-            ++tetPVecFieldIter
-        )
-        {
-            tetPointVectorFields.hook
-            (
-                new tetPointVectorField
-                (
-                    *tetPVecFieldIter(),
-                    tetMesh
-                )
-            );
-        }
-
-        // Construct the tet point tensor fields
-        for
-        (
-            IOobjectList::iterator tetPTensFieldIter = tetPTensFields.begin();
-            tetPTensFieldIter != tetPTensFields.end();
-            ++tetPTensFieldIter
-        )
-        {
-            tetPointTensorFields.hook
-            (
-                new tetPointTensorField
-                (
-                    *tetPTensFieldIter(),
-                    tetMesh
-                )
-            );
-        }
-    }
+    PtrList<pointTensorField> pointTensorFields;
+    readFields(pMesh, objects, pointTensorFields);
 
 
+    // Construct the Lagrangian fields
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     IOobjectList lagrangianObjects(mesh, runTime.timeName(), "lagrangian");
+
+    PtrList<labelIOField> lagrangianLabelFields;
+    lagrangianFieldDecomposer::readFields
+    (
+        lagrangianObjects,
+        lagrangianLabelFields
+    );
 
     PtrList<scalarIOField> lagrangianScalarFields;
     lagrangianFieldDecomposer::readFields
@@ -287,12 +271,39 @@ int main(int argc, char *argv[])
         lagrangianVectorFields
     );
 
+    PtrList<sphericalTensorIOField> lagrangianSphericalTensorFields;
+    lagrangianFieldDecomposer::readFields
+    (
+        lagrangianObjects,
+        lagrangianSphericalTensorFields
+    );
+
+    PtrList<symmTensorIOField> lagrangianSymmTensorFields;
+    lagrangianFieldDecomposer::readFields
+    (
+        lagrangianObjects,
+        lagrangianSymmTensorFields
+    );
+
     PtrList<tensorIOField> lagrangianTensorFields;
     lagrangianFieldDecomposer::readFields
     (
         lagrangianObjects,
         lagrangianTensorFields
     );
+
+
+    // Any uniform data to copy/link?
+
+    fileName uniformDir;
+
+    if (dir(runTime.timePath()/"uniform"))
+    {
+        uniformDir = runTime.timePath()/"uniform";
+
+        Info<< "Detected additional non-decomposed files in " << uniformDir
+            << endl;
+    }
 
 
     Info<< endl;
@@ -324,21 +335,6 @@ int main(int argc, char *argv[])
             )
         );
 
-        // read the addressing information
-        labelIOList faceProcAddressing
-        (
-            IOobject
-            (
-                "faceProcAddressing",
-                "constant",
-                procMesh.meshSubDir,
-                procMesh,
-                IOobject::MUST_READ,
-                IOobject::NO_WRITE
-            )
-        );
-
-        // read the addressing information
         labelIOList cellProcAddressing
         (
             IOobject
@@ -370,12 +366,28 @@ int main(int argc, char *argv[])
         (
             volScalarFields.size()
          || volVectorFields.size()
+         || volSphericalTensorFields.size()
+         || volSymmTensorFields.size()
          || volTensorFields.size()
          || surfaceScalarFields.size()
         )
         {
-            geometricFvFieldDecomposer fieldDecomposer
+            labelIOList faceProcAddressing
             (
+                IOobject
+                (
+                    "faceProcAddressing",
+                    "constant",
+                    procMesh.meshSubDir,
+                    procMesh,
+                    IOobject::MUST_READ,
+                    IOobject::NO_WRITE
+                )
+            );
+
+            fvFieldDecomposer fieldDecomposer
+            (
+                mesh,
                 procMesh,
                 faceProcAddressing,
                 cellProcAddressing,
@@ -384,24 +396,20 @@ int main(int argc, char *argv[])
 
             fieldDecomposer.decomposeFields(volScalarFields);
             fieldDecomposer.decomposeFields(volVectorFields);
+            fieldDecomposer.decomposeFields(volSphericalTensorFields);
+            fieldDecomposer.decomposeFields(volSymmTensorFields);
             fieldDecomposer.decomposeFields(volTensorFields);
+
             fieldDecomposer.decomposeFields(surfaceScalarFields);
         }
 
 
-        // tetPoint fields
+        // Point fields
         if
         (
-            tetPointScalarFields.size()
-         || tetPointVectorFields.size()
-         || tetPointTensorFields.size()
+            pointScalarFields.size()
         )
         {
-            tetPolyMesh& tetMesh = *tetMeshPtr;
-
-            tetPolyMesh procTetMesh(procMesh);
-
-            // read the point addressing information
             labelIOList pointProcAddressing
             (
                 IOobject
@@ -415,19 +423,21 @@ int main(int argc, char *argv[])
                 )
             );
 
-            geometricTetPointFieldDecomposer fieldDecomposer
+            pointMesh procPMesh(procMesh, true);
+
+            pointFieldDecomposer fieldDecomposer
             (
-                tetMesh,
-                procTetMesh,
+                pMesh,
+                procPMesh,
                 pointProcAddressing,
-                faceProcAddressing,
-                cellProcAddressing,
                 boundaryProcAddressing
             );
 
-            fieldDecomposer.decomposeFields(tetPointScalarFields);
-            fieldDecomposer.decomposeFields(tetPointVectorFields);
-            fieldDecomposer.decomposeFields(tetPointTensorFields);
+            fieldDecomposer.decomposeFields(pointScalarFields);
+            fieldDecomposer.decomposeFields(pointVectorFields);
+            fieldDecomposer.decomposeFields(pointSphericalTensorFields);
+            fieldDecomposer.decomposeFields(pointSymmTensorFields);
+            fieldDecomposer.decomposeFields(pointTensorFields);
         }
 
 
@@ -446,24 +456,55 @@ int main(int argc, char *argv[])
             // Lagrangian fields
             if
             (
-                lagrangianScalarFields.size()
+                lagrangianLabelFields.size()
+             || lagrangianScalarFields.size()
              || lagrangianVectorFields.size()
+             || lagrangianSphericalTensorFields.size()
+             || lagrangianSymmTensorFields.size()
              || lagrangianTensorFields.size()
             )
             {
+                fieldDecomposer.decomposeFields(lagrangianLabelFields);
                 fieldDecomposer.decomposeFields(lagrangianScalarFields);
                 fieldDecomposer.decomposeFields(lagrangianVectorFields);
+                fieldDecomposer.decomposeFields
+                (
+                    lagrangianSphericalTensorFields
+                );
+                fieldDecomposer.decomposeFields(lagrangianSymmTensorFields);
                 fieldDecomposer.decomposeFields(lagrangianTensorFields);
+            }
+        }
+
+
+        // Any non-decomposed data to copy?
+        if (uniformDir.size() > 0)
+        {
+            if (copyUniform || mesh.distributed())
+            {
+                cp(uniformDir, processorDb.timePath()/"uniform");
+            }
+            else
+            {
+                fileName timePath = processorDb.timePath();
+
+                if (timePath[0] != '/')
+                {
+                    // Adapt uniformDir and timePath to be relative paths.
+                    string parentPath(string("..")/"..");
+                    fileName currentDir(cwd());
+                    chDir(timePath);
+                    ln(parentPath/uniformDir, parentPath/timePath/"uniform");
+                    chDir(currentDir);
+                }
+                else
+                {
+                    ln(uniformDir, timePath/"uniform");
+                }
             }
         }
     }
 
-
-    // Clean up the tetMesh pointer
-    if (tetMeshPtr)
-    {
-        delete tetMeshPtr;
-    }
 
     Info<< "\nEnd.\n" << endl;
 

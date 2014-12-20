@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,8 @@ License
 #include "polyMesh.H"
 #include "primitiveMesh.H"
 #include "mapPolyMesh.H"
+#include "processorPolyPatch.H"
+#include "processorPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -79,8 +81,9 @@ polyBoundaryMesh::polyBoundaryMesh
 
         forAll(patches, patchI)
         {
-            patches.hook
+            patches.set
             (
+                patchI,
                 polyPatch::New
                 (
                     patchEntries[patchI].keyword(),
@@ -103,7 +106,7 @@ polyBoundaryMesh::polyBoundaryMesh
 }
 
 
-// Construct given size. Patches will be hooked later
+// Construct given size. Patches will be set later
 polyBoundaryMesh::polyBoundaryMesh
 (
     const IOobject& io,
@@ -172,7 +175,6 @@ const List<labelPairList>& polyBoundaryMesh::neighbourEdges() const
             << " boundaries." << endl;
     }
 
-    Pout<< "Size:" << size() << endl;
     if (!neighbourEdgesPtr_)
     {
         neighbourEdgesPtr_ = new List<labelPairList>(size());
@@ -420,6 +422,98 @@ label polyBoundaryMesh::whichPatch(const label faceIndex) const
 }
 
 
+bool polyBoundaryMesh::checkParallelSync(const bool report) const
+{
+    if (!Pstream::parRun())
+    {
+        return false;
+    }
+
+
+    const polyBoundaryMesh& bm = *this;
+
+    bool boundaryError = false;
+
+    // Collect non-proc patches and check proc patches are last.
+    wordList names(bm.size());
+    wordList types(bm.size());
+
+    label nonProcI = 0;
+
+    forAll (bm, patchI)
+    {
+        if (!isA<processorPolyPatch>(bm[patchI]))
+        {
+            if (nonProcI != patchI)
+            {
+                // There is processor patch inbetween normal patches.
+                boundaryError = true;
+
+                if (report)
+                {
+                    WarningIn
+                    (
+                        "polyBoundaryMesh::checkParallelSync(const bool) const"
+                    )   << "Problem with boundary patch " << patchI
+                        << " named " << bm[patchI].name()
+                        << " of type " <<  bm[patchI].type()
+                        << ".\nThe patch seems to be preceeded by processor"
+                        << " patches. This is can give problems."
+                        << nl << endl;
+                }
+            }
+            else
+            {
+                names[nonProcI] = bm[patchI].name();
+                types[nonProcI] = bm[patchI].type();
+                nonProcI++;
+            }
+        }
+    }
+    names.setSize(nonProcI);
+    types.setSize(nonProcI);
+
+    List<wordList> allNames(Pstream::nProcs());
+    allNames[Pstream::myProcNo()] = names;
+    Pstream::gatherList(allNames);
+    Pstream::scatterList(allNames);
+
+    List<wordList> allTypes(Pstream::nProcs());
+    allTypes[Pstream::myProcNo()] = types;
+    Pstream::gatherList(allTypes);
+    Pstream::scatterList(allTypes);
+
+    // Have every processor check but only master print error.
+
+    for (label procI = 1; procI < allNames.size(); procI++)
+    {
+        if
+        (
+            (allNames[procI] != allNames[0])
+         || (allTypes[procI] != allTypes[0])
+        )
+        {
+            boundaryError = true;
+
+            if (report && Pstream::master())
+            {
+                WarningIn
+                (
+                    "polyBoundaryMesh::checkParallelSync(const bool) const"
+                )   << "Inconsistent patches across processors." << nl
+                    << "Processor 0 has patch names:" << allNames[0]
+                    << " patch types:" << allTypes[0] << nl
+                    << "Processor " << procI << " has patch names:"
+                    << allNames[procI]
+                    << " patch types:" << allTypes[procI] << nl
+                    << endl;
+            }
+        }
+    }
+    return boundaryError;
+}
+
+
 bool polyBoundaryMesh::checkDefinition(const bool report) const
 {
     label nextPatchStart = mesh().nInternalFaces();
@@ -433,9 +527,10 @@ bool polyBoundaryMesh::checkDefinition(const bool report) const
         {
             boundaryError = true;
 
-            Pout<< "bool polyBoundaryMesh::checkDefinition("
-                << "const bool report) const : "
-                << "Problem with boundary patch " << patchI
+            WarningIn
+            (
+                "polyBoundaryMesh::checkDefinition(const bool) const"
+            )   << "Problem with boundary patch " << patchI
                 << " named " << bm[patchI].name()
                 << " of type " <<  bm[patchI].type()
                 << ".\nThe patch should start on face no " << nextPatchStart
@@ -493,13 +588,31 @@ void polyBoundaryMesh::updateMesh()
 
     forAll(patches, patchi)
     {
-        patches[patchi].initUpdateTopology();
+        patches[patchi].initUpdateMesh();
     }
 
     forAll(patches, patchi)
     {
         patches[patchi].updateMesh();
     }
+}
+
+
+// Reorder patch order
+void polyBoundaryMesh::reorder(const UList<label>& oldToNew)
+{
+    // Change order of patches
+    polyPatchList::reorder(oldToNew);
+
+    // Adapt indices
+    polyPatchList& patches = *this;
+
+    forAll(patches, patchi)
+    {
+        patches[patchi].index() = patchi;
+    }
+
+    updateMesh();
 }
 
 
@@ -510,14 +623,14 @@ bool polyBoundaryMesh::writeData(Ostream& os) const
 }
 
 
-bool polyBoundaryMesh::write
+bool polyBoundaryMesh::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
     IOstream::compressionType cmp
 ) const
 {
-    return regIOobject::write(fmt, ver, IOstream::UNCOMPRESSED);
+    return regIOobject::writeObject(fmt, ver, IOstream::UNCOMPRESSED);
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,12 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    HashTable
-
-Description
-    STL conforming hash table.
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef HashTable_C
@@ -43,15 +37,14 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct given initial table size
 template<class T, class Key, class Hash>
 HashTable<T, Key, Hash>::HashTable(const label size)
 :
     tableSize_(size),
     table_(NULL),
     nElmts_(0),
-    endIter_(*this, NULL, NULL, 0),
-    endConstIter_(*this, NULL, NULL, 0)
+    endIter_(*this, NULL, 0),
+    endConstIter_(*this, NULL, 0)
 {
     if (tableSize_)
     {
@@ -64,7 +57,6 @@ HashTable<T, Key, Hash>::HashTable(const label size)
 }
 
 
-// Construct as copy
 template<class T, class Key, class Hash>
 HashTable<T, Key, Hash>::HashTable(const HashTable<T, Key, Hash>& ht)
 :
@@ -72,8 +64,8 @@ HashTable<T, Key, Hash>::HashTable(const HashTable<T, Key, Hash>& ht)
     tableSize_(ht.tableSize_),
     table_(NULL),
     nElmts_(0),
-    endIter_(*this, NULL, NULL, 0),
-    endConstIter_(*this, NULL, NULL, 0)
+    endIter_(*this, NULL, 0),
+    endConstIter_(*this, NULL, 0)
 {
     if (tableSize_)
     {
@@ -145,7 +137,7 @@ typename HashTable<T, Key, Hash>::iterator HashTable<T, Key, Hash>::find
 
         for (hashedEntry* n=table_[ii]; n; n=n->next_)
         {
-            if (key == n->key_) return iterator(*this, n, prev, ii);
+            if (key == n->key_) return iterator(*this, n, ii);
             prev = n;
         }
     }
@@ -175,7 +167,7 @@ typename HashTable<T, Key, Hash>::const_iterator HashTable<T, Key, Hash>::find
 
         for (hashedEntry* n=table_[ii]; n; n=n->next_)
         {
-            if (key == n->key_) return const_iterator(*this, n, prev, ii);
+            if (key == n->key_) return const_iterator(*this, n, ii);
             prev = n;
         }
     }
@@ -259,18 +251,58 @@ bool HashTable<T, Key, Hash>::insert(const Key& key, const T& newEntry)
 
 
 template<class T, class Key, class Hash>
-bool HashTable<T, Key, Hash>::erase(const iterator& it)
+bool HashTable<T, Key, Hash>::erase(const iterator& cit)
 {
-    if (it != end() && it.elmtPtr_)
+    if (cit.elmtPtr_)    // note: endIter_ also has 0 elmtPtr_
     {
-        if (it.prevElmtPtr_)
+        iterator& it = const_cast<iterator&>(cit);
+
+        // Search element before elmtPtr_
+        hashedEntry* prevElmtPtr = 0;
+
+        for (hashedEntry* n=table_[it.hashIndex_]; n; n=n->next_)
         {
-            it.prevElmtPtr_->next_ = it.elmtPtr_->next_;
+            if (n == it.elmtPtr_)
+            {
+                break;
+            }
+            prevElmtPtr = n;
         }
 
-        if (it.elmtPtr_ == table_[it.hashIndex_])
+        if (prevElmtPtr)
         {
+            // Have element before elmtPtr
+            prevElmtPtr->next_ = it.elmtPtr_->next_;
+            delete it.elmtPtr_;
+            it.elmtPtr_ = prevElmtPtr;
+        }
+        else
+        {
+            // elmtPtr is first element on SLlist
             table_[it.hashIndex_] = it.elmtPtr_->next_;
+            delete it.elmtPtr_;
+
+            // Search back for previous non-zero table entry
+            while (--it.hashIndex_ >= 0 && !table_[it.hashIndex_]);
+
+            if (it.hashIndex_ >= 0)
+            {
+                // In table entry search for last element
+                it.elmtPtr_ = table_[it.hashIndex_];
+
+                while (it.elmtPtr_ && it.elmtPtr_->next_)
+                {
+                    it.elmtPtr_ = it.elmtPtr_->next_;
+                }
+            }
+            else
+            {
+                // No previous found. Mark with special value which is
+                // - not end()
+                // - handled by operator++
+                it.elmtPtr_ = reinterpret_cast<hashedEntry*>(this);
+                it.hashIndex_ = -1;
+            }
         }
 
         nElmts_--;
@@ -282,8 +314,6 @@ bool HashTable<T, Key, Hash>::erase(const iterator& it)
                 << "hashedEntry " << it.elmtPtr_->key_ << " removed.\n";
         }
 #       endif
-
-        delete it.elmtPtr_;
 
         return true;
     }
@@ -336,7 +366,7 @@ void HashTable<T, Key, Hash>::resize(const label newSize)
 
     HashTable<T, Key, Hash>* newTable = new HashTable<T, Key, Hash>(newSize);
 
-    for (iterator iter = begin(); iter != end(); ++iter)
+    for (const_iterator iter = begin(); iter != end(); ++iter)
     {
         newTable->insert(iter.key(), *iter);
     }
@@ -381,6 +411,7 @@ template<class T, class Key, class Hash>
 void HashTable<T, Key, Hash>::transfer(HashTable<T, Key, Hash>& ht)
 {
     clear();
+    delete[] table_;
 
     tableSize_ = ht.tableSize_;
     ht.tableSize_ = 0;

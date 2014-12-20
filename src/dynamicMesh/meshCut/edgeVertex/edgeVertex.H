@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -106,73 +106,121 @@ public:
     // EdgeVertex handling
 
         //- is eVert an edge?
-        bool isEdge(const label eVert) const
+        static bool isEdge(const primitiveMesh& mesh, const label eVert)
         {
-            if (eVert < 0 || eVert >= (mesh_.nPoints() + mesh_.nEdges()))
+            if (eVert < 0 || eVert >= (mesh.nPoints() + mesh.nEdges()))
             {
-                FatalErrorIn("edgeVertex::isEdge(const label)")
-                    << "EdgeVertex " << eVert << " out of range "
-                    << mesh_.nPoints() << " to "
-                    << (mesh_.nPoints() + mesh_.nEdges() - 1)
+                FatalErrorIn
+                (
+                    "edgeVertex::isEdge(const primitiveMesh&, const label)"
+                )   << "EdgeVertex " << eVert << " out of range "
+                    << mesh.nPoints() << " to "
+                    << (mesh.nPoints() + mesh.nEdges() - 1)
                     << abort(FatalError);
             }
             
-            return eVert >= mesh_.nPoints();
+            return eVert >= mesh.nPoints();
+        }
+        bool isEdge(const label eVert) const
+        {
+            return isEdge(mesh_, eVert);
         }
 
         //- convert eVert to edge label
-        label getEdge(const label eVert) const
+        static label getEdge(const primitiveMesh& mesh, const label eVert)
         {
-            if (!isEdge(eVert))
+            if (!isEdge(mesh, eVert))
             {
-                FatalErrorIn("edgeVertex::getEdge(const label)")
-                    << "EdgeVertex " << eVert << " not an edge"
+                FatalErrorIn
+                (
+                    "edgeVertex::getEdge(const primitiveMesh&, const label)"
+                )   << "EdgeVertex " << eVert << " not an edge"
                     << abort(FatalError);
             }
-            return eVert - mesh_.nPoints();
+            return eVert - mesh.nPoints();
+        }
+        label getEdge(const label eVert) const
+        {
+            return getEdge(mesh_, eVert);
         }
 
         //- convert eVert to vertex label
-        label getVertex(const label eVert) const
+        static label getVertex(const primitiveMesh& mesh, const label eVert)
         {
-            if (isEdge(eVert) || (eVert < 0))
+            if (isEdge(mesh, eVert) || (eVert < 0))
             {
-                FatalErrorIn("edgeVertex::getVertex(const label)")
-                    << "EdgeVertex " << eVert << " not a vertex"
+                FatalErrorIn
+                (
+                    "edgeVertex::getVertex(const primitiveMesh&, const label)"
+                )   << "EdgeVertex " << eVert << " not a vertex"
                     << abort(FatalError);
             }            
             return eVert;
         }
+        label getVertex(const label eVert) const
+        {
+            return getVertex(mesh_, eVert);
+        }
 
         //- Convert pointI to eVert
-        label vertToEVert(const label vertI) const
+        static label vertToEVert(const primitiveMesh& mesh, const label vertI)
         {
-            if ((vertI < 0) || (vertI >= mesh_.nPoints()))
+            if ((vertI < 0) || (vertI >= mesh.nPoints()))
             {
-                FatalErrorIn("edgeVertex::vertToEVert(const label)")
-                    << "Illegal vertex number " << vertI
+                FatalErrorIn
+                (
+                    "edgeVertex::vertToEVert(const primitiveMesh&, const label)"
+                )   << "Illegal vertex number " << vertI
                     << abort(FatalError);
             }
             return vertI;
         }
+        label vertToEVert(const label vertI) const
+        {
+            return vertToEVert(mesh_, vertI);
+        }
 
         //- Convert edgeI to eVert
-        label edgeToEVert(const label edgeI) const
+        static label edgeToEVert(const primitiveMesh& mesh, const label edgeI)
         {
-            if ((edgeI < 0) || (edgeI >= mesh_.nEdges()))
+            if ((edgeI < 0) || (edgeI >= mesh.nEdges()))
             {
-                FatalErrorIn("edgeVertex::edgeToEVert(const label)")
-                    << "Illegal edge number " << edgeI
+                FatalErrorIn
+                (
+                    "edgeVertex::edgeToEVert(const primitiveMesh&const label)"
+                )   << "Illegal edge number " << edgeI
                     << abort(FatalError);
             }
-            return mesh_.nPoints() + edgeI;
+            return mesh.nPoints() + edgeI;
+        }
+        label edgeToEVert(const label edgeI) const
+        {
+            return edgeToEVert(mesh_, edgeI);
         }
 
         //- Return coordinate of cut (uses weight if edgeCut)
-        point coord(const label cut, const scalar weight) const;
+        static point coord
+        (
+            const primitiveMesh&,
+            const label cut,
+            const scalar weight
+        );
+        point coord(const label cut, const scalar weight) const
+        {
+            return coord(mesh_, cut, weight);
+        }
 
         //- Find mesh edge (or -1) between two cuts. 
-        label cutPairToEdge(const label cut0, const label cut1) const;
+        static label cutPairToEdge
+        (
+            const primitiveMesh&,
+            const label cut0,
+            const label cut1
+        );
+        label cutPairToEdge(const label cut0, const label cut1) const
+        {
+            return cutPairToEdge(mesh_, cut0, cut1);
+        }
 
         //- Write cut description to Ostream
         Ostream& writeCut(Ostream& os, const label cut, const scalar) const;

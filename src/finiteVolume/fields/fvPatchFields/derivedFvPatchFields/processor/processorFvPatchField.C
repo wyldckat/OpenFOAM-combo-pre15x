@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -131,8 +131,7 @@ processorFvPatchField<Type>::processorFvPatchField
     const processorFvPatchField<Type>& ptf
 )
 :
-    lduCoupledInterface(),
-    processorLduCoupledInterface(),
+    processorLduInterfaceField(),
     coupledFvPatchField<Type>(ptf),
     procPatch_(refCast<const processorFvPatch>(ptf.patch()))
 {}
@@ -164,9 +163,7 @@ processorFvPatchField<Type>::~processorFvPatchField()
 template<class Type>
 tmp<Field<Type> > processorFvPatchField<Type>::patchNeighbourField() const
 {
-    return
-        (*this - this->patch().weights()*this->patchInternalField())
-       /(1.0 - this->patch().weights());
+    return *this;
 }
 
 
@@ -178,7 +175,7 @@ void processorFvPatchField<Type>::initEvaluate
     const bool bufferdTransfer
 )
 {
-    compressedSend(this->patchInternalField(), bufferdTransfer);
+    procPatch_.compressedSend(this->patchInternalField()(), bufferdTransfer);
 }
 
 
@@ -187,41 +184,20 @@ void processorFvPatchField<Type>::initEvaluate
 template<class Type>
 void processorFvPatchField<Type>::evaluate()
 {
-    tmp<Field<Type> > tpnf(compressedReceive<Type>(this->size()));
+    procPatch_.compressedReceive<Type>(*this);
 
     if (doTransform())
     {
-        tpnf = transform(procPatch_.forwardT(), tpnf);
+        transform(*this, procPatch_.forwardT(), *this);
     }
-
-    Field<Type>::operator=
-    (
-        this->patch().weights()*this->patchInternalField()
-      + (1.0 - this->patch().weights())*tpnf()
-    );
 }
 
 
-// Initialise neighbour colouring transfer
+//- Return patch-normal gradient
 template<class Type>
-void processorFvPatchField<Type>::initNbrColour
-(
-    const labelField& cField,
-    const bool bufferdTransfer
-) const
+tmp<Field<Type> > processorFvPatchField<Type>::snGrad() const
 {
-    send(this->patchInternalField(cField), bufferdTransfer);
-}
-
-
-// Return neighbour colouring
-template<class Type>
-tmp<labelField> processorFvPatchField<Type>::nbrColour
-(
-    const labelField&
-) const
-{
-    return receive<label>(this->size());
+    return this->patch().deltaCoeffs()*(*this - this->patchInternalField());
 }
 
 
@@ -237,7 +213,11 @@ void processorFvPatchField<Type>::initInterfaceMatrixUpdate
     const bool bufferdTransfer
 ) const
 {
-    compressedSend(this->patchInternalField(psiInternal), bufferdTransfer);
+    procPatch_.compressedSend
+    (
+        this->patch().patchInternalField(psiInternal)(),
+        bufferdTransfer
+    );
 }
 
 
@@ -253,18 +233,18 @@ void processorFvPatchField<Type>::updateInterfaceMatrix
     const direction cmpt
 ) const
 {
-    scalarField pnf(compressedReceive<scalar>(this->size()));
+    scalarField pnf(procPatch_.compressedReceive<scalar>(this->size())());
 
     // Transform according to the transformation tensor
-    transformProcCoupleField(pnf, cmpt);
+    transformCoupleField(pnf, cmpt);
 
     // Multiply the field by coefficients and add into the result
 
-    const labelList::subList FaceCells = this->patch().faceCells();
+    const unallocLabelList& faceCells = this->patch().faceCells();
 
-    forAll(FaceCells, elemI)
+    forAll(faceCells, elemI)
     {
-        result[FaceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
+        result[faceCells[elemI]] -= coeffs[elemI]*pnf[elemI];
     }
 }
 

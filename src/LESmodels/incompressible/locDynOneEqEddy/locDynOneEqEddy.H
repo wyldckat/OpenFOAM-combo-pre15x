@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -100,8 +100,17 @@ class locDynOneEqEddy
     // Private Member Functions
 
         //- Calculate ck, ce by filtering the velocity field U.
-        volScalarField ck(const volTensorField&, const volScalarField&) const;
-        volScalarField ce(const volTensorField&, const volScalarField&) const;
+        volScalarField ck
+        (
+            const volSymmTensorField&,
+            const volScalarField&
+        ) const;
+
+        volScalarField ce
+        (
+            const volSymmTensorField&,
+            const volScalarField&
+        ) const;
 
         // Disallow default bitwise copy construct and assignment
         locDynOneEqEddy(const locDynOneEqEddy&);

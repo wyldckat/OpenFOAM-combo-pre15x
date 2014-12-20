@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -102,29 +102,12 @@ class PtrList
 
         List<T*> ptrs_;
 
-        //- Number of the next free hook.
-        label nextFree_;
-
 
     // Private member functions
-
-        //- Construct with length and single value specified (not implemented).
-        //  Hides the equivalent constructor in List<T*>.
-        PtrList(const label, const T&);
-
 
         //- Read from Istream using given Istream constructor class
         template<class INew>
         void read(Istream&, const INew& inewt);
-
-
-protected:
-
-        //- Return address of next free element
-        label nextFree() const
-        {
-            return nextFree_;
-        }
 
 
 public:
@@ -187,19 +170,11 @@ public:
             //  and annull the argument list.
             void transfer(PtrList<T>&);
 
-            //- Return an element pointer to be set.  The pointer is checked
-            //  if already set and the index range checked.
-            typedef T* Tptr;
-            Tptr& set(const label);
-
-            //- Hook an an element created by new onto the list.
-            void hook(T*);
-
-            //- Hook an an element created by new onto the list.
-            inline void hook(const autoPtr<T>&);
-
-            //- Hook an an element created by new onto the list.
-            inline void hook(const tmp<T>&);
+            //- Set element. Return old element (can be NULL).
+            //  No checks on new element.
+            inline autoPtr<T> set(const label, T*);
+            inline autoPtr<T> set(const label, const autoPtr<T>&);
+            inline autoPtr<T> set(const label, const tmp<T>&);
 
             //- Reorders elements. Ordering does not have to be done in
             //  ascending or descending order. Reordering has to be unique.

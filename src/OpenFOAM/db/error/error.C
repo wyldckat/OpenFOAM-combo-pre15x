@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    error
-
 \*---------------------------------------------------------------------------*/
 
 #include "error.H"
@@ -36,7 +33,15 @@ Class
 #include "OSspecific.H"
 
 #if defined(__GNUC__)
+#if defined(__linux__) && (defined(__i386__) || defined(__x86_64__))
+#define HAS_DEMANGLING
+#endif
+#endif
+
+#ifdef HAS_DEMANGLING
 #include "IStringStream.H"
+#include "IFstream.H"
+#include "readHexLabel.H"
 #include <execinfo.h>
 #include <demangle.h>
 #endif
@@ -86,6 +91,12 @@ error::error(const dictionary& errDict)
             << endl;
         ::exit(1);
     }
+}
+
+
+error::~error()
+{
+    delete messageStreamPtr_;
 }
 
 
@@ -160,9 +171,172 @@ string error::message() const
 }
 
 
+
+#if defined(HAS_DEMANGLING)
+
+string doThePOpenDance(const string &cmd, label line=0)
+{
+    const int MAX=1000;
+
+    FILE *cmdPipe = popen(cmd.c_str(),"r");
+    if (cmdPipe)
+    {
+        // Read line number of lines
+        for (label cnt = 0; cnt <= line; cnt++)
+        {
+            char buffer[MAX];
+            char* s = fgets(buffer, MAX-1, cmdPipe);
+            //cout<< "for line:" << line << " cnt:" << cnt
+            //    << " s:" << s << std::endl;
+            if (s == NULL)
+            {
+                return "";
+            }
+            if (cnt == line)
+            {
+                string str(buffer);
+                return str.substr(0, str.size()-1);
+            }            
+        }
+        pclose(cmdPipe);
+    }
+
+    return "";
+}
+
+
+// use popen to call addr2line (using bfd.h directly would have
+// meant relinking everything)
+
+void printSourceFileAndLine
+(
+    Ostream& os,
+    const HashTable<label, fileName>& addressMap,
+    const fileName& filename,
+    const word& address
+)
+{
+    word myAddress = address;
+
+    if (filename.ext() == "so")
+    {
+        // Convert offset into .so into offset into executable.
+
+        // Check needed since softlinks are resolved in addressMap but
+        // not in filename.
+        label offset = 0;
+
+        HashTable<label, fileName>::const_iterator fileIter =
+            addressMap.find(filename);
+        if (fileIter != addressMap.end())
+        {
+            offset = fileIter();
+        }
+        else
+        {
+            HashTable<label, fileName>::const_iterator baseIter =
+                addressMap.find(filename.name());
+            if (baseIter != addressMap.end())
+            {
+                offset = baseIter();
+            }
+        }
+        IStringStream addressStr(address.substr(2));
+        label addressValue = readHexLabel(addressStr);
+        label relativeAddress = addressValue-offset;
+
+        // Reconstruct hex word from address
+        OStringStream nStream;
+        nStream << "0x" << hex << relativeAddress;
+        myAddress = nStream.str();
+    }
+
+    if (filename[0]=='/')
+    {
+        string line = doThePOpenDance
+        (
+            "addr2line -f --demangle=auto --exe "
+          + filename
+          + " "
+          + myAddress,
+            1
+        );
+
+        if (line == "??:0")
+        {
+            //os << " No debug information available";
+        }
+        else
+        {
+            string cwdLine(line.replaceAll(cwd()+'/', ""));
+
+            string homeLine(cwdLine.replaceAll(home(), '~'));
+
+            os << " at " << homeLine.c_str();
+        }
+    }
+}
+
+
+void getSymbolForRaw
+(
+    Ostream& os,
+    const string& raw,
+    const fileName& filename,
+    const word& address
+)
+{
+    if (filename[0] == '/')
+    {
+        string fcnt = doThePOpenDance
+        (
+            "addr2line -f --demangle=auto --exe "
+          + filename
+          + " "
+          + address
+        );
+
+        if (fcnt != "")
+        {
+            os << fcnt.c_str();
+            return;
+        }
+    }
+    os << "Uninterpreted: " << raw.c_str();
+}
+
+#endif
+
 void error::printStack(Ostream& os)
 {
-#if defined(__GNUC__)
+#if defined(HAS_DEMANGLING)
+
+    // Reads the starting addresses for the dynamically linked libraries
+    // from the /proc/pid/maps-file
+    // I'm afraid this works only for Linux 2.6-Kernels (may work on 2.4)
+    // Note2: the filenames in here will have softlinks resolved so will
+    // go wrong when having e.g. OpenFOAM installed under a softlink.
+
+    HashTable<label, fileName> addressMap;
+    {
+        IFstream is("/proc/" + name(pid()) + "/maps");
+
+        while(is.good())
+        {
+            string line;
+            is.getLine(line);
+
+            string::size_type space = line.rfind(' ') + 1;
+            fileName libPath = line.substr(space, line.size()-space);
+
+            if (libPath.size() > 0 && libPath[0] == '/')
+            {
+                string offsetString(line.substr(0,line.find('-')));
+                IStringStream offsetStr(offsetString);
+                addressMap.insert(libPath, readHexLabel(offsetStr));
+            }
+        }
+    }
 
     // Get raw stack symbols
     void *array[100];
@@ -174,6 +348,37 @@ void error::printStack(Ostream& os)
     for (size_t i = 0; i < size; i++)
     {
         string msg(strings[i]);
+        fileName programFile;
+        word address;
+
+        os << '#' << label(i) << "  ";
+        //os << "Raw   : " << msg << "\n\t";
+        {
+            string::size_type lPos = msg.find('[');
+            string::size_type rPos = msg.find(']');
+            
+            if (lPos != string::npos && rPos != string::npos && lPos<rPos)
+            {
+                address=msg.substr(lPos+1,rPos-lPos-1);
+            }
+
+            string::size_type bracketPos = msg.find('(');
+            string::size_type spacePos = msg.find(' ');
+            if (bracketPos != string::npos || spacePos != string::npos)
+            {
+                programFile=msg.substr(0,min(spacePos,bracketPos));
+
+                // not an absolute path
+                if (programFile[0] != '/')
+                {
+                    string tmp = doThePOpenDance("which "+programFile);
+                    if (tmp[0]=='/' || tmp[0]=='~')
+                    {
+                        programFile=tmp;
+                    }
+                }
+            }
+        }
 
         string::size_type bracketPos = msg.find('(');
 
@@ -195,12 +400,12 @@ void error::printStack(Ostream& os)
 
                 if (cplusNamePtr)
                 {
-                    os<< cplusNamePtr << endl;
+                    os<< cplusNamePtr;
                     free(cplusNamePtr);
                 }
                 else
                 {
-                    os<< cName.c_str() << endl;
+                    os<< cName.c_str();
                 }
             }
             else
@@ -211,20 +416,24 @@ void error::printStack(Ostream& os)
                 {
                     string fullName(msg.substr(start, endBracketPos-start));
 
-                    os<< fullName.c_str() << endl;
+                    os<< fullName.c_str() << nl;
                 }
                 else
                 {
                     // Print raw message
-                    os<< strings[i] << endl;
+                    getSymbolForRaw(os, msg, programFile, address);
                 }
             }
         }
         else
         {
             // Print raw message
-            os<< strings[i] << endl;
+            getSymbolForRaw(os, msg, programFile, address);
         }
+
+        printSourceFileAndLine(os, addressMap, programFile, address);
+
+        os << nl;
     }
     free(strings);
 
@@ -242,9 +451,9 @@ void error::exit(const int errNo)
 
     if (abort_)
     {
+        printStack(*this);
         Perr<< endl << *this << endl
             << "\nFOAM aborting (FOAM_ABORT set)\n" << endl;
-        printStack(Perr);
         ::abort();
     }
 
@@ -280,17 +489,17 @@ void error::abort()
 
     if (abort_)
     {
+        printStack(*this);
         Perr<< endl << *this << endl
             << "\nFOAM aborting (FOAM_ABORT set)\n" << endl;
-        printStack(Perr);
         ::abort();
     }
 
     if (Pstream::parRun())
     {
+        printStack(*this);
         Perr<< endl << *this << endl
             << "\nFOAM parallel run aborting\n" << endl;
-        printStack(Perr);
         Pstream::abort();
     }
     else
@@ -301,9 +510,9 @@ void error::abort()
         }
         else
         {
+            printStack(*this);
             Perr<< endl << *this << endl
                 << "\nFOAM aborting\n" << endl;
-            printStack(Perr);
             ::abort();
         }
     }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,6 +40,7 @@ SourceFiles
 #define ProcessorTopology_H
 
 #include "labelList.H"
+#include "lduSchedule.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,31 +50,6 @@ namespace Foam
 /*---------------------------------------------------------------------------*\
                        Class ProcessorTopology Declaration
 \*---------------------------------------------------------------------------*/
-
-//- Struct to hold the patch index and the initialisation flag
-//  for the patch schedule
-struct labool
-{
-    label patch;
-    bool init;
-    bool bufferedTransfer;
-
-    friend bool operator!=(const labool& lb1, const labool& lb2)
-    {
-        return true;
-    }
-
-    friend Ostream& operator<<(Ostream& os, const labool& lb)
-    {
-        os  << lb.patch << token::SPACE
-            << lb.init << token::SPACE
-            << lb.bufferedTransfer;
-        return os;
-    }
-};
-
-typedef List<labool> patchScheduleList;
-
 
 template<class Patch, class ProcPatch>
 class ProcessorTopology
@@ -89,15 +65,9 @@ private:
         //  -1 or patchI for connection to procID
         labelList procPatchMap_;
 
-        //- From cell (=processor) to face (processor-processor communication)
-        labelListList cellFaces_;
-    
-        //- From face (processor-processor communication) to cell (=processor)
-        labelListList faceCells_;
-
         //- Order in which the patches should be initialised/evaluated
         //  corresponding to the schedule
-        patchScheduleList patchSchedule_;
+        lduSchedule patchSchedule_;
 
 
     // Private Member Functions
@@ -105,10 +75,6 @@ private:
         //- Return all neighbouring processors of this processor. Set
         //  procPatchMap_.
         labelList procNeighbours(const PtrList<Patch>&);
-
-        //- Calculate cell-face and face-cell addressing.
-        void calcAddressing();
-
 
 public:
 
@@ -120,18 +86,6 @@ public:
 
     // Member Functions
 
-        //- From processor to unique inter-processor 'face'.
-        const labelListList& cellFaces() const
-        {
-            return cellFaces_;
-        }
-
-        //- From unique inter-processor 'face' to the two processors using it.
-        const labelListList& faceCells() const
-        {
-            return faceCells_;
-        }
-
         //- from neighbour processor to index in boundaryMesh. Local information
         //  (so not same over all processors)
         const labelList& procPatchMap() const
@@ -141,17 +95,10 @@ public:
 
         //- Order in which the patches should be initialised/evaluated
         //  corresponding to the schedule
-        const patchScheduleList& patchSchedule() const
+        const lduSchedule& patchSchedule() const
         {
             return patchSchedule_;
         }
-
-        //- Get label of 'face' for connection to neighbour procID on current
-        //  processor.
-        label getFace(const label nbrProcID) const;
-
-        //- Get label of 'face' for connection to neighbour procID 
-        label getFace(const label myProcID, const label nbrProcID) const;
 };
 
 

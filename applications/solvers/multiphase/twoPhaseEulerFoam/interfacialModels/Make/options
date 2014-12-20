@@ -1,6 +1,6 @@
 EXE_INC = \
     -I$(LIB_SRC)/finiteVolume/lnInclude \
-	-I../phaseModel/lnInclude
+    -I../phaseModel/lnInclude
 
-EXE_LIBS = \
-	-lphaseModel
+LIB_LIBS = \
+    -lphaseModel

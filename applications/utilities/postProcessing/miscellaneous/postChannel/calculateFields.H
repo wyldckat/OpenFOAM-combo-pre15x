@@ -1,6 +1,6 @@
         /*
         volTensorField gradU = fvc::grad(U);
-        volTensorField D = symm(fvc::grad(U));
+        volSymmTensorField D = symm(fvc::grad(U));
         volTensorField Dprim = symm(fvc::grad(U - Umean));
 
         volScalarField prod = -((U - Umean)*(U - Umean)) && D;

@@ -1,7 +1,0 @@
-#!/bin/sh
-set -x
-
-wmake oodles
-wmake coodles
-wmake channelOodles
-wmake dnsFoam

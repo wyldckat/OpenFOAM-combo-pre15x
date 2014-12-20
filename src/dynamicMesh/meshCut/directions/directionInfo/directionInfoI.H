@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,6 +72,7 @@ inline bool Foam::directionInfo::valid() const
 // No geometric data so never any problem on cyclics
 inline bool Foam::directionInfo::sameGeometry
 (
+    const polyMesh&,
     const directionInfo& w2,
     const scalar tol
 )
@@ -84,6 +85,7 @@ inline bool Foam::directionInfo::sameGeometry
 // index_ is already offset in face
 inline void Foam::directionInfo::leaveDomain
 (
+    const polyMesh&,
     const polyPatch& patch,
     const label patchFaceI,
     const point& faceCentre
@@ -97,6 +99,7 @@ inline void Foam::directionInfo::leaveDomain
 // etc.)
 inline void Foam::directionInfo::enterDomain
 (
+    const polyMesh&,
     const polyPatch& patch,
     const label patchFaceI,
     const point& faceCentre
@@ -112,7 +115,11 @@ inline void Foam::directionInfo::enterDomain
 
 
 // No geometric data.
-inline void Foam::directionInfo::transform(const tensor& rotTensor)
+inline void Foam::directionInfo::transform
+(
+    const polyMesh&,
+    const tensor& rotTensor
+)
 {}
 
 

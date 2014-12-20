@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,12 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Specialisation of Field<T> for tensor.
-
 \*---------------------------------------------------------------------------*/
 
 #include "tensorField.H"
+#include "transformField.H"
+
+#define TEMPLATE
 #include "FieldFunctionsM.C"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -37,10 +37,14 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * global functions  * * * * * * * * * * * * * //
 
-UNARY_FUNCTION_N(scalar, tensor, tr)
-UNARY_FUNCTION_R(tensor, tensor, dev)
-UNARY_FUNCTION_R(tensor, tensor, dev2)
-UNARY_FUNCTION_N(scalar, tensor, det)
+UNARY_FUNCTION(scalar, tensor, tr)
+UNARY_FUNCTION(sphericalTensor, tensor, sph)
+UNARY_FUNCTION(symmTensor, tensor, symm)
+UNARY_FUNCTION(symmTensor, tensor, twoSymm)
+UNARY_FUNCTION(tensor, tensor, skew)
+UNARY_FUNCTION(tensor, tensor, dev)
+UNARY_FUNCTION(tensor, tensor, dev2)
+UNARY_FUNCTION(scalar, tensor, det)
 
 void inv(Field<tensor>& tf, const UList<tensor>& tf1)
 {
@@ -50,35 +54,36 @@ void inv(Field<tensor>& tf, const UList<tensor>& tf1)
     }
 
     tensorField tf1Plus(tf1);
+    scalar scale = magSqr(tf1[0]);
 
-    if (mag(tf1[0].xx()) < SMALL)
+    if (mag(tf1[0].xx())/scale < SMALL)
     {
         tf1Plus += tensor(1,0,0,0,0,0,0,0,0);
     }
 
-    if (mag(tf1[0].yy()) < SMALL)
+    if (mag(tf1[0].yy())/scale < SMALL)
     {
         tf1Plus += tensor(0,0,0,0,1,0,0,0,0);
     }
 
-    if (mag(tf1[0].zz()) < SMALL)
+    if (mag(tf1[0].zz())/scale < SMALL)
     {
         tf1Plus += tensor(0,0,0,0,0,0,0,0,1);
     }
 
     TFOR_ALL_F_OP_FUNC_F(tensor, tf, =, inv, tensor, tf1Plus)
 
-    if (mag(tf1[0].xx()) < SMALL)
+    if (mag(tf1[0].xx())/scale < SMALL)
     {
         tf -= tensor(1,0,0,0,0,0,0,0,0);
     }
 
-    if (mag(tf1[0].yy()) < SMALL)
+    if (mag(tf1[0].yy())/scale < SMALL)
     {
         tf -= tensor(0,0,0,0,1,0,0,0,0);
     }
 
-    if (mag(tf1[0].zz()) < SMALL)
+    if (mag(tf1[0].zz())/scale < SMALL)
     {
         tf -= tensor(0,0,0,0,0,0,0,0,1);
     }
@@ -93,23 +98,47 @@ tmp<tensorField> inv(const UList<tensor>& tf)
 
 tmp<tensorField> inv(const tmp<tensorField>& tf)
 {
-    tmp<tensorField> result(tf.ptr());
-    inv(result(), result());
-    return result;
+    tmp<tensorField> tRes = reuseTmp<tensor, tensor>::New(tf);
+    inv(tRes(), tf());
+    reuseTmp<tensor, tensor>::clear(tf);
+    return tRes;
 }
 
+UNARY_FUNCTION(vector, tensor, eigenValues)
+UNARY_FUNCTION(tensor, tensor, eigenVectors)
 
-UNARY_FUNCTION_R(tensor, tensor, hinv)
-UNARY_FUNCTION_R(tensor, tensor, symm)
-UNARY_FUNCTION_R(tensor, tensor, skew)
-UNARY_FUNCTION_N(vector, tensor, eigenValues)
-UNARY_FUNCTION_R(tensor, tensor, eigenVectors)
+UNARY_FUNCTION(vector, symmTensor, eigenValues)
+UNARY_FUNCTION(tensor, symmTensor, eigenVectors)
+
+
+template<>
+tmp<Field<tensor> > transformFieldMask<tensor>
+(
+    const symmTensorField& stf
+)
+{
+    tmp<tensorField> tRes(new tensorField(stf.size()));
+    tensorField& res = tRes();
+    TFOR_ALL_F_OP_F(tensor, res, =, symmTensor, stf)
+    return tRes;
+}
+
+template<>
+tmp<Field<tensor> > transformFieldMask<tensor>
+(
+    const tmp<symmTensorField>& tstf
+)
+{
+    tmp<Field<tensor> > ret = transformFieldMask<tensor>(tstf());
+    tstf.clear();
+    return ret;
+}
 
 
 // * * * * * * * * * * * * * * * global operators  * * * * * * * * * * * * * //
 
-UNARY_OPERATOR_N(vector, tensor, *, hdual)
-UNARY_OPERATOR_N(tensor, vector, *, hdual)
+UNARY_OPERATOR(vector, tensor, *, hdual)
+UNARY_OPERATOR(tensor, vector, *, hdual)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

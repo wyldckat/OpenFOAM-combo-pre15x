@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,8 +33,20 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * * //
 
-template<template<class> class PatchField, class PointPatch, class Type>
-CoupledPointPatchField<PatchField, PointPatch, Type>::CoupledPointPatchField
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class CoupledPointPatch,
+    class Type
+>
+CoupledPointPatchField
+<
+    PatchField,
+    PointPatch,
+    CoupledPointPatch,
+    Type
+>::CoupledPointPatchField
 (
     const PointPatch& p,
     const Field<Type>& iF
@@ -44,10 +56,23 @@ CoupledPointPatchField<PatchField, PointPatch, Type>::CoupledPointPatchField
 {}
 
 
-template<template<class> class PatchField, class PointPatch, class Type>
-CoupledPointPatchField<PatchField, PointPatch, Type>::CoupledPointPatchField
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class CoupledPointPatch,
+    class Type
+>
+CoupledPointPatchField
+<
+    PatchField,
+    PointPatch,
+    CoupledPointPatch,
+    Type
+>::CoupledPointPatchField
 (
-    const CoupledPointPatchField<PatchField, PointPatch, Type>&,
+    const CoupledPointPatchField
+        <PatchField, PointPatch, CoupledPointPatch, Type>&,
     const PointPatch& p,
     const Field<Type>& iF,
     const PointPatchFieldMapper&
@@ -57,10 +82,23 @@ CoupledPointPatchField<PatchField, PointPatch, Type>::CoupledPointPatchField
 {}
 
 
-template<template<class> class PatchField, class PointPatch, class Type>
-CoupledPointPatchField<PatchField, PointPatch, Type>::CoupledPointPatchField
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class CoupledPointPatch,
+    class Type
+>
+CoupledPointPatchField
+<
+    PatchField,
+    PointPatch,
+    CoupledPointPatch,
+    Type
+>::CoupledPointPatchField
 (
-    const CoupledPointPatchField<PatchField, PointPatch, Type>& ptf,
+    const CoupledPointPatchField
+        <PatchField, PointPatch, CoupledPointPatch, Type>& ptf,
     const Field<Type>& iF
 )
 :

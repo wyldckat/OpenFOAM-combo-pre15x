@@ -1,4 +1,7 @@
 #!/bin/sh
+set -x
+
+(cd $FOAM_SRC/OpenFOAM ; wmakeLnInclude . )
 
 wmake libso zlib-1.2.1
 wmake libso foamUser
@@ -13,12 +16,9 @@ then
 
         ./configure \
             --prefix=$OPENMPI_ARCH_PATH \
-            --enable-shared \
-            --disable-static \
-            --disable-mpi-f77 \
-            --disable-mpi-f90 \
-            --disable-mpi-profile \
-            --disable-mpi-cxx
+            --enable-shared --disable-static \
+            --disable-mpi-f77 --disable-mpi-f90 --disable-mpi-cxx \
+            --disable-mpi-profile
 
         gmake
         gmake install
@@ -100,14 +100,6 @@ then
     cd $FOAM_SRC
 fi
 
-
-(cd $FOAM_SRC/OpenFOAM ; wmakeLnInclude . )
-
-cd $FOAM_APP/utilities/miscellaneous
-    wmake exe foamFlex
-    cp foamFlex/FlexLexer.h $FOAM_SRC/OpenFOAM/lnInclude
-cd $FOAM_SRC
-
 (cd Pstream ; ./Allwmake)
 wmake libso OpenFOAM
 
@@ -119,15 +111,15 @@ wmake libso meshTools
 
 wmake libso finiteVolume
 
+(cd MGridGenGamgAgglomeration ; ./Allwmake)
+
 wmake libso sampling
 
 wmake libso dynamicMesh
 
-(cd tetDecompositionFiniteElement ; ./Allwmake)
-wmake libso tetDecompositionMotionSolver
-
 wmake libso dynamicFvMesh
 wmake libso topoChangerFvMesh
+wmake libso fvMotionSolver
 wmake libso engine
 
 wmake libso ODE
@@ -138,9 +130,9 @@ wmake libso randomProcesses
 (cd turbulenceModels ; ./Allwmake)
 (cd LESmodels ; ./Allwmake)
 
-wmake libso lagrangian/dieselSpray
+(cd lagrangian ; ./Allwmake)
 
-wmake libso finiteArea
+#wmake libso finiteArea
 
 wmake libso errorEstimation
 

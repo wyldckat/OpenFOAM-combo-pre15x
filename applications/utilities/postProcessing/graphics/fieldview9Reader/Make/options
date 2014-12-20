@@ -4,7 +4,7 @@
  *
  */
 
-#if defined(linux) || defined(linuxAMD64)
+#if defined(linux) || defined(linux64)
 
     FV_LIBS = \
         $(FV_HOME)/user/obj/linux_x86/fv.o \

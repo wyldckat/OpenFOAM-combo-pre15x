@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,7 +72,7 @@ public:
         simpleGeomDecomp
         (
             const dictionary& decompositionDict,
-            const primitiveMesh& mesh
+            const polyMesh& mesh
         );
 
 
@@ -83,6 +83,13 @@ public:
 
 
     // Member Functions
+
+        bool parallelAware() const
+        {
+            // simple decomp does not attempt to do anything across proc
+            // boundaries
+            return false;
+        }
 
         labelList decompose(const pointField&);
 };

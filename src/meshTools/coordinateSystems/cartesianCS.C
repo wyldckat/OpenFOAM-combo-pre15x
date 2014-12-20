@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,64 +22,25 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Source file implementing general coordinate transformations
-    from arbitary coordinate systems to the global Cartesian system.
-
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "cartesianCS.H"
 #include "addToRunTimeSelectionTable.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-defineTypeNameAndDebug(cartesianCS, 0);
-
-addToRunTimeSelectionTable(coordinateSystem, cartesianCS, origAxisDir);
-addToRunTimeSelectionTable(coordinateSystem, cartesianCS, origRotation);
-addToRunTimeSelectionTable(coordinateSystem, cartesianCS, dictionary);
-
-const scalar cartesianCS::nonOrthogonalError = 1.0e-8;
-
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-void cartesianCS::calcTransformations()
-{
-    vector ip = direction()/mag(direction());
-    vector kp = axis()/mag(axis());
-    vector jp = kp ^ ip;
-
-    if (mag(kp&ip)/(mag(kp)*mag(ip)) >= nonOrthogonalError)
-    {
-        FatalErrorIn("void cartesianCS::calcTransformations()")
-            << "Coordinate system not orthogonal" << endl
-            << "mag(kp & ip) = " << mag(kp & ip)
-            << abort(FatalError);
-    }
-
-    R_ = tensor
-    (
-        ip.x(), ip.y(), ip.z(),
-        jp.x(), jp.y(), jp.z(),
-        kp.x(), kp.y(), kp.z()
-    ).T();
-
-    Rtrans_ = R_.T();
+    defineTypeNameAndDebug(cartesianCS, 0);
+    addToRunTimeSelectionTable(coordinateSystem, cartesianCS, origAxisDir);
+    addToRunTimeSelectionTable(coordinateSystem, cartesianCS, origRotation);
+    addToRunTimeSelectionTable(coordinateSystem, cartesianCS, dictionary);
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from origin and two axes
-cartesianCS::cartesianCS
+Foam::cartesianCS::cartesianCS
 (
     const word& name,
     const vector& origin,
@@ -87,70 +48,61 @@ cartesianCS::cartesianCS
     const vector& dir
 )
 :
-    coordinateSystem(name, origin, axis, dir),
-    R_(tensor::zero),
-    Rtrans_(tensor::zero)
-{
-    calcTransformations();
-}
+    coordinateSystem(name, origin, axis, dir)
+{}
 
 
-// Construct from origin and a coordinate rotation
-cartesianCS::cartesianCS
+Foam::cartesianCS::cartesianCS
 (
     const word& name,
     const vector& origin,
     const coordinateRotation& cr
 )
 :
-    coordinateSystem(name, origin, cr),
-    R_(cr.R()),
-    Rtrans_(R_.T())
+    coordinateSystem(name, origin, cr)
 {}
 
 
-cartesianCS::cartesianCS
+Foam::cartesianCS::cartesianCS
 (
     const word& name,
     const dictionary& dict
 )
 :
-    coordinateSystem(name, dict),
-    R_(tensor::zero),
-    Rtrans_(tensor::zero)
-{
-    calcTransformations();
-}
+    coordinateSystem(name, dict)
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-vector cartesianCS::toGlobal(const vector& localV) const
+Foam::vector Foam::cartesianCS::toGlobal(const vector& localV) const
 {
-    return (R_ & localV) + origin();
+    return coordinateSystem::toGlobal(localV);
 }
 
 
-tmp<vectorField> cartesianCS::toGlobal(const vectorField& localV) const
+Foam::tmp<Foam::vectorField> Foam::cartesianCS::toGlobal
+(
+    const vectorField& localV
+) const
 {
-    return (R_ & localV) + origin();
+    return coordinateSystem::toGlobal(localV);
 }
 
 
-vector cartesianCS::toLocal(const vector& globalV) const
+Foam::vector Foam::cartesianCS::toLocal(const vector& globalV) const
 {
-    return (Rtrans_ & (globalV - origin()));
+    return coordinateSystem::toLocal(globalV);
 }
 
 
-tmp<vectorField> cartesianCS::toLocal(const vectorField& globalV) const
+Foam::tmp<Foam::vectorField> Foam::cartesianCS::toLocal
+(
+    const vectorField& globalV
+) const
 {
-    return (Rtrans_ & (globalV - origin()));
+    return coordinateSystem::toLocal(globalV);
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

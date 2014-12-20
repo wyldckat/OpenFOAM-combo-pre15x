@@ -1,8 +1,6 @@
-CPP        = /usr/lib/cpp -undef -D$(WM_ARCH)
+CPP        = /usr/lib/cpp -undef $(GFLAGS)
 
-GLIBS      = -liberty -L$(FOAM_LIBBIN)/dummy -lPstream -lm -lnsl -lsocket
-
-PROJECT_LIBS = -L$(FOAM_LIBBIN)/dummy
+PROJECT_LIBS = -l$(WM_PROJECT) -liberty -lnsl -lsocket -L$(FOAM_LIBBIN)/dummy -lPstream
 
 include $(RULES)/X
 

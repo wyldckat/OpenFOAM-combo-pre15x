@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,10 +22,9 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    Pstream
-
 \*---------------------------------------------------------------------------*/
+
+#include <mpi.h>
 
 #include "Pstream.H"
 #include "PstreamReduceOps.H"
@@ -34,8 +33,6 @@ Class
 #include <cstring>
 #include <cstdlib>
 #include <csignal>
-
-#include <mpi.h>
 
 #if defined(SP)
 #   define MPI_SCALAR MPI_FLOAT
@@ -57,6 +54,8 @@ void Pstream::addValidParOptions(HashTable<string>& validParOptions)
     validParOptions.insert("p4wd", "directory");
     validParOptions.insert("p4amslave", "");
     validParOptions.insert("p4yourname", "hostname");
+    validParOptions.insert("GAMMANP", "number of instances");
+    validParOptions.insert("machinefile", "machine file");
 }
 
 
@@ -73,9 +72,7 @@ bool Pstream::init(int& argc, char**& argv)
         FatalErrorIn("Pstream::init(int& argc, char**& argv)")
             << "bool Pstream::init(int& argc, char**& argv) : "
                "attempt to run parallel on 1 processor"
-            << endl;
-
-        abort();
+            << Foam::abort(FatalError);
     }
 
     procIDs_.setSize(numprocs);
@@ -103,8 +100,8 @@ bool Pstream::init(int& argc, char**& argv)
     {
         FatalErrorIn("Pstream::init(int& argc, char**& argv)")
             << "Pstream::init(int& argc, char**& argv) : "
-            << "environment variable MPI_BUFFER_SIZE not defined";
-        abort();
+            << "environment variable MPI_BUFFER_SIZE not defined"
+            << Foam::abort(FatalError);
     }
 #   endif
 
@@ -114,6 +111,12 @@ bool Pstream::init(int& argc, char**& argv)
     MPI_Get_processor_name(processorName, &processorNameLen);
 
     //signal(SIGABRT, stop);
+
+    Info<< "MPI Pstream initialized with:" << nl
+        << "    floatTransfer         : " << floatTransfer << nl
+        << "    nProcsSimpleSum       : " << nProcsSimpleSum << nl
+        << "    scheduledTransfer     : " << scheduledTransfer << nl
+        << endl;
 
     // Now that nprocs is known construct communication tables.
     initCommunicationSchedule();
@@ -189,7 +192,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                     (
                         "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
                     )   << "MPI_Recv failed"
-                        << abort(FatalError);
+                        << Foam::abort(FatalError);
                 }
 
                 Value = bop(Value, value);
@@ -214,7 +217,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                 (
                     "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
                 )   << "MPI_Send failed"
-                    << abort(FatalError);
+                    << Foam::abort(FatalError);
             }
         }
 
@@ -245,7 +248,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                     (
                         "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
                     )   << "MPI_Send failed"
-                        << abort(FatalError);
+                        << Foam::abort(FatalError);
                 }
             }
         }
@@ -269,7 +272,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                 (
                     "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
                 )   << "MPI_Recv failed"
-                    << abort(FatalError);
+                    << Foam::abort(FatalError);
             }
         }
     }
@@ -323,7 +326,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                     (
                         "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
                     )   << "MPI_Recv failed"
-                        << abort(FatalError);
+                        << Foam::abort(FatalError);
                 }
 
 	            Value = bop(Value, value);
@@ -358,7 +361,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                 (
                     "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
                 )   << "MPI_Send failed"
-                    << abort(FatalError);
+                    << Foam::abort(FatalError);
             }
 
             if
@@ -379,7 +382,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                 (
                     "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
                 )   << "MPI_Recv failed"
-                    << abort(FatalError);
+                    << Foam::abort(FatalError);
             }
         }
 
@@ -414,7 +417,7 @@ void reduce(scalar& Value, const sumOp<scalar>& bop)
                     (
                         "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
                     )   << "MPI_Send failed"
-                        << abort(FatalError);
+                        << Foam::abort(FatalError);
                 }
             }
 

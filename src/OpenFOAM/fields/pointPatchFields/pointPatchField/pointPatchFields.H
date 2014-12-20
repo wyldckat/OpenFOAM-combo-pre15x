@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    pointPatchField
-
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef pointPatchFields_H
@@ -34,28 +29,7 @@ Description
 
 #include "pointPatchField.H"
 #include "fieldTypes.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-typedef PointPatchField<pointPatchField, pointPatch, scalar>
-    basePointPatchScalarField;
-typedef PointPatchField<pointPatchField, pointPatch, vector>
-    basePointPatchVectorField;
-typedef PointPatchField<pointPatchField, pointPatch, tensor>
-    basePointPatchTensorField;
-
-typedef pointPatchField<scalar> pointPatchScalarField;
-typedef pointPatchField<vector> pointPatchVectorField;
-typedef pointPatchField<tensor> pointPatchTensorField;
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
+#include "pointPatchFieldsFwd.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

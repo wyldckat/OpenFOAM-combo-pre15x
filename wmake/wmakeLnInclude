@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -81,7 +81,7 @@ echo $0: linking include files to $INCDIR
 echo
 
 cd $INCDIR
-find .. -name lnInclude -prune -o \( -name '*.[hcHIMC]' -o -name '*.type' \) -exec ln $LNOPTION {} . \;
+find .. -name lnInclude -prune -o \( -name '*.[hcHCx]*' -o -name '*.type' \) -exec ln $LNOPTION {} . \;
 
 
 #------------------------------------------------------------------------------

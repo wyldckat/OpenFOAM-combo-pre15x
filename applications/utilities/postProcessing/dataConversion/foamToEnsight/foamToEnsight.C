@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,6 +33,7 @@ Description
 #include "IOobjectList.H"
 #include "OFstream.H"
 #include "IOmanip.H"
+#include "scalarIOField.H"
 
 #include "ensightMesh.H"
 #include "ensightField.H"
@@ -255,6 +256,30 @@ int main(int argc, char *argv[])
                     else if (fieldTypes[i] == volVectorField::typeName)
                     {
                         ensightField<vector>
+                        (
+                            fieldObject,
+                            eMesh,
+                            postProcPath,
+                            prepend,
+                            timeIndex,
+                            ensightCaseFile
+                        );
+                    }
+                    else if (fieldTypes[i] == volSphericalTensorField::typeName)
+                    {
+                        ensightField<sphericalTensor>
+                        (
+                            fieldObject,
+                            eMesh,
+                            postProcPath,
+                            prepend,
+                            timeIndex,
+                            ensightCaseFile
+                        );
+                    }
+                    else if (fieldTypes[i] == volSymmTensorField::typeName)
+                    {
+                        ensightField<symmTensor>
                         (
                             fieldObject,
                             eMesh,

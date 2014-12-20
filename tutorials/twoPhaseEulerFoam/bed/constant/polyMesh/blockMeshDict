@@ -1,26 +1,30 @@
-// settlingFoam mesh description
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          blockMeshDict;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-version 0.5;
-format ascii;
-
-root    "/home/nordin/foam/run/settling";
-case    "5x50";
-instance "constant";
-local "mesh";
-object  meshDescription;
-
-class dictionary;
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-meshGenApp blockMesh;
 
 convertToMeters 1.0;
 
 vertices
-8
 (
 
     (0      0.0     0)
@@ -44,42 +48,38 @@ vertices
 //       |/           |/     |/
 //       0 ---------- 1      -----> x
 blocks
-1
 (
-    (hex 8(0 1 5 4 3 2 6 7))
-    25 1 125
-    3(1.0 1.0 1.0)
+    hex (0 1 5 4 3 2 6 7) (25 1 125) simpleGrading (1 1 1)
 );
 
+edges           
+(
+);
 
 patches
 (
-    patch
-    top
+    patch top
     (
-        (quad 4(3 2 6 7))
+        (3 2 6 7)
     )
 
-    patch
-    bottom
+    patch bottom
     (
-        (quad 4(1 0 4 5))
+        (1 0 4 5)
     )
 
-    wall
-	walls
+    wall walls
     (
-        (quad 4(2 1 5 6))
-        (quad 4(0 3 7 4))
+        (2 1 5 6)
+        (0 3 7 4)
     )
 
-	empty
-    frontBack
+    empty frontBack
     (
-        (quad 4(0 1 2 3))
-        (quad 4(7 6 5 4))
+        (0 1 2 3)
+        (7 6 5 4)
     )
 );
 
-// ************************************************************************* //
 
+// ************************************************************************* //

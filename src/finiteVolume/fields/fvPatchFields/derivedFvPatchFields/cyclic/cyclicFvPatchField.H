@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,8 +36,8 @@ SourceFiles
 #define cyclicFvPatchField_H
 
 #include "coupledFvPatchField.H"
+#include "cyclicLduInterfaceField.H"
 #include "cyclicFvPatch.H"
-#include "cyclicLduCoupledInterface.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -51,8 +51,8 @@ namespace Foam
 template<class Type>
 class cyclicFvPatchField
 :
-    public coupledFvPatchField<Type>,
-    virtual public cyclicLduCoupledInterface
+    public cyclicLduInterfaceField,
+    public coupledFvPatchField<Type>
 {
     // Private data
 
@@ -102,6 +102,12 @@ public:
             const fvPatchFieldMapper&
         );
 
+        //- Construct as copy
+        cyclicFvPatchField
+        (
+            const cyclicFvPatchField<Type>&
+        );
+
         //- Construct and return a clone
         virtual tmp<fvPatchField<Type> > clone() const
         {
@@ -134,9 +140,6 @@ public:
 
             //- Return neighbour coupled given internal cell data
             tmp<Field<Type> > patchNeighbourField() const;
-
-            //- Return neighbour colouring
-            virtual tmp<labelField> nbrColour(const labelField&) const;
 
             //- Update result field based on interface functionality
             virtual void updateInterfaceMatrix

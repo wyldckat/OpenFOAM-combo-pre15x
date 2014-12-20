@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,16 +61,6 @@ class polyMeshAdder
 private:
     // Private data
 
-        //- Current set of combined patches
-        DynamicList<word> allPatchNames_;
-
-        //- Current set of combined patch types.
-        DynamicList<word> allPatchTypes_;
-
-
-        //- After adding: map from new to original meshes.
-        mapAddedPolyMesh map_;
-
 
     // Private Member Functions
 
@@ -97,24 +87,47 @@ private:
             const labelList& cutEdgeLabels
         );
 
-        //- Extract processor neighbour label from patchname
-        static label neighbourProcNo(const word&);
-
         //- Index of patch in allPatches. Add if nonexisting.
-        label patchIndex(const polyPatch&);
+        static label patchIndex
+        (
+            const polyPatch&,
+            DynamicList<word>& allPatchNames,
+            DynamicList<word>& allPatchTypes
+        );
 
         //- Index of zone in all zones
         static label zoneIndex(const word&, DynamicList<word>&);
 
-        //- Clone patch with new polyBoundaryMesh and size, start. Returns new
-        //  patch index or -1 (if size was 0)
-        static label clonePatch
+        static void mergePatchNames
         (
-            const polyPatch& pp,
-            const label start,
-            const label size,
-            const polyBoundaryMesh&,
-            DynamicList<polyPatch*>&
+            const polyBoundaryMesh& patches0,
+            const polyBoundaryMesh& patches1,
+
+            DynamicList<word>& allPatchNames,
+            DynamicList<word>& allPatchTypes,
+
+            labelList& from1ToAllPatches,
+            labelList& fromAllTo1Patches
+        );
+
+        //- Get starts of patches
+        static labelList getPatchStarts(const polyBoundaryMesh&);
+        //- Get sizes of patches
+        static labelList getPatchSizes(const polyBoundaryMesh&);
+
+        static List<polyPatch*> combinePatches
+        (
+            const polyMesh& mesh0,
+            const polyMesh& mesh1,
+            const polyBoundaryMesh& allBoundaryMesh,
+            const label nAllPatches,
+            const labelList& fromAllTo1Patches,
+
+            const label nInternalFaces,
+            const labelList& nFaces,
+
+            labelList& from0ToAllPatches,
+            labelList& from1ToAllPatches
         );
 
         //- Determine order for internalFaces to be upper-triangular.
@@ -127,13 +140,31 @@ private:
             const labelList& neighbour
         );
 
-        //- Inverts face-cell addressing to create cell-face addressing.
-        static void makeCells
+        //- Merges primitives of two meshes.
+        static void mergePrimitives
         (
-            const label nCells,
-            const labelList& owner,
-            const labelList& neighbour,
-            cellList& cells
+            const polyMesh& mesh0,
+            const polyMesh& mesh1,
+            const faceCoupleInfo& coupleInfo,
+
+            const label nAllPatches,
+            const labelList& fromAllTo1Patches,
+            const labelList& from1ToAllPatches,
+
+            pointField& allPoints,
+            labelList& from0ToAllPoints,
+            labelList& from1ToAllPoints,
+
+            faceList& allFaces,
+            labelList& allOwner,
+            labelList& allNeighbour,
+            label& nInternalFaces,
+            labelList& nFacesPerPatch,
+            label& nCells,
+
+            labelList& from0ToAllFaces,
+            labelList& from1ToAllFaces,
+            labelList& from1ToAllCells
         );
 
         //- Merge point zones
@@ -175,38 +206,6 @@ private:
             List<DynamicList<label> >& czCells
         );
 
-        void mergePatchNames
-        (
-            const polyBoundaryMesh& patches0,
-            const polyBoundaryMesh& patches1,
-
-            labelList& from1ToAllPatches,
-            labelList& fromAllTo1Patches
-        );
-
-        //- Merges primitives of two meshes.
-        void mergePrimitives
-        (
-            const polyMesh& mesh0,
-            const polyMesh& mesh1,
-            const faceCoupleInfo& coupleInfo,
-
-            const labelList& fromAllTo1Patches,
-            const labelList& from1ToAllPatches,
-
-            pointField& allPoints,
-            labelList& from0ToAllPoints,
-            labelList& from1ToAllPoints,
-
-            faceList& allFaces,
-            labelList& from0ToAllFaces,
-            labelList& from1ToAllFaces,
-            labelList& nFaces,
-
-            cellList& allCells,
-            labelList& from1ToAllCells
-        ) const;
-
         //- Merge point/face/cell zone information
         static void mergeZones
         (
@@ -229,20 +228,6 @@ private:
             List<DynamicList<label> >& czCells
         );
 
-        List<polyPatch*> combinePatches
-        (
-            const polyMesh& mesh0,
-            const polyMesh& mesh1,
-            const polyBoundaryMesh& allBoundaryMesh,
-            const labelList& fromAllTo1Patches,
-
-            const label nInternalFaces,
-            const labelList& nFaces,
-
-            labelList& from0ToAllPatches,
-            labelList& from1ToAllPatches
-        ) const;
-
         //- Create new zones and add to new mesh.
         static void addZones
         (
@@ -259,48 +244,29 @@ private:
             polyMesh& mesh
         );
 
-protected:
-
-    // Used by fvMeshAdder
-
-        //- Do all but setting the patches
-        List<polyPatch*> addWithoutPatches
-        (
-            polyMesh& mesh0,
-            const polyMesh& mesh1,
-            const faceCoupleInfo& coupleInfo
-        );
-
 public:
-
-    // Constructors
-
-        //- Construct null
-        polyMeshAdder();
 
 
     // Member Functions
 
-        const mapAddedPolyMesh& map() const
-        {
-            return map_;
-        }
 
-        //- Add two polyMeshes.
-        autoPtr<polyMesh> add
+        //- Add two polyMeshes. Returns new polyMesh and map construct.
+        static autoPtr<polyMesh> add
         (
             const IOobject& io,
             const polyMesh& mesh0,
             const polyMesh& mesh1,
-            const faceCoupleInfo& coupleInfo
+            const faceCoupleInfo& coupleInfo,
+            autoPtr<mapAddedPolyMesh>& mapPtr
         );
 
-        //- Inplace add mesh to polyMesh.
-        void add
+        //- Inplace add mesh to polyMesh. Returns map construct.
+        static autoPtr<mapAddedPolyMesh> add
         (
             polyMesh& mesh0,
             const polyMesh& mesh1,
-            const faceCoupleInfo& coupleInfo
+            const faceCoupleInfo& coupleInfo,
+            const bool validBoundary = true
         );
 };
 

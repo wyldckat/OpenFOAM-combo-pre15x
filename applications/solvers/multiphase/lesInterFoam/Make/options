@@ -1,16 +1,15 @@
 EXE_INC = \
     -Iaveraging \
     -I../interFoam \
-    -I../interFoam/interfaceProperties/lnInclude \
-    -I../interFoam/incompressibleTwoPhaseMixture \
-    -I$(LIB_SRC)/finiteVolume/lnInclude \
+    -I$(LIB_SRC)/transportModels \
+    -I$(LIB_SRC)/transportModels/incompressible/lnInclude \
+    -I$(LIB_SRC)/transportModels/interfaceProperties/lnInclude \
     -I$(LIB_SRC)/LESmodels \
     -I$(LIB_SRC)/LESmodels/LESdeltas/lnInclude \
-    -I$(LIB_SRC)/transportModels
+    -I$(LIB_SRC)/finiteVolume/lnInclude
 
 EXE_LIBS = \
     -linterfaceProperties \
-    ../interFoam/Make/$(WM_OPTIONS)/twoPhaseMixture.o \
     -lincompressibleTransportModels \
     -lincompressibleLESmodels \
     -lfiniteVolume

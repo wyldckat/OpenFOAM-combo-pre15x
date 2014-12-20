@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,10 +11,10 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "/home/storm/chris/OpenFOAM/chris-1.2/run/tutorials.old/rhopSonicFoam";
-    case "wedge15Ma5";
+    root "";
+    case "";
     instance ""constant"";
-    local "polyMesh";
+    local "";
 
     class polyBoundaryMesh;
     object boundary;

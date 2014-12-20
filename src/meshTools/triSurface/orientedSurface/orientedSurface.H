@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -79,35 +79,36 @@ class orientedSurface
         );
 
         //- From changed faces get the changed edges
-        labelList faceToEdge(const labelList& changedFaces) const;
+        static labelList faceToEdge
+        (
+            const triSurface&,
+            const labelList& changedFaces
+        );
 
         //- From changed edges check the orientation of the connected faces
         //  and flip them. Return changed faces.
-        labelList edgeToFace
+        static labelList edgeToFace
         (
+            const triSurface&,
             const labelList& changedEdges,
             labelList& flip
-        ) const;
-
-
-        static label findEdge(const edgeList&, const labelList&, const edge&);
+        );
 
         //- Given nearest point and face check orientation to nearest face
         //  and flip if nessecary (only marked in flipState) and propagate.
-        void propagateOrientation
+        static void propagateOrientation
         (
+            const triSurface&,
             const point& outsidePoint,
             const bool orientOutside,
             const label nearestFaceI,
             const point& nearestPt,
             labelList& flipState
-        ) const;
+        );
 
-        //- Given flipState reverse triangles of *this
-        void flipSurface(const labelList& flipState);
-
-        //- Flip faces such that normals are consistent with point
-        void orientSurface(const point&, const bool orientOutside);
+        //- Given flipState reverse triangles of *this. Return true if
+        //  anything flipped.
+        static bool flipSurface(triSurface& s, const labelList& flipState);
 
 public:
 
@@ -132,6 +133,14 @@ public:
         //- Construct from triSurface. Calculates outside point as being
         //  outside the bounding box of the surface.
         orientedSurface(const triSurface&, const bool orientOutside = true);
+
+
+    // Member Functions
+
+        //- Flip faces such that normals are consistent with point:
+        //  orientOutside=true : point outside surface
+        //  orientOutside=false : point inside surface
+        static bool orient(triSurface&, const point&, const bool orientOutside);
 
 };
 

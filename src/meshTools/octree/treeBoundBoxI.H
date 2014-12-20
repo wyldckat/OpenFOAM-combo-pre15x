@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,6 +29,7 @@ Description
 #include "error.H"
 #include "treeBoundBox.H"
 #include "point.H"
+#include "Random.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -61,13 +62,13 @@ inline treeBoundBox::treeBoundBox(const boundBox& bb)
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // Returns octant in which sample resides. Reverse of subBbox.
-inline label treeBoundBox::subOctant(const point& sample) const
+inline direction treeBoundBox::subOctant(const point& sample) const
 {
     scalar midx = 0.5*(max().x() + min().x());
     scalar midy = 0.5*(max().y() + min().y());
     scalar midz = 0.5*(max().z() + min().z());
 
-    label octant = 0;
+    direction octant = 0;
 
     if (sample.x() > midx)
     {
@@ -88,13 +89,43 @@ inline label treeBoundBox::subOctant(const point& sample) const
 }
 
 
+// Returns octant in which sample resides. Reverse of subBbox. Precalculated
+// midpoint
+inline direction treeBoundBox::subOctant
+(
+    const point& mid,
+    const point& sample
+)
+{
+    direction octant = 0;
+
+    if (sample.x() > mid.x())
+    {
+        octant |= treeBoundBox::RIGHTHALF;
+    }
+
+    if (sample.y() > mid.y())
+    {
+        octant |= treeBoundBox::TOPHALF;
+    }
+
+    if (sample.z() > mid.z())
+    {
+        octant |= treeBoundBox::FRONTHALF;
+    }
+
+    return octant;
+}
+
+
 // Returns octant in which sample resides. Reverse of subBbox. Flags sample
 // exactly on edge.
-inline label treeBoundBox::subOctant(const point& sample, bool onEdge) const
+inline direction treeBoundBox::subOctant(const point& sample, bool& onEdge)
+ const
 {
     point mid = 0.5*(max() + min());
 
-    label octant = 0;
+    direction octant = 0;
 
     onEdge = false;
     if (sample.x() > mid.x())
@@ -130,14 +161,14 @@ inline label treeBoundBox::subOctant(const point& sample, bool onEdge) const
 
 // Returns octant in which sample resides. Reverse of subBbox. Precalculated
 // midpoint
-inline label treeBoundBox::subOctant
+inline direction treeBoundBox::subOctant
 (
     const point& mid,
     const point& sample,
-    bool onEdge
-) const
+    bool& onEdge
+)
 {
-    label octant = 0;
+    direction octant = 0;
 
     onEdge = false;
     if (sample.x() > mid.x())
@@ -175,15 +206,15 @@ inline label treeBoundBox::subOctant
 // Precalculated midpoint. If the sample is on the dividing line between
 // the octants the direction vector determines which octant to use
 // (i.e. in which octant the sample would be if it were moved along dir)
-inline label treeBoundBox::subOctant
+inline direction treeBoundBox::subOctant
 (
     const point& mid,
     const vector& dir,
     const point& sample,
-    bool onEdge
-) const
+    bool& onEdge
+)
 {
-    label octant = 0;
+    direction octant = 0;
 
     onEdge = false;
 
@@ -252,6 +283,20 @@ inline bool treeBoundBox::contains(const point& sample) const
         (sample.y() <= max().y()) &&
         (sample.z() <= max().z())
     );
+}
+
+
+//- Return slightly wider bounding box
+inline treeBoundBox treeBoundBox::extend(Random& rndGen, const scalar s) const
+{
+    treeBoundBox bb(*this);
+
+    const vector span(bb.max() - bb.min());
+
+    bb.min() -= scale(s*rndGen.vector01(), span);
+    bb.max() += scale(s*rndGen.vector01(), span);
+
+    return bb;
 }
 
 

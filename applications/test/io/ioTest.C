@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,38 +40,8 @@ using namespace Foam;
 
 int main(void)
 {
-/*    dictionary dotguiserc(string(getenv("HOME")) + "/.guiserc");
-    int rtn = dotguiserc.read();
-
-    // Look up debug switches in the start-up
-    readDebugSwitches(dotguiserc);
-*/
-//    List<scalar> slist(100000);
-
-//    register label i;
-/*    for (i=0; i<100000; i++)
-    {
-        slist[i] = i;
-    }
-    for (i=0; i<10; i++)
-    {
-        Info<< slist[i] << endl;
-    }
-    Ostream data_out("/usr/tmp/data");
-    data_out << slist;
-    data_out.close();
-*/
-/*    Istream data_in("/usr/tmp/data", BINARY);
-    data_in >> slist;
-
-    for (i=0; i<10; i++)
-    {
-        Info<< slist[i] << endl;
-    }
-*/
-
     string st("sfdsf  sdfs23df sdf32f .  sdfsdff23/2sf32");
-    Info<< word(st) << "END" << endl;
+    Info<< word(string::validate<word>(st)) << "END" << endl;
 
     string st1("1234567");
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,8 +57,9 @@ combustionMixture::combustionMixture
         // check if field exists and can be read
         if (header.headerOk())
         {
-            Y_.hook
+            Y_.set
             (
+                i,
                 new volScalarField
                 (
                     IOobject
@@ -88,8 +89,9 @@ combustionMixture::combustionMixture
                 mesh
             );
 
-            Y_.hook
+            Y_.set
             (
+                i,
                 new volScalarField
                 (
                     IOobject

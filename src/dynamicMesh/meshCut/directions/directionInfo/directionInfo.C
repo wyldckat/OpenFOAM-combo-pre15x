@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,14 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
 
 \*---------------------------------------------------------------------------*/
 
 #include "directionInfo.H"
 #include "hexMatcher.H"
 #include "meshTools.H"
-#include "ListOps.H"
+#include "polyMesh.H"
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -358,7 +357,7 @@ bool Foam::directionInfo::updateFace
 // Merge this with information on same face
 bool Foam::directionInfo::updateFace
 (
-    const polyMesh&,
+    const polyMesh& mesh,
     const label,    // thisFaceI
     const directionInfo& neighbourInfo,
     const scalar    // tol

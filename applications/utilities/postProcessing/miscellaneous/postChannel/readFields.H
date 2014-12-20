@@ -17,7 +17,7 @@
         mesh
     );
 
-    volTensorField R
+    volSymmTensorField R
     (
         IOobject
         (

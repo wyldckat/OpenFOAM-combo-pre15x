@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -128,35 +126,36 @@ void Foam::constantPatch::createGeometry()
 }
 
 
-template <class T>
-Foam::Field<T> Foam::constantPatch::doInterpolate
+template <class Type>
+Foam::tmp<Foam::Field<Type> > Foam::constantPatch::interpolate
 (
     const word& fieldName,
-    const fieldsCache<T>& cache
+    const fieldsCache<Type>& cache
 ) const
 {
     // One value per face
-    Field<T> values(patchFaceLabels_.size());
+    tmp<Field<Type> > tvalues(new Field<Type>(patchFaceLabels_.size()));
+    Field<Type>& values = tvalues();
 
     if (patchIndex_ != -1)
     {
-        const GeometricField<T, fvPatchField, volMesh>& vField =
+        const GeometricField<Type, fvPatchField, volMesh>& vField =
             *cache[fieldName];
 
-        const Field<T>& bField = vField.boundaryField()[patchIndex_];
+        const Field<Type>& bField = vField.boundaryField()[patchIndex_];
 
         forAll(patchFaceLabels_, elemI)
         {
             values[elemI] = bField[patchFaceLabels_[elemI]];
         }
     }
-    return values;
+
+    return tvalues;
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::constantPatch::constantPatch
 (
     const polyMesh& mesh,
@@ -178,7 +177,6 @@ Foam::constantPatch::constantPatch
 }
 
 
-// Construct from dictionary
 Foam::constantPatch::constantPatch
 (
     const polyMesh& mesh,
@@ -211,9 +209,7 @@ void Foam::constantPatch::correct
     const bool meshChanged,
     const volPointInterpolation& pInterp,
     const dictionary& interpolationSchemes,
-    const fieldsCache<scalar>& scalarCache,
-    const fieldsCache<vector>& vectorCache,
-    const fieldsCache<tensor>& tensorCache
+    const fieldsCache<scalar>& scalarCache
 )
 {
     if (meshChanged)
@@ -223,7 +219,7 @@ void Foam::constantPatch::correct
 }
 
 
-Foam::scalarField Foam::constantPatch::interpolate
+Foam::tmp<Foam::scalarField> Foam::constantPatch::interpolate
 (
     const word& fieldName,
     const fieldsCache<scalar>& cache,
@@ -231,11 +227,11 @@ Foam::scalarField Foam::constantPatch::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache);
+    return interpolate<scalar>(fieldName, cache);
 }
 
 
-Foam::vectorField Foam::constantPatch::interpolate
+Foam::tmp<Foam::vectorField> Foam::constantPatch::interpolate
 (
     const word& fieldName,
     const fieldsCache<vector>& cache,
@@ -243,11 +239,35 @@ Foam::vectorField Foam::constantPatch::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache);
+    return interpolate<vector>(fieldName, cache);
 }
 
 
-Foam::tensorField Foam::constantPatch::interpolate
+Foam::tmp<Foam::sphericalTensorField> Foam::constantPatch::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<sphericalTensor>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    return interpolate<sphericalTensor>(fieldName, cache);
+}
+
+
+Foam::tmp<Foam::symmTensorField> Foam::constantPatch::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<symmTensor>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    return interpolate<symmTensor>(fieldName, cache);
+}
+
+
+Foam::tmp<Foam::tensorField> Foam::constantPatch::interpolate
 (
     const word& fieldName,
     const fieldsCache<tensor>& cache,
@@ -255,7 +275,7 @@ Foam::tensorField Foam::constantPatch::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache);
+    return interpolate<tensor>(fieldName, cache);
 }
 
 

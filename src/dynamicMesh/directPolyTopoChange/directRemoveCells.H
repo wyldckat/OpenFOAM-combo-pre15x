@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,11 @@ Class
     directRemoveCells
 
 Description
-    Given list of cells to remove insert all the topology changes.
+    Given list of cells to remove insert all the topology changes. Works in
+    two passes:
+    - get faces that will become boundary faces
+    - given these faces and the patches they have to go into make the
+      changes.
 
 SourceFiles
     directRemoveCells.C
@@ -60,8 +64,19 @@ class directRemoveCells
         //- Reference to mesh
         const polyMesh& mesh_;
 
-        //- Patch to give to new external faces
-        word patchName_;
+        //- Whether or not to synchronize parallel case.
+        const bool syncPar_;
+
+
+    // Private Member Functions
+
+        //- Decrease count of elements of f
+        static void uncount
+        (
+            const labelList& f,
+            labelList& nUsage
+        );
+
 
 public:
 
@@ -71,16 +86,30 @@ public:
 
     // Constructors
 
-        //- Construct from mesh and patch to assign to newly exposed faces.
-        directRemoveCells(const polyMesh& mesh, const word& patchName);
+        //- Construct from mesh. syncPar: do parallel synchronization.
+        directRemoveCells(const polyMesh& mesh, const bool syncPar = true);
 
 
     // Member Functions
 
         // Topology changes
 
+            //- Get labels of exposed faces. These are
+            //  - internal faces that become boundary faces
+            //  - coupled faces that become uncoupled (since one of the sides
+            //    gets deleted)
+            labelList getExposedFaces(const labelList& cellsToRemove) const;
+
             //- Play commands into polyTopoChange to remove cells.
-            void setRefinement(const labelList&, directPolyTopoChange&) const;
+            //  patchIDs is for every element in facesToExpose (see above) the
+            //  patch it has to go into. This cannot be a coupled patch!
+            void setRefinement
+            (
+                const labelList& cellsToRemove,
+                const labelList& facesToExpose,
+                const labelList& patchIDs,
+                directPolyTopoChange&
+            ) const;
 
             //- Force recalculation of locally stored data on topological change
             void updateMesh(const mapPolyMesh&)

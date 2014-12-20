@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,7 +39,6 @@ SourceFiles
 #define smoothDelta_H
 
 #include "LESdelta.H"
-#include "meshWave.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -113,7 +112,7 @@ class smoothDelta
                 }
 
 
-                // Needed by meshWave
+                // Needed by FaceCellWave
 
                     //- Check whether origin has been changed at all or
                     //  still contains original (invalid) value.
@@ -123,72 +122,72 @@ class smoothDelta
                     //  Used for cyclics checking.
                     inline bool sameGeometry
                     (
+                        const polyMesh&,
                         const deltaData&,
-                        const scalar&
+                        const scalar
                     ) const;
 
-                    //- Convert origin to relative vector to leaving point
-                    //  (= face centre)
+                    //- Convert any absolute coordinates into relative to
+                    //  (patch)face centre
                     inline void leaveDomain
                     (
-                        const polyPatch& patch,
+                        const polyMesh&,
+                        const polyPatch&,
                         const label patchFaceI,
                         const point& faceCentre
                     );
 
-                    //- Convert relative origin to absolute by adding entering
-                    //  point
+                    //- Reverse of leaveDomain
                     inline void enterDomain
                     (
-                        const polyPatch& patch,
+                        const polyMesh&,
+                        const polyPatch&,
                         const label patchFaceI,
                         const point& faceCentre
                     );
 
-                    //- Apply rotation matrix to origin
-                    inline void transform(const tensor& rotTensor);
+                    //- Apply rotation matrix to any coordinates
+                    inline void transform
+                    (
+                        const polyMesh&,
+                        const tensor&
+                    );
 
                     //- Influence of neighbouring face.
-                    //  Calls update(...) with cellCentre of cellI
                     inline bool updateCell
                     (
-                        const polyMesh& mesh,
+                        const polyMesh&,
                         const label thisCellI,
                         const label neighbourFaceI,
-                        const deltaData& neighbourWallInfo,
+                        const deltaData& neighbourInfo,
                         const scalar tol
                     );
 
                     //- Influence of neighbouring cell.
-                    //  Calls update(...) with faceCentre of faceI
                     inline bool updateFace
                     (
-                        const polyMesh& mesh,
+                        const polyMesh&,
                         const label thisFaceI,
                         const label neighbourCellI,
-                        const deltaData& neighbourWallInfo,
+                        const deltaData& neighbourInfo,
                         const scalar tol
                     );
 
                     //- Influence of different value on same face.
-                    //  Merge new and old info.
-                    //  Calls update(...) with faceCentre of faceI
                     inline bool updateFace
                     (
-                        const polyMesh& mesh,
+                        const polyMesh&,
                         const label thisFaceI,
-                        const deltaData& neighbourWallInfo,
+                        const deltaData& neighbourInfo,
                         const scalar tol
                     );
 
-
                 // Member Operators
 
-                    //- Note: Used to determine whether to call update.
+                    // Needed for List IO
                     inline bool operator==(const deltaData&) const;
 
                     inline bool operator!=(const deltaData&) const;
-
 
                 // IOstream Operators
 
@@ -225,8 +224,13 @@ public:
 
     // Constructors
 
-        //- from IOdictionary
-        smoothDelta(const fvMesh& mesh, const dictionary&);
+        //- Construct from name, mesh and IOdictionary
+        smoothDelta
+        (
+            const word& name,
+            const fvMesh& mesh,
+            const dictionary&
+        );
 
 
     // Destructor

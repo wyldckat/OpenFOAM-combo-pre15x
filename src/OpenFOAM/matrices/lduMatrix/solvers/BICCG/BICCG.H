@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,6 +26,12 @@ Class
     BICCG
 
 Description
+    Diagonal incomplete LU preconditioned BiCG solver derived from the general
+    preconditioned BiCG solver PBiCG but with the choice of preconditioner
+    pre-selected.
+
+    This solver is present for backward-compatibility and the PBiCG solver
+    should be used for preference.
 
 SourceFiles
     BICCG.C
@@ -35,7 +41,7 @@ SourceFiles
 #ifndef BICCG_H
 #define BICCG_H
 
-#include "ICCG.H"
+#include "PBiCG.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,16 +54,8 @@ namespace Foam
 
 class BICCG
 :
-    public ICCG
+    public PBiCG
 {
-private:
-
-    // Static data
-
-        //- Maximum number of iterations in the solver
-        static label maxIter_;
-
-
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -66,47 +64,65 @@ private:
         //- Disallow default bitwise assignment
         void operator=(const BICCG&);
 
+        //- Return the dictionary data-stream constructed from the components.
+        //  Needed for backward compatibility
+        IStringStream solverDataStream
+        (
+            const scalar tolerance,
+            const scalar relTol
+        ) const;
+
+        //- Return the dictionary data-stream constructed from the old-style
+        //  data-stream.  Needed for backward compatibility
+        IStringStream solverDataStream
+        (
+            const word& solverName,
+            Istream& solverData
+        ) const;
+
 
 public:
 
     //- Runtime type information
-#   ifndef BICCGname
-#   define BICCGname "BICCG"
-#   endif
-    TypeName(BICCGname);
-#   undef BICCGname
+    TypeName("BICCG");
 
 
     // Constructors
 
-        //- Construct from matrix and solver data stream
+        //- Construct from matrix components and tolerances
         BICCG
         (
             const word& fieldName,
-            scalarField& psi,
             const lduMatrix& matrix,
-            const scalarField& source,
-            const FieldField<Field, scalar>& coupleBouCoeffs,
-            const FieldField<Field, scalar>& coupleIntCoeffs,
-            const lduCoupledInterfacePtrsList& interfaces,
-            const direction cmpt,
+            const FieldField<Field, scalar>& interfaceBouCoeffs,
+            const FieldField<Field, scalar>& interfaceIntCoeffs,
+            const lduInterfaceFieldPtrsList& interfaces,
+            const scalar tolerance,
+            const scalar relTol = 0.0
+        );
+
+        //- Construct from matrix components and solver data stream
+        BICCG
+        (
+            const word& fieldName,
+            const lduMatrix& matrix,
+            const FieldField<Field, scalar>& interfaceBouCoeffs,
+            const FieldField<Field, scalar>& interfaceIntCoeffs,
+            const lduInterfaceFieldPtrsList& interfaces,
             Istream& solverData
         );
 
 
+    // Destructor
+
+        virtual ~BICCG()
+        {}
+
+
     // Member Functions
 
-        //- Solve the matrix with this solver
-        lduMatrix::solverPerformance solve();
-
-        //- Set maximum number of iterations
-        static label setMaxIter(const label mIter)
-        {
-            label oldMaxIter = maxIter_;
-            maxIter_ = mIter;
-
-            return oldMaxIter;
-        }
+        //- Read and reset the solver parameters from the given stream
+        void read(Istream& solverData);
 };
 
 

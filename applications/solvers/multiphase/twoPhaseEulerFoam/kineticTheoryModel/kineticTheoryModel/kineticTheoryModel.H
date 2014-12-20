@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,7 +40,9 @@ SourceFiles
 #include "autoPtr.H"
 #include "viscosityModel.H"
 #include "conductivityModel.H"
-
+#include "radialModel.H"
+#include "granularPressureModel.H"
+#include "frictionalStressModel.H"
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -81,6 +83,12 @@ class kineticTheoryModel
 
         autoPtr<conductivityModel> conductivityModel_;
 
+        autoPtr<radialModel> radialModel_;
+
+        autoPtr<granularPressureModel> granularPressureModel_;
+
+        autoPtr<frictionalStressModel> frictionalStressModel_;
+
         //- coefficient of restitution
         const dimensionedScalar e_;
 
@@ -108,8 +116,17 @@ class kineticTheoryModel
         //- The granular viscosity
         volScalarField mua_;
 
+        //- The granular bulk viscosity
+        volScalarField lambda_;
+
         //- The granular pressure
         volScalarField pa_;
+
+        //- The granular temperature conductivity
+        volScalarField kappa_;
+
+        //- The radial distribution function
+        volScalarField gs0_;
 
 
     // Private Member Functions
@@ -159,7 +176,10 @@ public:
             return pa_;
         }
 
-        tmp<volScalarField> g0();
+        const volScalarField& lambda() const
+        {
+            return lambda_;
+        }
 };
 
 

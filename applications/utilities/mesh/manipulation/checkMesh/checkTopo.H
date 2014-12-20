@@ -1,6 +1,8 @@
     // Check if the boundary definition is unique
     mesh.boundaryMesh().checkDefinition(true);
     Pout<< endl;
+    mesh.boundaryMesh().checkParallelSync(true);
+    Pout<< endl;
 
     Pout<< "Number of points:           "
         << mesh.points().size() << nl
@@ -27,7 +29,7 @@
 
     if (Pstream::parRun())
     {
-        const parallelInfo& parData = mesh.parallelData();
+        const globalMeshData& parData = mesh.globalData();
 
         Info<< "Overall number of points:   " << parData.nTotalPoints() << nl
             << "                  faces:    " << parData.nTotalFaces() << nl

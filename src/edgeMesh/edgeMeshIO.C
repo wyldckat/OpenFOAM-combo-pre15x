@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "edgeMesh.H"
 #include "IFstream.H"
@@ -40,6 +36,10 @@ namespace Foam
 
 // construct from file
 edgeMesh::edgeMesh(const fileName& fname)
+:
+    points_(0),
+    edges_(0),
+    pointEdgesPtr_(NULL)
 {
     IFstream is(fname);
 
@@ -49,7 +49,7 @@ edgeMesh::edgeMesh(const fileName& fname)
     }
     else
     {
-        FatalErrorIn("edgeMesh::edgeMesh(const fileName& fname)")
+        FatalErrorIn("edgeMesh::edgeMesh(const fileName&)")
             << "cannot open file " << fname
             << abort(FatalError);
     }
@@ -60,7 +60,8 @@ edgeMesh::edgeMesh(const fileName& fname)
 edgeMesh::edgeMesh(Istream& is)
 :
     points_(is),
-    edges_(is)
+    edges_(is),
+    pointEdgesPtr_(NULL)
 {
     // Check state of Istream
     is.check("edgeMesh::edgeMesh(Istream&)");
@@ -77,6 +78,17 @@ Ostream& operator<<(Ostream& os, const edgeMesh& em)
     os.check("Ostream& operator<<(Ostream&, const edgeMesh&)");
 
     return os;
+}
+
+
+Istream& operator>>(Istream& is, edgeMesh& em)
+{
+    is >> em.points_ >> em.edges_;
+
+    // Check state of Istream
+    is.check("Istream& operator>>(Istream&, edgeMesh&)");
+
+    return is;
 }
 
 

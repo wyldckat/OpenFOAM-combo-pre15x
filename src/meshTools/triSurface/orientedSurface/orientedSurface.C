@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -77,15 +77,16 @@ bool Foam::orientedSurface::consistentEdge
 
 Foam::labelList Foam::orientedSurface::faceToEdge
 (
+    const triSurface& s,
     const labelList& changedFaces
-) const
+)
 {
     labelList changedEdges(3*changedFaces.size());
     label changedI = 0;
 
     forAll(changedFaces, i)
     {
-        const labelList& fEdges = faceEdges()[changedFaces[i]];
+        const labelList& fEdges = s.faceEdges()[changedFaces[i]];
 
         forAll(fEdges, j)
         {
@@ -100,9 +101,10 @@ Foam::labelList Foam::orientedSurface::faceToEdge
 
 Foam::labelList Foam::orientedSurface::edgeToFace
 (
+    const triSurface& s,
     const labelList& changedEdges,
     labelList& flip
-) const
+)
 {
     labelList changedFaces(2*changedEdges.size());
     label changedI = 0;
@@ -111,7 +113,7 @@ Foam::labelList Foam::orientedSurface::edgeToFace
     {
         label edgeI = changedEdges[i];
 
-        const labelList& eFaces = edgeFaces()[edgeI];
+        const labelList& eFaces = s.edgeFaces()[edgeI];
 
         if (eFaces.size() < 2)
         {
@@ -122,8 +124,8 @@ Foam::labelList Foam::orientedSurface::edgeToFace
             label face0 = eFaces[0];
             label face1 = eFaces[1];
 
-            const labelledTri& f0 = operator[](face0);
-            const labelledTri& f1 = operator[](face1);
+            const labelledTri& f0 = s[face0];
+            const labelledTri& f1 = s[face1];
 
             if (flip[face0] == UNVISITED)
             {
@@ -135,7 +137,7 @@ Foam::labelList Foam::orientedSurface::edgeToFace
                 else
                 {
                     // Face1 has a flip state, face0 hasn't
-                    if (consistentEdge(edges()[edgeI], f0, f1))
+                    if (consistentEdge(s.edges()[edgeI], f0, f1))
                     {
                         // Take over flip status
                         flip[face0] = (flip[face1] == FLIP ? FLIP : NOFLIP);
@@ -153,7 +155,7 @@ Foam::labelList Foam::orientedSurface::edgeToFace
                 if (flip[face1] == UNVISITED)
                 {
                     // Face0 has a flip state, face1 hasn't
-                    if (consistentEdge(edges()[edgeI], f0, f1))
+                    if (consistentEdge(s.edges()[edgeI], f0, f1))
                     {
                         flip[face1] = (flip[face0] == FLIP ? FLIP : NOFLIP);
                     }
@@ -178,19 +180,19 @@ Foam::labelList Foam::orientedSurface::edgeToFace
 
 void Foam::orientedSurface::propagateOrientation
 (
+    const triSurface& s,
     const point& samplePoint,
     const bool orientOutside,
     const label nearestFaceI,
     const point& nearestPt,
     labelList& flipState
-) const
+)
 {
     //
     // Determine orientation to normal on nearest face
     //
 
-    vector n =
-        triSurfaceTools::surfaceNormal(*this, nearestFaceI, nearestPt);
+    vector n = triSurfaceTools::surfaceNormal(s, nearestFaceI, nearestPt);
 
     if (debug)
     {
@@ -224,7 +226,7 @@ void Foam::orientedSurface::propagateOrientation
     
     while(true)
     {
-        changedEdges = faceToEdge(changedFaces);
+        changedEdges = faceToEdge(s, changedFaces);
 
         if (debug)
         {
@@ -238,7 +240,7 @@ void Foam::orientedSurface::propagateOrientation
             break;
         }
 
-        changedFaces = edgeToFace(changedEdges, flipState);
+        changedFaces = edgeToFace(s, changedEdges, flipState);
 
         if (debug)
         {
@@ -255,9 +257,15 @@ void Foam::orientedSurface::propagateOrientation
 }
 
 
-void Foam::orientedSurface::flipSurface(const labelList& flipState)
+bool Foam::orientedSurface::flipSurface
+(
+    triSurface& s,
+    const labelList& flipState
+)
 {
-    // Flip tris in *this
+    bool hasFlipped = false;
+
+    // Flip tris in s
     forAll(flipState, faceI)
     {
         if (flipState[faceI] == UNVISITED)
@@ -270,83 +278,20 @@ void Foam::orientedSurface::flipSurface(const labelList& flipState)
         }
         else if (flipState[faceI] == FLIP)
         {
-            labelledTri& tri = operator[](faceI);
+            labelledTri& tri = s[faceI];
 
             label tmp = tri[0];
 
             tri[0] = tri[1];
             tri[1] = tmp;
+
+            hasFlipped = true;
         }
     }
     // Recalculate normals
-    clearOut();
-}
+    s.clearOut();
 
-
-void Foam::orientedSurface::orientSurface
-(
-    const point& samplePoint,
-    const bool orientOutside
-)
-{
-    // Whether face has to be flipped.
-    //      UNVISITED: unvisited
-    //      NOFLIP: no need to flip
-    //      FLIP: need to flip
-    labelList flipState(size(), UNVISITED);
-
-
-    while (true)
-    {
-        // Linear search for nearest unvisited point on surface.
-
-        scalar minDist = GREAT;
-        point minPoint;
-        label minFaceI = -1;
-
-        forAll(*this, faceI)
-        {
-            if (flipState[faceI] == UNVISITED)
-            {
-                const labelledTri& f = operator[](faceI);
-
-                pointHit curHit =
-                    triPointRef
-                    (
-                        points()[f[0]],
-                        points()[f[1]],
-                        points()[f[2]]
-                    ).nearestPoint(samplePoint);
-
-                if (curHit.distance() < minDist)
-                {
-                    minDist = curHit.distance();
-                    minPoint = curHit.rawPoint();
-                    minFaceI = faceI;
-                }
-            }
-        }
-
-        // Did we find anything?
-        if (minFaceI == -1)
-        {
-            break;
-        }
-
-        // From this nearest face see if needs to be flipped and then
-        // go outwards.
-        propagateOrientation
-        (
-            samplePoint,
-            orientOutside,
-            minFaceI,
-            minPoint,
-            flipState
-        );
-    }
-
-    // Now finally flip triangles according to flipState.
-    flipSurface(flipState);
+    return hasFlipped;
 }
 
 
@@ -369,7 +314,7 @@ Foam::orientedSurface::orientedSurface
 :
     triSurface(surf)
 {
-    orientSurface(samplePoint, orientOutside);
+    orient(*this, samplePoint, orientOutside);
 }
 
 
@@ -386,7 +331,78 @@ Foam::orientedSurface::orientedSurface
 
     point outsidePoint = 2 * bb.max() - bb.min();
 
-    orientSurface(outsidePoint, orientOutside);
+    orient(*this, outsidePoint, orientOutside);
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+bool Foam::orientedSurface::orient
+(
+    triSurface& s,
+    const point& samplePoint,
+    const bool orientOutside
+)
+{
+    // Whether face has to be flipped.
+    //      UNVISITED: unvisited
+    //      NOFLIP: no need to flip
+    //      FLIP: need to flip
+    labelList flipState(s.size(), UNVISITED);
+
+
+    while (true)
+    {
+        // Linear search for nearest unvisited point on surface.
+
+        scalar minDist = GREAT;
+        point minPoint;
+        label minFaceI = -1;
+
+        forAll(s, faceI)
+        {
+            if (flipState[faceI] == UNVISITED)
+            {
+                const labelledTri& f = s[faceI];
+
+                pointHit curHit =
+                    triPointRef
+                    (
+                        s.points()[f[0]],
+                        s.points()[f[1]],
+                        s.points()[f[2]]
+                    ).nearestPoint(samplePoint);
+
+                if (curHit.distance() < minDist)
+                {
+                    minDist = curHit.distance();
+                    minPoint = curHit.rawPoint();
+                    minFaceI = faceI;
+                }
+            }
+        }
+
+        // Did we find anything?
+        if (minFaceI == -1)
+        {
+            break;
+        }
+
+        // From this nearest face see if needs to be flipped and then
+        // go outwards.
+        propagateOrientation
+        (
+            s,
+            samplePoint,
+            orientOutside,
+            minFaceI,
+            minPoint,
+            flipState
+        );
+    }
+
+    // Now finally flip triangles according to flipState.
+    return flipSurface(s, flipState);
 }
 
 

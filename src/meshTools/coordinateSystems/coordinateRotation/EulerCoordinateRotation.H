@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,8 @@ Description
     (around Z, around X' and around Z').
     For reference and illustration, see
     http://mathworld.wolfram.com/EulerAngles.html
-
+    Note, however, that it is the reverse transformation
+    (local->global) that is defined here.
 
 \*---------------------------------------------------------------------------*/
 
@@ -52,60 +53,56 @@ class EulerCoordinateRotation
 :
     public coordinateRotation
 {
-    // Private data
+    // Private member functions
 
-        //- Local-to-global transformation tensor
-        tensor R_;
+        //- Calculate transformation tensors
+        virtual void calcTransformations
+        (
+            const scalar phiAngle,
+            const scalar thetaAngle,
+            const scalar psiAngle,
+            const bool inDegrees = true
+        );
 
 
 public:
 
+    //- Runtime type information
+    TypeName("EulerRotation");
+
+
     // Constructors
 
-        //- Construct from components
+        //- Construct from rotation vector
         EulerCoordinateRotation
         (
-            const scalar phi,
-            const scalar theta,
-            const scalar psi
-        )
-        :
-            R_
-            (
-                cos(psi)*cos(phi) - cos(theta)*sin(phi)*sin(psi),
-                con(psi)*sin(phi) + cos(theta)*cos(phi)*sin(psi),
-                sin(psi)*sin(theta),
+            const vector& phiThetaPsi,
+            const bool inDegrees = true
+        );
 
-               -sin(psi)*cos(phi) - cos(theta)*sin(phi)*cos(psi),
-               -sin(psi)*sin(phi) + cos(theta)*cos(phi)*cos(psi),
-                cos(psi)*sin(theta),
+        //- Construct from components of rotation vector
+        EulerCoordinateRotation
+        (
+            const scalar phiAngle,
+            const scalar thetaAngle,
+            const scalar psiAngle,
+            const bool inDegrees = true
+        );
 
-                sin(theta)*sin(phi),
-               -sin(theta)*cos(phi),
-                cos(theta)
-            )
-        {}
+        //- Construct from dictionary
+        EulerCoordinateRotation(const dictionary&);
 
 
     // Destructor
 
         virtual ~EulerCoordinateRotation()
         {}
-
-
-    // Return local-to-global transformation tensor
-    virtual const tensor& R() const
-    {
-        return R_;
-    }
-
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

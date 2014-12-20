@@ -1,34 +1,29 @@
-// The FOAM Project // File: environmentalProperties
-/*
--------------------------------------------------------------------------------
- =========         | dictionary
- \\      /         |
-  \\    /          | Name:   environmentalProperties
-   \\  /           | Family: Data file
-    \\/            |
-    F ield         | FOAM version: 1.9.6
-    O peration     | Product of Nabla Ltd.
-    A and          |
-    M anipulation  | Email: Enquiries@Nabla.co.uk
--------------------------------------------------------------------------------
-*/
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.4                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
 
-version  0.5;
-format   ascii;
+FoamFile
+{
+    version         2.0;
+    format          ascii;
 
-root     "/home/larsg/foam/run/bubble";
-case     "2D5x50_1";
-instance "system";
-local    "";
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
 
-note     "environmentalProperties for Foam";
+    note            "environmentalProperties for Foam";
 
-class    dictionary;
-object   environmentalProperties;
+    class           dictionary;
+    object          environmentalProperties;
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 g               g      [0 1 -2 0 0]  (0 0 -9.81);
-
 
 // ************************************************************************* //

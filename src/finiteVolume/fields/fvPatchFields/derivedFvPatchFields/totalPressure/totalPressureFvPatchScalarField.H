@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,6 +52,22 @@ class totalPressureFvPatchScalarField
 {
     // Private data
 
+        //- Name of the velocity field
+        word UName_;
+
+        //- Name of the flux transporting the field
+        word phiName_;
+
+        //- Name of the density field used to normalise the mass flux
+        //  if neccessary
+        word rhoName_;
+
+        //- Name of the compressibility field used to calculate the wave speed
+        word psiName_;
+
+        //- Heat capacity ratio
+        scalar gamma_;
+
         //- Total pressure
         scalarField p0_;
 
@@ -79,13 +95,20 @@ public:
             const dictionary&
         );
 
-        //- Construct by mapping given totalPressureFvPatchScalarField onto a new patch
+        //- Construct by mapping given totalPressureFvPatchScalarField
+        //  onto a new patch
         totalPressureFvPatchScalarField
         (
             const totalPressureFvPatchScalarField&,
             const fvPatch&,
             const scalarField&,
             const fvPatchFieldMapper&
+        );
+
+        //- Construct as copy
+        totalPressureFvPatchScalarField
+        (
+            const totalPressureFvPatchScalarField&
         );
 
         //- Construct and return a clone
@@ -118,6 +141,31 @@ public:
 
         // Access
 
+            //- Return the name of the velocity field
+            const word& UName() const
+            {
+                return UName_;
+            }
+
+            //- Return reference to the name of the velocity field
+            //  to allow adjustment
+            word& UName()
+            {
+                return UName_;
+            }
+
+            //- Return the heat capacity ratio
+            scalar gamma() const
+            {
+                return gamma_;
+            }
+
+            //- Return reference to the heat capacity ratio to allow adjustment
+            scalar& gamma()
+            {
+                return gamma_;
+            }
+
             //- Return the total pressure
             const scalarField& p0() const
             {
@@ -148,6 +196,10 @@ public:
 
 
         // Evaluation functions
+
+            //- Update the coefficients associated with the patch field
+            //  using the given patch velocity field
+            virtual void updateCoeffs(const vectorField& Up);
 
             //- Update the coefficients associated with the patch field
             virtual void updateCoeffs();

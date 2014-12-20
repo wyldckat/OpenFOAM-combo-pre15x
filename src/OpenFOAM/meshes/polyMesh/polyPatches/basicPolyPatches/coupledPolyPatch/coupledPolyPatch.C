@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -235,8 +235,8 @@ void coupledPolyPatch::calcTransformTensors
     {
         separation_.setSize(0);
 
-        forwardT_ = tensorField(1, transformationTensor(-nr, nf));
-        reverseT_ = tensorField(1, transformationTensor(nf, -nr));
+        forwardT_ = tensorField(1, rotationTensor(-nr, nf));
+        reverseT_ = tensorField(1, rotationTensor(nf, -nr));
     }
     else
     {
@@ -281,8 +281,8 @@ void coupledPolyPatch::calcTransformTensors
 
         forAll (forwardT_, facei)
         {
-            forwardT_[facei] = transformationTensor(-nr[facei], nf[facei]);
-            reverseT_[facei] = transformationTensor(nf[facei], -nr[facei]);
+            forwardT_[facei] = rotationTensor(-nr[facei], nf[facei]);
+            reverseT_[facei] = rotationTensor(nf[facei], -nr[facei]);
         }
 
         if (sum(mag(forwardT_ - forwardT_[0])) < SMALL)

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -116,6 +116,13 @@ public:
 
 
     // Member Functions
+
+        //- Return the field to be interpolated
+        const GeometricField<Type, fvPatchField, volMesh>& psi() const
+        {
+            return psi_;
+        }
+
 
         //- Interpolate field to the given point in the given cell
         virtual Type interpolate

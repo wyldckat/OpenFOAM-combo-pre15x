@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -137,21 +137,24 @@ void Foam::mixerFvMesh::addZonesAndModifiers()
 
     List<cellZone*> cz(1);
 
+    // Mark every cell with its topological region
     regionSplit rs(*this);
 
-    labelList cellMask(rs.seedMask(findNearestCell(cs().origin())));
+    // Get the region of the cell containing the origin.
+    label originRegion = rs[findNearestCell(cs().origin())];
 
     labelList movingCells(nCells());
     label nMovingCells = 0;
 
-    forAll (cellMask, cellI)
+    forAll(rs, cellI)
     {
-        if (cellMask[cellI] > 0)
+        if (rs[cellI] == originRegion)
         {
             movingCells[nMovingCells] = cellI;
             nMovingCells++;
         }
     }
+
     movingCells.setSize(nMovingCells);
     Info << "Number of cells in the moving region: " << nMovingCells << endl;
 
@@ -169,8 +172,9 @@ void Foam::mixerFvMesh::addZonesAndModifiers()
     // Add a topology modifier
     Info << "Adding topology modifiers" << endl;
     topoChanger_.setSize(1);
-    topoChanger_.hook
+    topoChanger_.set
     (
+        0,
         new slidingInterface
         (
             "mixerSlider",
@@ -187,7 +191,6 @@ void Foam::mixerFvMesh::addZonesAndModifiers()
     );
     topoChanger_.writeOpt() = IOobject::AUTO_WRITE;
 
-    // Write mesh
     write();
 }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,7 @@ License
 #include "Istream.H"
 #include "token.H"
 #include "SLList.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -77,7 +78,7 @@ Istream& operator>>(Istream& is, List<T>& L)
 
         // Read list contents depending on data format
 
-        if (is.format() == IOstream::ASCII || !writeBinary(L.begin()))
+        if (is.format() == IOstream::ASCII || !contiguous<T>())
         {
             // Read beginning of contents
             char listDelimiter = is.readBeginList("List");

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,7 +80,7 @@ void meshToMesh::calcAddressing()
     forAll (patchesFrom, patchI)
     {
         // get reference to cells next to the boundary
-        const labelList::subList bCells = patchesFrom[patchI].faceCells();
+        const unallocLabelList& bCells = patchesFrom[patchI].faceCells();
         
         forAll (bCells, faceI)
         {
@@ -90,7 +90,7 @@ void meshToMesh::calcAddressing()
 
     treeBoundBox meshBb(fromPoints);
 
-    scalar typDim = meshBb.avgDim()/(2.0*pow(fromCells.size(), 1.0/3.0));
+    scalar typDim = meshBb.avgDim()/(2.0*cbrt(scalar(fromCells.size())));
 
     treeBoundBox shiftedBb
     (

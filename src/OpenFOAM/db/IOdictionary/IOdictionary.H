@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,8 +48,6 @@ SourceFiles
 namespace Foam
 {
 
-class objectRegistry;
-
 /*---------------------------------------------------------------------------*\
                            Class IOdictionary Declaration
 \*---------------------------------------------------------------------------*/
@@ -69,6 +67,9 @@ public:
 
         //- Construct given an IOobject
         IOdictionary(const IOobject&);
+
+        //- Construct given an IOobject and dictionary
+        IOdictionary(const IOobject&, const dictionary&);
 
 
     // Member functions

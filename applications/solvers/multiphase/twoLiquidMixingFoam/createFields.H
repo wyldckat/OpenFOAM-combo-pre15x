@@ -42,7 +42,8 @@
 
 #   include "createPhi.H"
 
-    twoPhaseMixture twoPhaseProperties(U, phi);
+    Info<< "Reading transportProperties\n" << endl;
+    twoPhaseMixture twoPhaseProperties(U, phi, "gamma");
     
     const dimensionedScalar& rho1 = twoPhaseProperties.rho1();
     const dimensionedScalar& rho2 = twoPhaseProperties.rho2();

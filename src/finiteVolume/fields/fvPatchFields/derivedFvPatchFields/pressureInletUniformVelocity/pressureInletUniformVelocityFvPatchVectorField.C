@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -75,6 +75,16 @@ pressureInletUniformVelocityFvPatchVectorField
 pressureInletUniformVelocityFvPatchVectorField::
 pressureInletUniformVelocityFvPatchVectorField
 (
+    const pressureInletUniformVelocityFvPatchVectorField& pivpvf
+)
+:
+    pressureInletVelocityFvPatchVectorField(pivpvf)
+{}
+
+
+pressureInletUniformVelocityFvPatchVectorField::
+pressureInletUniformVelocityFvPatchVectorField
+(
     const pressureInletUniformVelocityFvPatchVectorField& pivpvf,
     const vectorField& iF
 )
@@ -95,11 +105,7 @@ void pressureInletUniformVelocityFvPatchVectorField::updateCoeffs()
 
     pressureInletVelocityFvPatchVectorField::updateCoeffs();
 
-    operator==
-    (
-        patch().nf()
-       *sum(patch().Sf() & *this)/sum(patch().magSf())
-    );
+    operator==(patch().nf()*sum(patch().Sf() & *this)/sum(patch().magSf()));
 }
 
 

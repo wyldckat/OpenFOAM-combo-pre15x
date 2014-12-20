@@ -13,5 +13,3 @@
     );
 
     engineMesh& mesh = meshPtr();
-
-    mesh.constructAndClear();

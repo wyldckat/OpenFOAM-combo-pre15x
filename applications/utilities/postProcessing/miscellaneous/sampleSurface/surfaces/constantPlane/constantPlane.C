@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -115,17 +113,18 @@ void Foam::constantPlane::createGeometry()
 }
 
 
-template <class T>
-Foam::Field<T> Foam::constantPlane::doInterpolate
+template <class Type>
+Foam::tmp<Foam::Field<Type> > Foam::constantPlane::interpolate
 (
     const word& fieldName,
-    const fieldsCache<T>& cache
+    const fieldsCache<Type>& cache
 ) const
 {
     // One value per face
-    Field<T> values(meshCells_.size());
+    tmp<Field<Type> > tvalues(new Field<Type>(meshCells_.size()));
+    Field<Type>& values = tvalues();
 
-    const GeometricField<T, fvPatchField, volMesh>& field =
+    const GeometricField<Type, fvPatchField, volMesh>& field =
         *cache[fieldName];
 
     forAll(meshCells_, elemI)
@@ -133,13 +132,12 @@ Foam::Field<T> Foam::constantPlane::doInterpolate
         values[elemI] = field[meshCells_[elemI]];
     }
 
-    return values;
+    return tvalues;
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::constantPlane::constantPlane
 (
     const polyMesh& mesh,
@@ -160,8 +158,6 @@ Foam::constantPlane::constantPlane
 }
 
 
-// Construct from dictionary. Note how we construct plane from point/normal
-// to bypass the elaborate plane description format.
 Foam::constantPlane::constantPlane
 (
     const polyMesh& mesh,
@@ -193,9 +189,7 @@ void Foam::constantPlane::correct
     const bool meshChanged,
     const volPointInterpolation& pInterp,
     const dictionary& interpolationSchemes,
-    const fieldsCache<scalar>& scalarCache,
-    const fieldsCache<vector>& vectorCache,
-    const fieldsCache<tensor>& tensorCache
+    const fieldsCache<scalar>& scalarCache
 )
 {
     if (meshChanged)
@@ -206,7 +200,7 @@ void Foam::constantPlane::correct
 }
 
 
-Foam::scalarField Foam::constantPlane::interpolate
+Foam::tmp<Foam::scalarField> Foam::constantPlane::interpolate
 (
     const word& fieldName,
     const fieldsCache<scalar>& cache,
@@ -214,11 +208,11 @@ Foam::scalarField Foam::constantPlane::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache);
+    return interpolate<scalar>(fieldName, cache);
 }
 
 
-Foam::vectorField Foam::constantPlane::interpolate
+Foam::tmp<Foam::vectorField> Foam::constantPlane::interpolate
 (
     const word& fieldName,
     const fieldsCache<vector>& cache,
@@ -226,11 +220,35 @@ Foam::vectorField Foam::constantPlane::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache);
+    return interpolate<vector>(fieldName, cache);
 }
 
 
-Foam::tensorField Foam::constantPlane::interpolate
+Foam::tmp<Foam::sphericalTensorField> Foam::constantPlane::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<sphericalTensor>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    return interpolate<sphericalTensor>(fieldName, cache);
+}
+
+
+Foam::tmp<Foam::symmTensorField> Foam::constantPlane::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<symmTensor>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    return interpolate<symmTensor>(fieldName, cache);
+}
+
+
+Foam::tmp<Foam::tensorField> Foam::constantPlane::interpolate
 (
     const word& fieldName,
     const fieldsCache<tensor>& cache,
@@ -238,7 +256,7 @@ Foam::tensorField Foam::constantPlane::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache);
+    return interpolate<tensor>(fieldName, cache);
 }
 
 

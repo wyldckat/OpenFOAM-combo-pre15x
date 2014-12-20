@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -108,13 +108,25 @@ public:
         }
 
         //- Return the optional physical type of the patch
-        word& physicalType() const
+        const word& physicalType() const
+        {
+            return physicalType_;
+        }
+
+        //- Return the optional physical type of the patch for modification
+        word& physicalType()
         {
             return physicalType_;
         }
 
         //- Return the index of this patch in the boundaryMesh
         label index() const
+        {
+            return boundaryIndex_;
+        }
+
+        //- Return the index of this patch in the boundaryMesh for modification
+        label& index()
         {
             return boundaryIndex_;
         }

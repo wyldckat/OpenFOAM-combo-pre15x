@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -139,7 +139,7 @@ public:
             return epsilon_;
         }
 
-        tmp<volTensorField> R() const;
+        tmp<volSymmTensorField> R() const;
 
         tmp<fvVectorMatrix> divRhoR(volVectorField& U) const;
 

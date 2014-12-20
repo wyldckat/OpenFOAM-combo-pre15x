@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -80,7 +78,11 @@ void Foam::PointEdgeWave<Type>::calcCyclicAddressing()
                 patch.start()
             );
 
-            cycHalves_.hook(new primitivePatch(halfAFaces, mesh.points()));
+            cycHalves_.set
+            (
+                patchI,
+                new primitivePatch(halfAFaces, mesh.points())
+            );
 
             SubList<face> halfBFaces
             (
@@ -89,7 +91,11 @@ void Foam::PointEdgeWave<Type>::calcCyclicAddressing()
                 patch.start() + halfSize
             );
 
-            cycHalves_.hook(new primitivePatch(halfBFaces, mesh.points()));
+            cycHalves_.set
+            (
+                patchI,
+                new primitivePatch(halfBFaces, mesh.points())
+            );
         }
     }
 }
@@ -561,7 +567,7 @@ void Foam::PointEdgeWave<Type>::handleProcPatches()
         //    (Note:irrespective if changed or not for now)
         //
 
-        const parallelInfo& pd = mesh.parallelData();
+        const globalMeshData& pd = mesh.globalData();
 
         List<Type> sharedData(pd.nGlobalPoints());
 

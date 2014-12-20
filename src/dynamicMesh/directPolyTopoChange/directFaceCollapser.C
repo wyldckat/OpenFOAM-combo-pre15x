@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,6 +30,8 @@ Description
 #include "polyMesh.H"
 #include "directPolyTopoChange.H"
 #include "polyModifyPoint.H"
+#include "polyModifyFace.H"
+#include "polyRemoveFace.H"
 #include "SortableList.H"
 #include "meshTools.H"
 #include "OFstream.H"
@@ -100,7 +102,6 @@ void Foam::directFaceCollapser::filterFace
 {
     const face& f = mesh_.faces()[faceI];
     const labelList& fEdges = mesh_.faceEdges()[faceI];
-    const faceZoneMesh& faceZones = mesh_.faceZones();
 
     // Space for replaced vertices and split edges.
     DynamicList<label> newFace(10 * f.size());
@@ -167,42 +168,31 @@ void Foam::directFaceCollapser::filterFace
         }
 
         // Get current zone info
-        label zoneID = faceZones.whichZone(faceI);
+        label zoneID = mesh_.faceZones().whichZone(faceI);
 
         bool zoneFlip = false;
 
         if (zoneID >= 0)
         {
-            const faceZone& fZone = faceZones[zoneID];
+            const faceZone& fZone = mesh_.faceZones()[zoneID];
 
             zoneFlip = fZone.flipMap()[fZone.whichFace(faceI)];
         }
 
-        //meshMod.setAction
-        //(
-        //    polyModifyFace
-        //    (
-        //        newF,                       // modified face
-        //        faceI,                      // label of face being modified
-        //        mesh_.faceOwner()[faceI],   // owner
-        //        nei,                        // neighbour
-        //        false,                      // face flip
-        //        patchI,                     // patch for face
-        //        false,                      // remove from zone
-        //        -1,                         // zone for face
-        //        false                       // face flip in zone
-        //    )
-        //);
-        meshMod.modifyFace
+        meshMod.setAction
         (
-            newF,                       // modified face
-            faceI,                      // label of face being modified
-            mesh_.faceOwner()[faceI],   // owner
-            nei,                        // neighbour
-            false,
-            patchI,                     // patch for face
-            zoneID,
-            zoneFlip
+            polyModifyFace
+            (
+                newF,                       // modified face
+                faceI,                      // label of face being modified
+                mesh_.faceOwner()[faceI],   // owner
+                nei,                        // neighbour
+                false,                      // face flip
+                patchI,                     // patch for face
+                false,                      // remove from zone
+                zoneID,                     // zone for face
+                zoneFlip                    // face flip in zone
+            )
         );
     }
 }
@@ -231,7 +221,6 @@ void Foam::directFaceCollapser::setRefinement
     const edgeList& edges = mesh_.edges();
     const faceList& faces = mesh_.faces();
     const labelListList& edgeFaces = mesh_.edgeFaces();
-    const pointZoneMesh& pointZones = mesh_.pointZones();
 
 
     // From split edge to newly introduced point(s). Can be more than one per
@@ -256,32 +245,128 @@ void Foam::directFaceCollapser::setRefinement
         const label fpA = fpStart[i];
         const label fpB = fpEnd[i];
 
+        const point& pA = points[f[fpA]];
+        const point& pB = points[f[fpB]];
+
         Pout<< "Face:" << f << " collapsed to fp:" << fpA << ' '  << fpB
-            << " with points:" << points[f[fpA]] << ' ' << points[f[fpB]]
+            << " with points:" << pA << ' ' << pB
             << endl;
 
         // Create line from fpA to fpB
-        linePointRef lineAB(points[f[fpA]], points[f[fpB]]);
+        linePointRef lineAB(pA, pB);
 
         // Get projections of all vertices onto line.
+
+        // Distance(squared) to pA for every point on face.
         SortableList<scalar> dist(f.size());
 
-        forAll(f, fp)
+        dist[fpA] = 0;
+        dist[fpB] = magSqr(pB - pA);
+
+        // Step from fpA to fpB
+        // ~~~~~~~~~~~~~~~~~~~~
+        // (by incrementing)
+
+        label fpMin1 = fpA;
+        label fp = f.fcIndex(fpMin1);
+
+        while (fp != fpB)
         {
+            // See where fp sorts. Make sure it is above fpMin1!
             pointHit near = lineAB.nearestDist(points[f[fp]]);
 
-            // Responsability of caller to make sure polyModifyPoint is only
-            // called once per point. (so max only one collapse face per edge)
+            scalar w = magSqr(near.rawPoint() - pA);
 
-            meshMod.modifyPoint
+            if (w <= dist[fpMin1])
+            {
+                // Offset.
+                w = dist[fpMin1] + 1E-6*(dist[fpB] - dist[fpA]);
+
+                point newPoint
+                (
+                    pA + Foam::sqrt(w / (dist[fpB] - dist[fpA]))*(pB - pA)
+                );
+
+                Pout<< "Adapting position of vertex " << f[fp] << " on face "
+                    << f << " from " << near.rawPoint() << " to " << newPoint
+                    << endl;
+
+                near.setPoint(newPoint);
+            }
+
+            // Responsability of caller to make sure polyModifyPoint is only
+            // called once per point. (so max only one collapse face per
+            // edge)
+            meshMod.setAction
             (
-                f[fp],
-                near.rawPoint(),
-                pointZones.whichZone(f[fp]),
-                true
+                polyModifyPoint
+                (
+                    f[fp],
+                    near.rawPoint(),
+                    false,
+                    -1,
+                    true
+                )
             );
 
-            dist[fp] = magSqr(near.rawPoint() - points[f[fpA]]);
+            dist[fp] = w;
+
+            // Step to next vertex.
+            fpMin1 = fp;
+            fp = f.fcIndex(fpMin1);
+        }
+
+        // Step from fpA to fpB
+        // ~~~~~~~~~~~~~~~~~~~~
+        // (by decrementing)
+
+        fpMin1 = fpA;
+        fp = f.rcIndex(fpMin1);
+
+        while (fp != fpB)
+        {
+            // See where fp sorts. Make sure it is below fpMin1!
+            pointHit near = lineAB.nearestDist(points[f[fp]]);
+
+            scalar w = magSqr(near.rawPoint() - pA);
+
+            if (w <= dist[fpMin1])
+            {
+                // Offset.
+                w = dist[fpMin1] + 1E-6*(dist[fpB] - dist[fpA]);
+
+                point newPoint
+                (
+                    pA + Foam::sqrt(w / (dist[fpB] - dist[fpA]))*(pB - pA)
+                );
+
+                Pout<< "Adapting position of vertex " << f[fp] << " on face "
+                    << f << " from " << near.rawPoint() << " to " << newPoint
+                    << endl;
+
+                near.setPoint(newPoint);
+            }
+
+            // Responsability of caller to make sure polyModifyPoint is only
+            // called once per point. (so max only one collapse face per
+            // edge)
+            meshMod.setAction
+            (
+                polyModifyPoint
+                (
+                    f[fp],
+                    near.rawPoint(),
+                    false,
+                    -1,
+                    true
+                )
+            );
+
+            dist[fp] = w;
+
+            // Step to previous vertex.
+            fpMin1 = fp;
+            fp = f.rcIndex(fpMin1);
         }
 
         dist.sort();
@@ -303,14 +388,14 @@ void Foam::directFaceCollapser::setRefinement
 
 
         // From fp to index in sort:
-        //Pout<< "Face:" << f << " fpA:" << fpA << " fpB:" << fpB << nl;
+        Pout<< "Face:" << f << " fpA:" << fpA << " fpB:" << fpB << nl;
 
         labelList sortedFp(f.size());
         forAll(dist.indices(), i)
         {
             label fp = dist.indices()[i];
 
-            //Pout<< "   fp:" << fp << " distance:" << dist[i] << nl;
+            Pout<< "   fp:" << fp << " distance:" << dist[i] << nl;
 
             sortedFp[fp] = i;
         }
@@ -318,7 +403,7 @@ void Foam::directFaceCollapser::setRefinement
         const labelList& fEdges = mesh_.faceEdges()[faceI];
 
         // Now look up all edges in the face and see if they get extra
-        // vertices inserted and build an edge-to-inteserted-points table.
+        // vertices inserted and build an edge-to-intersected-points table.
 
         // Order of inserted points is in edge order (from e.start to
         // e.end)
@@ -407,7 +492,7 @@ void Foam::directFaceCollapser::setRefinement
     {
         const label faceI = faceLabels[i];
 
-        meshMod.removeFace(faceI);
+        meshMod.setAction(polyRemoveFace(faceI));
 
         // Update list of faces we still have to modify
         affectedFaces.erase(faceI);

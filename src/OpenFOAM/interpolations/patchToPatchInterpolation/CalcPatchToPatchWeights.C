@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -55,7 +53,8 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcPointAddressing() const
     scalarField& pointDistance = *pointDistancePtr_;
 
     const pointField& fromPatchPoints = fromPatch_.localPoints();
-    const unallocFaceList& fromPatchFaces = fromPatch_.localFaces();
+    const List<typename FromPatch::FaceType>& fromPatchFaces =
+        fromPatch_.localFaces();
 
     const pointField& toPatchPoints = toPatch_.localPoints();
     const vectorField& projectionDirection = toPatch_.pointNormals();
@@ -79,7 +78,8 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcPointAddressing() const
     {
         doWeights = false;
 
-        const face& hitFace = fromPatchFaces[proj[pointI].hitObject()];
+        const typename FromPatch::FaceType& hitFace =
+            fromPatchFaces[proj[pointI].hitObject()];
 
         point hitPoint = point::zero;
 
@@ -205,7 +205,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcPointAddressing() const
         if (doWeights)
         {
             // Set interpolation pointWeights
-            pointWeights.hook(new scalarField(hitFace.size()));
+            pointWeights.set(pointI, new scalarField(hitFace.size()));
 
             pointField hitFacePoints = hitFace.points(fromPatchPoints);
 
@@ -227,7 +227,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcPointAddressing() const
         }
         else
         {
-            pointWeights.hook(new scalarField(0));
+            pointWeights.set(pointI, new scalarField(0));
         }
     }
 }
@@ -248,7 +248,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcFaceAddressing() const
     }
 
     const pointField& fromPatchPoints = fromPatch_.points();
-    const unallocFaceList& fromPatchFaces = fromPatch_;
+    const typename FromPatch::FaceListType& fromPatchFaces = fromPatch_;
     const labelListList& fromPatchFaceFaces = fromPatch_.faceFaces();
 
     vectorField fromPatchFaceCentres(fromPatchFaces.size());
@@ -260,7 +260,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcFaceAddressing() const
     }
 
     const pointField& toPatchPoints = toPatch_.points();
-    const unallocFaceList& toPatchFaces = toPatch_;
+    const typename ToPatch::FaceListType& toPatchFaces = toPatch_;
 
     const vectorField& projectionDirection = toPatch_.faceNormals();
 
@@ -283,7 +283,8 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcFaceAddressing() const
             // A hit exists
             faceAddressing[faceI] = proj[faceI].hitObject();
 
-            const face& hitFace = fromPatchFaces[faceAddressing[faceI]];
+            const typename FromPatch::FaceType& hitFace =
+                fromPatchFaces[faceAddressing[faceI]];
 
             pointHit curHit =
                 hitFace.ray
@@ -314,7 +315,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcFaceAddressing() const
              || neighbours.size() == 0
             )
             {
-                faceWeights.hook(new scalarField(1));
+                faceWeights.set(faceI, new scalarField(1));
                 faceWeights[faceI][0] = 1.0;
             }
             else
@@ -323,7 +324,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcFaceAddressing() const
 
                 // The first coefficient corresponds to the centre face.
                 // The rest is ordered in the same way as the faceFaces list.
-                faceWeights.hook(new scalarField(neighbours.size() + 1));
+                faceWeights.set(faceI, new scalarField(neighbours.size() + 1));
 
                 faceWeights[faceI][0] = 1.0/m;
 
@@ -346,7 +347,7 @@ void PatchToPatchInterpolation<FromPatch, ToPatch>::calcFaceAddressing() const
         }
         else
         {
-            faceWeights.hook(new scalarField(0));
+            faceWeights.set(faceI, new scalarField(0));
         }
     }
 }

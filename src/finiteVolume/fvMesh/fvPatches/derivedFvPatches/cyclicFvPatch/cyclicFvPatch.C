@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -123,6 +123,57 @@ tmp<vectorField> cyclicFvPatch::delta() const
     }
 
     return tpdv;
+}
+
+
+tmp<labelField> cyclicFvPatch::interfaceInternalField
+(
+    const unallocLabelList& internalData
+) const
+{
+    return patchInternalField(internalData);
+}
+
+
+tmp<labelField> cyclicFvPatch::transfer
+(
+    const unallocLabelList& interfaceData
+) const
+{
+    tmp<labelField> tpnf(new labelField(this->size()));
+    labelField& pnf = tpnf();
+
+    label sizeby2 = this->size()/2;
+
+    for (label facei=0; facei<sizeby2; facei++)
+    {
+        pnf[facei] = interfaceData[facei + sizeby2];
+        pnf[facei + sizeby2] = interfaceData[facei];
+    }
+
+    return tpnf;
+}
+
+
+tmp<labelField> cyclicFvPatch::internalFieldTransfer
+(
+    const unallocLabelList& iF
+) const
+{
+    const unallocLabelList& faceCells = this->patch().faceCells();
+
+    tmp<labelField> tpnf(new labelField(this->size()));
+    labelField& pnf = tpnf();
+
+    label sizeby2 = this->size()/2;
+
+    for (label facei=0; facei<sizeby2; facei++)
+    {
+        pnf[facei] = iF[faceCells[facei + sizeby2]];
+        pnf[facei + sizeby2] = iF[faceCells[facei]];
+    }
+
+    return tpnf;
 }
 
 

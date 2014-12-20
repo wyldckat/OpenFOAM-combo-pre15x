@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,15 +35,13 @@ SourceFiles
 #ifndef triSurfaceTools_H
 #define triSurfaceTools_H
 
-#include "label.H"
-#include "labelList.H"
 #include "boolList.H"
-#include "point.H"
 #include "pointField.H"
-#include "HashTable.H"
 #include "DynamicList.H"
 #include "labelHashSet.H"
 #include "FixedList.H"
+#include "vector2D.H"
+#include "triPointRef.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -379,6 +377,36 @@ namespace triSurfaceTools
         const point& nearestPt
     );
 
+    //- on which side of surface
+    enum sideType
+    {
+        UNKNOWN,    // cannot be determined (e.g. non-manifold)
+        INSIDE,     // inside
+        OUTSIDE     // outside
+    };
+
+    //- if nearest point is on edgeI, determine on which side of surface sample
+    //  is.
+    sideType edgeSide
+    (
+        const triSurface& surf,
+        const point& sample,
+        const point& nearestPoint,
+        const label edgeI
+    );
+
+    //- Given nearest point (to sample) on surface determines which side
+    //  sample is. Uses either face normal, edge normal or point normal
+    //  (non-trivial). Feed in output of e.g. triangle::classify.
+    sideType surfaceSide
+    (
+        const triSurface& surf,
+        const point& sample,
+        const label nearestFaceI,   // nearest face
+        const point& nearestPt      // nearest point on nearest face
+    );
+
+
     //- Simple triangulation of (selected patches of) boundaryMesh. Needs
     //  polyMesh (or polyBoundaryMesh) since only at this level are the
     //  triangles on neighbouring patches connected.
@@ -398,6 +426,34 @@ namespace triSurfaceTools
         const labelHashSet& includePatches,
         const bool verbose = false
     );
+
+    //- Calculate linear interpolation weights for point (guaranteed to be
+    //  inside triangle)
+    void calcInterpolationWeights
+    (
+        const triPointRef&,
+        const point&,
+        FixedList<scalar, 3>& weights
+    );
+
+    // Calculate weighting factors from samplePts to triangle it is in.
+    // Uses linear search to find triangle.
+    // Vertices are:
+    //   (a b c)  : vertices of the triangle abc the point is in
+    // or if the point is outside all triangles:
+    //   (a b -1) : the edge ab the point is nearest to.
+    //   (a -1 -1) : the vertex a the point is nearest to
+    void calcInterpolationWeights
+    (
+        const triSurface& s,
+        const pointField& samplePts,
+        List<FixedList<label, 3> >& verts,
+        List<FixedList<scalar, 3> >& weights
+    );
+
+    //- Do unconstrained Delaunay of points. Returns triSurface with 3D points
+    //  with z=0. All triangles in region 0.
+    triSurface delaunay2D(const List<vector2D>&);
 }
 
 

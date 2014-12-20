@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -1012,11 +1012,7 @@ void FoamX::ITypeDescriptorImpl::removeSubType(ITypeDescriptor_ptr subEntry)
             if (pTypeDesc->_is_equivalent(subEntry))
             {
                 // Release and remove from linked list.
-                subTypes_.remove
-                (
-                    &(iter.DLListBase::iterator::operator*())
-                );
-
+                subTypes_.remove(iter);
                 break;
             }
         }

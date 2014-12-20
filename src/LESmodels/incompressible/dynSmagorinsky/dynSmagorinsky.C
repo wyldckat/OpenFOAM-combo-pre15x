@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,14 +41,14 @@ addToRunTimeSelectionTable(LESmodel, dynSmagorinsky, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-dimensionedScalar dynSmagorinsky::cD(const volTensorField& D) const
+dimensionedScalar dynSmagorinsky::cD(const volSymmTensorField& D) const
 {
-    volTensorField LL = dev(filter_(U() * U()) - (filter_(U()) * filter_(U())));
+    volSymmTensorField LL = dev(filter_(sqr(U())) - (sqr(filter_(U()))));
 
-    volTensorField MM =
+    volSymmTensorField MM =
         sqr(delta())*(filter_(mag(D)*(D)) - 4*mag(filter_(D))*filter_(D));
 
-    dimensionedScalar MMMM = average(MM && MM);
+    dimensionedScalar MMMM = average(magSqr(MM));
 
     if (MMMM.value() > VSMALL)
     {
@@ -61,15 +61,14 @@ dimensionedScalar dynSmagorinsky::cD(const volTensorField& D) const
 }
 
 
-dimensionedScalar dynSmagorinsky::cI(const volTensorField& D) const
+dimensionedScalar dynSmagorinsky::cI(const volSymmTensorField& D) const
 {
-    volScalarField KK =
-        0.5*(filter_(U() & U()) - (filter_(U()) & filter_(U())));
+    volScalarField KK = 0.5*(filter_(magSqr(U())) - magSqr(filter_(U())));
 
     volScalarField mm =
         sqr(delta())*(4*sqr(mag(filter_(D))) - filter_(sqr(mag(D))));
 
-    dimensionedScalar mmmm = average(mm && mm);
+    dimensionedScalar mmmm = average(magSqr(mm));
 
     if (mmmm.value() > VSMALL)
     {
@@ -124,7 +123,7 @@ void dynSmagorinsky::correct(const tmp<volTensorField>& gradU)
 {
     LESmodel::correct(gradU);
 
-    volTensorField D = dev(symm(gradU));
+    volSymmTensorField D = dev(symm(gradU));
     volScalarField magSqrD = magSqr(D);
 
     k_ = cI(D)*sqr(delta())*magSqrD;

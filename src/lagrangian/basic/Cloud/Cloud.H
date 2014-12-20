@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -147,9 +147,10 @@ public:
             //- Remove particle from cloud and delete
             void deleteParticle(particleType&);
 
-            //- Track the particles
+            //- Move the particles
+            //  passing the TrackingData to the track function
             template<class TrackingData>
-            void track(TrackingData& td);
+            void move(TrackingData& td);
 
             //- Remap the cells of particles corresponding to the
             //  mesh topology change

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,7 +28,7 @@ License
 #include "polyMesh.H"
 #include "twoDPointCorrector.H"
 #include "directionInfo.H"
-#include "meshWave.H"
+#include "MeshWave.H"
 #include "OFstream.H"
 #include "meshTools.H"
 #include "hexMatcher.H"
@@ -200,7 +200,7 @@ Foam::vectorField Foam::directions::propagateDirection
         }
     }
 
-    meshWave<directionInfo> directionCalc
+    MeshWave<directionInfo> directionCalc
     (
         mesh,
         changedFaces,

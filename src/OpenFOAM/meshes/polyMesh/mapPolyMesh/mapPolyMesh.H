@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -150,13 +150,13 @@ class mapPolyMesh
         const polyMesh& mesh_;
 
         //- Number of old live points
-        label nOldPoints_;
+        const label nOldPoints_;
 
         //- Number of old live faces
-        label nOldFaces_;
+        const label nOldFaces_;
 
         //- Number of old live cells
-        label nOldCells_;
+        const label nOldCells_;
 
         //- Old point map.
         //  Contains the old point label for all new points.
@@ -164,7 +164,7 @@ class mapPolyMesh
         //  - for added points this is the master point ID
         //  - for points added with no master, this is -1
         //  Size of the list equals the size of new points
-        labelList pointMap_;
+        const labelList pointMap_;
 
         //- Old face map.
         //  Contains a list of old face labels for every new face.
@@ -173,75 +173,75 @@ class mapPolyMesh
         //  - for faces added from faces this is the master face ID
         //  - for faces added with no master, this is -1
         //  - for faces added from points or edges, this is -1
-        labelList faceMap_;
+        const labelList faceMap_;
 
         //- Faces inflated from points
-        List<objectMap> facesFromPointsMap_;
+        const List<objectMap> facesFromPointsMap_;
 
         //- Faces inflated from edges
-        List<objectMap> facesFromEdgesMap_;
+        const List<objectMap> facesFromEdgesMap_;
 
         //- Old cell map.
         //  Contains old cell label for all preserved cells.
         //  Size of the list equals the number or preserved cells
-        labelList cellMap_;
+        const labelList cellMap_;
 
         //- Cells inflated from points
-        List<objectMap> cellsFromPointsMap_;
+        const List<objectMap> cellsFromPointsMap_;
 
         //- Cells inflated from edges
-        List<objectMap> cellsFromEdgesMap_;
+        const List<objectMap> cellsFromEdgesMap_;
 
         //- Cells inflated from faces
-        List<objectMap> cellsFromFacesMap_;
+        const List<objectMap> cellsFromFacesMap_;
 
         //- Reverse point map
-        labelList reversePointMap_;
+        const labelList reversePointMap_;
 
         //- Reverse face map
-        labelList reverseFaceMap_;
+        const labelList reverseFaceMap_;
 
         //- Reverse cell map
-        labelList reverseCellMap_;
+        const labelList reverseCellMap_;
 
         //- Map of flipped face flux faces
-        labelHashSet flipFaceFlux_;
+        const labelHashSet flipFaceFlux_;
 
         //- Patch mesh point renumbering
-        labelListList patchPointMap_;
+        const labelListList patchPointMap_;
 
         //- Point zone renumbering
         //  For every preserved point in zone give the old position.
         //  For added points, the index is set to -1
-        labelListList pointZoneMap_;
+        const labelListList pointZoneMap_;
 
         //- Face zone point renumbering
         //  For every preserved point in zone give the old position.
         //  For added points, the index is set to -1
-        labelListList faceZonePointMap_;
+        const labelListList faceZonePointMap_;
 
         //- Face zone face renumbering
         //  For every preserved face in zone give the old position.
         //  For added faces, the index is set to -1
-        labelListList faceZoneFaceMap_;
+        const labelListList faceZoneFaceMap_;
 
         //- Cell zone renumbering
         //  For every preserved cell in zone give the old position.
         //  For added cells, the index is set to -1
-        labelListList cellZoneMap_;
+        const labelListList cellZoneMap_;
 
         //- Pre-motion point positions.
         //  This specifies the correct way of blowing up zero-volume objects
-        pointField preMotionPoints_;
+        const pointField preMotionPoints_;
 
         //- List of the old patch sizes
         labelList oldPatchSizes_;
 
         //- List of the old patch start labels
-        labelList oldPatchStarts_;
+        const labelList oldPatchStarts_;
 
         //- List of numbers of mesh points per old patch
-        labelList oldPatchNMeshPoints_;
+        const labelList oldPatchNMeshPoints_;
 
 
     // Private Member Functions
@@ -288,6 +288,35 @@ public:
             const labelList& oldPatchNMeshPoints
         );
 
+        //- Construct from components and optionally reuse storage
+        mapPolyMesh
+        (
+            const polyMesh& mesh,
+            const label nOldPoints,
+            const label nOldFaces,
+            const label nOldCells,
+            labelList& pointMap,
+            labelList& faceMap,
+            List<objectMap>& facesFromPoints,
+            List<objectMap>& facesFromEdges,
+            labelList& cellMap,
+            List<objectMap>& cellsFromPoints,
+            List<objectMap>& cellsFromEdges,
+            List<objectMap>& cellsFromFaces,
+            labelList& reversePointMap,
+            labelList& reverseFaceMap,
+            labelList& reverseCellMap,
+            labelHashSet& flipFaceFlux,
+            labelListList& patchPointMap,
+            labelListList& pointZoneMap,
+            labelListList& faceZonePointMap,
+            labelListList& faceZoneFaceMap,
+            labelListList& cellZoneMap,
+            pointField& preMotionPoints,
+            labelList& oldPatchStarts,
+            labelList& oldPatchNMeshPoints,
+            const bool reUse
+        );
 
     // Member Functions
 

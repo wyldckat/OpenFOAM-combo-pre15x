@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -93,10 +93,18 @@ void vanDriestDelta::calcDelta()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-vanDriestDelta::vanDriestDelta(const fvMesh& mesh, const dictionary& dd)
+vanDriestDelta::vanDriestDelta
+(
+    const word& name,
+    const fvMesh& mesh,
+    const dictionary& dd
+)
 :
-    LESdelta(mesh),
-    geometricDelta_(LESdelta::New(mesh, dd.subDict(type() + "Coeffs"))),
+    LESdelta(name, mesh),
+    geometricDelta_
+    (
+        LESdelta::New("geometricDelta", mesh, dd.subDict(type() + "Coeffs"))
+    ),
     kappa_(dimensionedScalar(dd.lookup("kappa")).value()),
     Aplus_
     (

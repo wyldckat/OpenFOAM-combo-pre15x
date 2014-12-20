@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -112,7 +112,7 @@ protected:
         void movePoints(const pointField&);
 
         //- Initialise the update of the patch topology
-        virtual void initUpdateTopology();
+        virtual void initUpdateMesh();
 
         //- Update of the patch topology
         virtual void updateMesh();

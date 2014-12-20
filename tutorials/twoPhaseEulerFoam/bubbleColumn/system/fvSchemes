@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -41,9 +41,9 @@ divSchemes
     div(phib,epsilon) Gauss limitedLinear 1;
     div(phi,alpha)  Gauss limitedLinear01 1;
     div(phir,alpha) Gauss limitedLinear01 1;
-    div(phi,Theta) Gauss limitedLinear 1;
-    div((-nuEffa*grad(Ua).T())) Gauss linear;
-    div((-nuEffb*grad(Ub).T())) Gauss linear;
+    div(phi,Theta)  Gauss limitedLinear 1;
+    div(Rca)        Gauss linear;
+    div(Rcb)        Gauss linear;
 }
 
 laplacianSchemes
@@ -51,7 +51,7 @@ laplacianSchemes
     default         none;
     laplacian(nuEffa,Ua) Gauss linear corrected;
     laplacian(nuEffb,Ub) Gauss linear corrected;
-    laplacian((rho*1|A(U)),p) Gauss linear corrected;
+    laplacian((rho*(1|A(U))),p) Gauss linear corrected;
     laplacian(ppMagf,alpha) Gauss linear corrected;
     laplacian((alphak*nuEffb),k) Gauss linear corrected;
     laplacian((alphaEps*nuEffb),epsilon) Gauss linear corrected;

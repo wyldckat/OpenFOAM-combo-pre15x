@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -261,6 +261,14 @@ int main(int argc, char *argv[])
         (
             fieldNames.size()
         );
+        PtrList<volFieldSampler<sphericalTensor> > sampledSphericalTensorFields
+        (
+            fieldNames.size()
+        );
+        PtrList<volFieldSampler<symmTensor> > sampledSymmTensorFields
+        (
+            fieldNames.size()
+        );
         PtrList<volFieldSampler<tensor> > sampledTensorFields
         (
             fieldNames.size()
@@ -272,6 +280,8 @@ int main(int argc, char *argv[])
 
         label nScalarFields = 0;
         label nVectorFields = 0;
+        label nSphericalTensorFields = 0;
+        label nSymmTensorFields = 0;
         label nTensorFields = 0;
 
         forAll(fieldNames, fieldI)
@@ -302,8 +312,9 @@ int main(int argc, char *argv[])
 
                     volScalarField sField(fieldHeader, mesh);
 
-                    sampledScalarFields.hook
+                    sampledScalarFields.set
                     (
+                        nScalarFields,
                         new volFieldSampler<scalar>
                         (
                             pInterpPtr(),
@@ -325,8 +336,9 @@ int main(int argc, char *argv[])
 
                     volVectorField vField(fieldHeader, mesh);
 
-                    sampledVectorFields.hook
+                    sampledVectorFields.set
                     (
+                        nVectorFields,
                         new volFieldSampler<vector>
                         (
                             pInterpPtr(),
@@ -340,6 +352,56 @@ int main(int argc, char *argv[])
                 }
                 else if
                 (
+                    fieldHeader.headerClassName()
+                 == volSphericalTensorField::typeName
+                )
+                {
+                    Info<< "Sampling " << fieldHeader.headerClassName()
+                        << ' ' << fieldName << endl;
+
+                    volSphericalTensorField tField(fieldHeader, mesh);
+
+                    sampledSphericalTensorFields.set
+                    (
+                        nSphericalTensorFields,
+                        new volFieldSampler<sphericalTensor>
+                        (
+                            pInterpPtr(),
+                            interpolationSchemes,
+                            tField,
+                            sampleSets
+                        )
+                    );
+
+                    nSphericalTensorFields++;
+                }
+                else if
+                (
+                    fieldHeader.headerClassName()
+                 == volSymmTensorField::typeName
+                )
+                {
+                    Info<< "Sampling " << fieldHeader.headerClassName()
+                        << ' ' << fieldName << endl;
+
+                    volSymmTensorField tField(fieldHeader, mesh);
+
+                    sampledSymmTensorFields.set
+                    (
+                        nSymmTensorFields,
+                        new volFieldSampler<symmTensor>
+                        (
+                            pInterpPtr(),
+                            interpolationSchemes,
+                            tField,
+                            sampleSets
+                        )
+                    );
+
+                    nSymmTensorFields++;
+                }
+                else if
+                (
                     fieldHeader.headerClassName() == volTensorField::typeName
                 )
                 {
@@ -348,8 +410,9 @@ int main(int argc, char *argv[])
 
                     volTensorField tField(fieldHeader, mesh);
 
-                    sampledTensorFields.hook
+                    sampledTensorFields.set
                     (
+                        nTensorFields,
                         new volFieldSampler<tensor>
                         (
                             pInterpPtr(),
@@ -411,13 +474,52 @@ int main(int argc, char *argv[])
 
                             volVectorField vField(fieldHeader, mesh);
 
-                            sampledScalarFields.hook
+                            sampledScalarFields.set
                             (
+                                nScalarFields,
                                 new volFieldSampler<scalar>
                                 (
                                     pInterpPtr(),
                                     interpolationSchemes,
                                     vField.component(cmpt)(),
+                                    sampleSets
+                                )
+                            );
+
+                            nScalarFields++;
+                        }
+                        else if
+                        (
+                            fieldHeader.headerClassName()
+                         == volSymmTensorField::typeName
+                        )
+                        {
+                            size_t cmptPos(fieldName.find_last_of("0123456"));
+
+                            if (cmptPos == string::npos)
+                            {
+                                FatalErrorIn(args.executable())
+                                    << "cannot find component index for "
+                                    << fieldName
+                                    << exit(FatalError);
+                            }
+
+                            direction cmpt =
+                                atoi(string(fieldName[cmptPos]).c_str());
+
+                            Info<< "Sampling " << fieldHeader.headerClassName()
+                                << ' ' << fieldName << endl;
+
+                            volSymmTensorField tField(fieldHeader, mesh);
+
+                            sampledScalarFields.set
+                            (
+                                nScalarFields,
+                                new volFieldSampler<scalar>
+                                (
+                                    pInterpPtr(),
+                                    interpolationSchemes,
+                                    tField.component(cmpt)(),
                                     sampleSets
                                 )
                             );
@@ -448,8 +550,9 @@ int main(int argc, char *argv[])
 
                             volTensorField tField(fieldHeader, mesh);
 
-                            sampledScalarFields.hook
+                            sampledScalarFields.set
                             (
+                                nScalarFields,
                                 new volFieldSampler<scalar>
                                 (
                                     pInterpPtr(),
@@ -498,9 +601,35 @@ int main(int argc, char *argv[])
                     label fieldFound = (fieldHeader.headerOk() ? 1 : 0);
                     reduce(fieldFound, sumOp<label>());
 
+
                     if (fieldFound == Pstream::nProcs())
                     {
                         if
+                        (
+                            fieldHeader.headerClassName()
+                         == volScalarField::typeName
+                        )
+                        {
+                            Info<< "Sampling " << fieldHeader.headerClassName()
+                                << ' ' << fieldName << endl;
+
+                            volScalarField sField(fieldHeader, mesh);
+
+                            sampledScalarFields.set
+                            (
+                                nScalarFields,
+                                new volFieldSampler<scalar>
+                                (
+                                    pInterpPtr(),
+                                    interpolationSchemes,
+                                    mag(sField),
+                                    sampleSets
+                                )
+                            );
+
+                            nScalarFields++;
+                        }
+                        else if
                         (
                             fieldHeader.headerClassName()
                          == volVectorField::typeName
@@ -511,13 +640,64 @@ int main(int argc, char *argv[])
 
                             volVectorField vField(fieldHeader, mesh);
 
-                            sampledScalarFields.hook
+                            sampledScalarFields.set
                             (
+                                nScalarFields,
                                 new volFieldSampler<scalar>
                                 (
                                     pInterpPtr(),
                                     interpolationSchemes,
                                     mag(vField),
+                                    sampleSets
+                                )
+                            );
+
+                            nScalarFields++;
+                        }
+                        else if
+                        (
+                            fieldHeader.headerClassName()
+                         == volSphericalTensorField::typeName
+                        )
+                        {
+                            Info<< "Sampling " << fieldHeader.headerClassName()
+                                << ' ' << fieldName << endl;
+
+                            volSphericalTensorField tField(fieldHeader, mesh);
+
+                            sampledScalarFields.set
+                            (
+                                nScalarFields,
+                                new volFieldSampler<scalar>
+                                (
+                                    pInterpPtr(),
+                                    interpolationSchemes,
+                                    mag(tField),
+                                    sampleSets
+                                )
+                            );
+
+                            nScalarFields++;
+                        }
+                        else if
+                        (
+                            fieldHeader.headerClassName()
+                         == volSymmTensorField::typeName
+                        )
+                        {
+                            Info<< "Sampling " << fieldHeader.headerClassName()
+                                << ' ' << fieldName << endl;
+
+                            volSymmTensorField tField(fieldHeader, mesh);
+
+                            sampledScalarFields.set
+                            (
+                                nScalarFields,
+                                new volFieldSampler<scalar>
+                                (
+                                    pInterpPtr(),
+                                    interpolationSchemes,
+                                    mag(tField),
                                     sampleSets
                                 )
                             );
@@ -535,8 +715,9 @@ int main(int argc, char *argv[])
 
                             volTensorField tField(fieldHeader, mesh);
 
-                            sampledScalarFields.hook
+                            sampledScalarFields.set
                             (
+                                nScalarFields,
                                 new volFieldSampler<scalar>
                                 (
                                     pInterpPtr(),
@@ -570,6 +751,8 @@ int main(int argc, char *argv[])
         // Set the sampledFields to the correct size
         sampledScalarFields.setSize(nScalarFields);
         sampledVectorFields.setSize(nVectorFields);
+        sampledSphericalTensorFields.setSize(nSphericalTensorFields);
+        sampledSymmTensorFields.setSize(nSymmTensorFields);
         sampledTensorFields.setSize(nTensorFields);
 
         //
@@ -601,6 +784,28 @@ int main(int argc, char *argv[])
             sampledVectorFields.size()
         );
         combineSampleValues(sampledVectorFields, indexSets, masterVectorFields);
+
+        PtrList<volFieldSampler<sphericalTensor> > masterSphericalTensorFields
+        (
+            sampledSphericalTensorFields.size()
+        );
+        combineSampleValues
+        (
+            sampledSphericalTensorFields,
+            indexSets,
+            masterSphericalTensorFields
+        );
+
+        PtrList<volFieldSampler<symmTensor> > masterSymmTensorFields
+        (
+            sampledSymmTensorFields.size()
+        );
+        combineSampleValues
+        (
+            sampledSymmTensorFields,
+            indexSets,
+            masterSymmTensorFields
+        );
 
         PtrList<volFieldSampler<tensor> > masterTensorFields
         (
@@ -636,6 +841,24 @@ int main(int argc, char *argv[])
                 (
                     masterSampleSets[setI],
                     masterVectorFields,
+                    setI,
+                    timeDir,
+                    writeFormat
+                );
+
+                writeSampleFile
+                (
+                    masterSampleSets[setI],
+                    masterSphericalTensorFields,
+                    setI,
+                    timeDir,
+                    writeFormat
+                );
+
+                writeSampleFile
+                (
+                    masterSampleSets[setI],
+                    masterSymmTensorFields,
                     setI,
                     timeDir,
                     writeFormat

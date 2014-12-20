@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ Class
     regionSplit
 
 Description
-    This class separates the mesh into distint unconnected regions,
+    This class separates the mesh into distinct unconnected regions,
     each of which is then given a label.
 
 SourceFiles
@@ -45,14 +45,13 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
-class regionInfo;
-
 /*---------------------------------------------------------------------------*\
                            Class regionSplit Declaration
 \*---------------------------------------------------------------------------*/
 
 class regionSplit
+:
+    public labelList
 {
     // Private data
 
@@ -60,65 +59,50 @@ class regionSplit
         const polyMesh& mesh_;
 
         //- Number of regions
-        mutable label nRegions_;
-
-        //- Cell-to-region list
-        mutable labelList*  cellToRegionPtr_;
+        label nRegions_;
 
 
     // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        regionSplit(const regionSplit&);
 
-        //- Disallow default bitwise assignment
-        void operator=(const regionSplit&);
-
-
-        //- Calculate region split
-        void calcRegionSplit() const;
-
-        //- Given a seed cell label, fill mask with 1 for contiguous
-        //  region around it
+        //- Given a seed cell label, fill cellRegion/faceRegion with markValue
+        //  for contiguous region around it
         void fillSeedMask
         (
-            labelList& region,
+            labelList& cellRegion,
+            labelList& faceRegion,
             const label seedCellID,
-            const label mark
+            const label markValue
         ) const;
 
+        //- Calculate region split. Return number of regions.
+        label calcRegionSplit
+        (
+            const boolList& blockedFace,
+            labelList& cellRegion
+        ) const;
 
 public:
+
+    //- Runtime type information
+    ClassName("regionSplit");
 
     // Constructors
 
         //- Construct from mesh
-        regionSplit(const polyMesh& m)
-        :
-            mesh_(m),
-            nRegions_(-1),
-            cellToRegionPtr_(NULL)
-        {}
+        regionSplit(const polyMesh&);
 
-    // Destructor
-
-        ~regionSplit()
-        {
-            deleteDemandDrivenData(cellToRegionPtr_);
-        }
-
+        //- Construct from mesh and whether face is blocked
+        //  NOTE: blockedFace has to be consistent across coupled faces!
+        regionSplit(const polyMesh&, const boolList& blockedFace);
 
     // Member Functions
 
         //- Return number of regions
-        label nRegions() const;
-
-        //- Return region split
-        const labelList& cellToRegion() const;
-
-        //- Return mask covering contiguous cells from the given seed cell
-        labelList seedMask(const label seedCellID) const;
-
+        label nRegions() const
+        {
+            return nRegions_;
+        }
 };
 
 

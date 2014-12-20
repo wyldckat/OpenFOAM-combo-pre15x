@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,9 +65,6 @@ void Foam::vtkFoam::addPatch
         vtkFoamInsertNextPoint(vtkpoints, points[i]);
     }
 
-    vtkPatch->SetPoints(vtkpoints);
-    vtkpoints->Delete();
-
     if (debug)
     {
         Info<< "converting faces" << endl;
@@ -109,6 +106,9 @@ void Foam::vtkFoam::addPatch
             );
         }
     }
+
+    vtkPatch->SetPoints(vtkpoints);
+    vtkpoints->Delete();
 }
 
 

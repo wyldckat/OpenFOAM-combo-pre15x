@@ -2,7 +2,7 @@
     {
         OFstream nAveragingStepsFile
         (
-            runTime.path()/runTime.timeName()/"nAveragingSteps.raw"
+            runTime.path()/runTime.timeName()/"uniform"/"nAveragingSteps.raw"
         );
 
         if (nAveragingStepsFile.good())
@@ -12,8 +12,7 @@
         else
         {
             FatalErrorIn(args.executable())
-                << "Cannot open file "
-                << runTime.path()/runTime.timeName()/"nAveragingSteps.raw"
-                << exit(FatalError);
+                << "Cannot open file " << nAveragingStepsFile.name()
+                << abort(FatalError);
         }
     }

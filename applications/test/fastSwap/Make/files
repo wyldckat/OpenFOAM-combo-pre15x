@@ -1,8 +1,0 @@
-commSchedule.C
-processorTopology.C
-fastSwap-schedule.C
-/* fastSwap-simpleSchedule-float.C */
-/* fastSwap-simpleSchedule.C */
-
-EXE = $(FOAM_USER_APPBIN)/fastSwap
-

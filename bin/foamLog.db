@@ -34,7 +34,8 @@ minFt/min\(ft\) = /min(ft) =
 executionTime/ExecutionTime = /ExecutionTime = 
 
 #- Courant no:
-Courant/Max Courant Number = /Max Courant Number = 
+CourantMax/Courant Number /max: 
+CourantMean/Courant Number /mean: 
 
 #- K bounding
 kMin/bounding k,/min: 

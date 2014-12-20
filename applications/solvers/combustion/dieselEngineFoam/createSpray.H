@@ -6,8 +6,9 @@ volPointInterpolation vpi(mesh, pMesh);
 PtrList<specieProperties> gasProperties(Y.size());
 forAll(gasProperties, i)
 {
-    gasProperties.hook
+    gasProperties.set
     (
+        i,
         new specieProperties
         (
             dynamic_cast<const reactingMixture&>(thermo()).speciesData()[i]

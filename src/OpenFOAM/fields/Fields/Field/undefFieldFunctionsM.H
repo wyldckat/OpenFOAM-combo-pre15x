@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,68 +25,21 @@ License
 \*---------------------------------------------------------------------------*/
 
 #undef UNARY_FUNCTION
-#undef UNARY_FUNCTION_N
-#undef UNARY_FUNCTION_R
 
 #undef UNARY_OPERATOR
-#undef UNARY_OPERATOR_N
-#undef UNARY_OPERATOR_R
 
-
-#undef BINARY_FUNCTION_FF
-#undef BINARY_FUNCTION_FT
-#undef BINARY_FUNCTION_FR
-#undef BINARY_FUNCTION_TF
-#undef BINARY_FUNCTION_TT
-#undef BINARY_FUNCTION_TR
-#undef BINARY_FUNCTION_RF
-#undef BINARY_FUNCTION_RT
-
-#undef BINARY_FUNCTION_NN
-#undef BINARY_FUNCTION_NR
-#undef BINARY_FUNCTION_RN
-#undef BINARY_FUNCTION_RR
-
+#undef BINARY_FUNCTION
 
 #undef BINARY_TYPE_FUNCTION_SF
-#undef BINARY_TYPE_FUNCTION_ST
-#undef BINARY_TYPE_FUNCTION_SR
 #undef BINARY_TYPE_FUNCTION_FS
-#undef BINARY_TYPE_FUNCTION_TS
-#undef BINARY_TYPE_FUNCTION_RS
+#undef BINARY_TYPE_FUNCTION
 
-#undef BINARY_TYPE_FUNCTION_NN
-#undef BINARY_TYPE_FUNCTION_NR
-#undef BINARY_TYPE_FUNCTION_RN
-#undef BINARY_TYPE_FUNCTION_RR
-
-
-#undef BINARY_OPERATOR_FF
-#undef BINARY_OPERATOR_FT
-#undef BINARY_OPERATOR_FR
-#undef BINARY_OPERATOR_TF
-#undef BINARY_OPERATOR_TT
-#undef BINARY_OPERATOR_TR
-#undef BINARY_OPERATOR_RF
-#undef BINARY_OPERATOR_RT
-
-#undef BINARY_OPERATOR_NN
-#undef BINARY_OPERATOR_NR
-#undef BINARY_OPERATOR_RN
-#undef BINARY_OPERATOR_RR
-
+#undef BINARY_OPERATOR
 
 #undef BINARY_TYPE_OPERATOR_SF
-#undef BINARY_TYPE_OPERATOR_ST
-#undef BINARY_TYPE_OPERATOR_SR
 #undef BINARY_TYPE_OPERATOR_FS
-#undef BINARY_TYPE_OPERATOR_TS
-#undef BINARY_TYPE_OPERATOR_RS
+#undef BINARY_TYPE_OPERATOR
 
-#undef BINARY_TYPE_OPERATOR_NN
-#undef BINARY_TYPE_OPERATOR_NR
-#undef BINARY_TYPE_OPERATOR_RN
-#undef BINARY_TYPE_OPERATOR_RR
-
+#undef TEMPLATE
 
 // ************************************************************************* //

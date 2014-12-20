@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,8 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-gradientUnburntEnthalpyFvPatchScalarField::gradientUnburntEnthalpyFvPatchScalarField
+gradientUnburntEnthalpyFvPatchScalarField::
+gradientUnburntEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
     const scalarField& iF
@@ -47,7 +48,8 @@ gradientUnburntEnthalpyFvPatchScalarField::gradientUnburntEnthalpyFvPatchScalarF
 {}
 
 
-gradientUnburntEnthalpyFvPatchScalarField::gradientUnburntEnthalpyFvPatchScalarField
+gradientUnburntEnthalpyFvPatchScalarField::
+gradientUnburntEnthalpyFvPatchScalarField
 (
     const gradientUnburntEnthalpyFvPatchScalarField& ptf,
     const fvPatch& p,
@@ -59,7 +61,8 @@ gradientUnburntEnthalpyFvPatchScalarField::gradientUnburntEnthalpyFvPatchScalarF
 {}
 
 
-gradientUnburntEnthalpyFvPatchScalarField::gradientUnburntEnthalpyFvPatchScalarField
+gradientUnburntEnthalpyFvPatchScalarField::
+gradientUnburntEnthalpyFvPatchScalarField
 (
     const fvPatch& p,
     const scalarField& iF,
@@ -70,7 +73,18 @@ gradientUnburntEnthalpyFvPatchScalarField::gradientUnburntEnthalpyFvPatchScalarF
 {}
 
 
-gradientUnburntEnthalpyFvPatchScalarField::gradientUnburntEnthalpyFvPatchScalarField
+gradientUnburntEnthalpyFvPatchScalarField::
+gradientUnburntEnthalpyFvPatchScalarField
+(
+    const gradientUnburntEnthalpyFvPatchScalarField& tppsf
+)
+:
+    fixedGradientFvPatchScalarField(tppsf)
+{}
+
+
+gradientUnburntEnthalpyFvPatchScalarField::
+gradientUnburntEnthalpyFvPatchScalarField
 (
     const gradientUnburntEnthalpyFvPatchScalarField& tppsf,
     const scalarField& iF

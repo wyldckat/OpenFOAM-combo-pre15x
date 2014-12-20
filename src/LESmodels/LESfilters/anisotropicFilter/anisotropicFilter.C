@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -174,6 +174,42 @@ tmp<volVectorField> anisotropicFilter::operator()
         {
             filteredField.boundaryField()[patchI] = vector::zero;
         }
+    }
+
+    unFilteredField.clear();
+
+    return tmpFilteredField;
+}
+
+
+tmp<volSymmTensorField> anisotropicFilter::operator()
+(
+    const tmp<volSymmTensorField>& unFilteredField
+) const
+{
+    tmp<volSymmTensorField> tmpFilteredField
+    (
+        new volSymmTensorField
+        (
+            IOobject
+            (
+                "anisotropicFilteredSymmTensorField",
+                mesh().time().timeName(),
+                mesh(),
+                IOobject::MUST_READ,
+                IOobject::AUTO_WRITE
+            ),
+            mesh(),
+            dimLength
+        )
+    );
+
+    for (direction d=0; d<symmTensor::nComponents; d++)
+    {
+        tmpFilteredField().replace
+        (
+            d, anisotropicFilter::operator()(unFilteredField().component(d))
+        );
     }
 
     unFilteredField.clear();

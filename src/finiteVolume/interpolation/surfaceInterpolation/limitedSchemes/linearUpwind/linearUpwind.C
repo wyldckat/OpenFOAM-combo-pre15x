@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,6 +26,7 @@ License
 
 #include "linearUpwind.H"
 #include "fvMesh.H"
+#include "zeroGradientFvPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,9 +45,12 @@ Foam::linearUpwind<Type>::correction
         (
             IOobject
             (
-                vf.name(),
+                "linearUpwindCorrection(" + vf.name() + ')',
                 mesh.time().timeName(),
-                mesh
+                mesh,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
             ),
             mesh,
             dimensioned<Type>(vf.name(), vf.dimensions(), pTraits<Type>::zero)
@@ -63,11 +67,9 @@ Foam::linearUpwind<Type>::correction
     const volVectorField& C = mesh.C();
     const surfaceVectorField& Cf = mesh.Cf();
 
-
     GeometricField
         <typename outerProduct<vector, Type>::type, fvPatchField, volMesh>
         gradVf = gradScheme_().grad(vf);
-
 
     forAll(faceFlux, facei)
     {
@@ -93,7 +95,7 @@ Foam::linearUpwind<Type>::correction
 
         if (pSfCorr.coupled())
         {
-            const labelList::subList pOwner = 
+            const unallocLabelList& pOwner = 
                 mesh.boundary()[patchi].faceCells();
 
             const vectorField& pCf = Cf.boundaryField()[patchi];

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -254,8 +254,9 @@ ddtScheme<Type>::addIstreamConstructorToTable<SS<Type> >                       \
                                                                                \
 makeFvDdtTypeScheme(SS, scalar)                                                \
 makeFvDdtTypeScheme(SS, vector)                                                \
-makeFvDdtTypeScheme(SS, tensor)                                                \
 makeFvDdtTypeScheme(SS, sphericalTensor)                                       \
+makeFvDdtTypeScheme(SS, symmTensor)                                            \
+makeFvDdtTypeScheme(SS, tensor)                                                \
                                                                                \
 template<>                                                                     \
 tmp<surfaceScalarField> SS<scalar>::fvcDdtPhiCorr                              \

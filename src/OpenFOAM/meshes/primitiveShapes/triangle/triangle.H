@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -196,6 +196,8 @@ public:
             //  - near edge (nearType=EDGE, nearLabel=0, 1, 2)
             //    Note: edges are counted from starting
             //    vertex so e.g. edge 2 is from f[2] to f[0]
+            //  tol is fraction to account for truncation error. Is only used
+            //  when comparing normalized (0..1) numbers.
             bool classify
             (
                 const point& p,

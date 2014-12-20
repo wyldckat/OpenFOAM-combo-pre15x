@@ -28,7 +28,7 @@
     {
         fvScalarMatrix pcorrEqn
         (
-            fvm::laplacian(rUA, pcorr) == fvc::div(phi)
+            fvm::laplacian(rAU, pcorr) == fvc::div(phi)
         );
 
         pcorrEqn.setReference(pRefCell, pRefValue);
@@ -42,4 +42,3 @@
 }
 
 #include "continuityErrs.H"
-

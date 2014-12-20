@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,7 @@ SourceFiles
 #ifndef parabolicCylindricalCS_H
 #define parabolicCylindricalCS_H
 
-#include "cartesianCS.H"
+#include "coordinateSystem.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -50,7 +50,7 @@ namespace Foam
 
 class parabolicCylindricalCS
 :
-    public cartesianCS
+    public coordinateSystem
 {
 
 public:
@@ -90,10 +90,14 @@ public:
 
         //- Convert from local coordinate system to the global Cartesian system
         virtual vector toGlobal(const vector& localV) const;
+
+        //- Convert from local coordinate system to the global Cartesian system
         virtual tmp<vectorField> toGlobal(const vectorField& localV) const;
 
         //- Convert from global Cartesian coordinate system to the local system
         virtual vector toLocal(const vector& globalV) const;
+
+        //- Convert from global Cartesian coordinate system to the local system
         virtual tmp<vectorField> toLocal(const vectorField& globalV) const;
 };
 

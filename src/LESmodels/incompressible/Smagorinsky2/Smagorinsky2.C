@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,9 +60,9 @@ Smagorinsky2::Smagorinsky2
 // Evaluate B (from the definition of an eddy viscosity model) and
 // return it.
 
-tmp<volTensorField> Smagorinsky2::B() const
+tmp<volSymmTensorField> Smagorinsky2::B() const
 {
-    volTensorField D = dev(symm(fvc::grad(U())));
+    volSymmTensorField D = dev(symm(fvc::grad(U())));
 
     return (((2.0/3.0)*I)*k() - 2.0*nuSgs_*D - (2.0*cD2_)*delta()*(D&D));
 }
@@ -75,7 +75,11 @@ tmp<fvVectorMatrix> Smagorinsky2::divB
 {
     volTensorField gradU = fvc::grad(U);
 
-    volTensorField aniNuEff("aniNuEff", I*nuEff() + cD2_*delta()*symm(gradU));
+    volSymmTensorField aniNuEff
+    (
+        "aniNuEff",
+        I*nuEff() + cD2_*delta()*symm(gradU)
+    );
 
     return
     (

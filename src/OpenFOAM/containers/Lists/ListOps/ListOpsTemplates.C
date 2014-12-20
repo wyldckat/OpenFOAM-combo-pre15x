@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "ListOps.H"
@@ -31,29 +29,45 @@ Description
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
 
 template<class List>
-List Foam::renumber(const labelList& oldToNew, const List& f)
+List Foam::renumber
+(
+    const labelList& oldToNew,
+    const List& lst
+)
 {
-    List newF(f.size());
+    // Create copy
+    List newLst(lst.size());
 
-    forAll(f, fp)
+    forAll(lst, elemI)
     {
-        newF[fp] = oldToNew[f[fp]];
+        if (lst[elemI] >= 0)
+        {
+            newLst[elemI] = oldToNew[lst[elemI]];
+        }
     }
-    return newF;
+
+    return newLst;
 }
 
 
 template<class List>
-void Foam::inplaceRenumber(const labelList& oldToNew, List& f)
+void Foam::inplaceRenumber
+(
+    const labelList& oldToNew,
+    List& lst
+)
 {
-    forAll(f, fp)
+    forAll(lst, elemI)
     {
-        f[fp] = oldToNew[f[fp]];
+        if (lst[elemI] >= 0)
+        {
+            lst[elemI] = oldToNew[lst[elemI]];
+        }
     }
 }
 
 
-template <class List>
+template<class List>
 List Foam::reorder
 (
     const labelList& oldToNew,
@@ -63,15 +77,22 @@ List Foam::reorder
     // Create copy
     List newLst(lst.size());
 
-    forAll(oldToNew, elemI)
+    forAll(lst, elemI)
     {
-        newLst[oldToNew[elemI]] = lst[elemI];
+        if (oldToNew[elemI] >= 0)
+        {
+            newLst[oldToNew[elemI]] = lst[elemI];
+        }
+        else
+        {
+            newLst[elemI] = lst[elemI];
+        }
     }
     return newLst;
 }
 
 
-template <class List>
+template<class List>
 void Foam::inplaceReorder
 (
     const labelList& oldToNew,
@@ -81,16 +102,22 @@ void Foam::inplaceReorder
     // Create copy
     List newLst(lst.size());
 
-    forAll(oldToNew, elemI)
+    forAll(lst, elemI)
     {
-        newLst[oldToNew[elemI]] = lst[elemI];
+        if (oldToNew[elemI] >= 0)
+        {
+            newLst[oldToNew[elemI]] = lst[elemI];
+        }
+        else
+        {
+            newLst[elemI] = lst[elemI];
+        }
     }
+    
     lst.transfer(newLst);
 }
 
 
-//- Extract elements of List whose region is certain value. Use e.g.
-//  to extract all selected elements: extract(boolList, true, lst);
 template<class T, class List>
 List Foam::extract(const UList<T>& regions, const T& region, const List& lst)
 {
@@ -98,7 +125,8 @@ List Foam::extract(const UList<T>& regions, const T& region, const List& lst)
     {
         FatalErrorIn("extract(const UList<T>&, const T&, const List&)")
             << "Regions is of size " << regions.size() << " list it is supposed"
-            << " to index is of size " << lst.size() << abort(FatalError);
+            << " to index is of size " << lst.size()
+            << abort(FatalError);
     }
 
     List newLst(lst.size());
@@ -117,8 +145,6 @@ List Foam::extract(const UList<T>& regions, const T& region, const List& lst)
 }
 
 
-//- Find first occurence of given element and return index,
-//  return -1 if not found
 template<class List>
 Foam::label Foam::findIndex(const List& l, typename List::const_reference t)
 {
@@ -137,7 +163,70 @@ Foam::label Foam::findIndex(const List& l, typename List::const_reference t)
 }
 
 
-//- Find index of max element.
+template<class List>
+Foam::labelList Foam::findIndices
+(
+    const List& l,
+    typename List::const_reference t
+)
+{
+    // Count occurrences
+    label n = 0;
+
+    forAll(l, i)
+    {
+        if (l[i] == t)
+        {
+            n++;
+        }
+    }
+
+    // Create and fill
+    labelList indices(n);
+    n = 0;
+
+    forAll(l, i)
+    {
+        if (l[i] == t)
+        {
+            indices[n++] = i;
+        }
+    }
+
+    return indices;
+}
+
+
+template<class List>
+void Foam::setValues
+(
+    List& l,
+    const labelList& indices,
+    typename List::const_reference t
+)
+{
+    forAll(indices, i)
+    {
+        l[indices[i]] = t;
+    }
+}
+
+
+template<class List>
+List Foam::createWithValues
+(
+    const label sz,
+    const typename List::const_reference initValue,
+    const labelList& indices,
+    typename List::const_reference setValue
+)
+{
+    List l(sz, initValue);
+    setValues(l, indices, setValue);
+    return l;
+}
+
+
 template<class List>
 Foam::label Foam::findMax(const List& l)
 {
@@ -160,7 +249,6 @@ Foam::label Foam::findMax(const List& l)
 }
 
 
-//- Find index of min element.
 template<class List>
 Foam::label Foam::findMin(const List& l)
 {
@@ -183,8 +271,6 @@ Foam::label Foam::findMin(const List& l)
 }
 
 
-//- Find first occurence of given element in sorted list and return index,
-//  return -1 if not found. Binary search.
 template<class List>
 Foam::label Foam::findSortedIndex
 (

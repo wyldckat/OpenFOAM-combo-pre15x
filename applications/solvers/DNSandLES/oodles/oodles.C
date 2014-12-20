@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,6 @@ Description
 #include "IFstream.H"
 #include "OFstream.H"
 #include "Random.H"
-#include "Probe.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,10 +46,8 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "createTime.H"
 #   include "createMeshNoClear.H"
-#   include "readTransportProperties.H"
 #   include "createFields.H"
 #   include "createAverages.H"
-#   include "createProbes.H"
 #   include "initContinuityErrs.H"
 
 
@@ -87,7 +84,7 @@ int main(int argc, char *argv[])
             volScalarField rUA = 1.0/UEqn.A();
 
             U = rUA*UEqn.H();
-            phi = (fvc::interpolate(U) & mesh.Sf()) 
+            phi = (fvc::interpolate(U) & mesh.Sf())
                 + fvc::ddtPhiCorr(rUA, U, phi);
 
             adjustPhi(phi, U, p);
@@ -100,7 +97,15 @@ int main(int argc, char *argv[])
                 );
 
                 pEqn.setReference(pRefCell, pRefValue);
-                pEqn.solve();
+
+                if (corr == nCorr-1 && nonOrth == nNonOrthCorr)
+                {
+                    pEqn.solve(mesh.solver(p.name() + "Final"));
+                }
+                else
+                {
+                    pEqn.solve(mesh.solver(p.name()));
+                }
 
                 if (nonOrth == nNonOrthCorr)
                 {
@@ -120,8 +125,6 @@ int main(int argc, char *argv[])
         runTime.write();
 
 #       include "writeNaveragingSteps.H"
-
-#       include "writeProbes.H"
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"

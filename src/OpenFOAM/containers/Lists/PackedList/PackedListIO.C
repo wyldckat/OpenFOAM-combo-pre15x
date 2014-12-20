@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,6 +27,7 @@ License
 #include "PackedList.H"
 #include "Ostream.H"
 #include "token.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -67,11 +68,11 @@ template<class T>
 Ostream& operator<<(Ostream& os, const PackedList<T>& L)
 {
     // Write list contents depending on data format
-    if (os.format() == IOstream::ASCII || !writeBinary(L.v_))
+    if (os.format() == IOstream::ASCII || !contiguous<T>())
     {
         bool uniform = false;
 
-        if (L.size() > 1 && writeBinary(L.v_))
+        if (L.size() > 1 && contiguous<T>())
         {
             uniform = true;
 
@@ -98,7 +99,7 @@ Ostream& operator<<(Ostream& os, const PackedList<T>& L)
             // Write end of contents delimiter
             os << token::END_BLOCK;
         }
-        else if (L.size() < 11 && writeBinary(L.v_))
+        else if (L.size() < 11 && contiguous<T>())
         {
             // Write size of list and start contents delimiter
             os << L.size() << token::BEGIN_LIST;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,6 +32,7 @@ Description
 #include "OFstream.H"
 #include "mergePoints.H"
 #include "polyMesh.H"
+#include "geompack.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Miscellaneous
@@ -1940,6 +1941,170 @@ Foam::vector Foam::triSurfaceTools::surfaceNormal
 }
 
 
+Foam::triSurfaceTools::sideType Foam::triSurfaceTools::edgeSide
+(
+    const triSurface& surf,
+    const point& sample,
+    const point& nearestPoint,
+    const label edgeI
+)
+{
+    const labelList& eFaces = surf.edgeFaces()[edgeI];
+
+    if (eFaces.size() != 2)
+    {
+        // Surface not closed.
+        return UNKNOWN;
+    }
+    else
+    {
+        const vectorField& faceNormals = surf.faceNormals();
+
+        // Compare to bisector. This is actually correct since edge is
+        // nearest so there is a knife-edge.
+
+        vector n = 0.5*(faceNormals[eFaces[0]] + faceNormals[eFaces[1]]);
+
+        if (((sample - nearestPoint) & n) > 0)
+        {
+            return OUTSIDE;
+        }
+        else
+        {
+            return INSIDE;
+        }
+    }
+}
+
+
+// Calculate normal on triangle
+Foam::triSurfaceTools::sideType Foam::triSurfaceTools::surfaceSide
+(
+    const triSurface& surf,
+    const point& sample,
+    const label nearestFaceI,   // nearest face
+    const point& nearestPoint   // nearest point on nearest face
+)
+{
+    const labelledTri& f = surf[nearestFaceI];
+    const pointField& points = surf.points();
+
+    // Find where point is on triangle. Note tolerance needed. Is relative
+    // one (used in comparing normalized [0..1] triangle coordinates).
+    label nearType, nearLabel;
+    triPointRef
+    (
+        points[f[0]],
+        points[f[1]],
+        points[f[2]]
+    ).classify(nearestPoint, 1E-6, nearType, nearLabel);
+
+    if (nearType == triPointRef::NONE)
+    {
+        // Nearest to face interior. Use faceNormal to determine side
+        scalar c = (sample - nearestPoint) & surf.faceNormals()[nearestFaceI];
+
+        if (c > 0)
+        {
+            return OUTSIDE;
+        }
+        else
+        {
+            return INSIDE;
+        }
+    }
+    else if (nearType == triPointRef::EDGE)
+    {
+        // Nearest to edge nearLabel. Note that this can only be a knife-edge
+        // situation since otherwise the nearest point could never be the edge.
+
+        // Get the edge. Assume order of faceEdges same as face vertices.
+        label edgeI = surf.faceEdges()[nearestFaceI][nearLabel];
+
+        //if (debug)
+        //{
+        //    // Check order of faceEdges same as face vertices.
+        //    const edge& e = surf.edges()[edgeI];
+        //    const labelList& meshPoints = surf.meshPoints();
+        //    const edge meshEdge(meshPoints[e[0]], meshPoints[e[1]]);
+        //
+        //    if
+        //    (
+        //        meshEdge
+        //     != edge(f[nearLabel], f[f.fcIndex(nearLabel)])
+        //    )
+        //    {
+        //        FatalErrorIn("triSurfaceTools::surfaceSide")
+        //            << "Edge:" << edgeI << " local vertices:" << e
+        //            << " mesh vertices:" << meshEdge
+        //            << " not at position " << nearLabel
+        //            << " in face " << f
+        //            << abort(FatalError);
+        //    }
+        //}
+
+        return edgeSide(surf, sample, nearestPoint, edgeI);
+    }
+    else
+    {
+        // Nearest to point. Could use pointNormal here but is not correct.
+        // Instead determine which edge using point is nearest and use test
+        // above (nearType == triPointRef::EDGE).
+
+
+        const labelledTri& localF = surf.localFaces()[nearestFaceI];
+        label nearPointI = localF[nearLabel];
+
+        const edgeList& edges = surf.edges();
+        const pointField& localPoints = surf.localPoints();
+        const point& base = localPoints[nearPointI];
+
+        const labelList& pEdges = surf.pointEdges()[nearPointI];
+
+        scalar minDistSqr = Foam::sqr(GREAT);
+        label minEdgeI = -1;
+
+        forAll(pEdges, i)
+        {
+            label edgeI = pEdges[i];
+
+            const edge& e = edges[edgeI];
+
+            label otherPointI = e.otherVertex(nearPointI);
+
+            // Get edge normal.
+            vector eVec(localPoints[otherPointI] - base);
+            scalar magEVec = mag(eVec);
+
+            if (magEVec > VSMALL)
+            {
+                eVec /= magEVec;
+
+                // Get point along vector and determine closest.
+                const point perturbPoint = base + eVec;
+
+                scalar distSqr = Foam::magSqr(sample - perturbPoint);
+
+                if (distSqr < minDistSqr)
+                {
+                    minDistSqr = distSqr;
+                    minEdgeI = edgeI;
+                }
+            }
+        }
+
+        if (minEdgeI == -1)
+        {
+            FatalErrorIn("treeDataTriSurface::getSide")
+                << "Problem: did not find edge closer than " << minDistSqr
+                << abort(FatalError);
+        }
+
+        return edgeSide(surf, sample, nearestPoint, minEdgeI);
+    }
+}
+
+
 // triangulation of boundaryMesh
 Foam::triSurface Foam::triSurfaceTools::triangulate
 (
@@ -2159,10 +2324,294 @@ Foam::triSurface Foam::triSurfaceTools::triangulateFaceCentre
 }
 
 
-// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
+Foam::triSurface Foam::triSurfaceTools::delaunay2D(const List<vector2D>& pts)
+{
+    // Vertices in geompack notation. Note that could probably just use
+    // pts.begin() if double precision.
+    List<doubleScalar> geompackVertices(2*pts.size());
+    label doubleI = 0;
+    forAll(pts, i)
+    {
+        geompackVertices[doubleI++] = pts[i][0];
+        geompackVertices[doubleI++] = pts[i][1];
+    }
+
+    // Storage for triangles
+    int m2 = 3;
+    List<int> triangle_node(m2*3*pts.size());
+    List<int> triangle_neighbor(m2*3*pts.size());
+
+    // Triangulate
+    int nTris = 0;
+    dtris2
+    (
+        pts.size(),
+        geompackVertices.begin(),
+        &nTris,
+        triangle_node.begin(),
+        triangle_neighbor.begin()
+    );
+
+    // Trim
+    triangle_node.setSize(3*nTris);
+    triangle_neighbor.setSize(3*nTris);
+
+    // Convert to triSurface.
+    List<labelledTri> faces(nTris);
+
+    forAll(faces, i)
+    {
+        faces[i] = labelledTri
+        (
+            triangle_node[3*i]-1,
+            triangle_node[3*i+1]-1,
+            triangle_node[3*i+2]-1,
+            0
+        );
+    }
+
+    pointField points(pts.size());
+    forAll(pts, i)
+    {
+        points[i][0] = pts[i][0];
+        points[i][1] = pts[i][1];
+        points[i][2] = 0.0;
+    }
+
+    return triSurface(faces, points);
+}
 
 
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
+//// Use CGAL to do Delaunay
+//#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+//#include <CGAL/Delaunay_triangulation_2.h>
+//#include <CGAL/Triangulation_vertex_base_with_info_2.h>
+//#include <cassert>
+//
+//struct K : CGAL::Exact_predicates_inexact_constructions_kernel {};
+//
+//typedef CGAL::Triangulation_vertex_base_with_info_2<Foam::label, K> Vb;
+//typedef CGAL::Triangulation_data_structure_2<Vb> Tds;
+//typedef CGAL::Delaunay_triangulation_2<K,Tds> Triangulation;
+//
+//typedef Triangulation::Vertex_handle Vertex_handle;
+//typedef Triangulation::Vertex_iterator Vertex_iterator;
+//typedef Triangulation::Face_handle Face_handle;
+//typedef Triangulation::Finite_faces_iterator Finite_faces_iterator;
+//typedef Triangulation::Point Point;
+//Foam::triSurface Foam::triSurfaceTools::delaunay2D(const List<vector2D>& pts)
+//{
+//    Triangulation T;
+//
+//    // Insert 2D vertices; building triangulation
+//    forAll(pts, i)
+//    {
+//        const point& pt = pts[i];
+//
+//        T.insert(Point(pt[0], pt[1]));
+//    }
+//
+//
+//    // Number vertices
+//    // ~~~~~~~~~~~~~~~
+//
+//    label vertI = 0;
+//    for 
+//    (
+//        Vertex_iterator it = T.vertices_begin();
+//        it != T.vertices_end();
+//        ++it
+//    )
+//    {
+//        it->info() = vertI++;
+//    }
+//
+//    // Extract faces
+//    // ~~~~~~~~~~~~~
+//
+//    List<labelledTri> faces(T.number_of_faces());
+//
+//    label faceI = 0;
+//
+//    for
+//    (
+//        Finite_faces_iterator fc = T.finite_faces_begin();
+//        fc != T.finite_faces_end();
+//        ++fc
+//    )
+//    {
+//        faces[faceI++] = labelledTri
+//        (
+//            fc->vertex(0)->info(),
+//            f[1] = fc->vertex(1)->info(),
+//            f[2] = fc->vertex(2)->info()
+//        );
+//    }
+//
+//    pointField points(pts.size());
+//    forAll(pts, i)
+//    {
+//        points[i][0] = pts[i][0];
+//        points[i][1] = pts[i][1];
+//        points[i][2] = 0.0;
+//    }
+//
+//    return triSurface(faces, points);
+//}
+
+
+void Foam::triSurfaceTools::calcInterpolationWeights
+(
+    const triPointRef& tri,
+    const point& p,
+    FixedList<scalar, 3>& weights
+)
+{
+    // calculate triangle edge vectors and triangle face normal
+    // the 'i':th edge is opposite node i
+    FixedList<vector, 3> edge;
+    edge[0] = tri.c()-tri.b();
+    edge[1] = tri.a()-tri.c();
+    edge[2] = tri.b()-tri.a();
+
+    vector triangleFaceNormal = edge[1] ^ edge[2];
+
+    // calculate edge normal (pointing inwards)
+    FixedList<vector, 3> normal;
+    for(label i=0; i<3; i++)
+    {
+        normal[i] = triangleFaceNormal ^ edge[i];
+        normal[i] /= mag(normal[i]) + VSMALL;
+    }
+
+    weights[0] = ((p-tri.b()) & normal[0]) / max(VSMALL, normal[0] & edge[1]);
+    weights[1] = ((p-tri.c()) & normal[1]) / max(VSMALL, normal[1] & edge[2]);
+    weights[2] = ((p-tri.a()) & normal[2]) / max(VSMALL, normal[2] & edge[0]);
+}
+
+
+// Calculate weighting factors from samplePts to triangle it is in.
+// Uses linear search.
+void Foam::triSurfaceTools::calcInterpolationWeights
+(
+    const triSurface& s,
+    const pointField& samplePts,
+    List<FixedList<label, 3> >& allVerts,
+    List<FixedList<scalar, 3> >& allWeights
+)
+{
+    allVerts.setSize(samplePts.size());
+    allWeights.setSize(samplePts.size());
+
+    const pointField& points = s.points();
+
+    forAll(samplePts, i)
+    {
+        const point& samplePt = samplePts[i];
+
+
+        FixedList<label, 3>& verts = allVerts[i];
+        FixedList<scalar, 3>& weights = allWeights[i];
+
+        scalar minDistance = GREAT;
+
+        forAll(s, faceI)
+        {
+            const labelledTri& f = s[faceI];
+
+            triPointRef tri(f.tri(points));
+
+            pointHit nearest = tri.nearestPoint(samplePt);
+
+            if (nearest.hit())
+            {
+                // samplePt inside triangle
+                verts[0] = f[0];
+                verts[1] = f[1];
+                verts[2] = f[2];
+
+                calcInterpolationWeights(tri, nearest.rawPoint(), weights);
+
+                //Pout<< "calcScalingFactors : samplePt:" << samplePt
+                //    << " inside triangle:" << faceI
+                //    << " verts:" << verts
+                //    << " weights:" << weights
+                //    << endl;
+
+                break;
+            }
+            else if (nearest.distance() < minDistance)
+            {
+                minDistance = nearest.distance();
+
+                // Outside triangle. Store nearest.
+                label nearType, nearLabel;
+                tri.classify
+                (
+                    nearest.rawPoint(),
+                    1E-6,               // relative tolerance
+                    nearType,
+                    nearLabel
+                );
+
+                if (nearType == triPointRef::POINT)
+                {
+                    verts[0] = f[nearLabel];
+                    weights[0] = 1;
+                    verts[1] = -1;
+                    weights[1] = -GREAT;
+                    verts[2] = -1;
+                    weights[2] = -GREAT;
+
+                    //Pout<< "calcScalingFactors : samplePt:" << samplePt
+                    //    << " distance:" << nearest.distance()
+                    //    << " from point:" << points[f[nearLabel]]
+                    //    << endl;
+                }
+                else if (nearType == triPointRef::EDGE)
+                {
+                    verts[0] = f[nearLabel];
+                    verts[1] = f[f.fcIndex(nearLabel)];
+                    verts[2] = -1;
+
+                    const point& p0 = points[verts[0]];
+                    const point& p1 = points[verts[1]];
+
+                    scalar s = min
+                    (
+                        1,
+                        max
+                        (
+                            0,
+                            mag(nearest.rawPoint()-p0)/mag(p1-p0)
+                        )
+                    );
+
+                    // Interpolate
+                    weights[0] = 1-s;
+                    weights[1] = s;
+                    weights[2] = -GREAT;
+
+                    //Pout<< "calcScalingFactors : samplePt:" << samplePt
+                    //    << " distance:" << nearest.distance()
+                    //    << " from edge:" << p0 << p1 << " s:" << s
+                    //    << endl;
+                }
+                else
+                {
+                    // triangle. Can only happen because of truncation errors.
+                    verts[0] = f[0];
+                    verts[1] = f[1];
+                    verts[2] = f[2];
+
+                    calcInterpolationWeights(tri, nearest.rawPoint(), weights);
+
+                    break;
+                }
+            }
+        }
+    }
+}
 
 
 // ************************************************************************* //

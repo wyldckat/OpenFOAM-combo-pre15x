@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,29 +27,11 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "vtkMesh.H"
+#include "fvMeshSubset.H"
 #include "Time.H"
 #include "cellSet.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-void Foam::vtkMesh::calcMapping() const
-{
-    cMapPtr_ = new labelList(nCells());
-    labelList& cMap = *cMapPtr_;
-
-    forAll(cMap, i)
-    {
-        cMap[i] = i;
-    }
-
-    pMapPtr_ = new labelList(nPoints());
-    labelList& pMap = *pMapPtr_;
-
-    forAll(pMap, i)
-    {
-        pMap[i] = i;
-    }
-}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -57,11 +39,12 @@ void Foam::vtkMesh::calcMapping() const
 // Construct from components
 Foam::vtkMesh::vtkMesh
 (
-    const IOobject& io,
+    fvMesh& baseMesh,
     const word& setName
 )
 :
-    fvMeshSubset(io),
+    baseMesh_(baseMesh),
+    subsetter_(baseMesh),
     setName_(setName),
     cMapPtr_(NULL),
     pMapPtr_(NULL),
@@ -70,10 +53,10 @@ Foam::vtkMesh::vtkMesh
     if (setName.size() > 0)
     {
         // Read cellSet using whole mesh
-        cellSet currentSet(*this, setName_);
+        cellSet currentSet(baseMesh_, setName_);
 
         // Set current subset
-        setLargeCellSubset(currentSet);
+        subsetter_.setLargeCellSubset(currentSet);
     }
 }
 
@@ -92,7 +75,7 @@ Foam::vtkMesh::~vtkMesh()
 
 Foam::polyMesh::readUpdateState Foam::vtkMesh::readUpdate()
 {
-    polyMesh::readUpdateState meshState = fvMeshSubset::readUpdate();
+    polyMesh::readUpdateState meshState = baseMesh_.readUpdate();
 
     if (meshState != polyMesh::UNCHANGED)
     {
@@ -108,9 +91,9 @@ Foam::polyMesh::readUpdateState Foam::vtkMesh::readUpdate()
             Pout<< "Subsetting mesh based on cellSet " << setName_ << endl;
 
             // Read cellSet using whole mesh
-            cellSet currentSet(*this, setName_);
+            cellSet currentSet(baseMesh_, setName_);
 
-            setLargeCellSubset(currentSet);
+            subsetter_.setLargeCellSubset(currentSet);
         }
     }
 

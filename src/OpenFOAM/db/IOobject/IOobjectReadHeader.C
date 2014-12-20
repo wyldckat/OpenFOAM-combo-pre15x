@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,7 +60,6 @@ bool IOobject::readHeader(Istream& is)
         if (IOobject::debug)
         {
             SeriousIOErrorIn("IOobject::readHeader(Istream&)", is)
-                << "IOobject::readHeader(Istream&) :"
                 << " stream not open for reading from file "
                 << is.name() << endl;
         }
@@ -89,11 +88,26 @@ bool IOobject::readHeader(Istream& is)
         }
         else
         {
+            if (IOobject::debug)
+            {
+                SeriousIOErrorIn("IOobject::readHeader(Istream&)", is)
+                    << "First token " << firstToken.wordToken()
+                    << " is not valid, should be FoamFile"
+                    << endl;
+            }
+
             return false;
         }
     }
     else
     {
+        if (IOobject::debug)
+        {
+            SeriousIOErrorIn("IOobject::readHeader(Istream&)", is)
+                << "First token either could not be read or is not a word"
+                << endl;
+        }
+
         return false;
     }
 

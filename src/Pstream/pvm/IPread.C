@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,12 +50,13 @@ IPstream::IPstream
 :
     Pstream(bufSize),
     Istream(format, version),
-    fromProcNo_(fromProcNo)
+    fromProcNo_(fromProcNo),
+    messageSize_(0)
 {
     setOpened();
     setGood();
 
-    int bufid, len, tag, tid;
+    int bufid, tag, tid;
 
     // If the buffer size is not specified then probe the incomming message
 
@@ -65,10 +66,10 @@ IPstream::IPstream
         while (!(bufid = pvm_probe(procID(fromProcNo_), msgType())));
 
         // When the message arrives find it's size
-        pvm_bufinfo(bufid, &len, &tag, &tid);
+        pvm_bufinfo(bufid, &messageSize_, &tag, &tid);
 
         // Resize buffer to message size
-        buf_.setSize(len);
+        buf_.setSize(messageSize_);
     }
 
 
@@ -83,7 +84,7 @@ IPstream::IPstream
             buf_.begin(),
             buf_.size(),
             PVM_BYTE,
-            &tid, &tag, &len
+            &tid, &tag, &messageSize_
         ) != PvmOk
     )
     {
@@ -95,11 +96,12 @@ IPstream::IPstream
 
     // Check size of message read
 
-    if (len > buf_.size())
+    if (messageSize_ > buf_.size())
     {
         FatalErrorIn("IPstream::IPstream(const int fromProcNo)")
             << "buffer (" << buf_.size()
-            << ") not large enough for incomming message (" << len << ')'
+            << ") not large enough for incomming message ("
+            << messageSize_ << ')'
             << ::abort;
     }
 }

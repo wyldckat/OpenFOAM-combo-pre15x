@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,6 @@ Description
 SourceFiles
     pointFields.C
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef pointFieldsFwd_H
@@ -55,6 +54,10 @@ class GeometricField;
 
 typedef GeometricField<scalar, pointPatchField, pointMesh> pointScalarField;
 typedef GeometricField<vector, pointPatchField, pointMesh> pointVectorField;
+typedef GeometricField<sphericalTensor, pointPatchField, pointMesh>
+    pointSphericalTensorField;
+typedef GeometricField<symmTensor, pointPatchField, pointMesh>
+    pointSymmTensorField;
 typedef GeometricField<tensor, pointPatchField, pointMesh> pointTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,12 +132,12 @@ slicedFvPatchField<Type>::slicedFvPatchField
     const slicedFvPatchField<Type>& ptf
 )
 :
-    lduCoupledInterface(),
     fvPatchField<Type>(ptf.patch(), ptf.internalField(), Field<Type>())
 {
     // Transfer the slice from the argument
     UList<Type>::operator=(ptf);
 }
+
 
 template<class Type>
 tmp<fvPatchField<Type> > slicedFvPatchField<Type>::clone
@@ -217,22 +217,6 @@ tmp<Field<Type> > slicedFvPatchField<Type>::patchNeighbourField
     return Field<Type>::null();
 }
 
-//- Return neighbour colouring.
-//  Needed for AMG solver agglomeration
-template<class Type>
-tmp<labelField> slicedFvPatchField<Type>::nbrColour
-(
-    const labelField& iColour
-) const
-{
-    notImplemented
-    (
-        "slicedFvPatchField<Type>::"
-        "nbrColour(const labelField& iColour)"
-    );
-
-    return labelField::null();
-}
 
 //- Return patchField of the values on the patch or on the
 //  opposite patch

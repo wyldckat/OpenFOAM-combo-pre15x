@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,8 +47,8 @@ HashTable<T, Key, Hash>::HashTable(Istream& is, const label size)
     tableSize_(size),
     table_(new hashedEntry*[tableSize_]),
     nElmts_(0),
-    endIter_(*this, NULL, NULL, 0),
-    endConstIter_(*this, NULL, NULL, 0)
+    endIter_(*this, NULL, 0),
+    endConstIter_(*this, NULL, 0)
 {
     for (label i=0; i<tableSize_; i++)
     {

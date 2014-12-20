@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,16 +22,15 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "processorPointPatch.H"
 #include "pointBoundaryMesh.H"
-#include "globalProcessorPointPatch.H"
+#include "addToRunTimeSelectionTable.H"
+#include "pointMesh.H"
+#include "globalPointPatch.H"
 #include "faceList.H"
 #include "primitiveFacePatch.H"
-#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,7 +55,7 @@ void Foam::processorPointPatch::calcMeshPoints() const
 {
     // Algorithm:
     // Depending on whether the patch is a master or a slave, get the primitive
-    // patch points and filter away the points from the globalProcessor patch.
+    // patch points and filter away the points from the global patch.
 
     labelList mp(0);
 
@@ -84,25 +83,35 @@ void Foam::processorPointPatch::calcMeshPoints() const
         ).meshPoints();
     }
 
-    // Get reference to shared processor points
-    const labelList& sharedPoints =
-        refCast<const globalProcessorPointPatch>
-        (
-            boundaryMesh().globalPointPatch()
-        ).meshPoints();
-
-    // Filter the shared points out of the list
-    // Only do if running parallel to prevent
-    // mismatch between processorPointPatch (filtered) and corresponding
-    // patchField (not filtered).
-    if (Pstream::nProcs() == 1)
+    // If it is not runing parallel or there are no global points
+    // create a 1->1 map
+    if
+    (
+        !Pstream::parRun()
+     || !boundaryMesh().mesh().globalData().nGlobalPoints()
+    )
     {
+        nonGlobalPatchPointsPtr_ = new labelList(mp.size());
+        labelList& nonGlobalPatchPoints_ = *nonGlobalPatchPointsPtr_;
+        forAll(nonGlobalPatchPoints_, i)
+        {
+            nonGlobalPatchPoints_[i] = i;
+        }
+
         meshPointsPtr_ = new labelList(mp);
     }
     else
     {
+        // Get reference to shared points
+        const labelList& sharedPoints =
+            boundaryMesh().globalPatch().meshPoints();
+
+        nonGlobalPatchPointsPtr_ = new labelList(mp.size());
+        labelList& nonGlobalPatchPoints_ = *nonGlobalPatchPointsPtr_;
+
         meshPointsPtr_ = new labelList(mp.size());
-        labelList& filtPoints = *meshPointsPtr_;
+        labelList& meshPoints_ = *meshPointsPtr_;
+
         label noFiltPoints = 0;
 
         forAll (mp, pointI)
@@ -122,138 +131,35 @@ void Foam::processorPointPatch::calcMeshPoints() const
 
             if (!found)
             {
-                filtPoints[noFiltPoints] = curP;
+                nonGlobalPatchPoints_[noFiltPoints] = pointI;
+                meshPoints_[noFiltPoints] = curP;
                 noFiltPoints++;
             }
         }
 
-        filtPoints.setSize(noFiltPoints);
+        nonGlobalPatchPoints_.setSize(noFiltPoints);
+        meshPoints_.setSize(noFiltPoints);
     }
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-//- Construct from components
 processorPointPatch::processorPointPatch
 (
     const polyPatch& patch,
     const pointBoundaryMesh& bm
 )
 :
-    facePointPatch(patch, bm),
-    procPolyPatch_(refCast<const processorPolyPatch>(patch)),
-    meshPointsPtr_(NULL)
+    coupledFacePointPatch(patch, bm),
+    procPolyPatch_(refCast<const processorPolyPatch>(patch))
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 processorPointPatch::~processorPointPatch()
-{
-    deleteDemandDrivenData(meshPointsPtr_);
-}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-const labelList& processorPointPatch::meshPoints() const
-{
-    if (!meshPointsPtr_)
-    {
-        calcMeshPoints();
-    }
-
-    return *meshPointsPtr_;
-}
-
-
-const pointField& processorPointPatch::localPoints() const
-{
-    notImplemented("processorPointPatch::localPoints() const");
-    return Field<point>::null();
-}
-
-
-const vectorField& processorPointPatch::pointNormals() const
-{
-    notImplemented("processorPointPatch::pointNormals() const");
-    return Field<vector>::null();
-}
-
-
-const labelList& processorPointPatch::localEdgeIndices() const
-{
-    notImplemented("processorPointPatch::localEdgeIndices() const");
-    return labelList::null();
-}
-
-
-const labelList& processorPointPatch::cutEdgeIndices() const
-{
-    notImplemented("processorPointPatch::cutEdgeIndices() const");
-    return labelList::null();
-}
-
-
-const labelList& processorPointPatch::cutEdgeOwnerIndices() const
-{
-    notImplemented
-    (
-        "processorPointPatch::cutEdgeOwnerIndices() const"
-    );
-    return labelList::null();
-}
-
-
-const labelList& processorPointPatch::cutEdgeOwnerStart() const
-{
-    notImplemented("processorPointPatch::cutEdgeOwnerStart() const");
-    return labelList::null();
-}
-
-
-const labelList& processorPointPatch::
-cutEdgeNeighbourIndices() const
-{
-    notImplemented("processorPointPatch::cutEdgeNeighbourIndices() const");
-    return labelList::null();
-}
-
-
-const labelList& processorPointPatch::cutEdgeNeighbourStart() const
-{
-    notImplemented("processorPointPatch::cutEdgeNeighbourStart() const");
-    return labelList::null();
-}
-
-
-const labelList& processorPointPatch::doubleCutEdgeIndices() const
-{
-    notImplemented("processorPointPatch::doubleCutEdgeIndices() const");
-    return labelList::null();
-}
-
-
-const labelList& processorPointPatch::doubleCutOwner() const
-{
-    notImplemented("processorPointPatch::doubleCutOwner() const");
-    return labelList::null();
-}
-
-
-const labelList& processorPointPatch::doubleCutNeighbour() const
-{
-    notImplemented("processorPointPatch::doubleCutNeighbour() const");
-    return labelList::null();
-}
-
-
-const scalarField& processorPointPatch::ownNeiDoubleMask() const
-{
-    notImplemented("processorPointPatch::ownNeiDoubleMask() const");
-    return scalarField::null();
-}
+{}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

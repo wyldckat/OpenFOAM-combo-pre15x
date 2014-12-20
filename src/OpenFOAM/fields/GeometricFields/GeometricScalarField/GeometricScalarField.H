@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,10 @@ SourceFiles
 #define GeometricScalarField_H
 
 #include "GeometricField.H"
-#include "scalar.H"
+#include "DimensionedScalarField.H"
+
+#define TEMPLATE template<template<class> class PatchField, class GeoMesh>
+#include "GeometricFieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -69,209 +72,57 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > stabilise
 );
 
 
-template<template<class> class PatchField, class GeoMesh>
-void divide
-(
-    GeometricField<scalar, PatchField, GeoMesh>&,
-    const dimensioned<scalar>&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
-(
-    const dimensioned<scalar>&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, +, '+', add)
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, -, '-', subtract)
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
-(
-    const dimensioned<scalar>&,
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&
-);
+BINARY_OPERATOR(scalar, scalar, scalar, *, '*', multiply)
+BINARY_OPERATOR(scalar, scalar, scalar, /, '|', divide)
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
-(
-    const scalar&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
+BINARY_TYPE_OPERATOR_SF(scalar, scalar, scalar, /, '|', divide)
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > operator/
-(
-    const scalar&,
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&
-);
+BINARY_FUNCTION(scalar, scalar, scalar, pow)
+BINARY_TYPE_FUNCTION(scalar, scalar, scalar, pow)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<template<class> class PatchField, class GeoMesh>
-void pow
-(
-    GeometricField<scalar, PatchField, GeoMesh>&,
-    const GeometricField<scalar, PatchField, GeoMesh>&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
+UNARY_FUNCTION(scalar, scalar, pow3, pow3)
+UNARY_FUNCTION(scalar, scalar, pow4, pow4)
+UNARY_FUNCTION(scalar, scalar, sqrt, sqrt)
+UNARY_FUNCTION(scalar, scalar, sign, sign)
+UNARY_FUNCTION(scalar, scalar, pos, pos)
+UNARY_FUNCTION(scalar, scalar, neg, neg)
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const GeometricField<scalar, PatchField, GeoMesh>&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const GeometricField<scalar, PatchField, GeoMesh>&,
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&,
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&
-);
+UNARY_FUNCTION(scalar, scalar, exp, trans)
+UNARY_FUNCTION(scalar, scalar, log, trans)
+UNARY_FUNCTION(scalar, scalar, log10, trans)
+UNARY_FUNCTION(scalar, scalar, sin, trans)
+UNARY_FUNCTION(scalar, scalar, cos, trans)
+UNARY_FUNCTION(scalar, scalar, tan, trans)
+UNARY_FUNCTION(scalar, scalar, asin, trans)
+UNARY_FUNCTION(scalar, scalar, acos, trans)
+UNARY_FUNCTION(scalar, scalar, atan, trans)
+UNARY_FUNCTION(scalar, scalar, sinh, trans)
+UNARY_FUNCTION(scalar, scalar, cosh, trans)
+UNARY_FUNCTION(scalar, scalar, tanh, trans)
+UNARY_FUNCTION(scalar, scalar, asinh, trans)
+UNARY_FUNCTION(scalar, scalar, acosh, trans)
+UNARY_FUNCTION(scalar, scalar, atanh, trans)
+UNARY_FUNCTION(scalar, scalar, erf, trans)
+UNARY_FUNCTION(scalar, scalar, erfc, trans)
+UNARY_FUNCTION(scalar, scalar, lgamma, trans)
+UNARY_FUNCTION(scalar, scalar, j0, trans)
+UNARY_FUNCTION(scalar, scalar, j1, trans)
+UNARY_FUNCTION(scalar, scalar, y0, trans)
+UNARY_FUNCTION(scalar, scalar, y1, trans)
 
 
-template<template<class> class PatchField, class GeoMesh>
-void pow
-(
-    GeometricField<scalar, PatchField, GeoMesh>&,
-    const GeometricField<scalar, PatchField, GeoMesh>&,
-    const dimensioned<scalar>&
-);
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const GeometricField<scalar, PatchField, GeoMesh>&,
-    const dimensioned<scalar>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&,
-    const dimensioned<scalar>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const GeometricField<scalar, PatchField, GeoMesh>&,
-    const scalar&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&,
-    const scalar&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void pow
-(
-    GeometricField<scalar, PatchField, GeoMesh>&,
-    const dimensioned<scalar>&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const dimensioned<scalar>&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const dimensioned<scalar>&,
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const scalar&,
-    const GeometricField<scalar, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > pow
-(
-    const scalar&,
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&
-);
-
-
-#define transFunc(func)                                                        \
-template<template<class> class PatchField, class GeoMesh>                      \
-void func                                                                      \
-(                                                                              \
-    GeometricField<scalar, PatchField, GeoMesh>& Res,                          \
-    const GeometricField<scalar, PatchField, GeoMesh>& sf                      \
-);                                                                             \
+#define BesselFunc(func)                                                       \
                                                                                \
-template<template<class> class PatchField, class GeoMesh>                      \
-tmp<GeometricField<scalar, PatchField, GeoMesh> > func                         \
-(                                                                              \
-    const GeometricField<scalar, PatchField, GeoMesh>&                         \
-);                                                                             \
-                                                                               \
-template<template<class> class PatchField, class GeoMesh>                      \
-tmp<GeometricField<scalar, PatchField, GeoMesh> > func                         \
-(                                                                              \
-    const tmp<GeometricField<scalar, PatchField, GeoMesh> >&                   \
-);
-
-transFunc(pow3)
-transFunc(pow4)
-transFunc(sqrt)
-transFunc(sign)
-transFunc(pos)
-transFunc(neg)
-transFunc(exp)
-transFunc(log)
-transFunc(log10)
-transFunc(sin)
-transFunc(cos)
-transFunc(tan)
-transFunc(asin)
-transFunc(acos)
-transFunc(atan)
-transFunc(sinh)
-transFunc(cosh)
-transFunc(tanh)
-transFunc(asinh)
-transFunc(acosh)
-transFunc(atanh)
-transFunc(erf)
-transFunc(erfc)
-transFunc(lgamma)
-transFunc(j0)
-transFunc(j1)
-transFunc(y0)
-transFunc(y1)
-
-#undef transFunc
-
-
-#define transFunc(func)                                                        \
 template<template<class> class PatchField, class GeoMesh>                      \
 void func                                                                      \
 (                                                                              \
@@ -294,10 +145,10 @@ tmp<GeometricField<scalar, PatchField, GeoMesh> > func                         \
     const tmp<GeometricField<scalar, PatchField, GeoMesh> >&                   \
 );
 
-transFunc(jn)
-transFunc(yn)
+BesselFunc(jn)
+BesselFunc(yn)
 
-#undef transFunc
+#undef BesselFunc
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -306,10 +157,11 @@ transFunc(yn)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+#include "undefFieldFunctionsM.H"
+
 #ifdef NoRepository
 #   include "GeometricScalarField.C"
 #endif
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

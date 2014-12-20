@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -114,9 +114,11 @@ void writeSurfFields
             }
             else
             {
+                vectorField nf = pp.nf();
+
                 forAll(pf, i)
                 {
-                    writeFuns::insert(pf[i]*pp.nf()[i], fField);
+                    writeFuns::insert(pf[i]*nf[i], fField);
                 }
             }
         }

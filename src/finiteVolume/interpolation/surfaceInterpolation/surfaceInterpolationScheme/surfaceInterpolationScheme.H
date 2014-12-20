@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -225,8 +225,9 @@ surfaceInterpolationScheme<Type>::addMeshFluxConstructorToTable<SS<Type> >     \
                                                                                \
 makeSurfaceInterpolationTypeScheme(SS, scalar)                                 \
 makeSurfaceInterpolationTypeScheme(SS, vector)                                 \
-makeSurfaceInterpolationTypeScheme(SS, tensor)                                 \
-makeSurfaceInterpolationTypeScheme(SS, sphericalTensor)
+makeSurfaceInterpolationTypeScheme(SS, sphericalTensor)                        \
+makeSurfaceInterpolationTypeScheme(SS, symmTensor)                             \
+makeSurfaceInterpolationTypeScheme(SS, tensor)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

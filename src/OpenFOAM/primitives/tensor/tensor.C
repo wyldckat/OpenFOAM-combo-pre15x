@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Tensor of scalars.
 
 \*---------------------------------------------------------------------------*/
 
@@ -64,36 +61,12 @@ const tensor tensor::one
     1, 1, 1
 );
 
-template<>
-const tensor tensor::I
-(
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, 1
-);
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+// Return eigenvalues in ascending order of absolute values
 vector eigenValues(const tensor& t)
 {
-    static const scalar small(1e-10);
-
-    // return eigenvalues in ASCENDING ORDER OF ABSOLUTE VALUES !!!
-    scalar a = -t.xx() - t.yy() - t.zz();
-
-    scalar b = t.xx()*t.yy() + t.xx()*t.zz() + t.yy()*t.zz()
-             - t.xy()*t.yx() - t.xz()*t.zx() - t.yz()*t.zy();
-
-    scalar c = - t.xx()*t.yy()*t.zz() - t.xy()*t.yz()*t.zx()
-               - t.xz()*t.yx()*t.zy() + t.xz()*t.yy()*t.zx()
-               + t.xy()*t.yx()*t.zz() + t.xx()*t.yz()*t.zy();
-
-    scalar P = (a*a - 3.0*b)/9.0;
-    scalar Q = (2*a*a*a - 9*a*b + 27*c)/54.0;
-
-    scalar disc = Q*Q - P*P*P;
-
     scalar i = 0;
     scalar ii = 0;
     scalar iii = 0;
@@ -104,7 +77,7 @@ vector eigenValues(const tensor& t)
             mag(t.xy()) + mag(t.xz()) + mag(t.yx())
           + mag(t.yz()) + mag(t.zx()) + mag(t.zy())
         )
-      < small
+      < SMALL
     )
     {
         // diagonal matrix
@@ -112,108 +85,98 @@ vector eigenValues(const tensor& t)
         ii = t.yy();
         iii = t.zz();
     }
-    else if (disc < -small)
+    else
     {
-        // three different real roots
-        scalar theta = acos(Q/::pow(P, 1.5));
+        scalar a = -t.xx() - t.yy() - t.zz();
 
-        scalar sqrtP = sqrt(P);
+        scalar b = t.xx()*t.yy() + t.xx()*t.zz() + t.yy()*t.zz()
+            - t.xy()*t.yx() - t.xz()*t.zx() - t.yz()*t.zy();
 
-        i = -2.0*sqrtP*cos(theta/3.0) - a/3.0;
-        ii = -2.0*sqrtP*cos((theta + 2.0*mathematicalConstant::pi)/3.0) - a/3.0;
-        iii = -2.0*sqrtP*cos((theta - 2.0*mathematicalConstant::pi)/3.0) - a/3.0;
-    }
-    else if (disc >= -small && disc <= small)
-    {
-        // zero discriminant
-        if (mag(c) < small)
+        scalar c = - t.xx()*t.yy()*t.zz() - t.xy()*t.yz()*t.zx()
+            - t.xz()*t.yx()*t.zy() + t.xz()*t.yy()*t.zx()
+            + t.xy()*t.yx()*t.zz() + t.xx()*t.yz()*t.zy();
+
+        // If there is a zero root
+        if (mag(c) < SMALL)
         {
-            // there is a zero root; solve quadratic using algorithm from
-            // Numerical Recepies, pp156
-            scalar discQuad = sqr(b) - 4*a*c;
+            scalar disc = sqr(a) - 4*b;
 
-            if (discQuad >= -small)
+            if (disc > 0)
             {
-                scalar q = -0.5*(b + sign(b)*sqrt(mag(discQuad)));
+                scalar q = -0.5*(a + sign(a)*sqrt(disc));
 
                 i = 0;
-                ii = q/a;
-                iii = c/q;
+                ii = q;
+                iii = b/q;
             }
             else
             {
                 FatalErrorIn("eigenValues(const tensor&)")
-                    << "complex eigenvalues in quadratic, discQuad: "
-                    << discQuad << tab << "tensor: " << t
+                    << "zero and complex eigenvalues in tensor: " << t
                     << abort(FatalError);
             }
         }
         else
         {
-            if (Q >= -small && Q <= small)
-            {
-                // three equal real roots
-                scalar root = -a/3;
+            scalar Q = (a*a - 3*b)/9;
+            scalar R = (2*a*a*a - 9*a*b + 27*c)/54;
 
-                return vector(root, root, root);
+            scalar R2 = sqr(R);
+            scalar Q3 = pow3(Q);
+
+            // Three different real roots
+            if (R2 < Q3)
+            {
+                scalar sqrtQ = sqrt(Q);
+                scalar theta = acos(R/(Q*sqrtQ));
+
+                scalar m2SqrtQ = -2*sqrtQ;
+                scalar aBy3 = a/3;
+
+                i = m2SqrtQ*cos(theta/3) - aBy3;
+                ii = m2SqrtQ*cos((theta + mathematicalConstant::twoPi)/3)
+                    - aBy3;
+                iii = m2SqrtQ*cos((theta - mathematicalConstant::twoPi)/3)
+                    - aBy3;
             }
             else
             {
-                // two equal real roots + 1 different root
-                scalar r1f = -a/3 + sqrt(a*a - 3*b)/3;
-                scalar r2f = -a -2*r1f;
+                scalar A = cbrt(R + sqrt(R2 - Q3));
 
-                scalar r1s = -a/3 - sqrt(a*a - 3*b)/3;
-                scalar r2s = -a -2*r1s;
-
-                if (mag(2*r1f + r2f + a) < SMALL)
+                // Three equal real roots
+                if (A < SMALL)
                 {
-                    i = r1f;
-                    ii = r1f;
-                    iii = r2f;
+                    scalar root = -a/3;
+                    return vector(root, root, root);
                 }
                 else
                 {
-                    i = r1s;
-                    ii = r1s;
-                    iii = r2s;
+                    // Complex roots
+                    WarningIn("eigenValues(const tensor&)")
+                        << "complex eigenvalues detected for tensor: " << t
+                        << endl;
+
+                    return vector::zero;
                 }
             }
         }
     }
-    else
-    {
-        // positive discriminant, complex roots
-        FatalErrorIn("eigenValues(const tensor&)")
-            << "complex eigenvalues detected, disc: " << disc << tab
-            << "tensor: " << t
-            << abort(FatalError);
-    }
 
 
-    // hard-coded shell sort
+    // Sort the eigenvalues into ascending order
     if (mag(i) > mag(ii))
     {
-        // swap
-        scalar aux(i);
-        i = ii;
-        ii = aux;
+        Swap(i, ii);
     }
 
     if (mag(ii) > mag(iii))
     {
-        // swap
-        scalar aux(ii);
-        ii = iii;
-        iii = aux;
+        Swap(ii, iii);
     }
 
     if (mag(i) > mag(ii))
     {
-        // swap
-        scalar aux(i);
-        i = ii;
-        ii = aux;
+        Swap(i, ii);
     }
 
     return vector(i, ii, iii);
@@ -222,149 +185,272 @@ vector eigenValues(const tensor& t)
 
 vector eigenVector(const tensor& t, const scalar lambda)
 {
-    static const scalar small(1e-10);
-
-    // construct the matrix.
-    tensor lhs(t - lambda*I);
-
-    vector y(vector::zero);     // start with a zero vector
-
-    // If the first sub-determinant is non-zero, the eigen vector has a
-    // in this direction component
-    scalar firstSub = lhs.yy()*lhs.zz() - lhs.yz()*lhs.zy();
-    scalar secondSub = -lhs.xx()*lhs.zz() + lhs.xz()*lhs.zx();
-    scalar thirdSub = lhs.xx()*lhs.yy() - lhs.xy()*lhs.yx();
-
-    if (firstSub > small || firstSub < -small)
+    if (lambda < SMALL)
     {
-        y = vector
-            (
-                1.0,
-                (-lhs.yx()*lhs.zz() - lhs.zx()*lhs.zy())/firstSub,
-                (-lhs.yx()*lhs.yz() - lhs.zx()*lhs.yy())/firstSub
-            );
-
-        y /= mag(y);
-
-        return y;
-    }
-    else if (secondSub > small || secondSub < -small)
-    {
-        y = vector
-            (
-                (-lhs.xy()*lhs.zz() - lhs.yz()*lhs.xz())/secondSub,
-                1.0,
-                (-lhs.xy()*lhs.zx() - lhs.yz()*lhs.xx())/secondSub
-            );
-
-        y /= mag(y);
-
-        return y;
-    }
-    else if (thirdSub > small || thirdSub < -small)
-    {
-        y = vector
-            (
-                (-lhs.xz()*lhs.yy() - lhs.yz()*lhs.xz())/thirdSub,
-                (-lhs.xz()*lhs.yx() - lhs.yz()*lhs.xx())/thirdSub,
-                1.0
-            );
-
-        y /= mag(y);
-
-        return y;
+        return vector::zero;
     }
 
-    return y;
+    // Construct the matrix for the eigenvector problem
+    tensor A(t - lambda*I);
+
+    // Calculate the sub-determinants of the 3 components
+    scalar sd0 = A.yy()*A.zz() - A.yz()*A.zy();
+    scalar sd1 = A.xx()*A.zz() - A.xz()*A.zx();
+    scalar sd2 = A.xx()*A.yy() - A.xy()*A.yx();
+
+    scalar magSd0 = mag(sd0);
+    scalar magSd1 = mag(sd1);
+    scalar magSd2 = mag(sd2);
+
+    // Evaluate the eigenvector using the largest sub-determinant
+    if (magSd0 > magSd1 && magSd0 > magSd2 && magSd0 > SMALL)
+    {
+        vector ev
+        (
+            1,
+            (A.yz()*A.zx() - A.zz()*A.yx())/sd0,
+            (A.zy()*A.yx() - A.yy()*A.zx())/sd0
+        );
+        ev /= mag(ev);
+
+        return ev;
+    }
+    else if (magSd1 > magSd2 && magSd1 > SMALL)
+    {
+        vector ev
+        (
+            (A.xz()*A.zy() - A.zz()*A.xy())/sd1,
+            1,
+            (A.zx()*A.xy() - A.xx()*A.zy())/sd1
+        );
+        ev /= mag(ev);
+
+        return ev;
+    }
+    else if (magSd2 > SMALL)
+    {
+        vector ev
+        (
+            (A.xy()*A.yz() - A.yy()*A.xz())/sd2,
+            (A.yx()*A.xz() - A.xx()*A.yz())/sd2,
+            1
+        );
+        ev /= mag(ev);
+
+        return ev;
+    }
+    else
+    {
+        return vector::zero;
+    }
 }
 
 
 tensor eigenVectors(const tensor& t)
 {
-    // WARNING. Using the fact that the eigenvalues are in ascending
-    // absolute order. Change at your peril.
-    static const scalar small(1e-15);
+    vector evals(eigenValues(t));
 
-    vector ev1(1, 0, 0);
-    vector ev2(0, 1, 0);
-    vector ev3(0, 0, 1);
+    tensor evs;
+    evs.x() = eigenVector(t, evals.x());
+    evs.y() = eigenVector(t, evals.y());
+    evs.z() = eigenVector(t, evals.z());
 
-    // check for singular eigenvector problem matrix
-    if (mag(t.xy() + t.xz() + t.yz()) < small)
-    {
-        // hard-coded shell sort
-        if (mag(t.xx()) > mag(t.yy()))
-        {
-            // swap ev1 and ev2
-            vector aux(ev1);
-            ev1 = ev2;
-            ev2 = aux;
-        }
-        if (max(mag(t.xx()), mag(t.yy())) > mag(t.zz()))
-        {
-            // swap ev2 and ev3
-            vector aux(ev2);
-            ev2 = ev3;
-            ev3 = aux;
-        }
-        if (min(mag(t.xx()), mag(t.yy())) > mag(t.zz()))
-        {
-            // swap ev1 and ev2
-            vector aux(ev1);
-            ev1 = ev2;
-            ev2 = aux;
-        }
-    }
-    else
-    {
-        // solve for eigen vectors
-
-        vector evals(eigenValues(t));
-
-        ev1 = eigenVector(t, evals.x());
-        ev2 = eigenVector(t, evals.y());
-        ev3 = eigenVector(t, evals.z());
-    }
-
-    return tensor
-    (
-        ev1.x(), ev1.y(), ev1.z(),
-        ev2.x(), ev2.y(), ev2.z(),
-        ev3.x(), ev3.y(), ev3.z()
-    );
+    return evs;
 }
 
 
-// Matrix inversion with singular value decomposition
-tensor hinv(const tensor& t)
+// Return eigenvalues in ascending order of absolute values
+vector eigenValues(const symmTensor& t)
 {
-    static const scalar large(1e10);
-    static const scalar small(1e-10);
+    scalar i = 0;
+    scalar ii = 0;
+    scalar iii = 0;
 
-    if (det(t) > small)
+    if
+    (
+        (
+            mag(t.xy()) + mag(t.xz()) + mag(t.xy())
+          + mag(t.yz()) + mag(t.xz()) + mag(t.yz())
+        )
+      < SMALL
+    )
     {
-        return inv(t);
+        // diagonal matrix
+        i = t.xx();
+        ii = t.yy();
+        iii = t.zz();
     }
     else
     {
-        vector eig = eigenValues(t);
-        tensor eigVecs = eigenVectors(t);
+        scalar a = -t.xx() - t.yy() - t.zz();
 
-        tensor zeroInv(tensor::zero);
+        scalar b = t.xx()*t.yy() + t.xx()*t.zz() + t.yy()*t.zz()
+            - t.xy()*t.xy() - t.xz()*t.xz() - t.yz()*t.yz();
 
-        if (mag(eig.z()) > large*mag(eig.x()))
+        scalar c = - t.xx()*t.yy()*t.zz() - t.xy()*t.yz()*t.xz()
+            - t.xz()*t.xy()*t.yz() + t.xz()*t.yy()*t.xz()
+            + t.xy()*t.xy()*t.zz() + t.xx()*t.yz()*t.yz();
+
+        // If there is a zero root
+        if (mag(c) < SMALL)
         {
-            zeroInv += sqr(vector(eigVecs.xx(), eigVecs.xy(), eigVecs.xz()));
-        }
+            scalar disc = sqr(a) - 4*b;
 
-        if (mag(eig.z()) > large*mag(eig.y()))
+            if (disc > 0)
+            {
+                scalar q = -0.5*(a + sign(a)*sqrt(disc));
+
+                i = 0;
+                ii = q;
+                iii = b/q;
+            }
+            else
+            {
+                FatalErrorIn("eigenValues(const symmTensor&)")
+                    << "zero and complex eigenvalues in symmTensor: " << t
+                    << abort(FatalError);
+            }
+        }
+        else
         {
-            // singular direction 1
-            zeroInv += sqr(vector(eigVecs.yx(), eigVecs.yy(), eigVecs.yz()));
-        }
+            scalar Q = (a*a - 3*b)/9;
+            scalar R = (2*a*a*a - 9*a*b + 27*c)/54;
 
-        return inv(t + zeroInv) - zeroInv;
+            scalar R2 = sqr(R);
+            scalar Q3 = pow3(Q);
+
+            // Three different real roots
+            if (R2 < Q3)
+            {
+                scalar sqrtQ = sqrt(Q);
+                scalar theta = acos(R/(Q*sqrtQ));
+
+                scalar m2SqrtQ = -2*sqrtQ;
+                scalar aBy3 = a/3;
+
+                i = m2SqrtQ*cos(theta/3) - aBy3;
+                ii = m2SqrtQ*cos((theta + mathematicalConstant::twoPi)/3)
+                    - aBy3;
+                iii = m2SqrtQ*cos((theta - mathematicalConstant::twoPi)/3)
+                    - aBy3;
+            }
+            else
+            {
+                scalar A = cbrt(R + sqrt(R2 - Q3));
+
+                // Three equal real roots
+                if (A < SMALL)
+                {
+                    scalar root = -a/3;
+                    return vector(root, root, root);
+                }
+                else
+                {
+                    // Complex roots
+                    WarningIn("eigenValues(const symmTensor&)")
+                        << "complex eigenvalues detected for symmTensor: " << t
+                        << endl;
+
+                    return vector::zero;
+                }
+            }
+        }
     }
+
+
+    // Sort the eigenvalues into ascending order
+    if (mag(i) > mag(ii))
+    {
+        Swap(i, ii);
+    }
+
+    if (mag(ii) > mag(iii))
+    {
+        Swap(ii, iii);
+    }
+
+    if (mag(i) > mag(ii))
+    {
+        Swap(i, ii);
+    }
+
+    return vector(i, ii, iii);
+}
+
+
+vector eigenVector(const symmTensor& t, const scalar lambda)
+{
+    if (lambda < SMALL)
+    {
+        return vector::zero;
+    }
+
+    // Construct the matrix for the eigenvector problem
+    symmTensor A(t - lambda*I);
+
+    // Calculate the sub-determinants of the 3 components
+    scalar sd0 = A.yy()*A.zz() - A.yz()*A.yz();
+    scalar sd1 = A.xx()*A.zz() - A.xz()*A.xz();
+    scalar sd2 = A.xx()*A.yy() - A.xy()*A.xy();
+
+    scalar magSd0 = mag(sd0);
+    scalar magSd1 = mag(sd1);
+    scalar magSd2 = mag(sd2);
+
+    // Evaluate the eigenvector using the largest sub-determinant
+    if (magSd0 > magSd1 && magSd0 > magSd2 && magSd0 > SMALL)
+    {
+        vector ev
+        (
+            1,
+            (A.yz()*A.xz() - A.zz()*A.xy())/sd0,
+            (A.yz()*A.xy() - A.yy()*A.xz())/sd0
+        );
+        ev /= mag(ev);
+
+        return ev;
+    }
+    else if (magSd1 > magSd2 && magSd1 > SMALL)
+    {
+        vector ev
+        (
+            (A.xz()*A.yz() - A.zz()*A.xy())/sd1,
+            1,
+            (A.xz()*A.xy() - A.xx()*A.yz())/sd1
+        );
+        ev /= mag(ev);
+
+        return ev;
+    }
+    else if (magSd2 > SMALL)
+    {
+        vector ev
+        (
+            (A.xy()*A.yz() - A.yy()*A.xz())/sd2,
+            (A.xy()*A.xz() - A.xx()*A.yz())/sd2,
+            1
+        );
+        ev /= mag(ev);
+
+        return ev;
+    }
+    else
+    {
+        return vector::zero;
+    }
+}
+
+
+tensor eigenVectors(const symmTensor& t)
+{
+    vector evals(eigenValues(t));
+
+    tensor evs;
+    evs.x() = eigenVector(t, evals.x());
+    evs.y() = eigenVector(t, evals.y());
+    evs.z() = eigenVector(t, evals.z());
+
+    return evs;
 }
 
 

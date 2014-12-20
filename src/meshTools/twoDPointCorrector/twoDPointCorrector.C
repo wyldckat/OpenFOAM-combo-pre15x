@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "twoDPointCorrector.H"
-#include "primitiveMesh.H"
+#include "polyMesh.H"
 #include "wedgePolyPatch.H"
 #include "emptyPolyPatch.H"
 
@@ -64,7 +64,7 @@ void twoDPointCorrector::calcAddressing() const
 
     forAll (patches, patchI)
     {
-        if (typeid(patches[patchI]) == typeid(wedgePolyPatch))
+        if (isA<wedgePolyPatch>(patches[patchI]))
         {
             isWedge = true;
 
@@ -86,7 +86,7 @@ void twoDPointCorrector::calcAddressing() const
         {
             if
             (
-                typeid(patches[patchI]) == typeid(emptyPolyPatch)
+                isA<emptyPolyPatch>(patches[patchI])
              && patches[patchI].size() > 0
             )
             {
@@ -192,10 +192,10 @@ void twoDPointCorrector::clearAddressing() const
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 twoDPointCorrector::twoDPointCorrector(const polyMesh& mesh)
 :
     mesh_(mesh),
+    required_(mesh_.nGeometricD() == 2),
     planeNormalPtr_(NULL),
     normalEdgeIndicesPtr_(NULL)
 {}
@@ -225,10 +225,9 @@ direction twoDPointCorrector::normalDir() const
             << "Plane normal not aligned with the coordinate system" << nl
             << "    pn = " << pn
             << abort(FatalError);
-    }
 
-    // Dummy return to kee compiler happy
-    return vector::Z;
+        return vector::Z;
+    }
 }
 
 
@@ -258,6 +257,8 @@ const labelList& twoDPointCorrector::normalEdgeIndices() const
 
 void twoDPointCorrector::correctPoints(pointField& p) const
 {
+    if (!required_) return;
+
     // Algorithm:
     // Loop through all edges. Calculate the average point position A for
     // the front and the back. Correct the position of point P (in two planes)

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Finite-Volume matrix basic solvers.
 
 \*---------------------------------------------------------------------------*/
 
@@ -78,9 +75,9 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
     scalarField saveDiag = diag();
 
     Field<Type> source = source_;
-    addBoundarySource(source);
+    addBoundarySource(source, false);
 
-    typename powProduct<Vector<label>, Type::rank>::type validComponents
+    typename Type::labelType validComponents
     (
         pow
         (
@@ -110,30 +107,8 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
             internalCoeffs_.component(cmpt)
         );
 
-        lduCoupledInterfacePtrsList interfaces(psi_.boundaryField().size());
-
-        forAll (bouCoeffsCmpt, patchI)
-        {
-            interfaces[patchI] = &psi_.boundaryField()[patchI];
-        }
-
-        initMatrixInterfaces
-        (
-            bouCoeffsCmpt,
-            interfaces,
-            psiCmpt,
-            sourceCmpt,
-            cmpt
-        );
-
-        updateMatrixInterfaces
-        (
-            bouCoeffsCmpt,
-            interfaces,
-            psiCmpt,
-            sourceCmpt,
-            cmpt
-        );
+        lduInterfaceFieldPtrsList interfaces = 
+            psi_.boundaryField().interfaces();
 
         lduMatrix::solverPerformance solverPerf;
 
@@ -141,15 +116,12 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
         solverPerf = lduMatrix::solver::New
         (
             psi_.name() + pTraits<Type>::componentNames[cmpt],
-            psiCmpt,
             *this,
-            sourceCmpt,
             bouCoeffsCmpt,
             intCoeffsCmpt,
             interfaces,
-            cmpt,
             solverControls.rewind()
-        )->solve();
+        )->solve(psiCmpt, sourceCmpt, cmpt);
 
         solverPerf.print();
 
@@ -169,6 +141,19 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
     psi_.correctBoundaryConditions();
 
     return solverPerfVec;
+}
+
+
+template<class Type>
+autoPtr<typename fvMatrix<Type>::fvSolver> fvMatrix<Type>::solver()
+{
+    return solver(psi_.mesh().solver(psi_.name()));
+}
+
+template<class Type>
+lduMatrix::solverPerformance fvMatrix<Type>::fvSolver::solve()
+{
+    return solve(psi_.mesh().solver(psi_.name()));
 }
 
 
@@ -201,13 +186,6 @@ tmp<Field<Type> > fvMatrix<Type>::residual() const
             boundaryCoeffs_.component(cmpt)
         );
 
-        lduCoupledInterfacePtrsList interfaces(psi_.boundaryField().size());
-
-        forAll (bouCoeffsCmpt, patchI)
-        {
-            interfaces[patchI] = &psi_.boundaryField()[patchI];
-        }
-
         res.replace
         (
             cmpt,
@@ -216,7 +194,7 @@ tmp<Field<Type> > fvMatrix<Type>::residual() const
                 psiCmpt,
                 res.component(cmpt) - boundaryDiagCmpt*psiCmpt,
                 bouCoeffsCmpt,
-                interfaces,
+                psi_.boundaryField().interfaces(),
                 cmpt
             )
         );

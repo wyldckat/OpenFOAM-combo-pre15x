@@ -1,9 +1,0 @@
-#!/bin/sh
-set -x
-
-wmake icoFoam
-wmake icoDyMFoam
-wmake nonNewtonianIcoFoam
-wmake simpleFoam
-wmake turbFoam
-wmake boundaryFoam

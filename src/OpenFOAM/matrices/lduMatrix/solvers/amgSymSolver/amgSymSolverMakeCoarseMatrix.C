@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,8 +28,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "amgSymSolver.H"
-#include "amgCoupledInterface.H"
-#include "DynamicList.H"
+#include "amgInterfaceField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -227,10 +226,10 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
     blockCoeffsData.setSize(0);
 
 
-    // Create coarse-level coupled interfaces
+    // Create coarse-level interfaces
 
     // Get reference to fine-level interfaces
-    const lduCoupledInterfacePtrsList& fineInterfaces =
+    const lduInterfaceFieldPtrsList& fineInterfaces =
         interfaceLevel(fineLevelIndex);
 
     // Get reference to fine-level coefficients
@@ -238,14 +237,16 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
         interfaceCoeffsLevel(fineLevelIndex);
 
     // Create coarse interfaces, addressing and coefficients
-    // Hook the coarse interfaces and coefficients
-    interfaceLevels_.hook
+    // Set the coarse interfaces and coefficients
+    interfaceLevels_.set
     (
-        new lduCoupledInterfacePtrsList(fineInterfaces.size())
+        fineLevelIndex,
+        new lduInterfaceFieldPtrsList(fineInterfaces.size())
     );
 
-    interfaceCoeffs_.hook
+    interfaceCoeffs_.set
     (
+        fineLevelIndex,
         new FieldField<Field, scalar>(fineInterfaces.size())
     );
 
@@ -253,74 +254,91 @@ void amgSymSolver::makeCoarseMatrix(const label fineLevelIndex)
 
     // Note: references offset by one since the fine level is stored separately
     // 
-    lduCoupledInterfacePtrsList&  coarseInterfaces =
+    lduInterfaceFieldPtrsList&  coarseInterfaces =
         interfaceLevels_[fineLevelIndex];
     FieldField<Field, scalar>& coarseInterfaceCoeffs =
         interfaceCoeffs_[fineLevelIndex];
 
-    // Initialise transfer of colouring on the interface
+    lduInterfacePtrsList coarsePatchInterfaces(coarseInterfaces.size());
+
+    // Initialise transfer of restrict addressing on the interface
     forAll (fineInterfaces, inti)
     {
-        fineInterfaces[inti]->initNbrColour(restrictMap, true);
+        if (fineInterfaces.set(inti))
+        {
+            fineInterfaces[inti]
+                .interface().initInternalFieldTransfer(restrictMap, true);
+        }
     }
 
     // Add the coarse level
     forAll (fineInterfaces, inti)
     {
-        // Coarse level interface
-        coarseInterfaces[inti] =
-            amgCoupledInterface::New(fineInterfaces[inti], inti).ptr();
-
-        // Get the local colour
-        const unallocLabelList& localAddr = 
-            fineMatrix.lduAddr().patchAddr(inti);
-
-        labelField localColour(localAddr.size());
-
-        forAll (localColour, facei)
+        if (fineInterfaces.set(inti))
         {
-            localColour[facei] = restrictMap[localAddr[facei]];
-        }
-
-        const amgCoupledInterface& amgInterface =
-            refCast<const amgCoupledInterface>(*coarseInterfaces[inti]);
-
-        // Coefficients and addressing
-        coarseInterfaceCoeffs.hook
-        (
-            amgInterface.coeffs
+            // Coarse level interface
+            coarseInterfaces.set
             (
-                localColour,
-                fineInterfaces[inti]->nbrColour(restrictMap),
-                fineInterfaceCoeffs[inti]
-            ).ptr()
-        );
+                inti,
+                amgInterfaceField::New(fineInterfaces(inti)).ptr()
+            );
 
-        coarseInterfaceAddr[inti] = amgInterface.addressing();
+            // Get the local face-cell addressing
+            const unallocLabelList& localAddr = 
+                fineMatrix.lduAddr().patchAddr(inti);
+
+            labelField localRestrictAddressing(localAddr.size());
+
+            forAll (localRestrictAddressing, facei)
+            {
+                localRestrictAddressing[facei] = restrictMap[localAddr[facei]];
+            }
+
+            const amgInterfaceField& amgInterface =
+                refCast<const amgInterfaceField>(coarseInterfaces[inti]);
+
+            coarsePatchInterfaces.set(inti, &amgInterface);
+
+            // Coefficients and addressing
+            coarseInterfaceCoeffs.set
+            (
+                inti,
+                amgInterface.coeffs
+                (
+                    localRestrictAddressing,
+                    fineInterfaces[inti]
+                        .interface().internalFieldTransfer(restrictMap),
+                    fineInterfaceCoeffs[inti]
+                )
+            );
+            
+            coarseInterfaceAddr[inti] = amgInterface.faceCells();
+        }
     }
         
     // Matrix restriction done!
 
-    // Hook the coarse ldu addressing onto the list
-    addrLevels_.hook
+    // Set the coarse ldu addressing onto the list
+    meshLevels_.set
     (
-        new lduAddressingStore
+        fineLevelIndex,
+        new lduPrimitiveMesh
         (
             nCoarseEqns,
             coarseOwner,
             coarseNeighbour,
-            coarseInterfaceAddr
+            coarseInterfaceAddr,
+            coarsePatchInterfaces,
+            fineMatrix.patchSchedule(),
+            true
         )
     );
 
-    // Hook the coarse level matrix
-    matrixLevels_.hook
+    // Set the coarse level mesh
+    matrixLevels_.set
     (
-        new lduMatrix
-        (
-            addrLevels_[fineLevelIndex],
-            fineMatrix.lduCoupledInterfaceSchedule()
-        )
+        fineLevelIndex,
+        new lduMatrix(meshLevels_[fineLevelIndex])
     );
 
     // Insert coarse upper

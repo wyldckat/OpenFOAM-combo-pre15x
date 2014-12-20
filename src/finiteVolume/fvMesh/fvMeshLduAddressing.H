@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,7 +60,10 @@ class fvMeshLduAddressing
         const labelList& upperAddr_;
 
         //- Patch addressing as a list of sublists
-        PtrList<labelList::subList> patchAddr_;
+        List<const unallocLabelList*> patchAddr_;
+
+        //- Patch field evaluation schedule
+        const lduSchedule& patchSchedule_;
 
 
     // Private Member Functions
@@ -77,26 +80,24 @@ public:
     // Constructors
 
         //- Construct from components
-        fvMeshLduAddressing(const fvMesh& m)
+        fvMeshLduAddressing(const fvMesh& mesh)
         :
-            lduAddressing(m.nCells()),
+            lduAddressing(mesh.nCells()),
             lowerAddr_
             (
                 labelList::subList
                 (
-                    m.faceOwner(),
-                    m.nInternalFaces()
+                    mesh.faceOwner(),
+                    mesh.nInternalFaces()
                 )
             ),
-            upperAddr_(m.faceNeighbour()),
-            patchAddr_(m.boundary().size())
+            upperAddr_(mesh.faceNeighbour()),
+            patchAddr_(mesh.boundary().size()),
+            patchSchedule_(mesh.globalData().patchSchedule())
         {
-            forAll (m.boundary(), patchI)
+            forAll (mesh.boundary(), patchI)
             {
-                patchAddr_.hook
-                (
-                    new labelList::subList(m.boundary()[patchI].faceCells())
-                );
+                patchAddr_[patchI] = &mesh.boundary()[patchI].faceCells();
             }
         }
 
@@ -124,9 +125,14 @@ public:
         //- Return patch addressing
         const unallocLabelList& patchAddr(const label i) const
         {
-            return patchAddr_[i];
+            return *patchAddr_[i];
         }
 
+        // Return patch field evaluation schedule
+        const lduSchedule& patchSchedule() const
+        {
+            return patchSchedule_;
+        }
 };
 
 

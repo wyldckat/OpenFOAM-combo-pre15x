@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -62,6 +62,19 @@ IOdictionary::IOdictionary
         readStream(typeName) >> *this;
         close();
     }
+}
+
+
+IOdictionary::IOdictionary
+(
+    const IOobject& io,
+    const dictionary& dict
+)
+:
+    regIOobject(io),
+    dictionary(dict)
+{
+    dictionary::name() = IOobject::objectPath();
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Generic dimensioned Type class
-
 \*---------------------------------------------------------------------------*/
 
 #include "dimensionedType.H"
@@ -37,7 +34,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// Constructor given a name, a Value and its dimensionSet
 template <class Type>
 dimensioned<Type>::dimensioned
 (
@@ -52,7 +48,6 @@ dimensioned<Type>::dimensioned
 {}
 
 
-// Constructor given a name, a Value and its dimensionSet
 template <class Type>
 dimensioned<Type>::dimensioned
 (
@@ -66,7 +61,6 @@ dimensioned<Type>::dimensioned
 {}
 
 
-// Construct from Istream
 template <class Type>
 dimensioned<Type>::dimensioned
 (
@@ -75,6 +69,33 @@ dimensioned<Type>::dimensioned
 :
     name_(is),
     dimensions_(is),
+    value_(pTraits<Type>(is))
+{}
+
+
+template <class Type>
+dimensioned<Type>::dimensioned
+(
+    const word& name,
+    Istream& is
+)
+:
+    name_(name),
+    dimensions_(is),
+    value_(pTraits<Type>(is))
+{}
+
+
+template <class Type>
+dimensioned<Type>::dimensioned
+(
+    const word& name,
+    const dimensionSet& dimSet,
+    Istream& is
+)
+:
+    name_(name),
+    dimensions_(dimSet),
     value_(pTraits<Type>(is))
 {}
 
@@ -120,7 +141,6 @@ Type& dimensioned<Type>::value()
 }
 
 
-// Return a component as a dimensioned<cmptType>
 template <class Type>
 dimensioned<typename dimensioned<Type>::cmptType> dimensioned<Type>::component
 (
@@ -136,7 +156,6 @@ dimensioned<typename dimensioned<Type>::cmptType> dimensioned<Type>::component
 }
 
 
-// Return a component with a dimensioned<cmptType>
 template <class Type>
 void dimensioned<Type>::replace
 (
@@ -151,7 +170,6 @@ void dimensioned<Type>::replace
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-// Return a component as a dimensioned<cmptType>
 template <class Type>
 dimensioned<typename dimensioned<Type>::cmptType> dimensioned<Type>::operator[]
 (

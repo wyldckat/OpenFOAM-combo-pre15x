@@ -2,13 +2,13 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
     This file is part of OpenFOAM.
 
-    OpenFOAM is free software; you can redistribute it and/or modify it
+    OpenFOAM is free software; you can redistribute itand/or modify it
     under the terms of the GNU General Public License as published by the
     Free Software Foundation; either version 2 of the License, or (at your
     option) any later version.
@@ -72,15 +72,6 @@ class convectionScheme
         const fvMesh& mesh_;
 
 
-    // Private Member Functions
-
-        //- Disallow copy construct
-        convectionScheme(const convectionScheme&);
-
-        //- Disallow default bitwise assignment
-        void operator=(const convectionScheme&);
-
-
 public:
 
     //- Runtime type information
@@ -119,6 +110,9 @@ public:
 
 
     // Constructors
+
+        //- Copy construct
+        convectionScheme(const convectionScheme&);
 
         //- Construct from mesh, flux and Istream
         convectionScheme
@@ -191,6 +185,11 @@ public:
             const surfaceScalarField&,
             const GeometricField<Type, fvPatchField, volMesh>&
         ) const = 0;
+
+
+    // Member operators
+
+        void operator=(const convectionScheme<Type>&);
 };
 
 
@@ -218,8 +217,9 @@ convectionScheme<Type>::addIstreamConstructorToTable<SS<Type> >                \
                                                                                \
 makeFvConvectionTypeScheme(SS, scalar)                                         \
 makeFvConvectionTypeScheme(SS, vector)                                         \
-makeFvConvectionTypeScheme(SS, tensor)                                         \
-makeFvConvectionTypeScheme(SS, sphericalTensor)
+makeFvConvectionTypeScheme(SS, sphericalTensor)                                \
+makeFvConvectionTypeScheme(SS, symmTensor)                                     \
+makeFvConvectionTypeScheme(SS, tensor)
 
 
 #define makeMultivariateFvConvectionTypeScheme(SS, Type)                       \
@@ -234,8 +234,9 @@ convectionScheme<Type>::addMultivariateConstructorToTable<SS<Type> >           \
                                                                                \
 makeMultivariateFvConvectionTypeScheme(SS, scalar)                             \
 makeMultivariateFvConvectionTypeScheme(SS, vector)                             \
-makeMultivariateFvConvectionTypeScheme(SS, tensor)                             \
-makeMultivariateFvConvectionTypeScheme(SS, sphericalTensor)
+makeMultivariateFvConvectionTypeScheme(SS, sphericalTensor)                    \
+makeMultivariateFvConvectionTypeScheme(SS, symmTensor)                         \
+makeMultivariateFvConvectionTypeScheme(SS, tensor)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

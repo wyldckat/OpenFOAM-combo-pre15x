@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,8 +26,7 @@ License
 
 #include "dynamicFvMesh.H"
 #include "Time.H"
-
-#include <dlfcn.h>
+#include "dlLibraryTable.H"
 
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
@@ -53,47 +52,21 @@ Foam::autoPtr<Foam::dynamicFvMesh> Foam::dynamicFvMesh::New(const IOobject& io)
 
     Info<< "Selecting dynamicFvMesh " << dynamicFvMeshTypeName << endl;
 
-    if (dynamicMeshDict.found("dynamicFvMeshLib"))
+    dlLibraryTable::open
+    (
+        dynamicMeshDict,
+        "dynamicFvMeshLibs",
+        IOobjectConstructorTablePtr_
+    );
+
+    if (!IOobjectConstructorTablePtr_)
     {
-        string dynamicFvMeshLibName =
-            dynamicMeshDict.lookup("dynamicFvMeshLib");
-
-        if (dynamicFvMeshLibName.size())
-        {
-            label nSolvers = 0;
-
-            if (IOobjectConstructorTablePtr_)
-            {
-                nSolvers = IOobjectConstructorTablePtr_->size();
-            }
-
-            void* dynamicFvMeshLibPtr =
-                dlopen(dynamicFvMeshLibName.c_str(), RTLD_LAZY|RTLD_GLOBAL);
-
-            if (!dynamicFvMeshLibPtr)
-            {
-                FatalErrorIn
-                (
-                    "dynamicFvMesh::New(const IOobject&)"
-                )   << "could not load " << dlerror()
-                    << exit(FatalError);
-            }
-            else if 
-            (
-               !IOobjectConstructorTablePtr_
-             || IOobjectConstructorTablePtr_->size() <= nSolvers
-            )
-            {
-                WarningIn
-                (
-                    "dynamicFvMesh::New(const IOobject&)"
-                )   << "library " << dynamicFvMeshLibName
-                    << " did not introduce any new solvers"
-                    << endl << endl;
-            }
-        }
+        FatalErrorIn
+        (
+            "dynamicFvMesh::New(const IOobject&)"
+        )   << "dynamicFvMesh table is empty"
+            << exit(FatalError);
     }
-
 
     IOobjectConstructorTable::iterator cstrIter =
         IOobjectConstructorTablePtr_->find(dynamicFvMeshTypeName);

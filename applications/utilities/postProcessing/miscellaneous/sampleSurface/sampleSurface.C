@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -86,7 +86,7 @@ void mergePoints
     labelListList& allOldToNew
 )
 {
-    const boundBox& bb = mesh.parallelData().bb();
+    const boundBox& bb = mesh.globalData().bb();
 
     scalar mergeDim = mergeTol * mag(bb.max() - bb.min());
 
@@ -210,6 +210,14 @@ int main(int argc, char *argv[])
     (
         surfaceWriter<vector>::New(writeFormat)
     );
+    autoPtr<surfaceWriter<sphericalTensor> > sphericalTensorFormatter
+    (
+        surfaceWriter<sphericalTensor>::New(writeFormat)
+    );
+    autoPtr<surfaceWriter<symmTensor> > symmTensorFormatter
+    (
+        surfaceWriter<symmTensor>::New(writeFormat)
+    );
     autoPtr<surfaceWriter<tensor> > tensorFormatter
     (
         surfaceWriter<tensor>::New(writeFormat)
@@ -313,6 +321,8 @@ int main(int argc, char *argv[])
 
         fieldsCache<scalar> scalarCache;
         fieldsCache<vector> vectorCache;
+        fieldsCache<sphericalTensor> sphericalTensorCache;
+        fieldsCache<symmTensor> symmTensorCache;
         fieldsCache<tensor> tensorCache;
 
         forAll(fieldNames, fieldI)
@@ -371,6 +381,48 @@ int main(int argc, char *argv[])
 
                 else if 
                 (
+                    fieldHeader.headerClassName()
+                 == volSphericalTensorField::typeName
+                )
+                {
+                    Info<< "Loading " << fieldHeader.headerClassName()
+                        << ' ' << fieldName << endl;
+
+                    volSphericalTensorField* fieldPtr
+                    (
+                        new volSphericalTensorField
+                        (
+                            fieldHeader,
+                            mesh
+                        )
+                    );
+
+                    sphericalTensorCache.insert(fieldName, fieldPtr);
+                }
+
+                else if 
+                (
+                    fieldHeader.headerClassName()
+                 == volSymmTensorField::typeName
+                )
+                {
+                    Info<< "Loading " << fieldHeader.headerClassName()
+                        << ' ' << fieldName << endl;
+
+                    volSymmTensorField* fieldPtr
+                    (
+                        new volSymmTensorField
+                        (
+                            fieldHeader,
+                            mesh
+                        )
+                    );
+
+                    symmTensorCache.insert(fieldName, fieldPtr);
+                }
+
+                else if 
+                (
                     fieldHeader.headerClassName() == volTensorField::typeName
                 )
                 {
@@ -405,9 +457,7 @@ int main(int argc, char *argv[])
                 meshChanged,
                 pInterpPtr,
                 interpolationSchemes,
-                scalarCache,
-                vectorCache,
-                tensorCache
+                scalarCache
             );
         }
 
@@ -584,6 +634,130 @@ int main(int argc, char *argv[])
 
                         // Write to time directory under sampleSurfaces/
                         vectorFormatter().write
+                        (
+                            samplePath,
+                            runTime.timeName(),
+                            s.name(),
+                            allPoints[surfaceI],
+                            allFaces[surfaceI],
+                            fieldName,
+                            allValues
+                        );
+                    }
+                }
+            }
+
+            // SphericalTensor fields
+
+            else if (sphericalTensorCache.found(fieldName))
+            {
+                Info<< "Sampling volSphericalTensorField "
+                    << fieldName << endl << endl;
+
+                forAll(surfaces, surfaceI)
+                {
+                    const surface& s = surfaces[surfaceI];
+
+                    sphericalTensorField values
+                    (
+                        s.interpolate
+                        (
+                            fieldName,
+                            sphericalTensorCache,
+                            pInterpPtr,
+                            interpolationSchemes
+                        )
+                    );
+
+                    // Collect values from all processors
+                    List<sphericalTensorField>
+                        gatheredValues(Pstream::nProcs());
+
+                    gatheredValues[Pstream::myProcNo()] = values;
+                    Pstream::gatherList(gatheredValues);
+
+                    if (Pstream::master())
+                    {
+                        sphericalTensorField allValues
+                        (
+                            ListListOps::combine<sphericalTensorField>
+                            (
+                                gatheredValues,
+                                accessOp<sphericalTensorField>()
+                            )
+                        );
+
+                        // Renumber (point data) to correspond to merged points
+                        renumberData
+                        (
+                            allOldToNewPoints[surfaceI],
+                            allPoints[surfaceI].size(),
+                            allValues
+                        );
+
+                        // Write to time directory under sampleSurfaces/
+                        sphericalTensorFormatter().write
+                        (
+                            samplePath,
+                            runTime.timeName(),
+                            s.name(),
+                            allPoints[surfaceI],
+                            allFaces[surfaceI],
+                            fieldName,
+                            allValues
+                        );
+                    }
+                }
+            }
+
+            // SymmTensor fields
+
+            else if (symmTensorCache.found(fieldName))
+            {
+                Info<< "Sampling volSymmTensorField "
+                    << fieldName << endl << endl;
+
+                forAll(surfaces, surfaceI)
+                {
+                    const surface& s = surfaces[surfaceI];
+
+                    symmTensorField values
+                    (
+                        s.interpolate
+                        (
+                            fieldName,
+                            symmTensorCache,
+                            pInterpPtr,
+                            interpolationSchemes
+                        )
+                    );
+
+                    // Collect values from all processors
+                    List<symmTensorField> gatheredValues(Pstream::nProcs());
+                    gatheredValues[Pstream::myProcNo()] = values;
+                    Pstream::gatherList(gatheredValues);
+
+                    if (Pstream::master())
+                    {
+                        symmTensorField allValues
+                        (
+                            ListListOps::combine<symmTensorField>
+                            (
+                                gatheredValues,
+                                accessOp<symmTensorField>()
+                            )
+                        );
+
+                        // Renumber (point data) to correspond to merged points
+                        renumberData
+                        (
+                            allOldToNewPoints[surfaceI],
+                            allPoints[surfaceI].size(),
+                            allValues
+                        );
+
+                        // Write to time directory under sampleSurfaces/
+                        symmTensorFormatter().write
                         (
                             samplePath,
                             runTime.timeName(),

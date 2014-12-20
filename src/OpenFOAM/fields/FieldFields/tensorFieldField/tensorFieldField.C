@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,6 +29,9 @@ Description
 
 #include "tensorFieldField.H"
 
+#define TEMPLATE template<template<class> class Field>
+#include "FieldFieldFunctionsM.C"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -36,206 +39,34 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * global operators  * * * * * * * * * * * * * //
 
-template<template<class> class Field>
-void hdual(FieldField<Field, vector>& vf, const FieldField<Field, tensor>& tf)
-{
-    forAll(vf, i)
-    {
-        hdual(vf[i], tf[i]);
-    }
-}
+UNARY_FUNCTION(scalar, tensor, tr)
+UNARY_FUNCTION(sphericalTensor, tensor, sph)
+UNARY_FUNCTION(symmTensor, tensor, symm)
+UNARY_FUNCTION(symmTensor, tensor, twoSymm)
+UNARY_FUNCTION(tensor, tensor, skew)
+UNARY_FUNCTION(tensor, tensor, dev)
+UNARY_FUNCTION(tensor, tensor, dev2)
+UNARY_FUNCTION(scalar, tensor, det)
+UNARY_FUNCTION(tensor, tensor, inv)
+UNARY_FUNCTION(vector, tensor, eigenValues)
+UNARY_FUNCTION(tensor, tensor, eigenVectors)
 
-template<template<class> class Field>
-tmp<FieldField<Field, vector> > operator*
-(
-    const tmp<FieldField<Field, tensor> >& tf
-)
-{
-    tmp<FieldField<Field, vector> > hDual
-    (
-        FieldField<Field, vector>::NewCalculatedType(tf())
-    );
-    hdual(hDual(), tf);
-    tf.clear();
-    return hDual;
-}
+UNARY_FUNCTION(vector, symmTensor, eigenValues)
+UNARY_FUNCTION(symmTensor, symmTensor, eigenVectors)
 
 
-template<template<class> class Field>
-void hdual(FieldField<Field, tensor>& vf, const FieldField<Field, vector>& tf)
-{
-    forAll(vf, i)
-    {
-        hdual(vf[i], tf[i]);
-    }
-}
+// * * * * * * * * * * * * * * * global operators  * * * * * * * * * * * * * //
 
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > operator*
-(
-    const tmp<FieldField<Field, vector> >& tf
-)
-{
-    tmp<FieldField<Field, tensor> > hDual
-    (
-        FieldField<Field, tensor>::NewCalculatedType(tf())
-    );
-    hdual(hDual(), tf);
-    tf.clear();
-    return hDual;
-}
-
-
-// * * * * * * * * * * * * * * * global functions  * * * * * * * * * * * * * //
-
-#define tensorFunc(func)                                                      \
-template<template<class> class Field>                                         \
-void func(FieldField<Field, tensor>& tf, const FieldField<Field, tensor>& tf1)\
-{                                                                             \
-    forAll(tf, i)                                                             \
-    {                                                                         \
-        func(tf[i], tf1[i]);                                                  \
-    }                                                                         \
-}                                                                             \
-                                                                              \
-template<template<class> class Field>                                         \
-tmp<FieldField<Field, tensor> > func(const FieldField<Field, tensor>& tf)     \
-{                                                                             \
-    tmp<FieldField<Field, tensor> > result                                    \
-    (                                                                         \
-        FieldField<Field, tensor>::NewCalculatedType(tf)                      \
-    );                                                                        \
-    func(result(), tf);                                                       \
-    return result;                                                            \
-}                                                                             \
-                                                                              \
-template<template<class> class Field>                                         \
-tmp<FieldField<Field, tensor> > func                                          \
-(                                                                             \
-    const tmp<FieldField<Field, tensor> >& tf                                 \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, tensor> > result(tf.ptr());                         \
-    func(result(), result());                                                 \
-    return result;                                                            \
-}
-
-
-template<template<class> class Field>
-void tr(FieldField<Field, scalar>& sf, const FieldField<Field, tensor>& tf)
-{
-    forAll(sf, i)
-    {
-        tr(sf[i], tf[i]);
-    }
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > tr(const tmp<FieldField<Field, tensor> >& tf)
-{
-    tmp<FieldField<Field, scalar> > result
-    (
-        FieldField<Field, scalar>::NewCalculatedType(tf())
-    );
-    tr(result(), tf);
-    tf.clear();
-    return result;
-}
-
-
-tensorFunc(dev)
-tensorFunc(dev2)
-
-template<template<class> class Field>
-void det(FieldField<Field, scalar>& sf, const FieldField<Field, tensor>& tf)
-{
-    forAll(sf, i)
-    {
-        det(sf[i], tf[i]);
-    }
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > det(const tmp<FieldField<Field, tensor> >& tf)
-{
-    tmp<FieldField<Field, scalar> > result
-    (
-        FieldField<Field, scalar>::NewCalculatedType(tf())
-    );
-    det(result(), tf);
-    tf.clear();
-    return result;
-}
-
-
-template<template<class> class Field>
-void inv(FieldField<Field, tensor>& tf, const FieldField<Field, tensor>& tf1)
-{
-    forAll(tf, i)
-    {
-        inv(tf[i], tf1[i]);
-    }
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > inv(const FieldField<Field, tensor>& tf)
-{
-    tmp<FieldField<Field, tensor> > result
-    (
-        FieldField<Field, tensor>::NewCalculatedType(tf())
-    );
-    inv(result(), tf);
-    return result;
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > inv(const tmp<FieldField<Field, tensor> >& tf)
-{
-    tmp<FieldField<Field, tensor> > result(tf.ptr());
-    inv(result(), result());
-    return result;
-}
-
-
-tensorFunc(hinv)
-tensorFunc(symm)
-tensorFunc(skew)
-template<template<class> class Field>
-void eigenValues
-(
-    FieldField<Field, vector>& vf,
-    const FieldField<Field, tensor>& tf
-)
-{
-    forAll(vf, i)
-    {
-        eigenValues(vf[i], tf[i]);
-    }
-}
-
-template<template<class> class Field>
-tmp<FieldField<Field, vector> > eigenValues
-(
-    const tmp<FieldField<Field, tensor> >& tf
-)
-{
-    tmp<FieldField<Field, vector> > result
-    (
-        FieldField<Field, vector>::NewCalculatedType(tf())
-    );
-    eigenValues(result(), tf);
-    tf.clear();
-    return result;
-}
-
-
-tensorFunc(eigenVectors)
-
-#undef tensorFunc
+UNARY_OPERATOR(vector, tensor, *, hdual)
+UNARY_OPERATOR(tensor, vector, *, hdual)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,6 +63,10 @@ class Vector
 
 public:
 
+    //- Equivalent type of labels used for valid component indexing
+    typedef Vector<label> labelType;
+
+
     // Member constants
 
         enum
@@ -117,6 +121,15 @@ public:
 
 template<class Cmpt>
 class typeOfRank<Cmpt, 1>
+{
+public:
+
+    typedef Vector<Cmpt> type;
+};
+
+
+template<class Cmpt>
+class symmTypeOfRank<Cmpt, 1>
 {
 public:
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,6 +85,86 @@ Foam::mapPolyMesh::mapPolyMesh
     oldPatchSizes_(oldPatchStarts.size()),
     oldPatchStarts_(oldPatchStarts),
     oldPatchNMeshPoints_(oldPatchNMeshPoints)
+{
+    // Calculate old patch sizes
+    for (label patchI = 0; patchI < oldPatchStarts_.size() - 1; patchI++)
+    {
+        oldPatchSizes_[patchI] =
+            oldPatchStarts_[patchI + 1] - oldPatchStarts_[patchI];
+    }
+
+    // Set the last one by hand
+    const label lastPatchID = oldPatchStarts_.size() - 1;
+
+    oldPatchSizes_[lastPatchID] = nOldFaces_ - oldPatchStarts_[lastPatchID];
+
+    if (polyMesh::debug)
+    {
+        if (min(oldPatchSizes_) < 0)
+        {
+            FatalErrorIn("mapPolyMesh::mapPolyMesh(...)")
+                << "Calculated negative old patch size.  Error in mapping data"
+                << abort(FatalError);
+        }
+    }
+}
+
+
+// Construct from components and optionally reuse storage
+Foam::mapPolyMesh::mapPolyMesh
+(
+    const polyMesh& mesh,
+    const label nOldPoints,
+    const label nOldFaces,
+    const label nOldCells,
+    labelList& pointMap,
+    labelList& faceMap,
+    List<objectMap>& facesFromPoints,
+    List<objectMap>& facesFromEdges,
+    labelList& cellMap,
+    List<objectMap>& cellsFromPoints,
+    List<objectMap>& cellsFromEdges,
+    List<objectMap>& cellsFromFaces,
+    labelList& reversePointMap,
+    labelList& reverseFaceMap,
+    labelList& reverseCellMap,
+    labelHashSet& flipFaceFlux,
+    labelListList& patchPointMap,
+    labelListList& pointZoneMap,
+    labelListList& faceZonePointMap,
+    labelListList& faceZoneFaceMap,
+    labelListList& cellZoneMap,
+    pointField& preMotionPoints,
+    labelList& oldPatchStarts,
+    labelList& oldPatchNMeshPoints,
+    const bool reUse
+)
+:
+    mesh_(mesh),
+    nOldPoints_(nOldPoints),
+    nOldFaces_(nOldFaces),
+    nOldCells_(nOldCells),
+    pointMap_(pointMap, reUse),
+    faceMap_(faceMap, reUse),
+    facesFromPointsMap_(facesFromPoints, reUse),
+    facesFromEdgesMap_(facesFromEdges, reUse),
+    cellMap_(cellMap, reUse),
+    cellsFromPointsMap_(cellsFromPoints, reUse),
+    cellsFromEdgesMap_(cellsFromEdges, reUse),
+    cellsFromFacesMap_(cellsFromFaces, reUse),
+    reversePointMap_(reversePointMap, reUse),
+    reverseFaceMap_(reverseFaceMap, reUse),
+    reverseCellMap_(reverseCellMap, reUse),
+    flipFaceFlux_(flipFaceFlux),
+    patchPointMap_(patchPointMap, reUse),
+    pointZoneMap_(pointZoneMap, reUse),
+    faceZonePointMap_(faceZonePointMap, reUse),
+    faceZoneFaceMap_(faceZoneFaceMap, reUse),
+    cellZoneMap_(cellZoneMap, reUse),
+    preMotionPoints_(preMotionPoints, reUse),
+    oldPatchSizes_(oldPatchStarts.size()),
+    oldPatchStarts_(oldPatchStarts, reUse),
+    oldPatchNMeshPoints_(oldPatchNMeshPoints, reUse)
 {
     // Calculate old patch sizes
     for (label patchI = 0; patchI < oldPatchStarts_.size() - 1; patchI++)

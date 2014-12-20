@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -64,21 +64,23 @@ void wedgePolyPatch::initTransforms()
     if
     (
         mag(centreNormal_.x() + centreNormal_.y() + centreNormal_.z())
-      < (1 - SMALL)
+        < (1 - SMALL)
     )
     {
         FatalErrorIn
         (
             "wedgePolyPatch::wedgePolyPatch(const polyPatch&, "
             "const fvBoundaryMesh&)"
-        )   << "wedge does not align with a coordinate plane"
+        )   << "wedge does not align with a coordinate plane by "
+            << 1
+             - mag(centreNormal_.x() + centreNormal_.y() + centreNormal_.z())
             << exit(FatalError);
     }
 
     axis_ = centreNormal_ ^ n;
     axis_ /= mag(axis_);
 
-    faceT_ = transformationTensor(centreNormal_, n);
+    faceT_ = rotationTensor(centreNormal_, n);
     cellT_ = faceT_ & faceT_;
 }
 

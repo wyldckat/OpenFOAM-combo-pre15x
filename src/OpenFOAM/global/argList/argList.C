@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,7 +65,7 @@ argList::initValidTables::initValidTables()
 argList::initValidTables dummyInitValidTables;
 
 
-int argList::findArg(const string& arg)
+int argList::findArg(const string& arg) const
 {
     int argi = 1;
     for
@@ -87,15 +87,37 @@ int argList::findArg(const string& arg)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-argList::argList(int& argc, char**& argv)
+argList::argList(int& argc, char**& argv, bool checkArgs, bool checkOpts)
 :
     args_(argc),
     options_(argc),
     parRun_(false)
 {
-    wordList execCmpts = fileName(argv[0]).components();
-    executable_ = execCmpts[execCmpts.size()-1];
+    // Check if this run is a parallel run by searching for any parallel option
+    // If found call runPar (might filter argv)
 
+    for (int argi=0; argi<argc; argi++)
+    {
+        if (argv[argi][0] == '-')
+        {
+            const char *optionName = &argv[argi][1];
+
+            if (validParOptions.found(optionName))
+            {
+                parRunControl_.runPar(argc, argv);
+                break;
+            }
+        }
+    }    
+
+
+    // Get executable name
+    {
+        wordList execCmpts = fileName(argv[0]).components();
+        executable_ = execCmpts[execCmpts.size()-1];
+    }
+
+    // Check arguments and options
     int nArgs = 0;
 
     string argListString;
@@ -153,22 +175,6 @@ argList::argList(int& argc, char**& argv)
     // Case is a single processor run unless it is running parallel
     int nProcs = 1;
 
-    // Check if this run is a parallel run buy searching for any parallel option
-    // If found call runPar
-    for
-    (
-        HashTable<string>::iterator iter = options_.begin();
-        iter != options_.end();
-        ++iter
-    )
-    {
-        if (validParOptions.found(iter.key()))
-        {
-            parRunControl_.runPar(argc, argv);
-            break;
-        }
-    }
-
     string dateString = clock::date();
     string timeString = clock::clockTime();
     fileName currentDir = cwd();
@@ -188,7 +194,7 @@ argList::argList(int& argc, char**& argv)
     jobInfo.add("PPID", ppid());
     jobInfo.add("PGID", pgid());
 
-    if (!check())
+    if (!check(checkArgs, checkOpts))
     {
         FatalError.exit();
     }
@@ -216,6 +222,14 @@ argList::argList(int& argc, char**& argv)
                     rootPath_/globalCase_/"system/decomposeParDict"
                 );
 
+                if (!decompostionDictStream.good())
+                {
+                    FatalError
+                        << "Cannot read "
+                        << decompostionDictStream.name()
+                        << exit(FatalError);
+                }
+
                 dictionary decompositionDict(decompostionDictStream);
 
                 Switch distributed(false);
@@ -240,8 +254,38 @@ argList::argList(int& argc, char**& argv)
                     }
                 }
 
-                if (!distributed)
+
+                label dictNProcs
+                (
+                    readLabel
+                    (
+                        decompositionDict.lookup("numberOfSubdomains")
+                    )
+                );
+
+                // Check number of processors. We have nProcs(number of
+                // actual processes), dictNProcs(wanted number of processes read
+                // from decompositionDict) and nProcDirs(number of processor
+                // directories - n/a when running distributed)
+                //
+                // - normal running : nProcs = dictNProcs = nProcDirs
+                // - decomposition to more processors : nProcs = dictNProcs
+                // - decomposition to less processors : nProcs = nProcDirs
+
+                if (dictNProcs > Pstream::nProcs())
                 {
+                    FatalError
+                        << decompostionDictStream.name()
+                        << " specifies " << dictNProcs
+                        << " processors but job was started with "
+                        << Pstream::nProcs() << " processors."
+                        << exit(FatalError);
+                }
+
+                if (!distributed && dictNProcs < Pstream::nProcs())
+                {
+                    // Possibly going to less processors. Check if all procDirs
+                    // are there.
                     label nProcDirs = 0;
                     while 
                     (
@@ -448,20 +492,21 @@ void argList::printUsage() const
 }
 
 
-bool argList::check() const
+bool argList::check(bool checkArgs, bool checkOpts) const
 {
+    bool ok = true;
+
     if (Pstream::master())
     {
-        bool ok = true;
-
-        if (args_.size() - 1 != validArgs.size())
+        if (checkArgs && args_.size() - 1 != validArgs.size())
         {
             FatalError
                 << "Wrong number of arguments, expected " << validArgs.size()
                 << " found " << args_.size() - 1 << endl;
             ok = false;
         }
-        else
+
+        if (checkOpts)
         {
             forAllConstIter(HashTable<string>, options_, iter)
             {
@@ -483,13 +528,9 @@ bool argList::check() const
             Info<< endl;
             printUsage();
         }
+    }
 
-        return ok;
-    }
-    else
-    {
-        return true;
-    }
+    return ok;
 }
 
 
@@ -507,8 +548,10 @@ bool argList::checkRootCase() const
             return false;
         }
 
-        if (!dir(path()))
+        if (!dir(path()) && Pstream::master())
         {
+            // Allow slaves on non-existing processor directories. Created
+            // later.
             FatalError
                 << executable_
                 << ": Cannot open case directory " << path()

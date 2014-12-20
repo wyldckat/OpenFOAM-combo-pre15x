@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,13 +50,19 @@ defineTemplateRunTimeSelectionTable
 
 defineTemplateRunTimeSelectionTable
 (
-    divScheme<tensor>,
+    divScheme<sphericalTensor>,
     Istream
 );
 
 defineTemplateRunTimeSelectionTable
 (
-    divScheme<sphericalTensor>,
+    divScheme<symmTensor>,
+    Istream
+);
+
+defineTemplateRunTimeSelectionTable
+(
+    divScheme<tensor>,
     Istream
 );
 

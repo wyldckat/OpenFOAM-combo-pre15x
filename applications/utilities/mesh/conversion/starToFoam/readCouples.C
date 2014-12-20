@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,6 +85,7 @@ void starMesh::readCouples()
     {
         // read couples
         couples_.setSize(nCouples);
+        label couplei = 0;
 
         // A mesh with couples cannot be a shape mesh
         isShapeMesh_ = false;
@@ -162,9 +163,10 @@ void starMesh::readCouples()
                         [cellShapes_[slaveCell].model().index()]
                         [rotZeroSlaveFace];
 
-                // hook the couple
-                couples_.hook
+                // Set the couple
+                couples_.set
                 (
+                    couplei++,
                     new coupledFacePair
                     (
                         matchLabel,

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,56 +22,58 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Direct solver for diagonal lduMatrices.
-
 \*---------------------------------------------------------------------------*/
 
 #include "diagonalSolver.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
+    defineTypeNameAndDebug(diagonalSolver, 0);
+}
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-defineTypeNameAndDebug(diagonalSolver, 0);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-//- Construct from matrix
-diagonalSolver::diagonalSolver
+Foam::diagonalSolver::diagonalSolver
 (
     const word& fieldName,
-    scalarField& psi,
     const lduMatrix& matrix,
-    const scalarField& source,
-    const FieldField<Field, scalar>& coupleBouCoeffs,
-    const FieldField<Field, scalar>& coupleIntCoeffs,
-    const lduCoupledInterfacePtrsList& interfaces,
-    const direction cmpt
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const FieldField<Field, scalar>& interfaceIntCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
+    Istream& solverData
 )
 :
     lduMatrix::solver
     (
         fieldName,
-        psi,
         matrix,
-        source,
-        coupleBouCoeffs,
-        coupleIntCoeffs,
+        interfaceBouCoeffs,
+        interfaceIntCoeffs,
         interfaces,
-        cmpt
+        solverData
     )
 {}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-lduMatrix::solverPerformance diagonalSolver::solve()
+void Foam::diagonalSolver::read(Istream& solverData)
 {
-    psi_ = source_/matrix_.diag();
+    word solverName(solverData);
+}
+
+
+Foam::lduMatrix::solverPerformance Foam::diagonalSolver::solve
+(
+    scalarField& psi,
+    const scalarField& source,
+    const direction cmpt
+) const
+{
+    psi = source/matrix_.diag();
 
     return lduMatrix::solverPerformance
     (
@@ -85,9 +87,5 @@ lduMatrix::solverPerformance diagonalSolver::solve()
     );
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

@@ -115,3 +115,15 @@
         phi/linearInterpolate(rho),
         phi.boundaryField().types()
     );
+
+    rhoU.correctBoundaryConditions();
+
+    multivariateSurfaceInterpolationScheme<scalar>::fieldTable fields;
+
+    volScalarField magRhoU = mag(rhoU);
+    volScalarField H("H", (rhoE + p)/rho);
+
+    fields.add(rho);
+    fields.add(magRhoU);
+    fields.add(H);
+

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ Class
     patchDataWave
 
 Description
-    Takes a set of patches to start meshWave from. See patchWave.
+    Takes a set of patches to start MeshWave from. See patchWave.
     Like patchWave holds after
     construction distance at cells and distance at patches but also
     additional transported data. Is e.g. used in y+ calculation.
@@ -51,7 +51,7 @@ namespace Foam
 // Class forward declarations
 class polyMesh;
 class wallPoint;
-template<class Type> class meshWave;
+template<class Type> class MeshWave;
 
 /*---------------------------------------------------------------------------*\
                            Class patchDataWave Declaration
@@ -83,7 +83,7 @@ private:
         // After construction:
         //
 
-        //- Number of cells/faces unset after meshWave has finished
+        //- Number of cells/faces unset after MeshWave has finished
         label nUnset_;
 
         //- Distance at cell centres
@@ -109,8 +109,8 @@ private:
             List<TransferType>&
         ) const;
 
-        //- Copy meshWave values into *this
-        label getValues(const meshWave<TransferType>&);
+        //- Copy MeshWave values into *this
+        label getValues(const MeshWave<TransferType>&);
 
 
 public:

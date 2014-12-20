@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,25 +42,14 @@ const complex complex::one(1, 1);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from Istream
 complex::complex(Istream& is)
 {
-    // Read beginning of complex
-    is.readBegin("complex");
-
-    is >> re >> im;
-
-    // Read end of complex
-    is.readEnd("complex");
-
-    // Check state of Istream
-    is.check("complex::complex(Istream&)");
+    operator>>(is, *this);
 }
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// Return formated string as name for Complex
 word name(const complex& c)
 {
     std::ostringstream osBuffer;

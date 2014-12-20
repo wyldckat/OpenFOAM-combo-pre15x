@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,10 +61,6 @@ namespace Foam
 // Class forward declarations
 template<class Type> class octree;
 template<class Type> class treeLeaf;
-
-// * * * * * * Forward declaration of template friend functions  * * * * * * //
-
-//template<class Type> Istream& operator>>(Istream&, octreeLine<Type>&);
 
 
 /*---------------------------------------------------------------------------*\

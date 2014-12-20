@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -186,85 +186,33 @@ void fvMesh::makeCf() const
 }
 
 
-void fvMesh::makePhi() const
-{
-    if (debug)
-    {
-        Info<< "void fvMesh::makePhi() : "
-            << "reading old time flux field if present and creating "
-            << "zero current time flux field"
-            << endl;
-    }
-
-    // It is an error to attempt to recalculate
-    // if the pointer is already set
-    if (phiPtr_)
-    {
-        FatalErrorIn("fvMesh::makePhi()")
-            << "flux field already exists"
-            << abort(FatalError);
-    }
-
-    // Reading old time mesh motion flux if it exists and 
-    // creating zero current time mesh motion flux
-
-    scalar t0 = this->time().value() - this->time().deltaT().value();
-
-    IOobject meshPhiHeader
-    (
-        "meshPhi",
-        this->time().timeName(t0),
-        *this,
-        IOobject::NO_READ
-    );
-
-    if (meshPhiHeader.headerOk())
-    {
-        phiPtr_ = new surfaceScalarField
-        (
-            IOobject
-            (
-                "meshPhi",
-                this->time().timeName(t0),
-                *this,
-                IOobject::MUST_READ,
-                IOobject::AUTO_WRITE
-            ),
-            *this
-        );
-
-        phiPtr_->oldTime();
-
-        (*phiPtr_) = dimensionedScalar("0", dimVolume/dimTime, 0.0);
-    }
-    else
-    {
-        phiPtr_ = new surfaceScalarField
-        (
-            IOobject
-            (
-                "meshPhi",
-                this->time().timeName(),
-                *this,
-                IOobject::NO_READ,
-                IOobject::AUTO_WRITE
-            ),
-            *this,
-            dimensionedScalar("0", dimVolume/dimTime, 0.0)
-        );
-    }
-}
-
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-const scalarField& fvMesh::V() const
+const volScalarField::DimensionedInternalField& fvMesh::V() const
 {
-    return cellVolumes();
+    if (!VPtr_)
+    {
+        VPtr_ = new slicedVolScalarField::DimensionedInternalField
+        (
+            IOobject
+            (
+                "V",
+                time().timeName(),
+                *this,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            *this,
+            dimVolume,
+            cellVolumes()
+        );
+    }
+
+    return *static_cast<slicedVolScalarField::DimensionedInternalField*>(VPtr_);
 }
 
 
-const scalarField& fvMesh::V0() const
+const volScalarField::DimensionedInternalField& fvMesh::V0() const
 {
     if (!V0Ptr_)
     {
@@ -277,7 +225,7 @@ const scalarField& fvMesh::V0() const
 }
 
 
-scalarField& fvMesh::setV0()
+volScalarField::DimensionedInternalField& fvMesh::setV0()
 {
     if (!V0Ptr_)
     {
@@ -290,11 +238,11 @@ scalarField& fvMesh::setV0()
 }
 
 
-const scalarField& fvMesh::V00() const
+const volScalarField::DimensionedInternalField& fvMesh::V00() const
 {
     if (!V00Ptr_)
     {
-        V00Ptr_ = new scalarIOField
+        V00Ptr_ = new DimensionedField<scalar, volMesh>
         (
             IOobject
             (
@@ -307,6 +255,7 @@ const scalarField& fvMesh::V00() const
             V0()
         );
 
+        // If V00 is used then V0 should be stored for restart
         V0Ptr_->writeOpt() = IOobject::AUTO_WRITE;
     }
 
@@ -362,7 +311,9 @@ const surfaceScalarField& fvMesh::phi() const
 {
     if (!phiPtr_)
     {
-        makePhi();
+        FatalErrorIn("fvMesh::phi()")
+            << "mesh flux field does not exists, is the mesh actually moving?"
+            << exit(FatalError);
     }
 
     // Set zero current time 
@@ -380,7 +331,9 @@ surfaceScalarField& fvMesh::setPhi()
 {
     if (!phiPtr_)
     {
-        makePhi();
+        FatalErrorIn("fvMesh::setPhi()")
+            << "mesh flux field does not exists, is the mesh actually moving?"
+            << exit(FatalError);
     }
 
     return *phiPtr_;

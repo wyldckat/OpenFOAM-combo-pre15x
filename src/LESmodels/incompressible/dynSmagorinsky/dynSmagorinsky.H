@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -93,8 +93,8 @@ class dynSmagorinsky
     // Private Member Functions
 
         //- Calculate coefficients cD, cI from filtering velocity field
-        dimensionedScalar cD(const volTensorField& D) const;
-        dimensionedScalar cI(const volTensorField& D) const;
+        dimensionedScalar cD(const volSymmTensorField& D) const;
+        dimensionedScalar cI(const volSymmTensorField& D) const;
 
         // Disallow default bitwise copy construct and assignment
         dynSmagorinsky(const dynSmagorinsky&);

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,7 +56,8 @@ void Foam::vtk<Type>::writeGeometry
     {
         const point& pt = points[pointI];
 
-        os << pt.x() << ' ' << pt.y() << ' ' << pt.z() << nl;
+        os  << float(pt.x()) << ' ' << float(pt.y()) << ' ' << float(pt.z())
+            << nl;
     }
     os  << endl;
 
@@ -117,7 +118,7 @@ void Foam::vtk<Type>::writeData
 
     forAll(values, elemI)
     {
-        os << values[elemI];
+        os << float(values[elemI]);
 
         if (elemI > 0 && (elemI%10) == 0)
         {
@@ -162,7 +163,7 @@ void Foam::vtk<Type>::writeData
     {
         const vector& v = values[elemI];
 
-        os << v[0] << ' ' << v[1] << ' ' << v[2] << nl;
+        os << float(v[0]) << ' ' << float(v[1]) << ' ' << float(v[2]) << nl;
     }
 }
 
@@ -197,11 +198,10 @@ void Foam::vtk<Type>::writeData
     {
         const tensor& v = values[elemI];
 
-        os  << v;
-
-        os  << v[0] << ' ' << v[1] << ' ' << v[2]
-            << v[3] << ' ' << v[4] << ' ' << v[5]
-            << v[6] << ' ' << v[7] << ' ' << v[8] << nl;
+        os  << float(v[0]) << ' ' << float(v[1]) << ' ' << float(v[2])
+            << float(v[3]) << ' ' << float(v[4]) << ' ' << float(v[5])
+            << float(v[6]) << ' ' << float(v[7]) << ' ' << float(v[8])
+            << nl;
     }
 }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -143,6 +143,9 @@ public:
 
             //- Raw, low-level get character function.
             inline ISstream& get(char&);
+
+            //- Raw, low-level getline into a string function.
+            inline ISstream& getLine(string&);
 
             //- Raw, low-level putback character function.
             inline ISstream& putback(const char&);

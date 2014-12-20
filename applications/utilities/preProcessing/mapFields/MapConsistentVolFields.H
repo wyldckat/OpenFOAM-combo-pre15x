@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -94,7 +94,12 @@ void MapConsistentVolFields
             );
 
             // Interpolate field
-            meshToMeshInterp.interpolate(fieldTarget, fieldSource);
+            meshToMeshInterp.interpolate
+            (
+                fieldTarget,
+                fieldSource,
+                meshToMesh::INTERPOLATE
+            );
 
             // Write field
             fieldTarget.write();
@@ -107,7 +112,11 @@ void MapConsistentVolFields
             GeometricField<Type, fvPatchField, volMesh> fieldTarget
             (
                 fieldTargetIOobject,
-                meshToMeshInterp.interpolate(fieldSource)
+                meshToMeshInterp.interpolate
+                (
+                    fieldSource,
+                    meshToMesh::INTERPOLATE
+                )
             );
 
             // Write field

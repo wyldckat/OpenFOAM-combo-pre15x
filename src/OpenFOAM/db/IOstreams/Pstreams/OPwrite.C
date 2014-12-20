@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -89,7 +89,7 @@ Ostream& OPstream::write(const char c)
 
 Ostream& OPstream::write(const char* s)
 {
-    word nonWhiteChars(s);
+    word nonWhiteChars(string::validate<word>(s));
 
     if (nonWhiteChars.size() == 0)
     {
@@ -165,8 +165,8 @@ Ostream& OPstream::write(const char* data, std::streamsize count)
     if (format() != BINARY)
     {
         FatalErrorIn("Ostream::write(const char*, std::streamsize)")
-            << "stream format not binary";
-        abort();
+            << "stream format not binary"
+            << Foam::abort(FatalError);
     }
 
     writeToBuffer(data, count);

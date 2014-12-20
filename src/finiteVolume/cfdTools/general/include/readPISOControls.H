@@ -1,4 +1,4 @@
-    const dictionary& piso = mesh.solutionDict().subDict("PISO");
+    dictionary piso = mesh.solutionDict().subDict("PISO");
 
     int nCorr(readInt(piso.lookup("nCorrectors")));
 

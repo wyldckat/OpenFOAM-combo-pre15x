@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,8 +29,8 @@ Description
     Various tools to aid synchronizing lists across coupled patches.
 
     Require 
-    - combineOperator (e.g. sumEqOp) that is defined for the type and
-      combineReduce(UList<T>, combineOperator) should be defined.
+    - combineOperator (e.g. sumEqOp - not sumOp!) that is defined for the
+      type and combineReduce(UList<T>, combineOperator) should be defined.
     - null value which gets overridden by any valid value.
     - transform function
 
@@ -46,8 +46,8 @@ SourceFiles
 #ifndef syncTools_H
 #define syncTools_H
 
-#include "Pstream.H"
 #include "UList.H"
+#include "Pstream.H"
 #include "tensorField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -101,7 +101,7 @@ public:
         //  values (not accurate for shared points)
         //  Applies rotation and optionally separation for parallel cyclics
         template <class T, class CombineOp>
-        static label syncPointList
+        static void syncPointList
         (
             const polyMesh&,
             UList<T>&,
@@ -110,11 +110,10 @@ public:
             const bool applySeparation
         );
 
-        //- Synchronize values on all mesh edges. Returns number of changed
-        //  values (not accurate for shared edges)
+        //- Synchronize values on all mesh edges.
         //  Applies rotation and optionally separation for parallel cyclics
         template <class T, class CombineOp>
-        static label syncEdgeList
+        static void syncEdgeList
         (
             const polyMesh&,
             UList<T>&,
@@ -123,16 +122,37 @@ public:
             const bool applySeparation
         );
 
-        //- Synchronize values on all mesh faces. Returns number of changed
-        //  values.
+        //- Synchronize values on boundary faces only.
         //  Optionally applies rotation tensor for non-parallel cyclics
         //  (but not separation!)
         template <class T, class CombineOp>
-        static label syncFaceList
+        static void syncBoundaryFaceList
         (
             const polyMesh&,
             UList<T>&,
             const CombineOp& bop,
+            const bool applySeparation
+        );
+
+        //- Synchronize values on all mesh faces.
+        //  Optionally applies rotation tensor for non-parallel cyclics
+        //  (but not separation!)
+        template <class T, class CombineOp>
+        static void syncFaceList
+        (
+            const polyMesh&,
+            UList<T>&,
+            const CombineOp& bop,
+            const bool applySeparation
+        );
+
+        //- Swap coupled face values.
+        //  Applies rotation and optionally separation for parallel cyclics
+        template <class T>
+        static void swapBoundaryFaceList
+        (
+            const polyMesh&,
+            UList<T>&,
             const bool applySeparation
         );
 

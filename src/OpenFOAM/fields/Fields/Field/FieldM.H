@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -212,6 +212,19 @@ void checkFields
     /* loop through fields performing f1 OP1 f2 OP2 f3 */                   \
     List_FOR_ALL(f1, i)                                                     \
         List_ELEM(f1, f1P, i) OP FUNC((s), List_ELEM(f2, f2P, i));          \
+    List_END_FOR_ALL                                                        \
+
+
+// member function : this f1 OP fUNC s, f2
+
+#define TFOR_ALL_F_OP_FUNC_S_S(typeF1, f1, OP, FUNC, typeS1, s1, typeS2, s2)\
+                                                                            \
+    /* set access to f1 at end of field */                                  \
+    List_ACCESS(typeF1, f1, f1P);                                           \
+                                                                            \
+    /* loop through fields performing f1 OP1 FUNC(s1, s2) */                \
+    List_FOR_ALL(f1, i)                                                     \
+        List_ELEM(f1, f1P, i) OP FUNC((s1), (s2));                          \
     List_END_FOR_ALL                                                        \
 
 

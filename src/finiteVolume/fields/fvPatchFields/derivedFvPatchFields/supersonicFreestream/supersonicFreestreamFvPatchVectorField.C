@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,22 +22,7 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Supersonic free stream condition.
-
-    Supersonic outflow is vented according to ???
-
-    Supersonic inflow is assumed to occur according to the Prandtl-Meyer
-    expansion process.
-
-    Subsonic outflow is zero-gradiented from inside the domain.
-
-    N.B. This boundary condition is ill-posed if the free-stream flow is
-         normal to the boundary.
-
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "supersonicFreestreamFvPatchVectorField.H"
 #include "addToRunTimeSelectionTable.H"
@@ -127,6 +112,18 @@ supersonicFreestreamFvPatchVectorField::supersonicFreestreamFvPatchVectorField
 
 supersonicFreestreamFvPatchVectorField::supersonicFreestreamFvPatchVectorField
 (
+    const supersonicFreestreamFvPatchVectorField& sfspvf
+)
+:
+    mixedFvPatchVectorField(sfspvf),
+    UInf_(sfspvf.UInf_),
+    pInf_(sfspvf.pInf_),
+    TInf_(sfspvf.TInf_)
+{}
+
+
+supersonicFreestreamFvPatchVectorField::supersonicFreestreamFvPatchVectorField
+(
     const supersonicFreestreamFvPatchVectorField& sfspvf,
     const vectorField& iF
 )
@@ -149,13 +146,13 @@ void supersonicFreestreamFvPatchVectorField::updateCoeffs()
     }
 
     const fvPatchField<scalar>& pT =
-        lookupPatchField<volScalarField, scalar>("T");
+        patch().lookupPatchField<volScalarField, scalar>("T");
 
     const fvPatchField<scalar>& pp =
-        lookupPatchField<volScalarField, scalar>("p");
+        patch().lookupPatchField<volScalarField, scalar>("p");
 
     const fvPatchField<scalar>& ppsi =
-        lookupPatchField<volScalarField, scalar>("psi");
+        patch().lookupPatchField<volScalarField, scalar>("psi");
 
     // Need R of the free-stream flow.  Assume R is independent of location
     // along patch so use face 0

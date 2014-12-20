@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -85,7 +85,7 @@ GenEddyVisc::GenEddyVisc
 
 // Evaluate B (from the definition of an eddy viscosity model) and return it.
 
-tmp<volTensorField> GenEddyVisc::B() const
+tmp<volSymmTensorField> GenEddyVisc::B() const
 {
     return ((2.0/3.0)*I)*k_ - 2.0*(muSgs_/rho())*dev(symm(fvc::grad(U())));
 }

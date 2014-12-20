@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,32 +22,25 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Toroidal coordinate system
-
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "toroidalCS.H"
 #include "addToRunTimeSelectionTable.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(toroidalCS, 0);
+namespace Foam
+{
+    defineTypeNameAndDebug(toroidalCS, 0);
 
-addToRunTimeSelectionTable(coordinateSystem, toroidalCS, dictionary);
+    addToRunTimeSelectionTable(coordinateSystem, toroidalCS, dictionary);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-toroidalCS::toroidalCS
+Foam::toroidalCS::toroidalCS
 (
     const word& name,
     const vector& origin,
@@ -56,13 +49,12 @@ toroidalCS::toroidalCS
     const scalar radius
 )
 :
-    cartesianCS(name, origin, axis, direction),
+    coordinateSystem(name, origin, axis, direction),
     radius_(radius)
 {}
 
 
-// Construct from origin and a coordinate rotation
-toroidalCS::toroidalCS
+Foam::toroidalCS::toroidalCS
 (
     const word& name,
     const vector& origin,
@@ -70,26 +62,25 @@ toroidalCS::toroidalCS
     const scalar radius
 )
 :
-    cartesianCS(name, origin, cr),
+    coordinateSystem(name, origin, cr),
     radius_(radius)
 {}
 
 
-toroidalCS::toroidalCS
+Foam::toroidalCS::toroidalCS
 (
     const word& name,
     const dictionary& dict
 )
 :
-    cartesianCS(name, dict),
+    coordinateSystem(name, dict),
     radius_(readScalar(dict.lookup("radius")))
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-//- Convert from local coordinate system to the global Cartesian system
-vector toroidalCS::toGlobal(const vector& localV) const
+Foam::vector Foam::toroidalCS::toGlobal(const vector& localV) const
 {
     // Notation: r = localV.x()
     scalar theta = localV.y()*mathematicalConstant::pi/180.0;
@@ -104,14 +95,14 @@ vector toroidalCS::toGlobal(const vector& localV) const
             << abort(FatalError);
     }
 
-    return cartesianCS::toGlobal
+    return coordinateSystem::toGlobal
     (
         vector(rprime*cos(theta), rprime*sin(theta), localV.x()*cos(phi))
     );
 }
 
 
-tmp<vectorField> toroidalCS::toGlobal
+Foam::tmp<Foam::vectorField> Foam::toroidalCS::toGlobal
 (
     const vectorField& localV
 ) const
@@ -131,12 +122,11 @@ tmp<vectorField> toroidalCS::toGlobal
     lc.replace(vector::Y, rprime*sin(theta));
     lc.replace(vector::Z, r*cos(phi));
 
-    return cartesianCS::toGlobal(lc);
+    return coordinateSystem::toGlobal(lc);
 }
 
 
-// Convert from global Cartesian coordinate system to the local system
-vector toroidalCS::toLocal(const vector& globalV) const
+Foam::vector Foam::toroidalCS::toLocal(const vector& globalV) const
 {
     notImplemented("vector toroidalCS::toLocal(const vector& globalV) const");
 
@@ -144,7 +134,7 @@ vector toroidalCS::toLocal(const vector& globalV) const
 }
 
 
-tmp<vectorField> toroidalCS::toLocal
+Foam::tmp<Foam::vectorField> Foam::toroidalCS::toLocal
 (
     const vectorField& globalV
 ) const
@@ -158,27 +148,29 @@ tmp<vectorField> toroidalCS::toLocal
 }
 
 
-void toroidalCS::write(Ostream& os) const
+void Foam::toroidalCS::write(Ostream& os) const
 {
     coordinateSystem::write(os);
     os << "radius: " << radius() << endl;
 }
 
 
-void toroidalCS::writeDict(Ostream& os) const
+void Foam::toroidalCS::writeDict(Ostream& os, bool subDict) const
 {
-    os  << nl << name() << nl << token::BEGIN_BLOCK << nl
-        << "    type " << type() << token::END_STATEMENT
-        << "    origin " << origin() << token::END_STATEMENT << nl
-        << "    axis " << axis() << token::END_STATEMENT << nl
-        << "    direction " << direction() << token::END_STATEMENT << nl
-        << "    radius " << radius() << token::END_STATEMENT << nl
-        << token::END_BLOCK << endl;
+    if (subDict)
+    {
+	os  << indent << name() << nl
+	    << indent << token::BEGIN_BLOCK << incrIndent << nl;
+    }
+
+    coordinateSystem::writeDict(os, false);
+    os.writeKeyword("radius") << radius() << token::END_STATEMENT << nl;
+   
+    if (subDict)
+    {
+	os << decrIndent << indent << token::END_BLOCK << endl;
+    }    
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,9 +54,11 @@ class GeometricField;
 
 typedef GeometricField<scalar, fvPatchField, surfaceMesh> surfaceScalarField;
 typedef GeometricField<vector, fvPatchField, surfaceMesh> surfaceVectorField;
-typedef GeometricField<tensor, fvPatchField, surfaceMesh> surfaceTensorField;
 typedef GeometricField<sphericalTensor, fvPatchField, surfaceMesh>
     surfaceSphericalTensorField;
+typedef GeometricField<symmTensor, fvPatchField, surfaceMesh>
+    surfaceSymmTensorField;
+typedef GeometricField<tensor, fvPatchField, surfaceMesh> surfaceTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

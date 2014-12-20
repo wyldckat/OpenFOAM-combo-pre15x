@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,7 +36,6 @@ Description
 #include "IFstream.H"
 #include "OFstream.H"
 #include "Random.H"
-#include "Probe.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,7 +48,6 @@ int main(int argc, char *argv[])
 #   include "readTransportProperties.H"
 #   include "createFields.H"
 #   include "createAverages.H"
-#   include "createProbes.H"
 #   include "initContinuityErrs.H"
 #   include "createGradP.H"
 
@@ -89,8 +87,10 @@ int main(int argc, char *argv[])
         for (int corr=0; corr<nCorr; corr++)
         {
             U = rUA*UEqn.H();
-            phi = (fvc::interpolate(U) & mesh.Sf()) 
+            phi = (fvc::interpolate(U) & mesh.Sf())
                 + fvc::ddtPhiCorr(rUA, U, phi);
+
+            adjustPhi(phi, U, p);
 
             for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
             {
@@ -100,7 +100,15 @@ int main(int argc, char *argv[])
                 );
 
                 pEqn.setReference(pRefCell, pRefValue);
-                pEqn.solve();
+
+                if (corr == nCorr-1 && nonOrth == nNonOrthCorr)
+                {
+                    pEqn.solve(mesh.solver(p.name() + "Final"));
+                }
+                else
+                {
+                    pEqn.solve(mesh.solver(p.name()));
+                }
 
                 if (nonOrth == nNonOrthCorr)
                 {
@@ -141,8 +149,6 @@ int main(int argc, char *argv[])
 #       include "writeNaveragingSteps.H"
 
 #       include "writeGradP.H"
-
-#       include "writeProbes.H"
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"

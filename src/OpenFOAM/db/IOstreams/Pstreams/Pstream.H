@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -216,6 +216,9 @@ public:
         //- Number of processors at which the sum algorithm changes from linear
         //  to tree
         static int nProcsSimpleSum;
+
+        //- Switch for scheduled vs non-scheduled transfer
+        static bool scheduledTransfer;
 
 
     // Constructors

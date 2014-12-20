@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -119,6 +119,27 @@ syringePressureFvPatchScalarField::syringePressureFvPatchScalarField
 {}
 
 
+syringePressureFvPatchScalarField::syringePressureFvPatchScalarField
+(
+    const syringePressureFvPatchScalarField& sppsf
+)
+:
+    fixedValueFvPatchScalarField(sppsf),
+    Ap_(sppsf.Ap_),
+    Sp_(sppsf.Sp_),
+    VsI_(sppsf.VsI_),
+    tas_(sppsf.tas_),
+    tae_(sppsf.tae_),
+    tds_(sppsf.tds_),
+    tde_(sppsf.tde_),
+    psI_(sppsf.psI_),
+    psi_(sppsf.psi_),
+    ams_(sppsf.ams_),
+    ams0_(sppsf.ams0_),
+    curTimeIndex_(-1)
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 scalar syringePressureFvPatchScalarField::Vs(const scalar t) const
@@ -183,7 +204,7 @@ void syringePressureFvPatchScalarField::updateCoeffs()
     );
 
     const fvPatchField<scalar>& phip =
-        patchField<surfaceScalarField, scalar>(phi);
+        patch().patchField<surfaceScalarField, scalar>(phi);
 
     if (phi.dimensions() == dimVelocity*dimArea)
     {

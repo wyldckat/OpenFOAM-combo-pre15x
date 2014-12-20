@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,8 @@ Namespace
     fvc
 
 Description
-    Calculate the mesh motion flux
+    Calculate the mesh motion flux and convert fluxes from absolute to relative
+    and back.
 
 SourceFiles
     fvcMeshPhi.C
@@ -52,24 +53,69 @@ namespace Foam
 
 namespace fvc
 {
-    template<class Type>
     tmp<surfaceScalarField> meshPhi
     (
-        const GeometricField<Type, fvPatchField, volMesh>&
+        const volVectorField& U
     );
 
-    template<class Type>
     tmp<surfaceScalarField> meshPhi
     (
-        const dimensionedScalar&,
-        const GeometricField<Type, fvPatchField, volMesh>&
+        const dimensionedScalar& rho,
+        const volVectorField& U
     );
 
-    template<class Type>
     tmp<surfaceScalarField> meshPhi
     (
-        const volScalarField&,
-        const GeometricField<Type, fvPatchField, volMesh>&
+        const volScalarField& rho,
+        const volVectorField& U
+    );
+
+
+    //- Make the given flux relative
+    void makeRelative
+    (
+        surfaceScalarField& phi,
+        const volVectorField& U
+    );
+
+    //- Make the given flux relative
+    void makeRelative
+    (
+        surfaceScalarField& phi,
+        const dimensionedScalar& rho,
+        const volVectorField& U
+    );
+
+    //- Make the given flux relative
+    void makeRelative
+    (
+        surfaceScalarField& phi,
+        const volScalarField& rho,
+        const volVectorField& U
+    );
+
+
+    //- Make the given flux absolute
+    void makeAbsolute
+    (
+        surfaceScalarField& phi,
+        const volVectorField& U
+    );
+
+    //- Make the given flux absolute
+    void makeAbsolute
+    (
+        surfaceScalarField& phi,
+        const dimensionedScalar& rho,
+        const volVectorField& U
+    );
+
+    //- Make the given flux absolute
+    void makeAbsolute
+    (
+        surfaceScalarField& phi,
+        const volScalarField& rho,
+        const volVectorField& U
     );
 }
 
@@ -77,12 +123,6 @@ namespace fvc
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#ifdef NoRepository
-#   include "fvcMeshPhi.C"
-#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

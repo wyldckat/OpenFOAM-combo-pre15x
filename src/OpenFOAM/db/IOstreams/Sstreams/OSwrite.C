@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -143,7 +143,7 @@ Ostream& OSstream::write(const char* buf, std::streamsize count)
     {
         FatalIOErrorIn("Ostream::write(const char*, std::streamsize)", *this)
             << "stream format not binary"
-            << abort(FatalError);
+            << abort(FatalIOError);
     }
 
     os_ << token::BEGIN_LIST;

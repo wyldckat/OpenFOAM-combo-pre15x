@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -151,13 +151,6 @@ public:
             virtual tmp<Field<Type> > patchNeighbourField
             (
                 const Field<Type>& iField
-            ) const;
-
-            //- Return neighbour colouring.
-            //  Needed for AMG solver agglomeration
-            virtual tmp<labelField> nbrColour
-            (
-                const labelField& iColour
             ) const;
 
             //- Return patchField of the values on the patch or on the

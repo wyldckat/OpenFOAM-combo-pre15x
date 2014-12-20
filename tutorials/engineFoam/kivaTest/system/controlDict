@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -26,13 +26,13 @@ applicationClass engineFoam;
 
 startFrom       startTime;
 
-startTime       -15;
+startTime       -180;
 
 stopAt          endTime;
 
-endTime         60;
+endTime         -15;
 
-deltaT          0.025;
+deltaT          0.25;
 
 writeControl    runTime;
 

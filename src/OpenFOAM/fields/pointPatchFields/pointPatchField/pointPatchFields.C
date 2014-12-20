@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "pointPatchFields.H"
@@ -35,6 +33,17 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
+typedef PointPatchField<pointPatchField, pointPatch, scalar>
+    basePointPatchScalarField;
+typedef PointPatchField<pointPatchField, pointPatch, vector>
+    basePointPatchVectorField;
+typedef PointPatchField<pointPatchField, pointPatch, sphericalTensor>
+    basePointPatchSphericalTensorField;
+typedef PointPatchField<pointPatchField, pointPatch, symmTensor>
+    basePointPatchSymmTensorField;
+typedef PointPatchField<pointPatchField, pointPatch, tensor>
+    basePointPatchTensorField;
+
 defineNamedTemplateTypeNameAndDebug(basePointPatchScalarField, 0);
 defineTemplateRunTimeSelectionTable(basePointPatchScalarField, PointPatch);
 defineTemplateRunTimeSelectionTable(basePointPatchScalarField, patchMapper);
@@ -44,6 +53,16 @@ defineNamedTemplateTypeNameAndDebug(basePointPatchVectorField, 0);
 defineTemplateRunTimeSelectionTable(basePointPatchVectorField, PointPatch);
 defineTemplateRunTimeSelectionTable(basePointPatchVectorField, patchMapper);
 defineTemplateRunTimeSelectionTable(basePointPatchVectorField, dictionary);
+
+defineNamedTemplateTypeNameAndDebug(basePointPatchSphericalTensorField, 0);
+defineTemplateRunTimeSelectionTable(basePointPatchSphericalTensorField, PointPatch);
+defineTemplateRunTimeSelectionTable(basePointPatchSphericalTensorField, patchMapper);
+defineTemplateRunTimeSelectionTable(basePointPatchSphericalTensorField, dictionary);
+
+defineNamedTemplateTypeNameAndDebug(basePointPatchSymmTensorField, 0);
+defineTemplateRunTimeSelectionTable(basePointPatchSymmTensorField, PointPatch);
+defineTemplateRunTimeSelectionTable(basePointPatchSymmTensorField, patchMapper);
+defineTemplateRunTimeSelectionTable(basePointPatchSymmTensorField, dictionary);
 
 defineNamedTemplateTypeNameAndDebug(basePointPatchTensorField, 0);
 defineTemplateRunTimeSelectionTable(basePointPatchTensorField, PointPatch);

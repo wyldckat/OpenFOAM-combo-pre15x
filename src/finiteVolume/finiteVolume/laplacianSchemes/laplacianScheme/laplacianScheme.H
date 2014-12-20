@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -136,6 +136,20 @@ public:
             );
         }
 
+        //- Construct from mesh, interpolation and snGradScheme schemes
+        laplacianScheme
+        (
+            const fvMesh& mesh,
+            const tmp<surfaceInterpolationScheme<scalar> >& igs,
+            const tmp<snGradScheme<Type> >& sngs
+        )
+        :
+            mesh_(mesh),
+            tinterpGammaScheme_(igs),
+            tinterpTensorGammaScheme_(new linear<tensor>(mesh)),
+            tsnGradScheme_(sngs)
+        {}
+
 
     // Selectors
 
@@ -239,8 +253,9 @@ laplacianScheme<Type>::addIstreamConstructorToTable<SS<Type> >                 \
                                                                                \
 makeFvLaplacianTypeScheme(SS, scalar)                                          \
 makeFvLaplacianTypeScheme(SS, vector)                                          \
+makeFvLaplacianTypeScheme(SS, sphericalTensor)                                 \
+makeFvLaplacianTypeScheme(SS, symmTensor)                                      \
 makeFvLaplacianTypeScheme(SS, tensor)                                          \
-makeFvLaplacianTypeScheme(SS, sphericalTensor)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

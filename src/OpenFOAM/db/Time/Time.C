@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -83,8 +83,8 @@ void Foam::Time::adjustDeltaT()
         label nStepsToNextWrite = label(timeToNextWrite/deltaT_ - SMALL) + 1;
         scalar newDeltaT = timeToNextWrite/nStepsToNextWrite;
 
-        // Control the increase or decrease of the time step to
-        // within a factor of 2.  
+        // Control the increase of the time step to within a factor of 2
+        // and the decrease within a factor of 5.
         if (newDeltaT >= deltaT_)
         {
             deltaT_ = min(newDeltaT, 2.0*deltaT_);
@@ -93,6 +93,98 @@ void Foam::Time::adjustDeltaT()
         {
             deltaT_ = max(newDeltaT, 0.2*deltaT_);
         }
+    }
+}
+
+
+void Foam::Time::setControls()
+{
+    // default is to resume calculation from "latestTime"
+    word startFrom("latestTime");
+    if (controlDict_.found("startFrom"))
+    {
+        controlDict_.lookup("startFrom") >> startFrom;
+    }
+
+    if (startFrom == "startTime")
+    {
+        startTime_ = readScalar(controlDict_.lookup("startTime"));
+    }
+    else
+    {
+        // Search directory for valid time directories
+        instantList Times = findTimes(path());
+
+        if (startFrom == "firstTime")
+        {
+            if (Times.size())
+            {
+                startTime_ = Times[0].value();
+            }
+        }
+        else if (startFrom == "latestTime")
+        {
+            if (Times.size())
+            {
+                startTime_ = Times[Times.size()-1].value();
+            }
+        }
+        else
+        {
+            WarningIn("Time::setControls()")
+                << "    expected startTime, firstTime or latestTime"
+                << " found '" << startFrom
+                << "' in dictionary " << controlDict_.name() << nl
+                << "    Setting time to " << startTime_ << endl;
+        }
+    }
+
+    setTime(startTime_, 0);
+
+    readDict();
+    deltaTSave_ = deltaT_;
+    deltaT0_ = deltaTSave_;
+
+    if (Pstream::parRun())
+    {
+        scalar sumStartTime = startTime_;
+        reduce(sumStartTime, sumOp<scalar>());
+        if
+        (
+            mag(Pstream::nProcs()*startTime_ - sumStartTime)
+          > Pstream::nProcs()*deltaT_/10.0
+        )
+        {
+            FatalErrorIn("Time::setControls()")
+                << "Start time is not the same for all processors" << nl
+                << "processor " << Pstream::myProcNo() << " has startTime "
+                << startTime_ << exit(FatalError); 
+        }
+    }
+
+    IOdictionary timeDict
+    (
+        IOobject
+        (
+            "time",
+            timeName(),
+            "uniform",
+            *this,
+            IOobject::READ_IF_PRESENT,
+            IOobject::NO_WRITE
+        )
+    );
+
+    if (timeDict.found("deltaT"))
+    {
+        deltaTSave_ = readScalar(timeDict.lookup("deltaT"));
+        deltaT0_ = deltaTSave_;
+    }
+
+    if (timeDict.found("index"))
+    {
+        timeDict.lookup("index") >> startTimeIndex_;
+        timeIndex_ = startTimeIndex_;
     }
 }
 
@@ -131,6 +223,7 @@ Foam::Time::Time
         )
     ),
 
+    startTimeIndex_(0),
     startTime_(0),
     endTime_(0),
 
@@ -143,98 +236,113 @@ Foam::Time::Time
     writeVersion_(IOstream::currentVersion),
     writeCompression_(IOstream::UNCOMPRESSED),
     graphFormat_("raw"),
-    runTimeModifiable_(true)
+    runTimeModifiable_(true),
+    functionObjects_(*this)
 {
-    if (controlDict_.found("startFrom"))
-    {
-        word startFrom(controlDict_.lookup("startFrom"));
+    setControls();
+}
 
-        if (startFrom == "startTime")
-        {
-            startTime_ = readScalar(controlDict_.lookup("startTime"));
-        }
-        else
-        {
-            // Search directory for valid time directories
-            instantList Times = findTimes(path());
 
-            if (Times.size() > 0)
-            {
-                if (startFrom == "firstTime")
-                {
-                    startTime_ = Times[0].value();
-                }
-                else if (startFrom == "latestTime")
-                {
-                    startTime_ = Times[Times.size()-1].value();
-                }
-                else
-                {
-                    WarningIn("Time::Time(const word&, const fileName&)")
-                        << "    expected startTime, firstTime or latestTime"
-                        << " found " << startFrom
-                        << " in dictionary " << controlDict_.name() << nl
-                        << "    Setting time to 0.0" << endl;
-                }
-            }
-        }
-    }
-    else
-    {
-        FatalIOError
-        (
-            "Time::Time(const word&, const fileName&)",
-            __FILE__,
-            __LINE__,
-            controlDict_.name(),
-            0
-        )   << "    expected startFrom in dictionary " << controlDict_.name() 
-            << exit(FatalIOError);
-    }
+Foam::Time::Time
+(
+    const dictionary& dict,
+    const fileName& rootPath,
+    const fileName& caseName,
+    const word& systemName,
+    const word& constantName
+)
+:
+    TimePaths
+    (
+        rootPath,
+        caseName,
+        systemName,
+        constantName
+    ),
 
-    if (Pstream::parRun())
-    {
-        scalar sumStartTime = startTime_;
-        reduce(sumStartTime, sumOp<scalar>());
+    objectRegistry(*this),
 
-        if (mag(startTime_ - sumStartTime/Pstream::nProcs()) > SMALL)
-        {
-            FatalErrorIn("Time::Time(const word&, const fileName&)")
-                << "Start time is not the same for all processors" << nl
-                << "processor " << Pstream::myProcNo() << " has startTime "
-                << startTime_ << exit(FatalError); 
-        }
-    }
-
-    setTime(startTime_, 0);
-
-    readDict();
-    deltaTSave_ = deltaT_;
-    deltaT0_ = deltaTSave_;
-
-    IOdictionary timeDict
+    controlDict_
     (
         IOobject
         (
-            "time",
-            timeName(),
+            controlDictName,
+            system(),
             *this,
-            IOobject::READ_IF_PRESENT,
-            IOobject::NO_WRITE
-        )
-    );
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+        dict
+    ),
 
-    if (timeDict.found("deltaT"))
-    {
-        deltaTSave_ = readScalar(timeDict.lookup("deltaT"));
-        deltaT0_ = deltaTSave_;
-    }
+    startTimeIndex_(0),
+    startTime_(0),
+    endTime_(0),
 
-    if (timeDict.found("index"))
-    {
-        timeDict.lookup("index") >> timeIndex_;
-    }
+    stopAt_(saEndTime),
+    writeControl_(wcTimeStep),
+    writeInterval_(GREAT),
+    purgeWrite_(0),
+
+    writeFormat_(IOstream::ASCII),
+    writeVersion_(IOstream::currentVersion),
+    writeCompression_(IOstream::UNCOMPRESSED),
+    graphFormat_("raw"),
+    runTimeModifiable_(true),
+    functionObjects_(*this)
+{
+    setControls();
 }
+
+
+Foam::Time::Time
+(
+    const fileName& rootPath,
+    const fileName& caseName,
+    const word& systemName,
+    const word& constantName
+)
+:
+    TimePaths
+    (
+        rootPath,
+        caseName,
+        systemName,
+        constantName
+    ),
+
+    objectRegistry(*this),
+
+    controlDict_
+    (
+        IOobject
+        (
+            controlDictName,
+            system(),
+            *this,
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        )
+    ),
+
+    startTimeIndex_(0),
+    startTime_(0),
+    endTime_(0),
+
+    stopAt_(saEndTime),
+    writeControl_(wcTimeStep),
+    writeInterval_(GREAT),
+    purgeWrite_(0),
+
+    writeFormat_(IOstream::ASCII),
+    writeVersion_(IOstream::currentVersion),
+    writeCompression_(IOstream::UNCOMPRESSED),
+    graphFormat_("raw"),
+    runTimeModifiable_(true),
+    functionObjects_(*this)
+{}
 
 
 // * * * * * * * * * * * * * * * * Destructor * * * * * * * * * * * * * * * * //
@@ -250,7 +358,7 @@ Foam::word Foam::Time::timeName(const scalar t)
     std::ostringstream osBuffer;
     osBuffer.setf(ios_base::fmtflags(format_), ios_base::floatfield);
     osBuffer.precision(precision_);
-    osBuffer << (1 + SMALL)*t;
+    osBuffer << t;
     return osBuffer.str();
 }
 
@@ -320,6 +428,12 @@ Foam::instant Foam::Time::findClosestTime(const scalar t) const
 }
 
 
+Foam::label Foam::Time::startTimeIndex() const
+{
+    return startTimeIndex_;
+}
+
+
 Foam::dimensionedScalar Foam::Time::startTime() const
 {
     return dimensionedScalar("startTime", dimTime, startTime_);
@@ -334,7 +448,14 @@ Foam::dimensionedScalar Foam::Time::endTime() const
 
 bool Foam::Time::run() const
 {
-    return (value() < (endTime_ - 0.5*deltaT_));
+    bool running = value() < (endTime_ - 0.5*deltaT_);
+
+    if (!running)
+    {
+        const_cast<functionObjectList&>(functionObjects_).execute();
+    }
+
+    return running;
 }
 
 
@@ -422,8 +543,6 @@ void Foam::Time::endSubCycle(const TimeState& ts)
 
 Foam::Time& Foam::Time::operator+=(const dimensionedScalar& deltaT)
 {
-    readModifiedObjects();
-
     return operator+=(deltaT.value());
 }
 
@@ -431,6 +550,15 @@ Foam::Time& Foam::Time::operator+=(const dimensionedScalar& deltaT)
 Foam::Time& Foam::Time::operator+=(const scalar deltaT)
 {
     readModifiedObjects();
+
+    if (timeIndex_ == startTimeIndex_)
+    {
+        functionObjects_.start();
+    }
+    else
+    {
+        functionObjects_.execute();
+    }
 
     setDeltaT(deltaT);
     operator++();
@@ -443,7 +571,14 @@ Foam::Time& Foam::Time::operator++()
 {
     readModifiedObjects();
 
-    //adjustDeltaT();
+    if (timeIndex_ == startTimeIndex_)
+    {
+        functionObjects_.start();
+    }
+    else
+    {
+        functionObjects_.execute();
+    }
 
     deltaT0_ = deltaTSave_;
     deltaTSave_ = deltaT_;
@@ -454,7 +589,6 @@ Foam::Time& Foam::Time::operator++()
     {
         setTime(0.0, timeIndex_);
     }
-
 
     switch(writeControl_)
     {

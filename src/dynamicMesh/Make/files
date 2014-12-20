@@ -31,9 +31,16 @@ polyTopoChange/polyTopoChanger/polyTopoChangerChangeMesh.C
 directPolyTopoChange/directPolyTopoChange.C
 directPolyTopoChange/directEdgeCollapser.C
 directPolyTopoChange/directFaceCollapser.C
-directPolyTopoChange/directCutAndRemove.C
+directPolyTopoChange/directHexRef8.C
+directPolyTopoChange/directMeshCutAndRemove.C
 directPolyTopoChange/directRemoveCells.C
 directPolyTopoChange/directRemoveFaces.C
+directPolyTopoChange/refinementData.C
+directPolyTopoChange/refinementHistory.C
+directPolyTopoChange/directRemovePoints.C
+directPolyTopoChange/directCombineFaces.C
+directPolyTopoChange/localPointRegion.C
+directPolyTopoChange/directDuplicatePoints.C
 
 slidingInterface/slidingInterface.C
 slidingInterface/slidingInterfaceProjectPoints.C
@@ -75,6 +82,8 @@ meshCut/wallLayerCells/wallNormalInfo/wallNormalInfo.C
 
 polyTopoChange/attachPolyTopoChanger/attachPolyTopoChanger.C
 polyTopoChange/repatchPolyTopoChanger/repatchPolyTopoChanger.C
+
+fvMeshDistribute/fvMeshDistribute.C
 
 motionSmoother/motionSmoother.C
 

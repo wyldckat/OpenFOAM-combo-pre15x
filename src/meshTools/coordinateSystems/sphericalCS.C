@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,34 +22,26 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Spherical polar coordinate system.
-
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "sphericalCS.H"
 #include "addToRunTimeSelectionTable.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(sphericalCS, 0);
+namespace Foam
+{
+    defineTypeNameAndDebug(sphericalCS, 0);
 
-addToRunTimeSelectionTable(coordinateSystem, sphericalCS, origAxisDir);
-addToRunTimeSelectionTable(coordinateSystem, sphericalCS, origRotation);
-addToRunTimeSelectionTable(coordinateSystem, sphericalCS, dictionary);
-
+    addToRunTimeSelectionTable(coordinateSystem, sphericalCS, origAxisDir);
+    addToRunTimeSelectionTable(coordinateSystem, sphericalCS, origRotation);
+    addToRunTimeSelectionTable(coordinateSystem, sphericalCS, dictionary);
+}
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-sphericalCS::sphericalCS
+Foam::sphericalCS::sphericalCS
 (
     const word& name,
     const vector& origin,
@@ -57,49 +49,47 @@ sphericalCS::sphericalCS
     const vector& direction
 )
 :
-    cartesianCS(name, origin, axis, direction)
+    coordinateSystem(name, origin, axis, direction)
 {}
 
 
-// Construct from origin and a coordinate rotation
-sphericalCS::sphericalCS
+Foam::sphericalCS::sphericalCS
 (
     const word& name,
     const vector& origin,
     const coordinateRotation& cr
 )
 :
-    cartesianCS(name, origin, cr)
+    coordinateSystem(name, origin, cr)
 {}
 
 
-sphericalCS::sphericalCS
+Foam::sphericalCS::sphericalCS
 (
     const word& name,
     const dictionary& dict
 )
 :
-    cartesianCS(name, dict)
+    coordinateSystem(name, dict)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Convert from local coordinate system to the global Cartesian system
-vector sphericalCS::toGlobal(const vector& localV) const
+Foam::vector Foam::sphericalCS::toGlobal(const vector& localV) const
 {
     scalar r = localV.x();
     scalar theta = localV.y()*mathematicalConstant::pi/180.0;
     scalar phi = localV.z()*mathematicalConstant::pi/180.0;
 
-    return cartesianCS::toGlobal
+    return coordinateSystem::toGlobal
     (
         vector(r*cos(theta)*sin(phi), r*sin(theta)*sin(phi), r*cos(phi))
     );
 }
 
 
-tmp<vectorField> sphericalCS::toGlobal
+Foam::tmp<Foam::vectorField> Foam::sphericalCS::toGlobal
 (
     const vectorField& localV
 ) const
@@ -117,14 +107,13 @@ tmp<vectorField> sphericalCS::toGlobal
     lc.replace(vector::Y, r*sin(theta)*sin(phi));
     lc.replace(vector::Z, r*cos(phi));
 
-    return cartesianCS::toGlobal(lc);
+    return coordinateSystem::toGlobal(lc);
 }
 
 
-// Convert from global Cartesian coordinate system to the local system
-vector sphericalCS::toLocal(const vector& globalV) const
+Foam::vector Foam::sphericalCS::toLocal(const vector& globalV) const
 {
-    const vector lc = cartesianCS::toLocal(globalV);
+    const vector lc = coordinateSystem::toLocal(globalV);
     const scalar r = mag(lc);
 
     return
@@ -137,12 +126,12 @@ vector sphericalCS::toLocal(const vector& globalV) const
 }
 
 
-tmp<vectorField> sphericalCS::toLocal
+Foam::tmp<Foam::vectorField> Foam::sphericalCS::toLocal
 (
     const vectorField& globalV
 ) const
 {
-    const vectorField lc = cartesianCS::toLocal(globalV);
+    const vectorField lc = coordinateSystem::toLocal(globalV);
 
     const scalarField r = mag(lc);
 
@@ -174,9 +163,5 @@ tmp<vectorField> sphericalCS::toLocal
     return tresult;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

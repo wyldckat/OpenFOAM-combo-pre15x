@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -77,6 +77,20 @@ tmp<Field<Type1> > transformFieldMask(const Field<Type2>&);
 
 template<class Type1, class Type2>
 tmp<Field<Type1> > transformFieldMask(const tmp<Field<Type2> >&);
+
+
+template<>
+tmp<Field<symmTensor> > transformFieldMask<symmTensor>
+(
+    const tensorField&
+);
+
+template<>
+tmp<Field<symmTensor> > transformFieldMask<symmTensor>
+(
+    const tmp<tensorField>&
+);
+
 
 template<>
 tmp<Field<sphericalTensor> > transformFieldMask<sphericalTensor>

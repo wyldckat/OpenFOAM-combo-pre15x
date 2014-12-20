@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -91,6 +91,10 @@ public:
 
         tmp<volScalarField> operator()(const tmp<volScalarField>&) const;
         tmp<volVectorField> operator()(const tmp<volVectorField>&) const;
+        tmp<volSymmTensorField> operator()
+        (
+            const tmp<volSymmTensorField>&
+        ) const;
         tmp<volTensorField> operator()(const tmp<volTensorField>&) const;
 };
 

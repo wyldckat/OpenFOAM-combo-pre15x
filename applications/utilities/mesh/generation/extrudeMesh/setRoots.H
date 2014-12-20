@@ -14,6 +14,8 @@
 
     argList::validOptions.insert("surface", "surface file");
 
+    argList::validOptions.insert("mergeFaces", "");
+
     argList args(argc, argv);
 
     if (!args.check())

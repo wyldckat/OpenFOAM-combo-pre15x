@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,7 +40,6 @@ SourceFiles
 
 #include "point.H"
 #include "label.H"
-#include "scalar.H"
 #include "tensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -105,12 +104,18 @@ public:
             inline bool valid() const;
 
             //- Check for identical geometrical data. Used for cyclics checking.
-            inline bool sameGeometry(const cellInfo&, const scalar) const;
+            inline bool sameGeometry
+            (
+                const polyMesh&,
+                const cellInfo&,
+                const scalar
+            ) const;
 
             //- Convert any absolute coordinates into relative to (patch)face
             //  centre
             inline void leaveDomain
             (
+                const polyMesh&,
                 const polyPatch& patch,
                 const label patchFaceI,
                 const point& faceCentre
@@ -119,18 +124,23 @@ public:
             //- Reverse of leaveDomain
             inline void enterDomain
             (
+                const polyMesh&,
                 const polyPatch& patch,
                 const label patchFaceI,
                 const point& faceCentre
             );
 
             //- Apply rotation matrix to any coordinates
-            inline void transform(const tensor& rotTensor);
+            inline void transform
+            (
+                const polyMesh&,
+                const tensor& rotTensor
+            );
 
             //- Influence of neighbouring face.
             inline bool updateCell
             (
-                const polyMesh& mesh,
+                const polyMesh&,
                 const label thisCellI,
                 const label neighbourFaceI,
                 const cellInfo& neighbourInfo,
@@ -140,7 +150,7 @@ public:
             //- Influence of neighbouring cell.
             inline bool updateFace
             (
-                const polyMesh& mesh,
+                const polyMesh&,
                 const label thisFaceI,
                 const label neighbourCellI,
                 const cellInfo& neighbourInfo,
@@ -150,7 +160,7 @@ public:
             //- Influence of different value on same face.
             inline bool updateFace
             (
-                const polyMesh& mesh,
+                const polyMesh&,
                 const label thisFaceI,
                 const cellInfo& neighbourInfo,
                 const scalar tol

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -74,6 +74,15 @@ nuSgsWallFunctionFvPatchScalarField::nuSgsWallFunctionFvPatchScalarField
 
 nuSgsWallFunctionFvPatchScalarField::nuSgsWallFunctionFvPatchScalarField
 (
+    const nuSgsWallFunctionFvPatchScalarField& tppsf
+)
+:
+    fixedValueFvPatchScalarField(tppsf)
+{}
+
+
+nuSgsWallFunctionFvPatchScalarField::nuSgsWallFunctionFvPatchScalarField
+(
     const nuSgsWallFunctionFvPatchScalarField& tppsf,
     const scalarField& iF
 )
@@ -98,10 +107,13 @@ void nuSgsWallFunctionFvPatchScalarField::evaluate()
 
     const scalarField& ry = patch().deltaCoeffs();
 
-    const fvPatchVectorField& U = lookupPatchField<volVectorField, vector>("U");
+    const fvPatchVectorField& U = 
+        patch().lookupPatchField<volVectorField, vector>("U");
+
     scalarField magUp = mag(U.patchInternalField() - U);
 
-    const scalarField& nuw = lookupPatchField<volScalarField, scalar>("nu");
+    const scalarField& nuw =
+        patch().lookupPatchField<volScalarField, scalar>("nu");
     scalarField& nuSgsw = *this;
 
 

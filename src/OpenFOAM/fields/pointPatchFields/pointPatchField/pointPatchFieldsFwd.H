@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,15 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    pointPatchField
-
-Description
-
 \*---------------------------------------------------------------------------*/
 
-#ifndef patchFieldsFwd_H
-#define patchFieldsFwd_H
+#ifndef pointPatchFieldsFwd_H
+#define pointPatchFieldsFwd_H
 
 #include "fieldTypes.H"
 
@@ -45,6 +40,8 @@ template<class Type> class pointPatchField;
 
 typedef pointPatchField<scalar> pointPatchScalarField;
 typedef pointPatchField<vector> pointPatchVectorField;
+typedef pointPatchField<sphericalTensor> pointPatchSphericalTensorField;
+typedef pointPatchField<symmTensor> pointPatchSymmTensorField;
 typedef pointPatchField<tensor> pointPatchTensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

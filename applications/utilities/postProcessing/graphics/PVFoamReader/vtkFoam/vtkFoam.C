@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,6 +72,15 @@ void Foam::vtkFoam::SetName
 Foam::string Foam::vtkFoam::padTimeString(const string& ts)
 {
     return ts + string("            ", max(label(12 - ts.size()), 0));
+}
+
+
+// Pad the patch name string in order to account for dynamic changes
+// in patch names during topological changes
+Foam::string Foam::vtkFoam::padPatchString(const string& ps)
+{
+    label n = max(label(50 - ps.size()), 0);
+    return ps + string("                                                  ", n);
 }
 
 
@@ -179,6 +188,8 @@ void Foam::vtkFoam::updateSelectedRegions()
 
     label nRegions = reader_->GetRegionSelection()->GetNumberOfArrays();
 
+    selectedRegions_.setSize(nRegions);
+
     // Read the selected patches and add to the region list
     for (int i=0; i<nRegions; i++)
     {
@@ -220,29 +231,147 @@ void Foam::vtkFoam::convertMesh()
 
 
     // Read the selected patches and add to the region list
+
+    polyBoundaryMeshEntries patchEntries
+    (
+        IOobject
+        (
+            "boundary",
+            dbPtr_->findInstance(polyMesh::meshSubDir, "boundary"),
+            polyMesh::meshSubDir,
+            *dbPtr_,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE,
+            false
+        )
+    );
+
     label regioni = 0;
-    forAll (mesh.boundaryMesh(), patchi)
+    label regioniLast = 0;
+
+    // Read in the number Outputs (patch regions) currently being used
+    label currNOutputs = reader_->GetNumberOfOutputs();
+
+    // Cycle through all the patches in the boundary file for the relevant
+    // time step
+    forAll(patchEntries, entryi)
     {
-        if (mesh.boundaryMesh()[patchi].size())
+        // Number of faces in the current patch (Used to detect dummy patches
+        // of size zero)
+        label nFaces(readLabel(patchEntries[entryi].dict().lookup("nFaces")));
+
+        // Check to see if the patch is currently a part of the displayed list
+        if
+        (
+            reader_->GetRegionSelection()->ArrayExists
+            (
+                padPatchString(patchEntries[entryi].keyword()).c_str()
+            )
+        )
+        {
+            if  (!nFaces)
+            {
+                // Remove patch if it is only a dummy patch in the current
+                // time step with zero faces
+                reader_->GetRegionSelection()->RemoveArrayByName
+                (
+                    padPatchString(patchEntries[entryi].keyword()).c_str()
+                );
+            }
+            else
+            {
+                // A patch already existent in the list and which
+                // continues to exist found 
+                regioni++;
+            }
+        }
+        else
+        {
+            // A new patch so far not yet included into the list has been found
+            if  (nFaces)
+            {
+                regioni++;
+
+                // Add a new entry to the list of regions
+                reader_->GetRegionSelection()->AddArray
+                (
+                    padPatchString(patchEntries[entryi].keyword()).c_str()
+                );
+
+                // AddArray automatically enables a new array... disable
+                // it manually
+                reader_->GetRegionSelection()->DisableArray
+                (
+                    padPatchString(patchEntries[entryi].keyword()).c_str()
+                );
+            }
+        }
+
+        // Avoid Initialization of the same Output twice
+        if (regioni != regioniLast)
+        {
+            // Only setup an Output if it has not been setup before
+            if(regioni >= currNOutputs)
+            {
+                vtkUnstructuredGrid* ugrid = vtkUnstructuredGrid::New();
+                reader_->SetNthOutput(regioni,ugrid);
+                ugrid->Delete();
+            }
+            // Initialize -> Delete memory used, and reset to zero state
+            reader_->GetOutput(regioni)->Initialize();
+            regioniLast = regioni;
+        }
+    }
+
+    // Initialize (reset to zero and free) any outputs which are not used
+    // anymore
+    if (regioni < currNOutputs)
+    {
+        for(label i = (regioni+1); i < currNOutputs;i++)
+        {
+            reader_->GetOutput(i)->Initialize();
+        }
+    }
+
+    selectedRegions_.setSize(regioni + 1);
+
+    regioni = 0;
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    forAll (patches, patchi)
+    {
+        if (patches[patchi].size())
         {
             regioni++;
-
-            vtkUnstructuredGrid *vtkMesh =
-                vtkUnstructuredGrid::SafeDownCast(reader_->GetOutput(regioni));
 
             if (reader_->GetRegionSelection()->GetArraySetting(regioni))
             {
                 selectedRegions_[regioni] = true;
-                addPatch(mesh.boundaryMesh()[patchi], vtkMesh);
+                addPatch
+                (
+                    patches[patchi],
+                    vtkUnstructuredGrid::SafeDownCast
+                    (
+                        reader_->GetOutput(regioni)
+                    )
+                );
             }
             else
             {
                 selectedRegions_[regioni] = false;
+
+                vtkUnstructuredGrid *vtkMesh =
+                    vtkUnstructuredGrid::SafeDownCast
+                    (
+                        reader_->GetOutput(regioni)
+                    );
+
                 vtkMesh->Initialize();
                 SetName
                 (
                     vtkMesh,
-                    ('(' + mesh.boundaryMesh()[patchi].name() + ')').c_str()
+                    ('(' + padPatchString(patches[patchi].name()) + ')').c_str()
                 );
             }
         }
@@ -307,7 +436,7 @@ Foam::vtkFoam::vtkFoam(const char* const FileName, vtkFoamReader* reader)
 
             reader_->GetRegionSelection()->AddArray
             (
-                patchEntries[entryi].keyword().c_str()
+                padPatchString(patchEntries[entryi].keyword()).c_str()
             );
 
             vtkUnstructuredGrid* ugrid = vtkUnstructuredGrid::New();
@@ -348,16 +477,30 @@ void Foam::vtkFoam::UpdateInformation()
 
     addFields<volScalarField>(reader_->GetVolFieldSelection(), objects);
     addFields<volVectorField>(reader_->GetVolFieldSelection(), objects);
+    addFields<volSphericalTensorField>(reader_->GetVolFieldSelection(), objects);
+    addFields<volSymmTensorField>(reader_->GetVolFieldSelection(), objects);
     addFields<volTensorField>(reader_->GetVolFieldSelection(), objects);
 
     addFields<pointScalarField>(reader_->GetPointFieldSelection(), objects);
     addFields<pointVectorField>(reader_->GetPointFieldSelection(), objects);
+    addFields<pointSphericalTensorField>(reader_->GetPointFieldSelection(), objects);
+    addFields<pointSymmTensorField>(reader_->GetPointFieldSelection(), objects);
     addFields<pointTensorField>(reader_->GetPointFieldSelection(), objects);
 }
 
 
 void Foam::vtkFoam::Update()
 {
+    if
+    (
+        !reader_->GetCacheMesh()
+     || reader_->GetTimeSelection()->GetArraySetting(0)
+    )
+    {
+        delete meshPtr_;
+        meshPtr_ = NULL;
+    }
+
     // Clear the current set of selected fields
 
     for (label i=0; i<reader_->GetNumberOfOutputs(); i++)
@@ -450,6 +593,14 @@ void Foam::vtkFoam::Update()
     (
         mesh, pInterp, objects, reader_->GetVolFieldSelection()
     );
+    convertVolFields<Foam::sphericalTensor>
+    (
+        mesh, pInterp, objects, reader_->GetVolFieldSelection()
+    );
+    convertVolFields<Foam::symmTensor>
+    (
+        mesh, pInterp, objects, reader_->GetVolFieldSelection()
+    );
     convertVolFields<Foam::tensor>
     (
         mesh, pInterp, objects, reader_->GetVolFieldSelection()
@@ -463,16 +614,18 @@ void Foam::vtkFoam::Update()
     (
         mesh, objects, reader_->GetPointFieldSelection()
     );
+    convertPointFields<Foam::sphericalTensor>
+    (
+        mesh, objects, reader_->GetPointFieldSelection()
+    );
+    convertPointFields<Foam::symmTensor>
+    (
+        mesh, objects, reader_->GetPointFieldSelection()
+    );
     convertPointFields<Foam::tensor>
     (
         mesh, objects, reader_->GetPointFieldSelection()
     );
-
-    if (!reader_->GetCacheMesh())
-    {
-        delete meshPtr_;
-        meshPtr_ = NULL;
-    }
 
     if (debug)
     {

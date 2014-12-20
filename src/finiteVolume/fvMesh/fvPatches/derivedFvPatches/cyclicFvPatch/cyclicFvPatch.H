@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ SourceFiles
 #define cyclicFvPatch_H
 
 #include "coupledFvPatch.H"
+#include "cyclicLduInterface.H"
 #include "cyclicPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,7 +51,8 @@ namespace Foam
 
 class cyclicFvPatch
 :
-    public coupledFvPatch
+    public coupledFvPatch,
+    public cyclicLduInterface
 {
     // Private data
 
@@ -86,8 +88,45 @@ public:
 
     // Member functions
 
-        //- Return delta (P to N) vectors across coupled patch
-        tmp<vectorField> delta() const;
+        // Access
+
+            //- Return face transformation tensor
+            const tensorField& forwardT() const
+            {
+                return coupledFvPatch::forwardT();
+            }
+
+            //- Return neighbour-cell transformation tensor
+            const tensorField& reverseT() const
+            {
+                return coupledFvPatch::reverseT();
+            }
+
+
+            //- Return delta (P to N) vectors across coupled patch
+            tmp<vectorField> delta() const;
+
+
+        // Interface transfer functions
+
+            //- Return the values of the given internal data adjacent to
+            //  the interface as a field
+            virtual tmp<labelField> interfaceInternalField
+            (
+                const unallocLabelList& internalData
+            ) const;
+
+            //- Transfer and return neighbour field
+            virtual tmp<labelField> transfer
+            (
+                const unallocLabelList& interfaceData
+            ) const;
+
+            //- Return neighbour field
+            virtual tmp<labelField> internalFieldTransfer
+            (
+                const unallocLabelList& internalData
+            ) const;
 };
 
 

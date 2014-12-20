@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,14 +60,15 @@ class interpolatedPatch
     // Private Member Functions
 
         //- Interpolate field onto faces
-        template <class T>
-        Field<T> doInterpolate
+        template <class Type>
+        tmp<Field<Type> > interpolate
         (
             const word& fieldName,
-            const fieldsCache<T>& cache,
+            const fieldsCache<Type>& cache,
             const volPointInterpolation& pInterp,
             const dictionary& interpolationSchemes
         ) const;
+
 
 public:
 
@@ -105,7 +106,7 @@ public:
         //- correct() implemented by constantPatch::correct()
 
         //- interpolate field to surface
-        virtual scalarField interpolate
+        virtual tmp<scalarField> interpolate
         (
             const word&,
             const fieldsCache<scalar>&,
@@ -114,7 +115,7 @@ public:
         ) const;
 
         //- interpolate field to surface
-        virtual vectorField interpolate
+        virtual tmp<vectorField> interpolate
         (
             const word&,
             const fieldsCache<vector>&,
@@ -123,7 +124,25 @@ public:
         ) const;
 
         //- interpolate field to surface
-        virtual tensorField interpolate
+        virtual tmp<sphericalTensorField> interpolate
+        (
+            const word&,
+            const fieldsCache<sphericalTensor>&,
+            const volPointInterpolation&,
+            const dictionary& interpolationSchemes
+        ) const;
+
+        //- interpolate field to surface
+        virtual tmp<symmTensorField> interpolate
+        (
+            const word&,
+            const fieldsCache<symmTensor>&,
+            const volPointInterpolation&,
+            const dictionary& interpolationSchemes
+        ) const;
+
+        //- interpolate field to surface
+        virtual tmp<tensorField> interpolate
         (
             const word&,
             const fieldsCache<tensor>&,

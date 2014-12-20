@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -98,7 +98,7 @@ public:
 
         //- Evaluate B. This is done on the fly : its not usually necessary,
         //  but will be if we want to compare with experiments or DNS
-        virtual tmp<volTensorField> B() const;
+        virtual tmp<volSymmTensorField> B() const;
 
         //- Return SGS kinetic energy
         virtual tmp<volScalarField> k() const

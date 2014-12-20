@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -89,17 +89,20 @@ bool Foam::adjustPhi
             }
         }
 
+        // Calculate the total flux in the domain, used for normalisation
+        scalar totalFlux = VSMALL + sum(mag(phi)).value();
+
         reduce(massIn, sumOp<scalar>());
         reduce(fixedMassOut, sumOp<scalar>());
         reduce(adjustableMassOut, sumOp<scalar>());
 
         scalar massCorr = 1.0;
 
-        if (mag(adjustableMassOut) > SMALL)
+        if (mag(adjustableMassOut)/totalFlux > SMALL)
         {
             massCorr = (massIn - fixedMassOut)/adjustableMassOut;
         }
-        else if(mag(fixedMassOut - massIn) > SMALL)
+        else if(mag(fixedMassOut - massIn)/totalFlux > SMALL)
         {
             FatalErrorIn
             (
@@ -107,7 +110,11 @@ bool Foam::adjustPhi
                 "const volScalarField& p"
             )   << "Continuity error cannot be removed by adjusting the"
                    " outflow.\nPlease check the velocity boundary conditions"
-                   " and/or run potentialFoam to initialise the outflow."
+                   " and/or run potentialFoam to initialise the outflow." << nl
+                << "Total flux              : " << totalFlux << nl
+                << "Specified mass inflow   : " << massIn << nl
+                << "Specified mass outflow  : " << fixedMassOut << nl
+                << "Adjustable mass outflow : " << adjustableMassOut << nl
                 << exit(FatalError);
         }
 
@@ -135,9 +142,9 @@ bool Foam::adjustPhi
             }
         }
 
-        return mag(massIn) < SMALL
-            && mag(fixedMassOut) < SMALL
-            && mag(adjustableMassOut) < SMALL;
+        return mag(massIn)/totalFlux < SMALL
+            && mag(fixedMassOut)/totalFlux < SMALL
+            && mag(adjustableMassOut)/totalFlux < SMALL;
     }
     else
     {

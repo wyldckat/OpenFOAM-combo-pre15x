@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ SourceFiles
 #define diagTensor_H
 
 #include "DiagTensor.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,11 +48,10 @@ namespace Foam
 
 typedef DiagTensor<scalar> diagTensor;
 
-//- Allow binary writing for arrays of diagTensors
-inline bool writeBinary(const diagTensor*)
-{
-    return true;
-}
+
+//- Specify data associated with diagTensor type is contiguous
+template<>
+inline bool contiguous<diagTensor>() {return true;}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ Type
     sphericalTensor
 
 Description
-    3D sphericalTensor obtained from generic Vector
+    SphericalTensor of scalars.
 
 SourceFiles
     sphericalTensor.C
@@ -37,7 +37,7 @@ SourceFiles
 #define sphericalTensor_H
 
 #include "SphericalTensor.H"
-#include "tensor.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,11 +48,16 @@ namespace Foam
 
 typedef SphericalTensor<scalar> sphericalTensor;
 
-//- Allow binary writing for arrays of sphericalTensors
-inline bool writeBinary(const sphericalTensor*)
-{
-    return true;
-}
+// Identity tensor
+static const sphericalTensor I(1);
+
+static const sphericalTensor oneThirdI(1.0/3.0);
+static const sphericalTensor twoThirdsI(2.0/3.0);
+
+
+//- Specify data associated with sphericalTensor type is contiguous
+template<>
+inline bool contiguous<sphericalTensor>() {return true;}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

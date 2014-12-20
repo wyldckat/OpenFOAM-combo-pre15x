@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,23 +44,24 @@ void Foam::dx<Type>::writeDXGeometry
 {
     // Write vertex coordinates
 
-    os  << "# The irregular positions" << endl
+    os  << "# The irregular positions" << nl
         << "object 1 class array type float rank 1 shape 3 items "
-        << points.size() << " data follows" << endl;
+        << points.size() << " data follows" << nl;
 
     forAll(points, pointI)
     {
         const point& pt = points[pointI];
 
-        os << pt.x() << ' ' << pt.y() << ' ' << pt.z() << endl;
+        os  << float(pt.x()) << ' ' << float(pt.y()) << ' ' << float(pt.z())
+            << nl;
     }
-    os  << endl;
+    os  << nl;
 
     // Write triangles
 
-    os  << "# The irregular connections (triangles)" << endl
+    os  << "# The irregular connections (triangles)" << nl
         << "object 2 class array type int rank 1 shape 3 items "
-        << faces.size() << " data follows" << endl;
+        << faces.size() << " data follows" << nl;
 
     forAll(faces, faceI)
     {
@@ -76,10 +77,10 @@ void Foam::dx<Type>::writeDXGeometry
                 << exit(FatalError);
         }
 
-        os << f[0] << ' ' << f[1] << ' ' << f[2] << endl;
+        os << f[0] << ' ' << f[1] << ' ' << f[2] << nl;
     }
-    os << "attribute \"element type\" string \"triangles\"" << endl
-       << "attribute \"ref\" string \"positions\"" << endl << endl;
+    os << "attribute \"element type\" string \"triangles\"" << nl
+       << "attribute \"ref\" string \"positions\"" << nl << nl;
 }
 
 
@@ -95,22 +96,22 @@ void Foam::dx<Type>::writeDXData
     // Write data
     os  << "object 3 class array type float rank 0 items "
         << values.size()
-        << " data follows" << endl;
+        << " data follows" << nl;
 
     forAll(values, elemI)
     {
-        os << values[elemI] << endl;
+        os << float(values[elemI]) << nl;
     }
 
     if (values.size() == points.size())
     {
-        os  << endl << "attribute \"dep\" string \"positions\""
-            << endl << endl;
+        os  << nl << "attribute \"dep\" string \"positions\""
+            << nl << nl;
     }
     else
     {
-        os  << endl << "attribute \"dep\" string \"connections\""
-            << endl << endl;
+        os  << nl << "attribute \"dep\" string \"connections\""
+            << nl << nl;
     }
 }
 
@@ -127,24 +128,24 @@ void Foam::dx<Type>::writeDXData
     // Write data
     os  << "object 3 class array type float rank 1 shape 3 items "
         << values.size()
-        << " data follows" << endl;
+        << " data follows" << nl;
 
     forAll(values, elemI)
     {
-        os  << values[elemI].x() << ' ' << values[elemI].y()
-            << ' ' << values[elemI].z()
-            << endl;
+        os  << float(values[elemI].x()) << ' '
+            << float(values[elemI].y()) << ' '
+            << float(values[elemI].z()) << nl;
     }
 
     if (values.size() == points.size())
     {
-        os  << endl << "attribute \"dep\" string \"positions\""
-            << endl << endl;
+        os  << nl << "attribute \"dep\" string \"positions\""
+            << nl << nl;
     }
     else
     {
-        os  << endl << "attribute \"dep\" string \"connections\""
-            << endl << endl;
+        os  << nl << "attribute \"dep\" string \"connections\""
+            << nl << nl;
     }
 }
 
@@ -161,27 +162,27 @@ void Foam::dx<Type>::writeDXData
     // Write data
     os  << "object 3 class array type float rank 2 shape 3 items "
         << values.size()
-        << " data follows" << endl;
+        << " data follows" << nl;
 
     forAll(values, elemI)
     {
         const tensor& t = values[elemI];
 
-        os  << t.xx() << ' ' << t.xy() << ' ' << t.xz()
-            << t.yx() << ' ' << t.yy() << ' ' << t.yz()
-            << t.zx() << ' ' << t.zy() << ' ' << t.zz()
-            << endl;
+        os  << float(t.xx()) << ' ' << float(t.xy()) << ' ' << float(t.xz())
+            << float(t.yx()) << ' ' << float(t.yy()) << ' ' << float(t.yz())
+            << float(t.zx()) << ' ' << float(t.zy()) << ' ' << float(t.zz())
+            << nl;
     }
 
     if (values.size() == points.size())
     {
-        os  << endl << "attribute \"dep\" string \"positions\""
-            << endl << endl;
+        os  << nl << "attribute \"dep\" string \"positions\""
+            << nl << nl;
     }
     else
     {
-        os  << endl << "attribute \"dep\" string \"connections\""
-            << endl << endl;
+        os  << nl << "attribute \"dep\" string \"connections\""
+            << nl << nl;
     }
 }
 
@@ -191,13 +192,13 @@ template<class Type>
 void Foam::dx<Type>::writeDXTrailer(Ostream& os) const
 {
     os  << "# the field, with three components: \"positions\","
-        << " \"connections\", and \"data\"" << endl
+        << " \"connections\", and \"data\"" << nl
         << "object \"irregular positions irregular "
         << "connections\" class field"
-        << endl
-        << "component \"positions\" value 1" << endl
-        << "component \"connections\" value 2" << endl
-        << "component \"data\" value 3" << endl;
+        << nl
+        << "component \"positions\" value 1" << nl
+        << "component \"connections\" value 2" << nl
+        << "component \"data\" value 3" << nl;
 }
 
 
@@ -251,7 +252,7 @@ void Foam::dx<Type>::write
 
     writeDXTrailer(dxFile);
 
-    dxFile << "end" << endl;
+    dxFile << "end" << nl;
 }
 
 

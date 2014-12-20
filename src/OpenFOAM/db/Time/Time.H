@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,6 +50,7 @@ SourceFiles
 #include "instantList.H"
 #include "NamedEnum.H"
 #include "typeInfo.H"
+#include "functionObjectList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -72,7 +73,6 @@ class Time
 
         //- The controlDict
         IOdictionary controlDict_;
-
 
 public:
 
@@ -108,6 +108,7 @@ protected:
 
     // Protected data
 
+        label startTimeIndex_;
         scalar startTime_;
         scalar endTime_;
 
@@ -131,6 +132,9 @@ protected:
         //- Adjust the time step so that writing occurs at the specified time
         void adjustDeltaT();
 
+        //- Set the controls from the current controlDict
+        void setControls();
+
         //- Read the control dictionary and set the write controls etc.
         virtual void readDict();
 
@@ -152,6 +156,9 @@ private:
         //- Is runtim modification of dictionaries allowed
         Switch runTimeModifiable_;
 
+        //- Function objects executed at start and on ++, +=
+        functionObjectList functionObjects_;
+
 
 public:
 
@@ -167,6 +174,25 @@ public:
         Time
         (
             const word& name,
+            const fileName& rootPath,
+            const fileName& caseName,
+            const word& systemName = "system",
+            const word& constantName = "constant"
+        );
+
+        //- Construct given dictionary, rootPath and casePath
+        Time
+        (
+            const dictionary& dict,
+            const fileName& rootPath,
+            const fileName& caseName,
+            const word& systemName = "system",
+            const word& constantName = "constant"
+        );
+
+        //- Construct given endTime, rootPath and casePath
+        Time
+        (
             const fileName& rootPath,
             const fileName& caseName,
             const word& systemName = "system",
@@ -268,15 +294,18 @@ public:
             instant findClosestTime(const scalar) const;
 
             //- Write using given format, version and compression
-            virtual bool write
+            virtual bool writeObject
             (
                 IOstream::streamFormat fmt,
                 IOstream::versionNumber ver,
                 IOstream::compressionType cmp
             ) const;
 
-            //- Write using pre-selected format, version and compression
-            bool write() const;
+            //- Write the objects now and continue the run
+            bool writeNow();
+
+            //- Write the objects now and end the run
+            bool writeAndEnd();
 
 
         // Access
@@ -289,6 +318,9 @@ public:
 
             //- Search a given directory for valid time directories
             static instantList findTimes(const fileName&);
+
+            //- Return start time index
+            virtual label startTimeIndex() const;
 
             //- Return start time
             virtual dimensionedScalar startTime() const;

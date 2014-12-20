@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -56,7 +56,7 @@ int main(int argc, char *argv[])
     for(label i=0;i<nSamples;i++)
     {
         scalar ps = p->sample();
-        label n = (label)((ps-xMin)*nIntervals/(xMax-xMin));
+        label n = label((ps-xMin)*nIntervals/(xMax-xMin));
         //Info << "p[" << i << "] = " << ps << ", n = " << n << endl;
         samples[n]++;
     }

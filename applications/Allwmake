@@ -1,4 +1,5 @@
 #!/bin/sh
+set -x
 
-(cd solvers ; ./Allwmake)
-(cd utilities ; ./Allwmake)
+(cd solvers ; wmake all)
+(cd utilities ; wmake all)

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -209,6 +209,9 @@ void processorPolyPatch::calcGeometry()
                     << 100*mag(magSf[facei] - nmagSf)/avSf
                     << "% -- possible face ordering problem." << endl
                     << "patch:" << name() << " mesh face:" << start()+facei
+                    << " face centre:" << faceCentres()[facei]
+                    << " my area:" << magSf[facei]
+                    << " neighbour area:" << nmagSf
                     << exit(FatalError);
             }
         }
@@ -237,10 +240,10 @@ void processorPolyPatch::movePoints(const pointField&)
 }
 
 
-void processorPolyPatch::initUpdateTopology()
+void processorPolyPatch::initUpdateMesh()
 {
     // For completeness
-    polyPatch::initUpdateTopology();
+    polyPatch::initUpdateMesh();
 
     deleteDemandDrivenData(neighbPointsPtr_);
     deleteDemandDrivenData(neighbEdgesPtr_);
@@ -348,12 +351,24 @@ void processorPolyPatch::updateMesh()
 
                 if (edgeI == -1)
                 {
-                    FatalErrorIn("processorPolyPatch::updateMesh()")
-                        << "Cannot find patch edge with vertices " << e
-                        << " on patch " << name() << nl
-                        << "Can only find edges "
-                        << IndirectList<edge>(edges(), pEdges)
-                        << " connected to first vertex" << abort(FatalError);
+                    if (debug)
+                    {
+                        WarningIn("processorPolyPatch::updateMesh()")
+                            << "Cannot find patch edge with vertices " << e
+                            << " coords:"
+                            << localPoints()[e[0]]<< localPoints()[e[1]]
+                            << " on patch " << name() << nl
+                            << "Can only find edges "
+                            << IndirectList<edge>(edges(), pEdges)()
+                            << " connected to first vertex" << nl
+                            << "Either your mesh is incorrect or this patch"
+                            << " was constructed from part of a cyclic patch."
+                            << nl
+                            << "Not calculating edge neighbour addressing."
+                            << endl;
+                    }
+                    deleteDemandDrivenData(neighbEdgesPtr_);
+                    break;
                 }
 
                 neighbEdges[edgeI] = nbrEdgeI;
@@ -589,7 +604,7 @@ bool processorPolyPatch::order
                     << " : "
                     << "Cannot find point on face " << pp[oldFaceI]
                     << " with vertices:"
-                    << IndirectList<point>(pp.points(), pp[oldFaceI])
+                    << IndirectList<point>(pp.points(), pp[oldFaceI])()
                     << " that matches point " << wantedAnchor
                     << " when matching the halves of processor patch " << name()
                     << "Continuing with incorrect face ordering from now on!"

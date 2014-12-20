@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -107,8 +105,9 @@ ZoneMesh<ZoneType>::ZoneMesh
 
         forAll(zones, zoneI)
         {
-            zones.hook
+            zones.set
             (
+                zoneI,
                 ZoneType::New
                 (
                     patchEntries[zoneI].keyword(),
@@ -136,7 +135,7 @@ ZoneMesh<ZoneType>::ZoneMesh
 }
 
 
-// Construct given size. Zones will be hooked later
+// Construct given size. Zones will be set later
 template<class ZoneType>
 ZoneMesh<ZoneType>::ZoneMesh
 (

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,14 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "patchWave.H"
 #include "polyMesh.H"
 #include "wallPoint.H"
-#include "meshWave.H"
+#include "MeshWave.H"
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -71,7 +69,7 @@ void Foam::patchWave::setChangedFaces
 }
 
 
-Foam::label Foam::patchWave::getValues(const meshWave<wallPoint>& waveInfo)
+Foam::label Foam::patchWave::getValues(const MeshWave<wallPoint>& waveInfo)
 {
     const List<wallPoint>& cellInfo = waveInfo.allCellInfo();
     const List<wallPoint>& faceInfo = waveInfo.allFaceInfo();
@@ -105,7 +103,7 @@ Foam::label Foam::patchWave::getValues(const meshWave<wallPoint>& waveInfo)
         // Allocate storage for patchDistance
         scalarField* patchDistPtr = new scalarField(patch.size());
 
-        patchDistance_.hook(patchDistPtr);
+        patchDistance_.set(patchI, patchDistPtr);
 
         scalarField& patchField = *patchDistPtr;
 
@@ -184,7 +182,7 @@ void Foam::patchWave::correct()
     // Do calculate wall distance by 'growing' from faces.
     //
 
-    meshWave<wallPoint> waveInfo
+    MeshWave<wallPoint> waveInfo
     (
         mesh(),
         changedFaces,

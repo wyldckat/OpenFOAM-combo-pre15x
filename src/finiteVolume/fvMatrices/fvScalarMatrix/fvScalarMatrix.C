@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,14 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-     Finite-Volume scalar matrix member functions and operators
-
 \*---------------------------------------------------------------------------*/
 
 #include "fvScalarMatrix.H"
 #include "zeroGradientFvPatchFields.H"
-#include "lduCoupledInterfacePtrsList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -64,6 +60,71 @@ void fvMatrix<scalar>::setComponentReference
 
 
 template<>
+autoPtr<fvMatrix<scalar>::fvSolver> fvMatrix<scalar>::solver
+(
+    Istream& solverControls
+)
+{
+    if (debug)
+    {
+        Info<< "fvMatrix<scalar>::solver(Istream& solverControls) : "
+               "solver for fvMatrix<scalar>"
+            << endl;
+    }
+
+    scalarField saveDiag = diag();
+    addBoundaryDiag(diag(), 0);
+
+    autoPtr<fvMatrix<scalar>::fvSolver> solverPtr
+    (
+        new fvMatrix<scalar>::fvSolver
+        (
+            *this,
+            lduMatrix::solver::New
+            (
+                psi_.name(),
+                *this,
+                boundaryCoeffs_,
+                internalCoeffs_,
+                psi_.boundaryField().interfaces(),
+                solverControls
+            )
+        )
+    );
+
+    diag() = saveDiag;
+
+    return solverPtr;
+}
+
+
+template<>
+lduMatrix::solverPerformance fvMatrix<scalar>::fvSolver::solve
+(
+    Istream& solverControls
+)
+{
+    scalarField saveDiag = fvMat_.diag();
+    fvMat_.addBoundaryDiag(fvMat_.diag(), 0);
+
+    scalarField totalSource = fvMat_.source();
+    fvMat_.addBoundarySource(totalSource, false);
+
+    solver_->read(solverControls);
+    lduMatrix::solverPerformance solverPerf = 
+        solver_->solve(fvMat_.psi().internalField(), totalSource);
+
+    solverPerf.print();
+
+    fvMat_.diag() = saveDiag;
+
+    fvMat_.psi().correctBoundaryConditions();
+
+    return solverPerf;
+}
+
+
+template<>
 lduMatrix::solverPerformance fvMatrix<scalar>::solve(Istream& solverControls)
 {
     if (debug)
@@ -77,28 +138,18 @@ lduMatrix::solverPerformance fvMatrix<scalar>::solve(Istream& solverControls)
     addBoundaryDiag(diag(), 0);
 
     scalarField totalSource = source_;
-    addBoundarySource(totalSource, 0);
-
-    lduCoupledInterfacePtrsList interfaces(psi_.boundaryField().size());
-
-    forAll (interfaces, patchI)
-    {
-        interfaces[patchI] = &psi_.boundaryField()[patchI];
-    }
+    addBoundarySource(totalSource, false);
 
     // Solver call
     lduMatrix::solverPerformance solverPerf = lduMatrix::solver::New
     (
         psi_.name(),
-        psi_.internalField(),
         *this,
-        totalSource,
         boundaryCoeffs_,
         internalCoeffs_,
-        interfaces,
-        0,                         // dummy solving component
+        psi_.boundaryField().interfaces(),
         solverControls
-    )->solve();
+    )->solve(psi_.internalField(), totalSource);
 
     solverPerf.print();
 
@@ -117,13 +168,6 @@ tmp<scalarField> fvMatrix<scalar>::residual() const
     scalarField boundaryDiag(psi_.size(), 0.0);
     addBoundaryDiag(boundaryDiag, 0);
 
-    lduCoupledInterfacePtrsList interfaces(psi_.boundaryField().size());
-
-    forAll (interfaces, patchI)
-    {
-        interfaces[patchI] = &psi_.boundaryField()[patchI];
-    }
-
     tmp<scalarField> tres
     (
         lduMatrix::residual
@@ -131,7 +175,7 @@ tmp<scalarField> fvMatrix<scalar>::residual() const
             psi_.internalField(),
             source_ - boundaryDiag*psi_.internalField(),
             boundaryCoeffs_,
-            interfaces,
+            psi_.boundaryField().interfaces(),
             0
         )
     );

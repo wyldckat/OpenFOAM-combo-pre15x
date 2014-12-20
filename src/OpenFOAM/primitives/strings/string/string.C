@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,21 +28,16 @@ License
 #include "debug.H"
 #include "OSspecific.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 /* * * * * * * * * * * * * * * Static Member Data  * * * * * * * * * * * * * */
 
-int string::debug(debug::debugSwitch("string", 0));
-const string string::null;
+int Foam::string::debug(debug::debugSwitch("string", 0));
+const Foam::string Foam::string::null;
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // Count and return the number of a given character in the string
-string::size_type string::count(const char c) const
+Foam::string::size_type Foam::string::count(const char c) const
 {
     register size_type cCount=0;
 
@@ -64,7 +59,7 @@ string::size_type string::count(const char c) const
 
 
 // Replace first occurence of sub-string oldStr with newStr
-string& string::replace
+Foam::string& Foam::string::replace
 (
     const string& oldStr,
     const string& newStr,
@@ -83,7 +78,7 @@ string& string::replace
 
 
 // Replace all occurences of sub-string oldStr with newStr
-string& string::replaceAll
+Foam::string& Foam::string::replaceAll
 (
     const string& oldStr,
     const string& newStr,
@@ -106,7 +101,7 @@ string& string::replaceAll
 
 
 // Expand all occurences of environment variables
-string& string::expand()
+Foam::string& Foam::string::expand()
 {
     // Expand $VARS
 
@@ -210,8 +205,77 @@ string& string::expand()
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Remove repeated characters returning true if string changed
+bool Foam::string::removeRepeated(const char character)
+{
+    bool changed = false;
 
-} // End namespace Foam
+    if (character && find(character) != npos)
+    {
+        register string::size_type nChar=0;
+        iterator iter2 = begin();
+
+        register char prev = 0;
+
+        for
+        (
+            string::const_iterator iter1 = iter2;
+            iter1 != end();
+            iter1++
+        )
+        {
+            register char c = *iter1;
+
+            if (prev == c && c == character)
+            {
+                changed = true;
+            }
+            else
+            {
+                *iter2 = prev = c;
+                ++iter2;
+                ++nChar;
+            }
+        }
+        resize(nChar);
+    }
+
+    return changed;
+}
+
+
+// Return string with repeated characters removed
+Foam::string Foam::string::removeRepeated(const char character) const
+{
+    string s(*this);
+    s.removeRepeated(character);
+    return s;
+}
+
+
+// Remove trailing character returning true if string changed
+bool Foam::string::removeTrailing(const char character)
+{
+    bool changed = false;
+
+    string::size_type nChar = size();
+    if (character && nChar > 1 && operator[](nChar-1) == character)
+    {
+        resize(nChar-1);
+        changed = true;
+    }
+    
+    return changed;
+}
+
+
+// Return string with trailing character removed
+Foam::string Foam::string::removeTrailing(const char character) const
+{
+    string s(*this);
+    s.removeTrailing(character);
+    return s;
+}
+ 
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,7 +65,7 @@ private:
         bool registered_;
 
         //- Is this object owned by the registry
-        bool registries_;
+        bool ownedByRegistry_;
 
         //- Time of last modification
         mutable time_t lastModified_;
@@ -122,16 +122,23 @@ public:
             void checkOut();
 
             //- Is this object owned by the registry
-            bool registries() const
-            {
-                return registries_;
-            }
+            inline bool ownedByRegistry() const;
 
             //- Transfer ownership of this object to it's registry
-            void transferToRegistry()
-            {
-                registries_ = true;
-            }
+            inline void store();
+
+            //- Transfer ownership of the given object pointer to it's registry
+            //  and return reference to object.
+            template<class Type>
+            inline static Type& store(Type* tPtr);
+
+            //- Transfer ownership of the given object pointer to it's registry
+            //  and return reference to object.
+            template<class Type>
+            inline static Type& store(autoPtr<Type>& atPtr);
+
+            //- Release ownership of this object from it's registry
+            inline void release();
 
 
         // Edit
@@ -156,6 +163,9 @@ public:
             //- Read object
             virtual bool read();
 
+            //- Return true if the object's file has been modified
+            virtual bool modified() const;
+
             //- Read object if modified
             virtual bool readIfModified();
 
@@ -167,7 +177,7 @@ public:
             virtual bool writeData(Ostream&) const = 0;
 
             //- Write using given format, version and compression
-            virtual bool write
+            virtual bool writeObject
             (
                 IOstream::streamFormat fmt,
                 IOstream::versionNumber ver,
@@ -175,7 +185,7 @@ public:
             ) const;
 
             //- Write using setting from DB
-            bool write() const;
+            virtual bool write() const;
 
 
     // Member operators
@@ -187,6 +197,10 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#   include "regIOobjectI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

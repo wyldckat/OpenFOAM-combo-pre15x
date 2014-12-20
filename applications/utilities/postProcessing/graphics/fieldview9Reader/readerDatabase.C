@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -267,8 +267,6 @@ void Foam::readerDatabase::loadMesh()
         IOobject::MUST_READ,
         IOobject::AUTO_WRITE
     );
-
-    meshPtr_->constructAndClear();
 
     if (setName_.size() != 0)
     {

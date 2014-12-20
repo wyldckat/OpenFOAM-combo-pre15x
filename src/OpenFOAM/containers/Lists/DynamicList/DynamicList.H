@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -114,12 +114,25 @@ public:
             //- Reset size of List.
             void setSize(const label);
 
+            //- Reset size of List and value for new elements.
+            void setSize(const label, const T&);
+
             //- Clear the list, i.e. set next free to zero.
             //  Allocated size does not change
             void clear();
 
             //- Shrink the List<T> to the number of elements used
             inline DynamicList<T, SizeInc, SizeMult, SizeDiv>& shrink();
+
+            //- Transfer the contents of the argument List into this List
+            //  and annull the argument list. Is same as List::transfer except
+            //  checks that you're not changing the underlying list to something
+            //  smaller than nextFree_.
+            void transfer(List<T>&);
+
+            //- Transfer the contents of the argument DynamicList into this
+            //  DynamicList and annull the argument list.
+            void transfer(DynamicList<T, SizeInc, SizeMult, SizeDiv>&);
 
 
     // Member Operators
@@ -136,6 +149,9 @@ public:
 
         //- Assignment of all entries to the given value
         inline void operator=(const T&);
+
+        //- Assignment to List<T>
+        inline void operator=(const List<T>&);
 
 
     // IOstream operators

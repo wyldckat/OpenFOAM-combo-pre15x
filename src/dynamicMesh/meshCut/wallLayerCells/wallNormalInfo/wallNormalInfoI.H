@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -96,6 +96,7 @@ inline bool Foam::wallNormalInfo::valid() const
 // No geometric data so never any problem on cyclics
 inline bool Foam::wallNormalInfo::sameGeometry
 (
+    const polyMesh&,
     const wallNormalInfo& w2,
     const scalar tol
 ) const
@@ -107,6 +108,7 @@ inline bool Foam::wallNormalInfo::sameGeometry
 // No geometric data.
 inline void Foam::wallNormalInfo::leaveDomain
 (
+    const polyMesh&,
     const polyPatch& patch,
     const label patchFaceI,
     const point& faceCentre
@@ -117,6 +119,7 @@ inline void Foam::wallNormalInfo::leaveDomain
 // No geometric data.
 inline void Foam::wallNormalInfo::transform
 (
+    const polyMesh&,
     const tensor& rotTensor
 )
 {}
@@ -125,6 +128,7 @@ inline void Foam::wallNormalInfo::transform
 // No geometric data.
 inline void Foam::wallNormalInfo::enterDomain
 (
+    const polyMesh&,
     const polyPatch& patch,
     const label patchFaceI,
     const point& faceCentre
@@ -135,7 +139,7 @@ inline void Foam::wallNormalInfo::enterDomain
 // Update this with w2 if w2 nearer to pt.
 inline bool Foam::wallNormalInfo::updateCell
 (
-    const polyMesh& mesh,
+    const polyMesh&,
     const label thisCellI,
     const label neighbourFaceI,
     const wallNormalInfo& neighbourWallInfo,
@@ -149,7 +153,7 @@ inline bool Foam::wallNormalInfo::updateCell
 // Update this with w2 if w2 nearer to pt.
 inline bool Foam::wallNormalInfo::updateFace
 (
-    const polyMesh& mesh,
+    const polyMesh&,
     const label thisFaceI,
     const label neighbourCellI,
     const wallNormalInfo& neighbourWallInfo,
@@ -163,7 +167,7 @@ inline bool Foam::wallNormalInfo::updateFace
 // Update this with w2 if w2 nearer to pt.
 inline bool Foam::wallNormalInfo::updateFace
 (
-    const polyMesh& mesh,
+    const polyMesh&,
     const label thisFaceI,
     const wallNormalInfo& neighbourWallInfo,
     const scalar tol

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -447,6 +447,49 @@ Foam::surfaceFeatures::surfaceFeatures(const surfaceFeatures& sf)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+Foam::labelList Foam::surfaceFeatures::selectFeatureEdges
+(
+    const bool regionEdges,
+    const bool externalEdges,
+    const bool internalEdges
+) const
+{
+    DynamicList<label> selectedEdges;
+
+    if (regionEdges)
+    {
+        selectedEdges.setSize(selectedEdges.size() + nRegionEdges());
+
+        for (label i = 0; i < externalStart_; i++)
+        {
+            selectedEdges.append(featureEdges_[i]);
+        }
+    }
+
+    if (externalEdges)
+    {
+        selectedEdges.setSize(selectedEdges.size() + nExternalEdges());
+
+        for (label i = externalStart_; i < internalStart_; i++)
+        {
+            selectedEdges.append(featureEdges_[i]);
+        }
+    }
+
+    if (internalEdges)
+    {
+        selectedEdges.setSize(selectedEdges.size() + nInternalEdges());
+
+        for (label i = internalStart_; i < featureEdges_.size(); i++)
+        {
+            selectedEdges.append(featureEdges_[i]);
+        }
+    }
+
+    return selectedEdges.shrink();
+}
+
+
 void Foam::surfaceFeatures::findFeatures(const scalar includedAngle)
 {
     scalar minCos =
@@ -721,15 +764,10 @@ Foam::Map<Foam::label> Foam::surfaceFeatures::nearestSamples
 ) const
 {
     // Build tree out of all samples.
-    // Note: shapes holds reference!
-    octreeDataPoint shapes(samples);
-
-    treeBoundBox overallBb(samples);
-
     octree<octreeDataPoint> ppTree
     (
-        overallBb,  // overall search domain
-        shapes,     // all information needed to do checks on cells
+        treeBoundBox(samples),      // overall search domain
+        octreeDataPoint(samples),   // all information needed to do checks
         1,          // min levels
         20.0,       // maximum ratio of cubes v.s. cells
         100.0       // max. duplicity; n/a since no bounding boxes.
@@ -809,10 +847,11 @@ Foam::Map<Foam::label> Foam::surfaceFeatures::nearestSamples
 }
 
 
-// Get nearest vertex on patch for regularly sampled points along the feature
-// edges. Return map from sample to feature edge.
-Foam::Map<Foam::label> Foam::surfaceFeatures::nearestSamplesToFeatEdges
+// Get nearest sample point for regularly sampled points along
+// selected edges. Return map from sample to edge label
+Foam::Map<Foam::label> Foam::surfaceFeatures::nearestSamples
 (
+    const labelList& selectedEdges,
     const pointField& samples,
     const scalarField& sampleDist,
     const scalarField& maxDist,
@@ -825,26 +864,22 @@ Foam::Map<Foam::label> Foam::surfaceFeatures::nearestSamplesToFeatEdges
     scalar maxSearch = max(maxDist);
     vector span(maxSearch, maxSearch, maxSearch);
 
-    // shapes holds reference!
-    octreeDataPoint shapes(samples);
-
-    treeBoundBox overallBb(samples);
-
+    // octree.shapes holds reference!
     octree<octreeDataPoint> ppTree
     (
-        overallBb,  // overall search domain
-        shapes,     // all information needed to do checks on cells
+        treeBoundBox(samples),      // overall search domain
+        octreeDataPoint(samples),   // all information needed to do checks
         1,          // min levels
         20.0,       // maximum ratio of cubes v.s. cells
         100.0       // max. duplicity; n/a since no bounding boxes.
     );
 
     // From patch point to surface edge.
-    Map<label> nearest(2*featureEdges_.size());
+    Map<label> nearest(2*selectedEdges.size());
 
-    forAll(featureEdges_, i)
+    forAll(selectedEdges, i)
     {
-        label surfEdgeI = featureEdges_[i];
+        label surfEdgeI = selectedEdges[i];
 
         const edge& e = surfEdges[surfEdgeI];
 
@@ -918,7 +953,7 @@ Foam::Map<Foam::label> Foam::surfaceFeatures::nearestSamplesToFeatEdges
     {
         // Dump to obj file
 
-        Pout<< "Dumping nearest surface feature edges to nearestEdges.obj\n"
+        Pout<< "Dumping nearest surface edges to nearestEdges.obj\n"
             << "View this Lightwave-OBJ file with e.g. javaview\n" << endl;
 
         OFstream objStream("nearestEdges.obj");
@@ -955,8 +990,9 @@ Foam::Map<Foam::label> Foam::surfaceFeatures::nearestSamplesToFeatEdges
 //
 // Q: using point-based sampleDist and maxDist (distance to look around
 // each point). Should they be edge-based e.g. by averaging or max()?
-Foam::Map<Foam::pointIndexHit> Foam::surfaceFeatures::nearestEdgesToFeatEdges
+Foam::Map<Foam::pointIndexHit> Foam::surfaceFeatures::nearestEdges
 (
+    const labelList& selectedEdges,
     const edgeList& sampleEdges,
     const labelList& selectedSampleEdges,
     const pointField& samplePoints,
@@ -966,17 +1002,18 @@ Foam::Map<Foam::pointIndexHit> Foam::surfaceFeatures::nearestEdgesToFeatEdges
 ) const
 {
     // Build tree out of selected sample edges.
-    octreeDataEdges shapes(sampleEdges, samplePoints, selectedSampleEdges);
-
-    treeBoundBox overallBb(samplePoints);
-
     octree<octreeDataEdges> ppTree
     (
-        overallBb,  // overall search domain
-        shapes,     // all information needed to do checks on cells
-        1,          // min levels
-        20.0,       // maximum ratio of cubes v.s. cells
-        10.0        // max. duplicity
+        treeBoundBox(samplePoints), // overall search domain
+        octreeDataEdges
+        (
+            sampleEdges,
+            samplePoints,
+            selectedSampleEdges
+        ),                          // geometric info container for edges
+        1,                          // min levels
+        20.0,                       // maximum ratio of cubes v.s. cells
+        10.0                        // max. duplicity
     );
 
     const pointField& surfPoints = surf_.localPoints();
@@ -988,16 +1025,14 @@ Foam::Map<Foam::pointIndexHit> Foam::surfaceFeatures::nearestEdgesToFeatEdges
 
     Map<pointIndexHit> nearest(2*sampleEdges.size());
 
-    label i = 0;
-
     //
-    // Loop over all feature edges. Sample at regular intervals. Find nearest
+    // Loop over all selected edges. Sample at regular intervals. Find nearest
     // sampleEdges (using octree)
     //
 
-    forAll(featureEdges_, featI)
+    forAll(selectedEdges, i)
     {
-        label surfEdgeI = featureEdges_[featI];
+        label surfEdgeI = selectedEdges[i];
 
         const edge& e = surfEdges[surfEdgeI];
 
@@ -1073,8 +1108,6 @@ s += 0.01*eMag;
                 exit = true;
             }
         }
-
-        i++;
     }
 
 
@@ -1082,10 +1115,10 @@ s += 0.01*eMag;
     {
         // Dump to obj file
 
-        Pout<< "Dumping nearest surface feature edges to nearestEdgeEdges.obj\n"
+        Pout<< "Dumping nearest surface feature edges to nearestEdges.obj\n"
             << "View this Lightwave-OBJ file with e.g. javaview\n" << endl;
 
-        OFstream objStream("nearestEdgeEdges.obj");
+        OFstream objStream("nearestEdges.obj");
 
         label vertI = 0;
         for
@@ -1100,18 +1133,11 @@ s += 0.01*eMag;
             const edge& sampleEdge = sampleEdges[sampleEdgeI];
 
             // Write line from edgeMid to point on feature edge
-            const point edgePt =
-                0.5
-              * (
-                    samplePoints[sampleEdge[0]]
-                  + samplePoints[sampleEdge[1]]
-                );
+            meshTools::writeOBJ(objStream, sampleEdge.centre(samplePoints));
+            vertI++;
 
-            meshTools::writeOBJ(objStream, edgePt); vertI++;
-
-            const point& surfPt = iter().rawPoint();
-
-            meshTools::writeOBJ(objStream, surfPt); vertI++;
+            meshTools::writeOBJ(objStream, iter().rawPoint());
+            vertI++;
 
             objStream<< "l " << vertI-1 << ' ' << vertI << endl;
         }
@@ -1121,12 +1147,13 @@ s += 0.01*eMag;
 }
 
 
-// Get nearest surface feature edge for every sample. Return in form of
+// Get nearest surface edge for every sample. Return in form of
 // labelLists giving surfaceEdge label&intersectionpoint.
-void Foam::surfaceFeatures::nearestSurfFeatures
+void Foam::surfaceFeatures::nearestSurfEdge
 (
+    const labelList& selectedEdges,
     const pointField& samples,
-    const scalarField& maxDist,
+    const vector& searchSpan,   // Search span 
     labelList& edgeLabel,
     labelList& edgeEndPoint,
     pointField& edgePoint
@@ -1136,16 +1163,17 @@ void Foam::surfaceFeatures::nearestSurfFeatures
     edgeEndPoint.setSize(samples.size());
     edgePoint.setSize(samples.size());
 
-    const pointField& points = surf_.localPoints();
-
-    octreeDataEdges shapes(surf_.edges(), points, featureEdges_);
-
-    treeBoundBox overallBb(points);
-
+    const pointField& localPoints = surf_.localPoints();
+    
     octree<octreeDataEdges> ppTree
     (
-        overallBb,  // overall search domain
-        shapes,     // all information needed to do checks on cells
+        treeBoundBox(localPoints),  // overall search domain
+        octreeDataEdges
+        (
+            surf_.edges(),
+            localPoints,
+            selectedEdges
+        ),          // all information needed to do geometric checks
         1,          // min levels
         20.0,       // maximum ratio of cubes v.s. cells
         10.0        // max. duplicity
@@ -1156,11 +1184,9 @@ void Foam::surfaceFeatures::nearestSurfFeatures
     {
         const point& sample = samples[i];
 
-        point maxDistPt(maxDist[i], maxDist[i], maxDist[i]);
+        treeBoundBox tightest(sample - searchSpan, sample + searchSpan);
 
-        treeBoundBox tightest(sample - maxDistPt, sample + maxDistPt);
-
-        scalar tightestDist = maxDist[i];
+        scalar tightestDist = magSqr(searchSpan);
 
         label index =
             ppTree.findNearest
@@ -1177,7 +1203,7 @@ void Foam::surfaceFeatures::nearestSurfFeatures
         }
         else
         {
-            edgeLabel[i] = featureEdges_[index];
+            edgeLabel[i] = selectedEdges[index];
 
             // Unfortunately findNearest does not return nearest point so
             // recalculate
@@ -1186,22 +1212,23 @@ void Foam::surfaceFeatures::nearestSurfFeatures
             pointIndexHit pHit =
                 edgeNearest
                 (
-                    points[e.start()],
-                    points[e.end()],
+                    localPoints[e.start()],
+                    localPoints[e.end()],
                     sample
                 );
 
             edgePoint[i] = pHit.rawPoint();
             edgeEndPoint[i] = pHit.index();
-
         }
     }
 }
 
 
 // Get nearest point on nearest feature edge for every sample (is edge)
-void Foam::surfaceFeatures::nearestSurfFeatures
+void Foam::surfaceFeatures::nearestSurfEdge
 (
+    const labelList& selectedEdges,
+
     const edgeList& sampleEdges,
     const labelList& selectedSampleEdges,
     const pointField& samplePoints,
@@ -1216,19 +1243,17 @@ void Foam::surfaceFeatures::nearestSurfFeatures
     pointOnEdge.setSize(selectedSampleEdges.size());
     pointOnFeature.setSize(selectedSampleEdges.size());
 
-    octreeDataEdges shapes
-    (
-        surf_.edges(),
-        surf_.localPoints(),
-        featureEdges_
-    );
-
-    treeBoundBox overallBb(surf_.localPoints());
+    
 
     octree<octreeDataEdges> ppTree
     (
-        overallBb,  // overall search domain
-        shapes,     // all information needed to do checks on cells
+        treeBoundBox(surf_.localPoints()),  // overall search domain
+        octreeDataEdges
+        (
+            surf_.edges(),
+            surf_.localPoints(),
+            selectedEdges
+        ),          // all information needed to do geometric checks
         1,          // min levels
         10.0,       // maximum ratio of cubes v.s. cells
         10.0        // max. duplicity
@@ -1274,15 +1299,19 @@ void Foam::surfaceFeatures::operator=(const surfaceFeatures& rhs)
     // Check for assignment to self
     if (this == &rhs)
     {
-        FatalErrorIn("Foam::surfaceFeatures::operator=(const Foam::surfaceFeatures&)")
-            << "Attempted assignment to self"
+        FatalErrorIn
+        (
+            "Foam::surfaceFeatures::operator=(const Foam::surfaceFeatures&)"
+        )   << "Attempted assignment to self"
             << abort(FatalError);
     }
 
-    if (&surf_ == &rhs.surface())
+    if (&surf_ != &rhs.surface())
     {
-        FatalErrorIn("Foam::surfaceFeatures::operator=(const Foam::surfaceFeatures&)")
-            << "Operating on different surfaces"
+        FatalErrorIn
+        (
+            "Foam::surfaceFeatures::operator=(const Foam::surfaceFeatures&)"
+        )   << "Operating on different surfaces"
             << abort(FatalError);
     }
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,17 +23,59 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-    Extrude mesh from existing patch or from patch read from file.
+    Extrude mesh from existing patch or from patch read from file. Merges close
+    points so be careful.
+
+    Can do wedges:
+    - use wedgeExtruder instead of e.g. linearNormalExtruder
+    - extrusion is opposite the surface/patch normal so inwards the source
+      mesh
+    - axis direction has to be consistent with this.
+    - use -mergeFaces option if doing full 360 and want to merge front and back
+
+    E.g. starting from 'movingWall' patch of cavity tutorial:
+    - we want to rotate around the left side of this patch (is at x=0,y=0.1)
+      for a full 360 degrees:
+
+        wedgeExtruder
+        (
+            point(0,0.1,0),     // point on axis
+            vector(0,0,-1),     // (normalized!) direction of axis
+            360.0/180.0*mathematicalConstant::pi // angle
+        )
+
+    - note direction of axis. This should be consistent with rotating against
+      the patch normal direction. If you get it wrong you'll see all cells
+      with extreme aspect ratio and internal faces wrong way around in
+      checkMesh
+
+    - call with e.g. 10 layers. Thickness argument (0.1) is not used! 
+
+        extrudeMesh <root> <case> 10 0.1 \
+            -sourceRoot $FOAM_TUTORIALS/icoFoam \
+            -sourceCase cavity \
+            -sourcePatch movingWall
+            -mergeFaces
 
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
 #include "Time.H"
-#include "extrudedMesh.H"
 #include "dimensionedTypes.H"
-#include "linearNormalExtruder.H"
 #include "IFstream.H"
 #include "faceMesh.H"
+#include "directPolyTopoChange.H"
+#include "directEdgeCollapser.H"
+#include "mathematicalConstants.H"
+#include "globalMeshData.H"
+#include "polyTopoChanger.H"
+#include "perfectInterface.H"
+
+#include "extrudedMesh.H"
+#include "linearNormalExtruder.H"
+#include "linearRadialExtruder.H"
+#include "sigmaRadialExtruder.H"
+#include "wedgeExtruder.H"
 
 using namespace Foam;
 
@@ -55,7 +97,7 @@ int main(int argc, char *argv[])
     }
 
 
-    autoPtr<extrudedMesh> eMeshPtr(NULL);
+    autoPtr<extrudedMesh> meshPtr(NULL);
 
     if (args.options().found("sourceRoot"))
     {
@@ -100,7 +142,7 @@ int main(int argc, char *argv[])
             os << fMesh << nl;
         }
 
-        eMeshPtr.reset
+        meshPtr.reset
         (
             new extrudedMesh
             (
@@ -112,7 +154,19 @@ int main(int argc, char *argv[])
                 ),
                 pp,
                 nLayers,                        // number of layers
-                linearNormalExtruder(-thickness) // overall thickness (signed!)
+                linearNormalExtruder(-thickness) // overall thickness(signed!)
+                //wedgeExtruder
+                //(
+                //    point(0,0.1,0),     // point on axis
+                //    vector(0,0,-1),     // (normalized!) direction of axis
+                //    360.0/180.0*mathematicalConstant::pi // angle
+                //)
+                //wedgeExtruder
+                //(
+                //    point(0,0,0),     // point on axis
+                //    vector(0,1,0),    // (normalized!) direction of axis
+                //    30.0/180.0*mathematicalConstant::pi // angle
+                //)
             )
         );
     }
@@ -133,7 +187,7 @@ int main(int argc, char *argv[])
             << "    faces  : " << fMesh.size() << nl
             << endl;
 
-        eMeshPtr.reset
+        meshPtr.reset
         (
             new extrudedMesh
             (
@@ -150,11 +204,145 @@ int main(int argc, char *argv[])
         );        
     }
 
-    const extrudedMesh& eMesh = eMeshPtr();
+    extrudedMesh& mesh = meshPtr();
 
-    eMesh.checkMesh();
 
-    if (!eMesh.write())
+    const boundBox& bb = mesh.globalData().bb();
+    const vector span(bb.max() - bb.min());
+    const scalar minDim = min(span[0], min(span[1], span[2]));
+    const scalar mergeDim = 1E-4*minDim;
+
+    Pout<< "Mesh bounding box:" << bb << nl
+        << "        with span:" << span << nl
+        << "Merge distance   :" << mergeDim << nl
+        << endl;
+
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    const label origPatchID = patches.findPatchID("originalPatch");
+    const label otherPatchID = patches.findPatchID("otherSide");
+
+    if (origPatchID == -1 || otherPatchID == -1)
+    {
+        FatalErrorIn(args.executable())
+            << "Cannot find patch originalPatch or otherSide." << nl
+            << "Valid patches are " << patches.names() << exit(FatalError);
+    }
+
+    // Collapse edges
+    // ~~~~~~~~~~~~~~
+
+    {
+        Pout<< "Collapsing edges < " << mergeDim << " ..." << nl << endl;
+
+        // Edge collapsing engine
+        directEdgeCollapser collapser(mesh);
+
+        const edgeList& edges = mesh.edges();
+        const pointField& points = mesh.points();
+
+        forAll(edges, edgeI)
+        {
+            const edge& e = edges[edgeI];
+
+            scalar d = e.mag(points);
+
+            if (d < mergeDim)
+            {
+                Pout<< "Merging edge " << e << " since length " << d
+                    << " << " << mergeDim << nl;
+
+                // Collapse edge to e[0]
+                collapser.collapseEdge(edgeI, e[0]);
+            }
+        }
+
+        // Topo change container
+        directPolyTopoChange meshMod(mesh);
+        // Put all modifications into meshMod
+        bool anyChange = collapser.setRefinement(meshMod);
+
+        if (anyChange)
+        {
+            // Construct new mesh from directPolyTopoChange.
+            autoPtr<mapPolyMesh> map = meshMod.changeMesh(mesh, false);
+
+            // Update fields
+            mesh.updateMesh(map);
+
+            // Move mesh (if inflation used)
+            if (map().hasMotionPoints())
+            {
+                mesh.movePoints(map().preMotionPoints());
+            }
+        }
+    }
+
+
+    // Merging front and back patch faces
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    if (args.options().found("mergeFaces"))
+    {
+        Pout<< "Assuming full 360 degree axisymmetric case;"
+            << " stitching faces on patches " 
+            << patches[origPatchID].name() << " and "
+            << patches[otherPatchID].name() << " together ..." << nl << endl;
+
+        polyTopoChanger stitcher(mesh);
+        stitcher.setSize(1);
+
+        // Make list of masterPatch faces
+        labelList isf(patches[origPatchID].size());
+
+        forAll (isf, i)
+        {
+            isf[i] = patches[origPatchID].start() + i;
+        }
+
+        const word cutZoneName("originalCutFaceZone");
+
+        List<faceZone*> fz
+        (
+            1,
+            new faceZone
+            (
+                cutZoneName,
+                isf,
+                boolList(isf.size(), false),
+                0,
+                mesh.faceZones()
+            )
+        );
+
+        mesh.addZones(List<pointZone*>(0), fz, List<cellZone*>(0));
+
+        // Add the perfect interface mesh modifier
+        stitcher.set
+        (
+            0,
+            new perfectInterface
+            (
+                "couple",
+                0,
+                stitcher,
+                cutZoneName,
+                patches[origPatchID].name(),
+                patches[otherPatchID].name()
+            )
+        );
+
+        // Execute all polyMeshModifiers
+        autoPtr<mapPolyMesh> morphMap = stitcher.changeMesh();
+
+        mesh.movePoints(morphMap->preMotionPoints());
+    }
+
+
+
+    mesh.checkMesh();
+
+    if (!mesh.write())
     {
         FatalErrorIn(args.executable()) << "Failed writing mesh"
             << exit(FatalError);

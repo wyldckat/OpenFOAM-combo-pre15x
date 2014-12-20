@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -163,15 +161,15 @@ bool Foam::uniformSet::trackToBoundary
         label facei = -1;
         do
         {
-            scalar frac = 0.0;
-            facei = singleParticle.track(samplePt, frac);
+            singleParticle.stepFraction() = 0;
+            singleParticle.track(samplePt);
 
             if (debug)
             {
                 Info<< "Result of tracking "
                     << "  trackPt:" << trackPt
                     << "  trackCellI:" << singleParticle.cell()
-                    << "  trackFaceI:" << facei
+                    << "  trackFaceI:" << singleParticle.face()
                     << "  onBoundary:" << singleParticle.onBoundary()
                     << "  samplePt:" << samplePt
                     << "  smallDist:" << smallDist

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -161,7 +161,6 @@ fvPatchField<Type>::fvPatchField
     const fvPatchField<Type>& ptf
 )
 :
-    lduCoupledInterface(),
     Field<Type>(ptf),
     patch_(ptf.patch_),
     internalField_(ptf.internalField_),
@@ -240,90 +239,9 @@ tmp<Field<Type> > fvPatchField<Type>::snGrad() const
 
 // Return internal field next to patch as patch field
 template<class Type>
-template<class Type2>
-tmp<Field<Type2> > fvPatchField<Type>::patchInternalField
-(
-    const Field<Type2>& iField
-) const
-{
-    tmp<Field<Type2> > tpif(new Field<Type2>(patch_.size()));
-    Field<Type2>& pif = tpif();
-
-    const labelList::subList FaceCells = patch_.faceCells();
-
-    forAll(patch_, faceI)
-    {
-        pif[faceI] = iField[FaceCells[faceI]];
-    }
-
-    return tpif;
-}
-
-
-// Return internal field next to patch as patch field
-template<class Type>
 tmp<Field<Type> > fvPatchField<Type>::patchInternalField() const
 {
-    return patchInternalField(internalField_);
-}
-
-
-//- Return neighbour coupled given internal cell data
-template<class Type>
-tmp<Field<Type> > fvPatchField<Type>::patchNeighbourField
-(
-    const Field<Type>& iField
-) const
-{
-    return patchInternalField(iField);
-}
-
-
-//- Return neighbour coupled given internal cell data
-template<class Type>
-tmp<labelField> fvPatchField<Type>::nbrColour
-(
-    const labelField&
-) const
-{
-    // Dummy return to avoid unnecessary oprations on an uncoupled interface
-    return labelField(0);
-}
-
-
-//- Return patchField of the values on the patch or on the
-//  opposite patch
-template<class Type>
-tmp<Field<Type> > fvPatchField<Type>::patchNeighbourField() const
-{
-    return *this;
-}
-
-
-template<class Type>
-template<class GeometricField, class Type2>
-const fvPatchField<Type2>& fvPatchField<Type>::patchField
-(
-    const GeometricField& gf
-) const
-{
-    return gf.boundaryField()[patch_.index()];
-}
-
-
-template<class Type>
-template<class GeometricField, class Type2>
-const fvPatchField<Type2>& fvPatchField<Type>::lookupPatchField
-(
-    const word& name,
-    const GeometricField*,
-    const Type2*
-) const
-{
-    return patchField<GeometricField, Type2>
-    (
-        db().objectRegistry::lookupObject<GeometricField>(name)
-    );
+    return patch_.patchInternalField(internalField_);
 }
 
 

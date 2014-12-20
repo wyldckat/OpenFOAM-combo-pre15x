@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -51,6 +51,8 @@ class manualDecomp
 {
     // Private data
 
+        const polyMesh* meshPtr_;
+
         fileName decompDataFile_;
 
 
@@ -76,7 +78,7 @@ public:
         manualDecomp
         (
             const dictionary& decompositionDict,
-            const primitiveMesh& mesh
+            const polyMesh& mesh
         );
 
 
@@ -87,6 +89,13 @@ public:
 
 
     // Member Functions
+
+        //- manual decompose does not care about proc boundaries - is all
+        //  up to the user.
+        bool parallelAware() const
+        {
+            return true;
+        }
 
         labelList decompose(const pointField&);
 };

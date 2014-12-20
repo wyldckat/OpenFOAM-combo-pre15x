@@ -42,25 +42,25 @@ Download and unpack the files in the $HOME/OpenFOAM directory as
 described in: http://www.openfoam.org/download.html
 
 The environment variable settings are contained in files in a
-.OpenFOAM-1.3 directory in the OpenFOAM release, i.e. in
-$HOME/OpenFOAM/OpenFOAM-1.3/.OpenFOAM-1.3
+.OpenFOAM-1.4 directory in the OpenFOAM release, i.e. in
+$HOME/OpenFOAM/OpenFOAM-1.4/.OpenFOAM-1.4
 
 a) EITHER, if running bash or ksh (if in doubt type 'echo $SHELL'),
-source the .OpenFOAM-1.3/bashrc file by adding the following line to
+source the .OpenFOAM-1.4/bashrc file by adding the following line to
 the end of your $HOME/.bashrc file:
 
-. $HOME/OpenFOAM/OpenFOAM-1.3/.OpenFOAM-1.3/bashrc
+. $HOME/OpenFOAM/OpenFOAM-1.4/.OpenFOAM-1.4/bashrc
 
 Then update the environment variables by sourcing the $HOME/.bashrc
 file by typing in the terminal:
 . $HOME/.bashrc
 
-b) OR, if running tcsh or csh, source the .OpenFOAM-1.3/cshrc file by
+b) OR, if running tcsh or csh, source the .OpenFOAM-1.4/cshrc file by
 adding the following line to the end of your $HOME/.cshrc file:
 
-source $HOME/OpenFOAM/OpenFOAM-1.3/.OpenFOAM-1.3/cshrc
+source $HOME/OpenFOAM/OpenFOAM-1.4/.OpenFOAM-1.4/cshrc
 
-The update the environment variables by sourcing the $HOME/.bashrc
+Then update the environment variables by sourcing the $HOME/.cshrc
 file by typing in the terminal:
 source $HOME/.cshrc
 
@@ -68,7 +68,7 @@ source $HOME/.cshrc
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 If you cannot find an appropriate binary pack for your platform you 
 can build the complete OpenFOAM from the source-pack.  First you will
-need to compile or obtain a recent version of gcc (we recommend gcc-3.4.?)
+need to compile or obtain a recent version of gcc (we recommend gcc-4.1.?)
 for your platform which may be obtained from http://gcc.gnu.org/.  Install
 the compiler in $WM_PROJECT_INST_DIR/$WM_ARCH/gcc-3.4.? and change the 
 gcc version number in $WM_PROJECT_DIR/.bashrc and $WM_PROJECT_DIR/.cshrc as
@@ -86,9 +86,7 @@ do the port and maintiain it in future releases.
 5. Testing the installation
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 To check your installation setup, execute the 'foamInstallationTest'
-script (in the bin directory of the OpenFOAM installation). It checks
-all environment variables are set correctly and that the third-party
-software are installed as described below. If no problems are
+script (in the bin directory of the OpenFOAM installation). If no problems are
 reported, proceed to getting started with OpenFOAM; otherwise, go
 back and check you have installed the software correctly and/or
 contact your system administrator.
@@ -96,20 +94,20 @@ contact your system administrator.
 6. Getting Started
 ~~~~~~~~~~~~~~~~~~
 Create a project directory within the $HOME/OpenFOAM directory named
-<userName>-1.3 (e.g. 'chris-1.3' for user chris) and create a
+<userName>-1.4 (e.g. 'chris-1.4' for user chris) and create a
 directory named 'run' within it, e.g. by typing:
 
-mkdir -p $HOME/OpenFOAM/${LOGNAME}-1.3/run
+mkdir -p $HOME/OpenFOAM/${LOGNAME}-1.4/run
 
 Copy the 'tutorial' examples directory in the OpenFOAM distribution to the
 'run' directory.  If OpenFOAM environment variables are set correctly, then  
 the following command will be correct:
 
-cp -r $WM_PROJECT_DIR/tutorials $HOME/OpenFOAM/${LOGNAME}-1.3/run
+cp -r $WM_PROJECT_DIR/tutorials $HOME/OpenFOAM/${LOGNAME}-1.4/run
 
 Run the first example case of incompressible laminar flow in a cavity:
  
-cd $HOME/OpenFOAM/${LOGNAME}-1.3/run/tutorials/icoFoam 
+cd $HOME/OpenFOAM/${LOGNAME}-1.4/run/tutorials/icoFoam 
 blockMesh . cavity 
 icoFoam . cavity 
 
@@ -204,7 +202,7 @@ B. Running OpenFOAM in 64 bit mode
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Those users with an installation of Linux on a 64 bit machine may
 install either or both of the 32 bit version of OpenFOAM (linux) or
-the 64 bit version of FOAM (linuxAMD64).
+the 64 bit version of FOAM (linux64).
 
 In order to set up the user to run in 64 bit mode, the user must set
 the environment variable $WM_64 (to anything, e.g. "on") before

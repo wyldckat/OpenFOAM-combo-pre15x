@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,6 +43,7 @@ void writeLagrangian
     const bool binary,
     const vtkMesh& vMesh,
     const fileName& lagrFileName,       // where to create files
+    const wordList& labelNames,
     const wordList& scalarNames,
     const wordList& vectorNames
 )
@@ -85,8 +86,41 @@ void writeLagrangian
     pStream
         << "POINT_DATA " << parcels.size() << std::endl
         << "FIELD attributes "
-        << scalarNames.size() + vectorNames.size() << std::endl;
+        << labelNames.size()
+         + scalarNames.size()
+         + vectorNames.size()
+        << std::endl;
 
+    forAll(labelNames, i)
+    {
+        IOobject header
+        (
+            labelNames[i],
+            mesh.time().timeName(),
+            "lagrangian",
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::NO_WRITE
+        );
+
+        IOField<label> fld(header);
+
+        pStream << labelNames[i] << " 1 "
+            << parcels.size() << " float" << std::endl;
+
+        // Convert labelfield to scalarfield
+        scalarField scalarFld(fld.size());
+        forAll(fld, i)
+        {
+            scalarFld[i] = fld[i];
+        }
+
+        DynamicList<floatScalar> fField(parcels.size());
+
+        writeFuns::insert(scalarFld, fField);
+
+        writeFuns::write(pStream, binary, fField);
+    }
     forAll(scalarNames, i)
     {
         IOobject header

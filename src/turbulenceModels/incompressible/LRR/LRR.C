@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -192,9 +192,7 @@ void LRR::correct()
 
     turbulenceModel::correct();
 
-    volTensorField P = -(R_ & fvc::grad(U_));
-    P += P.T();
-
+    volSymmTensorField P = -twoSymm(R_ & fvc::grad(U_));
     volScalarField G = 0.5*tr(P);
 
 #   include "wallFunctionsI.H"
@@ -239,15 +237,15 @@ void LRR::correct()
     }
 
 
-    tmp<fvTensorMatrix> REqn
+    tmp<fvSymmTensorMatrix> REqn
     (
         fvm::ddt(R_)
       + fvm::div(phi_, R_)
     //- fvm::laplacian(Cs*(k_/epsilon_)*R_, R_)
       - fvm::laplacian(DREff(), R_)
+      + fvm::Sp(Clrr1*epsilon_/k_, R_)
       ==
         P
-      - fvm::Sp(Clrr1*epsilon_/k_, R_)
       - (2.0/3.0*(1 - Clrr1)*I)*epsilon_
       - Clrr2*dev(P)
     );
@@ -257,15 +255,15 @@ void LRR::correct()
 
     R_.max
     (
-        dimensionedTensor
+        dimensionedSymmTensor
         (
             "zero",
             R_.dimensions(),
-            tensor
+            symmTensor
             (
                 k0_.value(), -GREAT, -GREAT,
-                -GREAT, k0_.value(), -GREAT,
-                -GREAT, -GREAT, k0_.value()
+                k0_.value(), -GREAT,
+                k0_.value()
             )
         )
     );
@@ -288,7 +286,7 @@ void LRR::correct()
 
         if (typeid(curPatch) == typeid(wallFvPatch))
         {
-            tensorField& Rw = R_.boundaryField()[patchi];
+            symmTensorField& Rw = R_.boundaryField()[patchi];
 
             const scalarField& nutw = nut_.boundaryField()[patchi];
 
@@ -310,9 +308,9 @@ void LRR::correct()
                 tensor tauw = -nutw[facei]*2*symm(gradUw);
 
                 // Reset the shear components of the stress tensor
-                Rw[facei].xy() = Rw[facei].yx() = tauw.xy();
-                Rw[facei].xz() = Rw[facei].zx() = tauw.xz();
-                Rw[facei].yz() = Rw[facei].zy() = tauw.yz();
+                Rw[facei].xy() = tauw.xy();
+                Rw[facei].xz() = tauw.xz();
+                Rw[facei].yz() = tauw.yz();
             }
         }
     }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Simple boundary mesh
-
 \*---------------------------------------------------------------------------*/
 
 #include "fvMesh.H"
@@ -42,19 +39,18 @@ void fvBoundaryMesh::addPatches(const polyBoundaryMesh& basicBdry)
 {
     setSize(basicBdry.size());
 
-    // hook boundary patches
+    // Set boundary patches
     fvPatchList& Patches = *this;
 
     forAll(Patches, patchI)
     {
-        Patches.hook(fvPatch::New(basicBdry[patchI], *this));
+        Patches.set(patchI, fvPatch::New(basicBdry[patchI], *this));
     }
 }
 
     
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct with zero size
 fvBoundaryMesh::fvBoundaryMesh
 (
     const fvMesh& m
@@ -65,7 +61,6 @@ fvBoundaryMesh::fvBoundaryMesh
 {}
 
 
-// Construct from polyBoundaryMesh
 fvBoundaryMesh::fvBoundaryMesh
 (
     const fvMesh& m,
@@ -92,6 +87,26 @@ void fvBoundaryMesh::movePoints()
     {
         operator[](patchi).movePoints();
     }
+}
+
+
+lduInterfacePtrsList fvBoundaryMesh::interfaces() const
+{
+    lduInterfacePtrsList interfaces(size());
+
+    forAll (interfaces, patchi)
+    {
+        if (isA<lduInterface>(this->operator[](patchi)))
+        {
+            interfaces.set
+            (
+                patchi,
+               &refCast<const lduInterface>(this->operator[](patchi))
+            );
+        }
+    }
+
+    return interfaces;
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,8 +49,8 @@ tmp<volScalarField> realizableKE::rCmu
     const volScalarField& magS
 )
 {
-    tmp<volTensorField> tS = dev(symm(gradU));
-    const volTensorField& S = tS();
+    tmp<volSymmTensorField> tS = dev(symm(gradU));
+    const volSymmTensorField& S = tS();
 
     volScalarField W = 
         (2*sqrt(2.0))*((S&S)&&S)
@@ -135,11 +135,11 @@ realizableKE::realizableKE
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-tmp<volTensorField> realizableKE::R() const
+tmp<volSymmTensorField> realizableKE::R() const
 {
-    return tmp<volTensorField>
+    return tmp<volSymmTensorField>
     (
-        new volTensorField
+        new volSymmTensorField
         (
             IOobject
             (

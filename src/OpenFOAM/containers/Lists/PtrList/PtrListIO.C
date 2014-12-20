@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,13 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    A PtrList<class T> is a 1D array of pointers to objects
-    of T 'T', where the size of the array is known and used for
-    subscript bounds checking, etc.
-    The element operator [] returns a reference to the object
-    rather than a pointer
 
 \*---------------------------------------------------------------------------*/
 
@@ -74,7 +67,7 @@ void PtrList<T>::read(Istream& is, const INew& inewt)
             {
                 forAll(*this, i)
                 {
-                    hook(inewt(is));
+                    set(i, inewt(is));
                 
                     is.fatalCheck
                     (
@@ -86,7 +79,7 @@ void PtrList<T>::read(Istream& is, const INew& inewt)
             else
             {
                 T* tPtr = inewt(is).ptr();
-                hook(tPtr);
+                set(0, tPtr);
 
                 is.fatalCheck
                 (
@@ -96,7 +89,7 @@ void PtrList<T>::read(Istream& is, const INew& inewt)
 
                 for (label i=1; i<s; i++)
                 {
-                    hook(tPtr->clone());
+                    set(i, tPtr->clone());
                 }
             }
         }
@@ -134,6 +127,7 @@ void PtrList<T>::read(Istream& is, const INew& inewt)
 
         setSize(sllPtrs.size());
 
+        label i = 0;
         for
         (
             typename SLList<T*>::iterator iter = sllPtrs.begin();
@@ -141,7 +135,7 @@ void PtrList<T>::read(Istream& is, const INew& inewt)
             ++iter
         )
         {
-            hook(iter());
+            set(i++, iter());
         }
     }
     else
@@ -162,8 +156,6 @@ void PtrList<T>::read(Istream& is, const INew& inewt)
 template<class T>
 template<class INew>
 PtrList<T>::PtrList(Istream& is, const INew& inewt)
-:
-    nextFree_(0)
 {
     read(is, inewt);
 }
@@ -171,8 +163,6 @@ PtrList<T>::PtrList(Istream& is, const INew& inewt)
 
 template<class T>
 PtrList<T>::PtrList(Istream& is)
-:
-    nextFree_(0)
 {
     read(is, INew<T>());
 }

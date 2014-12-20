@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,6 +44,11 @@ namespace Foam
 
 template<class Cmpt, int rank>
 class typeOfRank
+{};
+
+
+template<class Cmpt, int rank>
+class symmTypeOfRank
 {};
 
 
@@ -109,7 +114,7 @@ class powProduct
 {
 public:
 
-    typedef typename typeOfRank
+    typedef typename symmTypeOfRank
     <
         typename pTraits<arg1>::cmptType,
         arg2*int(pTraits<arg1>::rank)

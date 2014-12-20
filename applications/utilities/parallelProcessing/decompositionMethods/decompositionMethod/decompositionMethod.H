@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,7 +39,7 @@ SourceFiles
 #include "typeInfo.H"
 #include "runTimeSelectionTables.H"
 #include "dictionary.H"
-#include "primitiveMesh.H"
+#include "polyMesh.H"
 #include "pointField.H"
 
 namespace Foam
@@ -95,7 +95,7 @@ public:
             dictionaryMesh,
             (
                 const dictionary& decompositionDict,
-                const primitiveMesh& mesh
+                const polyMesh& mesh
             ),
             (decompositionDict, mesh)
         );
@@ -113,7 +113,7 @@ public:
         static autoPtr<decompositionMethod> New
         (
             const dictionary& decompositionDict,
-            const primitiveMesh& mesh
+            const polyMesh& mesh
         );
 
 
@@ -138,6 +138,11 @@ public:
 
     // Member Functions
 
+        //- Is method parallel aware (i.e. does it synchronize domains across
+        //  proc boundaries)
+        virtual bool parallelAware() const = 0;
+
+        //- Return for every coordinate the wanted processor number
         virtual labelList decompose(const pointField&) = 0;
 };
 

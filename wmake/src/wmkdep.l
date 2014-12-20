@@ -3,7 +3,7 @@
  =========                   |
  \\      /   F ield          | OpenFOAM: The Open Source CFD Toolbox
   \\    /    O peration      |
-   \\  /     A nd            | Copyright (C) 1991-2005 OpenCFD Ltd.
+   \\  /     A nd            | Copyright (C) 1991-2007 OpenCFD Ltd.
     \\/      M anipulation   |
 -------------------------------------------------------------------------------
 License
@@ -56,16 +56,16 @@ void importDirectory(const char* dirName);
 
 %}
 
-%s CMNT CFNAME JFNAME FFNAME
+%s CMNT CFNAME SCFNAME JFNAME FFNAME
 %%
 
-"//".*\n                  ;             /* remove c++ style one line comments */
+"//".*\n                  ;               /* remove c++ style one line comments */
 
 "/*"                      BEGIN(CMNT);    /* start removing c style comment */
 <CMNT>.|\n                ;
 <CMNT>"*/"                BEGIN(INITIAL); /* end removing c style comment */
 
-^#[ \t]*include[ \t]+\"   BEGIN(CFNAME);  /* c-file name */
+^[ \t]*#[ \t]*include[ \t]+\"   BEGIN(CFNAME);  /* c-file name */
 <CFNAME>[^"\n ]*        { BEGIN(INITIAL); nextFile(yytext); } /*"*/
 
 ^[ \t]*import[ \t]+       BEGIN(JFNAME);  /* java-file name */

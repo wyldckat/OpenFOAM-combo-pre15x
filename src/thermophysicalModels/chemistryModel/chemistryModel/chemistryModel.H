@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -95,7 +95,7 @@ private:
         //- the chemical source term
         PtrList<scalarField> RR_;
 
-        //- Latest estimation of integration step in
+        //- Latest estimation of integration step
         scalarField deltaTChem_;
 
 
@@ -123,6 +123,36 @@ public:
 
 
     // Member Functions
+
+        //- Return the thermodynamics model
+        const hCombustionThermo& thermo() const
+        {
+            return thermo_;
+        }
+
+        //- Access the fractions of the species
+        const PtrList<volScalarField>& Y() const
+        {
+            return Y_;
+        }
+
+        //- Access the density field
+        const volScalarField& rho() const 
+        {
+            return rho_;
+        }
+
+        //- Return the chemistry properties
+        inline const IOdictionary& chemistryProperties() const
+        {
+            return chemistryProperties_;
+        }
+
+        //- Do the chemistry or not.
+        inline Switch chemistry() const
+        {
+            return chemistry_;
+        }
 
         inline const PtrList<reaction>& reactions() const
         {
@@ -152,8 +182,14 @@ public:
             return solver_;
         }
 
-        //- the chemical source terms
+        //- Return the chemical source terms
         inline tmp<volScalarField> RR(const label i) const;
+
+        //- Return the latest estimation of integration step
+        const scalarField& deltaTChem() const
+        {
+            return deltaTChem_;
+        }
 
         //- The chemical time scale
         tmp<volScalarField> tc() const;

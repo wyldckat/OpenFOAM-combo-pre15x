@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,8 +44,6 @@ SourceFiles
 namespace Foam
 {
 
-typedef HashTable<regIOobject*> regIOobjectTable;
-
 /*---------------------------------------------------------------------------*\
                            Class objectRegistry Declaration
 \*---------------------------------------------------------------------------*/
@@ -53,7 +51,7 @@ typedef HashTable<regIOobject*> regIOobjectTable;
 class objectRegistry
 :
     public regIOobject,
-    public regIOobjectTable
+    public HashTable<regIOobject*>
 {
     // Private Data
 
@@ -131,8 +129,12 @@ public:
             //- Return the list of names of the IOobjects
             wordList names() const;
 
-            //- Return the list of names of the IOobjects of given class
+            //- Return the list of names of the IOobjects of given class name
             wordList names(const word& className) const;
+
+            //- Return the list of names of the IOobjects of given type
+            template<class Type>
+            wordList names() const;
 
             //- Lookup and return a const sub-objectRegistry
             const objectRegistry& subRegistry(const word& name) const;
@@ -161,6 +163,9 @@ public:
 
         // Reading
 
+            //- Return true if any of the object's files have been modified
+            virtual bool modified() const;
+
             //- Read the objects that have been modified
             void readModifiedObjects();
 
@@ -184,18 +189,12 @@ public:
             }
 
             //- Write the objects
-            virtual bool write
+            virtual bool writeObject
             (
                 IOstream::streamFormat fmt,
                 IOstream::versionNumber ver,
                 IOstream::compressionType cmp
             ) const;
-
-            //- Write using setting from DB
-            bool write() const
-            {
-                return regIOobject::write();
-            }
 };
 
 

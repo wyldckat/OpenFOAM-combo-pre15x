@@ -2,7 +2,7 @@
 
 currDir=`pwd`
 application=`basename $currDir`
-cases="mixer2D movingCone"
+cases="movingCone"
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/CleanFunctions

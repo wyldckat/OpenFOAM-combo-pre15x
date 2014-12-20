@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -38,7 +38,7 @@ writeControl    adjustableRunTime;
 
 writeInterval   0.1;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     binary;
 
@@ -50,11 +50,11 @@ timeFormat      general;
 
 timePrecision   6;
 
-runTimeModifiable 	on;
+runTimeModifiable   on;
 
 adjustTimeStep  yes;
 
-maxCo			0.5;
+maxCo           0.5;
 
 maxDeltaT      1;
 

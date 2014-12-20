@@ -6,7 +6,7 @@
       + fvm::div(rhoPhi, U)
       - fvm::laplacian(muf, U)
       - (fvc::grad(U) & fvc::grad(muf))
-    //- fvc::div(muf*(mesh.Sf() & fvc::interpolate(fvc::grad(U)().T())))
+    //- fvc::div(muf*(fvc::interpolate(dev(fvc::grad(U))) & mesh.Sf()))
     );
 
     if (momentumPredictor)

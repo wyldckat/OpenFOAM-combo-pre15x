@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
     Dimensioned tensor obtained from generic dimensioned type.
 
 \*---------------------------------------------------------------------------*/
@@ -105,20 +103,9 @@ dimensionedTensor inv(const dimensionedTensor& dt)
 }
 
 
-dimensionedTensor hinv(const dimensionedTensor& dt)
+dimensionedSymmTensor symm(const dimensionedTensor& dt)
 {
-    return dimensionedTensor
-    (
-        "hinv("+dt.name()+')',
-        dimless/dt.dimensions(),
-        hinv(dt.value())
-    );
-}
-
-
-dimensionedTensor symm(const dimensionedTensor& dt)
-{
-    return dimensionedTensor
+    return dimensionedSymmTensor
     (
         "symm("+dt.name()+')',
         dt.dimensions(),
@@ -126,6 +113,15 @@ dimensionedTensor symm(const dimensionedTensor& dt)
     );
 }
 
+dimensionedSymmTensor twoSymm(const dimensionedTensor& dt)
+{
+    return dimensionedSymmTensor
+    (
+        "twoSymm("+dt.name()+')',
+        dt.dimensions(),
+        twoSymm(dt.value())
+    );
+}
 
 dimensionedTensor skew(const dimensionedTensor& dt)
 {
@@ -150,6 +146,28 @@ dimensionedVector eigenValues(const dimensionedTensor& dt)
 
 
 dimensionedTensor eigenVectors(const dimensionedTensor& dt)
+{
+    return dimensionedTensor
+    (
+        "eigenVectors("+dt.name()+')',
+        dimless,
+        eigenVectors(dt.value())
+    );
+}
+
+
+dimensionedVector eigenValues(const dimensionedSymmTensor& dt)
+{
+    return dimensionedVector
+    (
+        "eigenValues("+dt.name()+')',
+        dt.dimensions(),
+        eigenValues(dt.value())
+    );
+}
+
+
+dimensionedTensor eigenVectors(const dimensionedSymmTensor& dt)
 {
     return dimensionedTensor
     (

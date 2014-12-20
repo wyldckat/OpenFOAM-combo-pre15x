@@ -14,8 +14,10 @@ QZeta/QZeta.C
 LaunderGibsonRSTM/LaunderGibsonRSTM.C
 SpalartAllmaras/SpalartAllmaras.C
 realizableKE/realizableKE.C
+kOmegaSST/kOmegaSST.C
 
-wallFunctions/nutWallFunction/nutWallFunctionFvPatchScalarField.C
-wallFunctions/nutWallFunction/nutStandardWallFunctionFvPatchScalarField.C
+wallFunctions/nutWallFunction/nutWallFunction/nutWallFunctionFvPatchScalarField.C
+wallFunctions/nutWallFunction/nutStandardWallFunction/nutStandardWallFunctionFvPatchScalarField.C
+wallFunctions/nutWallFunction/nutStandardRoughWallFunction/nutStandardRoughWallFunctionFvPatchScalarField.C
 
 LIB = $(FOAM_LIBBIN)/libincompressibleTurbulenceModels

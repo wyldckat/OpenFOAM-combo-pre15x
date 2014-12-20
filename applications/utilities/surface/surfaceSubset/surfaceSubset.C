@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,9 +35,10 @@ Description
 #include "Switch.H"
 #include "IOdictionary.H"
 #include "boundBox.H"
-#include "triSurfaceSearch.H"
+#include "indexedOctree.H"
 #include "octree.H"
-#include "octreeDataTriSurface.H"
+#include "treeDataTriSurface.H"
+#include "Random.H"
 
 using namespace Foam;
 
@@ -225,74 +226,55 @@ int main(int argc, char *argv[])
 
         if (outside)
         {
-            Info<< "Selecting all triangles with centre on or outside surface "
+            Info<< "Selecting all triangles with centre outside surface "
                 << surfName << endl;
         }
         else
         {
-            Info<< "Selecting all triangles with centre on or inside surface "
+            Info<< "Selecting all triangles with centre inside surface "
                 << surfName << endl;
         }
 
+        // Read surface to select on
         triSurface selectSurf(surfName);
-        const pointField& selectNormals = selectSurf.faceNormals();
 
-        triSurfaceSearch selectQuery(selectSurf);
+        // bb of surface
+        treeBoundBox bb(selectSurf.localPoints());
 
-        const treeBoundBox& bb = selectQuery.tree().octreeBb();
-        const vector searchSpan = 1E-6*(bb.max() - bb.min());
-        const scalar searchDimSqr = magSqr(searchSpan);
+        // Radnom number generator
+        Random rndGen(354543);
 
-        // Check if face is
-        // - on surface
-        // - on outside/inside
+        // search engine
+        indexedOctree<treeDataTriSurface> selectTree
+        (
+            treeDataTriSurface(selectSurf),
+            bb.extend(rndGen, 1E-3),    // slightly randomize bb
+            8,      // maxLevel
+            10,     // leafsize
+            3.0     // duplicity
+        );
+
+        // Check if face (centre) is in outside or inside.
         forAll(facesToSubset, faceI)
         {
             if (!facesToSubset[faceI])
             {
                 const point fc(surf1[faceI].centre(surf1.points()));
 
-                pointIndexHit pHit = selectQuery.nearest(fc, searchSpan);
+                indexedOctree<treeDataTriSurface>::volumeType t =
+                    selectTree.getVolumeType(fc);
 
-                if
-                (
-                    pHit.hit()
-                 && magSqr(pHit.hitPoint() - fc) < searchDimSqr
-                 && (
-                        selectNormals[pHit.index()]
-                      & surf1.faceNormals()[faceI]
-                    )
-                  > 1-0.001
-                )
+                if (t == indexedOctree<treeDataTriSurface>::INSIDE && !outside)
                 {
-                    // fc on surface. Consider to be inside.
                     facesToSubset[faceI] = true;
                 }
-                else
+                else if
+                (
+                    t == indexedOctree<treeDataTriSurface>::OUTSIDE
+                 && outside
+                )
                 {
-                    label volType = selectQuery.tree().getSampleType(fc);
-
-                    if
-                    (
-                        volType == octree<octreeDataTriSurface>::INSIDE
-                     && !outside
-                    )
-                    {
-                        facesToSubset[faceI] = true;
-                    }
-                    else if
-                    (
-                        volType == octree<octreeDataTriSurface>::OUTSIDE
-                     && outside
-                    )
-                    {
-                        facesToSubset[faceI] = true;
-                    }
-                    else if (volType == octree<octreeDataTriSurface>::MIXED)
-                    {
-                        //? is possible?
-                        facesToSubset[faceI] = true;
-                    }
+                    facesToSubset[faceI] = true;
                 }
             }
         }

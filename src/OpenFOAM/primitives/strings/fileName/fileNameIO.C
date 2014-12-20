@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,21 +27,12 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "fileName.H"
 #include "IOstreams.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-// Construct from input
-
-fileName::fileName(Istream& is)
+Foam::fileName::fileName(Istream& is)
 :
     string(is)
 {
@@ -49,7 +40,7 @@ fileName::fileName(Istream& is)
 }
 
 
-Istream& operator>>(Istream& is, fileName& fn)
+Foam::Istream& Foam::operator>>(Istream& is, fileName& fn)
 {
     fileName fName(is);
 
@@ -62,17 +53,13 @@ Istream& operator>>(Istream& is, fileName& fn)
 }
 
 
-Ostream& operator<<(Ostream& os, const fileName& s)
+Foam::Ostream& Foam::operator<<(Ostream& os, const fileName& s)
 {
     os.write(s);
     os.check("Ostream& operator<<(Ostream&, const fileName&)");
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //
 

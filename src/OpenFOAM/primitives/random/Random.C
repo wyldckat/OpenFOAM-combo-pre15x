@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -46,33 +44,7 @@ namespace Foam
 
 #else
 
-
-#   ifdef cray
-extern "C" {
-
-     double drand48 (void);
-
-     double erand48 (unsigned short xsubi[3]);
-
-     long lrand48 (void);
-
-     long nrand48 (unsigned short xsubi[3]);
-
-     long mrand48 (void);
-
-     long jrand48 (unsigned short xsubi[3]);
-
-     void srand48 (long seedval);
-
-     unsigned short *seed48 (unsigned short seed16v[3]);
-
-     void lcong48 (unsigned short param[7]);
-}
-#   else
-
-#       include <cstdlib>
-
-#   endif
+#   include <cstdlib>
 
 #endif
 
@@ -139,10 +111,19 @@ vector Random::vector01()
 }
 
 
-tensor Random::tensor01()
+sphericalTensor Random::sphericalTensor01()
 {
-    tensor rndTen;
-    for (direction cmpt=0; cmpt<tensor::nComponents; cmpt++)
+    sphericalTensor rndTen;
+    rndTen.ii() = scalar01();
+
+    return rndTen;
+}
+
+
+symmTensor Random::symmTensor01()
+{
+    symmTensor rndTen;
+    for (direction cmpt=0; cmpt<symmTensor::nComponents; cmpt++)
     {
         rndTen.component(cmpt) = scalar01();
     }
@@ -151,10 +132,13 @@ tensor Random::tensor01()
 }
 
 
-sphericalTensor Random::sphericalTensor01()
+tensor Random::tensor01()
 {
-    sphericalTensor rndTen;
-    rndTen.ii() = scalar01();
+    tensor rndTen;
+    for (direction cmpt=0; cmpt<tensor::nComponents; cmpt++)
+    {
+        rndTen.component(cmpt) = scalar01();
+    }
 
     return rndTen;
 }
@@ -196,15 +180,21 @@ void Random::randomise(vector& v)
 }
 
 
-void Random::randomise(tensor& t)
-{
-    t = tensor01();
-}
-
-
 void Random::randomise(sphericalTensor& st)
 {
     st = sphericalTensor01();
+}
+
+
+void Random::randomise(symmTensor& st)
+{
+    st = symmTensor01();
+}
+
+
+void Random::randomise(tensor& t)
+{
+    t = tensor01();
 }
 
 

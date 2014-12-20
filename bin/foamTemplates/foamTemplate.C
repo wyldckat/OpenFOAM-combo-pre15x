@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    className
-
-Description
-
 \*----------------------------------------------------------------------------*/
 
 #include "className.H"
@@ -41,7 +36,6 @@ const dataType Foam::className::staticData();
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Null constructor
 Foam::className::className()
 :
     baseClassName(),
@@ -49,7 +43,6 @@ Foam::className::className()
 {}
 
 
-// Construct from components
 Foam::className::className(const dataType& data)
 :
     baseClassName(),
@@ -57,7 +50,6 @@ Foam::className::className(const dataType& data)
 {}
 
 
-// Construct as copy
 Foam::className::className(const className&)
 :
     baseClassName(),

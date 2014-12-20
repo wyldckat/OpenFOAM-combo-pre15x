@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,20 +48,21 @@ addToRunTimeSelectionTable(surface, interpolatedPlane, word);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-template <class T>
-Foam::Field<T> Foam::interpolatedPlane::doInterpolate
+template <class Type>
+Foam::tmp<Foam::Field<Type> > Foam::interpolatedPlane::interpolate
 (
     const word& fieldName,
-    const fieldsCache<T>& cache,
+    const fieldsCache<Type>& cache,
     const volPointInterpolation& pInterp,
     const dictionary& interpolationSchemes
 ) const
 {
     // One value per point
-    Field<T> values(points().size());
+    tmp<Field<Type> > tvalues(new Field<Type>(points().size()));
+    Field<Type>& values = tvalues();
 
     // Get interpolator from cache
-    const interpolation<T>& interpolator =
+    const interpolation<Type>& interpolator =
         cache.interpolator(fieldName, pInterp, interpolationSchemes);
 
     boolList pointDone(points().size(), false);
@@ -89,7 +88,7 @@ Foam::Field<T> Foam::interpolatedPlane::doInterpolate
         }
     }
 
-    return values;
+    return tvalues;
 }
 
 
@@ -129,7 +128,7 @@ Foam::interpolatedPlane::~interpolatedPlane()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::scalarField Foam::interpolatedPlane::interpolate
+Foam::tmp<Foam::scalarField> Foam::interpolatedPlane::interpolate
 (
     const word& fieldName,
     const fieldsCache<scalar>& cache,
@@ -137,11 +136,11 @@ Foam::scalarField Foam::interpolatedPlane::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache, pInterp, interpolationSchemes);
+    return interpolate<scalar>(fieldName, cache, pInterp, interpolationSchemes);
 }
 
 
-Foam::vectorField Foam::interpolatedPlane::interpolate
+Foam::tmp<Foam::vectorField> Foam::interpolatedPlane::interpolate
 (
     const word& fieldName,
     const fieldsCache<vector>& cache,
@@ -149,11 +148,47 @@ Foam::vectorField Foam::interpolatedPlane::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache, pInterp, interpolationSchemes);
+    return interpolate<vector>(fieldName, cache, pInterp, interpolationSchemes);
 }
 
 
-Foam::tensorField Foam::interpolatedPlane::interpolate
+Foam::tmp<Foam::sphericalTensorField> Foam::interpolatedPlane::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<sphericalTensor>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    return interpolate<sphericalTensor>
+    (
+        fieldName,
+        cache,
+        pInterp,
+        interpolationSchemes
+    );
+}
+
+
+Foam::tmp<Foam::symmTensorField> Foam::interpolatedPlane::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<symmTensor>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    return interpolate<symmTensor>
+    (
+        fieldName,
+        cache, 
+        pInterp,
+        interpolationSchemes
+    );
+}
+
+
+Foam::tmp<Foam::tensorField> Foam::interpolatedPlane::interpolate
 (
     const word& fieldName,
     const fieldsCache<tensor>& cache,
@@ -161,9 +196,8 @@ Foam::tensorField Foam::interpolatedPlane::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    return doInterpolate(fieldName, cache, pInterp, interpolationSchemes);
+    return interpolate<tensor>(fieldName, cache, pInterp, interpolationSchemes);
 }
-
 
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,7 +35,7 @@ SourceFiles
 #ifndef FixedValuePointPatchField_H
 #define FixedValuePointPatchField_H
 
-#include "ValueStoredPointPatchField.H"
+#include "ValuePointPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,7 +49,7 @@ namespace Foam
 template<template<class> class PatchField, class PointPatch, class Type>
 class FixedValuePointPatchField
 :
-    public ValueStoredPointPatchField<PatchField, PointPatch, Type>
+    public ValuePointPatchField<PatchField, PointPatch, Type>
 {
 
 public:
@@ -125,37 +125,15 @@ public:
         }
 
 
-    // Member functions
-
-        //- Insert boundary value into the internal field
-        //  Fixed values need to be inserted first. In the second go,
-        //  there's nothing to do
-        virtual void initEvaluate(const bool=false)
-        {
-            ValueStoredPointPatchField<PatchField, PointPatch, Type>::
-                evaluate();
-        }
-
-        virtual void evaluate()
-        {}
-
-
     // Member operators
 
-        //- Disable assignment operators
-        virtual void operator=(const Field<Type>&) {}
-        virtual void operator=(const Type&) {}
+        // Disable assignment operators
 
-        // Force an assignment irrespective of form of patch
+            virtual void operator=(const Field<Type>&)
+            {}
 
-        virtual void operator==
-        (
-            const ValueStoredPointPatchField<PatchField, PointPatch, Type>&
-        );
-
-        virtual void operator==(const Field<Type>&);
-        virtual void operator==(const Type&);
-
+            virtual void operator=(const Type&)
+            {}
 };
 
 

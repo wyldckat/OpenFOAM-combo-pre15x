@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,10 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Describes a surface normal vector boundary condition by its magnitude.
-    Note: The value is positive for outward-pointing vectors
 
 \*---------------------------------------------------------------------------*/
 
@@ -81,6 +77,17 @@ surfaceNormalFixedValueFvPatchVectorField
 {
     fvPatchVectorField::operator=(refValue_*patch().nf());
 }
+
+
+surfaceNormalFixedValueFvPatchVectorField::
+surfaceNormalFixedValueFvPatchVectorField
+(
+    const surfaceNormalFixedValueFvPatchVectorField& pivpvf
+)
+:
+    fixedValueFvPatchVectorField(pivpvf),
+    refValue_(pivpvf.refValue_)
+{}
 
 
 surfaceNormalFixedValueFvPatchVectorField::

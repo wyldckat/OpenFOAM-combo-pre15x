@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -271,7 +271,7 @@ void LISA::atomizeParcel
         
         scalar J = pWalk*p.d()/2.0;
         
-        tau = pow(3.0*cTau_,2.0/3.0)*pow(J*sigma/(sqr(Q)*pow(U,4.0)*rhoFuel),1.0/3.0);
+        tau = pow(3.0*cTau_,2.0/3.0)*cbrt(J*sigma/(sqr(Q)*pow(U,4.0)*rhoFuel));
 
         dL = sqrt(4.0*p.d()/k);
     }
@@ -286,7 +286,7 @@ void LISA::atomizeParcel
             pow(0.5 + 1.5 * muFuel/pow((rhoFuel*sigma*dL), 0.5), 0.5)
         );
 
-    scalar dD = pow(3.0*mathematicalConstant::pi*pow(dL, 2.0)/kL, 1.0/3.0);     
+    scalar dD = cbrt(3.0*mathematicalConstant::pi*pow(dL, 2.0)/kL);     
     
     scalar lisaExp = 0.27;
     scalar ambientPressure = 1.0e+5;

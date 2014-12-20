@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -225,6 +223,13 @@ bool Pstream::floatTransfer(debug::optimisationSwitch("floatTransfer", 1));
 // Number of processors at which the reduce algorithm changes from linear to
 // tree
 int Pstream::nProcsSimpleSum(debug::optimisationSwitch("nProcsSimpleSum", 16));
+
+//- Switch for scheduled vs non-scheduled transfer
+bool Pstream::scheduledTransfer
+(
+    debug::optimisationSwitch("scheduledTransfer", false)
+);
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

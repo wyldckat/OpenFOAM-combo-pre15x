@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,12 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Generic FieldField type.
-
 \*---------------------------------------------------------------------------*/
 
 #include "PstreamReduceOps.H"
+#include "FieldFieldReuseFunctions.H"
+
+#define TEMPLATE template<template<class> class Field, class Type>
+#include "FieldFieldFunctionsM.C"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -82,12 +83,12 @@ pow
 )
 {
     typedef typename powProduct<Type, r>::type powProductType;
-    tmp<FieldField<Field, powProductType> > result
+    tmp<FieldField<Field, powProductType> > tRes
     (
         FieldField<Field, powProductType>::NewCalculatedType(f)
     );
-    pow<Type, r>(result(), f);
-    return result;
+    pow<Type, r>(tRes(), f);
+    return tRes;
 }
 
 template<template<class> class Field, class Type, int r>
@@ -98,13 +99,13 @@ pow
 )
 {
     typedef typename powProduct<Type, r>::type powProductType;
-    tmp<FieldField<Field, powProductType> > result
+    tmp<FieldField<Field, powProductType> > tRes
     (
-        FieldField<Field, powProductType>::NewCalculatedType(tf())
+        reuseTmpFieldField<Field, powProductType, Type>::New(tf)
     );
-    pow<Type, r>(result(), tf());
-    tf.clear();
-    return result;
+    pow<Type, r>(tRes(), tf());
+    reuseTmpFieldField<Field, powProductType, Type>::clear(tf);
+    return tRes;
 }
 
 
@@ -126,12 +127,12 @@ tmp<FieldField<Field, typename outerProduct<Type, Type>::type> >
 sqr(const FieldField<Field, Type>& f)
 {
     typedef typename outerProduct<Type, Type>::type outerProductType;
-    tmp<FieldField<Field, outerProductType> > result
+    tmp<FieldField<Field, outerProductType> > tRes
     (
         FieldField<Field, outerProductType>::NewCalculatedType(f)
     );
-    sqr(result(), f);
-    return result;
+    sqr(tRes(), f);
+    return tRes;
 }
 
 template<template<class> class Field, class Type>
@@ -139,13 +140,13 @@ tmp<FieldField<Field, typename outerProduct<Type, Type>::type> >
 sqr(const tmp<FieldField<Field, Type> >& tf)
 {
     typedef typename outerProduct<Type, Type>::type outerProductType;
-    tmp<FieldField<Field, outerProductType> > result
+    tmp<FieldField<Field, outerProductType> > tRes
     (
-        FieldField<Field, outerProductType>::NewCalculatedType(tf())
+        reuseTmpFieldField<Field, outerProductType, Type>::New(tf)
     );
-    sqr(result(), tf());
-    tf.clear();
-    return result;
+    sqr(tRes(), tf());
+    reuseTmpFieldField<Field, outerProductType, Type>::clear(tf);
+    return tRes;
 }
 
 
@@ -161,26 +162,26 @@ void magSqr(FieldField<Field, scalar>& sf, const FieldField<Field, Type>& f)
 template<template<class> class Field, class Type>
 tmp<FieldField<Field, scalar> > magSqr(const FieldField<Field, Type>& f)
 {
-    tmp<FieldField<Field, scalar> > result
+    tmp<FieldField<Field, scalar> > tRes
     (
         FieldField<Field, scalar>::NewCalculatedType(f)
     );
 
-    magSqr(result(), f);
-    return result;
+    magSqr(tRes(), f);
+    return tRes;
 }
 
 template<template<class> class Field, class Type>
 tmp<FieldField<Field, scalar> > magSqr(const tmp<FieldField<Field, Type> >& tf)
 {
-    tmp<FieldField<Field, scalar> > result
+    tmp<FieldField<Field, scalar> > tRes
     (
-        FieldField<Field, scalar>::NewCalculatedType(tf())
+        reuseTmpFieldField<Field, scalar, Type>::New(tf)
     );
 
-    magSqr(result(), tf());
-    tf.clear();
-    return result;
+    magSqr(tRes(), tf());
+    reuseTmpFieldField<Field, scalar, Type>::clear(tf);
+    return tRes;
 }
 
 
@@ -196,26 +197,116 @@ void mag(FieldField<Field, scalar>& sf, const FieldField<Field, Type>& f)
 template<template<class> class Field, class Type>
 tmp<FieldField<Field, scalar> > mag(const FieldField<Field, Type>& f)
 {
-    tmp<FieldField<Field, scalar> > result
+    tmp<FieldField<Field, scalar> > tRes
     (
         FieldField<Field, scalar>::NewCalculatedType(f)
     );
 
-    mag(result(), f);
-    return result;
+    mag(tRes(), f);
+    return tRes;
 }
 
 template<template<class> class Field, class Type>
 tmp<FieldField<Field, scalar> > mag(const tmp<FieldField<Field, Type> >& tf)
 {
-    tmp<FieldField<Field, scalar> > result
+    tmp<FieldField<Field, scalar> > tRes
     (
-        FieldField<Field, scalar>::NewCalculatedType(tf())
+        reuseTmpFieldField<Field, scalar, Type>::New(tf)
     );
 
-    mag(result(), tf());
-    tf.clear();
-    return result;
+    mag(tRes(), tf());
+    reuseTmpFieldField<Field, scalar, Type>::clear(tf);
+    return tRes;
+}
+
+
+template<template<class> class Field, class Type>
+void cmptMax
+(
+    FieldField<Field, typename FieldField<Field, Type>::cmptType>& cf,
+    const FieldField<Field, Type>& f
+)
+{
+    forAll(cf, i)
+    {
+        cmptMax(cf[i], f[i]);
+    }
+}
+
+template<template<class> class Field, class Type>
+tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptMax
+(
+    const FieldField<Field, Type>& f
+)
+{
+    typedef typename FieldField<Field, Type>::cmptType cmptType;
+    tmp<FieldField<Field, cmptType> > tRes
+    (
+        FieldField<Field, cmptType>::NewCalculatedType(f)
+    );
+    cmptMax(tRes(), f);
+    return tRes;
+}
+
+template<template<class> class Field, class Type>
+tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptMax
+(
+    const tmp<FieldField<Field, Type> >& tf
+)
+{
+    typedef typename FieldField<Field, Type>::cmptType cmptType;
+    tmp<FieldField<Field, cmptType> > tRes
+    (
+        reuseTmpFieldField<Field, cmptType, Type>::New(tf)
+    );
+    cmptMax(tRes(), tf());
+    reuseTmpFieldField<Field, cmptType, Type>::clear(tf);
+    return tRes;
+}
+
+
+template<template<class> class Field, class Type>
+void cmptMin
+(
+    FieldField<Field, typename FieldField<Field, Type>::cmptType>& cf,
+    const FieldField<Field, Type>& f
+)
+{
+    forAll(cf, i)
+    {
+        cmptMin(cf[i], f[i]);
+    }
+}
+
+template<template<class> class Field, class Type>
+tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptMin
+(
+    const FieldField<Field, Type>& f
+)
+{
+    typedef typename FieldField<Field, Type>::cmptType cmptType;
+    tmp<FieldField<Field, cmptType> > tRes
+    (
+        FieldField<Field, cmptType>::NewCalculatedType(f)
+    );
+    cmptMin(tRes(), f);
+    return tRes;
+}
+
+template<template<class> class Field, class Type>
+tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptMin
+(
+    const tmp<FieldField<Field, Type> >& tf
+)
+{
+    typedef typename FieldField<Field, Type>::cmptType cmptType;
+    tmp<FieldField<Field, cmptType> > tRes
+    (
+        reuseTmpFieldField<Field, cmptType, Type>::New(tf)
+    );
+    cmptMin(tRes(), tf());
+    reuseTmpFieldField<Field, cmptType, Type>::clear(tf);
+    return tRes;
 }
 
 
@@ -239,12 +330,12 @@ tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptAv
 )
 {
     typedef typename FieldField<Field, Type>::cmptType cmptType;
-    tmp<FieldField<Field, cmptType> > result
+    tmp<FieldField<Field, cmptType> > tRes
     (
         FieldField<Field, cmptType>::NewCalculatedType(f)
     );
-    cmptAv(result(), f);
-    return result;
+    cmptAv(tRes(), f);
+    return tRes;
 }
 
 template<template<class> class Field, class Type>
@@ -254,13 +345,13 @@ tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptAv
 )
 {
     typedef typename FieldField<Field, Type>::cmptType cmptType;
-    tmp<FieldField<Field, cmptType> > result
+    tmp<FieldField<Field, cmptType> > tRes
     (
-        FieldField<Field, cmptType>::NewCalculatedType(tf())
+        reuseTmpFieldField<Field, cmptType, Type>::New(tf)
     );
-    cmptAv(result(), tf());
-    tf.clear();
-    return result;
+    cmptAv(tRes(), tf());
+    reuseTmpFieldField<Field, cmptType, Type>::clear(tf);
+    return tRes;
 }
 
 
@@ -283,12 +374,12 @@ tmp<FieldField<Field, Type> > cmptMag
     const FieldField<Field, Type>& f
 )
 {
-    tmp<FieldField<Field, Type> > result
+    tmp<FieldField<Field, Type> > tRes
     (
         FieldField<Field, Type>::NewCalculatedType(f)
     );
-    cmptMag(result(), f);
-    return result;
+    cmptMag(tRes(), f);
+    return tRes;
 }
 
 template<template<class> class Field, class Type>
@@ -297,134 +388,14 @@ tmp<FieldField<Field, Type> > cmptMag
     const tmp<FieldField<Field, Type> >& tf
 )
 {
-    tmp<FieldField<Field, Type> > result
+    tmp<FieldField<Field, Type> > tRes
     (
-        FieldField<Field, Type>::NewCalculatedType(tf())
+        reuseTmpFieldField<Field, Type, Type>::New(tf)
     );
-    cmptMag(result(), tf());
-    tf.clear();
-    return result;
+    cmptMag(tRes(), tf());
+    reuseTmpFieldField<Field, Type, Type>::clear(tf);
+    return tRes;
 }
-
-
-#define BINARY_FUNCTION(func)                                                 \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void func                                                                     \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type>& f1,                                        \
-    const FieldField<Field, Type>& f2                                         \
-)                                                                             \
-{                                                                             \
-    forAll(f, i)                                                              \
-    {                                                                         \
-        func(f[i], f1[i], f2[i]);                                             \
-    }                                                                         \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const FieldField<Field, Type>& f1,                                        \
-    const FieldField<Field, Type>& f2                                         \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf                                          \
-    (                                                                         \
-        FieldField<Field, Type>::NewCalculatedType(f1)                        \
-    );                                                                        \
-    func(tf(), f1, f2);                                                       \
-    return tf;                                                                \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const FieldField<Field, Type>& f1,                                        \
-    const tmp<FieldField<Field, Type> >& tf2                                  \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf2.ptr());                              \
-    FieldField<Field, Type>& f = tf();                                        \
-    func(f, f1, f);                                                           \
-    return tf;                                                                \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1,                                 \
-    const FieldField<Field, Type>& f2                                         \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf1.ptr());                              \
-    FieldField<Field, Type>& f = tf();                                        \
-    func(f, f, f2);                                                           \
-    return tf;                                                                \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1,                                 \
-    const tmp<FieldField<Field, Type> >& tf2                                  \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf2.ptr());                              \
-    FieldField<Field, Type>& f = tf();                                        \
-    func(f, tf1(), f);                                                        \
-    tf1.clear();                                                              \
-    return tf;                                                                \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void func                                                                     \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type>& f1,                                        \
-    const Type& s                                                             \
-)                                                                             \
-{                                                                             \
-    forAll(f, i)                                                              \
-    {                                                                         \
-        func(f[i], f1[i], s);                                                 \
-    }                                                                         \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const FieldField<Field, Type>& f1,                                        \
-    const Type& s                                                             \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf                                          \
-    (                                                                         \
-        FieldField<Field, Type>::NewCalculatedType(f1)                        \
-    );                                                                        \
-    func(tf(), f1, s);                                                        \
-    return tf;                                                                \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1,                                 \
-    const Type& s                                                             \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf1.ptr());                              \
-    FieldField<Field, Type>& f = tf();                                        \
-    func(f, f, s);                                                            \
-    return tf;                                                                \
-}
-
-BINARY_FUNCTION(max)
-BINARY_FUNCTION(min)
-BINARY_FUNCTION(scale)
-
-#undef BINARY_FUNCTION
 
 
 #define TMP_UNARY_FUNCTION(returnType, func)                                  \
@@ -635,295 +606,32 @@ TMP_UNARY_FUNCTION(Type, gAverage)
 #undef TMP_UNARY_FUNCTION
 
 
+BINARY_FUNCTION(Type, Type, Type, max)
+BINARY_FUNCTION(Type, Type, Type, min)
+BINARY_FUNCTION(Type, Type, Type, scale)
+
+BINARY_TYPE_FUNCTION(Type, Type, Type, max)
+BINARY_TYPE_FUNCTION(Type, Type, Type, min)
+BINARY_TYPE_FUNCTION(Type, Type, Type, scale)
+
+
 /* * * * * * * * * * * * * * * * Global operators  * * * * * * * * * * * * * */
 
-#define UNARY_OPERATOR(op, opFunc)                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void opFunc                                                                   \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type>& f1                                         \
-)                                                                             \
-{                                                                             \
-    forAll(f, i)                                                              \
-    {                                                                         \
-        opFunc(f[i], f1[i]);                                                  \
-    }                                                                         \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type>& f1                                         \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf                                          \
-    (                                                                         \
-        FieldField<Field, Type>::NewCalculatedType(f1)                        \
-    );                                                                        \
-    opFunc(tf(), f1);                                                         \
-    return tf;                                                                \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1                                  \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf1.ptr());                              \
-    opFunc(tf(), tf());                                                       \
-    return tf;                                                                \
-}
+UNARY_OPERATOR(Type, Type, -, negate)
 
-UNARY_OPERATOR(-, negate)
-
-#undef UNARY_OPERATOR
-
-
-#define BINARY_OPERATOR_FF(Type1, Type2, op, opFunc)                          \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void opFunc                                                                   \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type1>& f1,                                       \
-    const FieldField<Field, Type2>& f2                                        \
-)                                                                             \
-{                                                                             \
-    forAll(f, i)                                                              \
-    {                                                                         \
-        opFunc(f[i], f1[i], f2[i]);                                           \
-    }                                                                         \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type1>& f1,                                       \
-    const FieldField<Field, Type2>& f2                                        \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf                                          \
-    (                                                                         \
-        FieldField<Field, Type>::NewCalculatedType(f1)                        \
-    );                                                                        \
-    opFunc(tf(), f1, f2);                                                     \
-    return tf;                                                                \
-}
-
-#define BINARY_OPERATOR_FTR(Type1, Type2, op, opFunc)                         \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type1>& f1,                                       \
-    const tmp<FieldField<Field, Type2> >& tf2                                 \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf2.ptr());                              \
-    opFunc(tf(), f1, tf());                                                   \
-    return tf;                                                                \
-}
-
-#define BINARY_OPERATOR_FT(Type1, Type2, op, opFunc)                          \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type1>& f1,                                       \
-    const tmp<FieldField<Field, Type2> >& tf2                                 \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf = f1 op tf2();                           \
-    tf2.clear();                                                              \
-    return tf;                                                                \
-}
-
-#define BINARY_OPERATOR_TRF(Type1, Type2, op, opFunc)                         \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type1> >& tf1,                                \
-    const FieldField<Field, Type2>& f2                                        \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf1.ptr());                              \
-    opFunc(tf(), tf(), f2);                                                   \
-    return tf;                                                                \
-}
-
-#define BINARY_OPERATOR_TF(Type1, Type2, op, opFunc)                          \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type1> >& tf1,                                \
-    const FieldField<Field, Type2>& f2                                        \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf = tf1() op f2;                           \
-    tf1.clear();                                                              \
-    return tf;                                                                \
-}
-
-#define BINARY_OPERATOR_TRT(Type1, Type2, op, opFunc)                         \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type1> >& tf1,                                \
-    const tmp<FieldField<Field, Type2> >& tf2                                 \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf1.ptr());                              \
-    opFunc(tf(), tf(), tf2());                                                \
-    tf2.clear();                                                              \
-    return tf;                                                                \
-}
-
-#define BINARY_OPERATOR_TTR(Type1, Type2, op, opFunc)                         \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type1> >& tf1,                                \
-    const tmp<FieldField<Field, Type2> >& tf2                                 \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf2.ptr());                              \
-    opFunc(tf(), tf1(), tf());                                                \
-    tf1.clear();                                                              \
-    return tf;                                                                \
-}
-
-#define BINARY_OPERATOR_R(Type1, Type2, op, opFunc)                           \
-    BINARY_OPERATOR_FF(Type1, Type2, op, opFunc)                              \
-    BINARY_OPERATOR_FTR(Type1, Type2, op, opFunc)                             \
-    BINARY_OPERATOR_TRF(Type1, Type2, op, opFunc)                             \
-    BINARY_OPERATOR_TRT(Type1, Type2, op, opFunc)
-
-BINARY_OPERATOR_R(Type, Type, +, add)
-BINARY_OPERATOR_R(Type, Type, -, subtract)
-
-#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
-BINARY_OPERATOR_FF(scalar, Type, *, multiply)
-BINARY_OPERATOR_FTR(scalar, Type, *, multiply)
-BINARY_OPERATOR_TF(scalar, Type, *, multiply)
-BINARY_OPERATOR_TTR(scalar, Type, *, multiply)
+#ifndef __INTEL_COMPILER
+BINARY_OPERATOR(Type, Type, scalar, *, multiply)
+BINARY_OPERATOR(Type, scalar, Type, *, multiply)
 #endif
+BINARY_OPERATOR(Type, Type, scalar, /, divide)
 
-BINARY_OPERATOR_FF(Type, scalar, /, divide)
-BINARY_OPERATOR_FT(Type, scalar, /, divide)
-BINARY_OPERATOR_TRF(Type, scalar, /, divide)
-BINARY_OPERATOR_TRT(Type, scalar, /, divide)
+BINARY_TYPE_OPERATOR_SF(Type, scalar, Type, *, multiply)
+BINARY_TYPE_OPERATOR_FS(Type, Type, scalar, *, multiply)
 
-#undef BINARY_OPERATOR_R
-#undef BINARY_OPERATOR_FF
-#undef BINARY_OPERATOR_FTR
-#undef BINARY_OPERATOR_TF
-#undef BINARY_OPERATOR_TTR
-#undef BINARY_OPERATOR_FT
-#undef BINARY_OPERATOR_TRF
-#undef BINARY_OPERATOR_TRT
+BINARY_TYPE_OPERATOR_FS(Type, Type, scalar, /, divide)
 
 
-#define BINARY_TYPE_OPERATOR_TF(TYPE, op, opFunc)                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void opFunc                                                                   \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const TYPE& s,                                                            \
-    const FieldField<Field, Type>& f1                                         \
-)                                                                             \
-{                                                                             \
-    forAll(f, i)                                                              \
-    {                                                                         \
-        opFunc(f[i], s, f1[i]);                                               \
-    }                                                                         \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const TYPE& s,                                                            \
-    const FieldField<Field, Type>& f1                                         \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf                                          \
-    (                                                                         \
-        FieldField<Field, Type>::NewCalculatedType(f1)                        \
-    );                                                                        \
-    opFunc(tf(), s, f1);                                                      \
-    return tf;                                                                \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const TYPE& s,                                                            \
-    const tmp<FieldField<Field, Type> >& tf1                                  \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf1.ptr());                              \
-    opFunc(tf(), s, tf());                                                    \
-    return tf;                                                                \
-}
-
-#define BINARY_TYPE_OPERATOR_FT(TYPE, op, opFunc)                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void opFunc                                                                   \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type>& f1,                                        \
-    const TYPE& s                                                             \
-)                                                                             \
-{                                                                             \
-    forAll(f, i)                                                              \
-    {                                                                         \
-        opFunc(f[i], f1[i], s);                                               \
-    }                                                                         \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type>& f1,                                        \
-    const TYPE& s                                                             \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf                                          \
-    (                                                                         \
-        FieldField<Field, Type>::NewCalculatedType(f1)                        \
-    );                                                                        \
-    opFunc(tf(), f1, s);                                                      \
-    return tf;                                                                \
-}                                                                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1,                                 \
-    const TYPE& s                                                             \
-)                                                                             \
-{                                                                             \
-    tmp<FieldField<Field, Type> > tf(tf1.ptr());                              \
-    opFunc(tf(), tf(), s);                                                    \
-    return tf;                                                                \
-}
-
-#define BINARY_TYPE_OPERATOR(TYPE, op, opFunc)                                \
-    BINARY_TYPE_OPERATOR_TF(TYPE, op, opFunc)                                 \
-    BINARY_TYPE_OPERATOR_FT(TYPE, op, opFunc)
-
-BINARY_TYPE_OPERATOR(Type, +, add)
-BINARY_TYPE_OPERATOR(Type, -, subtract)
-
-BINARY_TYPE_OPERATOR(scalar, *, multiply)
-BINARY_TYPE_OPERATOR_FT(scalar, /, divide)
-
-#undef BINARY_TYPE_OPERATOR
-#undef BINARY_TYPE_OPERATOR_TF
-#undef BINARY_TYPE_OPERATOR_FT
-
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #define PRODUCT_OPERATOR(product, op, opFunc)                                 \
                                                                               \
@@ -950,12 +658,12 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Type1, Type2>::type productType;                 \
-    tmp<FieldField<Field, productType> > tf                                   \
+    tmp<FieldField<Field, productType> > tRes                                 \
     (                                                                         \
         FieldField<Field, productType>::NewCalculatedType(f1)                 \
     );                                                                        \
-    opFunc(tf(), f1, f2);                                                     \
-    return tf;                                                                \
+    opFunc(tRes(), f1, f2);                                                   \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
 template<template<class> class Field, class Type1, class Type2>               \
@@ -967,13 +675,13 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Type1, Type2>::type productType;                 \
-    tmp<FieldField<Field, productType> > tf                                   \
+    tmp<FieldField<Field, productType> > tRes                                 \
     (                                                                         \
-        FieldField<Field, productType>::NewCalculatedType(f1)                 \
+        reuseTmpFieldField<Field, productType, Type2>::New(tf2)               \
     );                                                                        \
-    opFunc(tf(), f1, tf2());                                                  \
-    tf2.clear();                                                              \
-    return tf;                                                                \
+    opFunc(tRes(), f1, tf2());                                                \
+    reuseTmpFieldField<Field, productType, Type2>::clear(tf2);                \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
 template<template<class> class Field, class Type1, class Type2>               \
@@ -985,13 +693,13 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Type1, Type2>::type productType;                 \
-    tmp<FieldField<Field, productType> > tf                                   \
+    tmp<FieldField<Field, productType> > tRes                                 \
     (                                                                         \
-        FieldField<Field, productType>::NewCalculatedType(tf1())              \
+        reuseTmpFieldField<Field, productType, Type1>::New(tf1)               \
     );                                                                        \
-    opFunc(tf(), tf1(), f2);                                                  \
-    tf1.clear();                                                              \
-    return tf;                                                                \
+    opFunc(tRes(), tf1(), f2);                                                \
+    reuseTmpFieldField<Field, productType, Type1>::clear(tf1);                \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
 template<template<class> class Field, class Type1, class Type2>               \
@@ -1003,14 +711,15 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Type1, Type2>::type productType;                 \
-    tmp<FieldField<Field, productType> > tf                                   \
+    tmp<FieldField<Field, productType> > tRes                                 \
     (                                                                         \
-        FieldField<Field, productType>::NewCalculatedType(tf1())              \
+        reuseTmpTmpFieldField<Field, productType, Type1, Type1, Type2>::New   \
+            (tf1, tf2)                                                        \
     );                                                                        \
-    opFunc(tf(), tf1(), tf2());                                               \
-    tf1.clear();                                                              \
-    tf2.clear();                                                              \
-    return tf;                                                                \
+    opFunc(tRes(), tf1(), tf2());                                             \
+    reuseTmpTmpFieldField<Field, productType, Type1, Type1, Type2>::clear     \
+        (tf1, tf2);                                                           \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
 template                                                                      \
@@ -1038,12 +747,12 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Type, Form>::type productType;                   \
-    tmp<FieldField<Field, productType> > tf                                   \
+    tmp<FieldField<Field, productType> > tRes                                 \
     (                                                                         \
         FieldField<Field, productType>::NewCalculatedType(f1)                 \
     );                                                                        \
-    opFunc(tf(), f1, static_cast<const Form&>(vs));                           \
-    return tf;                                                                \
+    opFunc(tRes(), f1, static_cast<const Form&>(vs));                         \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
 template                                                                      \
@@ -1056,13 +765,13 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Type, Form>::type productType;                   \
-    tmp<FieldField<Field, productType> > tf                                   \
+    tmp<FieldField<Field, productType> > tRes                                 \
     (                                                                         \
-        FieldField<Field, productType>::NewCalculatedType(tf1())              \
+        reuseTmpFieldField<Field, productType, Type>::New(tf1)                \
     );                                                                        \
-    opFunc(tf(), tf1(), static_cast<const Form&>(vs));                        \
-    tf1.clear();                                                              \
-    return tf;                                                                \
+    opFunc(tRes(), tf1(), static_cast<const Form&>(vs));                      \
+    reuseTmpFieldField<Field, productType, Type>::clear(tf1);                 \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
 template                                                                      \
@@ -1090,12 +799,12 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Form, Type>::type productType;                   \
-    tmp<FieldField<Field, productType> > tf                                   \
+    tmp<FieldField<Field, productType> > tRes                                 \
     (                                                                         \
         FieldField<Field, productType>::NewCalculatedType(f1)                 \
     );                                                                        \
-    opFunc(tf(), static_cast<const Form&>(vs), f1);                           \
-    return tf;                                                                \
+    opFunc(tRes(), static_cast<const Form&>(vs), f1);                         \
+    return tRes;                                                              \
 }                                                                             \
                                                                               \
 template                                                                      \
@@ -1108,14 +817,17 @@ operator op                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Form, Type>::type productType;                   \
-    tmp<FieldField<Field, productType> > tf                                   \
+    tmp<FieldField<Field, productType> > tRes                                 \
     (                                                                         \
-        FieldField<Field, productType>::NewCalculatedType(tf1())              \
+        reuseTmpFieldField<Field, productType, Type>::New(tf1)                \
     );                                                                        \
-    opFunc(tf(), static_cast<const Form&>(vs), tf1());                        \
-    tf1.clear();                                                              \
-    return tf;                                                                \
+    opFunc(tRes(), static_cast<const Form&>(vs), tf1());                      \
+    reuseTmpFieldField<Field, productType, Type>::clear(tf1);                 \
+    return tRes;                                                              \
 }
+
+PRODUCT_OPERATOR(typeOfSum, +, add)
+PRODUCT_OPERATOR(typeOfSum, -, subtract)
 
 PRODUCT_OPERATOR(outerProduct, *, outer)
 PRODUCT_OPERATOR(crossProduct, ^, cross)
@@ -1130,3 +842,7 @@ PRODUCT_OPERATOR(scalarProduct, &&, dotdot)
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
+
+// ************************************************************************* //

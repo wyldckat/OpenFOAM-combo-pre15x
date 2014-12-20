@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,8 +48,9 @@ template<class Type> class Field;
 typedef Field<label> labelField;
 typedef Field<scalar> scalarField;
 typedef Field<vector> vectorField;
-typedef Field<tensor> tensorField;
 typedef Field<sphericalTensor> sphericalTensorField;
+typedef Field<symmTensor> symmTensorField;
+typedef Field<tensor> tensorField;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -87,6 +87,15 @@ muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 
 muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
 (
+    const muSgsWallFunctionFvPatchScalarField& tppsf
+)
+:
+    fixedValueFvPatchScalarField(tppsf)
+{}
+
+
+muSgsWallFunctionFvPatchScalarField::muSgsWallFunctionFvPatchScalarField
+(
     const muSgsWallFunctionFvPatchScalarField& tppsf,
     const scalarField& iF
 )
@@ -111,11 +120,17 @@ void muSgsWallFunctionFvPatchScalarField::evaluate()
 
     const scalarField& ry = patch().deltaCoeffs();
 
-    const fvPatchVectorField& U = lookupPatchField<volVectorField, vector>("U");
+    const fvPatchVectorField& U = 
+        patch().lookupPatchField<volVectorField, vector>("U");
+
     scalarField magUp = mag(U.patchInternalField() - U);
 
-    const scalarField& muw = lookupPatchField<volScalarField, scalar>("mu");
-    const scalarField& rhow = lookupPatchField<volScalarField, scalar>("rho");
+    const scalarField& muw = 
+        patch().lookupPatchField<volScalarField, scalar>("mu");
+
+    const scalarField& rhow = 
+        patch().lookupPatchField<volScalarField, scalar>("rho");
+
     scalarField& muSgsw = *this;
 
     scalarField magFaceGradU = mag(U.snGrad());

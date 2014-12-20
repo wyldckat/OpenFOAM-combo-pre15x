@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -99,12 +99,16 @@ class PackedList
 {
     // Private data
 
+        //- Number of nBits entries
         label size_;
 
 
     // Private Member Functions
 
-        //- Number of integers needed for i elements of size nBits.
+        //- Calculate underlying list size
+        inline static label intSize(const label sz);
+
+        //- Calculate index into underlying List.
         inline static label intIndex(const label i);
 
         //- Check index i is within valid range (0 ... size-1).
@@ -114,8 +118,6 @@ class PackedList
         inline void checkValue(const unsigned int val) const;
 
 public:
-
-
 
     // Constructors
 

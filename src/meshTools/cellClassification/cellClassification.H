@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,7 +29,7 @@ Description
     'Cuts' a mesh with a surface. Divides cells into three types
     - cut, i.e. any of the edges of the cell is split or any edge of the
       surface pierces any of the faces of the cell.
-    - outside:cell can be reached by meshwave from any of the supplied
+    - outside:cell can be reached by Meshwave from any of the supplied
               outside points (without crossing any cut cell)
     - inside:all other.
 
@@ -160,7 +160,7 @@ private:
         //- Mark all faces intersected by or intersecting surface
         boolList markFaces(const triSurfaceSearch&) const;
 
-        //- Divide cells into cut/inside/outside by using meshWave from cut
+        //- Divide cells into cut/inside/outside by using MeshWave from cut
         //  faces. No check is done on whether outsidePts are in different
         //  domains.
         void markCells

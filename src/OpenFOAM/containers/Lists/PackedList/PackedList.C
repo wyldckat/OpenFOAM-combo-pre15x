@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,7 +39,7 @@ namespace Foam
 template<int nBits>
 PackedList<nBits>::PackedList(const label size, const unsigned int val)
 :
-    List<unsigned int>(intIndex(size-1)+1),
+    List<unsigned int>(intSize(size)),
     size_(size)
 {
     for (label i = 0; i < size; i++)
@@ -60,14 +60,14 @@ PackedList<nBits>::PackedList(const PackedList<nBits>& PList)
 
 //- Construct from labelList
 template<int nBits>
-PackedList<nBits>::PackedList(const labelList& PList)
+PackedList<nBits>::PackedList(const labelList& lst)
 :
-    List<unsigned int>(intIndex(PList.size()-1)),
-    size_(PList.size())
+    List<unsigned int>(intSize(lst.size()), 0),
+    size_(lst.size())
 {
-    forAll(PList, i)
+    forAll(lst, i)
     {
-        set(i, PList[i]);
+        set(i, lst[i]);
     }
 }
 
@@ -84,7 +84,7 @@ autoPtr<PackedList<nBits> > PackedList<nBits>::clone() const
 template <int nBits>
 void PackedList<nBits>::setSize(const label size)
 {
-    List<unsigned int>::setSize(size);
+    List<unsigned int>::setSize(intSize(size));
     size_ = size;
 }
 

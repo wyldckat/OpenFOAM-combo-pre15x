@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -78,6 +78,17 @@ Su
     return tfvm;
 }
 
+template<class Type>
+Zero
+Su
+(
+    const Zero&,
+    GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    return zero;
+}
+
 
 template<class Type>
 tmp<fvMatrix<Type> >
@@ -143,6 +154,17 @@ Sp
     return tfvm;
 }
 
+template<class Type>
+Zero
+Sp
+(
+    const Zero&,
+    GeometricField<Type, fvPatchField, volMesh>&
+)
+{
+    return zero;
+}
+
 
 template<class Type>
 tmp<fvMatrix<Type> >
@@ -183,6 +205,17 @@ SuSp
     tmp<fvMatrix<Type> > tfvm = fvm::SuSp(tsp(), vf);
     tsp.clear();
     return tfvm;
+}
+
+template<class Type>
+Zero
+SuSp
+(
+    const Zero&,
+    GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    return zero;
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,37 +22,28 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Parabolic cylindrical coordinate system.
-
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "parabolicCylindricalCS.H"
 #include "addToRunTimeSelectionTable.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-defineTypeNameAndDebug(parabolicCylindricalCS, 0);
-
-addToRunTimeSelectionTable
-(
-    coordinateSystem,
-    parabolicCylindricalCS,
-    dictionary
-);
+    defineTypeNameAndDebug(parabolicCylindricalCS, 0);
+    addToRunTimeSelectionTable
+    (
+        coordinateSystem,
+        parabolicCylindricalCS,
+        dictionary
+    );
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-parabolicCylindricalCS::parabolicCylindricalCS
+Foam::parabolicCylindricalCS::parabolicCylindricalCS
 (
     const word& name,
     const vector& origin,
@@ -60,36 +51,34 @@ parabolicCylindricalCS::parabolicCylindricalCS
     const vector& direction
 )
 :
-    cartesianCS(name, origin, axis, direction)
+    coordinateSystem(name, origin, axis, direction)
 {}
 
 
-// Construct from origin and a coordinate rotation
-parabolicCylindricalCS::parabolicCylindricalCS
+Foam::parabolicCylindricalCS::parabolicCylindricalCS
 (
     const word& name,
     const vector& origin,
     const coordinateRotation& cr
 )
 :
-    cartesianCS(name, origin, cr)
+    coordinateSystem(name, origin, cr)
 {}
 
 
-parabolicCylindricalCS::parabolicCylindricalCS
+Foam::parabolicCylindricalCS::parabolicCylindricalCS
 (
     const word& name,
     const dictionary& dict
 )
 :
-    cartesianCS(name, dict)
+    coordinateSystem(name, dict)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-//- Convert from local coordinate system to the global Cartesian system
-vector parabolicCylindricalCS::toGlobal(const vector& localV) const
+Foam::vector Foam::parabolicCylindricalCS::toGlobal(const vector& localV) const
 {
     // Notation: u = localV.x() v = localV.y() z = localV.z();
     if (localV.y() < 0.0)
@@ -99,7 +88,7 @@ vector parabolicCylindricalCS::toGlobal(const vector& localV) const
             << abort(FatalError);
     }
 
-    return cartesianCS::toGlobal
+    return coordinateSystem::toGlobal
     (
         vector
         (
@@ -111,7 +100,7 @@ vector parabolicCylindricalCS::toGlobal(const vector& localV) const
 }
 
 
-tmp<vectorField> parabolicCylindricalCS::toGlobal
+Foam::tmp<Foam::vectorField> Foam::parabolicCylindricalCS::toGlobal
 (
     const vectorField& localV
 ) const
@@ -148,12 +137,11 @@ tmp<vectorField> parabolicCylindricalCS::toGlobal
         localV.component(vector::Z)
     );
 
-    return cartesianCS::toGlobal(lc);
+    return coordinateSystem::toGlobal(lc);
 }
 
 
-// Convert from global Cartesian coordinate system to the local system
-vector parabolicCylindricalCS::toLocal(const vector& globalV) const
+Foam::vector Foam::parabolicCylindricalCS::toLocal(const vector& globalV) const
 {
     notImplemented
     (
@@ -164,7 +152,7 @@ vector parabolicCylindricalCS::toLocal(const vector& globalV) const
 }
 
 
-tmp<vectorField> parabolicCylindricalCS::toLocal
+Foam::tmp<Foam::vectorField> Foam::parabolicCylindricalCS::toLocal
 (
     const vectorField& globalV
 ) const
@@ -178,9 +166,5 @@ tmp<vectorField> parabolicCylindricalCS::toLocal
     return tmp<vectorField>(&vectorField::null());
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

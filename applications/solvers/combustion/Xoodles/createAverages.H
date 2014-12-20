@@ -2,11 +2,11 @@
 
     IFstream nAveragingStepsFile
     (
-        runTime.path()/runTime.timeName()/"nAveragingSteps.raw"
+        runTime.path()/runTime.timeName()/"uniform"/"nAveragingSteps.raw"
     );
 
     volVectorField* UmeanPtr;
-    volTensorField* RPtr;
+    volSymmTensorField* RPtr;
 
     volScalarField* pMeanPtr;
     volScalarField* pPrime2MeanPtr;
@@ -34,7 +34,7 @@
         );
 
         Info<< "\nReading field R\n" << endl;
-        RPtr = new volTensorField
+        RPtr = new volSymmTensorField
         (
             IOobject
             (
@@ -134,7 +134,7 @@
         );
 
         Info<< "Creating field R\n" << endl;
-        RPtr = new volTensorField
+        RPtr = new volSymmTensorField
         (
             IOobject
             (
@@ -219,7 +219,7 @@
     }
 
     volVectorField& Umean = *UmeanPtr;
-    volTensorField& R = *RPtr;
+    volSymmTensorField& R = *RPtr;
 
     volScalarField& pMean = *pMeanPtr;
     volScalarField& pPrime2Mean = *pPrime2MeanPtr;

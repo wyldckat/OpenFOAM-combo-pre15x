@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,12 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "basicSymmetryFvPatchField.H"
-#include "transformField.H"
+#include "symmTransformField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -80,6 +78,16 @@ basicSymmetryFvPatchField<Type>::basicSymmetryFvPatchField
 template<class Type>
 basicSymmetryFvPatchField<Type>::basicSymmetryFvPatchField
 (
+    const basicSymmetryFvPatchField<Type>& ptf
+)
+:
+    transformFvPatchField<Type>(ptf)
+{}
+
+
+template<class Type>
+basicSymmetryFvPatchField<Type>::basicSymmetryFvPatchField
+(
     const basicSymmetryFvPatchField<Type>& ptf,
     const Field<Type>& iF
 )
@@ -94,10 +102,10 @@ basicSymmetryFvPatchField<Type>::basicSymmetryFvPatchField
 template<class Type>
 tmp<Field<Type> > basicSymmetryFvPatchField<Type>::snGrad() const
 {
-    const vectorField& nHat = this->patch().nf();
+    vectorField nHat = this->patch().nf();
     return
     (
-        transform(I - 2.0*nHat*nHat, this->patchInternalField())
+        transform(I - 2.0*sqr(nHat), this->patchInternalField())
       - this->patchInternalField()
     )*(this->patch().deltaCoeffs()/2.0);
 }
@@ -112,12 +120,12 @@ void basicSymmetryFvPatchField<Type>::evaluate()
         this->updateCoeffs();
     }
 
-    const vectorField& nHat = this->patch().nf();
+    vectorField nHat = this->patch().nf();
     Field<Type>::operator=
     (
         (
             this->patchInternalField()
-          + transform(I - 2.0*nHat*nHat, this->patchInternalField())
+          + transform(I - 2.0*sqr(nHat), this->patchInternalField())
         )/2.0
     );
 
@@ -129,7 +137,7 @@ void basicSymmetryFvPatchField<Type>::evaluate()
 template<class Type>
 tmp<Field<Type> > basicSymmetryFvPatchField<Type>::snGradTransformDiag() const
 {
-    const vectorField& nHat = this->patch().nf();
+    vectorField nHat = this->patch().nf();
     vectorField diag(nHat.size());
 
     diag.replace(vector::X, mag(nHat.component(vector::X)));

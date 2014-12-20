@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -49,7 +49,7 @@ foreach file(*)
 
         cd $file
 
-        find . -type f -exec newRootCase $1 $2 $file {} \;
+        find . -type f -exec foamNewRootCase $1 $2 $file {} \;
 
         cd ..
 

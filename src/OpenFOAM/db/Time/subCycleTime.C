@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,7 +47,7 @@ subCycleTime::subCycleTime(Time& t, const label nSubCycles)
 
 subCycleTime::~subCycleTime()
 {
-    time_.endSubCycle(initialTimeState_);
+    endSubCycle();
 }
 
 
@@ -56,6 +56,12 @@ subCycleTime::~subCycleTime()
 bool subCycleTime::end() const
 {
     return subCycleIndex_ > nSubCycles_;
+}
+
+
+void subCycleTime::endSubCycle()
+{
+    time_.endSubCycle(initialTimeState_);
 }
 
 

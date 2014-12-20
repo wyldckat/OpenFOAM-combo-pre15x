@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -58,18 +58,18 @@ pointField BSpline::findKnots
 
     // set up the matrix
 
-    M.matrix()[0][0] = -0.5*scalar(NKnots - 1);
-    M.matrix()[0][2] =  0.5*scalar(NKnots - 1);
+    M[0][0] = -0.5*scalar(NKnots - 1);
+    M[0][2] =  0.5*scalar(NKnots - 1);
 
     for (register label i=1; i<newnKnots-1; i++)
     {
-        M.matrix()[i][i-1] = oneSixth;
-        M.matrix()[i][i] = twoThird;
-        M.matrix()[i][i+1] = oneSixth;
+        M[i][i-1] = oneSixth;
+        M[i][i] = twoThird;
+        M[i][i+1] = oneSixth;
     }
 
-    M.matrix()[newnKnots - 1][newnKnots - 3] = -0.5*scalar(NKnots - 1);
-    M.matrix()[newnKnots - 1][newnKnots - 1] =  0.5*scalar(NKnots - 1);
+    M[newnKnots - 1][newnKnots - 3] = -0.5*scalar(NKnots - 1);
+    M[newnKnots - 1][newnKnots - 1] =  0.5*scalar(NKnots - 1);
 
     // set up the vector
 

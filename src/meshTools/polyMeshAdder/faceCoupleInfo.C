@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,9 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-Class
-    faceCoupleInfo
-
 \*----------------------------------------------------------------------------*/
 
 #include "faceCoupleInfo.H"
@@ -36,7 +33,6 @@ Class
 #include "octree.H"
 #include "OFstream.H"
 #include "SortableList.H"
-//#include "triSurface.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -51,26 +47,6 @@ const Foam::scalar Foam::faceCoupleInfo::angleTol_ = 1E-3;
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-Foam::pointField Foam::faceCoupleInfo::calcFaceCentres
-(
-    const faceList& faces,
-    const pointField& points,
-    const label start,
-    const label size
-)
-{
-    pointField fc(size);
-
-    label faceI = start;
-
-    forAll(fc, i)
-    {
-        fc[i] = faces[faceI++].centre(points);
-    }
-    return fc;
-}
-
 
 //- Write edges
 void Foam::faceCoupleInfo::writeOBJ
@@ -234,7 +210,7 @@ void Foam::faceCoupleInfo::writePointsFaces() const
         writeOBJ
         (
             "cutToMasterFaces.obj",
-            calcFaceCentres(c, cutPoints(), 0, c.size()),
+            calcFaceCentres<List>(c, cutPoints(), 0, c.size()),
             equivMasterFaces
         );
     }
@@ -255,7 +231,7 @@ void Foam::faceCoupleInfo::writePointsFaces() const
         writeOBJ
         (
             "cutToSlaveFaces.obj",
-            calcFaceCentres(c, cutPoints(), 0, c.size()),
+            calcFaceCentres<List>(c, cutPoints(), 0, c.size()),
             equivSlaveFaces
         );
     }
@@ -432,7 +408,7 @@ Foam::label Foam::faceCoupleInfo::mostAlignedCutEdge
     if (report)
     {
         Pout<< "mostAlignedEdge : finding nearest edge among "
-            << IndirectList<edge>(cutFaces().edges(), pEdges)
+            << IndirectList<edge>(cutFaces().edges(), pEdges)()
             << " connected to point " << pointI
             << " coord:" << localPoints[pointI]
             << " running between " << edgeStart << " coord:"
@@ -570,7 +546,7 @@ void Foam::faceCoupleInfo::findPerfectMatchingFaces
 
     pointField fc0
     (
-        calcFaceCentres
+        calcFaceCentres<List>
         (
             mesh0.faces(),
             mesh0.points(),
@@ -581,7 +557,7 @@ void Foam::faceCoupleInfo::findPerfectMatchingFaces
 
     pointField fc1
     (
-        calcFaceCentres
+        calcFaceCentres<List>
         (
             mesh1.faces(),
             mesh1.points(),
@@ -1194,14 +1170,14 @@ void Foam::faceCoupleInfo::perfectPointMatch
         // construct from meshes.
         matchedAllFaces = matchPoints
         (
-            calcFaceCentres
+            calcFaceCentres<List>
             (
                 cutFaces(),
                 cutPoints_,
                 0,
                 cutFaces().size()
             ),
-            calcFaceCentres
+            calcFaceCentres<IndirectList>
             (
                 slavePatch(),
                 slavePatch().points(),
@@ -1444,7 +1420,7 @@ if (debug)
                     (
                         cutFaces().edges(),
                         cutFaces().pointEdges()[cutPointI]
-                    ),
+                    )(),
                     cutFaces().localPoints(),
                     false
                 );
@@ -1591,7 +1567,7 @@ if (debug)
                 "faceCoupleInfo::subDivisionMatch(const scalar)"
             )   << "Did not match all of cutFaces to a master face" << nl
                 << "First unmatched cut face:" << cutFaceI << " with points:"
-                << IndirectList<point>(cutFaces().points(), cutF)
+                << IndirectList<point>(cutFaces().points(), cutF)()
                 << nl
                 << "This usually means that the slave patch is not a"
                 << " subdivision of the master patch"
@@ -1612,6 +1588,146 @@ if (debug)
 }
 
 
+Foam::labelList Foam::faceCoupleInfo::getBoundaryPoints
+(
+    const primitiveMesh& mesh,
+    const labelList& excludePoints
+)
+{
+    boolList isBoundaryPoint(mesh.nPoints(), false);
+    label nPoints = 0;
+
+    // Mark all boundary points
+    for
+    (
+        label faceI = mesh.nInternalFaces();
+        faceI < mesh.nFaces();
+        faceI++
+    )
+    {
+        const face& f = mesh.faces()[faceI];
+
+        forAll(f, fp)
+        {
+            label pointI = f[fp];
+
+            if (!isBoundaryPoint[pointI])
+            {
+                isBoundaryPoint[pointI] = true;
+                nPoints++;
+            }
+        }
+    }
+
+    // Exclude points
+    forAll(excludePoints, i)
+    {
+        label pointI = excludePoints[i];
+
+        if (pointI != -1)
+        {
+            if (isBoundaryPoint[pointI])
+            {
+                isBoundaryPoint[pointI] = false;
+                nPoints--;
+            }
+        }
+    }
+
+
+    // Pack
+    labelList boundaryPoints(nPoints);
+    nPoints = 0;
+
+    forAll(isBoundaryPoint, pointI)
+    {
+        if (isBoundaryPoint[pointI])
+        {
+            boundaryPoints[nPoints++] = pointI;
+        }
+    }
+
+    return boundaryPoints;
+}
+
+
+void Foam::faceCoupleInfo::findNonCutSharedPoints
+(
+    const primitiveMesh& masterMesh,
+    const primitiveMesh& slaveMesh,
+    const scalar absTol
+)
+{
+    // Any points which are not on cut but are shared
+    // (points that are on any of the cut faces will be already found)
+
+    // Master boundary points (in masterMesh points, not masterPatch points)
+    labelList masterBoundaryPoints
+    (
+        getBoundaryPoints
+        (
+            masterMesh,
+            IndirectList<label>
+            (
+                masterPatch().meshPoints(),
+                cutToMasterPoints_
+            )()
+        )
+    );
+
+    // Slave boundary points (in slaveMesh points, not slavePatch points)
+    labelList slaveBoundaryPoints
+    (
+        getBoundaryPoints
+        (
+            slaveMesh,
+            IndirectList<label>
+            (
+                slavePatch().meshPoints(),
+                cutToSlavePoints_
+            )()
+        )
+    );
+
+    // Find any matches between the two sets.
+    labelList masterBoundaryToSlave(masterBoundaryPoints.size());
+    matchPoints
+    (
+        pointField
+        (
+            IndirectList<point>(masterMesh.points(), masterBoundaryPoints)()
+        ),
+        pointField
+        (
+            IndirectList<point>(slaveMesh.points(), slaveBoundaryPoints)()
+        ),
+        scalarField(masterBoundaryPoints.size(), absTol),
+        false,
+        masterBoundaryToSlave
+    );
+
+    // Convert indices into masterBoundaryPoints to masterMesh.
+    sharedToMasterPoints_.setSize(masterBoundaryToSlave.size());
+    sharedToSlavePoints_.setSize(masterBoundaryToSlave.size());
+    label matchI = 0;
+
+    forAll(masterBoundaryToSlave, i)
+    {
+        label slaveBPointI = masterBoundaryToSlave[i];
+
+        if (slaveBPointI != -1)
+        {
+            sharedToMasterPoints_[matchI] = masterBoundaryPoints[i];
+            sharedToSlavePoints_[matchI] = slaveBoundaryPoints[slaveBPointI];
+
+            matchI++;
+        }
+    }
+    sharedToMasterPoints_.setSize(matchI);
+    sharedToSlavePoints_.setSize(matchI);
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from mesh data
@@ -1625,7 +1741,20 @@ Foam::faceCoupleInfo::faceCoupleInfo
 :
     masterPatchPtr_(NULL),
     slavePatchPtr_(NULL),
-    cutFacesPtr_(NULL)
+    cutPoints_(0),
+    cutFacesPtr_(NULL),
+    cutToMasterFaces_(0),
+    cutToMasterPoints_(0),
+    cutToMasterEdges_(0),
+    cutToSlaveFaces_(0),
+    cutToSlavePoints_(0),
+    cutToSlaveEdges_(0),
+    masterToCutPoints_(0),
+    masterToCutEdges_(0),
+    slaveToCutPoints_(0),
+    slaveToCutEdges_(0),
+    sharedToMasterPoints_(0),
+    sharedToSlavePoints_(0)
 {
     // Get faces on both meshes that are aligned.
     // (not ordered i.e. masterToMesh[0] does
@@ -1688,6 +1817,11 @@ Foam::faceCoupleInfo::faceCoupleInfo
         subDivisionMatch(slaveMesh, false, absTol);
     }
 
+
+    // Find points that are shared but not on the cut.
+    findNonCutSharedPoints(masterMesh, slaveMesh, absTol);
+
+
     if (debug)
     {
         writePointsFaces();
@@ -1726,7 +1860,20 @@ Foam::faceCoupleInfo::faceCoupleInfo
             slaveMesh.points()
         )
     ),
-    cutFacesPtr_(NULL)
+    cutPoints_(0),
+    cutFacesPtr_(NULL),
+    cutToMasterFaces_(0),
+    cutToMasterPoints_(0),
+    cutToMasterEdges_(0),
+    cutToSlaveFaces_(0),
+    cutToSlavePoints_(0),
+    cutToSlaveEdges_(0),
+    masterToCutPoints_(0),
+    masterToCutEdges_(0),
+    slaveToCutPoints_(0),
+    slaveToCutEdges_(0),
+    sharedToMasterPoints_(0),
+    sharedToSlavePoints_(0)
 {
     if (perfectMatch && (masterAddressing.size() != slaveAddressing.size()))
     {
@@ -1779,6 +1926,10 @@ Foam::faceCoupleInfo::faceCoupleInfo
     {
         subDivisionMatch(slaveMesh, patchDivision, absTol);
     }
+
+
+    // Find points that are shared but not on the cut.
+    findNonCutSharedPoints(masterMesh, slaveMesh, absTol);
 }
 
 

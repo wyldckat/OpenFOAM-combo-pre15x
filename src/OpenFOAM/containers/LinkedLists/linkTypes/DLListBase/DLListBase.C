@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,13 +22,13 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "error.H"
 
 #include "DLListBase.H"
+#include "IOstreams.H"
+#include "long.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -39,8 +39,7 @@ namespace Foam
 
 DLListBase::iterator DLListBase::endIter
 (
-    const_cast<DLListBase&>(static_cast<const DLListBase&>(DLListBase())),
-    reinterpret_cast<link*>(NULL)
+    const_cast<DLListBase&>(static_cast<const DLListBase&>(DLListBase()))
 );
 
 DLListBase::const_iterator DLListBase::endConstIter
@@ -52,20 +51,19 @@ DLListBase::const_iterator DLListBase::endConstIter
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// add to head of list
 void DLListBase::insert(DLListBase::link* a)
 {
     nElmts_++;
 
     if (!first_)
     {
-        a->prev_ = 0;
-        a->next_ = 0;
+        a->prev_ = a;
+        a->next_ = a;
         first_ = last_ = a;
     }
     else
     {
-        a->prev_ = 0;
+        a->prev_ = a;
         a->next_ = first_;
         first_->prev_ = a;
         first_ = a;
@@ -73,34 +71,32 @@ void DLListBase::insert(DLListBase::link* a)
 }
 
 
-// add to tail of list
 void DLListBase::append(DLListBase::link* a)
 {
     nElmts_++;
 
     if (!first_)
     {
-        a->prev_ = 0;
-        a->next_ = 0;
+        a->prev_ = a;
+        a->next_ = a;
         first_ = last_ = a;
     }
     else
     {
         last_->next_ = a;
         a->prev_ = last_;
-        a->next_ = 0;
+        a->next_ = a;
         last_ = a;
     }
 }
 
 
-//- Swap this element with the one above unless it is at the top
 bool DLListBase::swapUp(DLListBase::link* a)
 {
-    link* ap = a->prev_;
-
-    if (ap)
+    if (first_ != a)
     {
+        link* ap = a->prev_;
+
         if (ap == first_)
         {
             first_ = a;
@@ -136,13 +132,12 @@ bool DLListBase::swapUp(DLListBase::link* a)
 }
 
 
-//- Swap this element with the one below unless it is at the bottom
 bool DLListBase::swapDown(DLListBase::link* a)
 {
-    link* an = a->next_;
-
-    if (an)
+    if (last_ != a)
     {
+        link* an = a->next_;
+
         if (a == first_)
         {
             first_ = an;
@@ -178,14 +173,13 @@ bool DLListBase::swapDown(DLListBase::link* a)
 }
 
 
-// remove and return head
 DLListBase::link* DLListBase::removeHead()
 {
     nElmts_--;
 
     if (!first_)
     {
-        FatalErrorIn("void DLListBase::remove()")
+        FatalErrorIn("void DLListBase::removeHead()")
             << "remove from empty list"
             << abort(FatalError);
     }
@@ -198,41 +192,39 @@ DLListBase::link* DLListBase::removeHead()
         last_ = 0;
     }
 
+    f->deregister();
     return f;
 }
 
 
-// remove and return element
-DLListBase::link* DLListBase::remove(DLListBase::link* it)
+DLListBase::link* DLListBase::remove(DLListBase::link* l)
 {
     nElmts_--;
 
-    link* ret = it;
+    link* ret = l;
 
-    if (it == first_)
+    if (l == first_ && first_ == last_)
+    {
+        first_ = 0;
+        last_ = 0;
+    }
+    else if (l == first_)
     {
         first_ = first_->next_;
-
-        if (first_)
-        {
-            first_->prev_ = 0;
-        }
+        first_->prev_ = first_;
     }
-    else if (it == last_)
+    else if (l == last_)
     {
         last_ = last_->prev_;
-
-        if (last_)
-        {
-            last_->next_ = 0;
-        }
+        last_->next_ = last_;
     }
     else
     {
-        it->next_->prev_ = it->prev_;
-        it->prev_->next_ = it->next_;
+        l->next_->prev_ = l->prev_;
+        l->prev_->next_ = l->next_;
     }
 
+    ret->deregister();
     return ret;
 }
 

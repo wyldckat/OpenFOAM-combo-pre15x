@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,11 +32,10 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "tetPointFields.H"
 #include "IOobjectList.H"
-#include "polyMeshReconstructor.H"
-#include "geometricFvFieldReconstructor.H"
-#include "geometricTetPointFieldReconstructor.H"
+#include "processorMeshes.H"
+#include "fvFieldReconstructor.H"
+#include "pointFieldReconstructor.H"
 #include "reconstructLagrangian.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -74,20 +73,14 @@ int main(int argc, char *argv[])
     int nProcs(readInt(decompositionDict.lookup("numberOfSubdomains")));
 
 
-    // Create the processor databases, meshes, cell addressing
-    // and boundary adressing
+    // Create the processor databases
     PtrList<Time> databases(nProcs);
-    PtrList<fvMesh> fvMeshes(nProcs);
-
-    PtrList<labelIOList> pointProcAddressing(nProcs);
-    PtrList<labelIOList> faceProcAddressing(nProcs);
-    PtrList<labelIOList> cellProcAddressing(nProcs);
-    PtrList<labelIOList> boundaryProcAddressing(nProcs);
 
     forAll (databases, procI)
     {
-        databases.hook
+        databases.set
         (
+            procI,
             new Time
             (
                 Time::controlDictName,
@@ -95,84 +88,25 @@ int main(int argc, char *argv[])
                 args.caseName()/fileName(word("processor") + name(procI))
             )
         );
-
-        fvMeshes.hook
-        (
-            new fvMesh
-            (
-                IOobject
-                (
-                    fvMesh::defaultRegion,
-                    databases[procI].timeName(),
-                    databases[procI]
-                )
-            )
-        );
-
-        pointProcAddressing.hook
-        (
-            new labelIOList
-            (
-                IOobject
-                (
-                    "pointProcAddressing",
-                    "constant",
-                    fvMeshes[procI].meshSubDir,
-                    fvMeshes[procI],
-                    IOobject::MUST_READ,
-                    IOobject::NO_WRITE
-                )
-            )
-        );
-
-        faceProcAddressing.hook
-        (
-            new labelIOList
-            (
-                IOobject
-                (
-                    "faceProcAddressing",
-                    "constant",
-                    fvMeshes[procI].meshSubDir,
-                    fvMeshes[procI],
-                    IOobject::MUST_READ,
-                    IOobject::NO_WRITE
-                )
-            )
-        );
-
-        cellProcAddressing.hook
-        (
-            new labelIOList
-            (
-                IOobject
-                (
-                    "cellProcAddressing",
-                    "constant",
-                    fvMeshes[procI].meshSubDir,
-                    fvMeshes[procI],
-                    IOobject::MUST_READ,
-                    IOobject::NO_WRITE
-                )
-            )
-        );
-
-        boundaryProcAddressing.hook
-        (
-            new labelIOList
-            (
-                IOobject
-                (
-                    "boundaryProcAddressing",
-                    "constant",
-                    fvMeshes[procI].meshSubDir,
-                    fvMeshes[procI],
-                    IOobject::MUST_READ,
-                    IOobject::NO_WRITE
-                )
-            )
-        );
     }
+
+
+    // Get times list from first database
+    const instantList Times = databases[0].times();
+
+#   include "checkTimeOptions.H"
+
+    // Set all times (on reconstructed mesh and on processor meshes)
+    runTime.setTime(Times[startTime], startTime);
+    mesh.readUpdate();
+
+    forAll (databases, procI)
+    {
+        databases[procI].setTime(Times[startTime], startTime);
+    }
+
+    // Read all meshes and addressing to reconstructed mesh
+    processorMeshes procMeshes(databases);
 
     // Foam version 2.1 changes the addressing of faces in faceProcAddressing
     // The following code checks and modifies the addressing for cases where
@@ -180,21 +114,6 @@ int main(int argc, char *argv[])
     // the reconstruction is attempted with version 2.1 or later
     // 
 #   include "checkFaceAddressingComp.H"
-
-    // Get times list from first database
-    const instantList Times = databases[0].times();
-
-#   include "checkTimeOptions.H"
-
-    polyMeshReconstructor meshReconstructor
-    (
-        mesh,
-        reinterpret_cast<PtrList<polyMesh>&>(fvMeshes),
-        pointProcAddressing,
-        faceProcAddressing,
-        cellProcAddressing,
-        boundaryProcAddressing
-    );
 
     // Loop over all times
     for (label timei = startTime; timei < endTime; timei++)
@@ -205,41 +124,65 @@ int main(int argc, char *argv[])
         Info << "Time = " << runTime.timeName() << endl << endl;
 
         // Set time for all databases
+
         forAll (databases, procI)
         {
             databases[procI].setTime(Times[timei], timei);
         }
 
-        // Reconstruct the points for moving mesh cases and write them out
-        meshReconstructor.reconstructPoints();
+        // Check if any new meshes need to be read.
+        fvMesh::readUpdateState meshStat = mesh.readUpdate();
+
+        fvMesh::readUpdateState procStat = procMeshes.readUpdate();
+
+        if (procStat == fvMesh::POINTS_MOVED)
+        {
+            // Reconstruct the points for moving mesh cases and write them out
+            procMeshes.reconstructPoints(mesh);
+        }
+        else if (meshStat != procStat)
+        {
+            WarningIn(args.executable())
+                << "readUpdate for the reconstructed mesh:" << meshStat << nl
+                << "readUpdate for the processor meshes  :" << procStat << nl
+                << "These should be equal or your addressing"
+                << " might be incorrect."
+                << " Please check your time directories for any "
+                << "mesh directories." << endl;
+        }
 
 
         // Get list of objects from processor0 database
-        IOobjectList objects(fvMeshes[0], databases[0].timeName());
+        IOobjectList objects(procMeshes.meshes()[0], databases[0].timeName());
+
 
         // If there are any FV fields, reconstruct them
+
         if
         (
             objects.lookupClass(volScalarField::typeName).size()
          || objects.lookupClass(volVectorField::typeName).size()
+         || objects.lookupClass(volSphericalTensorField::typeName).size()
+         || objects.lookupClass(volSymmTensorField::typeName).size()
          || objects.lookupClass(volTensorField::typeName).size()
          || objects.lookupClass(surfaceScalarField::typeName).size()
         )
         {
             Info << "Reconstructing FV fields" << nl << endl;
 
-            geometricFvFieldReconstructor fvReconstructor
+            fvFieldReconstructor fvReconstructor
             (
                 mesh,
-                fvMeshes,
-                pointProcAddressing,
-                faceProcAddressing,
-                cellProcAddressing,
-                boundaryProcAddressing
+                procMeshes.meshes(),
+                procMeshes.faceProcAddressing(),
+                procMeshes.cellProcAddressing(),
+                procMeshes.boundaryProcAddressing()
             );
 
             fvReconstructor.reconstructFvVolumeFields<scalar>(objects);
             fvReconstructor.reconstructFvVolumeFields<vector>(objects);
+            fvReconstructor.reconstructFvVolumeFields<sphericalTensor>(objects);
+            fvReconstructor.reconstructFvVolumeFields<symmTensor>(objects);
             fvReconstructor.reconstructFvVolumeFields<tensor>(objects);
 
             fvReconstructor.reconstructFvSurfaceFields<scalar>(objects);
@@ -249,43 +192,48 @@ int main(int argc, char *argv[])
             Info << "No FV fields" << nl << endl;
         }
 
-        // If there are any tetFem fields, reconstruct them
+
+        // If there are any point fields, reconstruct them
         if
         (
-            objects.lookupClass(tetPointScalarField::typeName).size()
-         || objects.lookupClass(tetPointVectorField::typeName).size()
+            objects.lookupClass(pointScalarField::typeName).size()
+         || objects.lookupClass(pointVectorField::typeName).size()
+         || objects.lookupClass(pointSphericalTensorField::typeName).size()
+         || objects.lookupClass(pointSymmTensorField::typeName).size()
+         || objects.lookupClass(pointTensorField::typeName).size()
         )
         {
-            Info << "Reconstructing tet point fields" << nl << endl;
+            Info << "Reconstructing point fields" << nl << endl;
 
-            tetPolyMesh tetMesh(mesh);
-            PtrList<tetPolyMesh> tetMeshes(fvMeshes.size());
+            pointMesh pMesh(mesh);
+            PtrList<pointMesh> pMeshes(procMeshes.meshes().size());
 
-            forAll (tetMeshes, procI)
+            forAll (pMeshes, procI)
             {
-                tetMeshes.hook(new tetPolyMesh(fvMeshes[procI]));
+                pMeshes.set(procI, new pointMesh(procMeshes.meshes()[procI]));
             }
 
-            geometricTetPointFieldReconstructor tetPointReconstructor
+            pointFieldReconstructor pointReconstructor
             (
-                tetMesh,
-                tetMeshes,
-                pointProcAddressing,
-                faceProcAddressing,
-                cellProcAddressing,
-                boundaryProcAddressing
+                pMesh,
+                pMeshes,
+                procMeshes.pointProcAddressing(),
+                procMeshes.boundaryProcAddressing()
             );
 
-            // Reconstruct tet point fields
-            tetPointReconstructor.reconstructTetPointFields<scalar>(objects);
-            tetPointReconstructor.reconstructTetPointFields<vector>(objects);
+            pointReconstructor.reconstructFields<scalar>(objects);
+            pointReconstructor.reconstructFields<vector>(objects);
+            pointReconstructor.reconstructFields<sphericalTensor>(objects);
+            pointReconstructor.reconstructFields<symmTensor>(objects);
+            pointReconstructor.reconstructFields<tensor>(objects);
         }
         else
         {
-            Info << "No tetFem fields" << nl << endl;
+            Info << "No point fields" << nl << endl;
         }
 
-        
+
+        // If there is any proc with lagrangian, assume all have.        
         label lagrangianProcI = -1;
 
         forAll (databases, procI)
@@ -303,16 +251,7 @@ int main(int argc, char *argv[])
             )
             {
                 lagrangianProcI = procI;
-
-                if 
-                (
-                    objects.lookupClass(IOField<scalar>::typeName).size()
-                 || objects.lookupClass(IOField<vector>::typeName).size()
-                 || objects.lookupClass(IOField<tensor>::typeName).size()
-                )
-                {
-                    break;
-                }
+                break;
             }
         }
 
@@ -328,20 +267,36 @@ int main(int argc, char *argv[])
                 "lagrangian"
             );
 
+            PtrList<polyMesh>& meshes = 
+                reinterpret_cast<PtrList<polyMesh>&>(procMeshes.meshes());
+
             reconstructLagrangianPositions
             (
                 mesh,
-                reinterpret_cast<PtrList<polyMesh>&>(fvMeshes),
-                faceProcAddressing,
-                cellProcAddressing
+                meshes,
+                procMeshes.faceProcAddressing(),
+                procMeshes.cellProcAddressing()
             );
-            reconstructLagrangianFields<scalar>(runTime, databases, objects);
-            reconstructLagrangianFields<vector>(runTime, databases, objects);
-            reconstructLagrangianFields<tensor>(runTime, databases, objects);
+            reconstructLagrangianFields<label>(mesh, meshes, objects);
+            reconstructLagrangianFields<scalar>(mesh, meshes, objects);
+            reconstructLagrangianFields<vector>(mesh, meshes, objects);
+            reconstructLagrangianFields<sphericalTensor>(mesh, meshes, objects);
+            reconstructLagrangianFields<symmTensor>(mesh, meshes, objects);
+            reconstructLagrangianFields<tensor>(mesh, meshes, objects);
         }
         else
         {
             Info << "No lagrangian fields" << nl << endl;
+        }
+
+
+        // If there are any "uniform" directories copy them from
+        // the master processor.
+
+        fileName uniformDir0 = databases[0].timePath()/"uniform";
+        if (dir(uniformDir0))
+        {
+            cp(uniformDir0, runTime.timePath());
         }
     }
 

@@ -2,7 +2,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -32,14 +32,18 @@
 
 GENERAL_RULES = $(WM_DIR)/rules/General
 RULES         = $(WM_DIR)/rules/$(WM_ARCH)$(WM_COMPILER)
+OBJECTS_DIR   = $(WM_OPTIONS)
+FFLAGS        =
+
+include $(GENERAL_RULES)/general
 include $(RULES)/general
+include $(OBJECTS_DIR)/options
 
 #------------------------------------------------------------------------------
 # declare names of make system control files derived from file files
 #------------------------------------------------------------------------------
 
 FILES   = $(WM_OPTIONS)/files
-OPTIONS = $(WM_OPTIONS)/options
 
 SFILES  = $(WM_OPTIONS)/sourceFiles
 OFILES  = $(WM_OPTIONS)/objectFiles
@@ -51,13 +55,10 @@ IFILES  = $(WM_OPTIONS)/includeDeps
 # Causes all derived files to be remade if any are changed or missing
 #------------------------------------------------------------------------------
 
-allFiles : $(FILES) $(OPTIONS) $(SFILES) $(OFILES) $(DFILES) $(IFILES)
+allFiles : $(FILES) $(SFILES) $(OFILES) $(DFILES) $(IFILES)
 
 $(FILES) : files
-	@wmkdir $(WM_OPTIONS) ; $(CPP) $(GFLAGS) files > $(FILES)
-
-$(OPTIONS)  : options
-	@$(CPP) $(GFLAGS) options > $(OPTIONS)
+	@$(CPP) $(GFLAGS) $(FFLAGS) files > $(FILES)
 
 $(SFILES): files
 	@wmakeDerivedFiles

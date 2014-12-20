@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "particle.H"
@@ -41,10 +39,13 @@ template<class particleType>
 particle<particleType>::particle
 (
     const Cloud<particleType>& cloud, 
-    Istream& is
+    Istream& is,
+    bool readFields
 )
 :
-    cloud_(cloud)
+    cloud_(cloud),
+    facei_(-1),
+    stepFraction_(0.0)
 {
     if (is.format() == IOstream::ASCII)
     {
@@ -52,11 +53,18 @@ particle<particleType>::particle
     }
     else
     {
+        // In binary read both celli_ and facei_, needed for parallel transfer
         is.read
         (
             reinterpret_cast<char*>(&position_),
             sizeof(position_) + sizeof(celli_)
+          + sizeof(facei_) + sizeof(stepFraction_)
         );
+    }
+
+    if (celli_ == -1)
+    {
+        celli_ = cloud_.pMesh().findCell(position_);
     }
 
     // Check state of Istream
@@ -76,10 +84,12 @@ Ostream& operator<<(Ostream& os, const particle<particleType>& p)
     }
     else
     {
+        // In binary write both celli_ and facei_, needed for parallel transfer
         os.write
         (
             reinterpret_cast<const char*>(&p.position_),
             sizeof(p.position_) + sizeof(p.celli_)
+          + sizeof(p.facei_) + sizeof(p.stepFraction_)
         );
     }
 

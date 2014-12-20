@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,34 +32,6 @@ License
 namespace Foam
 {
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-template<template<class> class PatchField, class PointPatch, class Type>
-Type BasicSymmetryPointPatchField<PatchField, PointPatch, Type>::
-fixFlagMatrix
-(
-    const vector& nHat
-) const
-{
-    Type fixFlag(pTraits<Type>::zero);
-
-    if (pTraits<Type>::nComponents > 1)
-    {
-        Type implicitnessIndicator =
-            pTraits<Type>::one
-          - transform(I - nHat*nHat, pTraits<Type>::one);
-
-        fixFlag = cmptMag(implicitnessIndicator);
-
-        return fixFlag;
-    }
-    else
-    {
-        return pTraits<Type>::zero;
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<template<class> class PatchField, class PointPatch, class Type>
@@ -70,7 +42,7 @@ BasicSymmetryPointPatchField
     const Field<Type>& iF
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF)
+    PatchField<Type>(p, iF)
 {}
 
 
@@ -83,7 +55,7 @@ BasicSymmetryPointPatchField
     const Field<Type>& f
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF, f)
+    PatchField<Type>(p, iF, f)
 {}
 
 
@@ -96,10 +68,8 @@ BasicSymmetryPointPatchField
     const dictionary& dict
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF)
-{
-    updateBoundaryField();
-}
+    PatchField<Type>(p, iF)
+{}
 
 
 template<template<class> class PatchField, class PointPatch, class Type>
@@ -112,10 +82,8 @@ BasicSymmetryPointPatchField
     const PointPatchFieldMapper&
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF)
-{
-    updateBoundaryField();
-}
+    PatchField<Type>(p, iF)
+{}
 
 
 template<template<class> class PatchField, class PointPatch, class Type>
@@ -126,10 +94,8 @@ BasicSymmetryPointPatchField
     const Field<Type>& iF
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(ptf, iF)
-{
-    updateBoundaryField();
-}
+    PatchField<Type>(ptf, iF)
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -137,27 +103,17 @@ BasicSymmetryPointPatchField
 // Evaluate patch field
 template<template<class> class PatchField, class PointPatch, class Type>
 void BasicSymmetryPointPatchField<PatchField, PointPatch, Type>::
-updateBoundaryField()
+evaluate()
 {
-    if (this->isPointField())
-    {
-        Field<Type>& values = *this;
+    const vectorField& nHat = this->patch().pointNormals();
 
-        tmp<Field<Type> > internalValues = this->patchInternalField();
+    tmp<Field<Type> > tvalues =
+        transform(I - nHat*nHat, this->patchInternalField());
 
-        const vectorField& nHat = this->patch().pointNormals();
+    // Get internal field to insert values into
+    Field<Type>& iF = const_cast<Field<Type>&>(this->internalField());
 
-        values = transform(I - nHat*nHat, internalValues);
-    }
-}
-
-
-// Write
-template<template<class> class PatchField, class PointPatch, class Type>
-void BasicSymmetryPointPatchField<PatchField, PointPatch, Type>::
-write(Ostream& os) const
-{
-    PointPatchField<PatchField, PointPatch, Type>::write(os);
+    setInInternalField(iF, tvalues());
 }
 
 

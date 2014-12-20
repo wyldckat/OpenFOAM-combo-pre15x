@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -78,6 +78,7 @@ Foam::commonRailInjector::commonRailInjector
     forAll(massFlowRateProfile_, i)
     {
         massFlowRateProfile_[i][0] = t.userTimeToTime(massFlowRateProfile_[i][0]);
+        velocityProfile_[i][0] = t.userTimeToTime(massFlowRateProfile_[i][0]);
     }
 
     forAll(injectionPressureProfile_, i)

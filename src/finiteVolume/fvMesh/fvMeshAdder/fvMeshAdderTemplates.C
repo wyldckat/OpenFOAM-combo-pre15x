@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,12 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 
 #include "volFields.H"
+#include "surfaceFields.H"
+#include "emptyFvPatchField.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -39,11 +39,11 @@ void Foam::fvMeshAdder::map
     Field<Type>& fld
 )
 {
-    forAll(oldToNew, cellI)
+    forAll(oldFld, cellI)
     {
         label newCellI = oldToNew[cellI];
 
-        if (newCellI != -1)
+        if (newCellI >= 0 && newCellI < fld.size())
         {
             fld[newCellI] = oldFld[cellI];
         }
@@ -52,153 +52,224 @@ void Foam::fvMeshAdder::map
 
 
 template<class Type>
-void Foam::fvMeshAdder::mapPatchField
-(
-    const Field<Type>& oldFld,
-    const label oldStart,
-    const labelList& oldToNew,
-    fvPatchField<Type>& fld
-)
-{
-    // Start of new patch.
-    const label newStart = fld.patch().patch().start();
-    const label newSize = fld.patch().patch().size();
-
-    forAll(oldFld, i)
-    {
-        // From old patch face to mesh face to new mesh face.
-        label newFaceI = oldToNew[i + oldStart];
-
-        if (newFaceI >= newStart+newSize)
-        {
-            FatalErrorIn("mapPatchField")
-                << "oldPatchface:" << i << " newMeshFace:" << newFaceI
-                << " oldSize:" << oldFld.size()
-                << " oldStart:" << oldStart
-                << " newStart:" << newStart
-                << " newSize:" << newSize
-                << abort(FatalError);
-        }
-
-        if (newFaceI >= newStart)
-        {
-            // So  -face is still there  -has not become internal
-            fld[newFaceI - newStart] = oldFld[i];
-        }
-    }
-}
-
-
-template<class Type>
 void Foam::fvMeshAdder::MapVolField
 (
-    const labelList& oldPatchStarts,
+    const mapAddedPolyMesh& meshMap,
+
     GeometricField<Type, fvPatchField, volMesh>& fld,
     const GeometricField<Type, fvPatchField, volMesh>& fldToAdd
-) const
+)
 {
     const fvMesh& mesh = fld.mesh();
-
-    const mapAddedPolyMesh& meshMap = polyMeshAdder::map();
 
     // Internal field
     // ~~~~~~~~~~~~~~
 
-    // Store old internal field
-    Field<Type> oldInternalField(fld.internalField());
-
-    // Modify internal field
-    Field<Type>& intFld = fld.internalField();
-
-    intFld.setSize(meshMap.cellMap().size());
-
-    map(oldInternalField, meshMap.oldCellMap(), intFld);
-    map(fldToAdd.internalField(), meshMap.addedCellMap(), intFld);
-
-
-    // Patch fields
-    // ~~~~~~~~~~~~
-
-    // Problem with the patch fields is that we need to reset both
-    // the fvPatch reference and the internal field reference and
-    // the .clone function only allows resetting the internal
-    // field so we have to recreate completely new patch fields.
-
-    const labelList& oldPatchMap = meshMap.oldPatchMap();
-    const labelList& addedPatchMap = meshMap.addedPatchMap();
-
-    // Create new patchFields.
-    PtrList<fvPatchField<Type> > patchFields
-    (
-        mesh.boundary().size()
-    );
-
-    // Add old mesh patches
-    forAll(oldPatchMap, patchI)
     {
-        label newPatchI = oldPatchMap[patchI];
+        // Store old internal field
+        Field<Type> oldInternalField(fld.internalField());
 
-        if (newPatchI != -1)
-        {
-            // Create new patchField with same type as existing one.
-            patchFields.set(newPatchI) =
-                fvPatchField<Type>::New
-                (
-                    fld.boundaryField()[patchI].type(),
-                    mesh.boundary()[newPatchI],
-                    fld.internalField()
-                ).ptr();
+        // Modify internal field
+        Field<Type>& intFld = fld.internalField();
 
-            // Map values.
-            mapPatchField
-            (
-                fld.boundaryField()[patchI],
-                oldPatchStarts[patchI],
-                meshMap.oldFaceMap(),
-                patchFields[newPatchI]
-            );
-        }
+        intFld.setSize(mesh.nCells());
+
+        map(oldInternalField, meshMap.oldCellMap(), intFld);
+        map(fldToAdd.internalField(), meshMap.addedCellMap(), intFld);
     }
 
-    // Add addedMesh patches
-    forAll(addedPatchMap, patchI)
-    {
-        label newPatchI = addedPatchMap[patchI];
 
-        if (newPatchI != -1)
+    // Patch fields from old mesh
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    {
+        const labelList& oldPatchMap = meshMap.oldPatchMap();
+        const labelList& oldPatchStarts = meshMap.oldPatchStarts();
+        const labelList& oldPatchSizes = meshMap.oldPatchSizes();
+
+        // Reorder old patches in order of new ones. Put removed patches at end.
+
+        label unusedPatchI = 0;
+
+        forAll(oldPatchMap, patchI)
         {
-            if (!patchFields(newPatchI))
+            label newPatchI = oldPatchMap[patchI];
+
+            if (newPatchI != -1)
             {
-                patchFields.set(newPatchI) =
+                unusedPatchI++;
+            }
+        }
+
+        label nUsedPatches = unusedPatchI;
+
+        // Reorder list for patchFields
+        labelList oldToNew(oldPatchMap.size());
+
+        forAll(oldPatchMap, patchI)
+        {
+            label newPatchI = oldPatchMap[patchI];
+
+            if (newPatchI != -1)
+            {
+                oldToNew[patchI] = newPatchI;
+            }
+            else
+            {
+                oldToNew[patchI] = unusedPatchI++;
+            }
+        }
+
+
+        // Sort deleted ones last so is now in newPatch ordering
+        fld.boundaryField().reorder(oldToNew);
+        // Extend to covers all patches
+        fld.boundaryField().setSize(mesh.boundaryMesh().size());
+        // Delete unused patches
+        for
+        (
+            label newPatchI = nUsedPatches;
+            newPatchI < fld.boundaryField().size();
+            newPatchI++
+        )
+        {
+            fld.boundaryField().set(newPatchI, NULL);
+        }
+
+
+        // Map old values
+        // ~~~~~~~~~~~~~~
+
+        forAll(oldPatchMap, patchI)
+        {
+            label newPatchI = oldPatchMap[patchI];
+
+            if (newPatchI != -1)
+            {
+                labelList newToOld
+                (   
+                    calcPatchMap
+                    (
+                        oldPatchStarts[patchI],
+                        oldPatchSizes[patchI],
+                        meshMap.oldFaceMap(),
+                        mesh.boundaryMesh()[newPatchI],
+                        0                   // unmapped value
+                    )
+                );
+
+                directFvPatchFieldMapper patchMapper(newToOld);
+
+
+                // Create new patchField with same type as existing one.
+                // Note:
+                // - boundaryField already in new order so access with newPatchI
+                // - fld.boundaryField()[newPatchI] both used for type and old
+                //   value
+                // - hope that field mapping allows aliasing since old and new
+                //   are same memory!
+                fld.boundaryField().set
+                (
+                    newPatchI,
                     fvPatchField<Type>::New
                     (
-                        fldToAdd.boundaryField()[patchI].type(),
-                        mesh.boundary()[newPatchI],
-                        fld.internalField()
-                    ).ptr();
+                        fld.boundaryField()[newPatchI], // old field
+                        mesh.boundary()[newPatchI],     // new fvPatch
+                        fld.internalField(),            // new internal field
+                        patchMapper                     // mapper (new to old)
+                    )
+                );
             }
-
-            // Map values.
-            mapPatchField
-            (
-                fldToAdd.boundaryField()[patchI],
-                fldToAdd.boundaryField()[patchI].patch().patch().start(),
-                meshMap.addedFaceMap(),
-                patchFields[newPatchI]
-            );
         }
     }
 
-    // Patch fields should now have correct
-    // -patch -internalField reference.
 
-    // Modify the boundaryField. Keep the reference to the
-    // boundary mesh intact.
-    fld.boundaryField().clear();
-    fld.boundaryField().setSize(patchFields.size());
-    forAll(patchFields, i)
+
+    // Patch fields from added mesh
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
     {
-        fld.boundaryField().hook(patchFields[i].clone());
+        const labelList& addedPatchMap = meshMap.addedPatchMap();
+
+        // Add addedMesh patches
+        forAll(addedPatchMap, patchI)
+        {
+            label newPatchI = addedPatchMap[patchI];
+
+            if (newPatchI != -1)
+            {
+                const polyPatch& newPatch = mesh.boundaryMesh()[newPatchI];
+                const polyPatch& oldPatch =
+                    fldToAdd.mesh().boundaryMesh()[patchI];
+
+                if (!fld.boundaryField()(newPatchI))
+                {
+                    // First occurrence of newPatchI. Map from existing
+                    // patchField
+
+                    // From new patch faces to patch faces on added mesh.
+                    labelList newToAdded
+                    (   
+                        calcPatchMap
+                        (
+                            oldPatch.start(),
+                            oldPatch.size(),
+                            meshMap.addedFaceMap(),
+                            newPatch,
+                            0                       // unmapped values
+                        )
+                    );
+
+                    directFvPatchFieldMapper patchMapper(newToAdded);
+
+                    fld.boundaryField().set
+                    (
+                        newPatchI,
+                        fvPatchField<Type>::New
+                        (
+                            fldToAdd.boundaryField()[patchI],   // added field
+                            mesh.boundary()[newPatchI],     // new fvPatch
+                            fld.internalField(),            // new int. field
+                            patchMapper                     // mapper
+                        )
+                    );
+                }
+                else
+                {
+                    // PatchField will have correct size already. Just slot in
+                    // my elements.
+
+                    // From new patch faces to patch faces on added mesh. This
+                    // time keep unmapped elements -1.
+                    labelList newToAdded
+                    (   
+                        calcPatchMap
+                        (
+                            oldPatch.start(),
+                            oldPatch.size(),
+                            meshMap.addedFaceMap(),
+                            newPatch,
+                            -1                      // unmapped values
+                        )
+                    );
+
+                    const fvPatchField<Type>& addedFld =
+                        fldToAdd.boundaryField()[patchI];
+
+                    fvPatchField<Type>& newFld = fld.boundaryField()[newPatchI];
+
+                    forAll(newFld, i)
+                    {
+                        label oldFaceI = newToAdded[i];
+
+                        if (oldFaceI >= 0 && oldFaceI < addedFld.size())
+                        {
+                            newFld[i] = addedFld[oldFaceI];
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -206,10 +277,10 @@ void Foam::fvMeshAdder::MapVolField
 template<class Type>
 void Foam::fvMeshAdder::MapVolFields
 (
-    const labelList& oldPatchStarts,
+    const mapAddedPolyMesh& meshMap,
     const fvMesh& mesh,
     const fvMesh& meshToAdd
-) const
+)
 {
     HashTable<const GeometricField<Type, fvPatchField, volMesh>*> fields
     (
@@ -264,11 +335,12 @@ void Foam::fvMeshAdder::MapVolFields
             const GeometricField<Type, fvPatchField, volMesh>& fldToAdd =
                 *fieldsToAdd[fld.name()];
 
-            MapVolField<Type>(oldPatchStarts, fld, fldToAdd);
+            MapVolField<Type>(meshMap, fld, fldToAdd);
         }
         else
         {
-            Pout<< "Not mapping field " << fld.name()
+            WarningIn("fvMeshAdder::MapVolFields")
+                << "Not mapping field " << fld.name()
                 << " since not present on mesh to add"
                 << endl;
         }
@@ -276,210 +348,314 @@ void Foam::fvMeshAdder::MapVolFields
 }
 
 
-//template<class Type>
-//Foam::tmp<Foam::GeometricField<Type, Foam::fvPatchField, Foam::volMesh> >
-//Foam::fvMeshAdder::add
-//(
-//    const fvMesh& mergedMesh,
-//    const GeometricField<Type, fvPatchField, volMesh>& fld0,
-//    const GeometricField<Type, fvPatchField, volMesh>& fld1
-//) const
-//{
-//    // Create and map the internal-field values. Note no need to initialize
-//    // internal field since all cells guaranteed to originate from one of either
-//    // meshes.
-//    Field<Type> internalField(mergedMesh.nCells());
-//
-//    map(fld0, meshMap.oldCellMap(), internalField);
-//    map(fld1, meshMap.addedCellMap(), internalField);
-//
-//    // Create and map the patch field values
-//    PtrList<fvPatchField<Type> > patchFields(mergedMesh.boundary().size());
-//
-//    // Add mesh0 patches
-//    forAll(meshMap.oldPatchMap(), patchI)
-//    {
-//        label newPatchI = meshMap.oldPatchMap()[patchI];
-//
-//        if (newPatchI != -1)
-//        {
-//            // Create new patchField with same type as fld0.
-//
-//            Pout<< "    Copying old mesh field at "
-//                << fld0.boundaryField()[patchI].patch().name()
-//                << "  type " << fld0.boundaryField()[patchI].type()
-//                << " to position " << newPatchI << endl;
-//
-//            patchFields.set(newPatchI) = fvPatchField<Type>::New
-//            (
-//                fld0.boundaryField()[patchI].type(),
-//                mergedMesh.boundary()[newPatchI],
-//                internalField
-//            ).ptr();
-//
-//            // Copy values.
-//            mapPatch
-//            (
-//                fld0.boundaryField()[patchI],
-//                fld0.boundaryField()[patchI].patch().patch().start(),
-//                meshMap.oldFaceMap(),
-//                patchFields[newPatchI]
-//            );
-//        }
-//    }
-//
-//    // Add mesh1 patches
-//    forAll(meshMap.addedPatchMap(), patchI)
-//    {
-//        label newPatchI = meshMap.addedPatchMap()[patchI];
-//
-//        if (newPatchI != -1)
-//        {
-//            if (!patchFields(newPatchI))
-//            {
-//                Pout<< "    Copying added mesh field at "
-//                    << fld0.boundaryField()[patchI].patch().name()
-//                    << "  type " << fld0.boundaryField()[patchI].type()
-//                    << " to position " << newPatchI << endl;
-//
-//                patchFields.set(newPatchI) = fvPatchField<Type>::New
-//                (
-//                    fld1.boundaryField()[patchI].type(),
-//                    mergedMesh.boundary()[newPatchI],
-//                    internalField
-//                ).ptr();
-//            }
-//
-//            // Copy values.
-//            mapPatch
-//            (
-//                fld1.boundaryField()[patchI],
-//                fld1.boundaryField()[patchI].patch().patch().start(),
-//                meshMap.addedFaceMap(),
-//                patchFields[newPatchI]
-//            );
-//        }
-//    }
-//
-//    // Create the complete field from the pieces
-//    tmp<GeometricField<Type, fvPatchField, volMesh> > tresF
-//    (
-//        new GeometricField<Type, fvPatchField, volMesh>
-//        (
-//            IOobject
-//            (
-//                "merged"+fld0.name(),
-//                mergedMesh.time().timeName(),
-//                mergedMesh,
-//                IOobject::NO_READ,
-//                IOobject::NO_WRITE
-//            ),
-//            mergedMesh,
-//            fld0.dimensions(),
-//            internalField,
-//            patchFields
-//        )
-//    );
-//
-//    return tresF;
-//}
+template<class Type>
+void Foam::fvMeshAdder::MapSurfaceField
+(
+    const mapAddedPolyMesh& meshMap,
+
+    GeometricField<Type, fvPatchField, surfaceMesh>& fld,
+    const GeometricField<Type, fvPatchField, surfaceMesh>& fldToAdd
+)
+{
+    const fvMesh& mesh = fld.mesh();
+    const labelList& oldPatchStarts = meshMap.oldPatchStarts();
+
+    // Internal field
+    // ~~~~~~~~~~~~~~
+
+    // Store old internal field
+    {
+        Field<Type> oldField(fld);
+
+        // Modify internal field
+        Field<Type>& intFld = fld.internalField();
+
+        intFld.setSize(mesh.nInternalFaces());
+
+        map(oldField, meshMap.oldFaceMap(), intFld);
+        map(fldToAdd, meshMap.addedFaceMap(), intFld);
+
+        // Faces that were boundary faces but are not anymore.
+        // Use owner value (so lowest numbered cell, i.e. from 'old' not 'added'
+        // mesh)
+        forAll(fld.boundaryField(), patchI)
+        {
+            const fvPatchField<Type>& pf = fld.boundaryField()[patchI];
+
+            label start = oldPatchStarts[patchI];
+
+            forAll(pf, i)
+            {
+                label newFaceI = meshMap.oldFaceMap()[start + i];
+
+                if (newFaceI >= 0 && newFaceI < mesh.nInternalFaces())
+                {
+                    intFld[newFaceI] = pf[i];
+                }
+            }
+        }
+    }
 
 
-//template<class Type>
-//void Foam::fvMeshAdder::readAndAddTypedVolFields
-//(
-//    const fvMesh& mesh,
-//    const IOobjectList& objects,
-//    const fvMesh& meshToAdd,
-//    const IOobjectList& objectsToAdd,
-//    const fvMesh& mergedMesh
-//) const
-//{
-//    // Get objects of Type.
-//    wordList fieldNames
-//    (
-//        objects.names
-//        (
-//            GeometricField<Type, fvPatchField, volMesh>::typeName
-//        )
-//    );
-//
-//
-//    // Merge _0 fields in iteration 2, all others in iteration 1.
-//    // Bit of a hack. GeometricField will try to load old time step field
-//    // ('readOldTimeIfPresent') so make sure it isn't mapped before the
-//    // this-timestep field since the _0 field will have the new mesh size.
-//
-//    // We enforce this by first doing all fields ending not in _0, then those
-//    // ending in _0, then those ending in _0_0 etc. until all have been done.
-//
-//    word postFix = "";
-//
-//    label nFiles = 0;
-//
-//    do
-//    {
-//        // Merge all fields ending in postFix.
-//
-//        forAll(fieldNames, i)
-//        {
-//            const word& fieldName = fieldNames[i];
-//
-//            string::size_type pos = fieldName.rfind(postFix);
-//
-//            if (pos != string::npos && pos == fieldName.size() - postFix.size())
-//            {
-//                // Check whether another level of _0
-//                word baseName = fieldName.substr(0, pos);
-//
-//                string::size_type pos2 = baseName.rfind("_0");
-//
-//                if (pos2 == string::npos || pos2 != baseName.size() - 2)
-//                {
-//                    nFiles++;
-//
-//                    Info<< "Merging field " << fieldName << " ..." << endl;
-//
-//                    if (objectsToAdd.found(fieldName))
-//                    {
-//                        // Load both fields
-//
-//                        GeometricField<Type, fvPatchField, volMesh> fld
-//                        (
-//                            *objects[fieldName],
-//                            mesh
-//                        );
-//
-//                        GeometricField<Type, fvPatchField, volMesh> fldToAdd
-//                        (
-//                            *objectsToAdd[fieldName],
-//                            meshToAdd
-//                        );
-//
-//                        // Merge the two fields onto the new mergedMesh
-//                        tmp<GeometricField<Type, fvPatchField, volMesh> > tfld
-//                        (
-//                            add(mergedMesh, fld, fldToAdd)
-//                        );
-//
-//                        tfld().rename(fieldName);
-//                        tfld().write();
-//                    }
-//                    else
-//                    {
-//                        Warning<< "Cannot find field " << fieldName
-//                            << " on mesh to add" << endl;
-//                    }
-//                }
-//            }
-//        }
-//
-//        // New iteration going through older timelevel fields
-//        postFix += "_0";
-//
-//    } while (nFiles < fieldNames.size());
-//
-//}
+    // Patch fields from old mesh
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    {
+        const labelList& oldPatchMap = meshMap.oldPatchMap();
+        const labelList& oldPatchSizes = meshMap.oldPatchSizes();
+
+        // Reorder old patches in order of new ones. Put removed patches at end.
+
+        label unusedPatchI = 0;
+
+        forAll(oldPatchMap, patchI)
+        {
+            label newPatchI = oldPatchMap[patchI];
+
+            if (newPatchI != -1)
+            {
+                unusedPatchI++;
+            }
+        }
+
+        label nUsedPatches = unusedPatchI;
+
+        // Reorder list for patchFields
+        labelList oldToNew(oldPatchMap.size());
+
+        forAll(oldPatchMap, patchI)
+        {
+            label newPatchI = oldPatchMap[patchI];
+
+            if (newPatchI != -1)
+            {
+                oldToNew[patchI] = newPatchI;
+            }
+            else
+            {
+                oldToNew[patchI] = unusedPatchI++;
+            }
+        }
+
+
+        // Sort deleted ones last so is now in newPatch ordering
+        fld.boundaryField().reorder(oldToNew);
+        // Extend to covers all patches
+        fld.boundaryField().setSize(mesh.boundaryMesh().size());
+        // Delete unused patches
+        for
+        (
+            label newPatchI = nUsedPatches;
+            newPatchI < fld.boundaryField().size();
+            newPatchI++
+        )
+        {
+            fld.boundaryField().set(newPatchI, NULL);
+        }
+
+
+        // Map old values
+        // ~~~~~~~~~~~~~~
+
+        forAll(oldPatchMap, patchI)
+        {
+            label newPatchI = oldPatchMap[patchI];
+
+            if (newPatchI != -1)
+            {
+                labelList newToOld
+                (   
+                    calcPatchMap
+                    (
+                        oldPatchStarts[patchI],
+                        oldPatchSizes[patchI],
+                        meshMap.oldFaceMap(),
+                        mesh.boundaryMesh()[newPatchI],
+                        0                   // unmapped value
+                    )
+                );
+
+                directFvPatchFieldMapper patchMapper(newToOld);
+
+
+                // Create new patchField with same type as existing one.
+                // Note:
+                // - boundaryField already in new order so access with newPatchI
+                // - fld.boundaryField()[newPatchI] both used for type and old
+                //   value
+                // - hope that field mapping allows aliasing since old and new
+                //   are same memory!
+                fld.boundaryField().set
+                (
+                    newPatchI,
+                    fvPatchField<Type>::New
+                    (
+                        fld.boundaryField()[newPatchI], // old field
+                        mesh.boundary()[newPatchI],     // new fvPatch
+                        fld.internalField(),            // new internal field
+                        patchMapper                     // mapper (new to old)
+                    )
+                );
+            }
+        }
+    }
+
+
+
+    // Patch fields from added mesh
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    {
+        const labelList& addedPatchMap = meshMap.addedPatchMap();
+
+        // Add addedMesh patches
+        forAll(addedPatchMap, patchI)
+        {
+            label newPatchI = addedPatchMap[patchI];
+
+            if (newPatchI != -1)
+            {
+                const polyPatch& newPatch = mesh.boundaryMesh()[newPatchI];
+                const polyPatch& oldPatch =
+                    fldToAdd.mesh().boundaryMesh()[patchI];
+
+                if (!fld.boundaryField()(newPatchI))
+                {
+                    // First occurrence of newPatchI. Map from existing
+                    // patchField
+
+                    // From new patch faces to patch faces on added mesh.
+                    labelList newToAdded
+                    (   
+                        calcPatchMap
+                        (
+                            oldPatch.start(),
+                            oldPatch.size(),
+                            meshMap.addedFaceMap(),
+                            newPatch,
+                            0                       // unmapped values
+                        )
+                    );
+
+                    directFvPatchFieldMapper patchMapper(newToAdded);
+
+                    fld.boundaryField().set
+                    (
+                        newPatchI,
+                        fvPatchField<Type>::New
+                        (
+                            fldToAdd.boundaryField()[patchI],   // added field
+                            mesh.boundary()[newPatchI],     // new fvPatch
+                            fld.internalField(),            // new int. field
+                            patchMapper                     // mapper
+                        )
+                    );
+                }
+                else
+                {
+                    // PatchField will have correct size already. Just slot in
+                    // my elements.
+
+                    // From new patch faces to patch faces on added mesh. This
+                    // time keep unmapped elements -1.
+                    labelList newToAdded
+                    (   
+                        calcPatchMap
+                        (
+                            oldPatch.start(),
+                            oldPatch.size(),
+                            meshMap.addedFaceMap(),
+                            newPatch,
+                            -1                      // unmapped values
+                        )
+                    );
+
+                    const fvPatchField<Type>& addedFld =
+                        fldToAdd.boundaryField()[patchI];
+
+                    fvPatchField<Type>& newFld = fld.boundaryField()[newPatchI];
+
+                    forAll(newFld, i)
+                    {
+                        label oldFaceI = newToAdded[i];
+
+                        if (oldFaceI >= 0 && oldFaceI < addedFld.size())
+                        {
+                            newFld[i] = addedFld[oldFaceI];
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+template<class Type>
+void Foam::fvMeshAdder::MapSurfaceFields
+(
+    const mapAddedPolyMesh& meshMap,
+    const fvMesh& mesh,
+    const fvMesh& meshToAdd
+)
+{
+    typedef GeometricField<Type, fvPatchField, surfaceMesh> fldType;
+
+    HashTable<const fldType*> fields
+    (
+        mesh.objectRegistry::lookupClass<fldType>()
+    );
+
+    HashTable<const fldType*> fieldsToAdd
+    (
+        meshToAdd.objectRegistry::lookupClass<fldType>()
+    );
+
+    // It is necessary to enforce that all old-time fields are stored
+    // before the mapping is performed.  Otherwise, if the
+    // old-time-level field is mapped before the field itself, sizes
+    // will not match.  
+
+    for
+    (
+        typename HashTable<const fldType*>::
+            iterator fieldIter = fields.begin();
+        fieldIter != fields.end();
+        ++fieldIter
+    )
+    {
+        const_cast<fldType*>(fieldIter())
+            ->storeOldTimes();
+    }
+
+
+    for
+    (
+        typename HashTable<const fldType*>::
+            iterator fieldIter = fields.begin();
+        fieldIter != fields.end();
+        ++fieldIter
+    )
+    {
+        fldType& fld = const_cast<fldType&>(*fieldIter());
+
+        if (fieldsToAdd.found(fld.name()))
+        {
+            Pout<< "Mapping field " << fld.name() << endl;
+
+            const fldType& fldToAdd = *fieldsToAdd[fld.name()];
+
+            MapSurfaceField<Type>(meshMap, fld, fldToAdd);
+        }
+        else
+        {
+            WarningIn("fvMeshAdder::MapSurfaceFields")
+                << "Not mapping field " << fld.name()
+                << " since not present on mesh to add"
+                << endl;
+        }
+    }
+}
 
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,7 +47,8 @@ IPstream::IPstream
 :
     Pstream(bufSize),
     Istream(format, version),
-    fromProcNo_(fromProcNo)
+    fromProcNo_(fromProcNo),
+    messageSize_(0)
 {
      notImplemented
      (
@@ -64,7 +65,7 @@ IPstream::IPstream
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool IPstream::read
+int IPstream::read
 (
     const int fromProcNo,
     char* buf,
@@ -81,7 +82,7 @@ bool IPstream::read
          ")"
      );
 
-     return false;
+     return 0;
 }
 
 

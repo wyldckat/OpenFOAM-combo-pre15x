@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,48 +22,29 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Top level solver class which selects the solver relevant to the particular
-    matrix structure.
-
 \*---------------------------------------------------------------------------*/
 
 #include "lduMatrix.H"
 #include "diagonalSolver.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// Define the constructor function hash tables
-
-defineRunTimeSelectionTable
-(
-    lduMatrix::solver,
-    symMatrix
-);
-
-defineRunTimeSelectionTable
-(
-    lduMatrix::solver,
-    asymMatrix
-);
+    defineRunTimeSelectionTable(lduMatrix::solver, symMatrix);
+    defineRunTimeSelectionTable(lduMatrix::solver, asymMatrix);
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-autoPtr<lduMatrix::solver> lduMatrix::solver::New
+Foam::autoPtr<Foam::lduMatrix::solver> Foam::lduMatrix::solver::New
 (
     const word& fieldName,
-    scalarField& psi,
-    lduMatrix& matrix,
-    const scalarField& source,
-    const FieldField<Field, scalar>& coupleBouCoeffs,
-    const FieldField<Field, scalar>& coupleIntCoeffs,
-    const lduCoupledInterfacePtrsList& interfaces,
-    const direction cmpt,
+    const lduMatrix& matrix,
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const FieldField<Field, scalar>& interfaceIntCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
     Istream& solverData
 )
 {
@@ -76,13 +57,11 @@ autoPtr<lduMatrix::solver> lduMatrix::solver::New
             new diagonalSolver
             (
                 fieldName,
-                psi,
                 matrix,
-                source,
-                coupleBouCoeffs,
-                coupleIntCoeffs,
+                interfaceBouCoeffs,
+                interfaceIntCoeffs,
                 interfaces,
-                cmpt
+                solverData
             )
         );
     }
@@ -95,8 +74,7 @@ autoPtr<lduMatrix::solver> lduMatrix::solver::New
         {
             FatalIOErrorIn
             (
-                "lduMatrix::solver::New(const fvMesh&, Istream&)",
-                solverData
+                "lduMatrix::solver::New", solverData
             )   << "Unknown symmetric matrix solver " << solverName
                 << endl << endl
                 << "Valid symmetric matrix solvers are :" << endl
@@ -109,13 +87,10 @@ autoPtr<lduMatrix::solver> lduMatrix::solver::New
             constructorIter()
             (
                 fieldName,
-                psi,
                 matrix,
-                source,
-                coupleBouCoeffs,
-                coupleIntCoeffs,
+                interfaceBouCoeffs,
+                interfaceIntCoeffs,
                 interfaces,
-                cmpt,
                 solverData
             )
         );
@@ -129,8 +104,7 @@ autoPtr<lduMatrix::solver> lduMatrix::solver::New
         {
             FatalIOErrorIn
             (
-                "lduMatrix::solver::New(const fvMesh&, Istream&)",
-                solverData
+                "lduMatrix::solver::New", solverData
             )   << "Unknown asymmetric matrix solver " << solverName
                 << endl << endl
                 << "Valid asymmetric matrix solvers are :" << endl
@@ -143,34 +117,91 @@ autoPtr<lduMatrix::solver> lduMatrix::solver::New
             constructorIter()
             (
                 fieldName,
-                psi,
                 matrix,
-                source,
-                coupleBouCoeffs,
-                coupleIntCoeffs,
+                interfaceBouCoeffs,
+                interfaceIntCoeffs,
                 interfaces,
-                cmpt,
                 solverData
             )
         );
     }
     else
     {
-        FatalErrorIn
+        FatalIOErrorIn
         (
-            "lduMatrix::solver::New"
-            "(lduMatrix& matrix, const word& solverName)"
+            "lduMatrix::solver::New", solverData
         )   << "cannot solve incomplete matrix, "
                "no diagonal or off-diagonal coefficient"
-            << exit(FatalError);
+            << exit(FatalIOError);
 
         return autoPtr<lduMatrix::solver>(NULL);
     }
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-} // End namespace Foam
+Foam::lduMatrix::solver::solver
+(
+    const word& fieldName,
+    const lduMatrix& matrix,
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const FieldField<Field, scalar>& interfaceIntCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
+    Istream& solverData
+)
+:
+    fieldName_(fieldName),
+    matrix_(matrix),
+    interfaceBouCoeffs_(interfaceBouCoeffs),
+    interfaceIntCoeffs_(interfaceIntCoeffs),
+    interfaces_(interfaces),
+
+    controlDict_(solverData),
+
+    maxIter_(1000),
+    tolerance_(1e-6),
+    relTol_(0)
+{
+    readControls();
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void Foam::lduMatrix::solver::readControls()
+{
+    readControl(controlDict_, maxIter_, "maxIter");
+    readControl(controlDict_, tolerance_, "tolerance");
+    readControl(controlDict_, relTol_, "relTol");
+}
+
+
+void Foam::lduMatrix::solver::read(Istream& solverData)
+{
+    word solverName(solverData);
+    solverData >> controlDict_;
+    readControls();
+}
+
+
+Foam::scalar Foam::lduMatrix::solver::normFactor
+(
+    const scalarField& psi,
+    const scalarField& source,
+    const scalarField& Apsi,
+    scalarField& tmpField
+) const
+{
+    // --- Calculate A dot reference value of psi
+    matrix_.sumA(tmpField, interfaceBouCoeffs_, interfaces_);
+    tmpField *= gAverage(psi);
+
+    return gSum(mag(Apsi - tmpField) + mag(source - tmpField)) + matrix_.small_;
+
+    // At convergence this simpler method is equivalent to the above
+    // return 2*gSumMag(source) + matrix_.small_;
+}
+
 
 // ************************************************************************* //

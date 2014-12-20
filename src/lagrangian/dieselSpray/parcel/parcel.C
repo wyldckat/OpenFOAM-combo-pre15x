@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -91,13 +89,9 @@ parcel::parcel
     Uturb_(Uturb),
     n_(n),
     X_(X),
-    tMom_(GREAT),
-    t0_(0),
-    tEnd_(0.0)
+    tMom_(GREAT)
 {}
 
-parcel::~parcel()
-{}
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -108,7 +102,7 @@ bool parcel::move(spray& sDB)
 
     const liquidMixture& fuels = sDB.fuels();
 
-    scalar dt = sDB.runTime().deltaT().value();
+    scalar deltaT = sDB.runTime().deltaT().value();
     label Nf = fuels.components().size();
     label Ns = sDB.composition().Y().size();
 
@@ -162,20 +156,23 @@ bool parcel::move(spray& sDB)
         pg,
         Yfg,
         m()*fuels.Y(X()),
-        dt
+        deltaT
     );
 
 
+    // set the end-time for the track
+    scalar tEnd = (1.0 - stepFraction())*deltaT;
+
     // set the maximum time step for this parcel
-    scalar deltaMax = min
+    scalar dtMax = min
     (
-        tEnd(),
+        tEnd,
         min
         (
             tauMomentum,
             min
             (
-                1.0e+10*mag(min(tauEvaporation)), // evaporation is not an issue...
+                1.0e+10*mag(min(tauEvaporation)), // evaporation is not an issue
                 min
                 (
                     mag(tauHeatTransfer),
@@ -187,7 +184,7 @@ bool parcel::move(spray& sDB)
 
     // prevent the number of subcycles from being too many 
     // (10 000 seems high enough)
-    deltaMax = max(deltaMax, 1.0e-4*tEnd());
+    dtMax = max(dtMax, 1.0e-4*tEnd);
 
     bool switchProcessor = false;
     vector planeNormal = vector::zero;
@@ -197,51 +194,33 @@ bool parcel::move(spray& sDB)
         planeNormal /= mag(planeNormal);
     }
 
-    label nIter = 0;
     // move the parcel until there is no 'timeLeft'
-    while (keepParcel && (tEnd() > SMALL) && (!switchProcessor))
+    while (keepParcel && tEnd > SMALL && !switchProcessor)
     {
         // set the lagrangian time-step
-        scalar deltaT = min(deltaMax, tEnd());
+        scalar dt = min(dtMax, tEnd);
 
         // remember which cell the parcel is in
         // since this will change if a face is hit
         label celli = cell();
         scalar p = sDB.p()[celli];
-        label facei = -1;
+
         // track parcel to face, or end of trajectory
         if (keepParcel)
         {
-            scalar fraction = t0()/dt;
-            vector toPos = position() + U()*deltaT;
-            facei = trackToFace(toPos, fraction, false);
+            // Track and adjust the time step if the trajectory is not completed
+            dt *= trackToFace(position() + dt*U_, sDB);
+
+            // Decrement the end-time acording to how much time the track took
+            tEnd -= dt;
+
+            // Set the current time-step fraction.
+            stepFraction() = 1.0 - tEnd/deltaT;
 
             if (onBoundary()) // hit face
             {
 #               include "boundaryTreatment.H"
             }
-
-            deltaT *= fraction;
-            t0() += deltaT;
-            tEnd() -= deltaT;
-
-            nIter++;
-            if (nIter > 100)
-            {
-                nIter = 0;
-                const vector& C = mesh.cellCentres()[celli];
-                nIter = 0;
-                vector toC = position() + 1.0e-6*(C - position());;
-                facei = trackToFace(toC, fraction, false);
-                /*
-                Info << "facei = " << facei << ", position() = " << position() 
-                    << ", U = " << U()
-                    << ", onBoundary() = " << onBoundary()
-                    << ",fraction = " << fraction
-                    << endl;
-                    */
-            }
-
         }
 
         if (keepParcel && sDB.twoD())
@@ -254,13 +233,11 @@ bool parcel::move(spray& sDB)
             }
         }
 
-        /*
-            **** calculate the lagrangian source terms ****
-            First we get the 'old' properties.
-            and then 'update' them to get the 'new' 
-            properties.
-            The difference is then added to the source terms.
-        */
+        // **** calculate the lagrangian source terms ****
+        // First we get the 'old' properties.
+        // and then 'update' them to get the 'new' 
+        // properties.
+        // The difference is then added to the source terms.
         
         scalar oRho = fuels.rho(p, T(), X());
         scalarField oMass(Nf, 0.0);
@@ -284,10 +261,10 @@ bool parcel::move(spray& sDB)
         // update the parcel properties (U, T, D)
         updateParcelProperties
         (
-            deltaT,
+            dt,
             sDB,
             celli,
-            facei
+            face()
         );
 
         scalar nRho = fuels.rho(p, T(), X());
@@ -339,15 +316,14 @@ bool parcel::move(spray& sDB)
 
         if (onBoundary() && keepParcel)
         {
-            if (facei > -1)
+            if (face() > -1)
             {
-                if (typeid(pbMesh[patch(facei)]) == typeid(processorPolyPatch))
+                if (isType<processorPolyPatch>(pbMesh[patch(face())]))
                 {
                     switchProcessor = true;
                 }
             }
         }
-
     }
 
     return keepParcel;
@@ -650,14 +626,13 @@ void parcel::updateParcelProperties
         }
         T() = Tnew;
         scalar rhod = fuels.rho(pg, T(), X());
-        d() = pow(6.0*m()/(Np*rhod*M_PI), 1.0/3.0);
+        d() = cbrt(6.0*m()/(Np*rhod*M_PI));
     }
 
     T() = Tnew;
     scalar rhod = fuels.rho(pg, T(), X());
     m() = sum(mi);
-    d() = pow(6.0*m()/(Np*rhod*M_PI), 1.0/3.0);
-
+    d() = cbrt(6.0*m()/(Np*rhod*M_PI));
 }
 
 
@@ -665,6 +640,10 @@ void parcel::transformProperties(const tensor& T)
 {
     U_ = transform(T, U_);
 }
+
+
+void parcel::transformProperties(const vector&)
+{}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

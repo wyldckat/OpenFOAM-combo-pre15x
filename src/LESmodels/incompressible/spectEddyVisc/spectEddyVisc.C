@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -70,7 +68,7 @@ tmp<volScalarField> spectEddyVisc::k() const
 
     return
         cK1_*pow(delta(), 2.0/3.0)*pow(Eps, 2.0/3.0)
-       *exp(-cK2_*pow(delta(), -4.0/3.0)*nu()*pow(Eps, -1.0/3.0))
+        *exp(-cK2_*pow(delta(), -4.0/3.0)*nu()/pow(Eps, 1.0/3.0))
       - cK3_*pow(Eps*nu(), 1.0/2.0)
        *erfc(cK4_*pow(delta(), -2.0/3.0)*pow(Eps, -1.0/6.0));
 }
@@ -88,7 +86,7 @@ void spectEddyVisc::correct(const tmp<volTensorField>& gradU)
             nu()
            /(
                scalar(1)
-             - exp(-cB_*pow(nu()/(nuSgs_ + nu()), 1.0/3.0)*pow(Re, -2.0/3.0))
+               - exp(-cB_*pow(nu()/(nuSgs_ + nu()), 1.0/3.0)*pow(Re, -2.0/3.0))
             );
     }
 

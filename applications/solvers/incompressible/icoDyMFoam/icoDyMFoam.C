@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -58,11 +58,8 @@ int main(int argc, char *argv[])
 #       include "readTimeControls.H"
 #       include "CourantNo.H"
 
-        if (mesh.moving())
-        {
-            // Make the fluxes absolute
-            phi += fvc::meshPhi(U);
-        }
+        // Make the fluxes absolute
+        fvc::makeAbsolute(phi, U);
 
 #       include "setDeltaT.H"
 
@@ -77,11 +74,8 @@ int main(int argc, char *argv[])
 #           include "correctPhi.H"
         }
 
-        if (mesh.moving())
-        {
-            // Make the fluxes relative
-            phi -= fvc::meshPhi(U);
-        }
+        // Make the fluxes relative to the mesh motion
+        fvc::makeRelative(phi, U);
 
 #       include "UEqn.H"
 
@@ -89,11 +83,11 @@ int main(int argc, char *argv[])
 
         for (int corr=0; corr<nCorr; corr++)
         {
-            rUA = 1.0/UEqn.A();
+            rAU = 1.0/UEqn.A();
 
-            U = rUA*UEqn.H();
+            U = rAU*UEqn.H();
             phi = (fvc::interpolate(U) & mesh.Sf());
-              //+ fvc::ddtPhiCorr(rUA, U, phi);
+              //+ fvc::ddtPhiCorr(rAU, U, phi);
 
             adjustPhi(phi, U, p);
 
@@ -101,11 +95,19 @@ int main(int argc, char *argv[])
             {
                 fvScalarMatrix pEqn
                 (
-                    fvm::laplacian(rUA, p) == fvc::div(phi)
+                    fvm::laplacian(rAU, p) == fvc::div(phi)
                 );
 
                 pEqn.setReference(pRefCell, pRefValue);
-                pEqn.solve();
+
+                if (corr == nCorr-1 && nonOrth == nNonOrthCorr)
+                {
+                    pEqn.solve(mesh.solver(p.name() + "Final"));
+                }
+                else
+                {
+                    pEqn.solve(mesh.solver(p.name()));
+                }
                 
                 if (nonOrth == nNonOrthCorr)
                 {
@@ -115,13 +117,10 @@ int main(int argc, char *argv[])
 
 #           include "continuityErrs.H"
 
-            if (mesh.moving())
-            {
-                // Make the fluxes relative
-                phi -= fvc::meshPhi(U);
-            }
+            // Make the fluxes relative to the mesh motion
+            fvc::makeRelative(phi, U);
 
-            U -= rUA*fvc::grad(p);
+            U -= rAU*fvc::grad(p);
             U.correctBoundaryConditions();
         }
 

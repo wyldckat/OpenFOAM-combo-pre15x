@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -70,9 +68,9 @@ void DeardorffDiffStress::correct(const tmp<volTensorField>& tgradU)
 
     GenSGSStress::correct(gradU);
 
-    volTensorField D = symm(gradU);
+    volSymmTensorField D = symm(gradU);
 
-    volTensorField P = -rho()*(((B_ & gradU) + ((gradU.T()) & B_)));
+    volSymmTensorField P = -rho()*twoSymm(B_ & gradU);
 
     volScalarField K = 0.5*tr(B_);
 
@@ -81,10 +79,10 @@ void DeardorffDiffStress::correct(const tmp<volTensorField>& tgradU)
         fvm::ddt(rho(), B_)
       + fvm::div(phi(), B_)
       - fvm::laplacian(DBEff(), B_)
+      + fvm::Sp(cm_*rho()*sqrt(K)/delta(), B_)
      ==
         P
       + 0.8*rho()*K*D
-      - fvm::Sp(cm_*rho()*sqrt(K)/delta(), B_)
       - (2*ce_ - 0.667*cm_)*I*rho()*epsilon()
     );
 
@@ -93,12 +91,12 @@ void DeardorffDiffStress::correct(const tmp<volTensorField>& tgradU)
 
     forAll(B_, celli)
     {
-        B_[celli].component(tensor::XX) =
-            max(B_[celli].component(tensor::XX), 1.0e-10);
-        B_[celli].component(tensor::YY) =
-            max(B_[celli].component(tensor::YY), 1.0e-10);
-        B_[celli].component(tensor::ZZ) =
-            max(B_[celli].component(tensor::ZZ), 1.0e-10);
+        B_[celli].component(symmTensor::XX) =
+            max(B_[celli].component(symmTensor::XX), 1.0e-10);
+        B_[celli].component(symmTensor::YY) =
+            max(B_[celli].component(symmTensor::YY), 1.0e-10);
+        B_[celli].component(symmTensor::ZZ) =
+            max(B_[celli].component(symmTensor::ZZ), 1.0e-10);
     }
 
     K = 0.5*tr(B_);

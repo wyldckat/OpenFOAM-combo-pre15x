@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "SyamlalConductivity.H"
+#include "mathematicalConstants.H"
 #include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -44,8 +45,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-Foam::SyamlalConductivity::SyamlalConductivity(const Foam::dictionary& dict)
+Foam::SyamlalConductivity::SyamlalConductivity(const dictionary& dict)
 :
     conductivityModel(dict)
 {}
@@ -59,23 +59,25 @@ Foam::SyamlalConductivity::~SyamlalConductivity()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::volScalarField Foam::SyamlalConductivity::kappa
+Foam::tmp<Foam::volScalarField> Foam::SyamlalConductivity::kappa
 (
-    const Foam::volScalarField& alpha,
-    const Foam::volScalarField& Theta,
-    const Foam::volScalarField& g0,
-    const Foam::dimensionedScalar& rhoa,
-    const Foam::dimensionedScalar& da,
-    const Foam::dimensionedScalar& e
+    const volScalarField& alpha,
+    const volScalarField& Theta,
+    const volScalarField& g0,
+    const dimensionedScalar& rhoa,
+    const dimensionedScalar& da,
+    const dimensionedScalar& e
 ) const
 {
-    const scalar piSqrt = pow(M_PI, 0.5);
-    volScalarField ThetaSqrt = pow(Theta, 0.5);
+    const scalar sqrtPi = sqrt(mathematicalConstant::pi);
 
-    return 
-        2.0*pow(alpha, 2.0)*rhoa*da*g0*(1.0+e)*ThetaSqrt/piSqrt
-      + (9.0/8.0)*ThetaSqrt*piSqrt*rhoa*da*g0*0.25*pow(1.0+e, 2.0)*(2.0*e-1.0)*pow(alpha, 2)/(49.0/16.0-33.0*e/16.0)
-      +  (15.0/32.0)*ThetaSqrt*piSqrt*alpha*rhoa*da/(49.0/16.0-33.0*e/16.0);
+    return rhoa*da*sqrt(Theta)*
+    (
+        2.0*sqr(alpha)*g0*(1.0 + e)/sqrtPi
+      + (9.0/8.0)*sqrtPi*g0*0.25*sqr(1.0 + e)*(2.0*e - 1.0)*sqr(alpha)
+       /(49.0/16.0 - 33.0*e/16.0)
+      + (15.0/32.0)*sqrtPi*alpha/(49.0/16.0 - 33.0*e/16.0)
+    );
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -46,13 +46,23 @@ namespace Foam
                   Class CoupledPointPatchField Declaration
 \*---------------------------------------------------------------------------*/
 
-template<template<class> class PatchField, class PointPatch, class Type>
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class CoupledPointPatch,
+    class Type
+>
 class CoupledPointPatchField
 :
     public PatchField<Type>
 {
 
 public:
+
+    //- Runtime type information
+    TypeName(CoupledPointPatch::typeName_());
+
 
     // Constructors
 
@@ -66,7 +76,8 @@ public:
         //- Construct by mapping given patchField<Type> onto a new patch
         CoupledPointPatchField
         (
-            const CoupledPointPatchField<PatchField, PointPatch, Type>&,
+            const CoupledPointPatchField
+                <PatchField, PointPatch, CoupledPointPatch, Type>&,
             const PointPatch&,
             const Field<Type>&,
             const PointPatchFieldMapper&
@@ -78,7 +89,8 @@ public:
         //- Construct as copy setting internal field reference
         CoupledPointPatchField
         (
-            const CoupledPointPatchField<PatchField, PointPatch, Type>&,
+            const CoupledPointPatchField
+                <PatchField, PointPatch, CoupledPointPatch, Type>&,
             const Field<Type>&
         );
 
@@ -94,7 +106,7 @@ public:
         // Access
 
             //- Return true if this patch field is derived from
-            //  CoupledPointPatchField<PatchField, PointPatch, Type>.
+            //  coupledFvPatchField<Type>.
             virtual bool coupled() const
             {
                 return true;
@@ -103,8 +115,12 @@ public:
             //- Evaluate the patch field
             virtual void evaluate() = 0;
 
-            //- Add field to internal field
-            virtual void addField(Field<Type>&) const = 0;
+            //- Initialise swap of patch point values
+            virtual void initSwapAdd(Field<Type>&) const
+            {}
+
+            //- Complete swap of patch point values and add to local values
+            virtual void swapAdd(Field<Type>&) const = 0;
 };
 
 

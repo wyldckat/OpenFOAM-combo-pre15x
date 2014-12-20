@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,9 +32,6 @@ SourceFiles
     Scalar.C
 
 \*---------------------------------------------------------------------------*/
-
-namespace Foam
-{
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -95,16 +92,6 @@ inline Scalar component(const Scalar s, const direction)
     return s;
 }
 
-inline Scalar atan2(const Scalar y, const Scalar x)
-{
-    return ::atan2(y, x);
-}
-
-inline Scalar mag(const Scalar s)
-{
-    return ::fabs(s);
-}
-
 inline Scalar sign(const Scalar s)
 {
     return (s >= 0)? 1: -1;
@@ -155,6 +142,16 @@ inline Scalar pow4(const Scalar s)
     return sqr(sqr(s));
 }
 
+inline Scalar cmptMax(const Scalar s)
+{
+    return s;
+}
+
+inline Scalar cmptMin(const Scalar s)
+{
+    return s;
+}
+
 inline Scalar cmptAv(const Scalar s)
 {
     return s;
@@ -171,14 +168,9 @@ inline Scalar scale(const Scalar s, const Scalar d)
 }
 
 
-#define transFunc(func)            \
-inline Scalar func(const Scalar s) \
-{                                  \
-    return ::func(s);              \
-}
-
 // Standard C++ transcendental functions
 transFunc(sqrt)
+transFunc(cbrt)
 transFunc(exp)
 transFunc(log)
 transFunc(log10)
@@ -204,20 +196,8 @@ transFunc(lgamma)
 transFunc(j0)
 transFunc(j1)
 
-inline Scalar jn(const int n, const Scalar s)
-{
-    return ::jn(n, s);
-}
-
 transFunc(y0)
 transFunc(y1)
-
-inline Scalar yn(const int n, const Scalar s)
-{
-    return ::yn(n, s);
-}
-
-#undef transFunc
 
 
 // Stabilisation around zero for division
@@ -240,8 +220,5 @@ Scalar readScalar(Istream& is);
 Istream& operator>>(Istream&, Scalar&);
 Ostream& operator<<(Ostream&, const Scalar);
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

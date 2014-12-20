@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -138,6 +138,7 @@ polySplineEdge::polySplineEdge
 
     controlPoints_ = intervening(otherKnots_, nInterKnots, fstend, sndend);
     calcDistances();
+    Info<< polyLine::controlPoints_ << endl;
 }
 
 

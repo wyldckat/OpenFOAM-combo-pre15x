@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,13 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    A PtrList<class T> is a 1D array of pointers to objects
-    of T 'T', where the size of the array is known and used for
-    subscript bounds checking, etc.
-    The element operator [] returns a reference to the object
-    rather than a pointer
-
 \*---------------------------------------------------------------------------*/
 
 #include "error.H"
@@ -44,30 +37,24 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
 
-// Construct with zero length
 template<class T>
 PtrList<T>::PtrList()
 :
-    ptrs_(),
-    nextFree_(0)
+    ptrs_()
 {}
 
 
-// Construct with length specified
 template<class T>
 PtrList<T>::PtrList(const label s)
 :
-    ptrs_(s, reinterpret_cast<T*>(NULL)),
-    nextFree_(0)
+    ptrs_(s, reinterpret_cast<T*>(NULL))
 {}
 
 
-// Construct as copy
 template<class T>
 PtrList<T>::PtrList(const PtrList<T>& a)
 :
-    ptrs_(a.size()),
-    nextFree_(a.nextFree_)
+    ptrs_(a.size())
 {
     forAll(*this, i)
     {
@@ -76,13 +63,11 @@ PtrList<T>::PtrList(const PtrList<T>& a)
 }
 
 
-// Construct as copy given additional information
 template<class T>
 template<class CloneArg>
 PtrList<T>::PtrList(const PtrList<T>& a, const CloneArg& cloneArg)
 :
-    ptrs_(a.size()),
-    nextFree_(a.nextFree_)
+    ptrs_(a.size())
 {
     forAll(*this, i)
     {
@@ -91,12 +76,10 @@ PtrList<T>::PtrList(const PtrList<T>& a, const CloneArg& cloneArg)
 }
 
 
-// Construct as copy or re-use as specified.
 template<class T>
 PtrList<T>::PtrList(PtrList<T>& a, bool reUse)
 :
-    ptrs_(a.size()),
-    nextFree_(a.nextFree_)
+    ptrs_(a.size())
 {
     if (reUse)
     {
@@ -105,7 +88,6 @@ PtrList<T>::PtrList(PtrList<T>& a, bool reUse)
             ptrs_[i] = a.ptrs_[i];
             a.ptrs_[i] = NULL;
         }
-        a.nextFree_ = 0;
         a.setSize(0);
     }
     else
@@ -117,12 +99,11 @@ PtrList<T>::PtrList(PtrList<T>& a, bool reUse)
     }
 }
 
-// Construct as copy of SLPtrList<T>
+
 template<class T>
 PtrList<T>::PtrList(const SLPtrList<T>& sll)
 :
-    ptrs_(sll.size()),
-    nextFree_(sll.size())
+    ptrs_(sll.size())
 {
     if (sll.size())
     {
@@ -142,7 +123,6 @@ PtrList<T>::PtrList(const SLPtrList<T>& sll)
 
 // * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * * //
 
-// Destroy ptrlist elements
 template<class T>
 PtrList<T>::~PtrList()
 {
@@ -157,41 +137,6 @@ PtrList<T>::~PtrList()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-// Return an element pointer to be set.  The pointer is checked
-// if already set and the index range checked.
-template<class T>
-typename PtrList<T>::Tptr& PtrList<T>::set(const label i)
-{
-    if (ptrs_[i])
-    {
-        FatalErrorIn("PtrList::set(const label)")
-            << "pointer already set, cannot set to new element"
-            << abort(FatalError);
-    }
-
-    return ptrs_[i];
-}
-
-
-// Hook an an element created by new onto the list
-template<class T>
-void PtrList<T>::hook(T* ptr)
-{
-    if (nextFree_ < size())
-    {
-        set(nextFree_) = ptr;
-    }
-    else
-    {
-        FatalErrorIn("PtrList::hook(T*)")
-            << "PtrList full, cannot add new element"
-            << abort(FatalError);
-    }
-
-    nextFree_++;
-}
-
 
 template<class T>
 void PtrList<T>::setSize(const label newSize)
@@ -214,7 +159,6 @@ void PtrList<T>::setSize(const label newSize)
         }
 
         ptrs_.setSize(newSize);
-        nextFree_ = newSize;
     }
     else if (newSize > oldSize)
     {
@@ -241,19 +185,14 @@ void PtrList<T>::clear()
     }
 
     ptrs_.clear();
-
-    // Reset the next free element to zero
-    nextFree_ = 0;
 }
 
 
-// Transfer the contents of the argument List into this List
-// and anull the argument list
 template<class T>
 void PtrList<T>::transfer(PtrList<T>& a)
 {
+    clear();
     ptrs_.transfer(a.ptrs_);
-    a.nextFree_ = 0;
 }
 
 
@@ -307,7 +246,6 @@ void PtrList<T>::reorder(const UList<label>& oldToNew)
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-// Assignment
 template<class T>
 PtrList<T>& PtrList<T>::operator=(const PtrList<T>& a)
 {
@@ -321,7 +259,6 @@ PtrList<T>& PtrList<T>::operator=(const PtrList<T>& a)
     if (size() == 0)
     {
         setSize(a.size());
-        nextFree_ = a.nextFree_;
 
         forAll(*this, i)
         {

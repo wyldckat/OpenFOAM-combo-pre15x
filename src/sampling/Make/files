@@ -1,3 +1,7 @@
+probes/probes.C
+probes/probesFunctionObject/probesFunctionObject.C
+probes/IOprobes.C
+
 samplingLine/pointAddressing.C
 samplingLine/samplingLine.C
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,9 +29,9 @@ Description
     of the mesh. I.e. if the mesh is hexes, the outside faces need to be quads
 
     Note: There is something seriously wrong with the ordering written in the
-    .msh file. Normal operation is to use the ordering as described
-    in the manual. Use the -autoInvert to invert based on the geometry.
-    Not very well tested.
+    .msh file. Normal operation is to check the ordering and invert prisms
+    and hexes if found to be wrong way round.
+    Use the -keepOrientation to keep the raw information.
 
     Note: The code now uses the element (cell,face) physical region id number
     to create cell zones and faces zones (similar to
@@ -39,9 +39,6 @@ Description
 
     A use of the cell zone information, is for field initialization with the
     "setFields" utility. see the classes:  topoSetSource, zoneToCell.  
-
-    2)  The addition of the flag "-verbose" to control the
-    amount of screen output
 \*---------------------------------------------------------------------------*/
 
 #include "argList.H"
@@ -65,6 +62,25 @@ static label MSHTET   = 4;
 static label MSHPYR   = 7;
 static label MSHPRISM = 6;
 static label MSHHEX   = 5;
+
+
+// Skips till end of section. Returns false if end of file.
+bool skipSection(IFstream& inFile)
+{
+    string line;
+    do
+    {
+        inFile.getLine(line);
+
+        if (!inFile.good())
+        {
+            return false;
+        }
+    }
+    while (line.size() < 4 || line.substr(0, 4) != "$End");
+
+    return true;
+}
 
 
 void renumber
@@ -215,50 +231,33 @@ void storeCellInZone
 }
 
 
-// Main program:
-
-int main(int argc, char *argv[])
+// Reads points and map
+void readPoints(IFstream& inFile, pointField& points, Map<label>& mshToFoam)
 {
-    argList::noParallel();
-    argList::validArgs.append(".msh file");
-    argList::validOptions.insert("autoInvert", "");
-    argList::validOptions.insert("verbose", "");
+    Info<< "Starting to read points at line " << inFile.lineNumber() << endl;
 
-#   include "setRootCase.H"
-#   include "createTime.H"
-
-    fileName mshName(args.args()[3]);
-
-    bool autoInvert = args.options().found("autoInvert");
-    bool verbose = args.options().found("verbose");
-
-    IFstream inFile(mshName);
-
-    word tag(inFile);
-
-    if (tag != "$NOD")
-    {
-        FatalErrorIn(args.executable())
-            << "Did not find $NOD tag on line " << inFile.lineNumber()
-            << exit(FatalError);
-    }
+    string line;
+    inFile.getLine(line);
+    IStringStream lineStr(line);
 
     label nVerts;
+    lineStr >> nVerts;
 
-    inFile >> nVerts;
+    Info<< "Vertices to be read:" << nVerts << endl;
 
-    Info<< "Read nVerts:" << nVerts << endl << endl;
-
-    pointField points(nVerts);
-
-    Map<label> mshToFoam(nVerts);
+    points.setSize(nVerts);
+    mshToFoam.resize(2*nVerts);
 
     for (label pointI = 0; pointI < nVerts; pointI++)
     {
         label mshLabel;
         scalar xVal, yVal, zVal;
 
-        inFile >> mshLabel >> xVal >> yVal >> zVal;
+        string line;
+        inFile.getLine(line);
+        IStringStream lineStr(line);
+
+        lineStr >> mshLabel >> xVal >> yVal >> zVal;
 
         point& pt = points[pointI];
 
@@ -268,35 +267,37 @@ int main(int argc, char *argv[])
 
         mshToFoam.insert(mshLabel, pointI);
     }
-    inFile >> tag;
 
-    if (tag != "$ENDNOD")
+    Info<< "Vertices read:" << mshToFoam.size() << endl;
+
+    inFile.getLine(line);
+    IStringStream tagStr(line);
+    word tag(tagStr);
+
+    if (tag != "$ENDNOD" && tag != "$EndNodes")
     {
-        FatalErrorIn(args.executable())
-            << "Did not find $ENDNOD tag on line " << inFile.lineNumber()
-            << exit(FatalError);
+        FatalErrorIn("readPoints")
+            << "Did not find $ENDNOD tag on line "
+            << inFile.lineNumber() << exit(FatalError);
     }
-
-    inFile >> tag;
-
-    if (tag != "$ELM")
-    {
-        FatalErrorIn(args.executable())
-            << "Did not find $ELM tag on line " << inFile.lineNumber()
-            << exit(FatalError);
-    }
-
-    label nElems;
-
-    inFile >> nElems;
-
-    Info<< "Read nElems:" << nElems << endl << endl;
+    Info<< endl;
+}
 
 
-    // Storage for all cells. Too big. Shrink later
-    cellShapeList cells(nElems);
-
-    label cellI = 0;
+// Reads cells and patch faces
+void readCells
+(
+    const bool version2Format,
+    const bool keepOrientation,
+    const pointField& points,
+    const Map<label>& mshToFoam,
+    IFstream& inFile,
+    cellShapeList& cells,
+    List<DynamicList<face> >& patchFaces,
+    List<DynamicList<label> >& zoneCells
+)
+{
+    Info<< "Starting to read cells at line " << inFile.lineNumber() << endl;
 
     const cellModel& hex = *(cellModeller::lookup("hex"));
     const cellModel& prism = *(cellModeller::lookup("prism"));
@@ -310,6 +311,21 @@ int main(int argc, char *argv[])
     labelList prismPoints(6);
     labelList hexPoints(8);
 
+
+    string line;
+    inFile.getLine(line);
+    IStringStream lineStr(line);
+
+    label nElems;
+    lineStr >> nElems;
+
+    Info<< "Cells to be read:" << nElems << endl << endl;
+
+
+    // Storage for all cells. Too big. Shrink later
+    cells.setSize(nElems);
+
+    label cellI = 0;
     label nTet = 0;
     label nPyr = 0;
     label nPrism = 0;
@@ -322,32 +338,49 @@ int main(int argc, char *argv[])
     // From gmsh physical region to Foam cellZone
     Map<label> regionToZone;
 
-    // Storage for patch faces.
-    List<DynamicList<face> > patchFaces(0);
-
-    // Storage for cell zones.
-    List<DynamicList<label> > zoneCells(0);
-
 
     for (label elemI = 0; elemI < nElems; elemI++)
     {
-        if (verbose && (elemI % 1000) == 0)
+        string line;
+        inFile.getLine(line);
+        IStringStream lineStr(line);
+
+        label elmNumber, elmType, regPhys;
+
+        if (version2Format)
         {
-            Info<< "Reading element " << elemI
-                << " out of " << nElems << endl;
+            lineStr >> elmNumber >> elmType;
+
+            label nTags;
+            lineStr>> nTags;
+
+            label regElem, partition;
+
+            if (nTags == 3)
+            {
+                lineStr >> regPhys >> regElem >> partition;
+            }
+            else
+            {
+                regPhys = 0;
+                for (label i = 0; i < nTags; i++)
+                {
+                    label dummy;
+                    lineStr>> dummy;
+                }
+            }
         }
-
-        label elmNumber, elmType, regPhys, regElem, nNodes;
-
-        inFile >> elmNumber >> elmType >> regPhys >> regElem >> nNodes;
+        else
+        {
+            label regElem, nNodes;
+            lineStr >> elmNumber >> elmType >> regPhys >> regElem >> nNodes;
+        }
 
         // regPhys on surface elements is region number.
 
-        labelList verts(nNodes);
-
         if (elmType == MSHTRI)
         {
-            inFile >> triPoints[0] >> triPoints[1] >> triPoints[2];
+            lineStr >> triPoints[0] >> triPoints[1] >> triPoints[2];
 
             renumber(mshToFoam, triPoints);
 
@@ -376,7 +409,7 @@ int main(int argc, char *argv[])
         }
         else if (elmType == MSHQUAD)
         {
-            inFile
+            lineStr
                 >> quadPoints[0] >> quadPoints[1] >> quadPoints[2]
                 >> quadPoints[3];
 
@@ -415,7 +448,7 @@ int main(int argc, char *argv[])
                 zoneCells
             );
 
-            inFile
+            lineStr
                 >> tetPoints[0] >> tetPoints[1] >> tetPoints[2]
                 >> tetPoints[3];
 
@@ -435,7 +468,7 @@ int main(int argc, char *argv[])
                 zoneCells
             );
 
-            inFile
+            lineStr
                 >> pyrPoints[0] >> pyrPoints[1] >> pyrPoints[2]
                 >> pyrPoints[3] >> pyrPoints[4];
 
@@ -455,7 +488,7 @@ int main(int argc, char *argv[])
                 zoneCells
             );
 
-            inFile
+            lineStr
                 >> prismPoints[0] >> prismPoints[1] >> prismPoints[2]
                 >> prismPoints[3] >> prismPoints[4] >> prismPoints[5];
 
@@ -465,7 +498,7 @@ int main(int argc, char *argv[])
 
             const cellShape& cell = cells[cellI];
 
-            if (autoInvert && !correctOrientation(points, cell))
+            if (!keepOrientation && !correctOrientation(points, cell))
             {
                 Info<< "Inverting prism " << cellI << endl;
                 // Reorder prism.
@@ -493,7 +526,7 @@ int main(int argc, char *argv[])
                 zoneCells
             );
 
-            inFile
+            lineStr
                 >> hexPoints[0] >> hexPoints[1]
                 >> hexPoints[2] >> hexPoints[3]
                 >> hexPoints[4] >> hexPoints[5]
@@ -505,10 +538,9 @@ int main(int argc, char *argv[])
 
             const cellShape& cell = cells[cellI];
 
-            if (autoInvert && !correctOrientation(points, cell))
+            if (!keepOrientation && !correctOrientation(points, cell))
             {
                 Info<< "Inverting hex " << cellI << endl;
-
                 // Reorder hex.
                 hexPoints[0] = cell[4];
                 hexPoints[1] = cell[5];
@@ -528,15 +560,24 @@ int main(int argc, char *argv[])
         }
         else
         {
-            // Unhandled element. Read the vertices.
-            for (label i = 0; i < nNodes; i++)
-            {
-                label mshLabel;
-
-                inFile >> mshLabel;
-            }
+            Info<< "Unhandled element " << elmType << " at line "
+                << inFile.lineNumber() << endl;
         }
     }
+
+
+    inFile.getLine(line);
+    IStringStream tagStr(line);
+    word tag(tagStr);
+
+    if (tag != "$ENDELM" && tag != "$EndElements")
+    {
+        FatalErrorIn("readCells")
+            << "Did not find $ENDELM tag on line "
+            << inFile.lineNumber() << exit(FatalError);
+    }
+
+
     cells.setSize(cellI);
 
     forAll(patchFaces, patchI)
@@ -546,25 +587,13 @@ int main(int argc, char *argv[])
 
 
     Info<< "Cells:" << endl
-        << "    total:" << cells.size() << endl
-        << "    hex  :" << nHex << endl
-        << "    prism:" << nPrism << endl
-        << "    pyr  :" << nPyr << endl
-        << "    tet  :" << nTet << endl
-        << endl;
+    << "    total:" << cells.size() << endl
+    << "    hex  :" << nHex << endl
+    << "    prism:" << nPrism << endl
+    << "    pyr  :" << nPyr << endl
+    << "    tet  :" << nTet << endl
+    << endl;
 
-
-    Info<< "Patches:" << nl
-        << "Patch\tSize" << endl;
-
-    forAll(patchFaces, patchI)
-    {
-        Info<< "    " << patchI << '\t' << patchFaces[patchI].size() << endl;
-    }
-    Info<< endl;
-
-
-    label nValidCellZones = 0;
 
     Info<< "CellZones:" << nl
         << "Zone\tSize" << endl;
@@ -577,12 +606,106 @@ int main(int argc, char *argv[])
 
         if (zCells.size() > 0)
         {
-            nValidCellZones++;
-
             Info<< "    " << zoneI << '\t' << zCells.size() << endl;
         }
     }
     Info<< endl;
+}
+
+
+// Main program:
+
+int main(int argc, char *argv[])
+{
+    argList::noParallel();
+    argList::validArgs.append(".msh file");
+    argList::validOptions.insert("keepOrientation", "");
+
+#   include "setRootCase.H"
+#   include "createTime.H"
+
+    fileName mshName(args.args()[3]);
+
+    bool keepOrientation = args.options().found("keepOrientation");
+
+    // Storage for points
+    pointField points;
+    Map<label> mshToFoam;
+
+    // Storage for all cells.
+    cellShapeList cells;
+
+    // Storage for patch faces.
+    List<DynamicList<face> > patchFaces(0);
+    // Storage for cell zones.
+    List<DynamicList<label> > zoneCells(0);
+
+    // Version 1 or 2 format
+    bool version2Format = false;
+
+
+    IFstream inFile(mshName);
+
+    while (inFile.good())
+    {
+        string line;
+        inFile.getLine(line);
+        IStringStream lineStr(line);
+
+        word tag(lineStr);
+
+        if (tag == "$MeshFormat")
+        {
+            Info<< "Found $MeshFormat tag; assuming version 2 file format."
+                << endl;
+            version2Format = true;
+
+            if (!skipSection(inFile))
+            {
+                break;
+            }
+        }
+        else if (tag == "$NOD" || tag == "$Nodes")
+        {
+            readPoints(inFile, points, mshToFoam);
+        }
+        else if (tag == "$ELM" || tag == "$Elements")
+        {
+            readCells
+            (
+                version2Format,
+                keepOrientation,
+                points,
+                mshToFoam,
+                inFile,
+                cells,
+                patchFaces,
+                zoneCells
+            );
+        }
+        else
+        {
+            Info<< "Skipping tag " << tag << " at line "
+                << inFile.lineNumber()
+                << endl;
+
+            if (!skipSection(inFile))
+            {
+                break;
+            }
+        }
+    }
+
+
+    label nValidCellZones = 0;
+
+    forAll(zoneCells, zoneI)
+    {
+        if (zoneCells[zoneI].size() > 0)
+        {
+            nValidCellZones++;
+        }
+    }
 
 
     // Problem is that the orientation of the patchFaces does not have to
@@ -650,12 +773,6 @@ int main(int argc, char *argv[])
 
         forAll(pFaces, i)
         {
-            if (verbose && (i % 1000) == 0)
-            {
-                Info<< "\tFinding face " << i << " of " << pFaces.size()
-                    << endl;
-            }
-
             const face& f = pFaces[i];
 
             // Find face in pp using all vertices of f.

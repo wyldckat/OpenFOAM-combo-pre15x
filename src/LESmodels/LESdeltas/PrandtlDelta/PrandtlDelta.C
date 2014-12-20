@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -53,10 +53,15 @@ void PrandtlDelta::calcDelta()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-PrandtlDelta::PrandtlDelta(const fvMesh& mesh, const dictionary& dd)
+PrandtlDelta::PrandtlDelta
+(
+    const word& name,
+    const fvMesh& mesh,
+    const dictionary& dd
+)
 :
-    LESdelta(mesh),
-    geometricDelta_(LESdelta::New(mesh, dd.subDict(type() + "Coeffs"))),
+    LESdelta(name, mesh),
+    geometricDelta_(LESdelta::New(name, mesh, dd.subDict(type() + "Coeffs"))),
     kappa_(dimensionedScalar(dd.lookup("kappa")).value()),
     Cdelta_
     (

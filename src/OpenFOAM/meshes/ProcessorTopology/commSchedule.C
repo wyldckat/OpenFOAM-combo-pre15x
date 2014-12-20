@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,232 +22,44 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "commSchedule.H"
 #include "SortableList.H"
+#include "boolList.H"
+#include "IOstreams.H"
+#include "IOmanip.H"
+#include "OStringStream.H"
+#include "Pstream.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+defineTypeNameAndDebug(commSchedule, 0);
+
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::label Foam::commSchedule::nBusyNbs
+Foam::label Foam::commSchedule::outstandingComms
 (
-    const labelListList& cellFaces,
-    const labelListList& faceCells,
-    const boolList& busy,
-    const label cellI
+    const labelList& commToSchedule,
+    DynamicList<label>& procComms
 ) const
 {
-    label nBusy = 0;
+    label nOutstanding = 0;
 
-    const labelList& myFaces = cellFaces[cellI];
-
-    forAll(myFaces, myFaceI)
+    forAll(procComms, i)
     {
-        label faceI = myFaces[myFaceI];
-
-        const labelList& myCells = faceCells[faceI];
-
-        // Check if the other cell on the face is busy.
-        if
-        (
-            (
-                (myCells[0] == cellI)
-             && busy[myCells[1]]
-            )
-         || (
-                (myCells[1] == cellI)
-             && busy[myCells[0]]
-            )
-        )
+        if (commToSchedule[procComms[i]] == -1)
         {
-            nBusy++;
+            nOutstanding++;
         }
     }
-    return nBusy;
-}
-
-
-
-// Find faces which are not yet used in a schedule and
-// assign them to the current schedule such that a cell is only used once.
-bool Foam::commSchedule::scheduleIteration
-(
-    const labelListList& cellFaces,
-    const labelListList& faceCells,
-    const label commIter
-)
-{
-    // Whether cell is busy (i.e. is involved in a communication with
-    // any of its neighbours)
-    boolList busy(cellFaces.size(), false);
-
-    // To detect whether all faces have been scheduled
-    bool seenUnscheduledFace = false;
-
-    do
-    {
-        // Get an unscheduled face. Alg is:
-        // - for all candidate faces
-        // - choose one with cells with max number of busy neighbours.
-        //   (should cluster next to previously scheduled cellpair)
-        // - if multiple ones with same number choose out of these one
-        //   with min number of faces
-        //   (if no scheduled cellpairs chooses corner cell)
-        label routeFaceI = -1;
-
-        label maxBusy = labelMin;
-
-        label minNFaces = labelMax;
-
-        forAll(faceCells, faceI)
-        {
-            if (faceSchedule_[faceI] != -1)
-            {
-                // Already scheduled. Skip.
-                continue;
-            }
-
-            // Remember whether we have done something in this loop.
-            seenUnscheduledFace = true;
-
-            const labelList& myCells = faceCells[faceI];
-
-            label cell0 = myCells[0];
-            label cell1 = myCells[1];
-
-            if (!busy[cell0] && !busy[cell1])
-            {
-                // Face is ok candidate: unscheduled and cells not busy
-
-                label busy0 = nBusyNbs(cellFaces, faceCells, busy, cell0);
-                label busy1 = nBusyNbs(cellFaces, faceCells, busy, cell1);
-
-                //label totBusy = max(busy0, busy1);
-                label totBusy = busy0 + busy1;
-
-                if (totBusy > maxBusy)
-                {
-                    maxBusy = totBusy;
-
-                    minNFaces = labelMax;
-
-                    routeFaceI = faceI;
-                }
-                else if (totBusy == maxBusy)
-                {
-                    label nFaces =
-                        min
-                        (
-                            cellFaces[cell0].size(),
-                            cellFaces[cell1].size()
-                        );
-
-                    if (nFaces < minNFaces)
-                    {
-                        minNFaces = nFaces;
-
-                        routeFaceI = faceI;
-                    }
-                }
-            }
-        }
-
-
-        if (routeFaceI == -1)
-        {
-            break;
-        }
-
-        // Make connection across routeFaceI
-        const labelList& myCells = faceCells[routeFaceI];
-
-        faceSchedule_[routeFaceI] = commIter;
-
-        busy[myCells[0]] = true;
-
-        busy[myCells[1]] = true;
-    }
-    while (true);
-
-    if (seenUnscheduledFace)
-    {
-        // At least one unscheduled face has been encountered.(might be
-        // scheduled now)
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
-// Schedule all. Fill faceSchedule_ and *this
-void Foam::commSchedule::scheduleAll
-(
-    const labelListList& cellFaces,
-    const labelListList& faceCells
-)
-{
-    // Current communication iteration.
-    label commIter = 0;
-
-    do
-    {
-        // Get all proc-proc communication across unscheduled face.
-
-        if (!scheduleIteration(cellFaces, faceCells, commIter))
-        {
-            // Done
-            break;
-        }
-
-        commIter++;
-
-    } while (true);
-
-
-    // Rework face wise schedule into cell wise. Gives processor to communicate
-    // with. (i.e. cellCells with cells ordered according to communication)
-    // Does not determine yet whether to send or receive.
-
-    forAll(cellFaces, cellI)
-    {
-        const labelList& myFaces = cellFaces[cellI];
-
-        // Sort faces according to schedule.
-        SortableList<label> sortedSchedule(myFaces.size());
-        forAll(myFaces, myFaceI)
-        {
-            sortedSchedule[myFaceI] = faceSchedule_[myFaces[myFaceI]];
-        }
-        sortedSchedule.sort();
-
-
-        labelList& cellSchedule = operator[](cellI);
-
-        cellSchedule.setSize(myFaces.size());
-
-        const labelList& indcs = sortedSchedule.indices();
-
-        forAll(indcs, indexI)
-        {
-            label faceI = myFaces[indcs[indexI]];
-
-            const labelList& myNbs = faceCells[faceI];
-
-            if (myNbs[0] == cellI)
-            {
-                cellSchedule[indexI] = myNbs[1];
-            }
-            else
-            {
-                cellSchedule[indexI] = myNbs[0];
-            }
-        }
-    }
+    return nOutstanding;
 }
 
 
@@ -256,14 +68,238 @@ void Foam::commSchedule::scheduleAll
 // Construct from separate addressing
 Foam::commSchedule::commSchedule
 (
-    const labelListList& cellFaces,
-    const labelListList& faceCells
+    const label nProcs,
+    const List<labelPair>& comms
 )
 :
-    labelListList(cellFaces.size()),
-    faceSchedule_(faceCells.size(), -1)
+    schedule_(comms.size()),
+    procSchedule_(nProcs)
 {
-    scheduleAll(cellFaces, faceCells);
+    // Determine comms per processor.
+    List<DynamicList<label> > procToComms(nProcs);
+
+    forAll(comms, commI)
+    {
+        label proc0 = comms[commI][0];
+        label proc1 = comms[commI][1];
+
+        if (proc0 < 0 || proc0 >= nProcs || proc1 < 0 || proc1 >= nProcs)
+        {
+            FatalErrorIn
+            (
+                "commSchedule::commSchedule"
+                "(const label, const List<labelPair>&)"
+            )   << "Illegal processor " << comms[commI] << abort(FatalError);
+        }
+
+        procToComms[proc0].append(commI);
+        procToComms[proc1].append(commI);
+    }
+    // Note: no need to shrink procToComms. Are small.
+
+    if (debug && Pstream::master())
+    {
+        Pout<< "commSchedule::commSchedule : Wanted communication:" << endl;
+
+        forAll(comms, i)
+        {
+            const labelPair& twoProcs = comms[i];
+
+            Pout<< i << ": "
+                << twoProcs[0] << " with " << twoProcs[1] << endl;
+        }
+        Pout<< endl;
+
+
+        Pout<< "commSchedule::commSchedule : Schedule:" << endl;
+
+        // Print header. Use buffered output to prevent parallel output messing
+        // up.
+        {
+            OStringStream os;
+            os  << "iter|";
+            for (int i = 0; i < nProcs; i++)
+            {
+                os  << setw(3) << i;
+            }
+            Pout<< os.str().c_str() << endl;
+        }
+        {
+            OStringStream os;
+            os  << "----+";
+            for (int i = 0; i < nProcs; i++)
+            {
+                os  << "---";
+            }
+            Pout<< os.str().c_str() << endl;
+        }
+    }
+
+    // Schedule all. Note: crap scheduler. Assumes all communication takes
+    // equally long.
+
+    label nScheduled = 0;
+
+    label iter = 0;
+
+    // Per index into comms the time when it was scheduled
+    labelList commToSchedule(comms.size(), -1);
+
+    while (nScheduled < comms.size())
+    {
+        label oldNScheduled = nScheduled;
+
+        // Find unscheduled comms. This is the comms where the two processors
+        // still have the most unscheduled comms.
+
+        boolList busy(nProcs, false);
+
+        while (true)
+        {
+            label maxCommI = -1;
+            label maxNeed = labelMin;
+
+            forAll(comms, commI)
+            {
+                label proc0 = comms[commI][0];
+                label proc1 = comms[commI][1];
+
+                if
+                (
+                    commToSchedule[commI] == -1             // unscheduled
+                && !busy[proc0]
+                && !busy[proc1]
+                )
+                {
+                    label need =
+                        outstandingComms(commToSchedule, procToComms[proc0])
+                      + outstandingComms(commToSchedule, procToComms[proc1]);
+
+                    if (need > maxNeed)
+                    {
+                        maxNeed = need;
+                        maxCommI = commI;
+                    }
+                }
+            }
+
+
+            if (maxCommI == -1)
+            {
+                // Found no unscheduled procs.
+                break;
+            }
+
+            // Schedule commI in this iteration
+            commToSchedule[maxCommI] = nScheduled++;
+            busy[comms[maxCommI][0]] = true;
+            busy[comms[maxCommI][1]] = true;
+        }
+
+        if (debug && Pstream::master())
+        {
+            label nIterComms = nScheduled-oldNScheduled;
+
+            if (nIterComms > 0)
+            {
+                labelList procToComm(nProcs, -1);
+
+                forAll(commToSchedule, commI)
+                {
+                    label sched = commToSchedule[commI];
+
+                    if (sched >= oldNScheduled && sched < nScheduled)
+                    {
+                        label proc0 = comms[commI][0];
+                        procToComm[proc0] = commI;
+                        label proc1 = comms[commI][1];
+                        procToComm[proc1] = commI;
+                    }
+                }
+
+                // Print it
+                OStringStream os;
+                os  << setw(3) << iter << " |";
+                forAll(procToComm, procI)
+                {
+                    if (procToComm[procI] == -1)
+                    {
+                        os  << "   ";
+                    }
+                    else
+                    {
+                        os  << setw(3) << procToComm[procI];
+                    }
+                }
+                Pout<< os.str().c_str() << endl;
+            }
+        }
+
+        iter++;
+    }
+
+    if (debug && Pstream::master())
+    {
+        Pout<< endl;
+    }
+
+
+    // Sort commToSchedule and obtain order in comms
+    schedule_ = SortableList<label>(commToSchedule).indices();
+
+    // Sort schedule_ by processor
+
+    labelList nProcScheduled(nProcs, 0);
+
+    // Count
+    forAll(schedule_, i)
+    {
+        label commI = schedule_[i];
+        const labelPair& twoProcs = comms[commI];
+
+        nProcScheduled[twoProcs[0]]++;
+        nProcScheduled[twoProcs[1]]++;
+    }
+    // Allocate
+    forAll(procSchedule_, procI)
+    {
+        procSchedule_[procI].setSize(nProcScheduled[procI]);
+    }
+    nProcScheduled = 0;
+    // Fill
+    forAll(schedule_, i)
+    {
+        label commI = schedule_[i];
+        const labelPair& twoProcs = comms[commI];
+
+        label proc0 = twoProcs[0];
+        procSchedule_[proc0][nProcScheduled[proc0]++] = commI;
+
+        label proc1 = twoProcs[1];
+        procSchedule_[proc1][nProcScheduled[proc1]++] = commI;
+    }
+
+    if (debug && Pstream::master())
+    {
+        Pout<< "commSchedule::commSchedule : Per processor:" << endl;
+
+        forAll(procSchedule_, procI)
+        {
+            const labelList& procComms = procSchedule_[procI];
+
+            Pout<< "Processor " << procI << " talks to processors:" << endl;
+
+            forAll(procComms, i)
+            {
+                const labelPair& twoProcs = comms[procComms[i]];
+
+                label nbr = (twoProcs[1] == procI ? twoProcs[0] : twoProcs[1]);
+
+                Pout<< "    " << nbr << endl;
+            }
+        }
+        Pout<< endl;
+    }
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -168,10 +168,6 @@ public:
             {
                 return polyPatch_.pointNormals();
             }
-
-            //- Face decomposition into triangle
-            //  Used for implementation of FEM boundary conditions
-            virtual triFaceList faceTriangles(const label faceID) const;
 };
 
 

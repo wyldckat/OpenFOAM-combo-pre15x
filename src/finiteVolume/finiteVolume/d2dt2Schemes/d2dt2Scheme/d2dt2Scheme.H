@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -194,8 +194,9 @@ d2dt2Scheme<Type>::addIstreamConstructorToTable<SS<Type> >                     \
                                                                                \
 makeFvD2dt2TypeScheme(SS, scalar)                                              \
 makeFvD2dt2TypeScheme(SS, vector)                                              \
-makeFvD2dt2TypeScheme(SS, tensor)                                              \
-makeFvD2dt2TypeScheme(SS, sphericalTensor)
+makeFvD2dt2TypeScheme(SS, sphericalTensor)                                     \
+makeFvD2dt2TypeScheme(SS, symmTensor)                                          \
+makeFvD2dt2TypeScheme(SS, tensor)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

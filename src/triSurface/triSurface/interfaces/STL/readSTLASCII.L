@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,6 +30,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 %{
+
+#undef yyFlexLexer
 
  /* ------------------------------------------------------------------------- *\
    ------ local definitions
@@ -164,7 +166,7 @@ static const char* stateExpects[7] =
     }
 
 <readSolidName>{string} {
-        word solidName(YYText());
+        word solidName(Foam::string::validate<word>(YYText()));
         if (STLsolidNames.found(solidName))
         {
             region = STLsolidNames[solidName];

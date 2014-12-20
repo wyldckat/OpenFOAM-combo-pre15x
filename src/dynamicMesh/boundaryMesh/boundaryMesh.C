@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -490,8 +490,9 @@ void Foam::boundaryMesh::read(const polyMesh& mesh)
     {
         const polyPatch& pp = mesh.boundaryMesh()[patchI];
 
-        patches_.hook
+        patches_.set
         (
+            patchI,
             new boundaryPatch
             (
                 pp.name(),
@@ -650,8 +651,9 @@ void Foam::boundaryMesh::readTriSurface(const fileName& fName)
         {
             const geometricSurfacePatch& surfPatch = surfPatches[patchI];
 
-            patches_.hook
+            patches_.set
             (
+                patchI,
                 new boundaryPatch
                 (
                     surfPatch.name(),
@@ -671,8 +673,9 @@ void Foam::boundaryMesh::readTriSurface(const fileName& fName)
 
         forAll(patches_, patchI)
         {
-            patches_.hook
+            patches_.set
             (
+                patchI,
                 new boundaryPatch
                 (
                     "patch" + name(patchI),
@@ -1567,7 +1570,7 @@ void Foam::boundaryMesh::addPatch(const word& patchName)
         "empty"
     );
 
-    patches_.set(patchI) = bpPtr;
+    patches_.set(patchI, bpPtr);
 
     if (debug)
     {
@@ -1610,14 +1613,14 @@ void Foam::boundaryMesh::deletePatch(const word& patchName)
 
     for (label patchI = 0; patchI < delPatchI; patchI++)
     {
-        newPatches.set(patchI) = (patches_[patchI]).clone().ptr();
+        newPatches.set(patchI, patches_[patchI].clone());
     }
 
     // Move patches down, starting from delPatchI.
 
     for (label patchI = delPatchI + 1; patchI < patches_.size(); patchI++)
     {
-       newPatches.set(patchI - 1) = (patches_[patchI]).clone().ptr();
+        newPatches.set(patchI - 1, patches_[patchI].clone());
     }
 
     patches_.clear();
@@ -1680,12 +1683,12 @@ void Foam::boundaryMesh::changePatchType
                 patchType
             );
 
-            newPatches.set(patchI) = bpPtr;
+            newPatches.set(patchI, bpPtr);
         }
         else
         {
             // Create copy
-            newPatches.set(patchI) = (patches_[patchI]).clone().ptr();
+            newPatches.set(patchI, patches_[patchI].clone());
         }
     }
 
@@ -1744,8 +1747,9 @@ void Foam::boundaryMesh::changeFaces
     {
         const boundaryPatch& bp = patches_[patchI];
 
-        newPatches.hook
+        newPatches.set
         (
+            patchI,
             new boundaryPatch
             (
                 bp.name(),

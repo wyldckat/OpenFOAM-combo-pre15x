@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,8 +44,9 @@ namespace fv
 
 defineTemplateRunTimeSelectionTable(laplacianScheme<scalar>, Istream);
 defineTemplateRunTimeSelectionTable(laplacianScheme<vector>, Istream);
-defineTemplateRunTimeSelectionTable(laplacianScheme<tensor>, Istream);
 defineTemplateRunTimeSelectionTable(laplacianScheme<sphericalTensor>, Istream);
+defineTemplateRunTimeSelectionTable(laplacianScheme<symmTensor>, Istream);
+defineTemplateRunTimeSelectionTable(laplacianScheme<tensor>, Istream);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

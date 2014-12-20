@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -110,6 +110,7 @@ public:
         //  Calculate for all cells. correctWalls : correct wall (face&point)
         //  cells for correct distance, searching neighbours.
         wallDist(const fvMesh& mesh, bool correctWalls = true);
+
 
     // Destructor
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,18 +41,16 @@ addToRunTimeSelectionTable(LESmodel, dynOneEqEddy, dictionary);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-dimensionedScalar dynOneEqEddy::ck(const volTensorField& D) const
+dimensionedScalar dynOneEqEddy::ck(const volSymmTensorField& D) const
 {
-    volScalarField KK =
-        0.5*(filter_(U() & U()) - (filter_(U()) & filter_(U())));
+    volScalarField KK = 0.5*(filter_(magSqr(U())) - magSqr(filter_(U())));
 
-    volTensorField LL =
-        dev(filter_(U() * U()) - (filter_(U()) * filter_(U())));
+    volSymmTensorField LL = dev(filter_(sqr(U())) - sqr(filter_(U())));
 
-    volTensorField MM =
+    volSymmTensorField MM =
         delta()*(filter_(sqrt(k_)*D) - 2*sqrt(KK + filter_(k_))*filter_(D));
 
-    dimensionedScalar MMMM = average(MM && MM);
+    dimensionedScalar MMMM = average(magSqr(MM));
 
     if (MMMM.value() > VSMALL)
     {
@@ -65,19 +63,21 @@ dimensionedScalar dynOneEqEddy::ck(const volTensorField& D) const
 }
 
 
-dimensionedScalar dynOneEqEddy::ce(const volTensorField& D) const
+dimensionedScalar dynOneEqEddy::ce(const volSymmTensorField& D) const
 {
-    volScalarField KK =
-        0.5*(filter_(U() & U()) - (filter_(U()) & filter_(U())));
+    volScalarField KK = 0.5*(filter_(magSqr(U())) - magSqr(filter_(U())));
 
     volScalarField mm =
         pow(KK + filter_(k_), 1.5)/(2*delta()) - filter_(pow(k_, 1.5))/delta();
 
     volScalarField ee =
-        2*delta()*ck(D)*(filter_(sqrt(k_)*(D && D))
-      - 2*sqrt(KK + filter_(k_))*(filter_(D) && filter_(D)));
+        2*delta()*ck(D)
+       *(
+           filter_(sqrt(k_)*magSqr(D))
+         - 2*sqrt(KK + filter_(k_))*magSqr(filter_(D))
+        );
 
-    dimensionedScalar mmmm = average(mm && mm);
+    dimensionedScalar mmmm = average(magSqr(mm));
 
     if (mmmm.value() > VSMALL)
     {
@@ -132,7 +132,7 @@ void dynOneEqEddy::correct(const tmp<volTensorField>& gradU)
 {
     GenEddyVisc::correct(gradU);
 
-    volTensorField D = symm(gradU);
+    volSymmTensorField D = symm(gradU);
 
     volScalarField P = 2.0*nuSgs_*magSqr(D);
 

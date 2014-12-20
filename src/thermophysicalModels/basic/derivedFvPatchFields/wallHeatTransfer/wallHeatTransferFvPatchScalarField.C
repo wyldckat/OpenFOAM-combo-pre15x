@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -94,6 +94,17 @@ wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
         evaluate();
     }
 }
+
+
+wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
+(
+    const wallHeatTransferFvPatchScalarField& tppsf
+)
+:
+    mixedFvPatchScalarField(tppsf),
+    Tinf_(tppsf.Tinf_),
+    alphaWall_(tppsf.alphaWall_)
+{}
 
 
 wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField

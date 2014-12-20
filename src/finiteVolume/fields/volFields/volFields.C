@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,10 +33,17 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
+defineTemplateTypeNameAndDebug(volScalarField::DimensionedInternalField, 0);
+defineTemplateTypeNameAndDebug(volVectorField::DimensionedInternalField, 0);
+defineTemplateTypeNameAndDebug(volSphericalTensorField::DimensionedInternalField, 0);
+defineTemplateTypeNameAndDebug(volSymmTensorField::DimensionedInternalField, 0);
+defineTemplateTypeNameAndDebug(volTensorField::DimensionedInternalField, 0);
+
 defineTemplateTypeNameAndDebug(volScalarField, 0);
 defineTemplateTypeNameAndDebug(volVectorField, 0);
-defineTemplateTypeNameAndDebug(volTensorField, 0);
 defineTemplateTypeNameAndDebug(volSphericalTensorField, 0);
+defineTemplateTypeNameAndDebug(volSymmTensorField, 0);
+defineTemplateTypeNameAndDebug(volTensorField, 0);
 
 template<>
 tmp<GeometricField<scalar, fvPatchField, volMesh> >

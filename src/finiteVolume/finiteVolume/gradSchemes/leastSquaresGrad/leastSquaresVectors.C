@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "leastSquaresVectors.H"
-#include "fvMesh.H"
 #include "surfaceFields.H"
 #include "volFields.H"
 
@@ -41,7 +40,7 @@ namespace Foam
 
 Foam::leastSquaresVectors::leastSquaresVectors(const fvMesh& mesh)
 :
-    MeshObject<leastSquaresVectors>(mesh),
+    MeshObject<fvMesh, leastSquaresVectors>(mesh),
     pVectorsPtr_(NULL),
     nVectorsPtr_(NULL)
 {}
@@ -57,9 +56,6 @@ Foam::leastSquaresVectors::~leastSquaresVectors()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-// LeastSquaresVectors using inverse-distance-squared weighting which gives
-// the same gradient as Gauss linear for orthogonal grids
 
 void Foam::leastSquaresVectors::makeLeastSquaresVectors() const
 {
@@ -108,83 +104,142 @@ void Foam::leastSquaresVectors::makeLeastSquaresVectors() const
     const unallocLabelList& owner = mesh_.owner();
     const unallocLabelList& neighbour = mesh_.neighbour();
 
-
-    // Build the d-vectors
-    surfaceVectorField d = mesh_.Sf()/(mesh_.magSf()*mesh_.deltaCoeffs());
-
-    if (!mesh_.orthogonal())
-    {
-        d -= mesh_.correctionVectors()/mesh_.deltaCoeffs();
-    }
+    const volVectorField& C = mesh.C();
+    const surfaceScalarField& w = mesh.weights();
+    const surfaceScalarField& magSf = mesh.magSf();
 
 
     // Set up temporary storage for the dd tensor (before inversion)
-    tensorField dd(mesh_.nCells(), tensor::zero);
-
+    symmTensorField dd(mesh_.nCells(), symmTensor::zero);
 
     forAll(owner, facei)
     {
-        tensor wdd = 1.0/magSqr(d[facei])*d[facei]*d[facei];
+        label own = owner[facei];
+        label nei = neighbour[facei];
 
-        dd[owner[facei]] += wdd;
+        vector d = C[nei] - C[own];
+        symmTensor wdd = (magSf[facei]/magSqr(d))*sqr(d);
 
-        // Yes, it is += because both vectors have the "wrong" sign
-        dd[neighbour[facei]] += wdd;
+        dd[own] += (1 - w[facei])*wdd;
+        dd[nei] += w[facei]*wdd;
     }
 
-    // Visit the boundaries. Coupled boundaries are taken into account
-    // in the construction of d vectors.  
-    forAll(d.boundaryField(), patchi)
+
+    forAll(lsP.boundaryField(), patchi)
     {
-        const fvPatchVectorField& pd = d.boundaryField()[patchi];
+        const fvPatchScalarField& pw = w.boundaryField()[patchi];
+        const fvPatchScalarField& pMagSf = magSf.boundaryField()[patchi];
 
-        const labelList::subList faceCells = pd.patch().faceCells();
+        const fvPatch& p = pw.patch();
+        const unallocLabelList& faceCells = p.patch().faceCells();
 
-        forAll(pd, patchFacei)
+        // Build the d-vectors
+        vectorField pd = 
+            mesh.Sf().boundaryField()[patchi]
+           /(
+               mesh.magSf().boundaryField()[patchi]
+              *mesh.deltaCoeffs().boundaryField()[patchi]
+           );
+
+        if (!mesh.orthogonal())
         {
-            label faceCelli = faceCells[patchFacei];
+            pd -= mesh.correctionVectors().boundaryField()[patchi]
+                /mesh.deltaCoeffs().boundaryField()[patchi];
+        }
 
-            dd[faceCelli] +=
-                (1.0/magSqr(pd[patchFacei]))*pd[patchFacei]*pd[patchFacei];
+        if (p.coupled())
+        {
+            forAll(pd, patchFacei)
+            {
+                const vector& d = pd[patchFacei];
+
+                dd[faceCells[patchFacei]] +=
+                    (pw[patchFacei]*pMagSf[patchFacei]/magSqr(d))*sqr(d);
+            }
+        }
+        else
+        {
+            forAll(pd, patchFacei)
+            {
+                const vector& d = pd[patchFacei];
+
+                dd[faceCells[patchFacei]] +=
+                    (pMagSf[patchFacei]/magSqr(d))*sqr(d);
+            }
         }
     }
 
 
     // Invert the dd tensor
-    tensorField invDd = inv(dd);
+    symmTensorField invDd = inv(dd);
 
 
     // Revisit all faces and calculate the lsP and lsN vectors
     forAll(owner, facei)
     {
-        lsP[facei] =
-            (1.0/magSqr(d[facei]))*(invDd[owner[facei]] & d[facei]);
+        label own = owner[facei];
+        label nei = neighbour[facei];
 
-        lsN[facei] =
-            ((-1.0)/magSqr(d[facei]))*(invDd[neighbour[facei]] & d[facei]);
+        vector d = C[nei] - C[own];
+        scalar magSfByMagSqrd = magSf[facei]/magSqr(d);
+
+        lsP[facei] = (1 - w[facei])*magSfByMagSqrd*(invDd[own] & d);
+        lsN[facei] = -w[facei]*magSfByMagSqrd*(invDd[nei] & d);
     }
 
     forAll(lsP.boundaryField(), patchi)
     {
-        const fvPatchVectorField& pd = d.boundaryField()[patchi];
-
         fvPatchVectorField& patchLsP = lsP.boundaryField()[patchi];
 
-        const fvPatch& p = patchLsP.patch();
-        const labelList::subList FaceCells = p.faceCells();
+        const fvPatchScalarField& pw = w.boundaryField()[patchi];
+        const fvPatchScalarField& pMagSf = magSf.boundaryField()[patchi];
 
-        forAll(p, patchFacei)
+        const fvPatch& p = pw.patch();
+        const unallocLabelList& faceCells = p.faceCells();
+
+        // Build the d-vectors
+        vectorField pd = 
+            mesh.Sf().boundaryField()[patchi]
+           /(
+               mesh.magSf().boundaryField()[patchi]
+              *mesh.deltaCoeffs().boundaryField()[patchi]
+           );
+
+        if (!mesh.orthogonal())
         {
-            patchLsP[patchFacei] =
-                (1.0/magSqr(pd[patchFacei]))
-               *(invDd[FaceCells[patchFacei]] & pd[patchFacei]);
+            pd -= mesh.correctionVectors().boundaryField()[patchi]
+                /mesh.deltaCoeffs().boundaryField()[patchi];
+        }
+
+
+        if (p.coupled())
+        {
+            forAll(pd, patchFacei)
+            {
+                const vector& d = pd[patchFacei];
+
+                patchLsP[patchFacei] =
+                    ((1 - pw[patchFacei])*pMagSf[patchFacei]/magSqr(d))
+                   *(invDd[faceCells[patchFacei]] & d);
+            }
+        }
+        else
+        {
+            forAll(pd, patchFacei)
+            {
+                const vector& d = pd[patchFacei];
+
+                patchLsP[patchFacei] =
+                    pMagSf[patchFacei]*(1.0/magSqr(d))
+                   *(invDd[faceCells[patchFacei]] & d);
+            }
         }
     }
 
 
     // For 3D meshes check the determinant of the dd tensor and switch to
-    // Gauss if it is less than 2
-    if (mesh.nD() == 3)
+    // Gauss if it is less than 3
+    if (mesh.nGeometricD() == 3)
     {
         label nBadCells = 0;
 
@@ -207,13 +262,15 @@ void Foam::leastSquaresVectors::makeLeastSquaresVectors() const
 
                     if (mesh.isInternalFace(facei))
                     {
+                        scalar wf = max(min(w[facei], 0.8), 0.2);
+
                         if (celli == owner[facei])
                         {
-                            lsP[facei] = (1 - w[facei])*Sf[facei]/V[celli];
+                            lsP[facei] = (1 - wf)*Sf[facei]/V[celli];
                         }
                         else
                         {
-                            lsN[facei] = -w[facei]*Sf[facei]/V[celli];
+                            lsN[facei] = -wf*Sf[facei]/V[celli];
                         }
                     }
                     else
@@ -224,9 +281,30 @@ void Foam::leastSquaresVectors::makeLeastSquaresVectors() const
                         {
                             label patchFacei = 
                                 facei - mesh.boundaryMesh()[patchi].start();
-                        
-                            lsP.boundaryField()[patchi][patchFacei] = 
-                                Sf.boundaryField()[patchi][patchFacei]/V[celli];
+
+                            if (mesh.boundary()[patchi].coupled())
+                            {
+                                scalar wf = max
+                                (
+                                    min
+                                    (
+                                        w.boundaryField()[patchi][patchFacei],
+                                        0.8
+                                    ),
+                                    0.2
+                                );
+
+                                lsP.boundaryField()[patchi][patchFacei] = 
+                                    (1 - wf)
+                                   *Sf.boundaryField()[patchi][patchFacei]
+                                   /V[celli];
+                            }
+                            else
+                            {
+                                lsP.boundaryField()[patchi][patchFacei] = 
+                                    Sf.boundaryField()[patchi][patchFacei]
+                                   /V[celli];
+                            }
                         }
                     }
                 }

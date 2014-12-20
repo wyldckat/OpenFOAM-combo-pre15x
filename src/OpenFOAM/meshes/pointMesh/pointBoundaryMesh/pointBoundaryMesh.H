@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,6 +45,7 @@ namespace Foam
 // Class forward declarations
 class pointMesh;
 class polyBoundaryMesh;
+class globalPointPatch;
 
 /*---------------------------------------------------------------------------*\
                        Class pointBoundaryMesh Declaration
@@ -89,8 +90,8 @@ public:
             return mesh_;
         }
 
-        //- Return reference to shared processor point patch
-        const pointPatch& globalPointPatch() const;
+        //- Return reference to globalPointPatch
+        const globalPointPatch& globalPatch() const;
 };
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,15 +26,16 @@ Class
     pointMesh
 
 Description
+    Mesh representing a set of points created from polyMesh.
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef pointMesh_H
 #define pointMesh_H
 
+#include "GeoMesh.H"
 #include "polyMesh.H"
 #include "pointBoundaryMesh.H"
-#include "primitiveMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,11 +47,10 @@ namespace Foam
 \*---------------------------------------------------------------------------*/
 
 class pointMesh
+:
+    public GeoMesh<polyMesh>
 {
     // Permanent data
-
-        //- Reference to underlying polyMesh
-        const polyMesh& mesh_;
 
         //- Boundary mesh
         pointBoundaryMesh boundary_;
@@ -64,28 +64,24 @@ class pointMesh
         //- Disallow default bitwise assignment
         void operator=(const pointMesh&);
 
-        //- Check for and create a parallel point patch
-        void addParallelPointPatch();
-
 
 public:
 
     typedef pointMesh Mesh;
     typedef pointBoundaryMesh BoundaryMesh;
 
+
     // Constructors
 
         //- Construct from polyMesh
-        explicit pointMesh(const polyMesh& pMesh);
+        explicit pointMesh
+        (
+            const polyMesh& pMesh,
+            bool alwaysConstructGlobalPatch = false
+        );
 
 
     // Member Functions
-
-        //- Return reference to polyMesh
-        const polyMesh& operator()() const
-        {
-            return mesh_;
-        }
 
         //- Return number of points
         label size() const
@@ -99,34 +95,16 @@ public:
             return mesh.mesh_.nPoints();
         }
 
-        //- Return number of points (checking of patch size.  Reconsider)
-        label nPoints() const
-        {
-            return mesh_.nPoints();
-        }
-
-        //- Return number of cells (checking of patch size.  Reconsider)
-        label nCells() const
-        {
-            return mesh_.nCells();
-        }
-
         //- Return reference to boundary mesh
         const pointBoundaryMesh& boundary() const
         {
             return boundary_;
         }
 
-        //- Correct stuff for moving mesh.
-        bool movePoints()
-        {
-            return true;
-        }
-
         //- Return parallel info
-        const parallelInfo& parallelData() const
+        const globalMeshData& globalData() const
         {
-            return mesh_.parallelData();
+            return mesh_.globalData();
         }
 
 

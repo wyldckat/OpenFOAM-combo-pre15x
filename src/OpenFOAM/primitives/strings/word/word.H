@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,7 +29,7 @@ Description
     A class for handling words, derived from string.
     A word is a string of characters containing no white space and
     may be constructed from a string by removing white space.
-    Words are delimited be white space.
+    Words are delimited by white space.
 
 SourceFiles
     word.C

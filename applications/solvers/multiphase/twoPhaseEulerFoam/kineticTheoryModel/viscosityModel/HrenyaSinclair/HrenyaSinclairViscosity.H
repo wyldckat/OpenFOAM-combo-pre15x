@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,9 +28,7 @@ Class
 Description
 
 SourceFiles
-    HrenyaSinclairViscosityI.H
     HrenyaSinclairViscosity.C
-    HrenyaSinclairViscosityIO.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -58,13 +56,14 @@ class HrenyaSinclairViscosity
         //- characteristic length of geometry
         dimensionedScalar L_;
 
+
 public:
 
         //- Runtime type information
         TypeName("HrenyaSinclair");
 
-    // Constructors
 
+    // Constructors
 
         //- Construct from components
         HrenyaSinclairViscosity(const dictionary& dict);
@@ -74,7 +73,10 @@ public:
 
         ~HrenyaSinclairViscosity();
 
-        volScalarField mua
+
+    // Member functions
+
+        tmp<volScalarField> mua
         (
             const volScalarField& alpha,
             const volScalarField& Theta,
@@ -83,17 +85,12 @@ public:
             const dimensionedScalar& da,
             const dimensionedScalar& e
         ) const;
-
 };
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-//#include "HrenyaSinclairViscosityI.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

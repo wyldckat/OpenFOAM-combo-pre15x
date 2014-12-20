@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,8 +25,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "polyMesh.H"
-#include "parallelInfo.H"
 #include "primitiveMesh.H"
+#include "globalMeshData.H"
 #include "demandDrivenData.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -86,7 +86,7 @@ void polyMesh::clearAddressing()
 
     // parallelData depends on the processorPatch ordering so force
     // recalculation
-    deleteDemandDrivenData(parallelDataPtr_);
+    deleteDemandDrivenData(globalMeshDataPtr_);
 }
 
 

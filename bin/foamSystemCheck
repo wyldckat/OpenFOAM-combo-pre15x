@@ -1,9 +1,9 @@
-#!/bin/sh
+#!/bin/sh -u
 #------------------------------------------------------------------------------
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -90,10 +90,6 @@ OS_version: $OS_VERSION
 Shell: $USER_SHELL
 User: $USER_NAME
 EOF
-}
-
-checkEnvVariables () {
-echo '$HOSTNAME:' `expenv "$HOSTNAME"`
 }
 
 checkNetworking () {
@@ -184,71 +180,13 @@ expenv () {
     eval "echo $1"
 }
 
-findExec() {
-OLD_IFS=$IFS
-IFS=':'
-for d in $1
-do
-    if [ ! -d "$d/$2" -a -x "$d/$2" ]; then
-        IFS=$OLD_IFS
-        echo "$d/$2"
-        return 0
-    fi
-done
-IFS=$OLD_IFS
-return 1
-}
-
-reportExecutable () {
-VERSION=""
-APP_PATH=`findExec "$PATH" $1`                     # Leave this...
-if [ $? -ne 0 ] ; then
-    echo "$1: ---- Not_installed"
-    return 1
-fi
-#APP_PATH=`echo $APP_PATH | sed -e s%"$HOME"%"~"%g` # ... as it is.
-case $1 in
-    icoFoam) VERSION=`$1 2>&1 | grep ' Version:' | sed -e 's/.*Version:/Version:/' | cut -d" " -f2`;;
-    gcc) VERSION=`$1 -v 2>&1 | grep 'version' | cut -d" " -f3`;;
-    gtar|tar) VERSION=`$APP_PATH --version 2>&1 | head -1 | sed -e s/"[^1-9.]"/""/g`;;
-#    gtar|tar) VERSION=`$APP_PATH --version | head -1` ;;
-    gzip) VERSION=`$1 --version 2>&1 | head -1 | cut -d" " -f2`;;
-    dx) unset DXEXEC; VERSION=`$1 -version 2>&1 | grep 'Open ' | grep 'Script' | cut -d" " -f6`;;
-    java) VERSION=`$1 -version 2>&1 | grep 'version' | cut -d" " -f3 | tr -d "\""`;;
-esac
-APP_PATH=`echo $APP_PATH | sed -e s%"$HOME"%"~"%g` # ... as it is.
-echo "$1: $VERSION $APP_PATH"
-}
-
-checkInstalledSoftware () {
-if [ "$OS" = "Linux" ] ; then
-    reportExecutable tar
-else
-    reportExecutable gtar 
-fi
-reportExecutable gzip
-reportExecutable gcc
-reportExecutable java
-reportExecutable dx
-reportExecutable icoFoam
-}
-
 #MAIN CODE
 #~~~~~~~~~
 HOST_NAME=`uname -n`
-#HOST_NAME=""
 OS=`uname -s`
-#OS=""
 OS_VERSION=`uname -r`
-#case $OS in
-#    AIX*) OS_VERSION="`uname -v`.`uname -r`" ;;
-#    *) OS_VERSION=`uname -r` ;;
-#esac
 USER_SHELL=`basename $SHELL`
-#USER_SHELL="polly"
 USER_NAME=$LOGNAME
-#USER_NAME=""
-#USER="ed"
 #
 if [ `length $USER_NAME` -eq 0 ] ; then
     USER_NAME=$USER
@@ -306,25 +244,19 @@ else
 fi
 #
 
-#heading "Checking environment variables..."
-#checkEnvVariables |  awk '{printf "%-12s %-50s\n", $1, $2}'
-
 heading "Checking networking..."
 checkNetworking 
-#| awk '{printf "%-20s %-50s\n", $1, $2}'
 if [ $SSHRSHOK -eq 1 ]; then
-    echo "(*) Only one of rsh or ssh is required by the Foam enviroment."
+    echo "(*) Only one of rsh or ssh is required and only by FoamX."
 elif [ $SSHRSHOK -gt 1  ]; then
     echo "FATALERROR: No remote shell available."
-    echo "            Foam${FOAM_VERSION} enviroment requires passwordless "
+    echo "            FoamX requires passwordless "
     echo "            'ssh' and/or 'rsh' to the current host."
-    echo "            Contact your system administrator."
+    echo "            Contact your system administrator if you intend "
+    echo "            to run FoamX."
     echo
     FATALERROR=`expr $FATALERROR + 1`
 fi
-#echo '(*) Note: rsh/ssh tests are not necessarily conclusive.'
-#echo '    If either are not successful, please check manually by executing:'
-#echo '    rsh $HOSTNAME (or ssh $HOSTNAME)'
 
 echo ""
 echo ""

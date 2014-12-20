@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,7 +27,7 @@ License
 #include "argList.H"
 #include "Time.H"
 #include "fvMesh.H"
-#include "parallelInfo.H"
+#include "globalMeshData.H"
 #include "LduMatrix.H"
 
 using namespace Foam;
@@ -50,7 +50,7 @@ int main(int argc, char *argv[])
     LduMatrix<vector, scalar, scalar> hmm
     (
         mesh.ldu(),
-        mesh.parallelData().patchSchedule()
+        mesh.globalData().patchSchedule()
     );
 
     Info<< hmm << endl;

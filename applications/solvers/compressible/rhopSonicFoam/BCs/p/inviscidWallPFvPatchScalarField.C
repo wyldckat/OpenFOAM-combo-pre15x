@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -100,6 +100,16 @@ inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 
 inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
 (
+    const inviscidWallPFvPatchScalarField& wbppsf
+)
+:
+    fixedGradientFvPatchScalarField(wbppsf),
+    fluxFraction_(wbppsf.fluxFraction_)
+{}
+
+
+inviscidWallPFvPatchScalarField::inviscidWallPFvPatchScalarField
+(
     const inviscidWallPFvPatchScalarField& wbppsf,
     const scalarField& iF
 )
@@ -121,13 +131,13 @@ void inviscidWallPFvPatchScalarField::updateCoeffs()
     }
 
     const fvPatchField<vector>& rhoUp =
-        lookupPatchField<volVectorField, vector>("rhoU");
+        patch().lookupPatchField<volVectorField, vector>("rhoU");
 
     const fvPatchField<scalar>& phip = 
-        lookupPatchField<surfaceScalarField, scalar>("phi");
+        patch().lookupPatchField<surfaceScalarField, scalar>("phi");
 
     const fvPatchField<scalar>& rAp =
-        lookupPatchField<surfaceScalarField, scalar>("rrhoUAf");
+        patch().lookupPatchField<surfaceScalarField, scalar>("rrhoUAf");
 
     gradient() = (fluxFraction_*phip - (patch().Sf() & rhoUp))/
                  (rAp*patch().magSf());

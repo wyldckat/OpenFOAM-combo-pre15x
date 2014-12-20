@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    DimensionedField
+    DimensionedField<T>
 
 Description
     Field with dimensions and associated with geometry type GeoMesh which is
@@ -41,7 +41,7 @@ SourceFiles
 
 #include "regIOobject.H"
 #include "Field.H"
-#include "dimensionSet.H"
+#include "dimensionedType.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -121,6 +121,14 @@ public:
             const dimensionSet&
         );
 
+        //- Construct from components
+        DimensionedField
+        (
+            const IOobject&,
+            const Mesh& mesh,
+            const dimensioned<Type>&
+        );
+
         //- Construct from Istream
         DimensionedField
         (
@@ -129,8 +137,66 @@ public:
             const word& fieldDictEntry="value"
         );
 
+        void readField
+        (
+            const dictionary& fieldDict,
+            const word& fieldDictEntry="value"
+        );
+
         //- Construct as copy
-        DimensionedField(const DimensionedField&);
+        DimensionedField
+        (
+            const DimensionedField<Type, GeoMesh>&
+        );
+
+        //- Construct as copy or re-use as specified.
+        DimensionedField
+        (
+            DimensionedField<Type, GeoMesh>&,
+            bool reUse
+        );
+
+        //- Construct as copy of tmp<DimensionedField> deleting argument
+#       ifdef ConstructFromTmp
+        DimensionedField
+        (
+            const tmp<DimensionedField<Type, GeoMesh> >&
+        );
+#       endif
+
+        //- Construct as copy resetting IO parameters
+        DimensionedField
+        (
+            const IOobject&,
+            const DimensionedField<Type, GeoMesh>&
+        );
+
+        //- Construct as copy resetting name
+        DimensionedField
+        (
+            const word& newName,
+            const DimensionedField<Type, GeoMesh>&
+        );
+
+        //- Construct as copy resetting name and re-use as specified.
+        DimensionedField
+        (
+            const word& newName,
+            DimensionedField<Type, GeoMesh>&,
+            bool reUse
+        );
+
+        //- Construct as copy resetting name
+#       ifdef ConstructFromTmp
+        DimensionedField
+        (
+            const word& newName,
+            const tmp<DimensionedField<Type, GeoMesh> >&
+        );
+#       endif
+
+        //- Clone
+        tmp<DimensionedField<Type, GeoMesh> > clone() const;
 
 
     // Destructor
@@ -149,6 +215,13 @@ public:
         //- Return non-const access to dimensions
         inline dimensionSet& dimensions();
 
+        inline const Field<Type>& field() const;
+
+        inline Field<Type>& field();
+
+        //- Return a null DimensionedField
+        static DimensionedField<Type, GeoMesh>& null();
+
         //- Return a component field of the field
         tmp<DimensionedField<cmptType, GeoMesh> > component
         (
@@ -162,8 +235,30 @@ public:
             const DimensionedField<cmptType, GeoMesh>&
         );
 
+        //- Replace a component field of the field
+        void replace
+        (
+            const direction,
+            const tmp<DimensionedField<cmptType, GeoMesh> >&
+        );
+
         //- Return the field transpose (only defined for second rank tensors)
         tmp<DimensionedField<Type, GeoMesh> > T() const;
+
+        //- Calculate and return arithmetic average
+        dimensioned<Type> average() const;
+
+        //- Calculate and return weighted average
+        dimensioned<Type> weightedAverage
+        (
+            const DimensionedField<scalar, GeoMesh>&
+        ) const;
+
+        //- Calculate and return weighted average
+        dimensioned<Type> weightedAverage
+        (
+            const tmp<DimensionedField<scalar, GeoMesh> >&
+        ) const;
 
 
         // Write
@@ -221,6 +316,7 @@ public:
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #include "DimensionedFieldI.H"
+#include "DimensionedFieldFunctions.H"
 
 #ifdef NoRepository
 #   include "DimensionedField.C"

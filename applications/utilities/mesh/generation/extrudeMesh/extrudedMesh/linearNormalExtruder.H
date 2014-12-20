@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,9 +72,9 @@ public:
             const label layer
         ) const
         {
-            scalar d = thickness_ * (layer+1)/nLayers;
+            scalar d = thickness_*layer/nLayers;
 
-            return surfacePoint + d * surfaceNormal;
+            return surfacePoint + d*surfaceNormal;
         }
 };
 

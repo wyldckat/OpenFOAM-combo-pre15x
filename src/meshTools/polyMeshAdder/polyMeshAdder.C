@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,6 +24,8 @@ License
 
 Class
     polyMeshAdder
+
+Description
 
 \*----------------------------------------------------------------------------*/
 
@@ -150,67 +152,53 @@ Foam::labelList Foam::polyMeshAdder::stringEdges
 }
 
 
-// Extract the 'to' processor from a proc boundary name
-Foam::label Foam::polyMeshAdder::neighbourProcNo(const word& patchName)
-{
-    string::size_type i = patchName.rfind("to");
-
-    word procName(patchName.substr(i+2));
-
-    return(readLabel(IStringStream(procName)()));
-}
-
-
 // Get index of patch in new set of patchnames/types
-Foam::label Foam::polyMeshAdder::patchIndex(const polyPatch& p)
+Foam::label Foam::polyMeshAdder::patchIndex
+(
+    const polyPatch& p,
+    DynamicList<word>& allPatchNames,
+    DynamicList<word>& allPatchTypes
+)
 {
     // Find the patch name on the list.  If the patch is already there
     // and patch types match, return index
     const word& pType = p.type();
     const word& pName = p.name();
 
-    label patchI = findIndex(allPatchNames_, pName);
+    label patchI = findIndex(allPatchNames, pName);
 
     if (patchI == -1)
     {
         // Patch not found. Append to the list
-        allPatchNames_.append(pName);
-        allPatchTypes_.append(pType);
+        allPatchNames.append(pName);
+        allPatchTypes.append(pType);
 
-        return allPatchNames_.size() - 1;
+        return allPatchNames.size() - 1;
     }
-    else if (allPatchTypes_[patchI] == pType)
+    else if (allPatchTypes[patchI] == pType)
     {
         // Found name and types match
         return patchI;
     }
     else
     {
-        //Pout<< "Did not find " << pName << " type " << pType << " in:"
-        //    << endl;
-        //forAll(allPatchNames_, i)
-        //{
-        //    Pout<< "    " << i << " name:" << allPatchNames_[i]
-        //    << " type:" << allPatchTypes_[i] << endl;
-        //}
-
         // Found the name, but type is different
 
         // Duplicate name is not allowed.  Create a composite name from the
         // patch name and case name
         const word& caseName = p.boundaryMesh().mesh().time().caseName();
 
-        allPatchNames_.append(pName + "_" + caseName);
-        allPatchTypes_.append(pType);
+        allPatchNames.append(pName + "_" + caseName);
+        allPatchTypes.append(pType);
 
         Pout<< "label patchIndex(const polyPatch& p) : "
             << "Patch " << p.index() << " named "
             << pName << " in mesh " << caseName
             << " already exists, but patch types"
             << " do not match.\nCreating a composite name as "
-            << allPatchNames_[allPatchNames_.size() - 1] << endl;
+            << allPatchNames[allPatchNames.size() - 1] << endl;
 
-        return allPatchNames_.size() - 1;
+        return allPatchNames.size() - 1;
     }
 }
 
@@ -238,78 +226,21 @@ Foam::label Foam::polyMeshAdder::zoneIndex
 }
 
 
-// Clone patch with new size,start and polyBoundaryMesh. Filter out empty
-// patch. Return -1 or index of new patch.
-Foam::label Foam::polyMeshAdder::clonePatch
-(
-    const polyPatch& pp,
-    const label start,
-    const label size,
-    const polyBoundaryMesh& allBoundaryMesh,
-    DynamicList<polyPatch*>& allPatches
-)
-{
-    label nOldPatches = allPatches.size();
-
-    // Handle procPatch separately since cannot be cloned since name changes.
-    if (size == 0)
-    {
-        Pout<< "Removing empty patch " << pp.name() << endl;
-    }
-    else if (typeid(pp) == typeid(processorPolyPatch))
-    {
-        allPatches.append
-        (
-            new processorPolyPatch
-            (
-                pp.name(),
-                size,
-                start,
-                allPatches.size(),
-                allBoundaryMesh,
-                Pstream::myProcNo(),        // from processor
-                neighbourProcNo(pp.name())  // to processor
-            )
-        );
-    }
-    else
-    {
-        allPatches.append
-        (
-            pp.clone
-            (
-                allBoundaryMesh,
-                allPatches.size(),
-                size,
-                start
-            ).ptr()
-        );
-    }
-
-    // Any patch added?
-    if (allPatches.size() > nOldPatches)
-    {
-        return allPatches.size() - 1;
-    }
-    else
-    {
-        return -1;
-    }
-}
-
-
 void Foam::polyMeshAdder::mergePatchNames
 (
     const polyBoundaryMesh& patches0,
     const polyBoundaryMesh& patches1,
+
+    DynamicList<word>& allPatchNames,
+    DynamicList<word>& allPatchTypes,
 
     labelList& from1ToAllPatches,
     labelList& fromAllTo1Patches
 )
 {
     // Insert the mesh0 patches and zones
-    append(patches0.names(), allPatchNames_);
-    append(patches0.types(), allPatchTypes_);
+    append(patches0.names(), allPatchNames);
+    append(patches0.types(), allPatchTypes);
 
 
     // Patches
@@ -323,13 +254,18 @@ void Foam::polyMeshAdder::mergePatchNames
 
     forAll(patches1, patchI)
     {
-        from1ToAllPatches[patchI] = patchIndex(patches1[patchI]);
+        from1ToAllPatches[patchI] = patchIndex
+        (
+            patches1[patchI],
+            allPatchNames,
+            allPatchTypes
+        );
     }
-    allPatchTypes_.shrink();
-    allPatchNames_.shrink();
+    allPatchTypes.shrink();
+    allPatchNames.shrink();
 
     // Invert 1 to all patch map
-    fromAllTo1Patches.setSize(allPatchNames_.size());
+    fromAllTo1Patches.setSize(allPatchNames.size());
     fromAllTo1Patches = -1;
 
     forAll(from1ToAllPatches, i)
@@ -339,11 +275,40 @@ void Foam::polyMeshAdder::mergePatchNames
 }
 
 
+Foam::labelList Foam::polyMeshAdder::getPatchStarts
+(
+    const polyBoundaryMesh& patches
+)
+{
+    labelList patchStarts(patches.size());
+    forAll(patches, patchI)
+    {
+        patchStarts[patchI] = patches[patchI].start();
+    }
+    return patchStarts;
+}
+
+
+Foam::labelList Foam::polyMeshAdder::getPatchSizes
+(
+    const polyBoundaryMesh& patches
+)
+{
+    labelList patchSizes(patches.size());
+    forAll(patches, patchI)
+    {
+        patchSizes[patchI] = patches[patchI].size();
+    }
+    return patchSizes;
+}
+
+
 Foam::List<Foam::polyPatch*> Foam::polyMeshAdder::combinePatches
 (
     const polyMesh& mesh0,
     const polyMesh& mesh1,
     const polyBoundaryMesh& allBoundaryMesh,
+    const label nAllPatches,
     const labelList& fromAllTo1Patches,
 
     const label nInternalFaces,
@@ -351,14 +316,14 @@ Foam::List<Foam::polyPatch*> Foam::polyMeshAdder::combinePatches
 
     labelList& from0ToAllPatches,
     labelList& from1ToAllPatches
-) const
+)
 {
     const polyBoundaryMesh& patches0 = mesh0.boundaryMesh();
     const polyBoundaryMesh& patches1 = mesh1.boundaryMesh();
 
 
     // Compacted new patch list.
-    DynamicList<polyPatch*> allPatches(allPatchNames_.size());
+    DynamicList<polyPatch*> allPatches(nAllPatches);
 
 
     // Map from 0 to all patches (since gets compacted)
@@ -373,14 +338,31 @@ Foam::List<Foam::polyPatch*> Foam::polyMeshAdder::combinePatches
     {
         // Originates from mesh0. Clone with new size & filter out empty
         // patch.
-        label filteredPatchI = clonePatch
-        (
-            patches0[patchI],
-            startFaceI,
-            nFaces[patchI],
-            allBoundaryMesh,
-            allPatches
-        );
+        label filteredPatchI;
+
+        if (nFaces[patchI] == 0 && isA<processorPolyPatch>(patches0[patchI]))
+        {
+            Pout<< "Removing zero sized mesh0 patch "
+                << patches0[patchI].name() << endl;
+
+            filteredPatchI = -1;
+        }
+        else
+        {
+            filteredPatchI = allPatches.size();
+
+            allPatches.append
+            (
+                patches0[patchI].clone
+                (
+                    allBoundaryMesh,
+                    filteredPatchI,
+                    nFaces[patchI],
+                    startFaceI
+                ).ptr()
+            );
+            startFaceI += nFaces[patchI];
+        }
 
         // Record new index in allPatches
         from0ToAllPatches[patchI] = filteredPatchI;
@@ -389,11 +371,6 @@ Foam::List<Foam::polyPatch*> Foam::polyMeshAdder::combinePatches
         if (fromAllTo1Patches[patchI] != -1)
         {
             from1ToAllPatches[fromAllTo1Patches[patchI]] = filteredPatchI;
-        }
-
-        if (filteredPatchI != -1)
-        {
-            startFaceI += nFaces[patchI];
         }
     }
 
@@ -406,21 +383,37 @@ Foam::List<Foam::polyPatch*> Foam::polyMeshAdder::combinePatches
         {
             // Patch has not been merged with any mesh0 patch.
 
-            label filteredPatchI = clonePatch
+            label filteredPatchI;
+
+            if
             (
-                patches1[patchI],
-                startFaceI,
-                nFaces[allPatchI],
-                allBoundaryMesh,
-                allPatches
-            );
-
-            from1ToAllPatches[patchI] = filteredPatchI;
-
-            if (filteredPatchI != -1)
+                nFaces[allPatchI] == 0
+             && isA<processorPolyPatch>(patches1[patchI])
+            )
             {
+                Pout<< "Removing zero sized mesh1 patch "
+                    << patches1[patchI].name() << endl;
+
+                filteredPatchI = -1;
+            }
+            else
+            {
+                filteredPatchI = allPatches.size();
+
+                allPatches.append
+                (
+                    patches1[patchI].clone
+                    (
+                        allBoundaryMesh,
+                        filteredPatchI,
+                        nFaces[allPatchI],
+                        startFaceI
+                    ).ptr()
+                );
                 startFaceI += nFaces[allPatchI];
             }
+
+            from1ToAllPatches[patchI] = filteredPatchI;
         }
     }
 
@@ -519,52 +512,6 @@ Foam::labelList Foam::polyMeshAdder::getFaceOrder
 }
 
 
-void Foam::polyMeshAdder::makeCells
-(
-    const label nCells,
-    const labelList& owner,
-    const labelList& neighbour,
-    cellList& cells
-)
-{
-    // Make cellCells addressing
-    labelList nFaces(nCells, 0);
-
-    forAll(owner, faceI)
-    {
-        nFaces[owner[faceI]]++;
-
-        if (neighbour[faceI] != -1)
-        {
-            nFaces[neighbour[faceI]]++;
-        }
-    }
-
-    cells.setSize(nCells);
-
-    forAll(cells, cellI)
-    {
-        cells[cellI].setSize(nFaces[cellI]);
-
-        nFaces[cellI] = 0;
-    }
-
-    forAll(owner, faceI)
-    {
-        label own = owner[faceI];
-
-        cells[own][nFaces[own]++] = faceI;
-
-        label nei = neighbour[faceI];
-
-        if (nei != -1)
-        {
-            cells[nei][nFaces[nei]++] = faceI;
-        }
-    }
-}
-
-
 // Adds primitives (cells, faces, points)
 // Cells:
 //  - all of mesh0
@@ -583,6 +530,7 @@ void Foam::polyMeshAdder::mergePrimitives
     const polyMesh& mesh1,
     const faceCoupleInfo& coupleInfo,
 
+    const label nAllPatches,                // number of patches in the new mesh
     const labelList& fromAllTo1Patches,
     const labelList& from1ToAllPatches,
 
@@ -591,13 +539,16 @@ void Foam::polyMeshAdder::mergePrimitives
     labelList& from1ToAllPoints,
 
     faceList& allFaces,
+    labelList& allOwner,
+    labelList& allNeighbour,
+    label& nInternalFaces,
+    labelList& nFacesPerPatch,
+    label& nCells,
+
     labelList& from0ToAllFaces,
     labelList& from1ToAllFaces,
-    labelList& nFaces,
-
-    cellList& allCells,
     labelList& from1ToAllCells
-) const
+)
 {
     const polyBoundaryMesh& patches0 = mesh0.boundaryMesh();
     const polyBoundaryMesh& patches1 = mesh1.boundaryMesh();
@@ -619,7 +570,7 @@ void Foam::polyMeshAdder::mergePrimitives
     from1ToAllPoints.setSize(mesh1.nPoints());
     from1ToAllPoints = -1;
 
-    // Copy coupled points.
+    // Copy coupled points (on cut)
     {
         const pointField& cutPoints = coupleInfo.cutPoints();
         const labelList& cutToMasterPoints = coupleInfo.cutToMasterPoints();
@@ -646,6 +597,51 @@ void Foam::polyMeshAdder::mergePrimitives
             }
             allPointI++;
         }
+    }
+
+    // Copy shared points which are not on cut.
+    forAll(coupleInfo.sharedToMasterPoints(), i)
+    {
+        label masterPointI = coupleInfo.sharedToMasterPoints()[i];
+        label slavePointI = coupleInfo.sharedToSlavePoints()[i];
+
+        if (from0ToAllPoints[masterPointI] != -1)
+        {
+            FatalErrorIn
+            (
+                "polyMeshAdder::mergePrimitives(..)"
+            )   << "Mesh0 point:" << masterPointI
+                << " coord:" << mesh0.points()[masterPointI]
+                << " which is matched to non-cut mesh1 point:" << slavePointI
+                << " coord:" << mesh1.points()[slavePointI]
+                << endl
+                << " already seems to be in the merged mesh as:"
+                << from0ToAllPoints[masterPointI]
+                << " coord:" << allPoints[from0ToAllPoints[masterPointI]]
+                << abort(FatalError);
+        }
+        if (from1ToAllPoints[slavePointI] != -1)
+        {
+            FatalErrorIn
+            (
+                "polyMeshAdder::mergePrimitives(..)"
+            )   << "Mesh1 point:" << slavePointI
+                << " coord:" << mesh1.points()[slavePointI]
+                << " which is matched to non-cut mesh0 point:" << masterPointI
+                << " coord:" << mesh0.points()[masterPointI]
+                << endl
+                << " already seems to be in the merged mesh as:"
+                << from1ToAllPoints[slavePointI]
+                << " coord:" << allPoints[from1ToAllPoints[slavePointI]]
+                << abort(FatalError);
+        }
+
+
+        allPoints[allPointI] = mesh0.points()[masterPointI];
+        from0ToAllPoints[masterPointI] = allPointI;
+        from1ToAllPoints[slavePointI] = allPointI;
+
+        allPointI++;
     }
 
     // Add uncoupled mesh0 points
@@ -677,13 +673,15 @@ void Foam::polyMeshAdder::mergePrimitives
     // ~~~~~
 
     // Sizes per patch
-    nFaces.setSize(allPatchNames_.size());
-    nFaces = 0;
+    nFacesPerPatch.setSize(nAllPatches);
+    nFacesPerPatch = 0;
 
     // Storage for faces and owner/neighbour
     allFaces.setSize(mesh0.nFaces() + mesh1.nFaces());
-    labelList allOwner(allFaces.size(), -1);
-    labelList allNeighbour(allFaces.size(), -1);
+    allOwner.setSize(allFaces.size());
+    allOwner = -1;
+    allNeighbour.setSize(allFaces.size());
+    allNeighbour = -1;
     label allFaceI = 0;
 
     from0ToAllFaces.setSize(mesh0.nFaces());
@@ -722,14 +720,14 @@ void Foam::polyMeshAdder::mergePrimitives
 
             // External face becomes internal so uncount
             label patch0 = patches0.whichPatch(mesh0FaceI);
-            nFaces[patch0]--;
+            nFacesPerPatch[patch0]--;
         }
         if (from1ToAllFaces[mesh1FaceI] == -1)
         {
             from1ToAllFaces[mesh1FaceI] = allFaceI;
 
             label patch1 = patches1.whichPatch(mesh1FaceI);
-            nFaces[from1ToAllPatches[patch1]]--;
+            nFacesPerPatch[from1ToAllPatches[patch1]]--;
         }
 
         // Copy cut face (since cutPoints are copied first no renumbering
@@ -750,17 +748,17 @@ void Foam::polyMeshAdder::mergePrimitives
         from1ToAllFaces[faceI] = allFaceI++;
     }
 
-    label nInternalFaces = allFaceI;
+    nInternalFaces = allFaceI;
 
     // Copy (unmarked/uncoupled) external faces in new order.
-    forAll(allPatchNames_, allPatchI)
+    for (label allPatchI = 0; allPatchI < nAllPatches; allPatchI++)
     {
         if (allPatchI < patches0.size())
         {
             // Patch is present in mesh0
             const polyPatch& pp = patches0[allPatchI];
 
-            nFaces[allPatchI] += pp.size();
+            nFacesPerPatch[allPatchI] += pp.size();
 
             label faceI = pp.start();
 
@@ -787,7 +785,7 @@ void Foam::polyMeshAdder::mergePrimitives
             // Patch is present in mesh1
             const polyPatch& pp = patches1[fromAllTo1Patches[allPatchI]];
 
-            nFaces[allPatchI] += pp.size();
+            nFacesPerPatch[allPatchI] += pp.size();
 
             label faceI = pp.start();
 
@@ -1030,8 +1028,9 @@ void Foam::polyMeshAdder::mergePrimitives
     }
 
     // Make cells (= cell-face addressing)
-    allCells.setSize(mesh0.nCells() + mesh1.nCells());
-    makeCells(allCells.size(), allOwner, allNeighbour, allCells);
+    nCells = mesh0.nCells() + mesh1.nCells();
+    cellList allCells(nCells);
+    primitiveMesh::calcCells(allCells, allOwner, allNeighbour, nCells);
 
     // Reorder faces for upper-triangular order.
     labelList oldToNew
@@ -1046,10 +1045,8 @@ void Foam::polyMeshAdder::mergePrimitives
     );
 
     inplaceReorder(oldToNew, allFaces);
-    forAll(allCells, allCellI)
-    {
-        inplaceRenumber(oldToNew, allCells[allCellI]);
-    }
+    inplaceReorder(oldToNew, allOwner);
+    inplaceReorder(oldToNew, allNeighbour);
     inplaceRenumber(oldToNew, from0ToAllFaces);
     inplaceRenumber(oldToNew, from1ToAllFaces);
 }
@@ -1368,272 +1365,6 @@ void Foam::polyMeshAdder::addZones
 }
 
 
-// Inplace add mesh1 to mesh0
-Foam::List<Foam::polyPatch*> Foam::polyMeshAdder::addWithoutPatches
-(
-    polyMesh& mesh0,
-    const polyMesh& mesh1,
-    const faceCoupleInfo& coupleInfo
-)
-{
-    const polyBoundaryMesh& patches0 = mesh0.boundaryMesh();
-    const polyBoundaryMesh& patches1 = mesh1.boundaryMesh();
-
-
-    allPatchNames_.setSize
-    (
-        mesh0.boundaryMesh().size()
-      + mesh1.boundaryMesh().size()
-    );
-    allPatchTypes_.setSize(allPatchNames_.size());
-
-
-    // Patch maps
-    labelList from1ToAllPatches(patches1.size());
-    labelList fromAllTo1Patches(allPatchNames_.size(), -1);
-
-    mergePatchNames(patches0, patches1, from1ToAllPatches, fromAllTo1Patches);
-
-
-    // New points
-    pointField allPoints;
-
-    // Map from mesh0/1 points to allPoints.
-    labelList from0ToAllPoints(mesh0.nPoints(), -1);
-    labelList from1ToAllPoints(mesh1.nPoints(), -1);
-
-    // New faces
-    faceList allFaces;
-
-    // Sizes per patch
-    labelList nFaces(allPatchNames_.size(), 0);
-
-    // Maps
-    labelList from0ToAllFaces(mesh0.nFaces(), -1);
-    labelList from1ToAllFaces(mesh1.nFaces(), -1);
-
-    // New cells
-    cellList allCells;
-
-    // Map
-    labelList from1ToAllCells(mesh1.nCells(), -1);
-
-    mergePrimitives
-    (
-        mesh0,
-        mesh1,
-        coupleInfo,
-
-        fromAllTo1Patches,
-        from1ToAllPatches,
-
-        allPoints,
-        from0ToAllPoints,
-        from1ToAllPoints,
-
-        allFaces,
-        from0ToAllFaces,
-        from1ToAllFaces,
-        nFaces,
-
-        allCells,
-        from1ToAllCells
-    );
-
-
-    // Zones
-    // ~~~~~
-
-    DynamicList<word> pointZoneNames;
-    List<DynamicList<label> > pzPoints;
-
-    DynamicList<word> faceZoneNames;
-    List<DynamicList<label> > fzFaces;
-    List<DynamicList<bool> > fzFlips;
-
-    DynamicList<word> cellZoneNames;
-    List<DynamicList<label> > czCells;
-
-    mergeZones
-    (
-        mesh0,
-        mesh1,
-
-        from0ToAllPoints,
-        from0ToAllFaces,
-
-        from1ToAllPoints,
-        from1ToAllFaces,
-        from1ToAllCells,
-
-        pointZoneNames,
-        pzPoints,
-
-        faceZoneNames,
-        fzFaces,
-        fzFlips,
-
-        cellZoneNames,
-        czCells
-    );
-
-
-    // Patches
-    // ~~~~~~~
-
-    // Map from 0 to all patches (since gets compacted)
-    labelList from0ToAllPatches(patches0.size(), -1);
-
-    List<polyPatch*> allPatches
-    (
-        combinePatches
-        (
-            mesh0,
-            mesh1,
-            mesh0.boundaryMesh(),   // Should be boundaryMesh() on new mesh.
-            fromAllTo1Patches,
-            mesh0.nInternalFaces()
-          + mesh1.nInternalFaces()
-          + coupleInfo.cutFaces().size(),
-            nFaces,
-
-            from0ToAllPatches,
-            from1ToAllPatches
-        )
-    );
-
-
-    // Map information
-    // ~~~~~~~~~~~~~~~
-
-    map_ = mapAddedPolyMesh
-    (
-        mesh0.nPoints(),
-        mesh0.nFaces(),
-        mesh0.nCells(),
-
-        mesh1.nPoints(),
-        mesh1.nFaces(),
-        mesh1.nCells(),
-
-        mapAddedPolyMesh::combine
-        (
-            allPoints.size(),
-            from0ToAllPoints,
-            from1ToAllPoints
-        ),
-        mapAddedPolyMesh::combine
-        (
-            allFaces.size(),
-            from0ToAllFaces,
-            from1ToAllFaces
-        ),
-        mapAddedPolyMesh::combine
-        (
-            allCells.size(),
-            mesh0.nCells(),
-            from1ToAllCells
-        ),
-        from0ToAllPatches,
-        from1ToAllPatches
-    );
-
-
-
-    // Now we have extracted all information from all meshes.
-    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
-    // Construct mesh.
-
-    {
-        // Construct owner, neighbour
-        labelList allOwn(allFaces.size(), -1);
-        labelList allNei(allFaces.size(), -1);
-
-        boolList markedFaces(allFaces.size(), false);
-
-        forAll(allCells, cellI)
-        {
-            // get reference to face labels for current cell
-            const cell& cellfaces = allCells[cellI];
-
-            forAll(cellfaces, i)
-            {
-                label faceI = cellfaces[i];
-
-                if (allOwn[faceI] == -1)
-                {
-                    allOwn[faceI] = cellI;
-                }
-                else if (allNei[faceI] != -1)
-                {
-                    FatalErrorIn("polyMeshAdder::addWithoutPatches")
-                        << "Problem faceI:" << faceI << abort(FatalError);
-                }
-                else
-                {
-                    allNei[faceI] = cellI;
-                }
-            }
-        }
-
-        label unUsedFace = findIndex(allOwn, -1);
-        if (unUsedFace != -1)
-        {
-            FatalErrorIn("polyMeshAdder::addWithoutPatches")
-                << "Found faceI:" << unUsedFace
-                << " which is not used by any cell."
-                << nl << "This is not supported" << abort(FatalError);
-        }
-
-
-        // Construct dummy patch info so nInternalFaces and nFaces is correct
-        // when passed into polyMesh::reset.
-        label nNewInternalFaces = allPatches[0]->start();
-
-        labelList patchStarts(mesh0.boundaryMesh().size(), nNewInternalFaces);
-        labelList patchSizes(mesh0.boundaryMesh().size(), 0);
-        patchSizes[patchSizes.size()-1] = allFaces.size() - nNewInternalFaces;
-
-        mesh0.resetPrimitives
-        (
-            allFaces.size(),
-            allPoints,
-            allFaces,
-            allOwn,
-            allNei,
-            patchSizes,
-            patchStarts,
-            false               // boundary is not valid
-        );
-    }
-
-    // Add zones to new mesh.
-    addZones
-    (
-        pointZoneNames,
-        pzPoints,
-
-        faceZoneNames,
-        fzFaces,
-        fzFlips,
-
-        cellZoneNames,
-        czCells,
-        mesh0
-    );
-
-    return allPatches;
-}
-
-
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-// Construct null
-Foam::polyMeshAdder::polyMeshAdder()
-{}
-
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -1646,26 +1377,30 @@ Foam::autoPtr<Foam::polyMesh> Foam::polyMeshAdder::add
     const IOobject& io,
     const polyMesh& mesh0,
     const polyMesh& mesh1,
-    const faceCoupleInfo& coupleInfo
+    const faceCoupleInfo& coupleInfo,
+    autoPtr<mapAddedPolyMesh>& mapPtr
 )
 {
     const polyBoundaryMesh& patches0 = mesh0.boundaryMesh();
     const polyBoundaryMesh& patches1 = mesh1.boundaryMesh();
 
 
-    allPatchNames_.setSize
-    (
-        mesh0.boundaryMesh().size()
-      + mesh1.boundaryMesh().size()
-    );
-    allPatchTypes_.setSize(allPatchNames_.size());
-
+    DynamicList<word> allPatchNames(patches0.size() + patches1.size());
+    DynamicList<word> allPatchTypes(allPatchNames.size());
 
     // Patch maps
     labelList from1ToAllPatches(patches1.size());
-    labelList fromAllTo1Patches(allPatchNames_.size(), -1);
+    labelList fromAllTo1Patches(allPatchNames.size(), -1);
 
-    mergePatchNames(patches0, patches1, from1ToAllPatches, fromAllTo1Patches);
+    mergePatchNames
+    (
+        patches0,
+        patches1,
+        allPatchNames,
+        allPatchTypes,
+        from1ToAllPatches,
+        fromAllTo1Patches
+    );
 
 
     // New points
@@ -1677,16 +1412,19 @@ Foam::autoPtr<Foam::polyMesh> Foam::polyMeshAdder::add
 
     // New faces
     faceList allFaces;
+    label nInternalFaces;
+
+    // New cells
+    labelList allOwner;
+    labelList allNeighbour;
+    label nCells;
 
     // Sizes per patch
-    labelList nFaces(allPatchNames_.size(), 0);
+    labelList nFaces(allPatchNames.size(), 0);
 
     // Maps
     labelList from0ToAllFaces(mesh0.nFaces(), -1);
     labelList from1ToAllFaces(mesh1.nFaces(), -1);
-
-    // New cells
-    cellList allCells;
 
     // Map
     labelList from1ToAllCells(mesh1.nCells(), -1);
@@ -1697,6 +1435,7 @@ Foam::autoPtr<Foam::polyMesh> Foam::polyMeshAdder::add
         mesh1,
         coupleInfo,
 
+        allPatchNames.size(),
         fromAllTo1Patches,
         from1ToAllPatches,
 
@@ -1705,11 +1444,14 @@ Foam::autoPtr<Foam::polyMesh> Foam::polyMeshAdder::add
         from1ToAllPoints,
 
         allFaces,
+        allOwner,
+        allNeighbour,
+        nInternalFaces,
+        nFaces,
+        nCells,
+
         from0ToAllFaces,
         from1ToAllFaces,
-        nFaces,
-
-        allCells,
         from1ToAllCells
     );
 
@@ -1763,7 +1505,8 @@ Foam::autoPtr<Foam::polyMesh> Foam::polyMeshAdder::add
         (
             mesh0,
             mesh1,
-            mesh0.boundaryMesh(),   // Should be boundaryMesh() on new mesh.
+            patches0,           // Should be boundaryMesh() on new mesh.
+            allPatchNames.size(),
             fromAllTo1Patches,
             mesh0.nInternalFaces()
           + mesh1.nInternalFaces()
@@ -1779,43 +1522,37 @@ Foam::autoPtr<Foam::polyMesh> Foam::polyMeshAdder::add
     // Map information
     // ~~~~~~~~~~~~~~~
 
-    map_ = mapAddedPolyMesh
+    mapPtr.reset
     (
-        mesh0.nPoints(),
-        mesh0.nFaces(),
-        mesh0.nCells(),
-
-        mesh1.nPoints(),
-        mesh1.nFaces(),
-        mesh1.nCells(),
-
-        mapAddedPolyMesh::combine
+        new mapAddedPolyMesh
         (
-            allPoints.size(),
-            from0ToAllPoints,
-            from1ToAllPoints
-        ),
-        mapAddedPolyMesh::combine
-        (
-            allFaces.size(),
-            from0ToAllFaces,
-            from1ToAllFaces
-        ),
-        mapAddedPolyMesh::combine
-        (
-            allCells.size(),
+            mesh0.nPoints(),
+            mesh0.nFaces(),
             mesh0.nCells(),
-            from1ToAllCells
-        ),
-        from0ToAllPatches,
-        from1ToAllPatches
+
+            mesh1.nPoints(),
+            mesh1.nFaces(),
+            mesh1.nCells(),
+
+            from0ToAllPoints,
+            from0ToAllFaces,
+            identity(mesh0.nCells()),
+
+            from1ToAllPoints,
+            from1ToAllFaces,
+            from1ToAllCells,
+
+            from0ToAllPatches,
+            from1ToAllPatches,
+            getPatchSizes(patches0),
+            getPatchStarts(patches0)
+        )
     );
 
 
 
     // Now we have extracted all information from all meshes.
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
 
     // Construct mesh
     autoPtr<polyMesh> tmesh
@@ -1825,7 +1562,8 @@ Foam::autoPtr<Foam::polyMesh> Foam::polyMeshAdder::add
             io,
             allPoints,
             allFaces,
-            allCells
+            allOwner,
+            allNeighbour
         )
     );
     polyMesh& mesh = tmesh();
@@ -1853,26 +1591,306 @@ Foam::autoPtr<Foam::polyMesh> Foam::polyMeshAdder::add
 
 
 // Inplace add mesh1 to mesh0
-void Foam::polyMeshAdder::add
+Foam::autoPtr<Foam::mapAddedPolyMesh> Foam::polyMeshAdder::add
 (
     polyMesh& mesh0,
     const polyMesh& mesh1,
-    const faceCoupleInfo& coupleInfo
+    const faceCoupleInfo& coupleInfo,
+    const bool validBoundary
 )
 {
-    List<polyPatch*> allPatches
+    const polyBoundaryMesh& patches0 = mesh0.boundaryMesh();
+    const polyBoundaryMesh& patches1 = mesh1.boundaryMesh();
+
+    DynamicList<word> allPatchNames(patches0.size() + patches1.size());
+    DynamicList<word> allPatchTypes(allPatchNames.size());
+
+    // Patch maps
+    labelList from1ToAllPatches(patches1.size());
+    labelList fromAllTo1Patches(allPatchNames.size(), -1);
+
+    mergePatchNames
     (
-        addWithoutPatches
+        patches0,
+        patches1,
+        allPatchNames,
+        allPatchTypes,
+        from1ToAllPatches,
+        fromAllTo1Patches
+    );
+
+
+    // New points
+    pointField allPoints;
+
+    // Map from mesh0/1 points to allPoints.
+    labelList from0ToAllPoints(mesh0.nPoints(), -1);
+    labelList from1ToAllPoints(mesh1.nPoints(), -1);
+
+    // New faces
+    faceList allFaces;
+    labelList allOwner;
+    labelList allNeighbour;
+    label nInternalFaces;
+    // Sizes per patch
+    labelList nFaces(allPatchNames.size(), 0);
+    label nCells;
+
+    // Maps
+    labelList from0ToAllFaces(mesh0.nFaces(), -1);
+    labelList from1ToAllFaces(mesh1.nFaces(), -1);
+    // Map
+    labelList from1ToAllCells(mesh1.nCells(), -1);
+
+    mergePrimitives
+    (
+        mesh0,
+        mesh1,
+        coupleInfo,
+
+        allPatchNames.size(),
+        fromAllTo1Patches,
+        from1ToAllPatches,
+
+        allPoints,
+        from0ToAllPoints,
+        from1ToAllPoints,
+
+        allFaces,
+        allOwner,
+        allNeighbour,
+        nInternalFaces,
+        nFaces,
+        nCells,
+
+        from0ToAllFaces,
+        from1ToAllFaces,
+        from1ToAllCells
+    );
+
+
+    // Zones
+    // ~~~~~
+
+    DynamicList<word> pointZoneNames;
+    List<DynamicList<label> > pzPoints;
+
+    DynamicList<word> faceZoneNames;
+    List<DynamicList<label> > fzFaces;
+    List<DynamicList<bool> > fzFlips;
+
+    DynamicList<word> cellZoneNames;
+    List<DynamicList<label> > czCells;
+
+    mergeZones
+    (
+        mesh0,
+        mesh1,
+
+        from0ToAllPoints,
+        from0ToAllFaces,
+
+        from1ToAllPoints,
+        from1ToAllFaces,
+        from1ToAllCells,
+
+        pointZoneNames,
+        pzPoints,
+
+        faceZoneNames,
+        fzFaces,
+        fzFlips,
+
+        cellZoneNames,
+        czCells
+    );
+
+
+    // Patches
+    // ~~~~~~~
+
+
+    // Store mesh0 patch info before modifying patches0.
+    labelList mesh0PatchSizes(getPatchSizes(patches0));
+    labelList mesh0PatchStarts(getPatchStarts(patches0));
+
+    // Map from 0 to all patches (since gets compacted)
+    labelList from0ToAllPatches(patches0.size(), -1);
+
+    // Inplace extend mesh0 patches (note that patches0.size() now also
+    // has changed)
+    polyBoundaryMesh& allPatches = 
+        const_cast<polyBoundaryMesh&>(mesh0.boundaryMesh());
+    allPatches.setSize(allPatchNames.size());
+
+    label startFaceI = nInternalFaces;
+
+    // Copy patches0 with new sizes. First patches always come from
+    // mesh0 and will always be present.
+    label allPatchI = 0;
+
+    forAll(from0ToAllPatches, patch0)
+    {
+        // Originates from mesh0. Clone with new size & filter out empty
+        // patch.
+
+        if (nFaces[patch0] == 0 && isA<processorPolyPatch>(allPatches[patch0]))
+        {
+            Pout<< "Removing zero sized mesh0 patch " << allPatchNames[patch0]
+                << endl;
+
+            from0ToAllPatches[patch0] = -1;
+            // Check if patch was also in mesh1 and update its addressing if so.
+            if (fromAllTo1Patches[patch0] != -1)
+            {
+                from1ToAllPatches[fromAllTo1Patches[patch0]] = -1;
+            }
+        }
+        else
+        {
+            // Clone.
+            allPatches.set
+            (
+                allPatchI,
+                allPatches[patch0].clone
+                (
+                    allPatches,
+                    allPatchI,
+                    nFaces[patch0],
+                    startFaceI
+                )
+            );
+
+            // Record new index in allPatches
+            from0ToAllPatches[patch0] = allPatchI;
+
+            // Check if patch was also in mesh1 and update its addressing if so.
+            if (fromAllTo1Patches[patch0] != -1)
+            {
+                from1ToAllPatches[fromAllTo1Patches[patch0]] = allPatchI;
+            }
+
+            startFaceI += nFaces[patch0];
+
+            allPatchI++;
+        }
+    }
+
+    // Copy unique patches of mesh1.
+    forAll(from1ToAllPatches, patch1)
+    {
+        label uncompactAllPatchI = from1ToAllPatches[patch1];
+
+        if (uncompactAllPatchI >= from0ToAllPatches.size())
+        {
+            // Patch has not been merged with any mesh0 patch.
+
+            if
+            (
+                nFaces[uncompactAllPatchI] == 0
+             && isA<processorPolyPatch>(patches1[patch1])
+            )
+            {
+                Pout<< "Removing zero sized mesh1 patch "
+                    << allPatchNames[uncompactAllPatchI] << endl;
+
+                from1ToAllPatches[patch1] = -1;
+            }
+            else
+            {
+                // Clone.
+                allPatches.set
+                (
+                    allPatchI,
+                    patches1[patch1].clone
+                    (
+                        allPatches,
+                        allPatchI,
+                        nFaces[uncompactAllPatchI],
+                        startFaceI
+                    )
+                );
+
+                // Record new index in allPatches
+                from1ToAllPatches[patch1] = allPatchI;
+
+                startFaceI += nFaces[uncompactAllPatchI];
+
+                allPatchI++;
+            }
+        }
+    }
+
+    allPatches.setSize(allPatchI);
+
+
+    // Construct map information before changing mesh0 primitives
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    autoPtr<mapAddedPolyMesh> mapPtr
+    (
+        new mapAddedPolyMesh
         (
-            mesh0,
-            mesh1,
-            coupleInfo
+            mesh0.nPoints(),
+            mesh0.nFaces(),
+            mesh0.nCells(),
+
+            mesh1.nPoints(),
+            mesh1.nFaces(),
+            mesh1.nCells(),
+
+            from0ToAllPoints,
+            from0ToAllFaces,
+            identity(mesh0.nCells()),
+
+            from1ToAllPoints,
+            from1ToAllFaces,
+            from1ToAllCells,
+
+            from0ToAllPatches,
+            from1ToAllPatches,
+
+            mesh0PatchSizes,
+            mesh0PatchStarts
         )
     );
 
-    // Add patches to new mesh.
-    mesh0.removeBoundary();
-    mesh0.addPatches(allPatches);
+
+
+    // Now we have extracted all information from all meshes.
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    labelList patchSizes(getPatchSizes(allPatches));
+    labelList patchStarts(getPatchStarts(allPatches));
+
+    mesh0.resetPrimitives
+    (
+        allFaces.size(),
+        allPoints,
+        allFaces,
+        allOwner,
+        allNeighbour,
+        patchSizes,     // size
+        patchStarts,    // patchstarts
+        validBoundary   // boundary valid?
+    );
+
+    // Add zones to new mesh.
+    addZones
+    (
+        pointZoneNames,
+        pzPoints,
+
+        faceZoneNames,
+        fzFaces,
+        fzFlips,
+
+        cellZoneNames,
+        czCells,
+        mesh0
+    );
+
+    return mapPtr;
 }
 
 

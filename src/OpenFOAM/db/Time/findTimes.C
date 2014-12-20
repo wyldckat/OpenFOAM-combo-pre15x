@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -53,11 +53,19 @@ instantList Time::findTimes(const fileName& directory)
 
     // Initialise instant list
     instantList Times(dirEntries.size() + 1);
-    Times[0].value() = 0;
-    Times[0].name() = "constant";
+    label nTimes = 0;
 
-    // Temporary variables and counters
-    label nTimes = 1;
+    // Check for "constant"
+    forAll(dirEntries, i)
+    {
+        if (dirEntries[i] == "constant")
+        {
+            Times[nTimes].value() = 0;
+            Times[nTimes].name() = dirEntries[i];
+            nTimes++;
+            break;
+        }
+    }
 
     // Read and parse all the entries in the directory
     forAll(dirEntries, i)

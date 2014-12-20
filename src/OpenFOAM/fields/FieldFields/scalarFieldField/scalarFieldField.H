@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,6 +39,9 @@ SourceFiles
 #include "FieldField.H"
 #include "scalar.H"
 
+#define TEMPLATE template<template<class> class Field>
+#include "FieldFieldFunctionsM.H"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -46,6 +49,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+template<template<class> class Field>
 void stabilise
 (
     FieldField<Field, scalar>& Res,
@@ -53,195 +57,84 @@ void stabilise
     const scalar s
 );
 
+template<template<class> class Field>
 tmp<FieldField<Field, scalar> > stabilise
 (
     const FieldField<Field, scalar>&,
     const scalar s
 );
 
+template<template<class> class Field>
 tmp<FieldField<Field, scalar> > stabilise
 (
     const tmp<FieldField<Field, scalar> >&,
     const scalar s
-);
-
-
-template<template<class> class Field>
-void divide
-(
-    FieldField<Field, scalar>&,
-    const scalar,
-    const FieldField<Field, scalar>&
-);
-
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > operator/
-(
-    const scalar,
-    const FieldField<Field, scalar>&
-);
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > operator/
-(
-    const scalar,
-    const tmp<FieldField<Field, scalar> >&
 );
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<template<class> class Field>
-void pow
-(
-    FieldField<Field, scalar>&,
-    const FieldField<Field, scalar>&,
-    const FieldField<Field, scalar>&
-);
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, +, add)
+BINARY_TYPE_OPERATOR(scalar, scalar, scalar, -, subtract)
 
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const FieldField<Field, scalar>&,
-    const FieldField<Field, scalar>&
-);
+BINARY_OPERATOR(scalar, scalar, scalar, *, multiply)
+BINARY_OPERATOR(scalar, scalar, scalar, /, divide)
 
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const tmp<FieldField<Field, scalar> >&,
-    const FieldField<Field, scalar>&
-);
+BINARY_TYPE_OPERATOR_SF(scalar, scalar, scalar, /, divide)
 
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const FieldField<Field, scalar>&,
-    const tmp<FieldField<Field, scalar> >&
-);
+BINARY_FUNCTION(scalar, scalar, scalar, pow)
+BINARY_TYPE_FUNCTION(scalar, scalar, scalar, pow)
 
-tmp<FieldField<Field, scalar> > pow
-(
-    const tmp<FieldField<Field, scalar> >&,
-    const tmp<FieldField<Field, scalar> >&
-);
+BINARY_FUNCTION(scalar, scalar, scalar, atan2)
+BINARY_TYPE_FUNCTION(scalar, scalar, scalar, atan2)
 
 
-template<template<class> class Field>
-void pow
-(
-    FieldField<Field, scalar>&,
-    const FieldField<Field, scalar>&,
-    const scalar&
-);
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const FieldField<Field, scalar>&,
-    const scalar&
-);
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const tmp<FieldField<Field, scalar> >&,
-    const scalar&
-);
-
-
-template<template<class> class Field>
-void pow
-(
-    FieldField<Field, scalar>&,
-    const scalar&,
-    const FieldField<Field, scalar>&
-);
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const scalar&,
-    const FieldField<Field, scalar>&
-);
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > pow
-(
-    const scalar&,
-    const tmp<FieldField<Field, scalar> >&
-);
+UNARY_FUNCTION(scalar, scalar, pow3)
+UNARY_FUNCTION(scalar, scalar, pow4)
+UNARY_FUNCTION(scalar, scalar, sqrt)
+UNARY_FUNCTION(scalar, scalar, sign)
+UNARY_FUNCTION(scalar, scalar, pos)
+UNARY_FUNCTION(scalar, scalar, neg)
+UNARY_FUNCTION(scalar, scalar, exp)
+UNARY_FUNCTION(scalar, scalar, log)
+UNARY_FUNCTION(scalar, scalar, log10)
+UNARY_FUNCTION(scalar, scalar, sin)
+UNARY_FUNCTION(scalar, scalar, cos)
+UNARY_FUNCTION(scalar, scalar, tan)
+UNARY_FUNCTION(scalar, scalar, asin)
+UNARY_FUNCTION(scalar, scalar, acos)
+UNARY_FUNCTION(scalar, scalar, atan)
+UNARY_FUNCTION(scalar, scalar, sinh)
+UNARY_FUNCTION(scalar, scalar, cosh)
+UNARY_FUNCTION(scalar, scalar, tanh)
+UNARY_FUNCTION(scalar, scalar, asinh)
+UNARY_FUNCTION(scalar, scalar, acosh)
+UNARY_FUNCTION(scalar, scalar, atanh)
+UNARY_FUNCTION(scalar, scalar, erf)
+UNARY_FUNCTION(scalar, scalar, erfc)
+UNARY_FUNCTION(scalar, scalar, lgamma)
+UNARY_FUNCTION(scalar, scalar, j0)
+UNARY_FUNCTION(scalar, scalar, j1)
+UNARY_FUNCTION(scalar, scalar, y0)
+UNARY_FUNCTION(scalar, scalar, y1)
 
 
-#define transFunc(func)                                                        \
-template<template<class> class Field>                                          \
-void func(FieldField<Field, scalar>& Res, const FieldField<Field, scalar>& sf);\
-                                                                               \
-template<template<class> class Field>                                          \
-tmp<FieldField<Field, scalar> > func(const FieldField<Field, scalar>&);        \
-                                                                               \
-template<template<class> class Field>                                          \
-tmp<FieldField<Field, scalar> > func(const tmp<FieldField<Field, scalar> >&);
+#define BesselFunc(func)                                                      \
+void func                                                                     \
+(                                                                             \
+    FieldField<Field, scalar>& Res,                                           \
+    const int n,                                                              \
+    const FieldField<Field, scalar>& sf                                       \
+);                                                                            \
+tmp<scalarField> func(const int n, const FieldField<Field, scalar>&);         \
+tmp<scalarField> func(const int n, const tmp<FieldField<Field, scalar> >&);
 
-transFunc(pow3)
-transFunc(pow4)
-transFunc(sqrt)
-transFunc(sign)
-transFunc(pos)
-transFunc(neg)
-transFunc(exp)
-transFunc(log)
-transFunc(log10)
-transFunc(sin)
-transFunc(cos)
-transFunc(tan)
-transFunc(asin)
-transFunc(acos)
-transFunc(atan)
-transFunc(sinh)
-transFunc(cosh)
-transFunc(tanh)
-transFunc(asinh)
-transFunc(acosh)
-transFunc(atanh)
-transFunc(erf)
-transFunc(erfc)
-transFunc(lgamma)
-transFunc(j0)
-transFunc(j1)
-transFunc(y0)
-transFunc(y1)
+BesselFunc(jn)
+BesselFunc(yn)
 
-#undef transFunc
-
-
-#define transFunc(func)                                                        \
-template<template<class> class Field>                                          \
-void func                                                                      \
-(                                                                              \
-    FieldField<Field, scalar>& Res,                                            \
-    const int n,                                                               \
-    const FieldField<Field, scalar>& sf);                                      \
-                                                                               \
-template<template<class> class Field>                                          \
-tmp<FieldField<Field, scalar> > func                                           \
-(                                                                              \
-    const int n,                                                               \
-    const FieldField<Field, scalar>&                                           \
-);                                                                             \
-                                                                               \
-template<template<class> class Field>                                          \
-tmp<FieldField<Field, scalar> > func                                           \
-(                                                                              \
-    const int n,                                                               \
-    const tmp<FieldField<Field, scalar> >&                                     \
-);
-
-transFunc(jn)
-transFunc(yn)
-
-#undef transFunc
+#undef BesselFunc
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -249,6 +142,8 @@ transFunc(yn)
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 #ifdef NoRepository
 #   include "scalarFieldField.C"

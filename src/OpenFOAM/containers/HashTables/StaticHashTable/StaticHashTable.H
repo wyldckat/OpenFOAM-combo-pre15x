@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,8 +27,8 @@ Class
 
 Description
     STL conforming hash table. Uses straight lists as underlying type.
-    Is slower to insert but should be more memory efficient and faster to
-    access.
+    Is slower to insert than the standard HashTable but should be more
+    memory efficient and faster to access.
     Explicitly does not have default size.
 
 SourceFiles
@@ -136,10 +136,10 @@ public:
     // Constructors
 
         //- Construct given initial table size
-        StaticHashTable(const label size);
+        StaticHashTable(const label size = 100);
 
         //- Construct from Istream
-        StaticHashTable(Istream&, const label size);
+        StaticHashTable(Istream&, const label size = 100);
 
         //- Construct as copy
         StaticHashTable(const StaticHashTable<T, Key, Hash>&);

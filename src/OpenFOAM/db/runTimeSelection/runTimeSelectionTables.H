@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,7 +50,7 @@ namespace Foam
     typedef autoPtr<baseType> (*argNames##ConstructorPtr)argList;       \
                                                                         \
     /* Construct from argList function table type */                    \
-        typedef HashTable<argNames##ConstructorPtr, word, string::hash> \
+    typedef HashTable<argNames##ConstructorPtr, word, string::hash>     \
         argNames##ConstructorTable;                                     \
                                                                         \
     /* Construct from argList function pointer table pointer */         \
@@ -74,10 +74,18 @@ namespace Foam
             argNames##ConstructorTablePtr_                              \
                 ->insert(baseType##Type::typeName, New);                \
         }                                                               \
+                                                                        \
+        ~add##argNames##ConstructorToTable()                            \
+        {                                                               \
+            destroy##argNames##ConstructorTables();                     \
+        }                                                               \
     };                                                                  \
                                                                         \
     /* Table Constructor called from the table add function */          \
-    static void construct##argNames##ConstructorTables()
+    static void construct##argNames##ConstructorTables();               \
+                                                                        \
+    /* Table destructor called from the table add function destructor */\
+    static void destroy##argNames##ConstructorTables()
 
 
 #define defineRunTimeSelectionTableConstructor(baseType,argNames)       \
@@ -96,6 +104,18 @@ namespace Foam
         }                                                               \
     }
 
+#define defineRunTimeSelectionTableDestructor(baseType,argNames)        \
+                                                                        \
+    /* Table destructor called from the table add function destructor */\
+    void baseType::destroy##argNames##ConstructorTables()               \
+    {                                                                   \
+        if (baseType::argNames##ConstructorTablePtr_)                   \
+        {                                                               \
+            delete baseType::argNames##ConstructorTablePtr_;            \
+            baseType::argNames##ConstructorTablePtr_ = NULL;            \
+        }                                                               \
+    }
+
 #define defineRunTimeSelectionTablePtr(baseType,argNames)               \
                                                                         \
     /* Define the constructor function table */                         \
@@ -111,14 +131,17 @@ namespace Foam
 #define defineRunTimeSelectionTable(baseType,argNames)                  \
                                                                         \
     defineRunTimeSelectionTablePtr(baseType,argNames);                  \
-    defineRunTimeSelectionTableConstructor(baseType,argNames)
+    defineRunTimeSelectionTableConstructor(baseType,argNames)           \
+    defineRunTimeSelectionTableDestructor(baseType,argNames)
 
 #define defineTemplateRunTimeSelectionTable(baseType,argNames)          \
                                                                         \
     template<>                                                          \
     defineRunTimeSelectionTablePtr(baseType,argNames);                  \
     template<>                                                          \
-    defineRunTimeSelectionTableConstructor(baseType,argNames)
+    defineRunTimeSelectionTableConstructor(baseType,argNames)           \
+    template<>                                                          \
+    defineRunTimeSelectionTableDestructor(baseType,argNames)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

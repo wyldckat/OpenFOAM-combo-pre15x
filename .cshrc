@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -51,14 +51,8 @@ setenv WM_DIR $WM_PROJECT_DIR/wmake
 setenv WM_LINK_LANGUAGE c++
 setenv WM_OPTIONS $WM_ARCH$WM_COMPILER$WM_PRECISION_OPTION$WM_COMPILE_OPTION
 
-set SHELL_VAR=$SHELL
-setenv WM_SHELL $SHELL_VAR:t
+setenv WM_SHELL bash
 set path=($WM_DIR $path)
-
-#setenv WM_DECOMP_INC -DCELL_DECOMP
-#setenv WM_DECOMP_LIBS -lcellDecompFiniteElement
-setenv WM_DECOMP_INC -DFACE_DECOMP
-setenv WM_DECOMP_LIBS -lfaceDecompFiniteElement
 
 setenv FOAM_DOT_DIR .$WM_PROJECT-$WM_PROJECT_VERSION
 
@@ -99,7 +93,7 @@ if ($WM_COMPILER == "Gcc" || $machineTest == "Linux" && $?WM_COMPILER) then
 endif
 
 if ($WM_COMPILER == "Gcc4" ) then
-    setenv WM_COMPILER_DIR $WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.1.0$WM_COMPILER_ARCH
+    setenv WM_COMPILER_DIR $WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.1.2$WM_COMPILER_ARCH
     set WM_COMPILER_BIN="$WM_COMPILER_DIR/bin $WM_COMPILER_DIR/../gdb-6.4/bin"
     set WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 endif
@@ -163,7 +157,7 @@ setenv CLASSPATH .
 
 # MICO
 # ~~~~
-setenv MICO_VERSION 2.3.11
+setenv MICO_VERSION 2.3.12
 setenv MICO_PATH $FOAM_SRC/mico-$MICO_VERSION
 setenv MICO_ARCH_PATH $MICO_PATH/platforms/$WM_OPTIONS
 set path=($MICO_ARCH_PATH/bin $path)
@@ -180,7 +174,30 @@ endif
 
 # Communications library
 # ~~~~~~~~~~~~~~~~~~~~~~
-if ($WM_MPLIB == MPICH) then
+
+if ($WM_MPLIB == LAM) then
+
+    setenv LAM_VERSION 7.1.2
+    setenv LAMHOME $FOAM_SRC/lam-$LAM_VERSION
+    setenv LAM_ARCH_PATH $LAMHOME/platforms/$WM_OPTIONS
+
+    AddLib $LAM_ARCH_PATH/lib
+    AddPath $LAM_ARCH_PATH/bin
+
+    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/lam-$LAM_VERSION
+
+else if ($WM_MPLIB == OPENMPI) then
+
+    setenv OPENMPI_VERSION 1.2b3
+    setenv OPENMPI_HOME $FOAM_SRC/openmpi-$OPENMPI_VERSION
+    setenv OPENMPI_ARCH_PATH $OPENMPI_HOME/platforms/$WM_OPTIONS
+
+    AddLib $OPENMPI_ARCH_PATH/lib
+    AddPath $OPENMPI_ARCH_PATH/bin
+
+    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/openmpi-$OPENMPI_VERSION
+
+else if ($WM_MPLIB == MPICH) then
 
     setenv MPICH_VERSION 1.2.4
     setenv MPICH_PATH $FOAM_SRC/mpich-$MPICH_VERSION
@@ -192,27 +209,31 @@ if ($WM_MPLIB == MPICH) then
 
     setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/mpich-$MPICH_VERSION
 
-else if ($WM_MPLIB == LAM) then
+else if ($WM_MPLIB == MPICH-GM) then
 
-    setenv LAM_VERSION 7.1.1
-    setenv LAMHOME $FOAM_SRC/lam-$LAM_VERSION
-    setenv LAM_ARCH_PATH $LAMHOME/platforms/$WM_OPTIONS
+    setenv MPICH_PATH /opt/mpi
+    setenv MPICH_ARCH_PATH $MPICH_PATH
+    setenv MPICH_ROOT $MPICH_ARCH_PATH
+    setenv GM_LIB_PATH /opt/gm/lib64
 
-    AddLib $LAM_ARCH_PATH/lib
-    AddPath $LAM_ARCH_PATH/bin
+    AddLib $MPICH_ARCH_PATH/lib
+    AddLib $GM_LIB_PATH
+    AddPath $MPICH_ARCH_PATH/bin
 
-    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/lam-$LAM_VERSION
+    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/mpich-gm
 
-else if ($WM_MPLIB == OPENMPI) then
+else if ($WM_MPLIB == GAMMA) then
 
-    setenv OPENMPI_VERSION 1.0.2a7
-    setenv OPENMPI_HOME $FOAM_SRC/openmpi-$OPENMPI_VERSION
-    setenv OPENMPI_ARCH_PATH $OPENMPI_HOME/platforms/$WM_OPTIONS
+    setenv GAMMA_ARCH_PATH /usr
 
-    AddLib $OPENMPI_ARCH_PATH/lib
-    AddPath $OPENMPI_ARCH_PATH/bin
+    #AddLib $GAMMA_ARCH_PATH/lib
+    #AddPath $GAMMA_ARCH_PATH/bin
 
-    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/openmpi-$OPENMPI_VERSION
+    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/gamma
+
+else if ($WM_MPLIB == MPI) then
+
+    setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/mpi
 
 else
     setenv FOAM_MPI_LIBBIN $FOAM_LIBBIN/dummy

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,30 +61,6 @@ facePointPatch::facePointPatch
     pointPatch(bm),
     polyPatch_(p)
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-triFaceList facePointPatch::faceTriangles
-(
-    const label faceID
-) const
-{
-    const face& f =
-        boundaryMesh().mesh()()
-            .boundaryMesh()[index()].localFaces()[faceID];
-
-    // Create a list of triangles to keep the triangles that
-    // have already been added
-    triFaceList result(f.size() - 2);
-
-    for (label triI = 0; triI < (f.size() - 2); triI++)
-    {
-        result[triI] = triFace(f[0], f[triI + 1], f[triI + 2]);
-    }
-
-    return result;
-}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

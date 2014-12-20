@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -22,10 +22,9 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
 dimensions      [0 2 -2 0 0 0 0];
 
-internalField   uniform 1e-10;
+internalField   uniform 1;
 
 boundaryField
 {
@@ -39,6 +38,11 @@ boundaryField
     {
         type            fixedValue;
         value           uniform 1e-10;
+    }
+
+    frontBack
+    {
+        type            cyclic;
     }
 
     defaultFaces    

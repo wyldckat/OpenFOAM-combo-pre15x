@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -57,43 +57,40 @@ label amgSymSolver::nBottomSweeps_ = 2;
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from lduMatrix
 amgSymSolver::amgSymSolver
 (
     const word& fieldName,
-    scalarField& psi,
     const lduMatrix& matrix,
-    const scalarField& source,
-    const FieldField<Field, scalar>& coupleBouCoeffs,
-    const FieldField<Field, scalar>& coupleIntCoeffs,
-    const lduCoupledInterfacePtrsList& interfaces,
-    const direction cmpt,
+    const FieldField<Field, scalar>& interfaceBouCoeffs,
+    const FieldField<Field, scalar>& interfaceIntCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
     Istream& solverData
 )
 :
     lduMatrix::solver
     (
         fieldName,
-        psi,
         matrix,
-        source,
-        coupleBouCoeffs,
-        coupleIntCoeffs,
+        interfaceBouCoeffs,
+        interfaceIntCoeffs,
         interfaces,
-        cmpt
+        IStringStream("{}")()
     ),
-    tolerance_(readScalar(solverData)),
-    relTol_(readScalar(solverData)),
-    nCellsInTopLevel_(readLabel(solverData)),
+    nCellsInTopLevel_(10),
 
     restrictAddressing_(maxLevels_),
-    addrLevels_(maxLevels_),
+    meshLevels_(maxLevels_),
     matrixLevels_(maxLevels_),
     interfaceLevels_(maxLevels_),
     interfaceCoeffs_(maxLevels_),
     cpu_()
 {
+    solverData >> tolerance_;
+    solverData >> relTol_;
+    solverData >> nCellsInTopLevel_;
+
     // Create coarse levels and calculate agglomeration
+
     label nCreatedLevels = 0;
 
 #   ifdef FULLDEBUG
@@ -108,14 +105,6 @@ amgSymSolver::amgSymSolver
         if (!calcAgglomeration(nCreatedLevels)) break;
 
         makeCoarseMatrix(nCreatedLevels);
-
-#       ifdef FULLDEBUG
-        if (debug >= 2)
-        {
-            Info << addrLevels_[nCreatedLevels].size() << " ";
-        }
-#       endif
-
         nCreatedLevels++;
     }
 
@@ -129,10 +118,22 @@ amgSymSolver::amgSymSolver
 #   endif
 
     restrictAddressing_.setSize(nCreatedLevels);
-    addrLevels_.setSize(nCreatedLevels);
+    meshLevels_.setSize(nCreatedLevels);
     matrixLevels_.setSize(nCreatedLevels);
     interfaceLevels_.setSize(nCreatedLevels);
     interfaceCoeffs_.setSize(nCreatedLevels);
+
+#   ifdef FULLDEBUG
+    if (debug >= 2)
+    {
+        Info<< "Levels ";
+        forAll(meshLevels_, i)
+        {
+            Info<< meshLevels_[i].size() << " ";
+        }
+        Info<< endl;
+    }
+#   endif
 
 #   ifdef FULLDEBUG
     if (debug >= 3)
@@ -151,12 +152,14 @@ amgSymSolver::~amgSymSolver()
     // for consistency of the interface
     forAll (interfaceLevels_, levelI)
     {
-        lduCoupledInterfacePtrsList& curLevel = interfaceLevels_[levelI];
+        lduInterfaceFieldPtrsList& curLevel = interfaceLevels_[levelI];
 
         forAll (curLevel, i)
         {
-            delete curLevel[i];
-            curLevel[i] = reinterpret_cast<lduCoupledInterface*>(NULL);
+            if (curLevel.set(i))
+            {
+                delete curLevel(i);
+            }
         }
     }
 }
@@ -177,7 +180,7 @@ const lduMatrix& amgSymSolver::matrixLevel(const label i) const
 }
 
 
-const lduCoupledInterfacePtrsList& amgSymSolver::interfaceLevel
+const lduInterfaceFieldPtrsList& amgSymSolver::interfaceLevel
 (
     const label i
 ) const
@@ -200,12 +203,23 @@ const FieldField<Field, scalar>& amgSymSolver::interfaceCoeffsLevel
 {
     if (i == 0)
     {
-        return coupleBouCoeffs_;
+        return interfaceBouCoeffs_;
     }
     else
     {
         return interfaceCoeffs_[i - 1];
     }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void amgSymSolver::read(Istream& solverData)
+{
+    word solverName(solverData);
+    solverData >> tolerance_;
+    solverData >> relTol_;
+    solverData >> nCellsInTopLevel_;
 }
 
 

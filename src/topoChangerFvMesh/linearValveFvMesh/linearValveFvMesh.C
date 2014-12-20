@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -143,8 +143,9 @@ void Foam::linearValveFvMesh::addZonesAndModifiers()
     // Add a topology modifier
     Info << "Adding topology modifiers" << endl;
     topoChanger_.setSize(1);
-    topoChanger_.hook
+    topoChanger_.set
     (
+        0,
         new slidingInterface
         (
             "mixerSlider",

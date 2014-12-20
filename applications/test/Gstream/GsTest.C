@@ -10,8 +10,8 @@ int main()
 {
     colour mauve("mauve", 1, 0, 1);
 
-    lineStyle solid("Solid", 2.0, 2.0, (IStringStream&)(const IStringStream&)IStringStream("1(1.0)"));
-    lineStyle broken("Broken", 2.0, 10.0, (IStringStream&)(const IStringStream&)IStringStream("4(1 1 4 1)"));
+    lineStyle solid("Solid", 2.0, 2.0, IStringStream("1(1.0)")());
+    lineStyle broken("Broken", 2.0, 10.0, IStringStream("4(1 1 4 1)")());
 
 
     //Xstream wind

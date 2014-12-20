@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,8 +50,11 @@ class subCycle
 {
     // Private data
 
+        //- Referene to the field being sub-cycled
         GeometricField& gf_;
-        //GeometricField  gf0_;
+
+        //- Copy of the "real" old-time value of the field
+        GeometricField  gf0_;
 
 
     // Private Member Functions
@@ -71,18 +74,25 @@ public:
         subCycle(GeometricField& gf, const label nSubCycles)
         :
             subCycleTime(const_cast<Time&>(gf.time()), nSubCycles),
-            gf_(gf)
-            //, gf0_(gf.oldTime())
-        {
-            gf.oldTime();
-        }
+            gf_(gf),
+            gf0_(gf.oldTime())
+        {}
 
 
     // Destructor
 
         ~subCycle()
         {
-            //gf_.oldTime() = gf0_;
+            // End the subCycleTime which restores the time state
+            endSubCycle();
+
+            // Correct the time index of the field to correspond to the global
+            // time
+            gf_.timeIndex() = gf_.time().timeIndex();
+
+            // Reset the old-time field value
+            gf_.oldTime() = gf0_;
+            gf_.oldTime().timeIndex() = gf_.time().timeIndex();
         }
 };
 

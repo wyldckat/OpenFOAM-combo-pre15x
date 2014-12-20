@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -133,6 +133,7 @@ Op(min, min(x, y))
 Op(scale, scale(x, y))
 Op(and, x && y)
 Op(or, x || y)
+Op(eqEq, x == y)
 
 #undef Op
 

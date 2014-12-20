@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,8 +50,9 @@ class fvMatrix;
 
 typedef fvMatrix<scalar> fvScalarMatrix;
 typedef fvMatrix<vector> fvVectorMatrix;
-typedef fvMatrix<tensor> fvTensorMatrix;
 typedef fvMatrix<sphericalTensor> fvSphericalTensorMatrix;
+typedef fvMatrix<symmTensor> fvSymmTensorMatrix;
+typedef fvMatrix<tensor> fvTensorMatrix;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

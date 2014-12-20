@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -73,8 +73,7 @@ int main(int argc, char *argv[])
         ++iter
     )
     {
-        Info<< "element:" << *iter << endl;
-        myList.remove(&(iter.Foam::DLListBase::iterator::operator*()));
+        Info<< "Removing " << myList.remove(iter) << endl;
     }
 
     myList.append(500.3);
@@ -84,6 +83,32 @@ int main(int argc, char *argv[])
     Info<< nl << "And again using STL const_iterator: " << nl << endl;
 
     const DLList<scalar>& const_myList = myList;
+
+    for
+    (
+        DLList<scalar>::const_iterator iter = const_myList.begin();
+        iter != const_myList.end();
+        ++iter
+    )
+    {
+        Info<< "element:" << *iter << endl;
+    }
+
+    myList.swapUp(myList.DLListBase::first());
+    myList.swapUp(myList.DLListBase::last());
+
+    for
+    (
+        DLList<scalar>::const_iterator iter = const_myList.begin();
+        iter != const_myList.end();
+        ++iter
+    )
+    {
+        Info<< "element:" << *iter << endl;
+    }
+
+    myList.swapDown(myList.DLListBase::first());
+    myList.swapDown(myList.DLListBase::last());
 
     for
     (

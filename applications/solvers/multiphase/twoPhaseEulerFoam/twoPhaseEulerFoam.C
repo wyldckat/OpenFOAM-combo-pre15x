@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,6 +36,9 @@ Description
 #include "wallFvPatch.H"
 #include "Switch.H"
 
+#include "IFstream.H"
+#include "OFstream.H"
+
 #include "dragModel.H"
 #include "phaseModel.H"
 #include "kineticTheoryModel.H"
@@ -51,6 +54,7 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "readEnvironmentalProperties.H"
 #   include "createFields.H"
+#   include "createAverages.H"
 #   include "readPPProperties.H"
 #   include "initContinuityErrs.H"
 #   include "readTimeControls.H"
@@ -95,8 +99,9 @@ int main(int argc, char *argv[])
             kineticTheory.solve();
             nuEffa += kineticTheory.mua()/rhoa;
         }
-
+#       include "calculateAverages.H"
 #       include "write.H"
+#       include "writeNaveragingSteps.H"
 
         Info<< "ExecutionTime = " << runTime.elapsedCpuTime() << " s"
             << "  ClockTime = " << runTime.elapsedClockTime() << " s"

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,20 +41,17 @@ int main(int argc, char *argv[])
 
     wordList ds(debug::debugSwitches().toc());
     sort(ds);
-
-    Info << "debug switches: " << ds << endl;
+    Info<< "debug switches: " << ds << endl;
 
     wordList is(debug::infoSwitches().toc());
     sort(is);
-
-    Info << "info switches: " << is << endl;
+    Info<< "info switches: " << is << endl;
 
     wordList os(debug::optimisationSwitches().toc());
     sort(os);
+    Info<< "optimisation switches: " << os << endl;
 
-    Info << "optimisation switches: " << os << endl;
-
-    Info << "...done" << endl;
+    Info<< "done" << endl;
 
     return 0;
 }

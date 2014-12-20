@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,6 +33,8 @@ Description
 #ifndef GeoMesh_H
 #define GeoMesh_H
 
+#include "label.H"
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
@@ -59,6 +61,7 @@ public:
     // Public typedefs
 
         typedef MESH Mesh;
+        typedef typename MESH::BoundaryMesh BoundaryMesh;
 
 
     // Constructors
@@ -70,18 +73,12 @@ public:
         {}
 
 
-    // Member Functions
+    // Member Operators
 
-        //- Return size
-        label size() const
+        //- Return reference to polyMesh
+        const MESH& operator()() const
         {
-            return size(mesh_);
-        }
-
-        //- Return size
-        static label size(const MESH& mesh)
-        {
-            return mesh.size();
+            return mesh_;
         }
 };
 

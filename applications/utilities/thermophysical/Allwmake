@@ -1,9 +1,0 @@
-#!/bin/sh
-
-set -x
-
-wmake adiabaticFlameT
-wmake mixtureAdiabaticFlameT
-wmake equilibriumFlameT
-wmake equilibriumCO
-wmake chemkinToFoam

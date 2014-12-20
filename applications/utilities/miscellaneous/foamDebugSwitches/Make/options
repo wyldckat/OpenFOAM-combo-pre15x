@@ -1,7 +1,4 @@
-#include "../../../preProcessing/FoamX/C++/FoamXLib/Make/orbOptions"
-
 EXE_LIBS = \
-    -lFoamX -lFoamXServer $(ORB_LIBS) \
     -lGstream -lGL \
     -lLESfilters \
     -lODE \
@@ -16,8 +13,6 @@ EXE_LIBS = \
     -lengine \
     -lerrorEstimation \
     -ldynamicMesh \
-    $(WM_DECOMP_LIBS) \
-    -lfiniteArea \
     -lincompressibleTransportModels \
     -lincompressibleTurbulenceModels \
     -lincompressibleLESmodels \

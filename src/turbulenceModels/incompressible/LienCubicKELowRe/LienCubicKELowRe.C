@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -129,6 +129,8 @@ LienCubicKELowRe::LienCubicKELowRe
     nonlinearStress
     (
         "nonlinearStress",
+        symm
+        (
         // quadratic terms
         pow(k_, 3.0)/sqr(epsilon_)*
         (
@@ -155,17 +157,18 @@ LienCubicKELowRe::LienCubicKELowRe
             C5viscosity,
             dimensionedScalar("0", C5viscosity.dimensions(), 0.0)
         )*gradU
+        )
     )
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-tmp<volTensorField> LienCubicKELowRe::R() const
+tmp<volSymmTensorField> LienCubicKELowRe::R() const
 {
-    return tmp<volTensorField>
+    return tmp<volSymmTensorField>
     (
-        new volTensorField
+        new volSymmTensorField
         (
             IOobject
             (
@@ -175,7 +178,7 @@ tmp<volTensorField> LienCubicKELowRe::R() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            ((2.0/3.0)*I)*k_ - nut_*(gradU + gradU.T()) + nonlinearStress,
+            ((2.0/3.0)*I)*k_ - nut_*twoSymm(gradU) + nonlinearStress,
             k_.boundaryField().types()
         )
     );
@@ -315,7 +318,8 @@ void LienCubicKELowRe::correct()
             dimensionedScalar("0", C5viscosity.dimensions(), 0.0)
         );
 
-    nonlinearStress =
+    nonlinearStress = symm
+    (
         // quadratic terms
         pow(k_, 3.0)/sqr(epsilon_)*
         (
@@ -341,7 +345,8 @@ void LienCubicKELowRe::correct()
         (
             C5viscosity,
             dimensionedScalar("0", C5viscosity.dimensions(), 0.0)
-        )*gradU;
+        )*gradU
+    );
 }
 
 

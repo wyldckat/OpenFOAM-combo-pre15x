@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,44 +26,19 @@ Class
     commSchedule
 
 Description
-    Given the processor topology works out a non-blocking communication
-    schedule. Instead of doing all sends first and having a lot of buffering
-    this works out how to have each processor do a sequence of sends and
-    receives such that there can never be the case that two processors are
-    waiting for each other to send something.
+    Given a set of processors that need to talk to one another determines
+    the order in which they should do so to
+    - have maximum overlap
+    - allow blocking communication without deadlock
+    Does a very simple scheduling which assumes same time for all operations.
 
-    *this[procI] is for processor procI a list with for every iteration
-    the neighbour it has to communicate with. It does not prespecify which
-    half should start sending or receiving. You might want to group the two
-    close together or separate them in time as long as one is sending and the
-    other is receiving.
+    After construction:
+    - schedule() gives the order in which the input communication should happen
+    - procSchedule()[procI] gives per procI  ,,    ,,
 
-
-    A typical use with matched send and receives is something like:
-
-    const labelList& mySchedule = operator[](Pstream::myProcNo()];
-
-    forAll(mySchedule, iterI)
-    {
-        label nb = mySchedule[iterI];
-
-        if (nb < Pstream::myProcNo())
-        {
-            // Send to neighbour
-            ..
-            // Receive from neighbour
-            ..
-        }
-        else
-        {
-            // Receive from neighbour
-            ..
-            // Send to neighbour
-            ..
-        }
-    }
-    
-
+    Does not care whether 'talking' is first send, second receive or maybe
+    full swap. This is all responsability of caller. See ProcessorTopology
+    class for use in scheduling processor boundary swaps.
 
 SourceFiles
     commSchedule.C
@@ -73,8 +48,9 @@ SourceFiles
 #ifndef commSchedule_H
 #define commSchedule_H
 
+#include "DynamicList.H"
+#include "labelPair.H"
 #include "labelList.H"
-#include "boolList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -86,66 +62,53 @@ namespace Foam
 \*---------------------------------------------------------------------------*/
 
 class commSchedule
-:
-    public labelListList
 {
     // Private data
 
-        //- Schedule per face. Gives for each face whether communication
-        //  takes place. Is -1 or the iteration in which communication should
-        //  take place. *this is the same information but sorted per iteration.
-        labelList faceSchedule_;
+        //- Order in which input communication has been scheduled
+        labelList schedule_;
 
+        //- Per processor the order in which communication has been scheduled
+        labelListList procSchedule_;
 
     // Private Member Functions
 
-        //- Count number of 'busy' neighbouring processors
-        label nBusyNbs
-        (
-            const labelListList& cellFaces,
-            const labelListList& faceCells,
-            const boolList& busy,
-            const label cellI
-        ) const;
-
-        //- Find faces which are not yet used in a schedule and
-        //  assign them to the current schedule such that a cell is only
-        //  used once. Returns true if any faces have been 'scheduled', false
-        //  otherwise
-        bool scheduleIteration
-        (
-            const labelListList& cellFaces,
-            const labelListList& faceCells,
-            const label commIter
-        );
-
-        //- Schedule all. Fill faceSchedule_ and *this
-        void scheduleAll
-        (
-            const labelListList& cellFaces,
-            const labelListList& faceCells
-        );
+        //- Count the number of outstanding communications for a single
+        //  processor
+        label outstandingComms(const labelList&, DynamicList<label>&) const;
 
 
 public:
 
+    ClassName("commSchedule");
+
     // Constructors
 
-        //- Construct from addressing
-        commSchedule
-        (
-            const labelListList& cellFaces,
-            const labelListList& faceCells
-        );
+        //- Construct from wanted communication. Wanted communication is between
+        //  two processors. Can be a one-way communication or
+        //  two-way communication, that is up to the caller. This class just
+        //  determines an order for it such that any processor is only talking
+        //  to one other at a time. After construction:
+        //  - schedule is the order in which comms is done.
+        //  - procSchedule[procI] is for procI the order in which comms is done.
+        commSchedule(const label nProcs, const List<labelPair>& comms);
 
 
     // Member Functions
 
-        //- Schedule on a face by face basis.
-        const labelList& faceSchedule() const
+        //- order in which comms is scheduled
+        const labelList& schedule() const
         {
-            return faceSchedule_;
+            return schedule_;
         }
+
+        //- Per processor the order in which communication has been scheduled
+        const labelListList& procSchedule() const
+        {
+            return procSchedule_;
+        }
+
+
 };
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,8 @@ Class
     cartesianCS
 
 Description
-    Cartesian coordinate system.
+    General coordinate transformations
+    from arbitary coordinate systems to the global Cartesian system.
 
 SourceFiles
     cartesianCS.C
@@ -52,27 +53,10 @@ class cartesianCS
 :
     public coordinateSystem
 {
-    // Private data
-
-        //- Local-to-global transformation tensor
-        tensor R_;
-
-        //- Global-to-local transformation tensor
-        tensor Rtrans_;
-
-        static const scalar nonOrthogonalError;
-
-
-    // Private member functions
-
-        //- Calculate transformation tensors
-        void calcTransformations();
-
-
 public:
 
     //- Runtime type information
-    TypeName("Cartesian");
+    TypeName("cartesian");
 
 
     // Constructors
@@ -109,11 +93,13 @@ public:
         //- Convert from local coordinate system to the global Cartesian system
         virtual vector toGlobal(const vector& localV) const;
 
+        //- Convert from local coordinate system to the global Cartesian system
         virtual tmp<vectorField> toGlobal(const vectorField& localV) const;
 
         //- Convert from global Cartesian system to the local coordinate system 
         virtual vector toLocal(const vector& globalV) const;
 
+        //- Convert from global Cartesian system to the local coordinate system 
         virtual tmp<vectorField> toLocal(const vectorField& globalV) const;
 };
 

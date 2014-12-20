@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -27,35 +27,44 @@
 #     paraFoam
 #
 # Description
-#     
+#
 #------------------------------------------------------------------------------
+Script=${0##*/}
+rootDir=${1:-.}                # treat missing root as "."
+caseName=${2:-.}               # treat missing case as "."
+caseDir="$rootDir/$caseName"
 
-if [  $# != 2 ]; then
-    echo $0: 'Wrong number of arguments'
-	echo 'Usage: paraFoam <root> <case>'
+usage() {
+    while [ "$#" -ge 1 ]; do echo "$1"; shift; done
+    cat<<USAGE
+
+usage: $Script <root> <case>
+       $Script <root>
+       $Script
+
+USAGE
     exit 1
-fi
+}
 
-ROOT=$1
-if [ "$ROOT" = "." -o "$ROOT" = "./" ] ; then
-    ROOT=`pwd`
-fi
+cd "$caseDir" 2>/dev/null || usage "directory does not exist:  '$caseDir'"
 
-CASE=$2
-CASE_DIR=$ROOT/$CASE
+for check in system/controlDict system/fvSchemes system/fvSolution
+do
+    [ -s $check ] || usage "file does not exist:  '$check'"
+done
 
-if [ ! -d $CASE_DIR ]; then
-    echo $0: case directory $CASE_DIR does not exist, exiting
-    exit 0
-fi
+# get a sensible caseName (avoid '.' as a case name)
+caseName=${PWD##*/}
 
-cd $CASE_DIR
-sed -e s%ROOT%$ROOT%g -e s%CASE%$CASE%g $WM_PROJECT_DIR/bin/paraFoam.pvs \
-    > paraFoam.pvs
-touch ${CASE}.foam
+# since we are now in the cwd, ROOT/CASE is '.'
+# just changing the $WM_PROJECT_DIR/bin/paraFoam.pvs template would work too
+# then we can remove the first sed expression
 
+sed -e s%ROOT/CASE%.%g \
+    -e s%CASE%$caseName%g $WM_PROJECT_DIR/bin/paraFoam.pvs > paraFoam.pvs
+
+touch ${caseName}.foam
 paraview paraFoam.pvs
-
-rm paraFoam.pvs ${CASE}.foam
+rm paraFoam.pvs ${caseName}.foam 2>/dev/null
 
 #------------------------------------------------------------------------------

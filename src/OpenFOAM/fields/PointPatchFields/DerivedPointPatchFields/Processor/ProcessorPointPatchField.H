@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,38 +55,18 @@ template
 >
 class ProcessorPointPatchField
 :
-    public CoupledPointPatchField<PatchField, PointPatch, Type>
+    public CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename ProcessorPointPatch::CoupledPointPatch,
+        Type
+    >
 {
     // Private data
 
         //- Local reference to processor patch
         const ProcessorPointPatch& procPatch_;
-
-
-    // Private member functions
-
-        //- Raw field send function
-        template<class Type2>
-        void sendPointField(const tmp<Field<Type2> >&) const;
-
-        template<class Type2>
-        void sendEdgeField(const tmp<Field<Type2> >&) const;
-
-
-        //- Raw field receive function
-        template<class Type2>
-        tmp<Field<Type2> > receivePointField() const;
-
-        template<class Type2>
-        tmp<Field<Type2> > receiveEdgeField() const;
-
-        //- Templated add diagonal/source functions
-        template<class Type2>
-        void initAddFieldTempl(const Field<Type2>&) const;
-
-        template<class Type2>
-        void addFieldTempl(Field<Type2>&) const;
-
 
 
 public:
@@ -128,7 +108,7 @@ public:
             return autoPtr<PatchField<Type> >
             (
                 new ProcessorPointPatchField
-                <PatchField, PointPatch, ProcessorPointPatch, Type>
+                    <PatchField, PointPatch, ProcessorPointPatch, Type>
                 (
                     *this
                 )
@@ -149,7 +129,7 @@ public:
             return autoPtr<PatchField<Type> >
             (
                 new ProcessorPointPatchField
-                <PatchField, PointPatch, ProcessorPointPatch, Type>
+                    <PatchField, PointPatch, ProcessorPointPatch, Type>
                 (
                     *this,
                     iF
@@ -167,15 +147,39 @@ public:
 
         // Access
 
-            //- Evaluate the patch field
-            virtual void evaluate()
-            {}
+            //- Return true if running parallel
+            virtual bool coupled() const
+            {
+                if (Pstream::parRun())
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
+            }
 
-            //- Init add field to internal field
-            virtual void initAddField() const;
+            //- Does the patch field perform the transfromation
+            virtual bool doTransform() const
+            {
+                return 
+                   !(
+                        procPatch_.procPolyPatch().parallel()
+                     || pTraits<Type>::rank == 0
+                    );
+            }
 
-            //- Add field to internal field
-            virtual void addField(Field<Type>&) const;
+
+        //- Evaluate the patch field
+        virtual void evaluate()
+        {}
+
+        //- Initialise swap of patch point values
+        virtual void initSwapAdd(Field<Type>&) const;
+
+        //- Complete swap of patch point values and add to local values
+        virtual void swapAdd(Field<Type>&) const;
 };
 
 

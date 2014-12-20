@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -188,26 +186,6 @@ inline scalar parcel::tMom() const
     return tMom_;
 }
 
-inline scalar& parcel::t0()
-{
-    return t0_;
-}
-
-inline scalar parcel::t0() const
-{
-    return t0_;
-}
-
-inline scalar& parcel::tEnd()
-{
-    return tEnd_;
-}
-
-inline scalar parcel::tEnd() const
-{
-    return tEnd_;
-}
-
 inline vector parcel::Urel(const vector& U) const
 {
     return U_ - U;
@@ -222,6 +200,7 @@ inline void parcel::correctNormal
     n_ = position() - d*sym;
     n_ /= mag(n_);
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

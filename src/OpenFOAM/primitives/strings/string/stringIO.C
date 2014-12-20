@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,16 +27,9 @@ License
 #include "string.H"
 #include "IOstreams.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from input
-
-string::string(Istream& is)
+Foam::string::string(Istream& is)
 {
     is >> *this;
 }
@@ -44,7 +37,7 @@ string::string(Istream& is)
 
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
-Istream& operator>>(Istream& is, string& s)
+Foam::Istream& Foam::operator>>(Istream& is, string& s)
 {
     token t(is);
 
@@ -75,7 +68,7 @@ Istream& operator>>(Istream& is, string& s)
 }
 
 
-Ostream& operator<<(Ostream& os, const string& s)
+Foam::Ostream& Foam::operator<<(Ostream& os, const string& s)
 {
     os.write(s);
     os.check("Ostream& operator<<(Ostream&, const string&)");
@@ -83,16 +76,12 @@ Ostream& operator<<(Ostream& os, const string& s)
 }
 
 
-Ostream& operator<<(Ostream& os, const std::string& s)
+Foam::Ostream& Foam::operator<<(Ostream& os, const std::string& s)
 {
     os.write(string(s));
     os.check("Ostream& operator<<(Ostream&, const std::string&)");
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

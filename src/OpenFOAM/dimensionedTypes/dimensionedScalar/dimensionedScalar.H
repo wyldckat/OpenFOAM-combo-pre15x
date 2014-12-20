@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,7 +31,6 @@ Description
 SourceFiles
     dimensionedScalar.C
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef dimensionedScalar_H
@@ -39,6 +38,7 @@ SourceFiles
 
 #include "dimensionedType.H"
 #include "scalar.H"
+#include "dimensionedScalarFwd.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,8 +46,6 @@ namespace Foam
 {
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-typedef dimensioned<scalar> dimensionedScalar;
 
 dimensionedScalar operator+(const dimensionedScalar&, const scalar);
 dimensionedScalar operator+(const scalar, const dimensionedScalar&);
@@ -63,6 +61,9 @@ dimensionedScalar pow3(const dimensionedScalar&);
 dimensionedScalar pow4(const dimensionedScalar&);
 
 dimensionedScalar sqrt(const dimensionedScalar&);
+dimensionedScalar cbrt(const dimensionedScalar&);
+dimensionedScalar hypot(const dimensionedScalar&, const dimensionedScalar&);
+
 dimensionedScalar sign(const dimensionedScalar&);
 dimensionedScalar pos(const dimensionedScalar&);
 dimensionedScalar neg(const dimensionedScalar&);

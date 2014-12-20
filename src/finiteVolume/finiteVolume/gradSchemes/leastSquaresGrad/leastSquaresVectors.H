@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ SourceFiles
 #define leastSquaresVectors_H
 
 #include "MeshObject.H"
+#include "fvMesh.H"
 #include "surfaceFieldsFwd.H"
 #include "labelPair.H"
 
@@ -51,7 +52,7 @@ namespace Foam
 
 class leastSquaresVectors
 :
-    public MeshObject<leastSquaresVectors>
+    public MeshObject<fvMesh, leastSquaresVectors>
 {
     // Private data
 

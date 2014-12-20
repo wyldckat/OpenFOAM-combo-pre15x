@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,32 +60,23 @@ scaleSimilarity::~scaleSimilarity()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-tmp<volTensorField> scaleSimilarity::B() const
+tmp<volSymmTensorField> scaleSimilarity::B() const
 {
-    return
-    (
-        (filter_(U() * U()) - (filter_(U()) * filter_(U())))
-    );
+    return(filter_(sqr(U())) - sqr(filter_(U())));
 }
 
 
 tmp<volScalarField> scaleSimilarity::k() const
 {
-    return
-    (
-        0.5*(filter_(U() & U()) - (filter_(U()) & filter_(U())))
-    );
+    return(0.5*(filter_(magSqr(U())) - magSqr(filter_(U()))));
 }
 
 
 tmp<volScalarField> scaleSimilarity::epsilon() const
 {
-    volTensorField D = symm(fvc::grad(U()));
+    volSymmTensorField D = symm(fvc::grad(U()));
 
-    return
-    (
-        ((filter_(U() * U()) - (filter_(U())*filter_(U()))) && D)
-    );
+    return((filter_(sqr(U())) - sqr(filter_(U()))) && D);
 }
 
 
@@ -102,8 +93,8 @@ tmp<volVectorField> scaleSimilarity::divB() const
         fvc::div
         (
             filter_(U())*filter_(U())
-          + 0.333*I*tr(filter_(U() * U()) - filter_(U())*filter_(U()))
-          - filter_(U() * U()),
+          + 0.333*I*tr(filter_(sqr(U())) - filter_(U())*filter_(U()))
+          - filter_(sqr(U())),
             "div(B)"
         )
     );

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,13 +42,6 @@ SourceFiles
 namespace Foam
 {
 
-// * * * * * * Forward declaration of template friend fuctions * * * * * * * //
-
-template<class T> class IndirectList;
-
-template<class T> Ostream& operator<<(Ostream&, const IndirectList<T>&);
-
-
 /*---------------------------------------------------------------------------*\
                            Class IndirectList Declaration
 \*---------------------------------------------------------------------------*/
@@ -58,7 +51,7 @@ class IndirectList
 {
     // Private data
 
-        const UList<T>& completeList_;
+        UList<T>& completeList_;
         List<label> addressing_;
 
 
@@ -89,14 +82,17 @@ public:
             //- Return the addressed elements as a List
             inline List<T> operator()() const;
 
+            //- Return non-const access to an element
+            inline T& operator[](const label);
+
             //- Return const access to an element
             inline const T& operator[](const label) const;
 
+            //- Assignment from UList of addressed elements
+            inline void operator=(const UList<T>&);
 
-    // Ostream operator
-
-        // Write IndirectList to Ostream.
-        friend Ostream& operator<< <T>(Ostream&, const IndirectList<T>&);
+            //- Assignment of all entries to the given value
+            inline void operator=(const T&);
 };
 
 

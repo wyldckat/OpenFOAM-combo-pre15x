@@ -1,14 +1,11 @@
 {
-    bool momentumPredictorSave = momentumPredictor;
-    momentumPredictor = false;
-#   include "UEqn.H"
-    momentumPredictor = momentumPredictorSave;
+#   include "continuityErrs.H"
 
     wordList pcorrTypes(pd.boundaryField().types());
 
     for (label i=0; i<pd.boundaryField().size(); i++)
     {
-        if(pd.boundaryField()[i].fixesValue())
+        if (pd.boundaryField()[i].fixesValue())
         {
             pcorrTypes[i] = fixedValueFvPatchScalarField::typeName;
         }
@@ -29,7 +26,9 @@
         pcorrTypes
     );
 
-    surfaceScalarField rUAf("(rho|A(U))", fvc::interpolate(1.0/UEqn.A()));
+    dimensionedScalar rUAf("(1|A(U))", dimTime/rho.dimensions(), 1.0);
+
+    adjustPhi(phi, U, pcorr);
 
     for(int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     {
@@ -46,7 +45,6 @@
             phi -= pcorrEqn.flux();
         }
     }
+
+#   include "continuityErrs.H"
 }
-
-#include "continuityErrs.H"
-

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,7 +44,6 @@ SourceFiles
 
 #include "fvPatch.H"
 #include "primitiveFields.H"
-#include "lduCoupledInterface.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -72,7 +71,6 @@ Ostream& operator<<(Ostream&, const fvPatchField<Type>&);
 template<class Type>
 class fvPatchField
 :
-    virtual public lduCoupledInterface,
     public Field<Type>
 {
     // Private data
@@ -267,6 +265,12 @@ public:
                 return false;
             }
 
+            //- Return true if this patch field is coupled
+            virtual bool coupled() const
+            {
+                return false;
+            }
+
             //- Return true if the boundary condition has already been updated
             bool updated() const
             {
@@ -279,23 +283,6 @@ public:
             //- Check that this patchField corresponds to a volTypeField,
             // if not abort!
             void checkVolField() const;
-
-            //- Return the corresponding patchField of the named field
-            template<class GeometricField, class Type2>
-            const fvPatchField<Type2>& patchField(const GeometricField&) const;
-
-            //- Lookup and return the patchField of the named field from the
-            //  local objectRegistry.
-            //  N.B.  The dummy pointer arguments are used if this function is 
-            //  instantiated within a templated function to avoid a bug in gcc.
-            //  See inletOutletFvPatchField.C and outletInletFvPatchField.C
-            template<class GeometricField, class Type2>
-            const fvPatchField<Type2>& lookupPatchField
-            (
-                const word& name,
-                const GeometricField* = NULL,
-                const Type2* = NULL
-            ) const;
 
 
         // Mapping functions
@@ -326,32 +313,15 @@ public:
                 updated_ = true;
             }
 
-            //- Return given internal field next to patch as patch field
-            template<class Type2>
-            tmp<Field<Type2> > patchInternalField
-            (
-                const Field<Type2>&
-            ) const;
-
             //- Return internal field next to patch as patch field
             virtual tmp<Field<Type> > patchInternalField() const;
 
-            //- Return neighbour coupled given internal cell data
-            virtual tmp<Field<Type> > patchNeighbourField
-            (
-                const Field<Type>& iField
-            ) const;
-
-            //- Return neighbour colouring.
-            //  Needed for AMG solver agglomeration
-            virtual tmp<labelField> nbrColour
-            (
-                const labelField& iColour
-            ) const;
-
-            //- Return patchField of the values on the patch or on the
-            //  opposite patch
-            virtual tmp<Field<Type> > patchNeighbourField() const;
+            //- Return patchField on the opposite patch of a coupled patch
+            virtual tmp<Field<Type> > patchNeighbourField() const
+            {
+                notImplemented(type() + "patchNeighbourField()");
+                return *this;
+            }
 
             //- Initialise the evaluation of the patch field
             virtual void initEvaluate(const bool=false)
@@ -474,9 +444,9 @@ defineNamedTemplateTypeNameAndDebug(type, 0);
                                                                            \
 makePatchTypeFieldTypeName(type##FvPatchScalarField);                      \
 makePatchTypeFieldTypeName(type##FvPatchVectorField);                      \
-makePatchTypeFieldTypeName(type##FvPatchTensorField);                      \
-makePatchTypeFieldTypeName(type##FvPatchSphericalTensorField);
-
+makePatchTypeFieldTypeName(type##FvPatchSphericalTensorField);             \
+makePatchTypeFieldTypeName(type##FvPatchSymmTensorField);                  \
+makePatchTypeFieldTypeName(type##FvPatchTensorField);
 
 #define makePatchTypeField(PatchTypeField, typePatchTypeField)             \
                                                                            \
@@ -504,16 +474,18 @@ addToRunTimeSelectionTable                                                 \
                                                                            \
 makePatchTypeField(fvPatchScalarField, type##FvPatchScalarField);          \
 makePatchTypeField(fvPatchVectorField, type##FvPatchVectorField);          \
-makePatchTypeField(fvPatchTensorField, type##FvPatchTensorField);          \
-makePatchTypeField(fvPatchSphericalTensorField, type##FvPatchSphericalTensorField);
+makePatchTypeField(fvPatchSphericalTensorField, type##FvPatchSphericalTensorField); \
+makePatchTypeField(fvPatchSymmTensorField, type##FvPatchSymmTensorField);  \
+makePatchTypeField(fvPatchTensorField, type##FvPatchTensorField);
 
 
 #define makePatchTypeFieldTypedefs(type)                                   \
                                                                            \
 typedef type##FvPatchField<scalar> type##FvPatchScalarField;               \
 typedef type##FvPatchField<vector> type##FvPatchVectorField;               \
-typedef type##FvPatchField<tensor> type##FvPatchTensorField;               \
-typedef type##FvPatchField<sphericalTensor> type##FvPatchSphericalTensorField;
+typedef type##FvPatchField<sphericalTensor> type##FvPatchSphericalTensorField; \
+typedef type##FvPatchField<symmTensor> type##FvPatchSymmTensorField;       \
+typedef type##FvPatchField<tensor> type##FvPatchTensorField;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

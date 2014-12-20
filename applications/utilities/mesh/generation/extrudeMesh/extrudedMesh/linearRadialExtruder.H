@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -76,7 +76,7 @@ public:
             vector rsHat = surfacePoint/rs;
 
             scalar delta = (R_ - rs)/nLayers;
-            scalar r = rs + (layer + 1)*delta;
+            scalar r = rs + layer*delta;
             return r*rsHat;
         }
 };

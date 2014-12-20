@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ License
 
 #include "Cloud.H"
 #include "processorPolyPatch.H"
-#include "parallelInfo.H"
+#include "globalMeshData.H"
 #include "PstreamCombineReduceOps.H"
 #include "mapPolyMesh.H"
 
@@ -93,30 +93,32 @@ public:
 
 template<class particleType>
 template<class TrackingData>
-void Cloud<particleType>::track(TrackingData& td)
+void Cloud<particleType>::move(TrackingData& td)
 {
-    const parallelInfo& pData = polyMesh_.parallelData();
+    const globalMeshData& pData = polyMesh_.globalData();
     const labelList& processorPatches = pData.processorPatches();
     const labelList& processorPatchIndices = pData.processorPatchIndices();
     const labelList& processorPatchNeighbours =
         pData.processorPatchNeighbours();
 
+    // Initialise the setpFraction moved for the particles
+    forAllIter(typename Cloud<particleType>, *this, pIter)
+    {
+        pIter().stepFraction() = 0;
+    }
+
     // Assume there will be particles to transfer
     bool transfered = true;
 
-    // Pickup first particle on list
-    // After first transfer this is set to the first added
-    iterator pIter = this->begin();
-
     // While there are particles to transfer
-    while(transfered)
+    while (transfered)
     {
         // List of lists of particles to be transfered for all the processor
         // patches
         List<IDLList<particleType> > transferList(processorPatches.size());
-        
+
         // Loop over all particles
-        while (pIter != this->end())
+        forAllIter(typename Cloud<particleType>, *this, pIter)
         {
             particleType& p = pIter();
 
@@ -127,42 +129,24 @@ void Cloud<particleType>::track(TrackingData& td)
             // (i.e. it hasn't passed through an inlet or outlet)
             if (keepParticle)
             {
-                // check if the particle has moved the full integration step
-                // if it hasn't it must have hit a processor boundary 
-                if (Pstream::parRun() && (p.tEnd() > SMALL))
+                // If we are running in parallel and the particle is on a
+                // boundary face
+                if (Pstream::parRun() && p.facei_ >= pMesh().nInternalFaces())
                 {
-                    // For parallel transfers the cell-index
-                    // is actually the patch face index
-                    label facei = p.cell();
+                    label patchi = pMesh().boundaryMesh().whichPatch(p.facei_);
+                    label n = processorPatchIndices[patchi];
 
-                    if (facei >= 0)
+                    // ... and the face is on a processor patch
+                    // prepare it for transfer
+                    if (n != -1)
                     {
-                        // Increment the iterator before transfering the
-                        // particle to the transfer list
-                        ++pIter;
-
-                        label patchi = pMesh().boundaryMesh().whichPatch(facei);
-                        label n = processorPatchIndices[patchi];
-
-                        p.prepareForParallelTransfer(patchi, facei);
+                        p.prepareForParallelTransfer(patchi, td);
                         transferList[n].append(this->remove(&p));
                     }
-                    else
-                    {
-                        FatalErrorIn("Cloud<particleType>::track()")
-                            << "transferList ambiguity"
-                            << exit(FatalError);
-                    }
-                }
-                else
-                {
-                    ++pIter;
                 }
             }
             else
             {
-                // Increment the iterator before deleting the particle
-                ++pIter;
                 deleteParticle(p);
             }
         }
@@ -243,20 +227,15 @@ void Cloud<particleType>::track(TrackingData& td)
                         typename particleType::iNew(*this)
                     );
 
-                    typename IDLList<particleType>::iterator newpIter =
-                        newParticles.begin();
-
-                    pIter = iterator(DLListBase::iterator(*this, &newpIter()));
-
-                    while (newpIter != newParticles.end())
+                    forAllIter
+                    (
+                        typename Cloud<particleType>,
+                        newParticles,
+                        newpIter
+                    )
                     {
-                        // Keep a reference to the particle before incrementing
-                        // the iterator
                         particleType& newp = newpIter();
-                        ++newpIter;
-
-                        label facei = newp.cell();
-                        newp.correctAfterParallelTransfer(patchi, facei);
+                        newp.correctAfterParallelTransfer(patchi, td);
                         addParticle(newParticles.remove(&newp));
                     }
                 }
@@ -281,23 +260,19 @@ void Cloud<particleType>::autoMap(const mapPolyMesh& mapper)
 
     const labelList& reverseMap = mapper.reverseFaceMap();
 
-    for
-    (
-        iterator iter = this->begin();
-        iter != this->end();
-        ++iter
-    )
+    forAllIter(typename Cloud<particleType>, *this, pIter)
     {
-        if (reverseMap[iter().celli_] != -1)
+        if (reverseMap[pIter().celli_] != -1)
         {
-            iter().celli_ = reverseMap[iter().celli_];
+            pIter().celli_ = reverseMap[pIter().celli_];
         }
         else
         {
-            vector p = iter().position();
-            const_cast<vector&>(iter().position()) = polyMesh_.cellCentres()[0];
-            scalar fraction = 0;
-            iter().track(p, fraction);
+            vector p = pIter().position();
+            const_cast<vector&>(pIter().position()) = 
+                polyMesh_.cellCentres()[0];
+            pIter().stepFraction() = 0;
+            pIter().track(p);
         }
     }
 }

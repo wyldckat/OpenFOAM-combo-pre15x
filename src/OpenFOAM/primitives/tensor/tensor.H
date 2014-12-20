@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ Type
     tensor
 
 Description
-    3D tensor obtained from generic Vector
+    Tensor or scalars.
 
 SourceFiles
     tensor.C
@@ -38,6 +38,9 @@ SourceFiles
 
 #include "Tensor.H"
 #include "vector.H"
+#include "sphericalTensor.H"
+#include "symmTensor.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,32 +51,22 @@ namespace Foam
 
 typedef Tensor<scalar> tensor;
 
-// Identity tensor
-static const tensor I
-(
-    1, 0, 0,
-    0, 1, 0,
-    0, 0, 1
-);
-
 vector eigenValues(const tensor& t);
+vector eigenVector(const tensor& t, const scalar lambda);
 tensor eigenVectors(const tensor& t);
-tensor hinv(const tensor& t);
 
-//- Allow binary writing for arrays of tensors
-inline bool writeBinary(const tensor*)
-{
-    return true;
-}
+vector eigenValues(const symmTensor& t);
+vector eigenVector(const symmTensor& t, const scalar lambda);
+tensor eigenVectors(const symmTensor& t);
+
+//- Specify data associated with tensor type is contiguous
+template<>
+inline bool contiguous<tensor>() {return true;}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-#include "sphericalTensor.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

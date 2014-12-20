@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -546,7 +546,7 @@ Foam::label Foam::meshTools::otherEdge
         "meshTools::otherEdge(const primitiveMesh&, const labelList&"
         ", const label, const label)"
     )   << "Can not find edge in "
-        << IndirectList<edge>(mesh.edges(), edgeLabels)
+        << IndirectList<edge>(mesh.edges(), edgeLabels)()
         << " connected to edge "
         << thisEdgeI << " with vertices " << mesh.edges()[thisEdgeI]
         << " on side " << thisVertI << abort(FatalError);

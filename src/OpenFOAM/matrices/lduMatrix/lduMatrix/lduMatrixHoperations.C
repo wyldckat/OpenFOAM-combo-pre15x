@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,83 +31,111 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
+template<class T>
+inline void Foam::lduMatrix::solver::readControl
+(
+    const dictionary& controlDict,
+    T& control,
+    const word& controlName
+)
 {
+    if (controlDict.found(controlName))
+    {
+        controlDict.lookup(controlName) >> control;
+    }
+}
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// H operator
 template<class Type>
-tmp<Field<Type> > lduMatrix::H(const Field<Type>& sf) const
+Foam::tmp<Foam::Field<Type> > Foam::lduMatrix::H(const Field<Type>& psi) const
 {
-    tmp<Field<Type> > tHphi
+    tmp<Field<Type> > tHpsi
     (
-        new Field<Type>(lduAddr_.size(), pTraits<Type>::zero)
+        new Field<Type>(lduAddr().size(), pTraits<Type>::zero)
     );
 
     if (lowerPtr_ || upperPtr_)
     {
-        Field<Type> & Hphi = tHphi();
+        Field<Type> & Hpsi = tHpsi();
 
-        const scalarField& Lower = lower();
-        const scalarField& Upper = upper();
+        Type* __restrict__ HpsiPtr = Hpsi.begin();
 
-        // Take refereces to addressing
-        const unallocLabelList& l = lduAddr_.lowerAddr();
-        const unallocLabelList& u = lduAddr_.upperAddr();
+        const Type* __restrict__ psiPtr = psi.begin();
 
-        for (register label face=0; face<l.size(); face++)
+        const label* __restrict__ uPtr = lduAddr().upperAddr().begin();
+        const label* __restrict__ lPtr = lduAddr().lowerAddr().begin();
+
+        const scalar* __restrict__ lowerPtr = lower().begin();
+        const scalar* __restrict__ upperPtr = upper().begin();
+
+        register const label nFaces = upper().size();
+
+        for (register label face=0; face<nFaces; face++)
         {
-            Hphi[u[face]] -= Lower[face]*sf[l[face]];
-            Hphi[l[face]] -= Upper[face]*sf[u[face]];
+            #ifdef ICC_IA64_PREFETCH
+            __builtin_prefetch (&uPtr[face+32],0,0);
+            __builtin_prefetch (&lPtr[face+32],0,0);
+            __builtin_prefetch (&lowerPtr[face+32],0,1);
+            __builtin_prefetch (&psiPtr[lPtr[face+32]],0,1);
+            __builtin_prefetch (&HpsiPtr[uPtr[face+32]],0,1);
+            #endif
+
+            HpsiPtr[uPtr[face]] -= lowerPtr[face]*psiPtr[lPtr[face]];
+        
+            #ifdef ICC_IA64_PREFETCH
+            __builtin_prefetch (&upperPtr[face+32],0,1);
+            __builtin_prefetch (&psiPtr[uPtr[face+32]],0,1);
+            __builtin_prefetch (&HpsiPtr[lPtr[face+32]],0,1);
+                #endif
+
+            HpsiPtr[lPtr[face]] -= upperPtr[face]*psiPtr[uPtr[face]];
         }
     }
 
-    return tHphi;
+    return tHpsi;
 }
 
 template<class Type>
-tmp<Field<Type> > lduMatrix::H(const tmp<Field<Type> >& tsf) const
+Foam::tmp<Foam::Field<Type> >
+Foam::lduMatrix::H(const tmp<Field<Type> >& tpsi) const
 {
-    tmp<Field<Type> > tHphi(H(tsf()));
-    tsf.clear();
-    return tHphi;
+    tmp<Field<Type> > tHpsi(H(tpsi()));
+    tpsi.clear();
+    return tHpsi;
 }
 
 
-// face H operator
 template<class Type>
-tmp<Field<Type> > lduMatrix::faceH(const Field<Type>& sf) const
+Foam::tmp<Foam::Field<Type> >
+Foam::lduMatrix::faceH(const Field<Type>& psi) const
 {
     const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
     const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
 
     // Take refereces to addressing
-    const unallocLabelList& l = lduAddr_.lowerAddr();
-    const unallocLabelList& u = lduAddr_.upperAddr();
+    const unallocLabelList& l = lduAddr().lowerAddr();
+    const unallocLabelList& u = lduAddr().upperAddr();
 
-    tmp<Field<Type> > tfaceHphi(new Field<Type> (Lower.size()));
-    Field<Type> & faceHphi = tfaceHphi();
+    tmp<Field<Type> > tfaceHpsi(new Field<Type> (Lower.size()));
+    Field<Type> & faceHpsi = tfaceHpsi();
 
     for (register label face=0; face<l.size(); face++)
     {
-        faceHphi[face] = Upper[face]*sf[u[face]] - Lower[face]*sf[l[face]];
+        faceHpsi[face] = Upper[face]*psi[u[face]] - Lower[face]*psi[l[face]];
     }
 
-    return tfaceHphi;
+    return tfaceHpsi;
 }
+
 
 template<class Type>
-tmp<Field<Type> > lduMatrix::faceH(const tmp<Field<Type> >& tsf) const
+Foam::tmp<Foam::Field<Type> >
+Foam::lduMatrix::faceH(const tmp<Field<Type> >& tpsi) const
 {
-    tmp<Field<Type> > tfaceHphi(faceH(tsf()));
-    tsf.clear();
-    return tfaceHphi;
+    tmp<Field<Type> > tfaceHpsi(faceH(tpsi()));
+    tpsi.clear();
+    return tfaceHpsi;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

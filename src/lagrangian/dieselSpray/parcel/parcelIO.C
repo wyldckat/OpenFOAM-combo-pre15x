@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "parcel.H"
@@ -36,7 +34,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from Istream
 parcel::parcel
 (
     const Cloud<parcel>& cloud,
@@ -48,12 +45,12 @@ parcel::parcel
     
     fuelNames_
     (
-        (cloud.pMesh().lookupObject<dictionary>("thermophysicalProperties")).lookup("liquidFuelComponents")
+        (cloud.pMesh().lookupObject<dictionary>("thermophysicalProperties"))
+       .lookup("liquidFuelComponents")
     ),
     X_(fuelNames_.size(), 0.0),
     
-    tMom_(GREAT),
-    tEnd_(0.0)
+    tMom_(GREAT)
 {
 
     label nX = fuelNames_.size();
@@ -107,7 +104,6 @@ parcel::parcel
 template<>
 void Cloud<parcel>::readFields()
 {
-
     IOField<scalar> d(fieldIOobject("d"));
     IOField<scalar> T(fieldIOobject("T"));
     IOField<scalar> m(fieldIOobject("m"));

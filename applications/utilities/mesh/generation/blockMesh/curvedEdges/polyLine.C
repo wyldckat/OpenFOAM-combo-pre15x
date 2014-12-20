@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -64,20 +64,19 @@ void polyLine::calcDistances()
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 polyLine::polyLine(const pointField& ps)
 :
     controlPoints_(ps),
     distances_(ps.size())
 {
-    calcDistances();
+    if (ps.size())
+    {
+        calcDistances();
+    }
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
-// returns the vector position corresponding to a particular value of the
-// index parameter 0<lambda<1
 
 vector polyLine::position(const scalar lambda) const
 {
@@ -125,7 +124,6 @@ vector polyLine::position(const scalar lambda) const
 }
 
 
-//- Return the length of the curve
 scalar polyLine::length() const
 {
     return lineLength_;

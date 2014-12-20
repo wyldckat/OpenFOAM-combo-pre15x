@@ -1,8 +1,8 @@
-*---------------------------------------------------------------------------*\
+/*---------------------------------------------------------------------------*\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Class
-    expDirectionMixedFvPatchField
 
 \*---------------------------------------------------------------------------*/
 
@@ -85,6 +82,21 @@ expDirectionMixedFvPatchField<Type>::expDirectionMixedFvPatchField
 {
     checkVolField();
     evaluate();
+}
+
+
+template<class Type>
+expDirectionMixedFvPatchField<Type>::expDirectionMixedFvPatchField
+(
+    const expDirectionMixedFvPatchField<Type>& ptf
+)
+:
+    fvPatchField<Type>(ptf),
+    refValue_(ptf.refValue_),
+    refGrad_(ptf.refGrad_),
+    valueFraction_(ptf.valueFraction_)
+{
+    checkVolField();
 }
 
 

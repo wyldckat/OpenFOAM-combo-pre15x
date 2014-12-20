@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -86,6 +86,12 @@ public:
             const fvPatch&,
             const scalarField&,
             const fvPatchFieldMapper&
+        );
+
+        //- Construct as copy
+        nuSgsWallFunctionFvPatchScalarField
+        (
+            const nuSgsWallFunctionFvPatchScalarField&
         );
 
         //- Construct and return a clone

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -457,7 +457,7 @@ void Foam::slidingInterface::renumberAttachedAddressing
         }
     }
 
-    // Re-hook the lists
+    // Re-set the lists
     clearAttachedAddressing();
 
     deleteDemandDrivenData(projectedSlavePointsPtr_);

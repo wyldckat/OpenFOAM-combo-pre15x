@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -170,7 +170,7 @@ public:
             GeometricField<Type, fvPatchField, surfaceMesh>& sfCorr = tsfCorr();
 
             const surfaceScalarField& faceFlux = this->faceFlux_;
-            const  surfaceScalarField& w = mesh.weights();
+            const surfaceScalarField& w = mesh.weights();
 
             const labelList& own = mesh.owner();
             const labelList& nei = mesh.neighbour();
@@ -189,7 +189,8 @@ public:
                 if (faceFlux[facei] > 0.0)
                 {
                     maxCorr =
-                        (1.0 - w[facei])*(vf[nei[facei]] - vf[own[facei]]);
+                        (1.0 - w[facei])
+                       *(vf[nei[facei]] - vf[own[facei]]);
 
                     sfCorr[facei] = 
                         (Cf[facei] - C[own[facei]]) & gradVf[own[facei]];

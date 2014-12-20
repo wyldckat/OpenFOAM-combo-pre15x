@@ -1,7 +1,0 @@
-Mesh.cpp
-Vector.cpp
-MeshCCMIO.cpp
-
-ccm24ToFoam.C
-
-EXE = $(FOAM_APPBIN)/ccm24ToFoam

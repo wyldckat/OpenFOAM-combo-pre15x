@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,8 +23,6 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "fixedRhoUFvPatchVectorField.H"
 #include "addToRunTimeSelectionTable.H"
@@ -73,6 +71,15 @@ fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 
 fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
 (
+    const fixedRhoUFvPatchVectorField& tppsf
+)
+:
+    fixedValueFvPatchVectorField(tppsf)
+{}
+
+
+fixedRhoUFvPatchVectorField::fixedRhoUFvPatchVectorField
+(
     const fixedRhoUFvPatchVectorField& tppsf,
     const vectorField& iF
 )
@@ -92,10 +99,10 @@ void fixedRhoUFvPatchVectorField::updateCoeffs()
     }
 
     const fvPatchScalarField& rhop =
-        lookupPatchField<volScalarField, scalar>("rho");
+        patch().lookupPatchField<volScalarField, scalar>("rho");
 
     const fvPatchVectorField& Up =
-        lookupPatchField<volVectorField, vector>("U");
+        patch().lookupPatchField<volVectorField, vector>("U");
 
     operator==(rhop*Up);
 

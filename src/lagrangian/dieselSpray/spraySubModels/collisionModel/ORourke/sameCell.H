@@ -90,7 +90,7 @@ if (( xx > collProb) && (mMin > VSMALL) && (mMax > VSMALL)) {
         pMax().T() = (averageTemp*mTot - newMinMass*pMin().T())/newMaxMass;
         rhoMax = spray_.fuels().rho(pc, pMax().T(), pMax().X());
         scalar d3 = pow(dMax, 3) + nProb*pow(dMin,3);
-        pMax().d() = pow(d3, 1.0/3.0);
+        pMax().d() = cbrt(d3);
         pMax().U() = (momMax + (1.0-newMinMass/mMin)*momMin)/newMaxMass;
         
         // update the liquid molar fractions

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,10 +48,27 @@ addToRunTimeSelectionTable(surface, interpolatedIsoSurface, word);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+template<class Type>
+Foam::tmp<Foam::Field<Type> > Foam::interpolatedIsoSurface::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<Type>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    const GeometricField<Type, fvPatchField, volMesh>& vField =
+        *cache[fieldName];
+
+    const GeometricField<Type, pointPatchField, pointMesh>& pField =
+        cache.pointField(fieldName, pInterp);
+
+    return meshCutSurface::interpolate(isoSurfCuts(), vField, pField);
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::interpolatedIsoSurface::interpolatedIsoSurface
 (
     const polyMesh& mesh,
@@ -70,7 +87,6 @@ Foam::interpolatedIsoSurface::interpolatedIsoSurface
 {}
 
 
-// Construct from dictionary
 Foam::interpolatedIsoSurface::interpolatedIsoSurface
 (
     const polyMesh& mesh,
@@ -101,8 +117,8 @@ Foam::interpolatedIsoSurface::~interpolatedIsoSurface()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-const Foam::cellDecompIsoSurfaceCuts& Foam::interpolatedIsoSurface::isoSurfCuts
-() const
+const Foam::cellDecompIsoSurfaceCuts&
+Foam::interpolatedIsoSurface::isoSurfCuts() const
 {
     if (!isoSurfCutsPtr_)
     {
@@ -118,9 +134,7 @@ void Foam::interpolatedIsoSurface::correct
     const bool meshChanged,
     const volPointInterpolation& pInterp,
     const dictionary& interpolationSchemes,
-    const fieldsCache<scalar>& scalarCache,
-    const fieldsCache<vector>& vectorCache,
-    const fieldsCache<tensor>& tensorCache
+    const fieldsCache<scalar>& scalarCache
 )
 {
     if (!scalarCache.found(isoFieldName_))
@@ -178,7 +192,7 @@ void Foam::interpolatedIsoSurface::correct
 }
 
 
-Foam::scalarField Foam::interpolatedIsoSurface::interpolate
+Foam::tmp<Foam::scalarField> Foam::interpolatedIsoSurface::interpolate
 (
     const word& fieldName,
     const fieldsCache<scalar>& cache,
@@ -189,21 +203,22 @@ Foam::scalarField Foam::interpolatedIsoSurface::interpolate
     if (fieldName == isoFieldName_)
     {
         // Same field as isoSurface was based on -> single value.
-        return scalarField(points_.size(), isoVal_);
+        return tmp<scalarField>(new scalarField(points_.size(), isoVal_));
     }
     else
     {
-        const volScalarField& vField = *cache[fieldName];
-
-        const pointScalarField& pField =
-            cache.pointField(fieldName, pInterp);
-
-        return meshCutSurface::interpolate(isoSurfCuts(), vField, pField);
+        return interpolate<scalar>
+        (
+            fieldName,
+            cache,
+            pInterp,
+            interpolationSchemes
+        );
     }
 }
 
 
-Foam::vectorField Foam::interpolatedIsoSurface::interpolate
+Foam::tmp<Foam::vectorField> Foam::interpolatedIsoSurface::interpolate
 (
     const word& fieldName,
     const fieldsCache<vector>& cache,
@@ -211,16 +226,47 @@ Foam::vectorField Foam::interpolatedIsoSurface::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    const volVectorField& vField = *cache[fieldName];
-
-    const pointVectorField& pField =
-        cache.pointField(fieldName, pInterp);
-
-    return meshCutSurface::interpolate(isoSurfCuts(), vField, pField);
+    return interpolate<vector>(fieldName, cache, pInterp, interpolationSchemes);
 }
 
 
-Foam::tensorField Foam::interpolatedIsoSurface::interpolate
+Foam::tmp<Foam::sphericalTensorField> Foam::interpolatedIsoSurface::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<sphericalTensor>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    return interpolate<sphericalTensor>
+    (
+        fieldName,
+        cache,
+        pInterp,
+        interpolationSchemes
+    );
+}
+
+
+Foam::tmp<Foam::symmTensorField> Foam::interpolatedIsoSurface::interpolate
+(
+    const word& fieldName,
+    const fieldsCache<symmTensor>& cache,
+    const volPointInterpolation& pInterp,
+    const dictionary& interpolationSchemes
+) const
+{
+    return interpolate<symmTensor>
+    (
+        fieldName,
+        cache, 
+        pInterp,
+        interpolationSchemes
+    );
+}
+
+
+Foam::tmp<Foam::tensorField> Foam::interpolatedIsoSurface::interpolate
 (
     const word& fieldName,
     const fieldsCache<tensor>& cache,
@@ -228,12 +274,7 @@ Foam::tensorField Foam::interpolatedIsoSurface::interpolate
     const dictionary& interpolationSchemes
 ) const
 {
-    const volTensorField& vField = *cache[fieldName];
-
-    const pointTensorField& pField =
-        cache.pointField(fieldName, pInterp);
-
-    return meshCutSurface::interpolate(isoSurfCuts(), vField, pField);
+    return interpolate<tensor>(fieldName, cache, pInterp, interpolationSchemes);
 }
 
 

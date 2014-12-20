@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -52,5 +52,34 @@ timePrecision   6;
 
 runTimeModifiable yes;
 
+functions
+(
+    probes1
+    {
+        // Type of functionObject
+        type probes;
+
+        // Where to load it from (if not already in solver)
+        functionObjectLibs ("libsampling.so");
+
+        // Locations to be probed. runTime modifiable!
+        probeLocations
+        (
+            (0.0254 0.0253 0.0)
+            (0.0508 0.0253 0.0)
+            (0.0762 0.0253 0.0)
+            (0.1016 0.0253 0.0)
+            (0.1270 0.0253 0.0)
+            (0.1524 0.0253 0.0)
+            (0.1778 0.0253 0.0)
+        );
+
+        // Fields to be probed. runTime modifiable!
+        fields
+        (
+            p
+        );
+    }
+);
 
 // ************************************************************************* //

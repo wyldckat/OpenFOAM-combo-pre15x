@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,7 +36,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
 
-//- Null construct
 inline DLListBase::link::link()
 :
     prev_(0),
@@ -44,15 +43,6 @@ inline DLListBase::link::link()
 {}
 
 
-//- Construct given pointers to previous and next links
-inline DLListBase::link::link(link* prev, link* next)
-:
-    prev_(prev),
-    next_(next)
-{}
-
-
-// Null construct
 inline DLListBase::DLListBase()
 :
     first_(0),
@@ -61,15 +51,14 @@ inline DLListBase::DLListBase()
 {}
 
 
-// Construct given initial entry
 inline DLListBase::DLListBase(link* a)
 :
     first_(a),
     last_(a),
     nElmts_(1)
 {
-    a->prev_ = 0;
-    a->next_ = 0;
+    a->prev_ = a;
+    a->next_ = a;
 }
 
 
@@ -81,14 +70,25 @@ inline DLListBase::~DLListBase()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return number of elements in list
+inline bool DLListBase::link::registered() const
+{
+    return prev_ != 0 && next_ != 0;
+}
+
+
+inline void DLListBase::link::deregister()
+{
+    prev_ = 0;
+    next_ = 0;
+}
+
+
 inline label DLListBase::size() const
 {
     return nElmts_;
 }
 
 
-// Return first entry
 inline DLListBase::link* DLListBase::first()
 {
     if (!nElmts_)
@@ -101,7 +101,6 @@ inline DLListBase::link* DLListBase::first()
 }
 
 
-// Return const access to first entry
 inline const DLListBase::link* DLListBase::first() const
 {
     if (!nElmts_)
@@ -114,7 +113,6 @@ inline const DLListBase::link* DLListBase::first() const
 }
 
 
-// Return last entry
 inline DLListBase::link* DLListBase::last()
 {
     if (!nElmts_)
@@ -127,7 +125,6 @@ inline DLListBase::link* DLListBase::last()
 }
 
 
-// Return const access to last entry
 inline const DLListBase::link* DLListBase::last() const
 {
     if (!nElmts_)
@@ -140,7 +137,6 @@ inline const DLListBase::link* DLListBase::last() const
 }
 
 
-// Clear the list
 inline void DLListBase::clear()
 {
     nElmts_ = 0;
@@ -149,19 +145,34 @@ inline void DLListBase::clear()
 }
 
 
+inline DLListBase::link* DLListBase::remove(DLListBase::iterator& it)
+{
+    return remove(it.curElmt_);
+}
+
+
 // * * * * * * * * * * * * * * * STL iterator  * * * * * * * * * * * * * * * //
 
-// Construct for a given DLListBase and link
 inline DLListBase::iterator::iterator(DLListBase& s, link* elmt)
 :
     curList_(s),
-    curElmt_(elmt)
+    curElmt_(elmt),
+    curLink_(*curElmt_)
+{}
+
+
+inline DLListBase::iterator::iterator(DLListBase& s)
+:
+    curList_(s),
+    curElmt_(NULL),
+    curLink_()
 {}
 
 
 inline void DLListBase::iterator::operator=(const iterator& iter)
 {
     curElmt_ = iter.curElmt_;
+    curLink_ = iter.curLink_;
 }
 
 
@@ -185,13 +196,16 @@ inline DLListBase::link& DLListBase::iterator::operator*()
 
 inline DLListBase::iterator& DLListBase::iterator::operator++()
 {
-    if (curElmt_ == curList_.last_)
+    // Check if the curElmt_ is the last element (if it points to itself)
+    // or if the list is empty because the last element may have been removed
+    if (curLink_.next_ == curElmt_ || curList_.last_ == 0)
     {
         curElmt_ = 0;
     }
     else
     {
-        curElmt_ = curElmt_->next_;
+        curElmt_ = curLink_.next_;
+        curLink_ = *curElmt_;
     }
 
     return *this;

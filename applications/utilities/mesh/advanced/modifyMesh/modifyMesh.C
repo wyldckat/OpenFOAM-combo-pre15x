@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -582,7 +582,7 @@ int main(int argc, char *argv[])
         cutter.setRefinement(meshMod);
 
         // Do changes
-        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh);
+        autoPtr<mapPolyMesh> morphMap = meshMod.changeMesh(mesh, false);
 
         if (morphMap().hasMotionPoints())
         {

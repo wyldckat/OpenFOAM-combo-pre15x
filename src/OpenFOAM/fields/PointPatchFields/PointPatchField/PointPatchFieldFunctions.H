@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -321,14 +321,14 @@ void inv
 ){}
 
 template<template<class> class PatchField, class PointPatch>
-void hinv
+void symm
 (
     PointPatchField<PatchField, PointPatch, tensor>&,
     const PointPatchField<PatchField, PointPatch, tensor>&
 ){}
 
 template<template<class> class PatchField, class PointPatch>
-void symm
+void twoSymm
 (
     PointPatchField<PatchField, PointPatch, tensor>&,
     const PointPatchField<PatchField, PointPatch, tensor>&

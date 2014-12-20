@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -109,6 +109,10 @@ Foam::labelList Foam::polyDualMesh::getFaceOrder
     }
 
     nInternalFaces = newFaceI;
+
+    Pout<< "nInternalFaces:" << nInternalFaces << endl;
+    Pout<< "nFaces:" << faceOwner.size() << endl;
+    Pout<< "nCells:" << cells.size() << endl;
 
     // Leave patch faces intact.
     for (label faceI = newFaceI; faceI < faceOwner.size(); faceI++)
@@ -881,11 +885,13 @@ void Foam::polyDualMesh::calcDual
     }
 
 
+    // Storage for new faces.
+    // Dynamic sized since we don't know size.
 
-    DynamicList<face> dualFaces(mesh.nEdges());
-    DynamicList<label> dualOwner(mesh.nEdges());
-    DynamicList<label> dualNeighbour(mesh.nEdges());
-    DynamicList<label> dualRegion(mesh.nEdges());
+    DynamicList<face> dynDualFaces(mesh.nEdges());
+    DynamicList<label> dynDualOwner(mesh.nEdges());
+    DynamicList<label> dynDualNeighbour(mesh.nEdges());
+    DynamicList<label> dynDualRegion(mesh.nEdges());
 
 
     // Generate faces from edges on the boundary
@@ -1005,14 +1011,14 @@ void Foam::polyDualMesh::calcDual
         // Store dual vertex for endFace.
         dualFace.append(mesh.nCells() + endFaceI - nIntFaces);
 
-        dualFaces.append(face(dualFace.shrink()));
-        dualOwner.append(owner);
-        dualNeighbour.append(neighbour);
-        dualRegion.append(-1);
+        dynDualFaces.append(face(dualFace.shrink()));
+        dynDualOwner.append(owner);
+        dynDualNeighbour.append(neighbour);
+        dynDualRegion.append(-1);
 
         {
             // Check orientation.
-            const face& f = dualFaces[dualFaces.size()-1];
+            const face& f = dynDualFaces[dynDualFaces.size()-1];
             vector n = f.normal(dualPoints);
             if (((mesh.points()[owner] - dualPoints[f[0]]) & n) > 0)
             {
@@ -1120,14 +1126,14 @@ void Foam::polyDualMesh::calcDual
                 }
             }
 
-            dualFaces.append(face(dualFace.shrink()));
-            dualOwner.append(owner);
-            dualNeighbour.append(neighbour);
-            dualRegion.append(-1);
+            dynDualFaces.append(face(dualFace.shrink()));
+            dynDualOwner.append(owner);
+            dynDualNeighbour.append(neighbour);
+            dynDualRegion.append(-1);
 
             {
                 // Check orientation.
-                const face& f = dualFaces[dualFaces.size()-1];
+                const face& f = dynDualFaces[dynDualFaces.size()-1];
                 vector n = f.normal(dualPoints);
                 if (((mesh.points()[owner] - dualPoints[f[0]]) & n) > 0)
                 {
@@ -1144,10 +1150,10 @@ void Foam::polyDualMesh::calcDual
     // Dump faces.
     if (debug)
     {
-        dualFaces.shrink();
-        dualOwner.shrink();
-        dualNeighbour.shrink();
-        dualRegion.shrink();
+        dynDualFaces.shrink();
+        dynDualOwner.shrink();
+        dynDualNeighbour.shrink();
+        dynDualRegion.shrink();
     
         OFstream str("dualInternalFaces.obj");
         Pout<< "polyDualMesh::calcDual : dumping internal faces to "
@@ -1157,9 +1163,9 @@ void Foam::polyDualMesh::calcDual
         {
             meshTools::writeOBJ(str, dualPoints[dualPointI]);
         }
-        forAll(dualFaces, dualFaceI)
+        forAll(dynDualFaces, dualFaceI)
         {
-            const face& f = dualFaces[dualFaceI];
+            const face& f = dynDualFaces[dualFaceI];
     
             str<< 'f';
             forAll(f, fp)
@@ -1170,7 +1176,7 @@ void Foam::polyDualMesh::calcDual
         }
     }
 
-    const label nInternalFaces = dualFaces.size();
+    const label nInternalFaces = dynDualFaces.size();
 
     // Outside faces
     // ~~~~~~~~~~~~~
@@ -1188,27 +1194,33 @@ void Foam::polyDualMesh::calcDual
 
             dualPoints,
 
-            dualFaces,
-            dualOwner,
-            dualNeighbour,
-            dualRegion
+            dynDualFaces,
+            dynDualOwner,
+            dynDualNeighbour,
+            dynDualRegion
         );
     }
 
-    dualFaces.shrink();
-    dualOwner.shrink();
-    dualNeighbour.shrink();
-    dualRegion.shrink();
+
+    // Transfer face info to straight lists
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    faceList dualFaces(dynDualFaces.shrink(), true);
+    dynDualFaces.clear();
+
+    labelList dualOwner(dynDualOwner.shrink(), true);
+    dynDualOwner.clear();
+
+    labelList dualNeighbour(dynDualNeighbour.shrink(), true);
+    dynDualNeighbour.clear();
+
+    labelList dualRegion(dynDualRegion.shrink(), true);
+    dynDualRegion.clear();
+
 
 
     // Dump faces.
     if (debug)
     {
-        dualFaces.shrink();
-        dualOwner.shrink();
-        dualNeighbour.shrink();
-        dualRegion.shrink();
-    
         OFstream str("dualFaces.obj");
         Pout<< "polyDualMesh::calcDual : dumping all faces to "
             << str.name() << endl;
@@ -1262,6 +1274,7 @@ void Foam::polyDualMesh::calcDual
         }
     }
 
+
     // Do upper-triangular face ordering. Determines face reordering map and
     // number of internal faces.
     label dummy;
@@ -1311,6 +1324,28 @@ void Foam::polyDualMesh::calcDual
     }
 
 
+    Pout<< "nFaces:" << dualFaces.size()
+        << " patchSizes:" << patchSizes
+        << " patchStarts:" << patchStarts
+        << endl;
+
+
+    // Add patches. First add zero sized (since mesh still 0 size)
+    List<polyPatch*> dualPatches(patches.size());
+
+    forAll(patches, patchI)
+    {
+        const polyPatch& pp = patches[patchI];
+
+        dualPatches[patchI] = pp.clone
+        (
+            boundaryMesh(),
+            patchI,
+            0, //patchSizes[patchI],
+            0  //patchStarts[patchI]
+        ).ptr();
+    }
+    addPatches(dualPatches);
 
     // Assign to mesh.
     resetPrimitives
@@ -1321,8 +1356,7 @@ void Foam::polyDualMesh::calcDual
         dualOwner,
         dualNeighbour,
         patchSizes,
-        patchStarts,
-        false
+        patchStarts
     );
 }
 
@@ -1371,8 +1405,8 @@ Foam::polyDualMesh::polyDualMesh
     polyMesh
     (
         mesh,
-        pointField(1),
-        faceList(1),
+        pointField(0),
+        faceList(0),
         cellList(0)
     ),
     cellPoint_
@@ -1402,25 +1436,6 @@ Foam::polyDualMesh::polyDualMesh
         labelList(mesh.nFaces() - mesh.nInternalFaces())
     )
 {
-    // Add patches
-    const polyBoundaryMesh& patches = mesh.boundaryMesh();
-
-    List<polyPatch*> dualPatches(patches.size());
-
-    forAll(patches, patchI)
-    {
-        const polyPatch& pp = patches[patchI];
-
-        dualPatches[patchI] = pp.clone
-        (
-            patches,
-            patchI,
-            0,
-            0
-        ).ptr();
-    }
-    addPatches(dualPatches);
-
     calcDual(mesh, featureEdges, featurePoints);
 }
 
@@ -1435,8 +1450,8 @@ Foam::polyDualMesh::polyDualMesh
     polyMesh
     (
         mesh,
-        pointField(1),  // to prevent any warnings "points not allocated"
-        faceList(1),    //            ,,            faces ,,
+        pointField(0),  // to prevent any warnings "points not allocated"
+        faceList(0),    //            ,,            faces ,,
         cellList(0)
     ),
     cellPoint_
@@ -1463,29 +1478,9 @@ Foam::polyDualMesh::polyDualMesh
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        labelList(mesh.nFaces() - mesh.nInternalFaces())
+        labelList(mesh.nFaces() - mesh.nInternalFaces(), -1)
     )
 {
-    // Add patches
-    const polyBoundaryMesh& patches = mesh.boundaryMesh();
-
-    List<polyPatch*> dualPatches(patches.size());
-
-    forAll(patches, patchI)
-    {
-        const polyPatch& pp = patches[patchI];
-
-        dualPatches[patchI] = pp.clone
-        (
-            patches,
-            patchI,
-            0,
-            0
-        ).ptr();
-    }
-    addPatches(dualPatches);
-
-
     labelList featureEdges, featurePoints;
 
     calcFeatures(mesh, featureCos, featureEdges, featurePoints);

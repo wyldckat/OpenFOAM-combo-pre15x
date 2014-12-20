@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -186,8 +186,6 @@ Foam::cellMapper::cellMapper(const mapPolyMesh& mpm)
     weightsPtr_(NULL),
     insertedCellLabelsPtr_(NULL)
 {
-    const label minCellMap = min(mpm_.cellMap());
-
     // Check for possibility of direct mapping
     if
     (
@@ -204,7 +202,7 @@ Foam::cellMapper::cellMapper(const mapPolyMesh& mpm)
     }
 
     // Check for inserted cells
-    if (direct_ && minCellMap > -1)
+    if (direct_ && (mpm_.cellMap().size() == 0 || min(mpm_.cellMap()) > -1))
     {
         insertedCells_ = false;
     }

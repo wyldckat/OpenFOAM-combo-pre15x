@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -70,6 +70,16 @@ public:
         :
             facePointPatch(patch, bm)
         {}
+
+
+    // Member Functions
+
+        //- Accumulate the effect of constraint direction of this patch
+        virtual void applyConstraint
+        (
+            const label pointi,
+            pointConstraint&
+        ) const;
 };
 
 

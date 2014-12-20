@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,6 +38,7 @@ SourceFiles
 #define coupledFvPatch_H
 
 #include "fvPatch.H"
+#include "lduInterface.H"
 #include "coupledPolyPatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -51,6 +52,7 @@ namespace Foam
 
 class coupledFvPatch
 :
+    public lduInterface,
     public fvPatch
 {
     // Private data
@@ -121,8 +123,52 @@ public:
                 return coupledPolyPatch_.parallel();
             }
 
+            //- Return faceCell addressing
+            virtual const unallocLabelList& faceCells() const
+            {
+                return fvPatch::faceCells();
+            }
+
             //- Return delta (P to N) vectors across coupled patch
             virtual tmp<vectorField> delta() const = 0;
+
+
+        // Interface transfer functions
+
+            //- Return the values of the given internal data adjacent to
+            //  the interface as a field
+            virtual tmp<labelField> interfaceInternalField
+            (
+                const unallocLabelList& internalData
+            ) const = 0;
+
+            //- Initialise interface data transfer
+            virtual void initTransfer
+            (
+                const unallocLabelList& interfaceData,
+                const bool bufferedTransfer
+            ) const
+            {}
+
+            //- Transfer and return neighbour field
+            virtual tmp<labelField> transfer
+            (
+                const unallocLabelList& interfaceData
+            ) const = 0;
+
+            //- Initialise neighbour field transfer
+            virtual void initInternalFieldTransfer
+            (
+                unallocLabelList& iF,
+                const bool bufferedTransfer
+            ) const
+            {}
+
+            //- Return neighbour field
+            virtual tmp<labelField> internalFieldTransfer
+            (
+                const unallocLabelList& iF
+            ) const = 0;
 };
 
 

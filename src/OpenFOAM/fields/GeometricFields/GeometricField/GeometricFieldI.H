@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,71 +22,53 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    generic Geometric Type field class
-
 \*---------------------------------------------------------------------------*/
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return reference to mesh
 template<class Type, template<class> class PatchField, class GeoMesh>
-inline const typename GeometricField<Type, PatchField, GeoMesh>::Mesh&
-GeometricField<Type, PatchField, GeoMesh>::mesh() const
-{
-    return mesh_;
-}
-
-
-// Return dimensions
-template<class Type, template<class> class PatchField, class GeoMesh>
-inline dimensionSet&
-GeometricField<Type, PatchField, GeoMesh>::dimensions()
-{
-    return dimensions_;
-}
-
-// Return dimensions
-template<class Type, template<class> class PatchField, class GeoMesh>
-inline const dimensionSet&
-GeometricField<Type, PatchField, GeoMesh>::dimensions() const
-{
-    return dimensions_;
-}
-
-// Return internal field
-template<class Type, template<class> class PatchField, class GeoMesh>
-inline const Field<Type>&
-GeometricField<Type, PatchField, GeoMesh>::internalField() const
+inline 
+const typename 
+Foam::GeometricField<Type, PatchField, GeoMesh>::DimensionedInternalField&
+Foam::GeometricField<Type, PatchField, GeoMesh>::
+dimensionedInternalField() const
 {
     return *this;
 }
 
-// Return reference to GeometricBoundaryField for const field
 template<class Type, template<class> class PatchField, class GeoMesh>
-inline const typename GeometricField<Type, PatchField, GeoMesh>::
+inline
+const typename
+Foam::GeometricField<Type, PatchField, GeoMesh>::InternalField&
+Foam::GeometricField<Type, PatchField, GeoMesh>::internalField() const
+{
+    return *this;
+}
+
+
+template<class Type, template<class> class PatchField, class GeoMesh>
+inline const typename Foam::GeometricField<Type, PatchField, GeoMesh>::
 GeometricBoundaryField&
-GeometricField<Type, PatchField, GeoMesh>::boundaryField() const
+Foam::GeometricField<Type, PatchField, GeoMesh>::boundaryField() const
 {
     return boundaryField_;
 }
 
 
-// Return reference to GeometricBoundaryField for const field
 template<class Type, template<class> class PatchField, class GeoMesh>
-inline label GeometricField<Type, PatchField, GeoMesh>::timeIndex() const
+inline Foam::label
+Foam::GeometricField<Type, PatchField, GeoMesh>::timeIndex() const
 {
     return timeIndex_;
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+template<class Type, template<class> class PatchField, class GeoMesh>
+inline Foam::label&
+Foam::GeometricField<Type, PatchField, GeoMesh>::timeIndex()
+{
+    return timeIndex_;
+}
 
-} // End namespace Foam
 
 // ************************************************************************* //

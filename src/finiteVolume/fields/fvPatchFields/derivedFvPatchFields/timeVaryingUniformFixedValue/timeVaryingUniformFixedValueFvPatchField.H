@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -94,6 +94,12 @@ public:
             const fvPatchFieldMapper&
         );
 
+        //- Construct as copy
+        timeVaryingUniformFixedValueFvPatchField
+        (
+            const timeVaryingUniformFixedValueFvPatchField<Type>&
+        );
+
         //- Construct and return a clone
         virtual tmp<fvPatchField<Type> > clone() const
         {
@@ -154,10 +160,14 @@ template<>
 void timeVaryingUniformFixedValueFvPatchField<vector>::updateCoeffs();
 
 template<>
-void timeVaryingUniformFixedValueFvPatchField<tensor>::updateCoeffs();
+void timeVaryingUniformFixedValueFvPatchField<sphericalTensor>::updateCoeffs();
 
 template<>
-void timeVaryingUniformFixedValueFvPatchField<sphericalTensor>::updateCoeffs();
+void timeVaryingUniformFixedValueFvPatchField<symmTensor>::updateCoeffs();
+
+template<>
+void timeVaryingUniformFixedValueFvPatchField<tensor>::updateCoeffs();
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

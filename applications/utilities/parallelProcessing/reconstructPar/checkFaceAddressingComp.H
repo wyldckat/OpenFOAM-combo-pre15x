@@ -6,6 +6,8 @@
 
     label minFaceIndex = labelMax;
 
+    PtrList<labelIOList>& faceProcAddressing = procMeshes.faceProcAddressing();
+
     forAll (faceProcAddressing, procI)
     {
         const labelList& curFaceAddr = faceProcAddressing[procI];

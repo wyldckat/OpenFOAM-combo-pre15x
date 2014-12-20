@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -73,6 +73,15 @@ freestreamPressureFvPatchScalarField::freestreamPressureFvPatchScalarField
 
 freestreamPressureFvPatchScalarField::freestreamPressureFvPatchScalarField
 (
+    const freestreamPressureFvPatchScalarField& wbppsf
+)
+:
+    zeroGradientFvPatchScalarField(wbppsf)
+{}
+
+
+freestreamPressureFvPatchScalarField::freestreamPressureFvPatchScalarField
+(
     const freestreamPressureFvPatchScalarField& wbppsf,
     const scalarField& iF
 )
@@ -95,7 +104,7 @@ void freestreamPressureFvPatchScalarField::updateCoeffs()
     const freestreamFvPatchVectorField& Up = 
         refCast<const freestreamFvPatchVectorField>
         (
-            lookupPatchField<volVectorField, vector>("U")
+            patch().lookupPatchField<volVectorField, vector>("U")
         );
 
     const surfaceScalarField& phi = 
@@ -104,7 +113,7 @@ void freestreamPressureFvPatchScalarField::updateCoeffs()
     fvPatchField<scalar>& phip =
         const_cast<fvPatchField<scalar>&>
         (
-            patchField<surfaceScalarField, scalar>(phi)
+            patch().patchField<surfaceScalarField, scalar>(phi)
         );
 
     if (phi.dimensions() == dimVelocity*dimArea)
@@ -114,7 +123,7 @@ void freestreamPressureFvPatchScalarField::updateCoeffs()
     else if (phi.dimensions() == dimDensity*dimVelocity*dimArea)
     {
         const fvPatchField<scalar>& rhop =
-            lookupPatchField<volScalarField, scalar>("rho");
+            patch().lookupPatchField<volScalarField, scalar>("rho");
 
         phip = rhop*(patch().Sf() & Up.freestreamValue());
     }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -156,6 +156,18 @@ public:
 
             //- Expand all occurences of environment variables and ~
             string& expand();
+
+            //- Remove repeated characters returning true if string changed
+            bool removeRepeated(const char character);
+
+            //- Return string with repeated characters removed
+            string removeRepeated(const char character) const;
+   
+            //- Remove trailing character returning true if string changed
+            bool removeTrailing(const char character);
+
+            //- Return string with trailing character removed
+            string removeTrailing(const char character) const;
 
 
     // Member Operators

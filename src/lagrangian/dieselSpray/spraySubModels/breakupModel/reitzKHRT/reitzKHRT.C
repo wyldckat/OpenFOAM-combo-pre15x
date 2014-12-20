@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -175,7 +175,7 @@ void reitzKHRT::breakupParcel
         p.ct() = -GREAT;
         scalar multiplier = p.d()/lambdaRT;
         scalar nDrops = multiplier*Np;
-        p.d() = pow(semiMass/nDrops, 1.0/3.0);
+        p.d() = cbrt(semiMass/nDrops);
     }
     // otherwise check for KH breakup
     else if (dc < p.d())

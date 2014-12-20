@@ -14,7 +14,7 @@ List<IOField<vector>* > sprayVectorFieldPtrs
 {
      int sprayFieldI = 0;
 
-    // Hook on scalar fields
+    // Set scalar fields
     forAll(sprayScalarNames, fieldI)
     {
         IOobject ioHeader
@@ -42,7 +42,7 @@ List<IOField<vector>* > sprayVectorFieldPtrs
 }
 
 
-// Hook on vector fields
+// Set vector fields
 
 {
     int sprayFieldI = 0;

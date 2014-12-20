@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,8 +60,9 @@ class defaultFvPatchField
 
         HashPtrTable<scalarField> scalarFields_;
         HashPtrTable<vectorField> vectorFields_;
-        HashPtrTable<tensorField> tensorFields_;
         HashPtrTable<sphericalTensorField> sphericalTensorFields_;
+        HashPtrTable<symmTensorField> symmTensorFields_;
+        HashPtrTable<tensorField> tensorFields_;
 
 public:
 
@@ -93,6 +94,12 @@ public:
             const fvPatch&,
             const Field<Type>&,
             const fvPatchFieldMapper&
+        );
+
+        //- Construct as copy
+        defaultFvPatchField
+        (
+            const defaultFvPatchField<Type>&
         );
 
         //- Construct and return a clone

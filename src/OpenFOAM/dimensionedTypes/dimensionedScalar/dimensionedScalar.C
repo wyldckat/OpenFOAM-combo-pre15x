@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Dimensioned scalar obtained from generic dimensioned type.
 
 \*---------------------------------------------------------------------------*/
 
@@ -108,6 +105,30 @@ dimensionedScalar sqrt(const dimensionedScalar& ds)
         "sqrt(" + ds.name() + ')',
         pow(ds.dimensions(), dimensionedScalar("0.5", dimless, 0.5)),
         ::sqrt(ds.value())
+    );
+}
+
+dimensionedScalar cbrt(const dimensionedScalar& ds)
+{
+    return dimensionedScalar
+    (
+        "cbrt(" + ds.name() + ')',
+        pow(ds.dimensions(), dimensionedScalar("(1/3)", dimless, 1.0/3.0)),
+        ::cbrt(ds.value())
+    );
+}
+
+dimensionedScalar hypot
+(
+    const dimensionedScalar& x,
+    const dimensionedScalar& y
+)
+{
+    return dimensionedScalar
+    (
+        "hypot(" + x.name() + ',' + y.name() + ')',
+        x.dimensions() + y.dimensions(),
+        ::hypot(x.value(), y.value())
     );
 }
 

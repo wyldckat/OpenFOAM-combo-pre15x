@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,21 +22,14 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "coordinateSystem.H"
 #include "dictionary.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-autoPtr<coordinateSystem> coordinateSystem::New
+Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
 (
     const word& coordType,
     const word& name,
@@ -73,7 +66,7 @@ autoPtr<coordinateSystem> coordinateSystem::New
 }
 
 
-autoPtr<coordinateSystem> coordinateSystem::New
+Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
 (
     const word& coordType,
     const word& name,
@@ -109,7 +102,7 @@ autoPtr<coordinateSystem> coordinateSystem::New
 }
 
 
-autoPtr<coordinateSystem> coordinateSystem::New
+Foam::autoPtr<Foam::coordinateSystem> Foam::coordinateSystem::New
 (
     const word& name,
     const dictionary& dict
@@ -122,7 +115,12 @@ autoPtr<coordinateSystem> coordinateSystem::New
             << endl;
     }
 
-    word coordType(dict.lookup("type"));
+    // default type is cartesian
+    word coordType("cartesian");
+    if (dict.found("type"))
+    {
+	dict.lookup("type") >> coordType;
+    }
 
     dictionaryConstructorTable::iterator cstrIter =
         dictionaryConstructorTablePtr_->find(coordType);
@@ -142,9 +140,5 @@ autoPtr<coordinateSystem> coordinateSystem::New
     return autoPtr<coordinateSystem>(cstrIter()(name, dict));
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

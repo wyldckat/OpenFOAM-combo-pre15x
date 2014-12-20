@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -67,21 +67,58 @@ fi
 
 
 #------------------------------------------------------------------------------
-# check arguments and change to the directory in which to run wmake
+# Select the version of make to be used
 #------------------------------------------------------------------------------
 
-curDir=`pwd`
+make="make"
+
+if [ "$WM_NCOMPPROCS" ]
+then
+    if [ "$WM_NCOMPPROCS" -ne 1 -a ! "$MAKEFLAGS" ]
+    then
+        lockDir=$HOME/.wmakeScheduler
+
+        if [ -d $lockDir ]
+        then
+            rm -f $lockDir/*
+        else
+            mkdir -p $lockDir
+        fi
+
+        make="make --no-print-directory -j "$WM_NCOMPPROCS
+    fi
+fi
+
+
+#------------------------------------------------------------------------------
+# check arguments and change to the directory in which to run wmake
+#
+# wmake
+# wmake dir
+# wmake target dir
+# wmake target dir MakeDir
+#
+# target is one of the targets in the Makefile
+# (e.g. Make/linuxAMD64Gcc4DPOpt/fvMesh.o) or one of the special targets:
+#   lib     : build statically linked lib (.a)
+#   libso   : build dynamically linked lib (.so)
+#   libo    : ?
+#   jar     : build Java jar
+#   exe     : build statically linked executable
+#   project : ?
+#   all     : all subdirectories
+#------------------------------------------------------------------------------
 
 makeOption=""
 dir="_"
 
 if [ $# -ge 1 ]
 then
-    if [ $1 = "lib" -o $1 = "libso" -o $1 = "libo"  -o $1 = "jar" -o $1 = "exe" -o $1 = "project" ]
+    if [ -d $1 ]
     then
-        makeOption=$1
-    else
         dir=$1
+    else
+        makeOption=$1
     fi
 fi
 
@@ -101,6 +138,11 @@ then
     fi
 fi
 
+
+#------------------------------------------------------------------------------
+# Check if there is a special name provided for the Make sub-directory
+#------------------------------------------------------------------------------
+
 if [ $# = 3 ]
 then
     MakeDir=$3
@@ -108,10 +150,26 @@ else
     MakeDir=Make
 fi
 
-if [ ! -d $MakeDir ]
+
+#------------------------------------------------------------------------------
+# Recurse the application directories tree
+#------------------------------------------------------------------------------
+
+if [ "$makeOption" = "all" ]
 then
-    echo $0: $MakeDir directory does not exist, exiting !
-    exit 0
+    if [ -e Allwmake ]
+    then
+        Allwmake
+        exit $?
+    elif [ ! -d $MakeDir ]
+    then
+        $make -f $WM_DIR/MakefileApps FOAM_APPS="`find . -maxdepth 1 \( -type d -a ! -name "." -a ! -name "Make" \)  -printf "%f "`"
+        exit $?
+    fi
+
+    # This is the end of the recursion down the application directories tree
+    # so remove the "all" option so that the call to make builds the application
+    makeOption=
 fi
 
 
@@ -123,23 +181,23 @@ fi
 if [ ! -d $MakeDir ]
 then
     echo $0: cannot make, $MakeDir directory does not exist
-    cd $curDir
     exit 1
 fi
 
 if [ ! -r $MakeDir/files ]
 then
     echo $0: cannot make, file $MakeDir/files does not exist
-    cd $curDir
     exit 1
 fi
 
-
-cd $MakeDir
-
-make -f $WM_DIR/MakefileFiles allFiles
-
-cd ..
+# Spawn a sub-shell and unset MAKEFLAGS in that sub-shell to stop avoid
+# files and options being built in parallel
+(
+  cd $MakeDir
+  unset MAKEFLAGS
+  make -s -f $WM_DIR/MakefileOptions
+  make -s -f $WM_DIR/MakefileFiles allFiles
+)
 
 
 #------------------------------------------------------------------------------
@@ -152,28 +210,7 @@ OBJECTS_DIR=$MakeDir/$WM_OPTIONS
 if [ ! -r $OBJECTS_DIR/objectFiles ]
 then
     echo $0: cannot make, file $OBJECTS_DIR/objectFiles was not created successfully
-    cd $curDir
     exit 1
-fi
-
-
-#------------------------------------------------------------------------------
-# Select the version of make to be used (pmake if available otherwise make)
-#------------------------------------------------------------------------------
-
-make="make"
-
-if [ "$WM_NCOMPPROCS" ]
-then
-    if [ "$WM_NCOMPPROCS" -ne 1 ]
-    then
-        if [ -r /usr/sbin/pmake ]
-        then
-            make="pmake -v -J "$WM_NCOMPPROCS
-        else
-            make="make -j "$WM_NCOMPPROCS
-        fi
-    fi
 fi
 
 
@@ -185,14 +222,13 @@ touch $OBJECTS_DIR/dontIncludeDeps
 
 if [ "$makeOption" = "lib" -o "$makeOption" = "libso" -o "$makeOption" = "libo" ]
 then
-    $make -f $WM_DIR/Makefile MAKE_DIR=$MakeDir INCLUDE_DEPS=$OBJECTS_DIR/dontIncludeDeps lnInclude/uptodate
+    $make -s -f $WM_DIR/Makefile MAKE_DIR=$MakeDir INCLUDE_DEPS=$OBJECTS_DIR/dontIncludeDeps lnInclude/uptodate
 fi
 
-$make -f $WM_DIR/Makefile MAKE_DIR=$MakeDir INCLUDE_DEPS=$OBJECTS_DIR/dontIncludeDeps $OBJECTS_DIR/dependencies
+$make -s -f $WM_DIR/Makefile MAKE_DIR=$MakeDir INCLUDE_DEPS=$OBJECTS_DIR/dontIncludeDeps $OBJECTS_DIR/dependencies
 
 retVal=$?
 if [ $retVal -ne 0 ]; then
-    cd $curDir
     exit $retVal
 fi
 
@@ -201,18 +237,8 @@ fi
 # make the object files and link
 #------------------------------------------------------------------------------
 
-echo  $makeOption
-$make -f $WM_DIR/Makefile MAKE_DIR=$MakeDir INCLUDE_DEPS=$OBJECTS_DIR/includeDeps $makeOption
-
-retVal=$?
-if [ $retVal -ne 0 ]; then
-    cd $curDir
-    exit $retVal
-fi
-
-
-#------------------------------------------------------------------------------
-
-cd $curDir
+cmd="$make -f $WM_DIR/Makefile MAKE_DIR=$MakeDir INCLUDE_DEPS=$OBJECTS_DIR/includeDeps $makeOption"
+#echo "cmd=$cmd"
+exec $cmd
 
 #------------------------------------------------------------------------------

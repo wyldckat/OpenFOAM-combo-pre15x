@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,12 +22,10 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
-
 \*---------------------------------------------------------------------------*/
 
 #include "entry.H"
+#include "OStringStream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -64,6 +62,31 @@ void entry::operator=(const entry& e)
     }
 
     keyword_ = e.keyword_;
+}
+
+
+bool entry::operator==(const entry& e) const
+{
+    if (keyword_ != e.keyword_)
+    {
+        return false;
+    }
+    else
+    {
+        OStringStream oss1;
+        oss1 << *this;
+
+        OStringStream oss2;
+        oss2 << e;
+
+        return oss1.str() == oss2.str();
+    }
+}
+
+
+bool entry::operator!=(const entry& e) const
+{
+    return !operator==(e);
 }
 
 

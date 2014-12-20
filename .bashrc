@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -65,11 +65,6 @@ export WM_OPTIONS=$WM_ARCH${WM_COMPILER}$WM_PRECISION_OPTION$WM_COMPILE_OPTION
 export WM_SHELL=${SHELL##*/}
 export PATH=$WM_DIR:$PATH
 
-#export WM_DECOMP_INC=-DCELL_DECOMP
-#export WM_DECOMP_LIBS=-lcellDecompFiniteElement
-export WM_DECOMP_INC=-DFACE_DECOMP
-export WM_DECOMP_LIBS=-lfaceDecompFiniteElement
-
 export FOAM_DOT_DIR=.$WM_PROJECT-$WM_PROJECT_VERSION
 
 export FOAM_SRC=$WM_PROJECT_DIR/src
@@ -109,7 +104,13 @@ if [ "$WM_COMPILER" = "Gcc" -o "$machineTest" = "Linux" -a "$WM_COMPILER" = "" ]
 fi
 
 if [ "$WM_COMPILER" = "Gcc4" ]; then
-    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.1.0$WM_COMPILER_ARCH
+    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.1.2$WM_COMPILER_ARCH
+    WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.4/bin"
+    WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
+fi
+
+if [ "$WM_COMPILER" = "Gcc42" ]; then
+    export WM_COMPILER_DIR=$WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.2-20061031$WM_COMPILER_ARCH
     WM_COMPILER_BIN="$WM_COMPILER_DIR/bin:$WM_COMPILER_DIR/../gdb-6.4/bin"
     WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 fi
@@ -168,7 +169,7 @@ export CLASSPATH=.
 
 # MICO
 # ~~~~
-export MICO_VERSION=2.3.11
+export MICO_VERSION=2.3.12
 export MICO_PATH=$FOAM_SRC/mico-$MICO_VERSION
 export MICO_ARCH_PATH=$MICO_PATH/platforms/$WM_OPTIONS
 export PATH=$MICO_ARCH_PATH/bin:$PATH
@@ -185,7 +186,30 @@ fi
 
 # Communications library
 # ~~~~~~~~~~~~~~~~~~~~~~
-if [ .$WM_MPLIB = .MPICH ]; then
+
+if [ .$WM_MPLIB = .LAM ]; then
+
+    export LAM_VERSION=7.1.2
+    export LAMHOME=$FOAM_SRC/lam-$LAM_VERSION
+    export LAM_ARCH_PATH=$LAMHOME/platforms/$WM_OPTIONS
+
+    AddLib $LAM_ARCH_PATH/lib
+    AddPath $LAM_ARCH_PATH/bin
+
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/lam-$LAM_VERSION
+
+elif [ .$WM_MPLIB = .OPENMPI ]; then
+
+    export OPENMPI_VERSION=1.2b3
+    export OPENMPI_HOME=$FOAM_SRC/openmpi-$OPENMPI_VERSION
+    export OPENMPI_ARCH_PATH=$OPENMPI_HOME/platforms/$WM_OPTIONS
+
+    AddLib $OPENMPI_ARCH_PATH/lib
+    AddPath $OPENMPI_ARCH_PATH/bin
+
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/openmpi-$OPENMPI_VERSION
+
+elif [ .$WM_MPLIB = .MPICH ]; then
 
     export MPICH_VERSION=1.2.4
     export MPICH_PATH=$FOAM_SRC/mpich-$MPICH_VERSION
@@ -197,33 +221,43 @@ if [ .$WM_MPLIB = .MPICH ]; then
 
     export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/mpich-$MPICH_VERSION
 
-elif [ .$WM_MPLIB = .LAM ]; then
+elif [ .$WM_MPLIB = .MPICH-GM ]; then
 
-    export LAM_VERSION=7.1.1
-    export LAMHOME=$FOAM_SRC/lam-$LAM_VERSION
-    export LAM_ARCH_PATH=$LAMHOME/platforms/$WM_OPTIONS
+    export MPICH_PATH=/opt/mpi
+    export MPICH_ARCH_PATH=$MPICH_PATH
+    export MPICH_ROOT=$MPICH_ARCH_PATH
+    export GM_LIB_PATH=/opt/gm/lib64
 
-    AddLib $LAM_ARCH_PATH/lib
-    AddPath $LAM_ARCH_PATH/bin
+    AddLib $MPICH_ARCH_PATH/lib
+    AddLib $GM_LIB_PATH
+    AddPath $MPICH_ARCH_PATH/bin
 
-    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/lam-$LAM_VERSION
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/mpich-gm
 
-elif [ .$WM_MPLIB = .OPENMPI ]; then
+elif [ .$WM_MPLIB = .GAMMA ]; then
 
-    export OPENMPI_VERSION=1.0.2a7
-    export OPENMPI_HOME=$FOAM_SRC/openmpi-$OPENMPI_VERSION
-    export OPENMPI_ARCH_PATH=$OPENMPI_HOME/platforms/$WM_OPTIONS
+    export GAMMA_ARCH_PATH=/usr
 
-    AddLib $OPENMPI_ARCH_PATH/lib
-    AddPath $OPENMPI_ARCH_PATH/bin
+    #AddLib $GAMMA_ARCH_PATH/lib
+    #AddPath $GAMMA_ARCH_PATH/bin
 
-    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/openmpi-$OPENMPI_VERSION
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/gamma
+
+elif [ .$WM_MPLIB = .MPI ]; then
+
+    export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/mpi
 
 else
     export FOAM_MPI_LIBBIN=$FOAM_LIBBIN/dummy
 fi
 
 AddLib $FOAM_MPI_LIBBIN
+
+
+# CGAL library if available
+# ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+AddLib $CGAL_LIB_DIR
 
 
 # Set the MPI buffer size (used by all platforms except SGI MPI)

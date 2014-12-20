@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,6 +31,8 @@ License
 #include "PtrList.H"
 #include "SLList.H"
 #include "IndirectList.H"
+#include "BiIndirectList.H"
+#include "contiguous.H"
 
 #include <algorithm>
 
@@ -105,9 +107,9 @@ List<T>::List(const List<T>& a)
         this->v_ = new T[this->size_];
 
 #       ifdef USEMEMCPY
-        if (writeBinary(this->v_))
+        if (contiguous<T>())
         {
-            memcpy(this->v_, a.v_, this->size_*sizeof(T));
+            memcpy(this->v_, a.v_, this->byteSize());
         }
         else
 #       endif
@@ -143,9 +145,9 @@ List<T>::List(List<T>& a, bool reUse)
         this->v_ = new T[this->size_];
 
 #       ifdef USEMEMCPY
-        if (writeBinary(this->v_))
+        if (contiguous<T>())
         {
-            memcpy(this->v_, a.v_, this->size_*sizeof(T));
+            memcpy(this->v_, a.v_, this->byteSize());
         }
         else
 #       endif
@@ -291,6 +293,28 @@ List<T>::List(const IndirectList<T>& idl)
 }
 
 
+// Construct as copy of BiIndirectList<T>
+template<class T>
+List<T>::List(const BiIndirectList<T>& idl)
+:
+    UList<T>(NULL, idl.size())
+{
+    if (this->size_)
+    {
+        this->v_ = new T[this->size_];
+
+        forAll(*this, i)
+        {
+            this->operator[](i) = idl[i];
+        }
+    }
+    else
+    {
+        this->v_ = 0;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * * //
 
 // Destroy list elements
@@ -333,7 +357,7 @@ void List<T>::setSize(const label newSize)
                 register label i = min(this->size_, newSize);
 
 #               ifdef USEMEMCPY
-                if (writeBinary(this->v_))
+                if (contiguous<T>())
                 {
                     memcpy(nv, this->v_, i*sizeof(T));
                 }
@@ -428,9 +452,9 @@ void List<T>::operator=(const UList<T>& a)
     if (this->size_)
     {
 #       ifdef USEMEMCPY
-        if (writeBinary(this->v_))
+        if (contiguous<T>())
         {
-            memcpy(this->v_, a.v_, this->size_*sizeof(T));
+            memcpy(this->v_, a.v_, this->byteSize());
         }
         else
 #       endif
@@ -490,6 +514,27 @@ void List<T>::operator=(const SLList<T>& sll)
 // Assignment operator. Takes linear time.
 template<class T>
 void List<T>::operator=(const IndirectList<T>& idl)
+{
+    if (idl.size() != this->size_)
+    {
+        if (this->size_) delete[] this->v_;
+        this->size_ = idl.size();
+        if (this->size_) this->v_ = new T[this->size_];
+    }
+
+    if (this->size_)
+    {
+        forAll(*this, i)
+        {
+            this->operator[](i) = idl[i];
+        }
+    }
+}
+
+
+// Assignment operator. Takes linear time.
+template<class T>
+void List<T>::operator=(const BiIndirectList<T>& idl)
 {
     if (idl.size() != this->size_)
     {

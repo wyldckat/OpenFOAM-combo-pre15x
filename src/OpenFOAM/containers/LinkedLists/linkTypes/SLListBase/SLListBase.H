@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -146,6 +146,9 @@ public:
             // Remove and return element
             link* remove(link*);
 
+            // Remove and return element specified by iterator
+            inline link* remove(iterator&);
+
             //- Clear the list
             inline void clear();
 
@@ -154,6 +157,7 @@ public:
 
         class iterator
         {
+            friend class SLListBase;
             friend class const_iterator;
 
             // Private data
@@ -164,10 +168,19 @@ public:
                 //- Current element
                 link* curElmt_;
 
+                //- Copy of the link
+                link curLink_;
+
         public:
 
             //- Construct for a given SLListBase and link
             inline iterator(SLListBase&, link*);
+
+            //- Construct for a given SLListBase
+            //  setting element and link to NULL.
+            //  Only used to create endIter
+            inline iterator(SLListBase&);
+
 
             // Member operators
 

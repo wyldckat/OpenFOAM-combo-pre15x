@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -59,9 +59,9 @@ SourceFiles
 #include "lduMatrix.H"
 #include "PtrList.H"
 #include "labelField.H"
-#include "lduAddressingStore.H"
+#include "lduPrimitiveMesh.H"
 #include "primitiveFields.H"
-#include "lduCoupledInterfacePtrsList.H"
+#include "lduInterfaceFieldPtrsList.H"
 #include "cpuTime.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -94,15 +94,8 @@ class amgSymSolver
 
     // Private data
 
-        //- Final convergence tolerance
-        scalar tolerance_;
-
-        //- Convergence tolerance relative to the initial
-        scalar relTol_;
-
         //- Min number of cells in top level
         label nCellsInTopLevel_;
-
 
         //- Restrict addressing array
         // Note: restrict addressing array n tells you how to grab the next
@@ -111,17 +104,17 @@ class amgSymSolver
         // finest matrix and create the zeroth level of the hierarchy
         PtrList<labelField> restrictAddressing_;
 
-        //- Hierarchy of matrix addressing
-        PtrList<lduAddressingStore> addrLevels_;
+        //- Hierarchy of meshes
+        PtrList<lduPrimitiveMesh> meshLevels_;
 
         //- Hierarchy of matrix levels
         PtrList<lduMatrix> matrixLevels_;
 
-        //- Hierarchy of coupled interfaces.
+        //- Hierarchy of interfaces.
         //  Warning! Needs to be cleared by hand.  
-        PtrList<lduCoupledInterfacePtrsList> interfaceLevels_;
+        PtrList<lduInterfaceFieldPtrsList> interfaceLevels_;
 
-        //- Hierarchy of coupled interface coefficients
+        //- Hierarchy of interfaced interface coefficients
         PtrList<FieldField<Field, scalar> > interfaceCoeffs_;
 
         //- Timing
@@ -140,7 +133,7 @@ class amgSymSolver
         const lduMatrix& matrixLevel(const label i) const;
 
         //- Simplified access to interface level
-        const lduCoupledInterfacePtrsList& interfaceLevel
+        const lduInterfaceFieldPtrsList& interfaceLevel
         (
             const label i
         ) const;
@@ -173,13 +166,19 @@ class amgSymSolver
             const label coarseLevelIndex
         ) const;
 
-        //- Return the scaling factor
+        //- Do a Jacobi iteration on the coarseField using ACf and
+        // return the scaling factor
         scalar scalingFactor
         (
-            const scalarField& coarseField,
+            scalarField& coarseField,
             const scalarField& coarseSource,
             const scalarField& ACf
         ) const;
+
+        //- Dummy readControls, the actual read is done by the read function
+        //  to maintain backward compatability
+        virtual void readControls()
+        {}
 
 
 public:
@@ -194,13 +193,10 @@ public:
         amgSymSolver
         (
             const word& fieldName,
-            scalarField& psi,
             const lduMatrix& matrix,
-            const scalarField& source,
-            const FieldField<Field, scalar>& coupleBouCoeffs,
-            const FieldField<Field, scalar>& coupleIntCoeffs,
-            const lduCoupledInterfacePtrsList& interfaces,
-            const direction cmpt,
+            const FieldField<Field, scalar>& interfaceBouCoeffs,
+            const FieldField<Field, scalar>& interfaceIntCoeffs,
+            const lduInterfaceFieldPtrsList& interfaces,
             Istream& solverData
         );
 
@@ -211,9 +207,6 @@ public:
 
 
     // Member Functions
-
-        //- Solve
-        lduMatrix::solverPerformance solve();
 
         //- Set maximum number of level
         static label setMaxLevels(const label mLevels)
@@ -250,6 +243,17 @@ public:
 
             return oldBottomSweeps;
         }
+
+        //- Read and reset the solver parameters from the given stream
+        void read(Istream& solverData);
+
+        //- Solve
+        lduMatrix::solverPerformance solve
+        (
+            scalarField& psi,
+            const scalarField& source,
+            const direction cmpt=0
+        ) const;
 };
 
 

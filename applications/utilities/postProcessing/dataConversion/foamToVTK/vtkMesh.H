@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,8 +37,8 @@ SourceFiles
 #ifndef vtkMesh_H
 #define vtkMesh_H
 
-#include "fvMeshSubset.H"
 #include "vtkTopo.H"
+#include "fvMeshSubset.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,16 +47,22 @@ namespace Foam
 
 // Class forward declarations
 class Time;
+//class fvMesh;
+//class fvMeshSubset;
 
 /*---------------------------------------------------------------------------*\
                            Class vtkMesh Declaration
 \*---------------------------------------------------------------------------*/
 
 class vtkMesh
-:
-    public fvMeshSubset
 {
     // Private data
+
+        //- Reference to mesh
+        fvMesh& baseMesh_;
+
+        //- Subsetting engine
+        fvMeshSubset subsetter_;
 
         //- Current cellSet (or empty)
         const word setName_;
@@ -72,9 +78,6 @@ class vtkMesh
 
     // Private Member Functions
 
-        //- Recalculate the constant mapping arrays
-        void calcMapping() const;
-
         //- Disallow default bitwise copy construct
         vtkMesh(const vtkMesh&);
 
@@ -87,7 +90,7 @@ public:
     // Constructors
 
         //- Construct from components
-        vtkMesh(const IOobject& io, const word& setName = "");
+        vtkMesh(fvMesh& baseMesh, const word& setName = "");
 
 
     // Destructor
@@ -98,6 +101,12 @@ public:
     // Member Functions
 
         // Access
+
+            //- whole mesh
+            const fvMesh& baseMesh() const
+            {
+                return baseMesh_;
+            }
 
             //- Check if running subMesh
             bool useSubMesh() const
@@ -120,11 +129,11 @@ public:
             {
                 if (setName_.size() == 0)
                 {
-                    return *this;
+                    return subsetter_.baseMesh();
                 }
                 else
                 {
-                    return subMesh();
+                    return subsetter_.subMesh();
                 }
             }
 
@@ -133,13 +142,13 @@ public:
             {
                 if (useSubMesh())
                 {
-                    return cellMap();
+                    return subsetter_.cellMap();
                 }
                 else
                 {
                     if (!cMapPtr_)
                     {
-                        calcMapping();
+                        cMapPtr_ = new labelList(identity(baseMesh_.nCells()));
                     }
                     return *cMapPtr_;
                 }
@@ -150,13 +159,13 @@ public:
             {
                 if (useSubMesh())
                 {
-                    return pointMap();
+                    return subsetter_.pointMap();
                 }
                 else
                 {
                     if (!pMapPtr_)
                     {
-                        calcMapping();
+                        pMapPtr_ = new labelList(identity(baseMesh_.nPoints()));
                     }
                     return *pMapPtr_;
                 }
@@ -185,7 +194,7 @@ public:
                 else
                 {
                     tmp<GeometricField<Type, fvPatchField, volMesh> > subFld =
-                        fvMeshSubset::interpolate(fld);
+                        subsetter_.interpolate(fld);
 
                     subFld().rename(fld.name());
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -81,6 +81,17 @@ pressureDirectedInletVelocityFvPatchVectorField
 pressureDirectedInletVelocityFvPatchVectorField::
 pressureDirectedInletVelocityFvPatchVectorField
 (
+    const pressureDirectedInletVelocityFvPatchVectorField& pivpvf
+)
+:
+    fixedValueFvPatchVectorField(pivpvf),
+    inletDir_(pivpvf.inletDir_)
+{}
+
+
+pressureDirectedInletVelocityFvPatchVectorField::
+pressureDirectedInletVelocityFvPatchVectorField
+(
     const pressureDirectedInletVelocityFvPatchVectorField& pivpvf,
     const vectorField& iF
 )
@@ -129,9 +140,9 @@ void pressureDirectedInletVelocityFvPatchVectorField::updateCoeffs()
         db().lookupObject<surfaceScalarField>("phi");
 
     const fvPatchField<scalar>& phip =
-        patchField<surfaceScalarField, scalar>(phi);
+        patch().patchField<surfaceScalarField, scalar>(phi);
 
-    const vectorField& n = patch().nf();
+    vectorField n = patch().nf();
     scalarField ndmagS = (n & inletDir_)*patch().magSf();
 
     if (phi.dimensions() == dimVelocity*dimArea)
@@ -141,7 +152,7 @@ void pressureDirectedInletVelocityFvPatchVectorField::updateCoeffs()
     else if (phi.dimensions() == dimDensity*dimVelocity*dimArea)
     {
         const fvPatchField<scalar>& rhop =
-            lookupPatchField<volScalarField, scalar>("rho");
+            patch().lookupPatchField<volScalarField, scalar>("rho");
 
         operator==(inletDir_*phip/(rhop*ndmagS));
     }

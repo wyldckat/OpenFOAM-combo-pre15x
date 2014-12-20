@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -140,6 +140,16 @@ public:
             else if (fieldType == "volVectorFieldValue")
             {
                 setFieldType<volVectorField>
+                    (mesh_, selectedCells_, fieldValues);
+            }
+            else if (fieldType == "volSphericalTensorFieldValue")
+            {
+                setFieldType<volSphericalTensorField>
+                    (mesh_, selectedCells_, fieldValues);
+            }
+            else if (fieldType == "volSymmTensorFieldValue")
+            {
+                setFieldType<volSymmTensorField>
                     (mesh_, selectedCells_, fieldValues);
             }
             else if (fieldType == "volTensorFieldValue")

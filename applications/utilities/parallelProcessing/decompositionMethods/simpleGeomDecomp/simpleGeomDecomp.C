@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -104,7 +104,7 @@ Foam::simpleGeomDecomp::simpleGeomDecomp(const dictionary& decompositionDict)
 Foam::simpleGeomDecomp::simpleGeomDecomp
 (
     const dictionary& decompositionDict,
-    const primitiveMesh&
+    const polyMesh&
 )
 :
     geomDecomp(decompositionDict, typeName)

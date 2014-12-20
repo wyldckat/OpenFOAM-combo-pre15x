@@ -1,6 +1,6 @@
 /*
  *  MICO --- an Open Source CORBA implementation
- *  Copyright (c) 1997-2003 by The Mico Team
+ *  Copyright (c) 1997-2006 by The Mico Team
  *
  *  This file was automatically generated. DO NOT EDIT!
  */

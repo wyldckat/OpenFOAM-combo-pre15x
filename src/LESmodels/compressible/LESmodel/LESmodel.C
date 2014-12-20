@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -74,7 +74,7 @@ LESmodel::LESmodel
 
     k0_("k0", dimVelocity*dimVelocity, SMALL),
 
-    delta_(LESdelta::New(U.mesh(), *this))
+    delta_(LESdelta::New("delta", U.mesh(), *this))
 {
     if (found("k0"))
     {

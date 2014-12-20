@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,7 +45,7 @@ void writeFaceSet
     const fileName& fileName
 )
 {
-    const faceList& faces = vMesh.faces();
+    const faceList& faces = vMesh.mesh().faces();
 
     std::ofstream pStream(fileName.c_str());
 
@@ -87,7 +87,7 @@ void writeFaceSet
         setFaces[setFaceI] = faces[iter.key()];
         setFaceI++;
     }
-    primitiveFacePatch fp(setFaces, vMesh.points());
+    primitiveFacePatch fp(setFaces, vMesh.mesh().points());
 
 
     // Write points and faces as polygons

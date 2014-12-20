@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,87 +38,6 @@ defineTypeNameAndDebug(objectRegistry, 0);
 
 // * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
-// Add an regIOobject to list
-bool objectRegistry::checkIn(regIOobject& io) const
-{
-    if
-    (
-        this == dynamic_cast<const objectRegistry*>(&time_)
-     && io.name() != "time"
-     && io.name() != "region0"
-    )
-    {
-        WarningIn("objectRegistry::checkIn(regIOobject&)")
-            << "Registering object '" << io.name() << '\''
-            << " with objectRegistry 'time'" << nl
-            << "    This is only appropriate for registering the regions"
-               " of a multi-region computation\n"
-               "    or in other special circumstances.\n"
-               "    Otherwise please register this object with it's region"
-               " (mesh)"
-            << endl;
-    }
-
-    if (objectRegistry::debug)
-    {
-        Info<< "objectRegistry::checkIn(regIOobject&) : "
-            << "checking in " << io.name()
-            << endl;
-    }
-
-    return const_cast<objectRegistry&>(*this).insert(io.name(), &io);
-}
-
-
-// Remove an regIOobject from list
-bool objectRegistry::checkOut(regIOobject& io) const
-{
-    iterator iter = const_cast<objectRegistry&>(*this).find(io.name());
-
-    if (iter != end())
-    {
-        if (objectRegistry::debug)
-        {
-            Info<< "objectRegistry::checkOut(regIOobject&) : "
-                << "checking out " << io.name()
-                << endl;
-        }
-
-        if (iter() != &io)
-        {
-            if (objectRegistry::debug)
-            {
-                WarningIn("objectRegistry::checkOut(regIOobject&)")
-                    << "attempt to checkOut copy of " << io.name()
-                    << endl;
-            }
-
-            return false;
-        }
-        else
-        {
-            if (io.registries())
-            {
-                delete iter();
-            }
-
-            return const_cast<objectRegistry&>(*this).erase(iter);
-        }
-    }
-    else
-    {
-        if (objectRegistry::debug)
-        {
-            Info<< "objectRegistry::checkOut(regIOobject&) : "
-                << "could not find " << io.name()
-                << endl;
-        }
-
-        return false;
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors *  * * * * * * * * * * * * * //
 
 objectRegistry::objectRegistry
@@ -139,7 +58,7 @@ objectRegistry::objectRegistry
             false
         )
     ),
-    regIOobjectTable(nIoObjects),
+    HashTable<regIOobject*>(nIoObjects),
     time_(t),
     parent_(t),
     dbDir_(name())
@@ -153,7 +72,7 @@ objectRegistry::objectRegistry
 )
 :
     regIOobject(io),
-    regIOobjectTable(nIoObjects),
+    HashTable<regIOobject*>(nIoObjects),
     time_(io.time()),
     parent_(io.db()),
     dbDir_(parent_.dbDir()/name())
@@ -168,9 +87,11 @@ objectRegistry::~objectRegistry()
 {
     for (iterator iter = begin(); iter != end(); ++iter)
     {
-        if (iter()->registries())
+        if (iter()->ownedByRegistry())
         {
-            delete iter();
+            regIOobject* elemPtr = iter();
+            erase(iter);
+            delete elemPtr;
         }
     }
 }
@@ -178,7 +99,6 @@ objectRegistry::~objectRegistry()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return the list of names of the IOobjects
 wordList objectRegistry::names() const
 {
     wordList objectNames(size());
@@ -193,7 +113,6 @@ wordList objectRegistry::names() const
 }
 
 
-// Return the list of names of the IOobjects of given class
 wordList objectRegistry::names(const word& ClassName) const
 {
     wordList objectNames(size());
@@ -219,13 +138,91 @@ const objectRegistry& objectRegistry::subRegistry(const word& name) const
 }
 
 
+bool objectRegistry::checkIn(regIOobject& io) const
+{
+    if (objectRegistry::debug)
+    {
+        Pout<< "objectRegistry::checkIn(regIOobject&) : "
+            << "checking in " << io.name()
+            << endl;
+    }
+
+    return const_cast<objectRegistry&>(*this).insert(io.name(), &io);
+}
+
+
+bool objectRegistry::checkOut(regIOobject& io) const
+{
+    iterator iter = const_cast<objectRegistry&>(*this).find(io.name());
+
+    if (iter != end())
+    {
+        if (objectRegistry::debug)
+        {
+            Pout<< "objectRegistry::checkOut(regIOobject&) : "
+                << "checking out " << io.name()
+                << endl;
+        }
+
+        if (iter() != &io)
+        {
+            if (objectRegistry::debug)
+            {
+                WarningIn("objectRegistry::checkOut(regIOobject&)")
+                    << "attempt to checkOut copy of " << io.name()
+                    << endl;
+            }
+
+            return false;
+        }
+        else
+        {
+            if (io.ownedByRegistry())
+            {
+                delete iter();
+            }
+
+            return const_cast<objectRegistry&>(*this).erase(iter);
+        }
+    }
+    else
+    {
+        if (objectRegistry::debug)
+        {
+            Pout<< "objectRegistry::checkOut(regIOobject&) : "
+                << "could not find " << io.name()
+                << endl;
+        }
+
+        return false;
+    }
+}
+
+
+bool objectRegistry::modified() const
+{
+    bool anyModified = false;
+
+    for (const_iterator iter = begin(); iter != end(); ++iter)
+    {
+        if (iter()->modified())
+        {
+            anyModified = true;
+            break;
+        }
+    }
+
+    return anyModified;
+}
+
+
 void objectRegistry::readModifiedObjects()
 {
     for (iterator iter = begin(); iter != end(); ++iter)
     {
         if (objectRegistry::debug)
         {
-            Info<< "objectRegistry::readModifiedObjects() : "
+            Pout<< "objectRegistry::readModifiedObjects() : "
                 << "Considering reading object "
                 << iter()->name()
                 << endl;
@@ -243,11 +240,11 @@ bool objectRegistry::readIfModified()
 }
 
 
-bool objectRegistry::write
+bool objectRegistry::writeObject
 (
-    IOstream::streamFormat,
-    IOstream::versionNumber,
-    IOstream::compressionType
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
 ) const
 {
     bool ok = true;
@@ -256,15 +253,16 @@ bool objectRegistry::write
     {
         if (objectRegistry::debug)
         {
-            Info<< "objectRegistry::write() : "
+            Pout<< "objectRegistry::write() : "
                 << "Considering writing object "
                 << iter()->name()
+                << " with writeOpt " << iter()->writeOpt()
                 << endl;
         }
 
         if (iter()->writeOpt() != NO_WRITE)
         {
-            ok = iter()->write() && ok;
+            ok = iter()->writeObject(fmt, ver, cmp) && ok;
         }
     }
 

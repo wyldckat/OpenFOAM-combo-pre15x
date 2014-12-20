@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,8 +27,6 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "ISstream.H"
 #include "int.H"
 #include "token.H"
@@ -47,7 +45,7 @@ Istream& ISstream::read(char& c)
 }
 
 
-Istream& ISstream::read(word& Word)
+Istream& ISstream::read(word& w)
 {
     static const int MAX_WORD = 1024;
     static char wordBuffer[MAX_WORD];
@@ -113,14 +111,14 @@ Istream& ISstream::read(word& Word)
     }
 
     wordBuffer[i] = '\0';        // Terminator.
-    Word = wordBuffer;
+    w = wordBuffer;
     putback(c);
 
     return *this;
 }
 
 
-Istream& ISstream::read(string& String)
+Istream& ISstream::read(string& s)
 {
     static const int MAX_STR = 1024;
     static const int MAX_ERROR_STR = 80;
@@ -132,7 +130,7 @@ Istream& ISstream::read(string& String)
     {
         stringBuffer[0] = '\0';
 
-        FatalIOErrorIn("ISstream::read(string& String)", *this)
+        FatalIOErrorIn("ISstream::read(string& s)", *this)
             << "cannot read start of string"
             << exit(FatalIOError);
 
@@ -143,7 +141,7 @@ Istream& ISstream::read(string& String)
     {
         stringBuffer[0] = '\0';
 
-        FatalIOErrorIn("ISstream::read(string& String)", *this)
+        FatalIOErrorIn("ISstream::read(string& s)", *this)
             << "Incorrect start of string character"
             << exit(FatalIOError);
 
@@ -159,7 +157,7 @@ Istream& ISstream::read(string& String)
         if (c == token::END_STRING && !escape)
         {
             stringBuffer[i] = '\0';
-            String = stringBuffer;
+            s = stringBuffer;
             return *this;
         }
 
@@ -168,7 +166,7 @@ Istream& ISstream::read(string& String)
             stringBuffer[i] = '\0';
             stringBuffer[MAX_ERROR_STR] = '\0';
 
-            FatalIOErrorIn("ISstream::read(string& String)", *this)
+            FatalIOErrorIn("ISstream::read(string& s)", *this)
                 << "found a '\\n' while reading string \""
                 << stringBuffer << '"'
                 << exit(FatalIOError);
@@ -186,7 +184,7 @@ Istream& ISstream::read(string& String)
             {
                 stringBuffer[MAX_STR - 1] = '\0';
 
-                FatalIOErrorIn("ISstream::read(string& String)", *this)
+                FatalIOErrorIn("ISstream::read(string& s)", *this)
                     << " string " << stringBuffer << "is too long" << endl
                     << "    maximum number of characters allowed = " << MAX_STR
                     << exit(FatalIOError);
@@ -203,7 +201,7 @@ Istream& ISstream::read(string& String)
     stringBuffer[i] = '\0';
     stringBuffer[MAX_ERROR_STR] = '\0';
 
-    FatalIOErrorIn("ISstream::read(string& String)", *this)
+    FatalIOErrorIn("ISstream::read(string& s)", *this)
         << "problem while reading string \"" << stringBuffer << "...\""
         << exit(FatalIOError);
 

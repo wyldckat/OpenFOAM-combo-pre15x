@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,9 +28,9 @@ Class
 Description
     A class for handling file names.
     A fileName can be  constructed from a char* or a word.
-    FileNames may be concaternated by adding a '/' separator.
-    FileNames may be decomposed into the path, name or component
-    list. FileNames may be interogated for type and access mode.
+    FileNames may be concatenated by adding a '/' separator.
+    FileNames may be decomposed into the path, name or component list.
+    FileNames may be interogated for type and access mode.
 
 SourceFiles
     fileName.C
@@ -103,7 +103,7 @@ public:
         //- Construct as copy of character array
         inline fileName(const char*);
 
-        //- Construct by concatonating elements of wordList separated by '/'
+        //- Construct by concatenating elements of wordList separated by '/'
         explicit fileName(const wordList&);
 
         //- Construct from Istream

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -44,7 +42,6 @@ namespace Foam
 
 void spray::evolve()
 {
-
     sms_.setSize(rho_.size());
     shs_.setSize(rho_.size());
     forAll(srhos_, i)
@@ -80,23 +77,10 @@ void spray::evolve()
         T_
     );
 
-    // set the move time for the parcels
-    for
-    (
-        spray::iterator elmnt = begin();
-        elmnt != end();
-        ++elmnt
-    )
-    {
-        elmnt().t0() = 0.0;
-        elmnt().tEnd() = runTime_.deltaT().value();
-    }
-
-
     calculateAmbientPressure();
     calculateAmbientTemperature();
     collisions().collideParcels(runTime_.deltaT().value());
-    track();
+    move();
     dispersion().disperseParcels();
     inject();
     atomizationLoop();
@@ -108,7 +92,8 @@ void spray::evolve()
     TInterpolator_.clear();
 }
 
-void spray::track()
+
+void spray::move()
 {
     // Reset Spray Source Terms
     sms_ = vector::zero;
@@ -118,8 +103,9 @@ void spray::track()
         srhos_[i] = 0.0;
     }
 
-    Cloud<parcel>::track(*this);
+    Cloud<parcel>::move(*this);
 }
+
 
 void spray::breakupLoop()
 {
@@ -158,6 +144,7 @@ void spray::breakupLoop()
         }
     }
 }
+
 
 void spray::atomizationLoop()
 {

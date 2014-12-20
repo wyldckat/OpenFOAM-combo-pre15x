@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -39,25 +39,21 @@ defineRunTimeSelectionTable(LESdelta, dictionary);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// from components
-LESdelta::LESdelta
-(
-    const fvMesh& mesh
-)
+LESdelta::LESdelta(const word& name, const fvMesh& mesh)
 :
     mesh_(mesh),
     delta_
     (
         IOobject
         (
-            "delta",
+            name,
             mesh.time().timeName(),
             mesh,
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
         mesh,
-        dimensionedScalar("delta", dimLength, SMALL),
+        dimensionedScalar(name, dimLength, SMALL),
         calculatedFvPatchScalarField::typeName
     )
 {}

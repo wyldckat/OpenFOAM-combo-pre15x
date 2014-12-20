@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -602,16 +602,16 @@ inline bool triangle<Point, PointRef>::classify
     nearType = NONE;
     nearLabel = -1;
 
-    if (Foam::mag(alpha+beta-1) < tol)
+    if (Foam::mag(alpha+beta-1) <= tol)
     {
         // On edge between vert 1-2 (=edge 1)
 
-        if (Foam::mag(alpha) < tol)
+        if (Foam::mag(alpha) <= tol)
         {
             nearType = POINT;
             nearLabel = 2;
         }
-        else if (Foam::mag(beta) < tol)
+        else if (Foam::mag(beta) <= tol)
         {
             nearType = POINT;
             nearLabel = 1;
@@ -622,16 +622,16 @@ inline bool triangle<Point, PointRef>::classify
             nearLabel = 1;
         }
     }
-    else if (Foam::mag(alpha) < tol)
+    else if (Foam::mag(alpha) <= tol)
     {
         // On edge between vert 2-0 (=edge 2)
 
-        if (Foam::mag(beta) < tol)
+        if (Foam::mag(beta) <= tol)
         {
             nearType = POINT;
             nearLabel = 0;
         }
-        else if (Foam::mag(beta-1) < tol)
+        else if (Foam::mag(beta-1) <= tol)
         {
             nearType = POINT;
             nearLabel = 2;
@@ -642,16 +642,16 @@ inline bool triangle<Point, PointRef>::classify
             nearLabel = 2;
         }
     }
-    else if (Foam::mag(beta) < tol)
+    else if (Foam::mag(beta) <= tol)
     {
         // On edge between vert 0-1 (= edge 0)
 
-        if (Foam::mag(alpha) < tol)
+        if (Foam::mag(alpha) <= tol)
         {
             nearType = POINT;
             nearLabel = 0;
         }
-        else if (Foam::mag(alpha-1) < tol)
+        else if (Foam::mag(alpha-1) <= tol)
         {
             nearType = POINT;
             nearLabel = 1;

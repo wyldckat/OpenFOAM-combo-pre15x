@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -158,6 +158,12 @@ public:
                 new syringePressureFvPatchScalarField(*this)
             );
         }
+
+        //- Construct as copy
+        syringePressureFvPatchScalarField
+        (
+            const syringePressureFvPatchScalarField&
+        );
 
         //- Construct as copy setting internal field reference
         syringePressureFvPatchScalarField

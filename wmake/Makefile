@@ -2,7 +2,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -63,8 +63,8 @@ CLASSES_DIR        = $(MAKE_DIR)/classes
 SYS_INC            = 
 SYS_LIBS           = 
 
-PROJECT_INC        = 
-PROJECT_LIBS       = 
+PROJECT_INC        = -I$(LIB_SRC)/$(WM_PROJECT)/lnInclude
+PROJECT_LIBS       = -l$(WM_PROJECT)
 
 EXE_INC            = 
 EXE_LIBS           = 
@@ -127,13 +127,13 @@ include $(OBJECTS_DIR)/dependencyFiles
 # set header file include paths
 #------------------------------------------------------------------------------
 
-LIB_HEADER_DIRS = $(EXE_INC) \
-                  -I$(LIB_SRC)/$(WM_PROJECT)/lnInclude \
-                  -IlnInclude \
-                  -I. \
-                  $(GINC) \
-                  $(PROJECT_INC) \
-                  $(SYS_INC)
+LIB_HEADER_DIRS = \
+        $(EXE_INC) \
+        -IlnInclude \
+        -I. \
+        $(PROJECT_INC) \
+        $(GINC) \
+        $(SYS_INC)
 
 
 #------------------------------------------------------------------------------
@@ -141,15 +141,15 @@ LIB_HEADER_DIRS = $(EXE_INC) \
 #------------------------------------------------------------------------------
 
 $(EXE):  $(OBJECTS)
-	     $(WM_SCRIPTS)/mkObjectDir $(EXE)
+	     @$(WM_SCRIPTS)/mkObjectDir $(EXE)
 	     $(LINKEXE) $(OBJECTS) -L$(LIB_WM_OPTIONS_DIR) \
-	     $(EXE_LIBS) -l$(WM_PROJECT) $(SYS_LIBS) $(LINK_LIBS) $(GLIBS) -o $(EXE)
+	     $(EXE_LIBS) $(PROJECT_LIBS) $(SYS_LIBS) $(LINK_LIBS) $(GLIBS) -o $(EXE)
 
 exe:     $(SEXE)
 	     @echo \`$(SEXE)\' is up to date.
 
 $(SEXE): $(OBJECTS)
-	     $(WM_SCRIPTS)/mkObjectDir $(SEXE)
+	     @$(WM_SCRIPTS)/mkObjectDir $(SEXE)
 	     $(LINKEXE) $(OBJECTS) $(EXE_LIBS) \
          $(SYS_LIBS) $(LINK_LIBS) $(GLIBS) -o $(SEXE)
 
@@ -162,17 +162,17 @@ libso:   $(LIB).$(SO)
 	     @echo \`$(LIB).$(SO)\' is up to date.
 
 $(LIB).$(SO): $(OBJECTS)
-	     $(WM_SCRIPTS)/mkObjectDir $(LIB)
-	     rm -f so_locations
-	     cd $(OBJECTS_DIR) ; \
+	     @$(WM_SCRIPTS)/mkObjectDir $(LIB)
+	     @rm -f so_locations
+	     @cd $(OBJECTS_DIR) ; \
 	     $(LINKLIBSO) $(LOCAL_OBJECTS) -L$(LIB_WM_OPTIONS_DIR) $(LIB_LIBS) $(GLIB_LIBS) -o $(LIB).$(SO)
 
 lib:     $(LIB).a
 	     @echo \`$(LIB).a\' is up to date.
 
 $(LIB).a: $(OBJECTS)
-	     $(WM_SCRIPTS)/mkObjectDir $(LIB)
-	     rm -f $(LIB).a
+	     @$(WM_SCRIPTS)/mkObjectDir $(LIB)
+	     @rm -f $(LIB).a
 	     $(AR) $(ARFLAGS) $(LIB).a $(OBJECTS)
 	     $(RANLIB) $(LIB).a
 
@@ -180,15 +180,15 @@ libo:    $(LIB).o
 	     @echo \`$(LIB).o\' is up to date.
 
 $(LIB).o: $(OBJECTS)
-	     $(WM_SCRIPTS)/mkObjectDir $(LIB)
-	     rm -f $(LIB).o
+	     @$(WM_SCRIPTS)/mkObjectDir $(LIB)
+	     @rm -f $(LIB).o
 	     $(LD) -r -o $(LIB).o $(OBJECTS)
 
 jar:     $(LIB).jar
 	     @echo \`$(LIB).jar\' is up to date.
 
 $(LIB).jar: $(OBJECTS)
-	     $(WM_SCRIPTS)/mkObjectDir $(LIB)
+	     @$(WM_SCRIPTS)/mkObjectDir $(LIB)
 	     jar cfm $(LIB).jar $(LIB_LIBS) -C $(CLASSES_DIR) .
 
 #------------------------------------------------------------------------------
@@ -204,7 +204,7 @@ lnInclude/uptodate: $(MAKE_DIR)/files $(MAKE_DIR)/options
 #------------------------------------------------------------------------------
 
 $(OBJECTS_DIR)/dependencies: $(DEPENDENCIES)
-	@echo dependencies up to data > $(OBJECTS_DIR)/dependencies
+	@echo dependencies up to date > $(OBJECTS_DIR)/dependencies
 
 include $(INCLUDE_DEPS)
 

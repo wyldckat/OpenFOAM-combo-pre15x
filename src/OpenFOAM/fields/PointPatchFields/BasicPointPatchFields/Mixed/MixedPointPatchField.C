@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -67,12 +67,10 @@ MixedPointPatchField<PatchField, PointPatch, Type>::MixedPointPatchField
     const Field<Type>& iF
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF),
+    ValuePointPatchField<PatchField, PointPatch, Type>(p, iF),
     refValue_(p.size()),
     valueFraction_(p.size())
-{
-    this->checkPointField();
-}
+{}
 
 
 template<template<class> class PatchField, class PointPatch, class Type>
@@ -85,12 +83,11 @@ MixedPointPatchField<PatchField, PointPatch, Type>::MixedPointPatchField
     const scalarField& vf
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF, f),
+    ValuePointPatchField<PatchField, PointPatch, Type>(p, iF, f),
     refValue_(v),
     valueFraction_(vf)
 {
     checkFieldSize();
-    this->checkPointField();
 }
 
 
@@ -102,13 +99,10 @@ MixedPointPatchField<PatchField, PointPatch, Type>::MixedPointPatchField
     const dictionary& dict
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(p, iF),
+    ValuePointPatchField<PatchField, PointPatch, Type>(p, iF),
     refValue_("refValue", dict, p.size()),
     valueFraction_("valueFraction", dict, p.size())
-{
-    this->checkPointField();
-    updateBoundaryField();
-}
+{}
 
 
 template<template<class> class PatchField, class PointPatch, class Type>
@@ -120,7 +114,7 @@ MixedPointPatchField<PatchField, PointPatch, Type>::MixedPointPatchField
     const PointPatchFieldMapper& mapper
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>
+    ValuePointPatchField<PatchField, PointPatch, Type>
     (
         ptf,
         p,
@@ -140,7 +134,7 @@ MixedPointPatchField<PatchField, PointPatch, Type>::MixedPointPatchField
     const Field<Type>& iF
 )
 :
-    ValueStoredPointPatchField<PatchField, PointPatch, Type>(ptf, iF),
+    ValuePointPatchField<PatchField, PointPatch, Type>(ptf, iF),
     refValue_(ptf.refValue_),
     valueFraction_(ptf.valueFraction_)
 {}
@@ -180,13 +174,18 @@ void MixedPointPatchField<PatchField, PointPatch, Type>::rmap
 
 // Evaluate patch field
 template<template<class> class PatchField, class PointPatch, class Type>
-void MixedPointPatchField<PatchField, PointPatch, Type>::updateBoundaryField()
+void MixedPointPatchField<PatchField, PointPatch, Type>::evaluate()
 {
-    Field<Type>& values = *this;
+    Field<Type>::operator=
+    (
+        valueFraction_*refValue_
+      + (1.0 - valueFraction_)*this->patchInternalField()
+    );
 
-    tmp<Field<Type> > internalValues = this->patchInternalField();
+    // Get internal field to insert values into
+    Field<Type>& iF = const_cast<Field<Type>&>(this->internalField());
 
-    values = valueFraction_*refValue_ + (1.0 - valueFraction_)*internalValues;
+    setInInternalField(iF, *this);
 }
 
 

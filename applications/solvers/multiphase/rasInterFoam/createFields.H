@@ -1,13 +1,3 @@
-    label nGammaCorr
-    (
-        readLabel(piso.lookup("nGammaCorr"))
-    );
-
-    label nGammaSubCycles
-    (
-        readLabel(piso.lookup("nGammaSubCycles"))
-    );
-
     Info<< "Reading field pd\n" << endl;
     volScalarField pd
     (
@@ -53,7 +43,7 @@
 #   include "createPhi.H"
 
     Info<< "Reading transportProperties\n" << endl;
-    twoPhaseMixture twoPhaseProperties(U, phi);
+    twoPhaseMixture twoPhaseProperties(U, phi, "gamma");
     
     const dimensionedScalar& rho1 = twoPhaseProperties.rho1();
     const dimensionedScalar& rho2 = twoPhaseProperties.rho2();

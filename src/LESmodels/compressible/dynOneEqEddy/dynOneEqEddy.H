@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -84,8 +84,8 @@ class dynOneEqEddy
     // Private Member Functions
 
         //- Calculate ck, ce by filtering the velocity field U.
-        dimensionedScalar ck_(const volTensorField& D) const;
-        dimensionedScalar ce_(const volTensorField& D) const;
+        dimensionedScalar ck_(const volSymmTensorField& D) const;
+        dimensionedScalar ce_(const volSymmTensorField& D) const;
 
         // Disallow default bitwise copy construct and assignment
         dynOneEqEddy(const dynOneEqEddy&);

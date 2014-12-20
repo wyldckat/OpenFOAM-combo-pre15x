@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,8 @@ namespace Foam
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-timeVaryingUniformFixedValueFvPatchField<Type>::timeVaryingUniformFixedValueFvPatchField
+timeVaryingUniformFixedValueFvPatchField<Type>::
+timeVaryingUniformFixedValueFvPatchField
 (
     const fvPatch& p,
     const Field<Type>& iF
@@ -49,22 +50,24 @@ timeVaryingUniformFixedValueFvPatchField<Type>::timeVaryingUniformFixedValueFvPa
 
 
 template<class Type>
-timeVaryingUniformFixedValueFvPatchField<Type>::timeVaryingUniformFixedValueFvPatchField
+timeVaryingUniformFixedValueFvPatchField<Type>::
+timeVaryingUniformFixedValueFvPatchField
 (
     const timeVaryingUniformFixedValueFvPatchField<Type>& ptf,
     const fvPatch& p,
     const Field<Type>& iF,
-    const fvPatchFieldMapper&
+    const fvPatchFieldMapper& mapper
 )
 :
-    fixedValueFvPatchField<Type>(p, iF),
+    fixedValueFvPatchField<Type>(ptf, p, iF, mapper),
     timeDataFileName_(ptf.timeDataFileName_),
     timeDataPtr_(NULL)
 {}
 
 
 template<class Type>
-timeVaryingUniformFixedValueFvPatchField<Type>::timeVaryingUniformFixedValueFvPatchField
+timeVaryingUniformFixedValueFvPatchField<Type>::
+timeVaryingUniformFixedValueFvPatchField
 (
     const fvPatch& p,
     const Field<Type>& iF,
@@ -87,7 +90,21 @@ timeVaryingUniformFixedValueFvPatchField<Type>::timeVaryingUniformFixedValueFvPa
 
 
 template<class Type>
-timeVaryingUniformFixedValueFvPatchField<Type>::timeVaryingUniformFixedValueFvPatchField
+timeVaryingUniformFixedValueFvPatchField<Type>::
+timeVaryingUniformFixedValueFvPatchField
+(
+    const timeVaryingUniformFixedValueFvPatchField<Type>& ptf
+)
+:
+    fixedValueFvPatchField<Type>(ptf),
+    timeDataFileName_(ptf.timeDataFileName_),
+    timeDataPtr_(NULL)
+{}
+
+
+template<class Type>
+timeVaryingUniformFixedValueFvPatchField<Type>::
+timeVaryingUniformFixedValueFvPatchField
 (
     const timeVaryingUniformFixedValueFvPatchField<Type>& ptf,
     const Field<Type>& iF

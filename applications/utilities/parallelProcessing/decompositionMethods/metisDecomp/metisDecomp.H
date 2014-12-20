@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,7 +50,7 @@ class metisDecomp
 {
     // Private data
 
-        const primitiveMesh& mesh_;
+        const polyMesh& mesh_;
 
 
     // Private Member Functions
@@ -72,7 +72,7 @@ public:
         metisDecomp
         (
             const dictionary& decompositionDict,
-            const primitiveMesh& mesh
+            const polyMesh& mesh
         );
 
 
@@ -83,6 +83,12 @@ public:
 
 
     // Member Functions
+
+        bool parallelAware() const
+        {
+            // Metis does not know about proc boundaries
+            return false;
+        }
 
         labelList decompose(const pointField&);
 };

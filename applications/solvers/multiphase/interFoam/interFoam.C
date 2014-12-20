@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,8 +32,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "dynamicFvMesh.H"
-
+#include "MULES.H"
 #include "subCycle.H"
 #include "interfaceProperties.H"
 #include "twoPhaseMixture.H"
@@ -45,14 +44,14 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-#   include "createDynamicFvMesh.H"
+#   include "createMesh.H"
 #   include "readEnvironmentalProperties.H"
 #   include "readPISOControls.H"
 #   include "initContinuityErrs.H"
 #   include "createFields.H"
 #   include "readTimeControls.H"
-#   include "setInitialDeltaT.H"
 #   include "correctPhi.H"
+#   include "setInitialDeltaT.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -68,10 +67,6 @@ int main(int argc, char *argv[])
         runTime++;
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
-
-        phi += fvc::meshPhi(rho, U);
-        mesh.update();
-        phi -= fvc::meshPhi(rho, U);
 
         twoPhaseProperties.correct();
 

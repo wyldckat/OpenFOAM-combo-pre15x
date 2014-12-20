@@ -1,0 +1,15 @@
+fvMotionSolvers/fvMotionSolver/fvMotionSolver.C
+fvMotionSolvers/laplacian/laplacianFvMotionSolver.C
+fvMotionSolvers/componentLaplacian/componentLaplacianFvMotionSolver.C
+
+motionDiffusivity/motionDiffusivity/motionDiffusivity.C
+motionDiffusivity/uniform/uniformDiffusivity.C
+motionDiffusivity/inverseDistance/inverseDistanceDiffusivity.C
+motionDiffusivity/directional/directionalDiffusivity.C
+motionDiffusivity/motionDirectional/motionDirectionalDiffusivity.C
+motionDiffusivity/file/fileDiffusivity.C
+
+motionDiffusivity/manipulators/quadratic/quadraticDiffusivity.C
+motionDiffusivity/manipulators/exponential/exponentialDiffusivity.C
+
+LIB = $(FOAM_LIBBIN)/libfvMotionSolvers

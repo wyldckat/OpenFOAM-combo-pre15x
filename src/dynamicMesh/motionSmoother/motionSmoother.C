@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,7 @@ License
 #include "twoDPointCorrector.H"
 #include "faceSet.H"
 #include "fixedValuePointPatchFields.H"
+#include "pointConstraint.H"
 
 namespace Foam
 {
@@ -40,6 +41,113 @@ defineTypeNameAndDebug(motionSmoother, 0);
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+// From pointPatchInterpolation
+void Foam::motionSmoother::makePatchPatchAddressing()
+{
+    if (debug)
+    {
+        Pout<< "motionSmoother::makePatchPatchAddressing() : "
+            << "constructing boundary addressing"
+            << endl;
+    }
+
+    const polyBoundaryMesh& bm = mesh_.boundaryMesh();
+    const pointBoundaryMesh& pbm = pMesh_.boundary();
+
+    // first count the total number of patch-patch points
+
+    label nPatchPatchPoints = 0;
+
+    forAll(bm, patchi)
+    {
+        if(!isA<emptyPolyPatch>(bm[patchi]))
+        {
+            nPatchPatchPoints += bm[patchi].boundaryPoints().size();
+        }
+    }
+
+
+    // Go through all patches and mark up the external edge points
+    Map<label> patchPatchPointSet(2*nPatchPatchPoints);
+
+    labelList patchPatchPoints(nPatchPatchPoints);
+
+    List<pointConstraint> patchPatchPointConstraints(nPatchPatchPoints);
+
+    label pppi = 0;
+
+    forAll(bm, patchi)
+    {
+        if(!isA<emptyPolyPatch>(bm[patchi]))
+        {
+            const labelList& bp = bm[patchi].boundaryPoints();
+            const labelList& meshPoints = bm[patchi].meshPoints();
+
+            forAll(bp, pointi)
+            {
+                label ppp = meshPoints[bp[pointi]];
+
+                Map<label>::iterator iter = patchPatchPointSet.find(ppp);
+
+                if (iter == patchPatchPointSet.end())
+                {
+                    patchPatchPointSet.insert(ppp, pppi);
+                    patchPatchPoints[pppi] = ppp;
+                    pbm[patchi].applyConstraint
+                    (
+                        bp[pointi],
+                        patchPatchPointConstraints[pppi]
+                    );
+                    pppi++;
+                }
+                else
+                {
+                    pbm[patchi].applyConstraint
+                    (
+                        bp[pointi],
+                        patchPatchPointConstraints[iter()]
+                    );
+                }
+            }
+        }
+    }
+
+    nPatchPatchPoints = pppi;
+    patchPatchPoints.setSize(nPatchPatchPoints);
+    patchPatchPointConstraints.setSize(nPatchPatchPoints);
+
+    patchPatchPointConstraintPoints_.setSize(nPatchPatchPoints);
+    patchPatchPointConstraintTensors_.setSize(nPatchPatchPoints);
+
+    label nConstraints = 0;
+
+    forAll(patchPatchPointConstraints, i)
+    {
+        if (patchPatchPointConstraints[i].first() != 0)
+        {
+            patchPatchPointConstraintPoints_[nConstraints] = 
+                patchPatchPoints[i];
+
+            patchPatchPointConstraintTensors_[nConstraints] = 
+                patchPatchPointConstraints[i].constraintTransformation();
+
+            nConstraints++;
+        }
+    }
+
+    patchPatchPointConstraintPoints_.setSize(nConstraints);
+    patchPatchPointConstraintTensors_.setSize(nConstraints);
+
+
+    if (debug)
+    {
+        Pout<< "motionSmoother::makePatchPatchAddressing() : "
+            << "finished constructing boundary addressing"
+            << endl;
+    }
+}
+
 
 void Foam::motionSmoother::checkFld(const pointScalarField& fld)
 {
@@ -137,6 +245,7 @@ void Foam::motionSmoother::minSmooth
     }
 
     newFld.correctBoundaryConditions();
+    applyCornerConstraints(newFld);
 }
 
 
@@ -161,6 +270,7 @@ void Foam::motionSmoother::scaleField
         }
     }
     fld.correctBoundaryConditions();
+    applyCornerConstraints(fld);
 }
 
 
@@ -245,8 +355,7 @@ Foam::motionSmoother::motionSmoother
     ),
     oldPoints_(mesh_.points()),
     isInternalPoint_(mesh_.nPoints(), 1),
-    twoDMotion_(false),
-    correct2DPtr_(NULL)
+    twoDCorrector_(mesh_)
 {
     const pointBoundaryMesh& patches = pMesh_.boundary();
 
@@ -277,30 +386,10 @@ Foam::motionSmoother::motionSmoother
     }
 
 
-    // Get twoDcorrector stuff
-    IOdictionary motionProps
-    (
-        IOobject
-        (
-            "dynamicMeshDict",
-            mesh_.time().constant(),
-            mesh_,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        )
-    );
-
-    twoDMotion_ = motionProps.lookup("twoDMotion");
-
-    if (twoDMotion_)
-    {
-        correct2DPtr_ = new twoDPointCorrector(mesh_);
-    }
-
     // Determine internal points. Note that for twoD there are no internal
     // points so we use the points of adaptPatchIDs instead
 
-    if (twoDMotion_)
+    if (twoDCorrector_.required())
     {
         const labelList& meshPoints = pp.meshPoints();
 
@@ -323,15 +412,15 @@ Foam::motionSmoother::motionSmoother
             }
         }
     }
+
+    makePatchPatchAddressing();
 }
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::motionSmoother::~motionSmoother()
-{
-    deleteDemandDrivenData(correct2DPtr_);
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -351,6 +440,12 @@ const Foam::pointMesh& Foam::motionSmoother::pMesh() const
 const Foam::indirectPrimitivePatch& Foam::motionSmoother::patch() const
 {
     return pp_;
+}
+
+
+const Foam::labelList& Foam::motionSmoother::adaptPatchIDs() const
+{
+    return adaptPatchIDs_;
 }
 
 
@@ -414,17 +509,139 @@ void Foam::motionSmoother::correct()
 }
 
 
+void Foam::motionSmoother::setDisplacement(pointField& patchDisp)
+{
+    const labelList& meshPoints = pp_.meshPoints();
+
+    // Set internal point data from displacement on combined patch points.
+    forAll(meshPoints, patchPointI)
+    {
+        displacement_[meshPoints[patchPointI]] = patchDisp[patchPointI];
+    }
+
+    const pointBoundaryMesh& patches = pMesh_.boundary();
+
+    // Copy internal point data to boundaryField for all affected patches
+    forAll(adaptPatchIDs_, i)
+    {
+        label patchI = adaptPatchIDs_[i];
+
+        const labelList& meshPoints = patches[patchI].meshPoints();
+
+        vectorField bDisp(meshPoints.size());
+
+        forAll(meshPoints, patchPointI)
+        {
+            bDisp[patchPointI] = displacement_[meshPoints[patchPointI]];
+        }
+
+        displacement_.boundaryField()[patchI] == bDisp;
+    }
+
+
+    // Make consistent with non-adapted bc's by evaluating those now and
+    // resetting the displacement from the values.
+    // Note that we're just doing a correctBoundaryConditions with
+    // fixedValue bc's first.
+    labelHashSet adaptPatchSet(adaptPatchIDs_);
+
+    const lduSchedule& patchSchedule = mesh_.globalData().patchSchedule();
+
+    forAll(patchSchedule, patchEvalI)
+    {
+        label patchI = patchSchedule[patchEvalI].patch;
+
+        if (!adaptPatchSet.found(patchI))
+        {
+            if (patchSchedule[patchEvalI].init)
+            {
+                displacement_.boundaryField()[patchI]
+                    .initEvaluate(patchSchedule[patchEvalI].bufferedTransfer);
+            }
+            else
+            {
+                displacement_.boundaryField()[patchI].evaluate();
+            }
+        }
+    }
+
+    // Multi-patch constraints
+    applyCornerConstraints(displacement_);
+
+    // Now reset input displacement
+    forAll(meshPoints, patchPointI)
+    {
+        patchDisp[patchPointI] = displacement_[meshPoints[patchPointI]];
+    }
+}
+
+
+//  correctBoundaryConditions with fixedValue bc's first.
+void Foam::motionSmoother::correctBoundaryConditions
+(
+    pointVectorField& displacement
+) const
+{
+    labelHashSet adaptPatchSet(adaptPatchIDs_);
+
+    const lduSchedule& patchSchedule = mesh_.globalData().patchSchedule();
+
+
+    // 1. evaluate on AdaptPatches
+    forAll(patchSchedule, patchEvalI)
+    {
+        label patchI = patchSchedule[patchEvalI].patch;
+
+        if (adaptPatchSet.found(patchI))
+        {
+            if (patchSchedule[patchEvalI].init)
+            {
+                displacement.boundaryField()[patchI]
+                    .initEvaluate(patchSchedule[patchEvalI].bufferedTransfer);
+            }
+            else
+            {
+                displacement.boundaryField()[patchI].evaluate();
+            }
+        }
+    }
+
+
+    // 2. evaluate on non-AdaptPatches
+    forAll(patchSchedule, patchEvalI)
+    {
+        label patchI = patchSchedule[patchEvalI].patch;
+
+        if (!adaptPatchSet.found(patchI))
+        {
+            if (patchSchedule[patchEvalI].init)
+            {
+                displacement.boundaryField()[patchI]
+                    .initEvaluate(patchSchedule[patchEvalI].bufferedTransfer);
+            }
+            else
+            {
+                displacement.boundaryField()[patchI].evaluate();
+            }
+        }
+    }
+
+    // Multi-patch constraints
+    applyCornerConstraints(displacement);
+}
+
+
 Foam::tmp<Foam::scalarField> Foam::motionSmoother::movePoints
 (
     pointField& newPoints
 )
 {
     // Correct for 2-D motion
-    if (correct2DPtr_)
+    if (twoDCorrector_.required())
     {
         Pout<< "Correct-ing 2-D mesh motion";
 
-        if (mesh_.parallelData().parallel())
+        if (mesh_.globalData().parallel())
         {
             WarningIn("motionSmoother::movePoints(pointField& newPoints)")
                 << "2D mesh-motion probably not correct in parallel" << endl;
@@ -451,15 +668,13 @@ Foam::tmp<Foam::scalarField> Foam::motionSmoother::movePoints
         }
 
         // Correct tangentially
-        correct2DPtr_->correctPoints(newPoints);
+        twoDCorrector_.correctPoints(newPoints);
         Pout<< " ...done" << endl;
     }    
 
     tmp<scalarField> tsweptVol = mesh_.movePoints(newPoints);
 
     pp_.movePoints(newPoints);
-
-    pMesh_.movePoints();
 
     return tsweptVol;
 }
@@ -492,24 +707,42 @@ bool Foam::motionSmoother::scaleMesh
     );
 
     // Set newPoints as old + scale*displacement
-    pointField newPoints
-    (
-        oldPoints_
-      + scale_.internalField()*displacement_.internalField()
-    );
+    pointField newPoints;
+    {
+        // Create overall displacement with same b.c.s as displacement_
+        pointVectorField totalDisplacement
+        (
+            IOobject
+            (
+                "totalDisplacement",
+                mesh_.time().timeName(),
+                mesh_,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
+            ),
+            scale_*displacement_,
+            displacement_.boundaryField().types()
+        );
+        correctBoundaryConditions(totalDisplacement);
+        newPoints = oldPoints_ + totalDisplacement.internalField();
+    }
+
     Pout<< "Calculated new mesh position in = "
         << timer.cpuTimeIncrement() << " s\n" << nl << endl;
 
     {
-        Pout<< "scale        : " << " min:" << min(scale_.internalField())
+        Pout<< "scale        :" << " min:" << min(scale_.internalField())
             << "  max:" << max(scale_.internalField()) << endl;
 
-        pointScalarField magDisp(mag(displacement_));
+        scalarField magDisp(mag(displacement_.internalField()));
 
-        Pout<< "displacement : " << "  min:" << min(magDisp.internalField())
-            << "  max:" << max(magDisp.internalField()) << endl;
+        Pout<< "displacement :" << " min:"
+            << returnReduce(min(magDisp), minOp<scalar>())
+            << "  max:"
+            << returnReduce(max(magDisp), maxOp<scalar>())
+            << endl;
     }
-
 
 
     // Move
@@ -594,10 +827,9 @@ bool Foam::motionSmoother::scaleMesh
 
 void Foam::motionSmoother::updateMesh()
 {
-    if (correct2DPtr_)
-    {
-        correct2DPtr_->updateMesh();
-    }    
+    twoDCorrector_.updateMesh();
+
+    makePatchPatchAddressing();
 }
 
 
@@ -662,6 +894,16 @@ bool Foam::motionSmoother::checkMesh(labelHashSet& wrongFaces) const
 
     return nWrongFaces;
 }
+
+
+// Specialisaion of applyCornerConstraints for scalars because
+// no constraint need be applied
+template<>
+void Foam::motionSmoother::applyCornerConstraints<Foam::scalar>
+(
+    GeometricField<scalar, pointPatchField, pointMesh>& pf
+) const
+{}
 
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -242,6 +242,14 @@ public:
                 return featureEdges_.size() - internalStart_;
             }
 
+            //- Helper function: select a subset of featureEdges_
+            labelList selectFeatureEdges
+            (
+                const bool regionEdges,
+                const bool externalEdges,
+                const bool internalEdges
+            ) const;
+
 
         // Edit
 
@@ -258,37 +266,40 @@ public:
             //- Set from status per edge
             void setFromStatus(const List<edgeStatus>&);
 
+
         // Find
 
-            //- Find nearest sample for every point (usually the set of
-            //  featurePoints). Return map from index in
+            //- Find nearest sample for selected surface points (usually the
+            //  set of featurePoints). Return map from index in
             //  samples to surface point. Do not include points that are further
             //  than maxDist away (separate maxDist for every sample)
             Map<label> nearestSamples
             (
-                const labelList& pointLabels,
+                const labelList& selectedPoints,
                 const pointField& samples,
                 const scalarField& maxDist
             ) const;
 
             //- Find nearest sample for regularly sampled points along the
-            //  feature edges. Return map from sample to feature edge.
+            //  selected (surface) edges. Return map from sample to edge.
             //  maxDist is distance below which gets snapped.
             //  Edge gets sampled at points sampleDist[sampleI] apart.
             //  (with a maximum of 10 samples per edge)
-            Map<label> nearestSamplesToFeatEdges
+            Map<label> nearestSamples
             (
+                const labelList& selectedEdges,
                 const pointField& samples,
                 const scalarField& sampleDist,
                 const scalarField& maxDist,
                 const scalar minSampleDist = 0.1
             ) const;
 
-            //- Like nearestSamplesToFeatEdges but now gets nearest point on
+            //- Like nearestSamples but now gets nearest point on
             //  sample-edge instead of nearest sample-point itself.
             //  Return map from sample edge to feature edge.
-            Map<pointIndexHit> nearestEdgesToFeatEdges
+            Map<pointIndexHit> nearestEdges
             (
+                const labelList& selectedEdges,
                 const edgeList& sampleEdges,
                 const labelList& selectedSampleEdges,
                 const pointField& samplePoints,
@@ -298,34 +309,38 @@ public:
             ) const;
 
 
-            //- Find nearest surface feature edge for each sample point.
+            //- Find nearest surface edge (out of selectedEdges) for
+            //  each sample point.
             //  Sets:
             //  - edgeLabel : label of surface edge.
             //  - edgePoint : exact position of nearest point on edge.
             //  - edgeEndPoint : -1, 0, 1 depending on whether edgePoint is
             //                  on inside/start/end of edge
-            void nearestSurfFeatures
+            void nearestSurfEdge
             (
+                const labelList& selectedEdges,
                 const pointField& samples,
-                const scalarField& maxDist,
+                const vector& searchSpan,   // search span 
                 labelList& edgeLabel,
                 labelList& edgeEndPoint,
                 pointField& edgePoint
             ) const;
 
 
-            //- Find nearest surface feature edge for each sample edge.
+            //- Find nearest surface edge (out of selectedEdges) for each
+            // sample edge.
             //  Sets:
             //  - edgeLabel         : label of surface edge.
             //  - pointOnEdge       : exact position of nearest point on edge.
             //  - pointOnFeature    : exact position on sample edge.
-            void nearestSurfFeatures
+            void nearestSurfEdge
             (
+                const labelList& selectedEdges,
                 const edgeList& sampleEdges,
                 const labelList& selectedSampleEdges,
                 const pointField& samplePoints,
-
                 const vector& searchSpan,   // search span 
+
                 labelList& edgeLabel,       // label of surface edge or -1
                 pointField& pointOnEdge,    // point on above edge
                 pointField& pointOnFeature  // point on sample edge

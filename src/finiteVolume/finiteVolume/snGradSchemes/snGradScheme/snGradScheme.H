@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -126,13 +126,13 @@ public:
         }
 
 
-        //- Return the snGrad of the given cell field
-        //  with the given weigting factors
+        //- Return the snGrad of the given cell field with the given deltaCoeffs
         static tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
         snGrad
         (
             const GeometricField<Type, fvPatchField, volMesh>&,
-            const tmp<surfaceScalarField>&
+            const tmp<surfaceScalarField>&,
+            const word& snGradName = "snGrad"
         );
 
         //- Return the interpolation weighting factors for the given field
@@ -193,8 +193,9 @@ snGradScheme<Type>::addMeshConstructorToTable<SS<Type> >                       \
                                                                                \
 makeSnGradTypeScheme(SS, scalar)                                               \
 makeSnGradTypeScheme(SS, vector)                                               \
-makeSnGradTypeScheme(SS, tensor)                                               \
-makeSnGradTypeScheme(SS, sphericalTensor)
+makeSnGradTypeScheme(SS, sphericalTensor)                                      \
+makeSnGradTypeScheme(SS, symmTensor)                                           \
+makeSnGradTypeScheme(SS, tensor)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -88,8 +88,12 @@ public:
             //- Return object pointer for reuse
             inline T* ptr();
 
-            //- If object pointer points to valid object:
-            //  delete object and set pointer to that given
+            //- Set pointer to that given.
+            //  If object pointer already set issue a FatalError.
+            inline void set(T* p);
+
+            //- If object pointer already set delete object and
+            //  set pointer to that given
             inline void reset(T* p = NULL);
 
             //- If object pointer points to valid object:

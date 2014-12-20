@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,14 +22,14 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "metisDecomp.H"
 #include "addToRunTimeSelectionTable.H"
 #include "floatScalar.H"
 #include "IFstream.H"
+#include "Time.H"
+#include "coupledPolyPatch.H"
 
 extern "C"
 {
@@ -56,7 +56,7 @@ namespace Foam
 Foam::metisDecomp::metisDecomp
 (
     const dictionary& decompositionDict,
-    const primitiveMesh& mesh
+    const polyMesh& mesh
 )
 :
     decompositionMethod(decompositionDict),
@@ -68,19 +68,34 @@ Foam::metisDecomp::metisDecomp
 
 Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
 {
-
-    //
     // Make Metis CSR (Compressed Storage Format) storage
     //   adjncy      : contains neighbours (= edges in graph)
     //   xadj(celli) : start of information in adjncy for celli
-    //
 
     labelList xadj(mesh_.nCells()+1);
 
-    labelList adjncy(2*mesh_.nInternalFaces());
+    // Initialise the number if internal faces of the cells to twice the
+    // number of internal faces
+    label nInternalFaces = 2*mesh_.nInternalFaces();
+
+    // Check the boundary for coupled patches and add to the number of 
+    // internal faces
+    const polyBoundaryMesh& pbm = mesh_.boundaryMesh();
+
+    forAll(pbm, patchi)
+    {
+        if (isA<coupledPolyPatch>(pbm[patchi]))
+        {
+            nInternalFaces += pbm[patchi].size();
+        }
+    }
+
+    // Create the adjncy array the size of the total number of internal and
+    // coupled faces
+    labelList adjncy(nInternalFaces);
 
     // Fill in xadj
-
+    // ~~~~~~~~~~~~
     label freeAdj = 0;
 
     for (label cellI = 0; cellI < mesh_.nCells(); cellI++)
@@ -93,7 +108,12 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
         {
             label faceI = cFaces[i];
 
-            if (mesh_.isInternalFace(faceI))
+            if
+            (
+                mesh_.isInternalFace(faceI)
+             || isA<coupledPolyPatch>
+                (pbm[pbm.whichPatch(faceI)])
+            )
             {
                 freeAdj++;
             }
@@ -103,9 +123,11 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
 
 
     // Fill in adjncy
+    // ~~~~~~~~~~~~~~
 
     labelList nFacesPerCell(mesh_.nCells(), 0);
 
+    // Internal faces
     for (label faceI = 0; faceI < mesh_.nInternalFaces(); faceI++)
     {
         label own = mesh_.faceOwner()[faceI];
@@ -115,15 +137,41 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
         adjncy[xadj[nei] + nFacesPerCell[nei]++] = own;
     }
 
+    // Coupled faces
+    forAll(pbm, patchi)
+    {
+        if (isA<coupledPolyPatch>(pbm[patchi]))
+        {
+            const unallocLabelList& faceCells = pbm[patchi].faceCells();
+
+            label sizeby2 = faceCells.size()/2;
+
+            for (label facei=0; facei<sizeby2; facei++)
+            {
+                label own = faceCells[facei];
+                label nei = faceCells[facei + sizeby2];
+
+                adjncy[xadj[own] + nFacesPerCell[own]++] = nei;
+                adjncy[xadj[nei] + nFacesPerCell[nei]++] = own;
+            }
+        }
+    }
+
 
     // C style numbering
     int numFlag = 0;
 
+    // Method of decomposition
+    // recursive: multi-level recursive bisection (default)
+    // k-way: multi-level k-way 
+    word method("k-way");
+
     // decomposition options. 0 = use defaults
     labelList options(5, 0);
 
-    // processor weights. Use even weighting
-    Field<floatScalar> processorWeights(nProcessors_, 1.0/nProcessors_);
+    // processor weights initialised with no size, only used if specified in
+    // a file
+    Field<floatScalar> processorWeights;
 
     // cell weights (so on the vertices of the dual)
     labelList cellWeights;
@@ -141,9 +189,44 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
             decompositionDict_.subDict("metisCoeffs")
         );
 
+        if (metisDecompCoeffs.found("method"))
+        {
+            metisDecompCoeffs.lookup("method") >> method;
+
+            if (method != "recursive" && method != "k-way")
+            {
+                FatalErrorIn("metisDecomp::decompose()")
+                    << "Method " << method << " in metisCoeffs in dictionary : "
+                    << decompositionDict_.name()
+                    << " should be 'recursive' or 'k-way'"
+                    << exit(FatalError);
+            }
+
+            Info<< "Using Metis options     " << options
+                << endl << endl;
+        }
+
+        if (metisDecompCoeffs.found("options"))
+        {
+            metisDecompCoeffs.lookup("options") >> options;
+
+            if (options.size() != 5)
+            {
+                FatalErrorIn("metisDecomp::decompose()")
+                    << "Number of options in metisCoeffs in dictionary : "
+                    << decompositionDict_.name()
+                    << " should be 5"
+                    << exit(FatalError);
+            }
+
+            Info<< "Using Metis options     " << options
+                << endl << endl;
+        }
+
         if (metisDecompCoeffs.found("processorWeights"))
         {
             metisDecompCoeffs.lookup("processorWeights") >> processorWeights;
+            processorWeights /= sum(processorWeights);
 
             if (processorWeights.size() != nProcessors_)
             {
@@ -159,22 +242,23 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
         {
             Info<< "metisDecomp : Using cell-based weights." << endl;
 
-            fileName cellWeightsFile
+            word cellWeightsFile
             (
                 metisDecompCoeffs.lookup("cellWeightsFile")
             );
 
-            IFstream decompStream(cellWeightsFile);
-
-            if (!decompStream)
-            {
-                FatalIOErrorIn("manualDecomp::decompose()", decompStream)
-                    << "Cannot read cell weights data file "
-                    << cellWeightsFile << "." << endl
-                    << exit(FatalIOError);
-            }
-
-            decompStream >> cellWeights;
+            labelIOList cellIOWeights
+            (
+                IOobject
+                (
+                    cellWeightsFile,
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                )
+            );
+            cellWeights.transfer(cellIOWeights);
 
             if (cellWeights.size() != mesh_.nCells())
             {
@@ -189,22 +273,22 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
         {
             Info<< "metisDecomp : Using face-based weights." << endl;
 
-            fileName faceWeightsFile
+            word faceWeightsFile
             (
                 metisDecompCoeffs.lookup("faceWeightsFile")
             );
 
-            IFstream decompStream(faceWeightsFile);
-
-            if (!decompStream)
-            {
-                FatalIOErrorIn("manualDecomp::decompose()", decompStream)
-                    << "Cannot read face weights data file "
-                    << faceWeightsFile << "." << endl
-                    << exit(FatalIOError);
-            }
-
-            labelList weights(decompStream);
+            labelIOList weights
+            (
+                IOobject
+                (
+                    faceWeightsFile,
+                    mesh_.time().timeName(),
+                    mesh_,
+                    IOobject::MUST_READ,
+                    IOobject::AUTO_WRITE
+                )
+            );
 
             if (weights.size() != mesh_.nInternalFaces())
             {
@@ -231,27 +315,7 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
                 faceWeights[xadj[nei] + nFacesPerCell[nei]++] = w;
             }
         }
-
-        if (metisDecompCoeffs.found("options"))
-        {
-            metisDecompCoeffs.lookup("options") >> options;
-
-            if (options.size() != 5)
-            {
-                FatalErrorIn("metisDecomp::decompose()")
-                    << "Number of options in metisCoeffs in dictionary : "
-                    << decompositionDict_.name()
-                    << " should be 5"
-                    << abort(FatalError);
-            }
-
-            Info<< "Using Metis options     " << options
-                << endl << endl;
-        }
     }
-
-    processorWeights /= sum(processorWeights);
-
 
     int numCells = mesh_.nCells();
 
@@ -277,22 +341,82 @@ Foam::labelList Foam::metisDecomp::decompose(const pointField& points)
         wgtFlag += 1;       // Weights on edges
     }
 
-        
-    METIS_WPartGraphKway
-    (
-        &numCells,         // num vertices in graph
-        xadj.begin(),      // indexing into adjncy
-        adjncy.begin(),    // neighbour info
-        vwgtPtr,           // vertexweights
-        adjwgtPtr,         // no edgeweights
-        &wgtFlag,
-        &numFlag,
-        &nProcessors_,
-        processorWeights.begin(),
-        options.begin(),
-        &edgeCut,
-        finalDecomp.begin()
-    );
+    if (method == "recursive")
+    {
+        if (processorWeights.size())
+        {
+            METIS_WPartGraphRecursive
+            (
+                &numCells,         // num vertices in graph
+                xadj.begin(),      // indexing into adjncy
+                adjncy.begin(),    // neighbour info
+                vwgtPtr,           // vertexweights
+                adjwgtPtr,         // no edgeweights
+                &wgtFlag,
+                &numFlag,
+                &nProcessors_,
+                processorWeights.begin(),
+                options.begin(),
+                &edgeCut,
+                finalDecomp.begin()
+            );
+        }
+        else
+        {
+            METIS_PartGraphRecursive
+            (
+                &numCells,         // num vertices in graph
+                xadj.begin(),      // indexing into adjncy
+                adjncy.begin(),    // neighbour info
+                vwgtPtr,           // vertexweights
+                adjwgtPtr,         // no edgeweights
+                &wgtFlag,
+                &numFlag,
+                &nProcessors_,
+                options.begin(),
+                &edgeCut,
+                finalDecomp.begin()
+            );
+        }
+    }
+    else
+    {
+        if (processorWeights.size())
+        {
+            METIS_WPartGraphKway
+            (
+                &numCells,         // num vertices in graph
+                xadj.begin(),      // indexing into adjncy
+                adjncy.begin(),    // neighbour info
+                vwgtPtr,           // vertexweights
+                adjwgtPtr,         // no edgeweights
+                &wgtFlag,
+                &numFlag,
+                &nProcessors_,
+                processorWeights.begin(),
+                options.begin(),
+                &edgeCut,
+                finalDecomp.begin()
+            );
+        }
+        else
+        {
+            METIS_PartGraphKway
+            (
+                &numCells,         // num vertices in graph
+                xadj.begin(),      // indexing into adjncy
+                adjncy.begin(),    // neighbour info
+                vwgtPtr,           // vertexweights
+                adjwgtPtr,         // no edgeweights
+                &wgtFlag,
+                &numFlag,
+                &nProcessors_,
+                options.begin(),
+                &edgeCut,
+                finalDecomp.begin()
+            );
+        }
+    }
 
     return finalDecomp;
 }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,7 +47,6 @@ SourceFiles
 #include "vectorField.H"
 #include "tmp.H"
 #include "coordinateRotation.H"
-#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -62,6 +61,8 @@ class coordinateSystem
 {
     // Private data
 
+        static const scalar nonOrthogonalError;
+
         //- Name of patch
         word name_;
 
@@ -73,6 +74,18 @@ class coordinateSystem
 
         //- Origin
         vector dir_;
+
+        //- Local-to-global transformation tensor
+        tensor R_;
+
+        //- Global-to-local transformation tensor
+        tensor Rtrans_;
+
+
+    // Private Member Functions
+
+        //- Calculate transformation tensors
+        void calcTransformations();
 
 
 public:
@@ -206,22 +219,30 @@ public:
             return dir_;
         }
 
+        //- Return transformation tensor - please don't use directly
+        const tensor& R() const
+        {
+            return R_;
+        }
+
 
         //- Convert from local coordinate system to the global Cartesian system
         virtual vector toGlobal(const vector& localV) const = 0;
 
+        //- Convert from local coordinate system to the global Cartesian system
         virtual tmp<vectorField> toGlobal(const vectorField& localV) const = 0;
 
         //- Convert from global Cartesian system to the local coordinate system 
         virtual vector toLocal(const vector& globalV) const = 0;
 
+        //- Convert from global Cartesian system to the local coordinate system 
         virtual tmp<vectorField> toLocal(const vectorField& globalV) const = 0;
 
         //- Write
         virtual void write(Ostream&) const;
 
         //- Write dictionary
-        virtual void writeDict(Ostream&) const;
+        virtual void writeDict(Ostream&, bool subDict = true) const;
 
 
     // Ostream Operator

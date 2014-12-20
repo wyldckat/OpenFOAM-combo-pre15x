@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,7 +29,11 @@ Description
     Generic GeometricField class.
 
 SourceFiles
+    GeometricFieldI.H
     GeometricField.C
+    GeometricBoundaryField.C
+    GeometricFieldFunctions.H
+    GeometricFieldFunctions.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -38,9 +42,9 @@ SourceFiles
 
 #include "regIOobject.H"
 #include "dimensionedTypes.H"
-#include "Field.H"
+#include "DimensionedField.H"
 #include "FieldField.H"
-#include "scalarField.H"
+#include "lduInterfaceFieldPtrsList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -76,8 +80,7 @@ Ostream& operator<<
 template<class Type, template<class> class PatchField, class GeoMesh>
 class GeometricField
 :
-    public regIOobject,
-    public Field<Type>
+    public DimensionedField<Type, GeoMesh>
 {
     // Private member functions
 
@@ -93,7 +96,10 @@ public:
     // Public typedefs
 
         typedef typename GeoMesh::Mesh Mesh;
-        typedef typename Mesh::BoundaryMesh BoundaryMesh;
+        typedef typename GeoMesh::BoundaryMesh BoundaryMesh;
+
+        typedef DimensionedField<Type, GeoMesh> DimensionedInternalField;
+        typedef Field<Type> InternalField;
 
 
     class GeometricBoundaryField
@@ -177,6 +183,10 @@ public:
             //  the boundary
             GeometricBoundaryField boundaryInternalField() const;
 
+            //- Return a list of pointers for each patch field with only those
+            //  pointing to interfaces being set
+            lduInterfaceFieldPtrsList interfaces() const;
+
             //- Write boundary field as dictionary entry
             void writeEntry(const word& keyword, Ostream& os) const;
  
@@ -184,10 +194,7 @@ public:
         // Member operators
 
             //- Assignment to BoundaryField<Type, PatchField, BoundaryMesh>
-            void operator=
-            (
-                const GeometricBoundaryField&
-            );
+            void operator=(const GeometricBoundaryField&);
 
             //- Assignment to FieldField<PatchField, Type>
             void operator=(const FieldField<PatchField, Type>&);
@@ -198,10 +205,7 @@ public:
 
             //- Forced assignment to 
             //  BoundaryField<Type, PatchField, BoundaryMesh>
-            void operator==
-            (
-                const GeometricBoundaryField&
-            );
+            void operator==(const GeometricBoundaryField&);
 
             //- Forced assignment to FieldField<PatchField, Type>
             void operator==(const FieldField<PatchField, Type>&);
@@ -214,12 +218,6 @@ public:
 private:
 
     // Private data
-
-        //- Reference to mesh
-        const Mesh& mesh_;
-
-        //- Dimension set
-        dimensionSet dimensions_;
 
         //- Current time index.  
         //  Used to trigger the storing of the old-time value
@@ -237,7 +235,8 @@ private:
 
     // Private member functions
 
-        tmp<GeometricBoundaryField> readField();
+        //- Read the field from the given stream
+        tmp<GeometricBoundaryField> readField(Istream& is);
 
 
 public:
@@ -303,11 +302,19 @@ public:
             const PtrList<PatchField<Type> >&
         );
 
-        //- Construct and read
+        //- Construct and read given IOobject
         GeometricField
         (
             const IOobject&,
             const Mesh&
+        );
+
+        //- Construct and read from given stream
+        GeometricField
+        (
+            const IOobject&,
+            const Mesh&,
+            Istream&
         );
 
         //- Construct as copy
@@ -364,18 +371,6 @@ public:
         );
 
 
-    // Selectors
-
-        //- Return a pointer to a GeometricField created by re-using the given
-        //  tmp<GeometricField>
-        static tmp<GeometricField<Type, PatchField, GeoMesh> > New
-        (
-            const IOobject&,
-            const tmp<GeometricField<Type, PatchField, GeoMesh> >&,
-            const dimensionSet&
-        );
-
-
     // Destructor
 
         virtual ~GeometricField();
@@ -383,20 +378,17 @@ public:
 
     // Member functions
 
-        //- Return reference to mesh
-        inline const Mesh& mesh() const;
+        //- Return dimensioned internal field
+        DimensionedInternalField& dimensionedInternalField();
 
-        //- Return dimensions
-        inline dimensionSet& dimensions();
-
-        //- Return dimensions
-        inline const dimensionSet& dimensions() const;
+        //- Return dimensioned internal field
+        inline const DimensionedInternalField& dimensionedInternalField() const;
 
         //- Return internal field
-        Field<Type>& internalField();
+        InternalField& internalField();
 
         //- Return internal field
-        inline const Field<Type>& internalField() const;
+        inline const InternalField& internalField() const;
 
         //- Return reference to GeometricBoundaryField
         GeometricBoundaryField& boundaryField();
@@ -406,6 +398,9 @@ public:
 
         //- Return the time index of the field
         inline label timeIndex() const;
+
+        //- Return the time index of the field
+        inline label& timeIndex();
 
         //- Store the old-time fields
         void storeOldTimes() const;
@@ -443,12 +438,6 @@ public:
         (
             const direction
         ) const;
-
-        //- Calculate and return arithmetic average
-        dimensioned<Type> average() const;
-
-        //- Calculate and return weighted average
-        dimensioned<Type> weightedAverage(const scalarField&) const;
 
         //- WriteData member function required by regIOobject
         bool writeData(Ostream&) const;

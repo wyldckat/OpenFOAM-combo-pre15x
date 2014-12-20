@@ -11,5 +11,3 @@
             IOobject::MUST_READ
         )
     );
-
-    mesh.constructAndClear();

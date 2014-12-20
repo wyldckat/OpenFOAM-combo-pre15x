@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,8 +25,8 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "emptyPolyPatch.H"
-#include "parallelInfo.H"
 #include "commSchedule.H"
+#include "globalMeshData.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -59,8 +59,9 @@ GeometricBoundaryField
 
     forAll(bmesh_, patchi)
     {
-        hook
+        set
         (
+            patchi,
             PatchField<Type>::New
             (
                 patchFieldType,
@@ -102,14 +103,18 @@ GeometricBoundaryField
             "GeometricBoundaryField::"
             "GeometricBoundaryField(const BoundaryMesh&, "
             "const Field<Type>&, const wordList&)"
-        )   << "Incorrect number of patch type specifications given"
+        )   << "Incorrect number of patch type specifications given" << nl
+            << "    Number of patches in mesh = " << bmesh.size()
+            << " number of patch type specifications = "
+            << patchFieldTypes.size()
             << abort(FatalError);
     }
 
     forAll(bmesh_, patchi)
     {
-        hook
+        set
         (
+            patchi,
             PatchField<Type>::New
             (
                 patchFieldTypes[patchi],
@@ -147,8 +152,9 @@ GeometricBoundaryField
     {
         if (bmesh_[patchi].type() != emptyPolyPatch::typeName)
         {
-            hook
+            set
             (
+                patchi,
                 PatchField<Type>::New
                 (
                     bmesh_[patchi],
@@ -159,8 +165,9 @@ GeometricBoundaryField
         }
         else
         {
-            hook
+            set
             (
+                patchi,
                 PatchField<Type>::New
                 (
                     emptyPolyPatch::typeName,
@@ -197,7 +204,7 @@ GeometricBoundaryField
 
     forAll(bmesh_, patchi)
     {
-        hook(ptfl[patchi].clone(field));
+        set(patchi, ptfl[patchi].clone(field));
     }
 }
 
@@ -226,7 +233,7 @@ GeometricBoundaryField
 
     forAll(bmesh_, patchi)
     {
-        hook(btf[patchi].clone(field));
+        set(patchi, btf[patchi].clone(field));
     }
 }
 
@@ -291,8 +298,8 @@ evaluate()
                "evaluate()" << endl;
     }
 
-    const patchScheduleList& patchSchedule =
-        bmesh_.mesh().parallelData().patchSchedule();
+    const lduSchedule& patchSchedule =
+        bmesh_.mesh().globalData().patchSchedule();
 
     forAll(patchSchedule, patchEvali)
     {
@@ -343,6 +350,29 @@ boundaryInternalField() const
     }
 
     return BoundaryInternalField;
+}
+
+
+template<class Type, template<class> class PatchField, class GeoMesh>
+lduInterfaceFieldPtrsList
+GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
+interfaces() const
+{
+    lduInterfaceFieldPtrsList interfaces(this->size());
+
+    forAll (interfaces, patchi)
+    {
+        if (isA<lduInterfaceField>(this->operator[](patchi)))
+        {
+            interfaces.set
+            (
+                patchi,
+                &refCast<const lduInterfaceField>(this->operator[](patchi))
+            );
+        }
+    }
+
+    return interfaces;
 }
 
 

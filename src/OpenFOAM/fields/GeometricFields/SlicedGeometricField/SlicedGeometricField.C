@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,7 +29,7 @@ Class
 
 #include "SlicedGeometricField.H"
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * Private Member Functions * * * * * * * * * * * * * //
 
 template
 <
@@ -55,8 +55,9 @@ slicedBoundaryField
 
     forAll (mesh.boundary(), patchi)
     {
-        bf.hook
+        bf.set
         (
+            patchi,
             new SlicedPatchField<Type>
             (
                 mesh.boundary()[patchi],
@@ -67,6 +68,40 @@ slicedBoundaryField
     }
 
     return tbf;
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template
+<
+    class Type,
+    template<class> class PatchField,
+    template<class> class SlicedPatchField,
+    class GeoMesh
+>
+Foam::SlicedGeometricField<Type, PatchField, SlicedPatchField, GeoMesh>::
+DimensionedInternalField::DimensionedInternalField
+(
+    const IOobject& io,
+    const Mesh& mesh,
+    const dimensionSet& ds,
+    const Field<Type>& iField
+)
+:
+    DimensionedField<Type, GeoMesh>
+    (
+        io,
+        mesh,
+        ds,
+        Field<Type>()
+    )
+{
+    // Set the internalField to the slice of the complete field
+    UList<Type>::operator=
+    (
+        typename Field<Type>::subField(iField, GeoMesh::size(mesh))
+    );
 }
 
 
@@ -155,7 +190,20 @@ Foam::SlicedGeometricField<Type, PatchField, SlicedPatchField, GeoMesh>::
 }
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+template
+<
+    class Type,
+    template<class> class PatchField,
+    template<class> class SlicedPatchField,
+    class GeoMesh
+>
+Foam::SlicedGeometricField<Type, PatchField, SlicedPatchField, GeoMesh>::
+DimensionedInternalField::~DimensionedInternalField()
+{
+    // Set the internalField storage pointer to NULL before it's destruction
+    // to protect the field it a slice of.
+    UList<Type>::operator=(UList<Type>(NULL, 0));
+}
 
 
 // ************************************************************************* //

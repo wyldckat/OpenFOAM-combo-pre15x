@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -96,6 +96,23 @@ public:
         gaussLaplacianScheme(const fvMesh& mesh, Istream& is)
         :
             laplacianScheme<Type>(mesh, is)
+        {}
+
+        //- Construct from mesh, interpolation and snGradScheme schemes
+        gaussLaplacianScheme
+        (
+            const fvMesh& mesh,
+            const tmp<surfaceInterpolationScheme<scalar> >& igs,
+            const tmp<snGradScheme<Type> >& sngs
+        )
+        :
+            laplacianScheme<Type>(mesh, igs, sngs)
+        {}
+
+
+    // Destructor
+
+        virtual ~gaussLaplacianScheme()
         {}
 
 

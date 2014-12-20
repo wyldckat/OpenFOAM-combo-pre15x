@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,66 +33,19 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-static const scalar edgeRelTol_ = 0.1;
-
-// Min of (length of) connected edges.
-scalar minEdgeLen(const primitiveMesh& mesh, const label vertI)
-{
-    const edgeList& edges = mesh.edges();
-
-    const pointField& points = mesh.points();
-
-    const labelList& pEdges = mesh.pointEdges()[vertI];
-
-    scalar minLen = GREAT;
-
-    forAll(pEdges, pEdgeI)
-    {
-        minLen = min(minLen, edges[pEdges[pEdgeI]].mag(points));
-    }
-    return minLen;
-}
-
-
-// Checks if points are close. Uses edge-relative tolerance
-bool closePoints
-(
-    const primitiveMesh& mesh,
-    const scalar tol,
-    const label point0,
-    const label point1
-)
-{
-    const point& p0 = mesh.points()[point0];
-    const point& p1 = mesh.points()[point1];
-
-    // Determine minimum edge.
-    scalar minLen = min(minEdgeLen(mesh, point0), minEdgeLen(mesh, point1));
-
-    if (mag(p0 - p1) < tol*minLen)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-
 // Merge points and create mapping array. Return mapping.
 bool checkCoords
 (
     const primitiveMesh& mesh,
     const bool report,
-    const scalar mergeTol,
+    const scalar reportDistSqr,
     labelHashSet* setPtr
 )
 {
     const pointField& pts = mesh.points();
 
     // Sort points
-    SortableList<scalar> sortedMag(mag(pts));
+    SortableList<scalar> sortedMag(magSqr(pts));
 
     label nClose = 0;
 
@@ -100,27 +53,53 @@ bool checkCoords
     {
         label ptI = sortedMag.indices()[i];
 
-        label prevPtI = sortedMag.indices()[i-1];
-
-        if (closePoints(mesh, edgeRelTol_, ptI, prevPtI))
+        // Compare ptI to any previous points with similar sortedMag
+        for
+        (
+            label j = i-1;
+            j >= 0 && (sortedMag[j] > sortedMag[i]-reportDistSqr);
+            --j
+        )
         {
-            nClose++;
+            label prevPtI = sortedMag.indices()[j];
 
-            if (report)
+            if (magSqr(pts[ptI] - pts[prevPtI]) < reportDistSqr)
             {
-                Pout<< "checkCoords : points "
-                    << ptI << " and " << prevPtI
-                    << " with coordinates:" << pts[ptI]
-                    << " and " << pts[prevPtI] << endl
-                    << " are relatively close to each other."
-                    << " This might be correct in case of e.g. baffles."
-                    << endl;
-            }
+                // Check if unconnected.
+                const labelList& pEdges = mesh.pointEdges()[ptI];
 
-            if (setPtr)
-            {
-                setPtr->insert(ptI);
-                setPtr->insert(prevPtI);
+                bool connected = false;
+
+                forAll(pEdges, pEdgeI)
+                {
+                    if (mesh.edges()[pEdges[pEdgeI]].otherVertex(prevPtI) != -1)
+                    {
+                        connected = true;
+                        break;
+                    }
+                }
+
+                if (!connected)
+                {
+                    nClose++;
+
+                    if (report)
+                    {
+                        Pout<< "checkCoords : unconnected points "
+                            << ptI << " and " << prevPtI
+                            << " with coordinates:" << pts[ptI]
+                            << " and " << pts[prevPtI] << endl
+                            << " are relatively close to each other."
+                            << " This might be correct in case of e.g. baffles."
+                            << endl;
+                    }
+
+                    if (setPtr)
+                    {
+                        setPtr->insert(ptI);
+                        setPtr->insert(prevPtI);
+                    }
+                }
             }
         }
     }
@@ -133,10 +112,9 @@ bool checkCoords
         {
             WarningIn
             (
-                "bool checkCoords(const primitiveMesh& mesh, "
-                "const bool report, const scalar mergeTol, "
-                "labelHashSet* setPtr)"
-            ) << nClose  << " points that are close together found." << nl
+                "checkCoords(const primitiveMesh&, "
+                "const bool, const scalar, labelHashSet*)"
+            )   << nClose  << " points that are close together found." << nl
                 << endl;
         }
 

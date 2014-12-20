@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    syncTools
-
-Description
-
 \*----------------------------------------------------------------------------*/
 
 #include "syncTools.H"
@@ -41,18 +36,21 @@ Foam::label Foam::transform(const tensor&, const label val)
 }
 
 
-// Note: no need to sync info since if one has procPatches all have
-// procPatches
+// Does anyone have couples? Since meshes might have 0 cells and 0 proc
+// boundaries need to reduce this info.
 bool Foam::syncTools::hasCouples(const polyBoundaryMesh& patches)
 {
+    bool hasAnyCouples = false;
+
     forAll(patches, patchI)
     {
         if (patches[patchI].coupled())
         {
-            return true;
+            hasAnyCouples = true;
+            break;
         }
     }
-    return false;
+    return returnReduce(hasAnyCouples, orOp<bool>());
 }
 
 

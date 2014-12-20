@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,16 +22,66 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "coordinateRotation.H"
+#include "dictionary.H"
+#include "addToRunTimeSelectionTable.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-const Foam::vector Foam::coordinateRotation::z = vector(0, 0, 1);
-const Foam::vector Foam::coordinateRotation::x = vector(1, 0, 0);
+namespace Foam
+{
+    defineTypeNameAndDebug(coordinateRotation, 0);
+    defineRunTimeSelectionTable(coordinateRotation, dictionary);
+}
+
+
+const Foam::vector Foam::coordinateRotation::z = Foam::vector(0, 0, 1);
+const Foam::vector Foam::coordinateRotation::x = Foam::vector(1, 0, 0);
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::coordinateRotation::coordinateRotation()
+:
+    R_(tensor::zero)
+{}
+
+
+// * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
+
+Foam::autoPtr<Foam::coordinateRotation> Foam::coordinateRotation::New
+(
+    const dictionary& dict
+)
+{
+    if (debug)
+    {
+        Pout<< "coordinateRotation::New(const dictionary&) : "
+            << "constructing coordinateRotation"
+            << endl;
+    }
+
+    word rotType(dict.lookup("type"));
+
+    dictionaryConstructorTable::iterator cstrIter =
+        dictionaryConstructorTablePtr_->find(rotType);
+
+    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    {
+        FatalIOErrorIn
+        (
+            "coordinateRotation::New(const dictionary&)",
+            dict
+        )   << "Unknown coordinateRotation type " << rotType << nl << nl
+            << "Valid coordinateRotation types are :" << endl
+            << dictionaryConstructorTablePtr_->toc()
+            << exit(FatalIOError);
+    }
+
+    return autoPtr<coordinateRotation>(cstrIter()(dict));
+}
 
 
 // ************************************************************************* //

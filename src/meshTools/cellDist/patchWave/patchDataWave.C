@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,7 +27,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "patchDataWave.H"
-#include "meshWave.H"
+#include "MeshWave.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -74,11 +74,11 @@ void Foam::patchDataWave<TransferType>::setChangedFaces
 }
 
 
-// Copy from meshWave data into *this (distance) and field_ (transported data)
+// Copy from MeshWave data into *this (distance) and field_ (transported data)
 template<class TransferType>
 Foam::label Foam::patchDataWave<TransferType>::getValues
 (
-    const meshWave<TransferType>& waveInfo
+    const MeshWave<TransferType>& waveInfo
 )
 {
     const polyMesh& mesh = cellDistFuncs::mesh();
@@ -124,14 +124,14 @@ Foam::label Foam::patchDataWave<TransferType>::getValues
         // Allocate storage for patchDistance
         scalarField* patchFieldPtr = new scalarField(patch.size());
 
-        patchDistance_.hook(patchFieldPtr);
+        patchDistance_.set(patchI, patchFieldPtr);
 
         scalarField& patchField = *patchFieldPtr;
 
         // Allocate storage for patchData
         Field<Type>* patchDataFieldPtr = new Field<Type>(patch.size());
 
-        patchData_.hook(patchDataFieldPtr);
+        patchData_.set(patchI, patchDataFieldPtr);
 
         Field<Type>& patchDataField = *patchDataFieldPtr;
 
@@ -224,7 +224,7 @@ void Foam::patchDataWave<TransferType>::correct()
     // Do calculate wall distance by 'growing' from faces.
     //
 
-    meshWave<TransferType> waveInfo
+    MeshWave<TransferType> waveInfo
     (
         mesh(),
         changedFaces,

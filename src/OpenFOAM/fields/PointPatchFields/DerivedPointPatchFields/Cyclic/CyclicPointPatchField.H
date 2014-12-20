@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,7 +36,7 @@ SourceFiles
 #ifndef CyclicPointPatchField_H
 #define CyclicPointPatchField_H
 
-#include "ZeroGradientPointPatchField.H"
+#include "CoupledPointPatchField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,8 +56,19 @@ template
 >
 class CyclicPointPatchField
 :
-    public PatchField<Type>
+    public CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename CyclicPointPatch::CoupledPointPatch,
+        Type
+    >
 {
+    // Private data
+
+        //- Local reference cast into the cyclic patch
+        const CyclicPointPatch& cyclicPatch_;
+
 
 public:
 
@@ -140,8 +151,33 @@ public:
 
     // Member functions
 
-        //- Update the patch field
-        virtual void evaluate();
+        //- Cyclic coupled interface functions
+
+            //- Does the patch field perform the transfromation
+            virtual bool doTransform() const
+            {
+                return !(cyclicPatch_.parallel() || pTraits<Type>::rank == 0);
+            }
+
+            //- Return face transformation tensor
+            virtual const tensorField& forwardT() const
+            {
+                return cyclicPatch_.forwardT();
+            }
+
+            //- Return neighbour-cell transformation tensor
+            virtual const tensorField& reverseT() const
+            {
+                return cyclicPatch_.reverseT();
+            }
+
+
+        //- Evaluate the patch field
+        virtual void evaluate()
+        {}
+
+        //- Complete swap of patch point values and add to local values
+        virtual void swapAdd(Field<Type>&) const;
 };
 
 

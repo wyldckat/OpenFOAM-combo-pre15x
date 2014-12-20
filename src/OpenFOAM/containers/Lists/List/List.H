@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,6 +61,7 @@ template<class T, label Size> class FixedList;
 template<class T> class PtrList;
 template<class T> class SLList;
 template<class T> class IndirectList;
+template<class T> class BiIndirectList;
 
 
 /*---------------------------------------------------------------------------*\
@@ -108,6 +109,9 @@ public:
 
         //- Construct as copy of IndirectList<T>
         List(const IndirectList<T>&);
+
+        //- Construct as copy of BiIndirectList<T>
+        List(const BiIndirectList<T>&);
 
         //- Construct from Istream.
         List(Istream&);
@@ -165,6 +169,9 @@ public:
 
         //- Assignment from IndirectList operator. Takes linear time.
         void operator=(const IndirectList<T>&);
+
+        //- Assignment from BiIndirectList operator. Takes linear time.
+        void operator=(const BiIndirectList<T>&);
 
         //- Assignment of all entries to the given value
         inline void operator=(const T&);

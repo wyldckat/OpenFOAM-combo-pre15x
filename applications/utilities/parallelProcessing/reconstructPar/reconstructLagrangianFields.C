@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,19 +22,18 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "IOField.H"
+#include "Time.H"
 
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<IOField<Type> > reconstructLagrangianField
+Foam::tmp<Foam::IOField<Type> > Foam::reconstructLagrangianField
 (
-    const Time& runTime,
-    PtrList<Time>& databases,
+    const polyMesh& mesh,
+    PtrList<polyMesh>& meshes,
     const IOobject& fieldIoObject
 )
 {
@@ -45,9 +44,9 @@ tmp<IOField<Type> > reconstructLagrangianField
             IOobject
             (
                 fieldIoObject.name(),
-                runTime.timeName(),
+                mesh.time().timeName(),
                 "lagrangian",
-                runTime,
+                mesh,
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
@@ -56,14 +55,14 @@ tmp<IOField<Type> > reconstructLagrangianField
     );
     Field<Type>& field = tfield();
 
-    forAll(databases, i)
+    forAll(meshes, i)
     {
         IOobject fieldIOobject
         ( 
             fieldIoObject.name(),
-            databases[i].timeName(),
+            meshes[i].time().timeName(),
             "lagrangian",
-            databases[i],
+            meshes[i],
             IOobject::MUST_READ,
             IOobject::NO_WRITE
         );
@@ -87,10 +86,10 @@ tmp<IOField<Type> > reconstructLagrangianField
 
 
 template<class Type>
-void reconstructLagrangianFields
+void Foam::reconstructLagrangianFields
 (
-    const Time& runTime,
-    PtrList<Time>& databases,
+    const polyMesh& mesh,
+    PtrList<polyMesh>& meshes,
     const IOobjectList& objects
 )
 {
@@ -113,8 +112,8 @@ void reconstructLagrangianFields
             Info<< "        " << fieldIter()->name() << endl;
             reconstructLagrangianField<Type>
             (
-                runTime,
-                databases,
+                mesh,
+                meshes,
                 *fieldIter()
             )().write();
         }

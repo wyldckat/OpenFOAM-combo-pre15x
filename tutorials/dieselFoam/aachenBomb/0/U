@@ -1,28 +1,28 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.3                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 
-version             1.0;
-format              ascii;
-root                "";
-case                "example";
-instance            "0";
-local               "";
-class               volVectorField;
-form                dictionary;
-object              U;
+FoamFile
+{
+    version             2.0;
+    format              ascii;
+    root                "";
+    case                "";
+    instance            "";
+    local               "";
+    class               volVectorField;
+    object              U;
+}
 
 // ************************************************************************* //
 
 dimensions          [ 0 1 -1 0 0 0 0 ];
 
 internalField       uniform ( 0 0 0 );
-
-referenceLevel      ( 0 0 0 );
 
 boundaryField
 {
@@ -32,15 +32,15 @@ boundaryField
         value               uniform ( 0 0 0 );
     }
 
-	front
-	{
-		type				wedge;
-	}
+    front
+    {
+        type                wedge;
+    }
 
-	back
-	{
-		type				wedge;
-	}
+    back
+    {
+        type                wedge;
+    }
 
 }
 

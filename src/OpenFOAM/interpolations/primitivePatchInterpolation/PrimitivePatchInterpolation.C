@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,7 +36,65 @@ namespace Foam
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class Patch>
-const scalarField&
+const scalarListList&
+PrimitivePatchInterpolation<Patch>::faceToPointWeights() const
+{
+    if (!faceToPointWeightsPtr_)
+    {
+        makeFaceToPointWeights();
+    }
+
+    return *faceToPointWeightsPtr_;
+}
+
+
+template<class Patch>
+void PrimitivePatchInterpolation<Patch>::makeFaceToPointWeights() const
+{
+    if (faceToPointWeightsPtr_)
+    {
+        FatalErrorIn
+        (
+            "PrimitivePatchInterpolation<Patch>::makeFaceToPointWeights() const"
+        )   << "Face-to-edge weights already calculated"
+            << abort(FatalError);
+    }
+
+    const pointField& points = patch_.localPoints();
+    const faceList& faces = patch_.localFaces();
+
+    faceToPointWeightsPtr_ = new scalarListList(points.size());
+    scalarListList& weights = *faceToPointWeightsPtr_;
+
+    // get reference to addressing
+    const labelListList& pointFaces = patch_.pointFaces();
+
+    forAll(pointFaces, pointi)
+    {
+        const labelList& curFaces = pointFaces[pointi];
+
+        scalarList& pw = weights[pointi];
+        pw.setSize(curFaces.size());
+
+        scalar sumw = 0.0;
+
+        forAll(curFaces, facei)
+        {
+            pw[facei] = 
+                1.0/mag(faces[curFaces[facei]].centre(points) - points[pointi]);
+            sumw += pw[facei];
+        }
+
+        forAll(curFaces, facei)
+        {
+            pw[facei] /= sumw;
+        }
+    }
+}
+
+
+template<class Patch>
+const scalarList&
 PrimitivePatchInterpolation<Patch>::faceToEdgeWeights() const
 {
     if (!faceToEdgeWeightsPtr_)
@@ -65,27 +123,22 @@ void PrimitivePatchInterpolation<Patch>::makeFaceToEdgeWeights() const
     const edgeList& edges = patch_.edges();
     const labelListList& edgeFaces = patch_.edgeFaces();
 
-    faceToEdgeWeightsPtr_ = new scalarField(patch_.nInternalEdges.size());
-    scalarField& weights = *faceToEdgeWeightsPtr_;
+    faceToEdgeWeightsPtr_ = new scalarList(patch_.nInternalEdges());
+    scalarList& weights = *faceToEdgeWeightsPtr_;
 
-    label ownerFace, neighbourFace;
-
-    for (label edgeI = 0; edgeI < weights.size(); edgeI++)
+    for (label edgei = 0; edgei < weights.size(); edgei++)
     {
-        ownerFace = edgeFaces[edgeI][0];
-        neighbourFace = edgeFaces[edgeI][1];
+        vector P = faces[edgeFaces[edgei][0]].centre(points);
+        vector N = faces[edgeFaces[edgei][1]].centre(points);
+        vector S = points[edges[edgei].start()];
+        vector e = edges[edgei].vec(points);
 
-        vector P = faces[ownerFace].centre(points);
-        vector N = faces[neighbourFace].centre(points);
-        vector S = points[edges[edgeI].start()];
-        vector e = edges[edgeI].vec(points);
-
-        scalar alpha = - ( ( (N - P)^(S - P) )&( (N - P)^e ) )/
-            ( ( (N - P)^e )&( (N - P)^e ) );
+        scalar alpha = 
+            -(((N - P)^(S - P))&((N - P)^e))/(((N - P)^e )&((N - P)^e));
 
         vector E = S + alpha*e;
 
-        weights[edgeI] = mag(N - E)/(mag(N - E) + mag(E - P));
+        weights[edgei] = mag(N - E)/(mag(N - E) + mag(E - P));
     }
 }
 
@@ -93,8 +146,20 @@ void PrimitivePatchInterpolation<Patch>::makeFaceToEdgeWeights() const
 template<class Patch>
 void PrimitivePatchInterpolation<Patch>::clearWeights()
 {
+    deleteDemandDrivenData(faceToPointWeightsPtr_);
     deleteDemandDrivenData(faceToEdgeWeightsPtr_);
 }
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class Patch>
+PrimitivePatchInterpolation<Patch>::PrimitivePatchInterpolation(const Patch& p)
+:
+    patch_(p),
+    faceToPointWeightsPtr_(NULL),
+    faceToEdgeWeightsPtr_(NULL)
+{}
 
 
 // * * * * * * * * * * * * * * * * Destructor * * * * * * * * * * * * * * * //
@@ -137,19 +202,18 @@ tmp<Field<Type> > PrimitivePatchInterpolation<Patch>::faceToPointInterpolate
 
     Field<Type>& result = tresult();
 
-    // get reference to addressing
     const labelListList& pointFaces = patch_.pointFaces();
+    const scalarListList& weights = faceToPointWeights();
 
-    forAll (pointFaces, pointI)
+    forAll(pointFaces, pointi)
     {
-        const labelList& curFaces = pointFaces[pointI];
+        const labelList& curFaces = pointFaces[pointi];
+        const scalarList& w = weights[pointi];
 
-        forAll (curFaces, faceI)
+        forAll(curFaces, facei)
         {
-            result[pointI] += ff[curFaces[faceI]];
+            result[pointi] += w[facei]*ff[curFaces[facei]];
         }
-
-        result[pointI] /= curFaces.size();
     }
 
     return tresult;
@@ -198,19 +262,18 @@ tmp<Field<Type> > PrimitivePatchInterpolation<Patch>::pointToFaceInterpolate
 
     Field<Type>& result = tresult();
 
-    // get reference to addressing
     const faceList& localFaces = patch_.localFaces();
 
-    forAll (result, faceI)
+    forAll(result, facei)
     {
-        const labelList& curPoints = localFaces[faceI];
+        const labelList& curPoints = localFaces[facei];
 
-        forAll (curPoints, pointI)
+        forAll(curPoints, pointi)
         {
-            result[faceI] += pf[curPoints[pointI]];
+            result[facei] += pf[curPoints[pointi]];
         }
 
-        result[faceI] /= curPoints.size();
+        result[facei] /= curPoints.size();
     }
 
     return tresult;
@@ -251,10 +314,7 @@ tmp<Field<Type> > PrimitivePatchInterpolation<Patch>::faceToEdgeInterpolate
 
     tmp<Field<Type> > tresult
     (
-        new Field<Type>
-        (
-            patch_.nEdges(), pTraits<Type>::zero
-        )
+        new Field<Type>(patch_.nEdges(), pTraits<Type>::zero)
     );
 
     Field<Type>& result = tresult();
@@ -264,25 +324,18 @@ tmp<Field<Type> > PrimitivePatchInterpolation<Patch>::faceToEdgeInterpolate
     const edgeList& edges = patch_.edges();
     const labelListList& edgeFaces = patch_.edgeFaces();
 
-    const scalarField& weights = faceToEdgeWeights();
+    const scalarList& weights = faceToEdgeWeights();
 
-    label ownerFace, neighbourFace;
-
-    for (label edgeI = 0; edgeI < patch_.nInternalEdges(); edgeI++)
+    for (label edgei = 0; edgei < patch_.nInternalEdges(); edgei++)
     {
-        ownerFace = edgeFaces[edgeI][0];
-        neighbourFace = edgeFaces[edgeI][1];
-
-        result[edgeI] = 
-            weights[edgeI]*pf[ownerFace]
-          + (1.0 - weights[edgeI])*pf[neighbourFace];
+        result[edgei] = 
+            weights[edgei]*pf[edgeFaces[edgei][0]]
+          + (1.0 - weights[edgei])*pf[edgeFaces[edgei][1]];
     }
 
-    for (label edgeI = patch_.nInternalEdges(); edgeI < edges.size(); edgeI++)
+    for (label edgei = patch_.nInternalEdges(); edgei < edges.size(); edgei++)
     {
-        const label ownerFace = edgeFaces[edgeI][0];
-
-        result[edgeI] = pf[ownerFace];
+        result[edgei] = pf[edgeFaces[edgei][0]];
     }
 
     return tresult;

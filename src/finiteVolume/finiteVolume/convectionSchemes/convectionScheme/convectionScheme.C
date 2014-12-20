@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,6 +40,17 @@ namespace Foam
 
 namespace fv
 {
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class Type>
+convectionScheme<Type>::convectionScheme(const convectionScheme& cs)
+:
+    refCount(),
+    mesh_(cs.mesh_)
+{}
+
 
 // * * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * //
 
@@ -160,7 +171,20 @@ convectionScheme<Type>::~convectionScheme()
 {}
 
 
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+template<class Type>
+void convectionScheme<Type>::operator=(const convectionScheme<Type>& cs)
+{
+    if (this == &cs)
+    {
+        FatalErrorIn
+        (
+            "convectionScheme<Type>::operator=(const convectionScheme<Type>&)"
+        )   << "attempted assignment to self"
+            << abort(FatalError);
+    }
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #------------------------------------------------------------------------------
 # License
@@ -86,7 +86,6 @@ isValid() {
 # Main.
 #
 #-------------------------
-
 
 # If JAVA_PATH is set, it overrides the default.
 if [ ! -z "$JAVA_PATH" ] ; then
@@ -227,6 +226,11 @@ fi
 #orbArgs="-ORBInitialPort $HOSTPORT"
 #echo "Starting Java with ORB arguments : $orbArgs"
 
+# Set Language to English
+oldLang=$LANG
+export LANG=en_EN
+echo "Setting LANG to $LANG"
+
 #------------------------------------------------------------------------------
 # Run FoamX via jar file.
 jars='.'
@@ -243,3 +247,6 @@ $jdkhome/bin/java \
     FoamX.App $orbArgs $args
 
 #------------------------------------------------------------------------------
+
+# Reset Language to original
+export LANG=$oldLang

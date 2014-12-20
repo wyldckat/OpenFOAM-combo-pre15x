@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -77,6 +77,19 @@ fixedGradientFvPatchField<Type>::fixedGradientFvPatchField
 {
     this->checkVolField();
     evaluate();
+}
+
+
+template<class Type>
+fixedGradientFvPatchField<Type>::fixedGradientFvPatchField
+(
+    const fixedGradientFvPatchField<Type>& ptf
+)
+:
+    fvPatchField<Type>(ptf),
+    gradient_(ptf.gradient_)
+{
+    this->checkVolField();
 }
 
 

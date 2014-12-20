@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -62,14 +62,12 @@ SourceFiles
 #include "PackedList.H"
 #include "indirectPrimitivePatch.H"
 #include "className.H"
+#include "twoDPointCorrector.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// Class forward declarations
-class twoDPointCorrector;
 
 /*---------------------------------------------------------------------------*\
                            Class motionSmoother Declaration
@@ -148,12 +146,14 @@ class motionSmoother
         //- Is mesh point on boundary or not
         PackedList<1> isInternalPoint_;
 
-        //- Is motion limited to twoD
-        Switch twoDMotion_;
-
-        //- Only if twoDMotion_ : 2-D motion corrector pointer
-        twoDPointCorrector* correct2DPtr_;
+        //- 2-D motion corrector
+        twoDPointCorrector twoDCorrector_;
         
+        // Muli-patch constraints (from pointPatchInterpolation)
+
+            labelList patchPatchPointConstraintPoints_;
+            tensorField patchPatchPointConstraintTensors_;
+
 
     // Private Member Functions
 
@@ -162,7 +162,7 @@ class motionSmoother
         template <class Type>
         static Type avg
         (
-            const GeometricField<Type, pointPatchField, pointMesh>& fld,
+            const GeometricField<Type, pointPatchField, pointMesh>&,
             const edgeList& edges,
             const pointField& points,
             const labelList& edgeLabels,
@@ -174,7 +174,7 @@ class motionSmoother
         template <class Type>
         static Type avg
         (
-            const GeometricField<Type, pointPatchField, pointMesh>& fld,
+            const GeometricField<Type, pointPatchField, pointMesh>&,
             const scalarField& edgeGamma,
             const edgeList& edges,
             const pointField& points,
@@ -182,7 +182,24 @@ class motionSmoother
             const label pointI
         );
 
-        static void checkFld(const pointScalarField& fld);
+        //- Check constraints
+        template<class Type>
+        void checkConstraints
+        (
+            GeometricField<Type, pointPatchField, pointMesh>&
+        ) const;
+
+        //- Multi-patch constraints
+        template<class Type>
+        void applyCornerConstraints
+        (
+            GeometricField<Type, pointPatchField, pointMesh>&
+        ) const;
+
+        //- Assemble tensors for multi-patch constraints
+        void makePatchPatchAddressing();
+
+        static void checkFld(const pointScalarField&);
 
         //- Get points used by given faces
         labelHashSet getPoints(const labelHashSet&) const;
@@ -203,7 +220,7 @@ class motionSmoother
         (
             const labelHashSet& pointLabels,
             const scalar scale,
-            pointScalarField& fld
+            pointScalarField&
         ) const;
 
         //- As above but points have to be in meshPoints as well
@@ -213,7 +230,7 @@ class motionSmoother
             const labelList& meshPoints,
             const labelHashSet& pointLabels,
             const scalar scale,
-            pointScalarField& fld
+            pointScalarField&
         ) const;
 
         //- Helper function. Is point internal?
@@ -269,6 +286,9 @@ public:
             //- Reference to patch
             const indirectPrimitivePatch& patch() const;
 
+            //- Patch labels that are being adapted
+            const labelList& adaptPatchIDs() const;
+
             scalar maxNonOrtho() const;
 
             scalar minVol() const;
@@ -290,20 +310,10 @@ public:
             //- Starting mesh position
             const pointField& oldPoints() const;
 
-            bool twoDMotion() const
-            {
-                return twoDMotion_;
-            }
-
+            //- Return reference to 2D point motion correction
             twoDPointCorrector& twoDCorrector()
             {
-                if (!correct2DPtr_)
-                {
-                    FatalErrorIn("motionSmoother::correct2D()")
-                        << "No 2D motion. Check constant/dynamicMeshDict"
-                        <<  " and empty 3D boundaries" << abort(FatalError);
-                }
-                return *correct2DPtr_;
+                return twoDCorrector_;
             }
 
 
@@ -312,6 +322,16 @@ public:
 
             //- Take over existing mesh position.
             void correct();
+
+            //- Set displacement field from displacement on patch points.
+            //  Modify provided displacement to be consistent with actual
+            //  boundary conditions on displacement.
+            void setDisplacement(pointField& patchDisp);
+
+            //- Special correctBoundaryConditions which evaluates fixedValue
+            //  patches first so they get overwritten with any constraint
+            //  bc's.
+            void correctBoundaryConditions(pointVectorField&) const;
 
 
             //- Move mesh. Does 2D correction (modifies passed pointField) and
@@ -368,6 +388,13 @@ public:
                 );
 
 };
+
+
+template<>
+void motionSmoother::applyCornerConstraints<scalar>
+(
+    GeometricField<scalar, pointPatchField, pointMesh>& pf
+) const;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

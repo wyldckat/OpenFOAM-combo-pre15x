@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -88,11 +88,11 @@ public:
 
         //- Evaluate B. This is done on the fly : its not usually necessary,
         //  but will be if we want to compare with experiments or DNS
-        tmp<volTensorField> B() const
+        tmp<volSymmTensorField> B() const
         {
-            return tmp<volTensorField>
+            return tmp<volSymmTensorField>
             (
-                new volTensorField
+                new volSymmTensorField
                 (
                     IOobject
                     (
@@ -103,9 +103,9 @@ public:
                         IOobject::NO_WRITE
                     ),
                     mesh_,
-                    dimensionedTensor
+                    dimensionedSymmTensor
                     (
-                        "B", sqr(U().dimensions()), tensor::zero
+                        "B", sqr(U().dimensions()), symmTensor::zero
                     )
                 )
             );

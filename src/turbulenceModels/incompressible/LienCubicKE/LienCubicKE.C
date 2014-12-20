@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -109,24 +109,27 @@ LienCubicKE::LienCubicKE
     (
         "nonlinearStress",
         // quadratic terms
-        pow(k_, 3.0)/sqr(epsilon_)*
+        symm
         (
-            Ctau1/fEta*
+            pow(k_, 3.0)/sqr(epsilon_)*
             (
-                (gradU & gradU)
-              + (gradU & gradU)().T()
+                Ctau1/fEta*
+                (
+                    (gradU & gradU)
+                  + (gradU & gradU)().T()
+                )
+              + Ctau2/fEta*(gradU & gradU.T())
+              + Ctau3/fEta*(gradU.T() & gradU)
             )
-          + Ctau2/fEta*(gradU & gradU.T())
-          + Ctau3/fEta*(gradU.T() & gradU)
-        )
-        // cubic term C4
-      - 20.0*pow(k_, 4.0)/pow(epsilon_, 3.0)*
-        pow(Cmu, 3.0)*
-        (
-            ((gradU & gradU) & gradU.T())
-          + ((gradU & gradU.T()) & gradU.T())
-          - ((gradU.T() & gradU) & gradU)
-          - ((gradU.T() & gradU.T()) & gradU)
+            // cubic term C4
+          - 20.0*pow(k_, 4.0)/pow(epsilon_, 3.0)*
+            pow(Cmu, 3.0)*
+            (
+                ((gradU & gradU) & gradU.T())
+              + ((gradU & gradU.T()) & gradU.T())
+              - ((gradU.T() & gradU) & gradU)
+              - ((gradU.T() & gradU.T()) & gradU)
+            )
         )
     )
 {
@@ -136,11 +139,11 @@ LienCubicKE::LienCubicKE
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-tmp<volTensorField> LienCubicKE::R() const
+tmp<volSymmTensorField> LienCubicKE::R() const
 {
-    return tmp<volTensorField>
+    return tmp<volSymmTensorField>
     (
-        new volTensorField
+        new volSymmTensorField
         (
             IOobject
             (
@@ -150,7 +153,7 @@ tmp<volTensorField> LienCubicKE::R() const
                 IOobject::NO_READ,
                 IOobject::NO_WRITE
             ),
-            ((2.0/3.0)*I)*k_ - nut_*(gradU + gradU.T()) + nonlinearStress,
+            ((2.0/3.0)*I)*k_ - nut_*twoSymm(gradU) + nonlinearStress,
             k_.boundaryField().types()
         )
     );
@@ -263,7 +266,8 @@ void LienCubicKE::correct()
 
 #   include "wallNonlinearViscosityI.H"
 
-    nonlinearStress =
+    nonlinearStress = symm
+    (
         // quadratic terms
         pow(k_, 3.0)/sqr(epsilon_)*
         (
@@ -283,7 +287,8 @@ void LienCubicKE::correct()
           + ((gradU & gradU.T()) & gradU.T())
           - ((gradU.T() & gradU) & gradU)
           - ((gradU.T() & gradU.T()) & gradU)
-        );
+        )
+    );
 }
 
 

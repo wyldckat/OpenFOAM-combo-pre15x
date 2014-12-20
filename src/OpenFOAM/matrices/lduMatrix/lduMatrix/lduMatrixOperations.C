@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,19 +31,14 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-void lduMatrix::sumDiag()
+void Foam::lduMatrix::sumDiag()
 {
     const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
     const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
     scalarField& Diag = diag();
 
-    const unallocLabelList& l = lduAddr_.lowerAddr();
-    const unallocLabelList& u = lduAddr_.upperAddr();
+    const unallocLabelList& l = lduAddr().lowerAddr();
+    const unallocLabelList& u = lduAddr().upperAddr();
 
     for (register label face=0; face<l.size(); face++)
     {
@@ -53,14 +48,14 @@ void lduMatrix::sumDiag()
 }
 
 
-void lduMatrix::negSumDiag()
+void Foam::lduMatrix::negSumDiag()
 {
     const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
     const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
     scalarField& Diag = diag();
 
-    const unallocLabelList& l = lduAddr_.lowerAddr();
-    const unallocLabelList& u = lduAddr_.upperAddr();
+    const unallocLabelList& l = lduAddr().lowerAddr();
+    const unallocLabelList& u = lduAddr().upperAddr();
 
     for (register label face=0; face<l.size(); face++)
     {
@@ -70,11 +65,11 @@ void lduMatrix::negSumDiag()
 }
 
 
-void lduMatrix::relax
+void Foam::lduMatrix::relax
 (
     const FieldField<Field, scalar>& intCoeffsCmptAvg,
-    const FieldField<Field, scalar>& magCoupleBouCoeffs,
-    const lduCoupledInterfacePtrsList& interfaces,
+    const FieldField<Field, scalar>& magInterfaceBouCoeffs,
+    const lduInterfaceFieldPtrsList& interfaces,
     const scalar alpha
 )
 {
@@ -84,8 +79,8 @@ void lduMatrix::relax
     scalarField& Diag = diag();
     scalarField sumOff(Diag.size(), 0.0);
 
-    const unallocLabelList& l = lduAddr_.lowerAddr();
-    const unallocLabelList& u = lduAddr_.upperAddr();
+    const unallocLabelList& l = lduAddr().lowerAddr();
+    const unallocLabelList& u = lduAddr().upperAddr();
 
     for (register label face = 0; face < l.size(); face++)
     {
@@ -94,16 +89,16 @@ void lduMatrix::relax
     }
 
     // Add the interface internal coefficients to diagonal
-    // and the interface boundary coefficients to the summ-off-diagonal
-    forAll (interfaces, patchI)
+    // and the interface boundary coefficients to the sum-off-diagonal
+    forAll(interfaces, patchI)
     {
-        if (interfaces[patchI]->coupled())
+        if (interfaces.set(patchI))
         {
-            const unallocLabelList& pa = lduAddr_.patchAddr(patchI);
+            const unallocLabelList& pa = lduAddr().patchAddr(patchI);
             const scalarField& iCoeffs = intCoeffsCmptAvg[patchI];
-            const scalarField& pCoeffs = magCoupleBouCoeffs[patchI];
+            const scalarField& pCoeffs = magInterfaceBouCoeffs[patchI];
 
-            for (register label face = 0; face < pa.size(); face++)
+            forAll(pa, face)
             {
                 Diag[pa[face]] += iCoeffs[face];
                 sumOff[pa[face]] += pCoeffs[face];
@@ -115,15 +110,14 @@ void lduMatrix::relax
     Diag /= alpha;
 
     // Remove the interface internal coefficients from the diagonal
-    forAll (interfaces, patchI)
+    forAll(interfaces, patchI)
     {
-        if (interfaces[patchI]->coupled())
+        if (interfaces.set(patchI))
         {
- 
-            const unallocLabelList& pa = lduAddr_.patchAddr(patchI);
+            const unallocLabelList& pa = lduAddr().patchAddr(patchI);
             const scalarField& iCoeffs = intCoeffsCmptAvg[patchI];
 
-            for (register label face = 0; face < pa.size(); face++)
+            forAll(pa, face)
             {
                 Diag[pa[face]] -= iCoeffs[face];
             }
@@ -132,40 +126,9 @@ void lduMatrix::relax
 }
 
 
-tmp<scalarField> lduMatrix::residual
-(
-    const scalarField& psi,
-    const FieldField<Field, scalar>& coupleBouCoeffs,
-    const lduCoupledInterfacePtrsList& interfaces,
-    const direction cmpt
-) const
-{
-    tmp<scalarField> tApsi(new scalarField(psi.size()));
-    Amul(tApsi(), psi, coupleBouCoeffs, interfaces, cmpt);
-    return -tApsi;
-}
-
-
-tmp<scalarField> lduMatrix::residual
-(
-    const scalarField& psi,
-    const scalarField& source,
-    const FieldField<Field, scalar>& coupleBouCoeffs,
-    const lduCoupledInterfacePtrsList& interfaces,
-    const direction cmpt
-) const
-{
-    tmp<scalarField> tApsi(new scalarField(psi.size()));
-    Amul(tApsi(), psi, coupleBouCoeffs, interfaces, cmpt);
-    return source - tApsi;
-}
-
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// member operators
-
-void lduMatrix::operator=(const lduMatrix& A)
+void Foam::lduMatrix::operator=(const lduMatrix& A)
 {
     if (this == &A)
     {
@@ -202,7 +165,7 @@ void lduMatrix::operator=(const lduMatrix& A)
 }
 
 
-void lduMatrix::negate()
+void Foam::lduMatrix::negate()
 {
     if (lowerPtr_)
     {
@@ -221,7 +184,7 @@ void lduMatrix::negate()
 }
 
 
-void lduMatrix::operator+=(const lduMatrix& A)
+void Foam::lduMatrix::operator+=(const lduMatrix& A)
 {
     if (A.diagPtr_)
     {
@@ -289,7 +252,7 @@ void lduMatrix::operator+=(const lduMatrix& A)
 }
 
 
-void lduMatrix::operator-=(const lduMatrix& A)
+void Foam::lduMatrix::operator-=(const lduMatrix& A)
 {
     if (A.diagPtr_)
     {
@@ -357,7 +320,7 @@ void lduMatrix::operator-=(const lduMatrix& A)
 }
 
 
-void lduMatrix::operator*=(const scalarField& sf)
+void Foam::lduMatrix::operator*=(const scalarField& sf)
 {
     if (diagPtr_)
     {
@@ -368,7 +331,7 @@ void lduMatrix::operator*=(const scalarField& sf)
     {
         scalarField& upper = *upperPtr_;
 
-        const unallocLabelList& l = lduAddr_.lowerAddr();
+        const unallocLabelList& l = lduAddr().lowerAddr();
 
         for (register label face=0; face<upper.size(); face++)
         {
@@ -380,7 +343,7 @@ void lduMatrix::operator*=(const scalarField& sf)
     {
         scalarField& lower = *lowerPtr_;
 
-        const unallocLabelList& u = lduAddr_.upperAddr();
+        const unallocLabelList& u = lduAddr().upperAddr();
 
         for (register label face=0; face<lower.size(); face++)
         {
@@ -390,7 +353,7 @@ void lduMatrix::operator*=(const scalarField& sf)
 }
 
 
-void lduMatrix::operator*=(scalar s)
+void Foam::lduMatrix::operator*=(scalar s)
 {
     if (diagPtr_)
     {
@@ -408,9 +371,5 @@ void lduMatrix::operator*=(scalar s)
     }
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

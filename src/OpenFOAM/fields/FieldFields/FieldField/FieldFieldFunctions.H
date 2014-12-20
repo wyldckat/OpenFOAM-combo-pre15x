@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,12 +22,12 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Generic FieldField type.
-
 \*---------------------------------------------------------------------------*/
 
-#include "PstreamReduceOps.H"
+#include "scalarFieldField.H"
+
+#define TEMPLATE template<template<class> class Field, class Type>
+#include "FieldFieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -107,6 +107,46 @@ tmp<FieldField<Field, scalar> > mag(const tmp<FieldField<Field, Type> >& tf);
 
 
 template<template<class> class Field, class Type>
+void cmptMax
+(
+    FieldField<Field, typename FieldField<Field, Type>::cmptType>& cf,
+    const FieldField<Field, Type>& f
+);
+
+template<template<class> class Field, class Type>
+tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptMax
+(
+    const FieldField<Field, Type>& f
+);
+
+template<template<class> class Field, class Type>
+tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptMax
+(
+    const tmp<FieldField<Field, Type> >& tf
+);
+
+
+template<template<class> class Field, class Type>
+void cmptMin
+(
+    FieldField<Field, typename FieldField<Field, Type>::cmptType>& cf,
+    const FieldField<Field, Type>& f
+);
+
+template<template<class> class Field, class Type>
+tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptMin
+(
+    const FieldField<Field, Type>& f
+);
+
+template<template<class> class Field, class Type>
+tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptMin
+(
+    const tmp<FieldField<Field, Type> >& tf
+);
+
+
+template<template<class> class Field, class Type>
 void cmptAv
 (
     FieldField<Field, typename FieldField<Field, Type>::cmptType>& cf,
@@ -124,6 +164,7 @@ tmp<FieldField<Field, typename FieldField<Field, Type>::cmptType> > cmptAv
 (
     const tmp<FieldField<Field, Type> >& tf
 );
+
 
 template<template<class> class Field, class Type>
 void cmptMag
@@ -143,72 +184,6 @@ tmp<FieldField<Field, Type> > cmptMag
 (
     const tmp<FieldField<Field, Type> >& tf
 );
-
-#define BINARY_FUNCTION(func)                                                 \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void func                                                                     \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type>& f1,                                        \
-    const FieldField<Field, Type>& f2                                         \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const FieldField<Field, Type>& f1,                                        \
-    const FieldField<Field, Type>& f2                                         \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const FieldField<Field, Type>& f1,                                        \
-    const tmp<FieldField<Field, Type> >& tf2                                  \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1,                                 \
-    const FieldField<Field, Type>& f2                                         \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1,                                 \
-    const tmp<FieldField<Field, Type> >& tf2                                  \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void func                                                                     \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type>& f1,                                        \
-    const Type& s                                                             \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const FieldField<Field, Type>& f1,                                        \
-    const Type& s                                                             \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > func                                            \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1,                                 \
-    const Type& s                                                             \
-);
-
-BINARY_FUNCTION(max)
-BINARY_FUNCTION(min)
-BINARY_FUNCTION(scale)
-
-#undef BINARY_FUNCTION
 
 
 #define TMP_UNARY_FUNCTION(returnType, func)                                  \
@@ -242,8 +217,6 @@ Type average(const FieldField<Field, Type>& f);
 TMP_UNARY_FUNCTION(Type, average)
 
 
-#include "PstreamReduceOps.H"
-
 #define G_UNARY_FUNCTION(returnType, gFunc, func, rFunc)                      \
                                                                               \
 template<template<class> class Field, class Type>                             \
@@ -266,192 +239,32 @@ TMP_UNARY_FUNCTION(Type, gAverage)
 #undef TMP_UNARY_FUNCTION
 
 
+BINARY_FUNCTION(Type, Type, Type, max)
+BINARY_FUNCTION(Type, Type, Type, min)
+BINARY_FUNCTION(Type, Type, Type, scale)
+
+BINARY_TYPE_FUNCTION(Type, Type, Type, max)
+BINARY_TYPE_FUNCTION(Type, Type, Type, min)
+BINARY_TYPE_FUNCTION(Type, Type, Type, scale)
+
+
 /* * * * * * * * * * * * * * * * Global operators  * * * * * * * * * * * * * */
 
-#define UNARY_OPERATOR(op, opFunc)                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void opFunc                                                                   \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type>& f1                                         \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type>& f1                                         \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1                                  \
-);
+UNARY_OPERATOR(Type, Type, -, negate)
 
-UNARY_OPERATOR(-, negate)
-
-#undef UNARY_OPERATOR
-
-
-#define BINARY_OPERATOR_FF(Type1, Type2, op, opFunc)                          \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void opFunc                                                                   \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type1>& f1,                                       \
-    const FieldField<Field, Type2>& f2                                        \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type1>& f1,                                       \
-    const FieldField<Field, Type2>& f2                                        \
-);
-
-#define BINARY_OPERATOR_FTR(Type1, Type2, op, opFunc)                         \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type1>& f1,                                       \
-    const tmp<FieldField<Field, Type2> >& tf2                                 \
-);
-
-#define BINARY_OPERATOR_FT(Type1, Type2, op, opFunc)                          \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type1>& f1,                                       \
-    const tmp<FieldField<Field, Type2> >& tf2                                 \
-);
-
-#define BINARY_OPERATOR_TRF(Type1, Type2, op, opFunc)                         \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type1> >& tf1,                                \
-    const FieldField<Field, Type2>& f2                                        \
-);
-
-#define BINARY_OPERATOR_TF(Type1, Type2, op, opFunc)                          \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type1> >& tf1,                                \
-    const FieldField<Field, Type2>& f2                                        \
-);
-
-#define BINARY_OPERATOR_TRT(Type1, Type2, op, opFunc)                         \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type1> >& tf1,                                \
-    const tmp<FieldField<Field, Type2> >& tf2                                 \
-);
-
-#define BINARY_OPERATOR_TTR(Type1, Type2, op, opFunc)                         \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type1> >& tf1,                                \
-    const tmp<FieldField<Field, Type2> >& tf2                                 \
-);
-
-#define BINARY_OPERATOR_R(Type1, Type2, op, opFunc)                           \
-    BINARY_OPERATOR_FF(Type1, Type2, op, opFunc)                              \
-    BINARY_OPERATOR_FTR(Type1, Type2, op, opFunc)                             \
-    BINARY_OPERATOR_TRF(Type1, Type2, op, opFunc)                             \
-    BINARY_OPERATOR_TRT(Type1, Type2, op, opFunc)
-
-BINARY_OPERATOR_R(Type, Type, +, add)
-BINARY_OPERATOR_R(Type, Type, -, subtract)
-
-#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
-BINARY_OPERATOR_FF(scalar, Type, *, multiply)
-BINARY_OPERATOR_FTR(scalar, Type, *, multiply)
-BINARY_OPERATOR_TF(scalar, Type, *, multiply)
-BINARY_OPERATOR_TTR(scalar, Type, *, multiply)
+#ifndef __INTEL_COMPILER
+BINARY_OPERATOR(Type, Type, scalar, *, multiply)
+BINARY_OPERATOR(Type, scalar, Type, *, multiply)
 #endif
+BINARY_OPERATOR(Type, Type, scalar, /, divide)
 
-BINARY_OPERATOR_FF(Type, scalar, /, divide)
-BINARY_OPERATOR_FT(Type, scalar, /, divide)
-BINARY_OPERATOR_TRF(Type, scalar, /, divide)
-BINARY_OPERATOR_TRT(Type, scalar, /, divide)
+BINARY_TYPE_OPERATOR_SF(Type, scalar, Type, *, multiply)
+BINARY_TYPE_OPERATOR_FS(Type, Type, scalar, *, multiply)
 
-#undef BINARY_OPERATOR_R
-#undef BINARY_OPERATOR_FF
-#undef BINARY_OPERATOR_FTR
-#undef BINARY_OPERATOR_TF
-#undef BINARY_OPERATOR_TTR
-#undef BINARY_OPERATOR_FT
-#undef BINARY_OPERATOR_TRF
-#undef BINARY_OPERATOR_TRT
+BINARY_TYPE_OPERATOR_FS(Type, Type, scalar, /, divide)
 
 
-#define BINARY_TYPE_OPERATOR_TF(TYPE, op, opFunc)                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void opFunc                                                                   \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const TYPE& s,                                                            \
-    const FieldField<Field, Type>& f1                                         \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const TYPE& s,                                                            \
-    const FieldField<Field, Type>& f1                                         \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const TYPE& s,                                                            \
-    const tmp<FieldField<Field, Type> >& tf1                                  \
-);
-
-#define BINARY_TYPE_OPERATOR_FT(TYPE, op, opFunc)                             \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-void opFunc                                                                   \
-(                                                                             \
-    FieldField<Field, Type>& f,                                               \
-    const FieldField<Field, Type>& f1,                                        \
-    const TYPE& s                                                             \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const FieldField<Field, Type>& f1,                                        \
-    const TYPE& s                                                             \
-);                                                                            \
-                                                                              \
-template<template<class> class Field, class Type>                             \
-tmp<FieldField<Field, Type> > operator op                                     \
-(                                                                             \
-    const tmp<FieldField<Field, Type> >& tf1,                                 \
-    const TYPE& s                                                             \
-);
-
-#define BINARY_TYPE_OPERATOR(TYPE, op, opFunc)                                \
-    BINARY_TYPE_OPERATOR_TF(TYPE, op, opFunc)                                 \
-    BINARY_TYPE_OPERATOR_FT(TYPE, op, opFunc)
-
-BINARY_TYPE_OPERATOR(Type, +, add)
-BINARY_TYPE_OPERATOR(Type, -, subtract)
-
-BINARY_TYPE_OPERATOR(scalar, *, multiply)
-BINARY_TYPE_OPERATOR_FT(scalar, /, divide)
-
-#undef BINARY_TYPE_OPERATOR
-#undef BINARY_TYPE_OPERATOR_TF
-#undef BINARY_TYPE_OPERATOR_FT
-
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 #define PRODUCT_OPERATOR(product, op, opFunc)                                 \
                                                                               \
@@ -549,6 +362,9 @@ operator op                                                                   \
     const tmp<FieldField<Field, Type> >& tf1                                  \
 );
 
+PRODUCT_OPERATOR(typeOfSum, +, add)
+PRODUCT_OPERATOR(typeOfSum, -, subtract)
+
 PRODUCT_OPERATOR(outerProduct, *, outer)
 PRODUCT_OPERATOR(crossProduct, ^, cross)
 PRODUCT_OPERATOR(innerProduct, &, dot)
@@ -562,3 +378,7 @@ PRODUCT_OPERATOR(scalarProduct, &&, dotdot)
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
+
+// ************************************************************************* //

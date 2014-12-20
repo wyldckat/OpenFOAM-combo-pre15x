@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -113,7 +113,7 @@ void writePatch
                 // Write value of neighbouring cell instead of patch value
                 writeFuns::insert
                 (
-                    pField.patchInternalField
+                    pField.patch().patchInternalField
                     (
                         vsf.internalField()
                     )(),
@@ -145,7 +145,7 @@ void writePatch
             {
                 writeFuns::insert
                 (
-                    pField.patchInternalField
+                    pField.patch().patchInternalField
                     (
                         vvf.internalField()
                     )(),
@@ -189,7 +189,7 @@ void writePatch
                 tmp<scalarField> tpField =
                     pInter.faceToPointInterpolate
                     (
-                        bField.patchInternalField
+                        bField.patch().patchInternalField
                         (
                             vsf.internalField()
                         )()
@@ -238,7 +238,7 @@ void writePatch
                 tmp<vectorField> tpField =
                     pInter.faceToPointInterpolate
                     (
-                        bField.patchInternalField
+                        bField.patch().patchInternalField
                         (
                             vvf.internalField()
                         )()

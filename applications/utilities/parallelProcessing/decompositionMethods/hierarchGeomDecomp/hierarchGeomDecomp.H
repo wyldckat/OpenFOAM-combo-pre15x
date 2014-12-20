@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,9 +80,34 @@ class hierarchGeomDecomp
         //- Convert ordering string ("xyz") into list of components.
         void setDecompOrder();
 
+        //- Find index of t in list inbetween indices left and right
+        static label findLower
+        (
+            const List<scalar>&,
+            const scalar t,
+            const label left,
+            const label right
+        );
+
+        //- Find midValue (at local index mid) such that the number of
+        //  elements between mid and leftIndex are (globally summed) the
+        //  wantedSize. Binary search.
+        static void findBinary
+        (
+            const label sizeTol,        // size difference considered acceptible
+            const List<scalar>&,
+            const label leftIndex,      // index of previous value
+            const scalar leftValue,     // value at leftIndex
+            const scalar maxValue,      // global max of values
+            const scalar wantedSize,    // wanted size
+            label& mid,                 // index where size of bin is wantedSize
+            scalar& midValue            // value at mid
+        );
+
         //- Recursively sort in x,y,z (or rather acc. to decompOrder_)
         void sortComponent
         (
+            const label sizeTol,
             const pointField&,
             const labelList& slice,         // slice of points to decompose
             const direction componentIndex, // index in decompOrder_
@@ -111,7 +136,7 @@ public:
         hierarchGeomDecomp
         (
             const dictionary& decompositionDict,
-            const primitiveMesh& mesh
+            const polyMesh& mesh
         );
 
 
@@ -122,6 +147,12 @@ public:
 
 
     // Member Functions
+
+        //- hierarchgeom is aware of processor boundaries
+        bool parallelAware() const
+        {
+            return true;
+        }
 
         labelList decompose(const pointField&);
 };

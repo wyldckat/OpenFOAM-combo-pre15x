@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Spatial transformation functions for primitive fields.
 
 \*---------------------------------------------------------------------------*/
 
@@ -79,8 +76,9 @@ tmp<Field<Type> > transform
     const tmp<Field<Type> >& ttf
 )
 {
-    tmp<Field<Type> > tranf(ttf.ptr());
-    transform(tranf(), trf, tranf());
+    tmp<Field<Type> > tranf = reuseTmp<Type, Type>::New(ttf);
+    transform(tranf(), trf, ttf());
+    reuseTmp<Type, Type>::clear(ttf);
     return tranf;
 }
 
@@ -106,8 +104,9 @@ tmp<Field<Type> > transform
     const tmp<Field<Type> >& ttf
 )
 {
-    tmp<Field<Type> > tranf(ttf.ptr());
-    transform(tranf(), ttrf(), tranf());
+    tmp<Field<Type> > tranf = reuseTmp<Type, Type>::New(ttf);
+    transform(tranf(), ttrf(), ttf());
+    reuseTmp<Type, Type>::clear(ttf);
     ttrf.clear();
     return tranf;
 }
@@ -145,8 +144,9 @@ tmp<Field<Type> > transform
     const tmp<Field<Type> >& ttf
 )
 {
-    tmp<Field<Type> > tranf(ttf.ptr());
-    transform(tranf(), t, tranf());
+    tmp<Field<Type> > tranf = reuseTmp<Type, Type>::New(ttf);
+    transform(tranf(), t, ttf());
+    reuseTmp<Type, Type>::clear(ttf);
     return tranf;
 }
 

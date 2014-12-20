@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -83,9 +83,18 @@ class SpalartAllmaras
 
     // Private member functions
 
-        tmp<volScalarField> fv1() const;
-        tmp<volScalarField> fv2() const;
-        tmp<volScalarField> fv3() const;
+        tmp<volScalarField> chi() const;
+        tmp<volScalarField> fv1(const volScalarField& chi) const;
+        tmp<volScalarField> fv2
+        (
+            const volScalarField& chi,
+            const volScalarField& fv1
+        ) const;
+        tmp<volScalarField> fv3
+        (
+            const volScalarField& chi,
+            const volScalarField& fv1
+        ) const;
         tmp<volScalarField> fw(const volScalarField& Stilda) const;
 
 
@@ -164,7 +173,7 @@ public:
             );
         }
 
-        tmp<volTensorField> R() const;
+        tmp<volSymmTensorField> R() const;
 
         tmp<fvVectorMatrix> divR(volVectorField& U) const;
 

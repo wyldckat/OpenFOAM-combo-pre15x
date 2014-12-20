@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "CyclicPointPatchField.H"
+#include "Swap.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -47,7 +48,14 @@ CyclicPointPatchField
     const Field<Type>& iF
 )
 :
-    PatchField<Type>(p, iF)
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename CyclicPointPatch::CoupledPointPatch,
+        Type
+    >(p, iF),
+    cyclicPatch_(refCast<const CyclicPointPatch>(p))
 {}
 
 
@@ -66,7 +74,14 @@ CyclicPointPatchField
     const Field<Type>& f
 )
 :
-    PatchField<Type>(p, iF, f)
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename CyclicPointPatch::CoupledPointPatch,
+        Type
+    >(p, iF, f),
+    cyclicPatch_(refCast<const CyclicPointPatch>(p))
 {}
 
 
@@ -85,7 +100,14 @@ CyclicPointPatchField
     const dictionary& dict
 )
 :
-    PatchField<Type>(p, iF)
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename CyclicPointPatch::CoupledPointPatch,
+        Type
+    >(p, iF),
+    cyclicPatch_(refCast<const CyclicPointPatch>(p))
 {
     if (!isType<CyclicPointPatch>(p))
     {
@@ -117,13 +139,21 @@ template
 CyclicPointPatchField<PatchField, PointPatch, CyclicPointPatch, Type>::
 CyclicPointPatchField
 (
-    const CyclicPointPatchField<PatchField, PointPatch, CyclicPointPatch, Type>&,
+    const CyclicPointPatchField
+        <PatchField, PointPatch, CyclicPointPatch, Type>&,
     const PointPatch& p,
     const Field<Type>& iF,
     const PointPatchFieldMapper&
 )
 :
-    PatchField<Type>(p, iF)
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename CyclicPointPatch::CoupledPointPatch,
+        Type
+    >(p, iF),
+    cyclicPatch_(refCast<const CyclicPointPatch>(p))
 {
     if (!isType<CyclicPointPatch>(this->patch()))
     {
@@ -158,18 +188,24 @@ template
 CyclicPointPatchField<PatchField, PointPatch, CyclicPointPatch, Type>::
 CyclicPointPatchField
 (
-    const CyclicPointPatchField<PatchField, PointPatch, CyclicPointPatch, Type>&
-        ptf,
+    const CyclicPointPatchField
+        <PatchField, PointPatch, CyclicPointPatch, Type>& ptf,
     const Field<Type>& iF
 )
 :
-    PatchField<Type>(ptf, iF)
+    CoupledPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        typename CyclicPointPatch::CoupledPointPatch,
+        Type
+    >(ptf, iF),
+    cyclicPatch_(ptf.cyclicPatch_)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Evaluate patch field
 template
 <
     template<class> class PatchField,
@@ -178,13 +214,30 @@ template
     class Type
 >
 void CyclicPointPatchField<PatchField, PointPatch, CyclicPointPatch, Type>::
-evaluate()
+swapAdd(Field<Type>& pField) const
 {
-    notImplemented
-    (
-        "void CyclicPointPatchField"
-        "<PatchField, PointPatch, CyclicPointPatch, Type>::evaluate()"
-    );
+    Field<Type> pf(this->patchInternalField(pField));
+
+    const edgeList& pairs = cyclicPatch_.transformPairs();
+
+    if (doTransform())
+    {
+        forAll(pairs, pairi)
+        {
+            Type tmp = pf[pairs[pairi][0]];
+            pf[pairs[pairi][0]] = transform(forwardT()[0], pf[pairs[pairi][1]]);
+            pf[pairs[pairi][1]] = transform(reverseT()[0], tmp);
+        }
+    }
+    else
+    {
+        forAll(pairs, pairi)
+        {
+            Swap(pf[pairs[pairi][0]], pf[pairs[pairi][1]]);
+        }
+    }
+
+    addToInternalField(pField, pf);
 }
 
 

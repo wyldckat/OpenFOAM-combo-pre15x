@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "coupledFvPatchField.H"
@@ -42,6 +40,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
     const Field<Type>& iF
 )
 :
+    lduInterfaceField(refCast<const lduInterface>(p)),
     fvPatchField<Type>(p, iF)
 {}
 
@@ -54,6 +53,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
     const Field<Type>& f
 )
 :
+    lduInterfaceField(refCast<const lduInterface>(p)),
     fvPatchField<Type>(p, iF, f)
 {}
 
@@ -67,6 +67,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
     const fvPatchFieldMapper& mapper
 )
 :
+    lduInterfaceField(refCast<const lduInterface>(p)),
     fvPatchField<Type>(ptf, p, iF, mapper)
 {}
 
@@ -79,7 +80,19 @@ coupledFvPatchField<Type>::coupledFvPatchField
     const dictionary& dict
 )
 :
+    lduInterfaceField(refCast<const lduInterface>(p)),
     fvPatchField<Type>(p, iF, dict)
+{}
+
+
+template<class Type>
+coupledFvPatchField<Type>::coupledFvPatchField
+(
+    const coupledFvPatchField<Type>& ptf
+)
+:
+    lduInterfaceField(refCast<const lduInterface>(ptf.patch())),
+    fvPatchField<Type>(ptf)
 {}
 
 
@@ -90,6 +103,7 @@ coupledFvPatchField<Type>::coupledFvPatchField
     const Field<Type>& iF
 )
 :
+    lduInterfaceField(refCast<const lduInterface>(ptf.patch())),
     fvPatchField<Type>(ptf, iF)
 {}
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -155,11 +155,11 @@ public:
             );
         }
 
-        tmp<volTensorField> R() const
+        tmp<volSymmTensorField> R() const
         {
-            return tmp<volTensorField>
+            return tmp<volSymmTensorField>
             (
-                new volTensorField
+                new volSymmTensorField
                 (
                     IOobject
                     (
@@ -170,9 +170,9 @@ public:
                         IOobject::NO_WRITE
                     ),
                     mesh_,
-                    dimensionedTensor
+                    dimensionedSymmTensor
                     (
-                        "R", sqr(U_.dimensions()), tensor::zero
+                        "R", sqr(U_.dimensions()), symmTensor::zero
                     )
                 )
             );

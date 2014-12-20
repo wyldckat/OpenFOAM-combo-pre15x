@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,69 +25,90 @@ License
 Class
     fvMeshAdder
 
-Description
-
 \*----------------------------------------------------------------------------*/
 
+#include "fvMesh.H"
 #include "fvMeshAdder.H"
-#include "mapAddedPolyMesh.H"
-#include "SortableList.H"
-//#include "IOobject.H"
 #include "faceCoupleInfo.H"
 #include "fvMesh.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+//- Calculate map from new patch faces to old patch faces. -1 where
+//  could not map.
+Foam::labelList Foam::fvMeshAdder::calcPatchMap
+(
+    const label oldStart,
+    const label oldSize,
+    const labelList& oldToNew,
+    const polyPatch& newPatch,
+    const label unmappedValue
+)
+{
+    labelList newToOld(newPatch.size(), unmappedValue);
 
+    label newStart = newPatch.start();
+    label newSize = newPatch.size();
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+    for (label i = 0; i < oldSize; i++)
+    {
+        label newFaceI = oldToNew[oldStart+i];
 
-// Construct null
-Foam::fvMeshAdder::fvMeshAdder()
-:
-    polyMeshAdder()
-{}
-
+        if (newFaceI >= newStart && newFaceI < newStart+newSize)
+        {
+            newToOld[newFaceI-newStart] = i;
+        }
+    }
+    return newToOld;
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // Inplace add mesh1 to mesh0
-void Foam::fvMeshAdder::add
+Foam::autoPtr<Foam::mapAddedPolyMesh> Foam::fvMeshAdder::add
 (
     fvMesh& mesh0,
     const fvMesh& mesh1,
-    const faceCoupleInfo& coupleInfo
+    const faceCoupleInfo& coupleInfo,
+    const bool validBoundary
 )
 {
-    // Save old patch starts (needed in mapping later on)
-    labelList patchStarts(mesh0.boundaryMesh().size(), -1);
-    forAll(mesh0.boundaryMesh(), patchI)
-    {
-        patchStarts[patchI] = mesh0.boundaryMesh()[patchI].start();
-    }
+    mesh0.clearOut();
 
-
-    // Do all changes to mesh0
-    List<polyPatch*> allPatches
+    // Resulting merged mesh (polyMesh only!)
+    autoPtr<mapAddedPolyMesh> mapPtr
     (
-        addWithoutPatches
+        polyMeshAdder::add
         (
             mesh0,
             mesh1,
-            coupleInfo
+            coupleInfo,
+            validBoundary
         )
     );
 
-    // Add patches to new mesh.
-    mesh0.removeFvBoundary();
-    mesh0.addFvPatches(allPatches);
+    // Adjust the fvMesh part.
+    const polyBoundaryMesh& patches = mesh0.boundaryMesh();
+
+    fvBoundaryMesh& fvPatches = const_cast<fvBoundaryMesh&>(mesh0.boundary());
+    fvPatches.setSize(patches.size());
+    forAll(patches, patchI)
+    {
+        fvPatches.set(patchI, fvPatch::New(patches[patchI], fvPatches));
+    }
 
     // Do the mapping of the stored fields
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    MapVolFields<scalar>(patchStarts, mesh0, mesh1);
-    MapVolFields<vector>(patchStarts, mesh0, mesh1);
-    MapVolFields<tensor>(patchStarts, mesh0, mesh1);
+    fvMeshAdder::MapVolFields<scalar>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapVolFields<vector>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapVolFields<tensor>(mapPtr, mesh0, mesh1);
+
+    fvMeshAdder::MapSurfaceFields<scalar>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapSurfaceFields<vector>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapSurfaceFields<tensor>(mapPtr, mesh0, mesh1);
+
+    return mapPtr;
 }
 
 

@@ -12,8 +12,8 @@
             "rho",
             runTime.timeName(),
             mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::READ_IF_PRESENT,
+            IOobject::AUTO_WRITE
         ),
         thermo->rho()
     );
@@ -43,6 +43,10 @@
     scalar pRefValue = 0.0;
     setRefCell(p, mesh.solutionDict().subDict("SIMPLE"), pRefCell, pRefValue);
 
+    dimensionedScalar pMin
+    (
+        mesh.solutionDict().subDict("SIMPLE").lookup("pMin")
+    );
 
     Info<< "Creating turbulence model\n" << endl;
     autoPtr<compressible::turbulenceModel> turbulence

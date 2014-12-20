@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "error.H"
@@ -39,8 +37,7 @@ namespace Foam
 
 SLListBase::iterator SLListBase::endIter
 (
-    const_cast<SLListBase&>(static_cast<const SLListBase&>(SLListBase())),
-    reinterpret_cast<link*>(NULL)
+    const_cast<SLListBase&>(static_cast<const SLListBase&>(SLListBase()))
 );
 
 SLListBase::const_iterator SLListBase::endConstIter
@@ -52,7 +49,6 @@ SLListBase::const_iterator SLListBase::endConstIter
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// add at head of list
 void SLListBase::insert(SLListBase::link* a)
 {
     nElmts_++;
@@ -70,7 +66,6 @@ void SLListBase::insert(SLListBase::link* a)
 }
 
 
-// add at tail of list
 void SLListBase::append(SLListBase::link* a)
 {
     nElmts_++;
@@ -87,7 +82,6 @@ void SLListBase::append(SLListBase::link* a)
 }
 
 
-//remove and return head
 SLListBase::link* SLListBase::removeHead()
 {
     nElmts_--;
@@ -114,7 +108,6 @@ SLListBase::link* SLListBase::removeHead()
 }
 
 
-// remove and return element
 SLListBase::link* SLListBase::remove(SLListBase::link* it)
 {
     SLListBase::iterator iter = begin();

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -72,6 +72,29 @@ void reduce
     {
         reduce(Pstream::treeCommunication(), Value, bop);
     }
+}    
+
+
+// Reduce using either linear or tree communication schedule
+template <class T, class BinaryOp>
+T returnReduce
+(
+    const T& Value,
+    const BinaryOp& bop
+)
+{
+    T WorkValue(Value);
+
+    if (Pstream::nProcs() < Pstream::nProcsSimpleSum)
+    {
+        reduce(Pstream::linearCommunication(), WorkValue, bop);
+    }
+    else
+    {
+        reduce(Pstream::treeCommunication(), WorkValue, bop);
+    }
+
+    return WorkValue;
 }    
 
 

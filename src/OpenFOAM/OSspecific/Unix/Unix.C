@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -602,8 +602,7 @@ bool Foam::cp(const fileName& src, const fileName& dest)
             return false;
         }
     }
-
-    if (src.type() == fileName::DIRECTORY)
+    else if (src.type() == fileName::DIRECTORY)
     {
         // If dest is a directory, create the destination file name.
         if (destFile.type() == fileName::DIRECTORY)
@@ -638,15 +637,52 @@ bool Foam::cp(const fileName& src, const fileName& dest)
             if (Unix::debug)
             {
                 Info<< "Copying : " << src/subdirs[i]
-                    << " to " << destFile/subdirs[i] << endl;
+                    << " to " << destFile << endl;
             }
 
             // Dir to Dir.
-            cp(src/subdirs[i], destFile/subdirs[i]);
+            cp(src/subdirs[i], destFile);
         }
     }
 
     return true;
+}
+
+
+// Create a softlink. destFile should not exist. Returns true if successful.
+bool Foam::ln(const fileName& src, const fileName& dest)
+{
+    if (Unix::debug)
+    {
+        Info<< "Create softlink from : " << src << " to " << dest
+            << endl;
+    }
+
+    if (exists(dest))
+    {
+        WarningIn("ln(const fileName&, const fileName&)")
+            << "destination " << dest << " already exists. Not linking."
+            << endl;
+        return false;
+    }
+
+    if (!exists(src))
+    {
+        WarningIn("ln(const fileName&, const fileName&)")
+            << "source " << src << " does not exist." << endl;
+        return false;
+    }
+
+    if (symlink(src.c_str(), dest.c_str()) == 0)
+    {
+        return true;
+    }
+    else
+    {
+        WarningIn("ln(const fileName&, const fileName&)")
+            << "symlink from " << src << " to " << dest << " failed." << endl;
+        return false;
+    }
 }
 
 

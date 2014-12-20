@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,21 +36,18 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * * //
 
-//- Null construct
 inline SLListBase::link::link()
 :
     next_(0)
 {}
 
 
-//- Construct given pointer to another link
 inline SLListBase::link::link(link* p)
 :
     next_(p)
 {}
 
 
-// Null construct
 inline SLListBase::SLListBase()
 :
     last_(0),
@@ -58,7 +55,6 @@ inline SLListBase::SLListBase()
 {}
 
 
-// Construct given initial entry
 inline SLListBase::SLListBase(link* a)
 :
     last_(a->next_ = a),
@@ -74,14 +70,12 @@ inline SLListBase::~SLListBase()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return number of elements in list
 inline label SLListBase::size() const
 {
     return nElmts_;
 }
 
 
-// Return first entry
 inline SLListBase::link* SLListBase::first()
 {
     if (!nElmts_)
@@ -94,7 +88,6 @@ inline SLListBase::link* SLListBase::first()
 }
 
 
-// Return const access to first entry
 inline const SLListBase::link* SLListBase::first() const
 {
     if (!nElmts_)
@@ -107,7 +100,6 @@ inline const SLListBase::link* SLListBase::first() const
 }
 
 
-// Return last entry
 inline SLListBase::link* SLListBase::last()
 {
     if (!nElmts_)
@@ -120,7 +112,6 @@ inline SLListBase::link* SLListBase::last()
 }
 
 
-// Return const access to last entry
 inline const SLListBase::link* SLListBase::last() const
 {
     if (!nElmts_)
@@ -133,7 +124,6 @@ inline const SLListBase::link* SLListBase::last() const
 }
 
 
-// Clear the list
 inline void SLListBase::clear()
 {
     nElmts_ = 0;
@@ -141,19 +131,34 @@ inline void SLListBase::clear()
 }
 
 
+inline SLListBase::link* SLListBase::remove(SLListBase::iterator& it)
+{
+    return remove(it.curElmt_);
+}
+
+
 // * * * * * * * * * * * * * * * STL iterator  * * * * * * * * * * * * * * * //
 
-// Construct for a given SLListBase and link
 inline SLListBase::iterator::iterator(SLListBase& s, link* elmt)
 :
     curList_(s),
-    curElmt_(elmt)
+    curElmt_(elmt),
+    curLink_(*curElmt_)
+{}
+
+
+inline SLListBase::iterator::iterator(SLListBase& s)
+:
+    curList_(s),
+    curElmt_(NULL),
+    curLink_()
 {}
 
 
 inline void SLListBase::iterator::operator=(const iterator& iter)
 {
     curElmt_ = iter.curElmt_;
+    curLink_ = iter.curLink_;
 }
 
 
@@ -177,13 +182,14 @@ inline SLListBase::link& SLListBase::iterator::operator*()
 
 inline SLListBase::iterator& SLListBase::iterator::operator++()
 {
-    if (curElmt_ == curList_.last_)
+    if (curElmt_ == curList_.last_ || curList_.last_ == 0)
     {
         curElmt_ = 0;
     }
     else
     {
-        curElmt_ = curElmt_->next_;
+        curElmt_ = curLink_.next_;
+        curLink_ = *curElmt_;
     }
 
     return *this;

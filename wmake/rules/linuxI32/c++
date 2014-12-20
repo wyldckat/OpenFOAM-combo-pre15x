@@ -1,8 +1,9 @@
 .SUFFIXES: .C .cxx .cc .cpp
 
-c++WARN     = -wd654 -vec-report0
+c++WARN     = -wd654,819,1125,1476,1505,1572
 
-CC          = icc -gcc-version=400
+#CC          = icpc -gcc-version=400
+CC          = icpc
 
 include $(RULES)/c++$(WM_COMPILE_OPTION)
 
@@ -10,13 +11,13 @@ ptFLAGS     = -DNoRepository
 
 c++FLAGS    = $(GFLAGS) $(c++WARN) $(c++OPT) $(c++DBUG) $(ptFLAGS) $(LIB_HEADER_DIRS) -KPIC
 
-Ctoo        = $(CC) $(c++FLAGS) -c $$SOURCE -o $@
+Ctoo        = $(WM_SCHEDULER) $(CC) $(c++FLAGS) -c $$SOURCE -o $@
 cxxtoo      = $(Ctoo)
 cctoo       = $(Ctoo)
 cpptoo      = $(Ctoo)
 
-#LINK_LIBS   = $(c++DBUG) -L$(IA32ROOT)/lib
-LINK_LIBS   = $(c++DBUG) -lstdc++
+#LINK_LIBS   = $(c++DBUG) -lstdc++
+LINK_LIBS   = $(c++DBUG) -L$(IA32ROOT)/lib
 
 LINKLIBSO   = $(CC) $(c++FLAGS) -shared
 LINKEXE     = $(CC) $(c++FLAGS)

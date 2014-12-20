@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    TensorField
+    GeometricTensorField
 
 Description
     Tensor specific part of the implementation of GeometricField.
@@ -31,269 +31,53 @@ Description
 SourceFiles
     GeometricTensorField.C
 
-
 \*---------------------------------------------------------------------------*/
 
 #ifndef GeometricTensorField_H
 #define GeometricTensorField_H
 
-#include "GeometricField.H"
-#include "tensor.H"
+#include "GeometricSphericalTensorField.H"
+#include "GeometricSymmTensorField.H"
+#include "DimensionedTensorField.H"
+
+#define TEMPLATE template<template<class> class PatchField, class GeoMesh>
+#include "GeometricFieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-// * * * * * * * * * * * * * * * Global Operators  * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<template<class> class PatchField, class GeoMesh>
-void hdual
-(
-    GeometricField<vector, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
+UNARY_FUNCTION(scalar, tensor, tr, transform)
+UNARY_FUNCTION(sphericalTensor, tensor, sph, transform)
+UNARY_FUNCTION(symmTensor, tensor, symm, transform)
+UNARY_FUNCTION(symmTensor, tensor, twoSymm, transform)
+UNARY_FUNCTION(tensor, tensor, skew, transform)
+UNARY_FUNCTION(tensor, tensor, dev, transform)
+UNARY_FUNCTION(tensor, tensor, dev2, transform)
+UNARY_FUNCTION(scalar, tensor, det, transform)
+UNARY_FUNCTION(tensor, tensor, inv, inv)
+UNARY_FUNCTION(vector, tensor, eigenValues, sign)
+UNARY_FUNCTION(tensor, tensor, eigenVectors, transform)
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<vector, PatchField, GeoMesh> > operator*
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<vector, PatchField, GeoMesh> > operator*
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
+UNARY_FUNCTION(vector, symmTensor, eigenValues, sign)
+UNARY_FUNCTION(symmTensor, symmTensor, eigenVectors, transform)
 
 
-template<template<class> class PatchField, class GeoMesh>
-void hdual
-(
-    GeometricField<tensor, PatchField, GeoMesh>&,
-    const GeometricField<vector, PatchField, GeoMesh>&
-);
+// * * * * * * * * * * * * * * * global operators  * * * * * * * * * * * * * //
 
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > operator*
-(
-    const GeometricField<vector, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > operator*
-(
-    const tmp<GeometricField<vector, PatchField, GeoMesh> >&
-);
-
-
-// * * * * * * * * * * * * * * * Global functions  * * * * * * * * * * * * * //
-
-template<template<class> class PatchField, class GeoMesh>
-void tr
-(
-    GeometricField<scalar, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > tr
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > tr
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void dev
-(
-    GeometricField<tensor, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > dev
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > dev
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void dev2
-(
-    GeometricField<tensor, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > dev2
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > dev2
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void det
-(
-    GeometricField<scalar, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > det
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<scalar, PatchField, GeoMesh> > det
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void inv
-(
-    GeometricField<tensor, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > inv
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > inv
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void hinv
-(
-    GeometricField<tensor, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > hinv
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > hinv
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void symm
-(
-    GeometricField<tensor, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > symm
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > symm
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void skew
-(
-    GeometricField<tensor, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > skew
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > skew
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void eigenValues
-(
-    GeometricField<vector, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<vector, PatchField, GeoMesh> > eigenValues
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<vector, PatchField, GeoMesh> > eigenValues
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
-
-template<template<class> class PatchField, class GeoMesh>
-void eigenVectors
-(
-    GeometricField<tensor, PatchField, GeoMesh>&,
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > eigenVectors
-(
-    const GeometricField<tensor, PatchField, GeoMesh>&
-);
-
-template<template<class> class PatchField, class GeoMesh>
-tmp<GeometricField<tensor, PatchField, GeoMesh> > eigenVectors
-(
-    const tmp<GeometricField<tensor, PatchField, GeoMesh> >&
-);
-
+UNARY_OPERATOR(vector, tensor, *, hdual, transform)
+UNARY_OPERATOR(tensor, vector, *, hdual, transform)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 #ifdef NoRepository
 #   include "GeometricTensorField.C"

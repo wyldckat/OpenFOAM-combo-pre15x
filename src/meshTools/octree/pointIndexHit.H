@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -160,6 +160,19 @@ public:
             index_ = index;
         }
 
+        bool operator==(const pointIndexHit& rhs) const
+        {
+            return
+                hit_ == rhs.hit()
+             && hitPoint_ == rhs.rawPoint()
+             && index_ == rhs.index();
+        }
+
+        bool operator!=(const pointIndexHit& rhs) const
+        {
+            return !operator==(rhs);
+        }
+
         void write(Ostream& os)
         {
             if (hit())
@@ -177,6 +190,12 @@ public:
             return os << pHit.hit_ << token::SPACE << pHit.hitPoint_
                 << token::SPACE << pHit.index_;
         }
+
+        friend Istream& operator>>(Istream& is, pointIndexHit& pHit)
+        {
+            return is >> pHit.hit_ >> pHit.hitPoint_ >> pHit.index_;
+        }
+
 };
 
 

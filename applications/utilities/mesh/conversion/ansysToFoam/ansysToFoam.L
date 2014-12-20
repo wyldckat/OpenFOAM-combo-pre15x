@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,6 +31,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 %{
+
+#undef yyFlexLexer
 
  /* ------------------------------------------------------------------------- *\
    ------ local definitions
@@ -182,7 +184,7 @@ bface                 ^{space}"SFE"{cspace}
             {
                 if (!slPatchCells(i))
                 {
-                    slPatchCells.hook(new SLList<label>);
+                    slPatchCells.set(i, new SLList<label>);
                 }
             }
         }
@@ -195,7 +197,7 @@ bface                 ^{space}"SFE"{cspace}
             {
                 if (!slPatchCellFaces(i))
                 {
-                    slPatchCellFaces.hook(new SLList<label>);
+                    slPatchCellFaces.set(i, new SLList<label>);
                 }
             }
         }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -741,7 +741,7 @@ backwardDdtScheme<Type>::fvcDdtPhiCorr
         {
             FatalErrorIn
             (
-                "CrankNicholsonDdtScheme<Type>::fvcDdtPhiCorr"
+                "backwardDdtScheme<Type>::fvcDdtPhiCorr"
             )   << "dimensions of phi are not correct"
                 << abort(FatalError);
 
@@ -760,10 +760,13 @@ tmp<surfaceScalarField> backwardDdtScheme<Type>::meshPhi
     scalar deltaT = deltaT_();
     scalar deltaT0 = deltaT0_(vf);
 
-    scalar coefft   = 1 + deltaT/(deltaT + deltaT0);
-    scalar coefft00 = deltaT*deltaT/(deltaT0*(deltaT + deltaT0));
+    // Coefficient for t-3/2 (between times 0 and 00)
+    scalar coefft0_00 = deltaT/(deltaT + deltaT0);
 
-    return coefft*mesh().phi() - coefft00*mesh().phi().oldTime();
+    // Coefficient for t-1/2 (between times n and 0)
+    scalar coefftn_0 = 1 + coefft0_00;
+
+    return coefftn_0*mesh().phi() - coefft0_00*mesh().phi().oldTime();
 }
 
 

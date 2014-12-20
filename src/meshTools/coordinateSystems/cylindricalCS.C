@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,35 +22,27 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-    Cylindrical coordinate system: axis is the local z-axis, direction the
-    local x-axis
-
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "cylindricalCS.H"
 #include "addToRunTimeSelectionTable.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
+#include "mathematicalConstants.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineTypeNameAndDebug(cylindricalCS, 0);
+namespace Foam
+{
+    defineTypeNameAndDebug(cylindricalCS, 0);
 
-addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, origAxisDir);
-addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, origRotation);
-addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, dictionary);
+    addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, origAxisDir);
+    addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, origRotation);
+    addToRunTimeSelectionTable(coordinateSystem, cylindricalCS, dictionary);
+}
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
-cylindricalCS::cylindricalCS
+Foam::cylindricalCS::cylindricalCS
 (
     const word& name,
     const vector& origin,
@@ -58,66 +50,65 @@ cylindricalCS::cylindricalCS
     const vector& direction
 )
 :
-    cartesianCS(name, origin, axis, direction)
+    coordinateSystem(name, origin, axis, direction)
 {}
 
 
-// Construct from origin and a coordinate rotation
-cylindricalCS::cylindricalCS
+Foam::cylindricalCS::cylindricalCS
 (
     const word& name,
     const vector& origin,
     const coordinateRotation& cr
 )
 :
-    cartesianCS(name, origin, cr)
+    coordinateSystem(name, origin, cr)
 {}
 
 
-cylindricalCS::cylindricalCS
+Foam::cylindricalCS::cylindricalCS
 (
     const word& name,
     const dictionary& dict
 )
 :
-    cartesianCS(name, dict)
+    coordinateSystem(name, dict)
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Convert from local coordinate system to the global Cartesian system
-vector cylindricalCS::toGlobal(const vector& localV) const
+Foam::vector Foam::cylindricalCS::toGlobal(const vector& localV) const
 {
-    scalar theta = localV.y()*mathematicalConstant::pi/180.0;
+    scalar theta = 
+	localV.y()*mathematicalConstant::pi/180.0;
 
-    return cartesianCS::toGlobal
+    return coordinateSystem::toGlobal
     (
         vector(localV.x()*cos(theta), localV.x()*sin(theta), localV.z())
     );
 }
 
 
-tmp<vectorField> cylindricalCS::toGlobal
+Foam::tmp<Foam::vectorField> Foam::cylindricalCS::toGlobal
 (
     const vectorField& localV
 ) const
 {
-    scalarField theta = localV.component(vector::Y)*mathematicalConstant::pi/180.0;
+    scalarField theta = 
+	localV.component(vector::Y)*mathematicalConstant::pi/180.0;
 
     vectorField lc(localV.size());
     lc.replace(vector::X, localV.component(vector::X)*cos(theta));
     lc.replace(vector::Y, localV.component(vector::X)*sin(theta));
     lc.replace(vector::Z, localV.component(vector::Z));
 
-    return cartesianCS::toGlobal(lc);
+    return coordinateSystem::toGlobal(lc);
 }
 
 
-// Convert from global Cartesian coordinate system to the local system
-vector cylindricalCS::toLocal(const vector& globalV) const
+Foam::vector Foam::cylindricalCS::toLocal(const vector& globalV) const
 {
-    const vector lc = cartesianCS::toLocal(globalV);
+    const vector lc = coordinateSystem::toLocal(globalV);
 
     return
         vector
@@ -129,12 +120,12 @@ vector cylindricalCS::toLocal(const vector& globalV) const
 }
 
 
-tmp<vectorField> cylindricalCS::toLocal
+Foam::tmp<Foam::vectorField> Foam::cylindricalCS::toLocal
 (
     const vectorField& globalV
 ) const
 {
-    const vectorField lc = cartesianCS::toLocal(globalV);
+    const vectorField lc = coordinateSystem::toLocal(globalV);
 
     tmp<vectorField> tresult(new vectorField(lc.size()));
     vectorField& result = tresult();
@@ -157,9 +148,5 @@ tmp<vectorField> cylindricalCS::toLocal
     return tresult;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

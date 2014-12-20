@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,8 +36,12 @@ SourceFiles
 #ifndef tensorFieldField_H
 #define tensorFieldField_H
 
-#include "FieldField.H"
+#include "sphericalTensorFieldField.H"
+#include "symmTensorFieldField.H"
 #include "tensor.H"
+
+#define TEMPLATE template<template<class> class Field>
+#include "FieldFieldFunctionsM.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,125 +50,25 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-template<template<class> class Field>
-void hdual
-(
-    FieldField<Field, vector>&,
-    const FieldField<Field, tensor>&
-);
+UNARY_FUNCTION(scalar, tensor, tr)
+UNARY_FUNCTION(sphericalTensor, tensor, sph)
+UNARY_FUNCTION(symmTensor, tensor, symm)
+UNARY_FUNCTION(symmTensor, tensor, twoSymm)
+UNARY_FUNCTION(tensor, tensor, skew)
+UNARY_FUNCTION(tensor, tensor, dev)
+UNARY_FUNCTION(tensor, tensor, dev2)
+UNARY_FUNCTION(scalar, tensor, det)
+UNARY_FUNCTION(tensor, tensor, inv)
+UNARY_FUNCTION(vector, tensor, eigenValues)
+UNARY_FUNCTION(tensor, tensor, eigenVectors)
 
-template<template<class> class Field>
-tmp<FieldField<Field, vector> > operator*
-(
-    const tmp<FieldField<Field, tensor> >&
-);
+UNARY_FUNCTION(vector, symmTensor, eigenValues)
+UNARY_FUNCTION(symmTensor, symmTensor, eigenVectors)
 
-template<template<class> class Field>
-void hdual
-(
-    FieldField<Field, tensor>&,
-    const FieldField<Field, vector>&
-);
+// * * * * * * * * * * * * * * * global operators  * * * * * * * * * * * * * //
 
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > operator*
-(
-    const tmp<FieldField<Field, vector> >&
-);
-
-template<template<class> class Field>
-void tr(FieldField<Field, scalar>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > tr(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
-void dev(FieldField<Field, tensor>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > dev(const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > dev(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
-void dev2(FieldField<Field, tensor>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > dev2(const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > dev2(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
-void det(FieldField<Field, scalar>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, scalar> > det(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
-void inv(FieldField<Field, tensor>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > inv(const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > inv(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
-void hinv(FieldField<Field, tensor>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > hinv(const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > hinv(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
-void symm(FieldField<Field, tensor>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > symm(const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > symm(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
-void skew(FieldField<Field, tensor>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > skew(const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > skew(const tmp<FieldField<Field, tensor> >&);
-
-template<template<class> class Field>
-void eigenValues(FieldField<Field, vector>&, const FieldField<Field, tensor>&);
-
-template<template<class> class Field>
-tmp<FieldField<Field, vector> > eigenValues
-(
-    const tmp<FieldField<Field, tensor> >&
-);
-
-template<template<class> class Field>
-void eigenVectors
-(
-    FieldField<Field, tensor>&,
-    const FieldField<Field, tensor>&
-);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > eigenVectors
-(
-    const FieldField<Field, tensor>&
-);
-
-template<template<class> class Field>
-tmp<FieldField<Field, tensor> > eigenVectors
-(
-    const tmp<FieldField<Field, tensor> >&
-);
+UNARY_OPERATOR(vector, tensor, *, hdual)
+UNARY_OPERATOR(tensor, vector, *, hdual)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -172,6 +76,8 @@ tmp<FieldField<Field, tensor> > eigenVectors
 } // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "undefFieldFunctionsM.H"
 
 #ifdef NoRepository
 #   include "tensorFieldField.C"

@@ -3,8 +3,7 @@ ARFLAGS    = cr
 RANLIB     = ranlib
 LD         = ld
 
-GFLAGS     = -D$(WM_ARCH) -D$(WM_PRECISION_OPTION) 
-#-fsingle-precision-constant
+GFLAGS     = -D$(WM_ARCH) -D$(WM_PRECISION_OPTION)
 GINC       = 
 GLIBS      = -lm
 GLIB_LIBS  = 

@@ -1,4 +1,4 @@
-    const dictionary& simple = mesh.solutionDict().subDict("SIMPLE");
+    dictionary simple = mesh.solutionDict().subDict("SIMPLE");
 
     int nNonOrthCorr = 0;
     if (simple.found("nNonOrthogonalCorrectors"))

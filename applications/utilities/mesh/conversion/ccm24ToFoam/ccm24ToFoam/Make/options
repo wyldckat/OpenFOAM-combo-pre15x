@@ -1,9 +1,0 @@
-EXE_INC = \
-    -I$(LIB_SRC)/finiteVolume/lnInclude \
-    -I../libccmio/libadf \
-    -I../libccmio/libccmio
-
-EXE_LIBS = \
-    -lfiniteVolume \
-    -ladf \
-    -lccmio

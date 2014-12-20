@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.4                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -40,16 +40,16 @@ divSchemes
     div(phi,U)      Gauss <>;
     div(phiB,U)     Gauss <>;
     div(phi,B)      Gauss <>;
-    div(phiB,(2*DBU*B)) Gauss <>;
+    div(phiB,((2*DBU)*B)) Gauss <>;
 }
 
 laplacianSchemes
 {
     default         none;
     laplacian(nu,U) Gauss linear corrected;
-    laplacian(1|A(U),p) Gauss linear corrected;
+    laplacian((1|A(U)),p) Gauss linear corrected;
     laplacian(DB,B) Gauss linear corrected;
-    laplacian(1|A(B),pB) Gauss linear corrected;
+    laplacian((1|A(B)),pB) Gauss linear corrected;
 }
 
 interpolationSchemes

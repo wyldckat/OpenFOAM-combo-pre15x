@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -92,7 +92,14 @@ else
     lamDir=""
 fi
 
-tar czpf $foamPackFile $packDirs $micoDir $mpichDir $lamDir
+if [ -r $foam/src/openmpi-[0-9.ab]*/platforms/$bin ]
+then
+    openmpiDir=$foam/src/openmpi-[0-9.ab]*/platforms/$bin
+else
+    openmpiDir=""
+fi
+
+tar czpf $foamPackFile $packDirs $micoDir $mpichDir $lamDir $openmpiDir
 
 if [ $? = 0 ]
 then

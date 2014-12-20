@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,6 +31,8 @@ Description
 \*---------------------------------------------------------------------------*/
 
 %{
+
+#undef yyFlexLexer
 
  /* ------------------------------------------------------------------------- *\
    ------ local definitions
@@ -340,21 +342,32 @@ mtype                 {space}"MTYPE:"{space}
 
         cellMap[curNumberOfCells] = cellI;
         cellTypes[curNumberOfCells] = cellType;
-        cellLabels.hook(new labelList(nVertices));
+        cellLabels.set(curNumberOfCells, new labelList(nVertices));
 
         labelList& curLabels = cellLabels[curNumberOfCells];
 
         // Find out how many labels are expected. If less or equal to
         // seven, read them all and finish with it. If there is more,
         // set read of the next line
-        label labelsToRead = min(7, curLabels.size());
-
-        for (label labelI = 0; labelI < labelsToRead; labelI++)
+        label labelsToRead = min(8, nVertices);
+        label labelI = 0;
+        for (; labelI < labelsToRead; labelI++)
         {
-            curLabels[labelI] = readLabel(elementStream);
+            if (elementStream.eof()) break;
+
+            // Check token to avoid trailing space.
+            token curLabelTok(elementStream);
+            if (curLabelTok.isLabel())
+            {
+                curLabels[labelI] = curLabelTok.labelToken();
+            }
+            else
+            {
+                break;
+            }
         }
 
-        if (labelsToRead < nVertices)
+        if (labelI < nVertices)
         {
             BEGIN(cellContLine);
         }

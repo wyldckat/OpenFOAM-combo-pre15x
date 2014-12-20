@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,6 +26,12 @@ Class
     ICCG
 
 Description
+    Incomplete Cholesky preconditioned CG solver derived from the general
+    preconditioned CG solver PCG but with the choice of preconditioner
+    pre-selected.
+
+    This solver is present for backward-compatibility and the PCG solver
+    should be used for preference.
 
 SourceFiles
     ICCG.C
@@ -35,7 +41,7 @@ SourceFiles
 #ifndef ICCG_H
 #define ICCG_H
 
-#include "lduMatrix.H"
+#include "PCG.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,16 +54,8 @@ namespace Foam
 
 class ICCG
 :
-    public lduMatrix::solver
+    public PCG
 {
-private:
-
-    // Static data
-
-        //- Maximum number of iterations in the solver
-        static label maxIter_;
-
-
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -66,38 +64,39 @@ private:
         //- Disallow default bitwise assignment
         void operator=(const ICCG&);
 
+        //- Return the dictionary data-stream constructed from the components.
+        //  Needed for backward compatibility
+        IStringStream solverDataStream
+        (
+            const scalar tolerance,
+            const scalar relTol
+        ) const;
 
-protected:
-
-    // Protected data
-
-        scalar tolerance_;
-        scalar relTol_;
+        //- Return the dictionary data-stream constructed from the old-style
+        //  data-stream.  Needed for backward compatibility
+        IStringStream solverDataStream
+        (
+            const word& solverName,
+            Istream& solverData
+        ) const;
 
 
 public:
 
     //- Runtime type information
-#   ifndef ICCGname
-#   define ICCGname "ICCG"
-#   endif
-    TypeName(ICCGname);
-#   undef ICCGname
+    TypeName("ICCG");
 
 
     // Constructors
 
-        //- Construct from components
+        //- Construct from matrix components and tolerances
         ICCG
         (
             const word& fieldName,
-            scalarField& psi,
             const lduMatrix& matrix,
-            const scalarField& source,
-            const FieldField<Field, scalar>& coupleBouCoeffs,
-            const FieldField<Field, scalar>& coupleIntCoeffs,
-            const lduCoupledInterfacePtrsList& interfaces,
-            const direction cmpt,
+            const FieldField<Field, scalar>& interfaceBouCoeffs,
+            const FieldField<Field, scalar>& interfaceIntCoeffs,
+            const lduInterfaceFieldPtrsList& interfaces,
             const scalar tolerance,
             const scalar relTol = 0.0
         );
@@ -106,30 +105,24 @@ public:
         ICCG
         (
             const word& fieldName,
-            scalarField& psi,
             const lduMatrix& matrix,
-            const scalarField& source,
-            const FieldField<Field, scalar>& coupleBouCoeffs,
-            const FieldField<Field, scalar>& coupleIntCoeffs,
-            const lduCoupledInterfacePtrsList& interfaces,
-            const direction cmpt,
+            const FieldField<Field, scalar>& interfaceBouCoeffs,
+            const FieldField<Field, scalar>& interfaceIntCoeffs,
+            const lduInterfaceFieldPtrsList& interfaces,
             Istream& solverData
         );
 
 
+    // Destructor
+
+        virtual ~ICCG()
+        {}
+
+
     // Member Functions
 
-        //- Solve the matrix with this solver
-        lduMatrix::solverPerformance solve();
-
-        //- Set maximum number of iterations
-        static label setMaxIter(const label mIter)
-        {
-            label oldMaxIter = maxIter_;
-            maxIter_ = mIter;
-
-            return oldMaxIter;
-        }
+        //- Read and reset the solver parameters from the given stream
+        void read(Istream& solverData);
 };
 
 

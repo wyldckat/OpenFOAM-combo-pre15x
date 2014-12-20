@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,11 +32,9 @@ SourceFiles
     polyMesh.C
     polyMeshCalcFaceCells.C
     polyMeshClear.C
-    polyMeshCorrectFaceDirections.C
-    polyMeshCreate.C
+    polyMeshFromShapeMesh.C
     polyMeshIO.C
-    polyMeshPurgePolygons.C
-    polyMeshShapeMeshTools.C
+    polyMeshUpdate.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -62,7 +60,7 @@ SourceFiles
 namespace Foam
 {
 
-class parallelInfo;
+class globalMeshData;
 class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
@@ -113,6 +111,10 @@ private:
             //- Boundary mesh
             mutable polyBoundaryMesh boundary_;
 
+            //- vector of valid directions in mesh
+            //  defined according to the presence of empty patches
+            mutable Vector<label> directions_;
+
 
         // Zoning information
 
@@ -127,7 +129,7 @@ private:
 
 
         //- Parallel info
-        mutable parallelInfo* parallelDataPtr_;
+        mutable globalMeshData* globalMeshDataPtr_;
 
 
         // Mesh motion related data
@@ -156,6 +158,9 @@ private:
         //- Initialise the polyMesh from the given set of cells
         void initMesh(cellList& c);
 
+        //- Calculate the valid directions in the mesh from the boundaries
+        void calcDirections() const;
+
         //- Calculate the cell shapes from the primitive
         //  polyhedral information
         void calcCellShapes() const;
@@ -176,6 +181,12 @@ private:
 
 public:
 
+    // Public typedefs
+
+        typedef polyMesh Mesh;
+        typedef polyBoundaryMesh BoundaryMesh;
+
+
     //- Runtime type information
     TypeName("polyMesh");
 
@@ -192,6 +203,18 @@ public:
         explicit polyMesh(const IOobject& io);
 
         //- Construct from components without boundary.
+        //  Boundary is added using addPatches() member function
+        polyMesh
+        (
+            const IOobject& io,
+            const pointField& points,
+            const faceList& faces,
+            const labelList& allOwner,
+            const labelList& allNeighbour
+        );
+
+        //- Construct from components with cells rather than owner
+        //  and neighbourwithout boundary.
         //  Boundary is added using addPatches() member function
         polyMesh
         (
@@ -266,6 +289,19 @@ public:
                 return boundary_;
             }
 
+            //- Return the vector of valid directions in mesh
+            //  defined according to the presence of empty patches.
+            //  1 indicates valid direction and -1 an invalid direction.
+            const Vector<label>& directions() const;
+
+            //- Return the number of valid geoemtric dimensions in the mesh
+            label nGeometricD() const;
+
+            //- Return the number of valid solution dimensions in the mesh
+            //  For wedge cases this includes the circumferential direction
+            //  in case of swirl
+            label nSolutionD() const;
+
             //- Return point zone mesh
             const pointZoneMesh& pointZones() const
             {
@@ -284,9 +320,8 @@ public:
                 return cellZones_;
             }
 
-
             //- Return parallel info
-            const parallelInfo& parallelData() const;
+            const globalMeshData& globalData() const;
 
 
         // Mesh motion
@@ -295,6 +330,12 @@ public:
             bool moving() const
             {
                 return moving_;
+            }
+
+            //- Set the mesh to be moving
+            void setMoving()
+            {
+                moving_ = true;
             }
 
             //- Move points, returns volumes swept by faces in motion
@@ -325,7 +366,11 @@ public:
             }
 
             //- Add boundary patches
-            void addPatches(const List<polyPatch*>&);
+            void addPatches
+            (
+                const List<polyPatch*>&,
+                const bool validBoundary = true
+            );
 
             //- Add mesh zones
             void addZones
@@ -377,8 +422,11 @@ public:
             //- Clear primitive data (points, faces and cells)
             void clearPrimitives();
 
-            //- Remove all files
-            void removeFiles(const fileName& dir) const;
+            //- Remove all files from mesh instance
+            void removeFiles(const fileName& instanceDir) const;
+   
+            //- Remove all files from mesh instance()
+            void removeFiles() const;
 };
 
 

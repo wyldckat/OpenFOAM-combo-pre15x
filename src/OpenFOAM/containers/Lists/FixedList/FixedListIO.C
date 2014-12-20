@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,7 @@ License
 #include "Istream.H"
 #include "Ostream.H"
 #include "token.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,7 +50,7 @@ Istream& operator>>(Istream& is, FixedList<T, Size>& L)
 {
     is.fatalCheck("operator>>(Istream&, FixedList<T, Size>&)");
 
-    if (is.format() == IOstream::ASCII || !writeBinary(L.begin()))
+    if (is.format() == IOstream::ASCII || !contiguous<T>())
     {
         token firstToken(is);
 
@@ -171,11 +172,11 @@ template<class T, label Size>
 Ostream& operator<<(Ostream& os, const FixedList<T, Size>& L)
 {
     // Write list contents depending on data format
-    if (os.format() == IOstream::ASCII || !writeBinary(L.v_))
+    if (os.format() == IOstream::ASCII || !contiguous<T>())
     {
         bool uniform = false;
 
-        if (Size > 1 && writeBinary(L.v_))
+        if (Size > 1 && contiguous<T>())
         {
             uniform = true;
 
@@ -200,7 +201,7 @@ Ostream& operator<<(Ostream& os, const FixedList<T, Size>& L)
             // Write end of contents delimiter
             os << token::END_BLOCK;
         }
-        else if (Size < 11 && writeBinary(L.v_))
+        else if (Size < 11 && contiguous<T>())
         {
             // Write size of list and start contents delimiter
             os << token::BEGIN_LIST;

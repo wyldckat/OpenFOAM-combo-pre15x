@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -106,6 +106,7 @@ void readFields
     // Construct the vol scalar fields
     fields.setSize(fieldObjects.size());
 
+    label fieldi = 0;
     for
     (
         IOobjectList::iterator iter = fieldObjects.begin();
@@ -113,7 +114,7 @@ void readFields
         ++iter
     )
     {
-        fields.hook(new GeoField(*iter(), mesh));
+        fields.set(fieldi++, new GeoField(*iter(), mesh));
     }
 }
 
@@ -239,8 +240,9 @@ int main(int argc, char *argv[])
         mesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
 
         // Add the perfect interface mesh modifier
-        stitcher.hook
+        stitcher.set
         (
+            0,
             new perfectInterface
             (
                 "couple",
@@ -323,8 +325,9 @@ int main(int argc, char *argv[])
         mesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
 
         // Add the sliding interface mesh modifier
-        stitcher.hook
+        stitcher.set
         (
+            0,
             new slidingInterface
             (
                 "couple",
@@ -352,6 +355,12 @@ int main(int argc, char *argv[])
 
     PtrList<volVectorField> volVectorFields;
     readFields(mesh, objects, volVectorFields);
+
+    PtrList<volSphericalTensorField> volSphericalTensorFields;
+    readFields(mesh, objects, volSphericalTensorFields);
+
+    PtrList<volSymmTensorField> volSymmTensorFields;
+    readFields(mesh, objects, volSymmTensorFields);
 
     PtrList<volTensorField> volTensorFields;
     readFields(mesh, objects, volTensorFields);

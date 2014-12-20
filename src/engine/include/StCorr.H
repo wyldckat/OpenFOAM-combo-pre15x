@@ -3,7 +3,7 @@
     if (ign.igniting())
     {
         // Calculate volume of ignition kernel
-        dimensionedScalar Vk("Vk", dimVolume, gSum(c*mesh.V()));
+        dimensionedScalar Vk("Vk", dimVolume, gSum(c*mesh.V().field()));
         dimensionedScalar Ak("Ak", dimArea, 0.0);
 
         if (Vk.value() > SMALL)
@@ -11,7 +11,7 @@
             // Calculate kernel area from it's volume
             // and the dimensionality of the case
 
-            switch(mesh.nD())
+            switch(mesh.nGeometricD())
             {
                 case 3:
                 {
@@ -78,7 +78,7 @@
             // discretisation of the b equation.
             volScalarField mgb =
                 fvc::div(nf, b, "div(phiSt,b)") - b*fvc::div(nf) + dMgb;
-            dimensionedScalar AkEst = gSum(mgb*mesh.V());
+            dimensionedScalar AkEst = gSum(mgb*mesh.V().field());
 
             StCorr.value() = max(min((Ak/AkEst).value(), 10.0), 1.0);
 

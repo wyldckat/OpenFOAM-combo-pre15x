@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,17 +48,6 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "readThermodynamicProperties.H"
 #   include "createFields.H"
-
-    rhoU.correctBoundaryConditions();
-
-    multivariateSurfaceInterpolationScheme<scalar>::fieldTable fields;
-
-    volScalarField magRhoU = mag(rhoU);
-    volScalarField H("H", (rhoE + p)/rho);
-
-    fields.add(rho);
-    fields.add(magRhoU);
-    fields.add(H);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

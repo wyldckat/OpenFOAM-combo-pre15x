@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -38,6 +38,7 @@ SourceFiles
 
 #include "scalar.H"
 #include "Vector.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -48,8 +49,10 @@ namespace Foam
 
 typedef Vector<scalar> vector;
 
-//- Allow binary writing for arrays of vector
-inline bool writeBinary(const vector*) {return true;}
+
+//- Specify data associated with vector type is contiguous
+template<>
+inline bool contiguous<vector>() {return true;}
 
 
 template<class Type>

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,6 +28,7 @@ License
 
 #include "UList.H"
 #include "ListLoopM.H"
+#include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -36,7 +37,6 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return a null UList
 template<class T>
 UList<T>& UList<T>::null()
 {
@@ -45,9 +45,39 @@ UList<T>& UList<T>::null()
 }
 
 
+template<class T>
+void UList<T>::assign(const UList<T>& a)
+{
+    if (a.size_ != this->size_)
+    {
+        FatalErrorIn("UList<T>::operator=(const UList<T>&)")
+            << "ULists have different sizes: "
+            << this->size_ << " " << a.size_
+            << abort(FatalError);
+    }
+
+    if (this->size_)
+    {
+#       ifdef USEMEMCPY
+        if (contiguous<T>())
+        {
+            memcpy(this->v_, a.v_, this->byteSize());
+        }
+        else
+#       endif
+        {
+            List_ACCESS(T, (*this), vp);
+            List_CONST_ACCESS(T, a, ap);
+            List_FOR_ALL((*this), i)
+                List_ELEM((*this), vp, i) = List_ELEM(a, ap, i);
+            List_END_FOR_ALL
+        }
+    }
+}
+
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-// Assignment of all entries to the given value
 template<class T>
 void UList<T>::operator=(const T& t)
 {
@@ -63,10 +93,11 @@ void UList<T>::operator=(const T& t)
 template<class T>
 void UList<T>::swap(UList<T>& a)
 {
-    if (a.size_ != size_)
+    if (a.size_ != this->size_)
     {
         FatalErrorIn("UList<T>::swap(const UList<T>&)")
-            << "ULists have different sizes"
+            << "ULists have different sizes: "
+            << this->size_ << " " << a.size_
             << abort(FatalError);
     }
 
@@ -81,13 +112,29 @@ void UList<T>::swap(UList<T>& a)
 }
 
 
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class T>
+label UList<T>::byteSize() const
+{
+    if (!contiguous<T>())
+    {
+        FatalErrorIn("UList<T>::byteSize()")
+            << "Cannot return the binary size of a list of "
+               "non-primitive elements"
+            << abort(FatalError);
+    }
+
+    return this->size_*sizeof(T);
+}
+
+
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-// Comparison for equality
 template<class T>
 bool UList<T>::operator==(const UList<T>& a) const
 {
-    if (size_ != a.size_)
+    if (this->size_ != a.size_)
     {
         return false;
     }
@@ -105,7 +152,6 @@ bool UList<T>::operator==(const UList<T>& a) const
 }
 
 
-// Comparison for inequality
 template<class T>
 bool UList<T>::operator!=(const UList<T>& a) const
 {
@@ -113,7 +159,6 @@ bool UList<T>::operator!=(const UList<T>& a) const
 }
 
 
-// Compare ULists lexicographically
 template<class T>
 bool UList<T>::operator<(const UList<T>& a) const
 {
@@ -134,7 +179,7 @@ bool UList<T>::operator<(const UList<T>& a) const
         }
     }
 
-    if (size_ < a.size_)
+    if (this->size_ < a.size_)
     {
         return true;
     }
@@ -145,7 +190,6 @@ bool UList<T>::operator<(const UList<T>& a) const
 }
 
 
-// Compare ULists lexicographically
 template<class T>
 bool UList<T>::operator>(const UList<T>& a) const
 {
@@ -153,7 +197,6 @@ bool UList<T>::operator>(const UList<T>& a) const
 }
 
 
-//- Return true if !(a > b). Takes linear time.
 template<class T>
 bool UList<T>::operator<=(const UList<T>& a) const
 {
@@ -161,7 +204,6 @@ bool UList<T>::operator<=(const UList<T>& a) const
 }
 
 
-//- Return true if !(a < b). Takes linear time.
 template<class T>
 bool UList<T>::operator>=(const UList<T>& a) const
 {

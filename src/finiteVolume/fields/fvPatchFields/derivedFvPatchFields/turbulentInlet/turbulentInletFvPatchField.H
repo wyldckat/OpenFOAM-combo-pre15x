@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -84,13 +84,20 @@ public:
             const dictionary&
         );
 
-        //- Construct by mapping given turbulentInletFvPatchField onto a new patch
+        //- Construct by mapping given turbulentInletFvPatchField
+        //  onto a new patch
         turbulentInletFvPatchField
         (
             const turbulentInletFvPatchField<Type>&,
             const fvPatch&,
             const Field<Type>&,
             const fvPatchFieldMapper&
+        );
+
+        //- Construct as copy
+        turbulentInletFvPatchField
+        (
+            const turbulentInletFvPatchField<Type>&
         );
 
         //- Construct and return a clone
