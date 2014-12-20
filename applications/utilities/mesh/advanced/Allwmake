@@ -1,0 +1,13 @@
+#!/bin/sh
+
+set -x
+wmake autoRefineMesh
+wmake refineWallLayer
+wmake selectCells
+wmake combinePatchFaces
+wmake collapseEdges
+wmake collapseFaces
+wmake removeFaces
+wmake splitCells
+wmake refinementLevel
+wmake modifyMesh

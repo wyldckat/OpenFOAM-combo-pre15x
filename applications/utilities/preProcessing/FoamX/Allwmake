@@ -1,0 +1,5 @@
+#!/bin/sh
+
+(cd Idl ; make)
+(cd C++ ; ./Allwmake)
+(cd Java ; wmake jar)

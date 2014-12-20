@@ -1,0 +1,3 @@
+#!/bin/sh
+#find . \( -name 'core' \) -exec ls -l {} \; -exec rm {} \;
+find . \( -name 'core' -o -name 'core.[1-9]*' \) -print | xargs -t rm

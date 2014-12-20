@@ -1,0 +1,161 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+\*---------------------------------------------------------------------------*/
+
+#include "wallHeatTransferFvPatchScalarField.H"
+#include "addToRunTimeSelectionTable.H"
+#include "fvPatchFieldMapper.H"
+#include "volFields.H"
+#include "basicThermo.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
+(
+    const fvPatch& p,
+    const scalarField& iF
+)
+:
+    mixedFvPatchScalarField(p, iF),
+    Tinf_(p.size(), 0.0),
+    alphaWall_(p.size(), 0.0)
+{
+    refValue() = 0.0;
+    refGrad() = 0.0;
+    valueFraction() = 0.0;
+}
+
+
+wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
+(
+    const wallHeatTransferFvPatchScalarField& ptf,
+    const fvPatch& p,
+    const scalarField& iF,
+    const fvPatchFieldMapper& mapper
+)
+:
+    mixedFvPatchScalarField(ptf, p, iF, mapper),
+    Tinf_(ptf.Tinf_, mapper),
+    alphaWall_(ptf.alphaWall_, mapper)
+{}
+
+
+wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
+(
+    const fvPatch& p,
+    const scalarField& iF,
+    const dictionary& dict
+)
+:
+    mixedFvPatchScalarField(p, iF),
+    Tinf_("Tinf", dict, p.size()),
+    alphaWall_("alphaWall", dict, p.size())
+{
+    refValue() = Tinf_;
+    refGrad() = 0.0;
+    valueFraction() = 0.0;
+
+    if (dict.found("value"))
+    {
+        fvPatchField<scalar>::operator=
+        (
+            scalarField("value", dict, p.size())
+        );
+    }
+    else
+    {
+        evaluate();
+    }
+}
+
+
+wallHeatTransferFvPatchScalarField::wallHeatTransferFvPatchScalarField
+(
+    const wallHeatTransferFvPatchScalarField& tppsf,
+    const scalarField& iF
+)
+:
+    mixedFvPatchScalarField(tppsf, iF),
+    Tinf_(tppsf.Tinf_),
+    alphaWall_(tppsf.alphaWall_)
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+// Update the coefficients associated with the patch field
+void wallHeatTransferFvPatchScalarField::updateCoeffs()
+{
+    if (updated())
+    {
+        return;
+    }
+
+    const basicThermo& thermo = db().lookupObject<basicThermo>
+    (
+        "thermophysicalProperties"
+    );
+    
+    const label patchi = patchMesh().index();
+
+    const scalarField& Tw = thermo.T().boundaryField()[patchi];
+    scalarField Cpw = thermo.Cp(Tw, patchi);
+
+    valueFraction() = 
+        1.0/
+        (
+            1.0
+          + Cpw*thermo.alpha().boundaryField()[patchi]
+           *patchMesh().deltaCoeffs()/alphaWall_
+        );
+
+    mixedFvPatchScalarField::updateCoeffs();
+}
+
+
+// Write
+void wallHeatTransferFvPatchScalarField::write(Ostream& os) const
+{
+    fvPatchScalarField::write(os);
+    Tinf_.writeEntry("Tinf", os);
+    alphaWall_.writeEntry("alphaWall", os);
+    writeEntry("value", os);
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+makePatchTypeField(fvPatchScalarField, wallHeatTransferFvPatchScalarField);
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

@@ -1,0 +1,54 @@
+default
+{
+
+ddtSchemes
+{
+    default backward;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+    grad(p)         Gauss linear;
+    grad(U)         Gauss linear;
+}
+
+divSchemes
+{
+    default         none;
+    div(phi,U)      Gauss linear;
+    div(phi,k)      Gauss linear;
+    div(phi,B)      Gauss linear;
+    div(B)          Gauss linear;
+    div(phi,nuTilda) Gauss linear;
+    div((nuEff*dev(grad(U).T()))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         none;
+    laplacian(nuEff,U) Gauss linear corrected;
+    laplacian(1|A(U),p) Gauss linear corrected;
+    laplacian(DkEff,k) Gauss linear limited 0.5;
+    laplacian(DBEff,B) Gauss linear limited 0.5;
+    laplacian(DnuTildaEff,nuTilda) Gauss linear limited 0.5;
+}
+
+interpolationSchemes
+{
+    default         linear;
+    interpolate(HbyA) linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    p;
+}
+
+}

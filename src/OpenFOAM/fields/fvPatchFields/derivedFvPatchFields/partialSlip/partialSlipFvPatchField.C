@@ -1,0 +1,206 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    partialSlipFvPatchField
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "partialSlipFvPatchField.H"
+#include "transformField.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class Type>
+partialSlipFvPatchField<Type>::partialSlipFvPatchField
+(
+    const fvPatch& p,
+    const Field<Type>& iF
+)
+:
+    transformFvPatchField<Type>(p, iF),
+    valueFraction_(p.size(), 1.0)
+{
+    this->checkVolField();
+}
+
+
+template<class Type>
+partialSlipFvPatchField<Type>::partialSlipFvPatchField
+(
+    const partialSlipFvPatchField<Type>& ptf,
+    const fvPatch& p,
+    const Field<Type>& iF,
+    const fvPatchFieldMapper& mapper
+)
+:
+    transformFvPatchField<Type>(ptf, p, iF, mapper),
+    valueFraction_(ptf.valueFraction_, mapper)
+{
+    this->checkVolField();
+}
+
+
+template<class Type>
+partialSlipFvPatchField<Type>::partialSlipFvPatchField
+(
+    const fvPatch& p,
+    const Field<Type>& iF,
+    const dictionary& dict
+)
+:
+    transformFvPatchField<Type>(p, iF),
+    valueFraction_("valueFraction", dict, p.size())
+{
+    this->checkVolField();
+    evaluate();
+}
+
+
+template<class Type>
+partialSlipFvPatchField<Type>::partialSlipFvPatchField
+(
+    const partialSlipFvPatchField<Type>& ptf,
+    const Field<Type>& iF
+)
+:
+    transformFvPatchField<Type>(ptf, iF),
+    valueFraction_(ptf.valueFraction_)
+{
+    this->checkVolField();
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+// Map from self
+template<class Type>
+void partialSlipFvPatchField<Type>::autoMap
+(
+    const fvPatchFieldMapper& m
+)
+{
+    if (m.resizeOnly())
+    {
+        setSize(m.size());
+        valueFraction_.setSize(m.size());
+    }
+    else
+    {
+        Field<Type>::autoMap((const FieldMapper&)m);
+        valueFraction_.autoMap((const FieldMapper&)m);
+    }
+}
+
+
+// Reverse-map the given fvPatchField onto this fvPatchField
+template<class Type>
+void partialSlipFvPatchField<Type>::rmap
+(
+    const fvPatchField<Type>& ptf,
+    const labelList& addr
+)
+{
+    transformFvPatchField<Type>::rmap(ptf, addr);
+
+    const partialSlipFvPatchField<Type>& dmptf =
+        refCast<const partialSlipFvPatchField<Type> >(ptf);
+
+    valueFraction_.rmap(dmptf.valueFraction_, addr);
+}
+
+
+// Return gradient at boundary
+template<class Type>
+tmp<Field<Type> > partialSlipFvPatchField<Type>::snGrad() const
+{
+    vectorField nHat = this->patchMesh().nf();
+    Field<Type> pif = this->patchInternalField();
+
+    return
+    (
+        (1.0 - valueFraction_)*transform(I - nHat*nHat, pif) - pif
+    )*this->patchMesh().deltaCoeffs();
+}
+
+
+// Evaluate the field on the patch
+template<class Type>
+void partialSlipFvPatchField<Type>::evaluate()
+{
+    if (!this->updated())
+    {
+        this->updateCoeffs();
+    }
+
+    vectorField nHat = this->patchMesh().nf();
+
+    Field<Type>::operator=
+    (
+        (1.0 - valueFraction_)
+       *transform(I - nHat*nHat, this->patchInternalField())
+    );
+
+    transformFvPatchField<Type>::evaluate();
+}
+
+
+// Return defining fields
+template<class Type>
+tmp<Field<Type> > partialSlipFvPatchField<Type>::snGradTransformDiag() const
+{
+    vectorField nHat = this->patchMesh().nf();
+    vectorField diag(nHat.size());
+
+    diag.replace(vector::X, mag(nHat.component(vector::X)));
+    diag.replace(vector::Y, mag(nHat.component(vector::Y)));
+    diag.replace(vector::Z, mag(nHat.component(vector::Z)));
+
+    return 
+        valueFraction_*pTraits<Type>::one
+      + (1.0 - valueFraction_)*pow<vector, pTraits<Type>::rank>(diag);
+}
+
+
+// Write
+template<class Type>
+void partialSlipFvPatchField<Type>::write(Ostream& os) const
+{
+    transformFvPatchField<Type>::write(os);
+    valueFraction_.writeEntry("valueFraction", os);
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

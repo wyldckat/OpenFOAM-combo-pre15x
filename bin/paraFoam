@@ -1,0 +1,61 @@
+#!/bin/sh
+#------------------------------------------------------------------------------
+# =========                 |
+# \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+#  \\    /   O peration     |
+#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#    \\/     M anipulation  |
+#-------------------------------------------------------------------------------
+# License
+#     This file is part of OpenFOAM.
+#
+#     OpenFOAM is free software; you can redistribute it and/or modify it
+#     under the terms of the GNU General Public License as published by the
+#     Free Software Foundation; either version 2 of the License, or (at your
+#     option) any later version.
+#
+#     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+#     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#     for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with OpenFOAM; if not, write to the Free Software Foundation,
+#     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+# Script
+#     paraFoam
+#
+# Description
+#     
+#------------------------------------------------------------------------------
+
+if [  $# != 2 ]; then
+    echo $0: 'Wrong number of arguments'
+	echo 'Usage: paraFoam <root> <case>'
+    exit 1
+fi
+
+ROOT=$1
+if [ "$ROOT" = "." -o "$ROOT" = "./" ] ; then
+    ROOT=`pwd`
+fi
+
+CASE=$2
+CASE_DIR=$ROOT/$CASE
+
+if [ ! -d $CASE_DIR ]; then
+    echo $0: case directory $CASE_DIR does not exist, exiting
+    exit 0
+fi
+
+cd $CASE_DIR
+sed -e s%ROOT%$ROOT%g -e s%CASE%$CASE%g $WM_PROJECT_DIR/bin/paraFoam.pvs \
+    > paraFoam.pvs
+touch ${CASE}.foam
+
+paraview paraFoam.pvs
+
+rm paraFoam.pvs ${CASE}.foam
+
+#------------------------------------------------------------------------------

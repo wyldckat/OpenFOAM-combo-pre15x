@@ -1,0 +1,42 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "/home/penfold/mattijs/foam/mattijs2.1/run/icoFoam";
+    case            "cavity";
+    instance        "system";
+    local           "";
+
+    class           dictionary;
+    object          createPatcheDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Destination name
+name    cyclic0;
+
+// Type of patch
+type    cyclic;
+
+// Construct from
+// -set : use all faces in the named 'set'
+// -patches: from the list of patches. Faces are kept in that order. 
+constructFrom patches;
+
+// Patches to use as source of faces (only valid if constructFrom == 'patches')
+patches ( half0 half1);
+
+// Name of set to use (only valid if constructFrom == 'set')
+set f0;
+
+// ************************************************************************* //

@@ -1,0 +1,145 @@
+addPatchCellLayer                    = addPatchCellLayer
+
+attachDetach                         = attachDetach
+
+layerAdditionRemoval                 = layerAdditionRemoval
+
+slidingInterface                     = slidingInterface
+enrichedPatch                        = $(slidingInterface)/enrichedPatch
+
+directPolyTopoChange                 = directPolyTopoChange
+
+boundaryMesh                         = boundaryMesh
+boundaryPatch                        = boundaryPatch
+setUpdater                           = setUpdater
+
+meshCut                              = meshCut
+cellCuts                             = $(meshCut)/cellCuts
+cellLooper                           = $(meshCut)/cellLooper
+directions                           = $(meshCut)/directions
+edgeVertex                           = $(meshCut)/edgeVertex
+hashEdge                             = $(meshCut)/hashEdge
+meshModifiers                        = $(meshCut)/meshModifiers
+morphFvMesh                          = $(meshCut)/morphFvMesh
+morphMesh                            = $(meshCut)/morphMesh
+refineCell                           = $(meshCut)/refineCell
+splitCell                            = $(meshCut)/splitCell
+wallLayerCells                       = $(meshCut)/wallLayerCells
+wallNormalInfo                       = $(wallLayerCells)/wallNormalInfo
+
+meshCutter                           = $(meshModifiers)/meshCutter
+meshCutAndRemove                     = $(meshModifiers)/meshCutAndRemove
+removeFaces                          = $(meshModifiers)/removeFaces
+removeCells                          = $(meshModifiers)/removeCells
+undoableMeshCutter                   = $(meshModifiers)/undoableMeshCutter
+refinementIterator                   = $(meshModifiers)/refinementIterator
+multiDirRefinement                   = $(meshModifiers)/multiDirRefinement
+hexRef8                              = $(meshModifiers)/hexRef8
+
+directionInfo                        = $(directions)/directionInfo
+
+attachPolyMesh                       = attachPolyMesh
+repatchPolyMesh                      = repatchPolyMesh
+
+motionSolver                         = motionSolver
+cellQuality                          = $(motionSolver)/cellQuality
+
+motionDiffs                          = $(motionSolver)/motionDiffs
+motionDiff                           = $(motionDiffs)/motionDiff
+constant                             = $(motionDiffs)/constant
+linear                               = $(motionDiffs)/linear
+quadratic                            = $(motionDiffs)/quadratic
+exponential                          = $(motionDiffs)/exponential
+patchEnhanced                        = $(motionDiffs)/patchEnhanced
+file                                 = $(motionDiffs)/file
+nonOrthogonality                     = $(motionDiffs)/nonOrthogonality
+skewness                             = $(motionDiffs)/skewness
+mixedQuality                         = $(motionDiffs)/mixedQuality
+
+tools                                = tools
+twoDPointCorrector                   = $(tools)/twoDPointCorrector
+
+motionSmoother                      =  motionSmoother
+
+
+$(addPatchCellLayer)/addPatchCellLayer.C
+
+$(attachDetach)/attachDetach.C
+$(attachDetach)/attachInterface.C
+$(attachDetach)/detachInterface.C
+$(attachDetach)/attachDetachPointMatchMap.C
+
+$(layerAdditionRemoval)/layerAdditionRemoval.C
+$(layerAdditionRemoval)/setLayerPairing.C
+$(layerAdditionRemoval)/addCellLayer.C
+$(layerAdditionRemoval)/removeCellLayer.C
+
+$(enrichedPatch)/enrichedPatch.C
+$(enrichedPatch)/enrichedPatchPointMap.C
+$(enrichedPatch)/enrichedPatchFaces.C
+$(enrichedPatch)/enrichedPatchPointPoints.C
+$(enrichedPatch)/enrichedPatchCutFaces.C
+$(enrichedPatch)/enrichedPatchMasterPoints.C
+
+$(directPolyTopoChange)/directPolyTopoChange.C
+
+$(slidingInterface)/slidingInterface.C
+$(slidingInterface)/slidingInterfaceProjectPoints.C
+$(slidingInterface)/coupleSlidingInterface.C
+$(slidingInterface)/slidingInterfaceAttachedAddressing.C
+$(slidingInterface)/slidingInterfaceClearCouple.C
+$(slidingInterface)/decoupleSlidingInterface.C
+
+perfectInterface/perfectInterface.C
+
+$(boundaryMesh)/boundaryMesh.C
+$(boundaryPatch)/boundaryPatch.C
+$(boundaryMesh)/octreeDataFaceList.C
+$(setUpdater)/setUpdater.C
+
+$(morphMesh)/morphMesh.C
+$(removeFaces)/removeFaces.C
+$(removeCells)/removeCells.C
+$(cellCuts)/cellCuts.C
+
+$(meshCutter)/meshCutter.C
+$(meshCutAndRemove)/meshCutAndRemove.C
+$(morphFvMesh)/morphFvMesh.C
+$(cellLooper)/cellLooper.C
+$(cellLooper)/topoCellLooper.C
+$(cellLooper)/geomCellLooper.C
+$(cellLooper)/hexCellLooper.C
+$(directions)/directions.C
+$(directionInfo)/directionInfo.C
+$(undoableMeshCutter)/undoableMeshCutter.C
+$(refinementIterator)/refinementIterator.C
+$(multiDirRefinement)/multiDirRefinement.C
+$(hexRef8)/hexRef8.C
+$(edgeVertex)/edgeVertex.C
+$(splitCell)/splitCell.C
+$(refineCell)/refineCell.C
+$(wallLayerCells)/wallLayerCells.C
+$(wallNormalInfo)/wallNormalInfo.C
+
+$(repatchPolyMesh)/repatchPolyMesh.C
+
+$(twoDPointCorrector)/twoDPointCorrector.C
+
+$(motionSolver)/motionSolver.C
+$(cellQuality)/cellQuality.C
+
+$(motionDiff)/motionDiff.C
+
+$(constant)/constDiff.C
+$(linear)/linearDiff.C
+$(quadratic)/quadraticDiff.C
+$(exponential)/exponentialDiff.C
+$(patchEnhanced)/patchEnhancedDiff.C
+$(file)/fileDiff.C
+$(nonOrthogonality)/nonOrthogonalityDiff.C
+$(skewness)/skewnessDiff.C
+$(mixedQuality)/mixedQualityDiff.C
+
+$(motionSmoother)/motionSmoother.C
+
+LIB = $(FOAM_LIBBIN)/libdynamicMesh

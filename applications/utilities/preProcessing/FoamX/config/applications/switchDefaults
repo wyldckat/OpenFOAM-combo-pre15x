@@ -1,0 +1,67 @@
+#!/bin/sh
+
+#
+# FUNCTIONS
+#
+printUsage () {
+cat <<EOF
+Usage: $0 {-n|-y} <file>
+Searches down for all file of name <file> in current directory and
+   turns on/off reading of default values depending on flag.
+
+Flags are:
+-n (default) comment out defaults ...
+-y           include defaults ...
+-h           help
+EOF
+}
+
+#
+# VARIABLE
+#
+DEFAULTS="OFF"
+
+#
+# OPTIONS
+#
+OPTS=`getopt nyh $*`
+if [ $? -ne 0 ] ; then
+    echo "Aborting due to invalid option"
+    printUsage
+    exit 1
+fi
+eval set -- "$OPTS"
+while [ $1 != -- ]; do
+    case $1 in
+        -n) ;;
+        -y) DEFAULTS="ON";;
+        -h) printUsage; exit 1;;
+    esac
+    shift
+done
+shift
+
+#
+# MAIN
+#
+
+FILES=`find . -name $1`
+
+if [ "$FILES" = "" ] ; then
+    echo "No files of name $1"
+    exit 1
+fi
+
+for f in $FILES
+do
+    cp $f $f.bak
+    if [ "$DEFAULTS" = "OFF" ] ; then
+        sed \
+        -e s/"\(include[ \t]*\"defaults\/[a-z,A-Z]*.def\"\)"/"\/\/\1"/g \
+        $f.bak > $f
+    else
+        sed \
+        -e s/"\/\/\(include[ \t]*\"defaults\/[a-z,A-Z]*.def\"\)"/"\1"/g \
+        $f.bak > $f
+    fi
+done

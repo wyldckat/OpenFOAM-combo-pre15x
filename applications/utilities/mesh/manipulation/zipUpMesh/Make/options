@@ -1,0 +1,4 @@
+EXE_INC = \
+    /* -DDEBUG_ZIPUP */ \
+    /* -DDEBUG_CHAIN */ \
+    /* -DDEBUG_ORDER */

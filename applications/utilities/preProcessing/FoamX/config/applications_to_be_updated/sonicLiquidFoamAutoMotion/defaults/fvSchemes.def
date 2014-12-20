@@ -1,0 +1,33 @@
+default
+{
+
+
+timeScheme          EulerImplicit;
+
+gradSchemes
+{
+    default             Gauss only ;
+    grad(p)             Gauss only ;
+}
+
+divSchemes
+{
+    default             none 0 ;
+    div(phi,U)          Gamma2V 0.5 ;
+    div(phid,p)         Gamma2 0.2 ;
+}
+
+laplacianSchemes
+{
+    default             none;
+    laplacian(mu,U)     Gauss;
+    laplacian(rho|A(U),p) Gauss;
+}
+
+fluxRequired
+{
+    p                   0;
+}
+
+
+};

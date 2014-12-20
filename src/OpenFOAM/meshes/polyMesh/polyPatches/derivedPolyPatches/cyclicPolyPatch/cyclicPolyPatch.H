@@ -1,0 +1,319 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    cyclicPolyPatch
+
+Description
+    Cyclic plane patch.
+
+    Note: morph patch face ordering comes geometric or topological.
+    Geometric: -halves should be flat planes. -no rotation in patch plane
+    allowed.
+    Topological: needs unmodified faces on both sides to correspond. Also
+    needs at least one per connected patch area (so all patch faces can be
+    visited from an unmodified face)
+
+SourceFiles
+    cyclicPolyPatch.C
+    cyclicPolyPatchMorph.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef cyclicPolyPatch_H
+#define cyclicPolyPatch_H
+
+#include "coupledPolyPatch.H"
+#include "SubField.H"
+#include "FixedList.H"
+#include "edgeList.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+class polyTopoChange;
+class mapPolyMesh;
+class patchZones;
+
+/*---------------------------------------------------------------------------*\
+                      Class cyclicPolyPatch Declaration
+\*---------------------------------------------------------------------------*/
+
+class cyclicPolyPatch
+:
+    public coupledPolyPatch
+{
+
+    // Static data
+
+        //- Morph:angle between normals of neighbouring faces.
+        //  Used to split cyclic into halves.
+        static scalar featureCos_;
+
+
+    // Private data
+
+        mutable edgeList* coupledPointsPtr_;
+
+
+    // Private member functions
+
+        void calcTransforms();
+
+
+        // Morphing helper functions
+
+            //- Get pairs of unmodified faces (on current mesh)
+            bool getUnmodifiedFacePairs
+            (
+                const polyTopoChange& ref,
+                const mapPolyMesh& map,
+                List<FixedList<label, 2> >&
+            ) const;
+
+            //- Do ordering using geometric matching
+            bool geometricOrder
+            (
+                const polyTopoChange&,
+                const mapPolyMesh&,
+                const patchZones&,
+                const pointField& normals,
+                labelList&,
+                labelList&
+            ) const;
+
+            //- Do ordering using topological matching
+            bool topologicalOrder
+            (
+                const polyTopoChange& ref,
+                const mapPolyMesh& map,
+                const patchZones& ppZones,
+                labelList& faceMap,
+                labelList& rotation
+            ) const;
+
+
+protected:
+
+    // Protected Member functions
+
+        //- Initialise the calculation of the patch geometry
+        void initGeometry();
+
+        //- Calculate the patch geometry
+        void calcGeometry();
+
+        //- Initialise the patches for moving points
+        void initMovePoints(const pointField&);
+
+        //- Correct patches after moving points
+        void movePoints(const pointField&);
+
+
+public:
+
+    //- Runtime type information
+    TypeName("cyclic");
+
+
+    // Static member functions
+
+        //- Return feature angle
+        static scalar featureCos();
+
+        //- Set the feature angle, returning the previous value
+        static scalar setFeatureCos(const scalar t);
+
+
+    // Constructors
+
+        //- Construct from components
+        cyclicPolyPatch
+        (
+            const word& name,
+            const label size,
+            const label start,
+            const label index,
+            const polyBoundaryMesh& bm
+        );
+
+        //- Construct from Istream
+        cyclicPolyPatch
+        (
+            Istream&,
+            const label index, const polyBoundaryMesh&
+        );
+
+        //- Construct from dictionary
+        cyclicPolyPatch
+        (
+            const word& name,
+            const dictionary& dict,
+            const label index,
+            const polyBoundaryMesh& bm
+        );
+
+        //- Construct as copy, resetting the boundary mesh
+        cyclicPolyPatch(const cyclicPolyPatch&, const polyBoundaryMesh&);
+
+        //- Construct given the original patch and resetting the
+        //  face list and boundary mesh information
+        cyclicPolyPatch
+        (
+            const cyclicPolyPatch& pp,
+            const polyBoundaryMesh& bm,
+            const label index,
+            const label newSize,
+            const label newStart
+        );
+
+        //- Construct and return a clone, resetting the boundary mesh
+        virtual autoPtr<polyPatch> clone(const polyBoundaryMesh& bm) const
+        {
+            return autoPtr<polyPatch>(new cyclicPolyPatch(*this, bm));
+        }
+
+        //- Construct and return a clone, resetting the face list
+        //  and boundary mesh
+        virtual autoPtr<polyPatch> clone
+        (
+            const polyBoundaryMesh& bm,
+            const label index,
+            const label newSize,
+            const label newStart
+        ) const
+        {
+            return autoPtr<polyPatch>
+            (
+                new cyclicPolyPatch(*this, bm, index, newSize, newStart)
+            );
+        }
+
+
+    // Destructor
+
+        virtual ~cyclicPolyPatch();
+
+
+    // Member Functions
+
+        //- Return connected points (in patch local point indexing)
+        const edgeList& coupledPoints() const;
+
+
+        vector separation(const label facei) const
+        {
+            if (facei < size()/2)
+            {
+                return coupledPolyPatch::separation()[0];
+            }
+            else
+            {
+                return -coupledPolyPatch::separation()[0];
+            }
+        }
+
+        const tensor& transformT(const label facei) const
+        {
+            if (facei < size()/2)
+            {
+                return reverseT()[0];
+            }
+            else
+            {
+                return forwardT()[0];
+            }
+        }
+
+        template<class T>
+        T transform(const T& t, const label facei) const
+        {
+            if (parallel())
+            {
+                return t;
+            }
+            else
+            {
+                return Foam::transform(transformT(facei), t);
+            }
+        }
+
+        label transformLocalFace(const label facei) const
+        {
+            if (facei < size()/2)
+            {
+                return facei + size()/2;
+            }
+            else
+            {
+                return facei - size()/2;
+            }
+        }
+
+        label transformGlobalFace(const label facei) const
+        {
+            if (facei - start() < size()/2)
+            {
+                return facei + size()/2;
+            }
+            else
+            {
+                return facei - size()/2;
+            }
+        }
+
+        // Morph
+
+            //- Initialize ordering (on new mesh)
+            //  Gets -changes (in old mesh ordering)
+            //  -map from old to new mesh
+            virtual void sendOrder(const polyTopoChange&, const mapPolyMesh&)
+             const;
+
+            //- Morph:Return new ordering. Ordering is -faceMap: for every face
+            //  index of the new face -rotation:for every new face the clockwise
+            //  shift of the original face. Return false if nothing changes
+            //  (faceMap is identity, rotation is 0), true otherwise.
+            virtual bool order
+            (
+                const polyTopoChange&,
+                const mapPolyMesh&,
+                labelList& faceMap,
+                labelList& rotation
+            ) const;
+
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

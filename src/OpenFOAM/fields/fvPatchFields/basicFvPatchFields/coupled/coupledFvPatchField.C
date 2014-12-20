@@ -1,0 +1,189 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "coupledFvPatchField.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+coupledFvPatchField<Type>::coupledFvPatchField
+(
+    const fvPatch& p,
+    const Field<Type>& iF
+)
+:
+    fvPatchField<Type>(p, iF)
+{}
+
+
+template<class Type>
+coupledFvPatchField<Type>::coupledFvPatchField
+(
+    const fvPatch& p,
+    const Field<Type>& iF,
+    const Field<Type>& f
+)
+:
+    fvPatchField<Type>(p, iF, f)
+{}
+
+
+template<class Type>
+coupledFvPatchField<Type>::coupledFvPatchField
+(
+    const coupledFvPatchField<Type>& ptf,
+    const fvPatch& p,
+    const Field<Type>& iF,
+    const fvPatchFieldMapper& mapper
+)
+:
+    fvPatchField<Type>(ptf, p, iF, mapper)
+{}
+
+
+template<class Type>
+coupledFvPatchField<Type>::coupledFvPatchField
+(
+    const fvPatch& p,
+    const Field<Type>& iF,
+    const dictionary& dict
+)
+:
+    fvPatchField<Type>(p, iF, dict)
+{}
+
+
+template<class Type>
+coupledFvPatchField<Type>::coupledFvPatchField
+(
+    const coupledFvPatchField<Type>& ptf,
+    const Field<Type>& iF
+)
+:
+    fvPatchField<Type>(ptf, iF)
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+// return gradient at boundary
+template<class Type>
+tmp<Field<Type> > coupledFvPatchField<Type>::snGrad() const
+{
+    return
+        (this->patchNeighbourField() - this->patchInternalField())
+       *this->patchMesh().deltaCoeffs();
+}
+
+
+//- Initialise the evaluation of the patch field
+template<class Type>
+void coupledFvPatchField<Type>::initEvaluate(const bool)
+{
+    if (!this->updated())
+    {
+        this->updateCoeffs();
+    }
+}
+
+
+// Evaluate the patch field
+template<class Type>
+void coupledFvPatchField<Type>::evaluate()
+{
+    if (!this->updated())
+    {
+        this->updateCoeffs();
+    }
+
+    Field<Type>::operator=
+    (
+        this->patchMesh().weights()*this->patchInternalField()
+      + (1.0 - this->patchMesh().weights())*this->patchNeighbourField()
+    );
+}
+
+
+//- Return the matrix diagonal coefficients corresponding to the
+//  evaluation of the value of this patchField
+template<class Type>
+tmp<Field<Type> > coupledFvPatchField<Type>::valueInternalCoeffs
+(
+    const tmp<scalarField>& w
+) const
+{
+    return Type(pTraits<Type>::one)*w;
+}
+
+//- Return the matrix source coefficients corresponding to the
+//  evaluation of the value of this patchField
+template<class Type>
+tmp<Field<Type> > coupledFvPatchField<Type>::valueBoundaryCoeffs
+(
+    const tmp<scalarField>& w
+) const
+{
+    return Type(pTraits<Type>::one)*(1.0 - w);
+}
+
+//- Return the matrix diagonal coefficients corresponding to the
+//  evaluation of the gradient of this patchField
+template<class Type>
+tmp<Field<Type> > coupledFvPatchField<Type>::gradientInternalCoeffs() const
+{
+    return -Type(pTraits<Type>::one)*this->patchMesh().deltaCoeffs();
+}
+
+//- Return the matrix source coefficients corresponding to the
+//  evaluation of the gradient of this patchField
+template<class Type>
+tmp<Field<Type> > coupledFvPatchField<Type>::gradientBoundaryCoeffs() const
+{
+    return -this->gradientInternalCoeffs();
+}
+
+
+// Write
+template<class Type>
+void coupledFvPatchField<Type>::write(Ostream& os) const
+{
+    fvPatchField<Type>::write(os);
+    this->writeEntry("value", os);
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

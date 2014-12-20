@@ -1,0 +1,7 @@
+default
+{
+
+twoDMotion            yes;
+motionPlaneNormal     (0 0 1);
+
+};

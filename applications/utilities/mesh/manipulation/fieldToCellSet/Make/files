@@ -1,0 +1,3 @@
+fieldToCellSet.C
+
+EXE = $(FOAM_APPBIN)/fieldToCellSet

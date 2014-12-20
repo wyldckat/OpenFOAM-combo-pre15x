@@ -1,0 +1,899 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "error.H"
+#include "GlobalProcessorPointPatchField.H"
+#include "lduMatrix.H"
+#include "Map.H"
+#include "constraints.H"
+#include "PstreamCombineReduceOps.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+// Reduce the field and extract the local values
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+template<class Type2>
+tmp<Field<Type2> > GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::reduceExtractPoint
+(
+    const tmp<Field<Type2> >& tpField
+) const
+{
+    // Create the global list and insert local values
+    if (procPatch_.globalPointSize() > 0)
+    {
+        Field<Type2> gpf(procPatch_.globalPointSize(), pTraits<Type2>::zero);
+
+        const labelList& addr = procPatch_.sharedPointAddr();
+        const Field<Type2>& pField = tpField();
+
+        forAll (addr, i)
+        {
+            gpf[addr[i]] = pField[i];
+        }
+
+        combineReduce(gpf, plusEqOp<Field<Type2> >());
+
+        // Extract local data
+        tmp<Field<Type2> > tlpf(new Field<Type2>(addr.size()));
+        Field<Type2>& lpf = tlpf();
+
+        forAll (addr, i)
+        {
+            lpf[i] = gpf[addr[i]];
+        }
+
+        return tlpf;
+    }
+    else
+    {
+        return tpField;
+    }
+}
+
+
+// Reduce the field and extract the local values
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+template<class Type2>
+tmp<Field<Type2> > GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::reduceExtractEdge
+(
+    const tmp<Field<Type2> >& teField
+) const
+{
+    if (procPatch_.globalEdgeSize() > 0)
+    {
+        // Create the global list and insert local values
+        Field<Type2> gef(procPatch_.globalEdgeSize(), pTraits<Type2>::zero);
+
+        const labelList& addr = procPatch_.sharedEdgeAddr();
+        const Field<Type2>& eField = teField();
+
+        forAll (addr, i)
+        {
+            gef[addr[i]] = eField[i];
+        }
+
+        combineReduce(gef, plusEqOp<Field<Type2> >());
+
+        // Extract local data
+        tmp<Field<Type2> > tlef(new Field<Type2>(addr.size()));
+        Field<Type2>& lef = tlef();
+
+        forAll (addr, i)
+        {
+            lef[i] = gef[addr[i]];
+        }
+
+        return tlef;
+    }
+    else
+    {
+        return teField;
+    }
+}
+
+
+// Add the diagonal/source to the internal field.
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+template<class Type2>
+void GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::addFieldTempl
+(
+    Field<Type2>& pField
+) const
+{
+    // Set the values from the global sum
+    tmp<Field<Type2> > trpf =
+        reduceExtractPoint<Type2>(patchInternalField(pField));
+    Field<Type2>& rpf = trpf();
+
+    // Get addressing
+    const labelList& addr = procPatch_.meshPoints();
+
+    forAll (addr, i)
+    {
+        pField[addr[i]] = rpf[i];
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * * //
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::GlobalProcessorPointPatchField
+(
+    const PointPatch& p,
+    const Field<Type>& iF
+)
+:
+    CoupledPointPatchField<PatchField, PointPatch, Type>(p, iF),
+    procPatch_(refCast<const GlobalProcessorPointPatch>(p))
+{}
+
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::GlobalProcessorPointPatchField
+(
+    const PointPatch& p,
+    const Field<Type>& iF,
+    const dictionary& dict
+)
+:
+    CoupledPointPatchField<PatchField, PointPatch, Type>(p, iF),
+    procPatch_(refCast<const GlobalProcessorPointPatch>(p))
+{
+    if (typeid(p) != typeid(GlobalProcessorPointPatch))
+    {
+        FatalIOErrorIn
+        (
+            "GlobalProcessorPointPatchField<PatchField, PointPatch, "
+            "GlobalProcessorPointPatch, Type>::"
+            "GlobalProcessorPointPatchField\n"
+            "(\n" " const PointPatch& p,\n"
+            " const Field<Type>& field,\n"
+            " const dictionary& dict\n"
+            ")\n",
+            dict
+        )   << "patch " << this->patchMesh().index()
+            << " not processorPoint type. "
+            << "Patch type = " << p.type()
+            << exit(FatalIOError);
+    }
+}
+
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::GlobalProcessorPointPatchField
+(
+    const GlobalProcessorPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        GlobalProcessorPointPatch,
+        Type
+    >& ptf,
+    const PointPatch& p,
+    const Field<Type>& iF,
+    const PointPatchFieldMapper&
+)
+:
+    CoupledPointPatchField<PatchField, PointPatch, Type>(p, iF),
+    procPatch_(refCast<const GlobalProcessorPointPatch>(ptf.patchMesh()))
+{
+    if (typeid(this->patchMesh()) != typeid(GlobalProcessorPointPatch))
+    {
+        FatalErrorIn
+        (
+            "GlobalProcessorPointPatchField<PatchField, PointPatch, "
+            "GlobalProcessorPointPatch, Type>::"
+            "GlobalProcessorPointPatchField\n"
+            "(\n"
+            " const GlobalProcessorPointPatchField<PatchField, "
+            "PointPatch, GlobalProcessorPointPatch, Type>& ptf,\n"
+            " const PointPatch& p,\n"
+            " const Field<Type>& iF,\n"
+            " const PointPatchFieldMapper& mapper\n"
+            ")\n"
+        )   << "Field type does not correspond to patch type for patch "
+            << this->patchMesh().index() << "." << endl
+            << "Field type: " << typeName << endl
+            << "Patch type: " << this->patchMesh().type()
+            << exit(FatalError);
+    }
+}
+
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::GlobalProcessorPointPatchField
+(
+    const GlobalProcessorPointPatchField
+    <
+        PatchField,
+        PointPatch,
+        GlobalProcessorPointPatch,
+        Type
+    >& ptf,
+    const Field<Type>& iF
+)
+:
+    CoupledPointPatchField<PatchField, PointPatch, Type>(ptf, iF),
+    procPatch_(refCast<const GlobalProcessorPointPatch>(ptf.patchMesh()))
+{}
+
+
+// * * * * * * * * * * * * * * * * * Destructor * * * * * * * * * * * * * * * //
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::~GlobalProcessorPointPatchField()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions * * * * * * * * * * * * * * //
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+void GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::addField(Field<Type>& d) const
+{
+    addFieldTempl(d);
+}
+
+
+// Set boundary condition to matrix
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+void GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::setBoundaryCondition
+(
+    Map<constraint<Type> >& fix
+) const
+{
+    // Get addressing
+    const labelList& meshPoints = procPatch_.meshPoints();
+
+    forAll (meshPoints, pointI)
+    {
+        const label curPoint = meshPoints[pointI];
+
+        // Create a constraint. None of the components is fixed
+        constraint<Type> bc
+        (
+            curPoint,
+            pTraits<Type>::zero,
+            pTraits<Type>::zero
+        );
+
+        // If not set, add it, otherwise combine with already
+        // existing value
+        if (!fix.found(curPoint))
+        {
+            fix.insert(curPoint, bc);
+        }
+        else
+        {
+            fix[curPoint].combine(bc);
+        }
+    }
+}
+
+
+// Add diagonal coefficients
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+void GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::addDiag(scalarField& d) const
+{
+    addFieldTempl(d);
+}
+
+
+// Add source
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+void GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::addSource
+(
+    scalarField& s
+) const
+{
+    addFieldTempl(s);
+}
+
+
+// Return neighbour colouring
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+tmp<labelField> GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::nbrColour
+(
+    const labelField& cField
+) const
+{
+    return reduceExtractPoint<label>(this->patchInternalField(cField));
+}
+
+
+// Add upper/lower coefficients
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+void GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::addUpperLower
+(
+    scalarField& eField
+) const
+{
+    // Set the contribution for the local edge coefficients
+
+    // Get the addressing
+    const labelList& addr = procPatch_.localEdgeIndices();
+
+    // Get the local elements of the edge field
+    tmp<scalarField> tlocalEdgeField(new scalarField(addr.size()));
+    scalarField& localEdgeField = tlocalEdgeField();
+
+    forAll (addr, i)
+    {
+        localEdgeField[i] = eField[addr[i]];
+    }
+
+    // Set the edge values
+    tmp<scalarField> tref =
+        reduceExtractEdge<scalar>(tlocalEdgeField);
+    scalarField& ref = tref();
+
+    forAll (addr, i)
+    {
+        eField[addr[i]] = ref[i];
+    }
+}
+
+
+// Get the cut edge coefficients in Amul order
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+tmp<scalarField> GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::cutBouCoeffs
+(
+    const lduMatrix& m
+) const
+{
+    // Go through all the cut edges.  For all owners pick up the upper
+    // and for all the neighbours pick up the lower.
+
+    // Get the indices of cut edges
+    const labelList& cutOwn = procPatch_.cutEdgeOwnerIndices();
+    const labelList& cutNei = procPatch_.cutEdgeNeighbourIndices();
+    const labelList& doubleCut = procPatch_.doubleCutEdgeIndices();
+
+    // Get matrix coefficients
+    const scalarField& Lower = m.lower();
+    const scalarField& Upper = m.upper();
+
+    tmp<scalarField> tcutCoeffs
+    (
+        new scalarField(cutOwn.size() + cutNei.size() + 2*doubleCut.size(), 0)
+    );
+    scalarField& cutCoeffs = tcutCoeffs();
+
+    label coeffI = 0;
+        
+    // Owner side
+    // ~~~~~~~~~~
+    forAll (cutOwn, edgeI)
+    {
+        cutCoeffs[coeffI] = Upper[cutOwn[edgeI]];
+        coeffI++;
+    }
+
+    // Neighbour side
+    // ~~~~~~~~~~~~~~
+    forAll (cutNei, edgeI)
+    {
+        cutCoeffs[coeffI] = Lower[cutNei[edgeI]];
+        coeffI++;
+    }
+
+    // Doubly cut coeficients
+    // ~~~~~~~~~~~~~~~~~~~~~~
+    forAll (doubleCut, edgeI)
+    {
+        cutCoeffs[coeffI] = Upper[doubleCut[edgeI]];
+        coeffI++;
+
+        cutCoeffs[coeffI] = Lower[doubleCut[edgeI]];
+        coeffI++;
+    }
+
+    return tcutCoeffs;
+}
+
+
+// Get the cut edge coefficients in Tmul order
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+tmp<scalarField> GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::cutIntCoeffs
+(
+    const lduMatrix& m
+) const
+{
+    // Go through all the cut edges.  For all owners pick up the lower
+    // and for all the neighbours pick up the upper.
+
+    // Get the indices of cut edges
+    const labelList& cutOwn = procPatch_.cutEdgeOwnerIndices();
+    const labelList& cutNei = procPatch_.cutEdgeNeighbourIndices();
+    const labelList& doubleCut = procPatch_.doubleCutEdgeIndices();
+
+    // Get matrix coefficients
+    const scalarField& Lower = m.lower();
+    const scalarField& Upper = m.upper();
+
+    tmp<scalarField> tcutCoeffs
+    (
+        new scalarField(cutOwn.size() + cutNei.size() + 2*doubleCut.size(), 0)
+    );
+    scalarField& cutCoeffs = tcutCoeffs();
+
+    label coeffI = 0;
+
+    // Owner side
+    // ~~~~~~~~~~
+    forAll (cutOwn, edgeI)
+    {
+        cutCoeffs[coeffI] = Lower[cutOwn[edgeI]];
+        coeffI++;
+    }
+
+    // Neighbour side
+    // ~~~~~~~~~~~~~~
+    forAll (cutNei, edgeI)
+    {
+        cutCoeffs[coeffI] = Upper[cutNei[edgeI]];
+        coeffI++;
+    }
+
+    // Doubly cut coeficients
+    // ~~~~~~~~~~~~~~~~~~~~~~
+    forAll (doubleCut, edgeI)
+    {
+        cutCoeffs[coeffI] = Lower[doubleCut[edgeI]];
+        coeffI++;
+
+        cutCoeffs[coeffI] = Upper[doubleCut[edgeI]];
+        coeffI++;
+    }
+
+    return tcutCoeffs;
+}
+
+
+// Add upper/lower coefficients
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+void GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::eliminateUpperLower
+(
+    scalarField& eField
+) const
+{
+    // Kill the coefficient for cut edges.
+
+    // Get the indices of cut edges
+    const labelList& cutOwn = procPatch_.cutEdgeOwnerIndices();
+    const labelList& cutNei = procPatch_.cutEdgeNeighbourIndices();
+    const labelList& doubleCut = procPatch_.doubleCutEdgeIndices();
+
+    // Owner side
+    // ~~~~~~~~~~
+    forAll (cutOwn, edgeI)
+    {
+        eField[cutOwn[edgeI]] = 0;
+    }
+
+    // Neighbour side
+    // ~~~~~~~~~~~~~~
+    forAll (cutNei, edgeI)
+    {
+        eField[cutNei[edgeI]] = 0;
+    }
+
+    // Doubly cut edges
+    // ~~~~~~~~~~~~~~~~
+    forAll (doubleCut, edgeI)
+    {
+        eField[doubleCut[edgeI]] = 0;
+    }
+}
+
+
+// Complete matrix update on coupled interfaces
+template
+<
+    template<class> class PatchField,
+    class PointPatch,
+    class GlobalProcessorPointPatch,
+    class Type
+>
+void GlobalProcessorPointPatchField
+<
+    PatchField,
+    PointPatch,
+    GlobalProcessorPointPatch,
+    Type
+>
+::updateInterfaceMatrix
+(
+    const scalarField& psiInternal,
+    scalarField& result,
+    const lduMatrix& m,
+    const scalarField& coeffs,
+    const direction
+) const
+{
+    tmp<scalarField> tlocalMult(new scalarField(this->size(), 0));
+    scalarField& localMult = tlocalMult();
+
+    const labelList& mp = procPatch_.meshPoints();
+
+    // Get the multiplication mask for the global side
+    const scalarField& cutMask = procPatch_.ownNeiDoubleMask();
+
+    // Get matrix addressing
+    const unallocLabelList& L = m.lduAddr().lowerAddr();
+    const unallocLabelList& U = m.lduAddr().upperAddr();
+
+    // Note that the addressing is into the local points of the patch.
+    // Mesh points is used only for size
+
+    // Coefficients are already ordered in the appropriate way. Just
+    // use the counter.  
+    label coeffI = 0;
+    scalarField sumOffDiag(this->size(), 0);
+
+    // Owner side
+    // ~~~~~~~~~~
+    {
+        const labelList& cutOwn = procPatch_.cutEdgeOwnerIndices();
+        const labelList& cutOwnStart = procPatch_.cutEdgeOwnerStart();
+
+        forAll (mp, pointI)
+        {
+            label ownIndex = cutOwnStart[pointI];
+            label endOwn = cutOwnStart[pointI + 1];
+
+            for (; ownIndex < endOwn; ownIndex++)
+            {
+                localMult[pointI] +=
+                    cutMask[coeffI]*coeffs[coeffI]
+                    *psiInternal[U[cutOwn[ownIndex]]];
+
+                sumOffDiag[pointI] += cutMask[coeffI]*coeffs[coeffI];
+
+                // Multiply the internal side as well
+                result[U[cutOwn[ownIndex]]] +=
+                    coeffs[coeffI]*psiInternal[mp[pointI]];
+
+                coeffI++;
+            }
+        }
+    }
+
+    // Neighbour side
+    // ~~~~~~~~~~~~~~
+    {
+        const labelList& cutNei = procPatch_.cutEdgeNeighbourIndices();
+        const labelList& cutNeiStart = procPatch_.cutEdgeNeighbourStart();
+
+        forAll (mp, pointI)
+        {
+            label neiIndex = cutNeiStart[pointI];
+            label endNei = cutNeiStart[pointI + 1];
+
+            for (; neiIndex < endNei; neiIndex++)
+            {
+                localMult[pointI] +=
+                    cutMask[coeffI]*coeffs[coeffI]
+                    *psiInternal[L[cutNei[neiIndex]]];
+
+                sumOffDiag[pointI] += cutMask[coeffI]*coeffs[coeffI];
+
+                // Multiply the internal side as well
+                result[L[cutNei[neiIndex]]] +=
+                    coeffs[coeffI]*psiInternal[mp[pointI]];
+
+                coeffI++;
+            }
+        }
+    }
+
+    // Doubly cut coefficients
+    // ~~~~~~~~~~~~~~~~~~~~~~~
+
+    // There exists a possibility of having an internal edge for a
+    // point on the processor patch which is in fact connected to
+    // another point of the same patch.  This particular nastiness
+    // introduces a deformation in the solution because the edge is
+    // either multiplied twice or not at all.  For this purpose, the
+    // offending edges need to be separated out and multiplied
+    // appropriately.
+    {
+        const labelList& doubleCut = procPatch_.doubleCutEdgeIndices();
+
+        const labelList& doubleCutOwner = procPatch_.doubleCutOwner();
+        const labelList& doubleCutNeighbour = procPatch_.doubleCutNeighbour();
+
+        forAll (doubleCut, edgeI)
+        {
+            // Owner side
+            localMult[doubleCutOwner[edgeI]] +=
+                cutMask[coeffI]*coeffs[coeffI]*psiInternal[U[doubleCut[edgeI]]];
+
+            sumOffDiag[doubleCutOwner[edgeI]] +=
+                cutMask[coeffI]*coeffs[coeffI];
+
+            coeffI++;
+
+            // Neighbour side
+            localMult[doubleCutNeighbour[edgeI]] +=
+                cutMask[coeffI]*coeffs[coeffI]*psiInternal[L[doubleCut[edgeI]]];
+
+            sumOffDiag[doubleCutNeighbour[edgeI]] +=
+                cutMask[coeffI]*coeffs[coeffI];
+
+            coeffI++;
+        }
+    }
+
+    // Reduce/extract the result and enforce over all processors
+
+    tmp<Field<scalar> > trpf =
+        reduceExtractPoint<scalar>(localMult);
+    Field<scalar>& rpf = trpf();
+
+    // Get addressing
+    const labelList& addr = procPatch_.meshPoints();
+
+    forAll (addr, i)
+    {
+        result[addr[i]] += rpf[i];
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

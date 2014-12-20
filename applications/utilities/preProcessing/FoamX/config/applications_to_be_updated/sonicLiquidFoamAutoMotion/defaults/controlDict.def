@@ -1,0 +1,38 @@
+default
+{
+
+
+applicationClass    sonicLiquidFoamAutoMotion;
+
+startFrom           startTime;
+
+startTime           0;
+
+stopAt              endTime;
+
+endTime             0.00025;
+
+deltaT              5e-07;
+
+writeControl        timeStep;
+
+writeInterval       20;
+
+cycleWrite          0;
+
+writeFormat         ascii;
+
+writeCompression    compressed;
+
+timeFormat          general;
+
+timePrecision       6;
+
+runTimeModifiable   yes;
+
+nCorrectors         2;
+
+nNonOrthogonalCorrectors 0;
+
+
+};

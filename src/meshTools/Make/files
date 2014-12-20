@@ -1,0 +1,147 @@
+cellClassification                  = cellClassification
+
+cellDist                            = cellDist
+cellDistPatchWave                   = cellDist/patchWave
+cellDistWallPoint                   = cellDist/wallPoint
+
+cellFeatures                        = cellFeatures
+
+coordinateSystems                   =  coordinateSystems
+coordinateSystemsCoordinateRotation =  coordinateSystems/coordinateRotation
+
+meshSearch                          =  meshSearch
+
+meshSubset                          =  meshSubset
+
+meshTools                           =  meshTools
+
+motionSmoother                      =  motionSmoother
+
+octree                              =  octree
+
+PointEdgeWave                       =  PointEdgeWave
+
+regionSplit                         =  regionSplit
+regionSplitRegionInfo               =  regionSplit/regionInfo
+
+sets                                =  sets
+setsTopoSets                        =  $(sets)/topoSets
+setsTopoSetSource                   =  $(sets)/topoSetSource
+
+setsCellSources                     =  $(sets)/cellSources
+setsCellSourcesFaceToCell           =  $(setsCellSources)/faceToCell
+setsCellSourcesPointToCell          =  $(setsCellSources)/pointToCell
+setsCellSourcesLabelToCell          =  $(setsCellSources)/labelToCell
+setsCellSourcesSurfaceToCell        =  $(setsCellSources)/surfaceToCell
+setsCellSourcesCellToCell           =  $(setsCellSources)/cellToCell
+setsCellSourcesShapeToCell          =  $(setsCellSources)/shapeToCell
+setsCellSourcesBoxToCell            =  $(setsCellSources)/boxToCell
+setsCellSourcesNearestToCell        =  $(setsCellSources)/nearestToCell
+setsCellSourcesNbrToCell            =  $(setsCellSources)/nbrToCell
+
+setsFaceSources                     =  $(sets)/faceSources
+setsFaceSourcesFaceToFace           =  $(setsFaceSources)/faceToFace
+setsFaceSourcesLabelToFace          =  $(setsFaceSources)/labelToFace
+setsFaceSourcesCellToFace           =  $(setsFaceSources)/cellToFace
+setsFaceSourcesPointToFace          =  $(setsFaceSources)/pointToFace
+setsFaceSourcesPatchToFace          =  $(setsFaceSources)/patchToFace
+setsFaceSourcesZoneToFace           =  $(setsFaceSources)/zoneToFace
+setsFaceSourcesBoxToFace            =  $(setsFaceSources)/boxToFace
+
+setsPointSources                    =  $(sets)/pointSources
+setsPointSourcesLabelToPoint        =  $(setsPointSources)/labelToPoint
+setsPointSourcesPointToPoint        =  $(setsPointSources)/pointToPoint
+setsPointSourcesCellToPoint         =  $(setsPointSources)/cellToPoint
+setsPointSourcesFaceToPoint         =  $(setsPointSources)/faceToPoint
+setsPointSourcesBoxToPoint          =  $(setsPointSources)/boxToPoint
+setsPointSourcesSurfaceToPoint      =  $(setsPointSources)/surfaceToPoint
+
+meshCutSurface                      = meshCutSurface
+meshCut                             = $(meshCutSurface)/meshCut
+edgeCuts                            = $(meshCutSurface)/edgeCuts
+
+surfaceSnap                         = surfaceSnap
+surfaceSets                         = surfaceSets
+
+
+$(cellClassification)/cellClassification.C
+$(cellClassification)/cellInfo.C
+
+$(cellDist)/cellDistFuncs.C
+$(cellDistPatchWave)/patchWave.C
+$(cellDistWallPoint)/wallPoint.C
+
+$(cellFeatures)/cellFeatures.C
+
+$(coordinateSystems)/parabolicCylindricalCS.C
+$(coordinateSystems)/coordinateSystem.C
+$(coordinateSystems)/toroidalCS.C
+$(coordinateSystems)/cartesianCS.C
+$(coordinateSystems)/newCoordinateSystem.C
+$(coordinateSystems)/cylindricalCS.C
+$(coordinateSystems)/sphericalCS.C
+$(coordinateSystemsCoordinateRotation)/coordinateRotation.C
+
+$(meshSearch)/meshSearch.C
+
+$(meshSubset)/meshSubset.C
+
+$(meshTools)/meshTools.C
+
+$(PointEdgeWave)/PointEdgeWaveName.C
+$(PointEdgeWave)/pointEdgePoint.C
+
+$(regionSplit)/regionSplit.C
+$(regionSplitRegionInfo)/regionInfo.C
+
+$(octree)/octreeName.C
+$(octree)/octreeDataPoint.C
+$(octree)/octreeDataPointTreeLeaf.C
+$(octree)/octreeDataEdges.C
+$(octree)/octreeDataCell.C
+$(octree)/octreeDataFace.C
+$(octree)/treeBoundBox.C
+$(octree)/treeNodeName.C
+$(octree)/treeLeafName.C
+
+$(setsTopoSets)/cellSet.C
+$(setsTopoSets)/topoSet.C
+$(setsTopoSets)/faceSet.C
+$(setsTopoSets)/pointSet.C
+$(setsTopoSetSource)/topoSetSource.C
+
+$(setsCellSourcesFaceToCell)/faceToCell.C
+$(setsCellSourcesPointToCell)/pointToCell.C
+$(setsCellSourcesShapeToCell)/shapeToCell.C
+$(setsCellSourcesBoxToCell)/boxToCell.C
+$(setsCellSourcesLabelToCell)/labelToCell.C
+$(setsCellSourcesSurfaceToCell)/surfaceToCell.C
+$(setsCellSourcesCellToCell)/cellToCell.C
+$(setsCellSourcesNearestToCell)/nearestToCell.C
+$(setsCellSourcesNbrToCell)/nbrToCell.C
+
+$(setsFaceSourcesFaceToFace)/faceToFace.C
+$(setsFaceSourcesLabelToFace)/labelToFace.C
+$(setsFaceSourcesCellToFace)/cellToFace.C
+$(setsFaceSourcesPointToFace)/pointToFace.C
+$(setsFaceSourcesPatchToFace)/patchToFace.C
+$(setsFaceSourcesZoneToFace)/zoneToFace.C
+$(setsFaceSourcesBoxToFace)/boxToFace.C
+
+$(setsPointSourcesLabelToPoint)/labelToPoint.C
+$(setsPointSourcesPointToPoint)/pointToPoint.C
+$(setsPointSourcesCellToPoint)/cellToPoint.C
+$(setsPointSourcesFaceToPoint)/faceToPoint.C
+$(setsPointSourcesBoxToPoint)/boxToPoint.C
+$(setsPointSourcesSurfaceToPoint)/surfaceToPoint.C
+
+$(meshCut)/meshCutSurface.C
+$(meshCut)/cellAddressing.C
+$(edgeCuts)/meshEdgeCuts.C
+$(edgeCuts)/faceDecompIsoSurfaceCuts.C
+$(edgeCuts)/cellDecompIsoSurfaceCuts.C
+
+$(surfaceSnap)/surfaceSnap.C
+$(surfaceSets)/surfaceSets.C
+
+LIB = $(FOAM_LIBBIN)/libmeshTools

@@ -1,0 +1,10 @@
+default
+{
+
+problemD              2;
+
+qGraphPatch           2;
+
+qGraphPatchDirection  1;
+
+};

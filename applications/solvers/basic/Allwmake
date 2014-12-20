@@ -1,0 +1,6 @@
+#!/bin/sh
+set -x
+
+wmake laplacianFoam
+wmake potentialFoam
+wmake scalarTransportFoam

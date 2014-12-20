@@ -1,0 +1,60 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Namespace
+    fvc
+
+Description
+    Namespace of functions to calculate explicit derivatives.
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef fvc_H
+#define fvc_H
+
+#include "fv.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "surfaceInterpolate.H"
+#include "fvcVolumeIntegrate.H"
+#include "fvcSurfaceIntegrate.H"
+#include "fvcAverage.H"
+#include "fvcReconstruct.H"
+#include "fvcDdt.H"
+#include "fvcDDt.H"
+#include "fvcD2dt2.H"
+#include "fvcDiv.H"
+#include "fvcFlux.H"
+#include "fvcGrad.H"
+#include "fvcMagSqrGradGrad.H"
+#include "fvcSnGrad.H"
+#include "fvcCurl.H"
+#include "fvcLaplacian.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

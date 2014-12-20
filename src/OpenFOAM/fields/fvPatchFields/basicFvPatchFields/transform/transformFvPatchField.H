@@ -1,0 +1,161 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    transformFvPatchField
+
+Description
+
+SourceFiles
+    transformFvPatchField.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef transformFvPatchField_H
+#define transformFvPatchField_H
+
+#include "fvPatchField.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                        Class transformFvPatch Declaration
+\*---------------------------------------------------------------------------*/
+
+template<class Type>
+class transformFvPatchField
+:
+    public fvPatchField<Type>
+{
+
+public:
+
+    //- Runtime type information
+    TypeName("transform");
+
+
+    // Constructors
+
+        //- Construct from patch and internal field
+        transformFvPatchField
+        (
+            const fvPatch&,
+            const Field<Type>&
+        );
+
+        //- Construct from patch, internal field and dictionary
+        transformFvPatchField
+        (
+            const fvPatch&,
+            const Field<Type>&,
+            const dictionary&
+        );
+
+        //- Construct by mapping the given transformFvPatchField<Type>
+        //  onto a new patch
+        transformFvPatchField
+        (
+            const transformFvPatchField<Type>&,
+            const fvPatch&,
+            const Field<Type>&,
+            const fvPatchFieldMapper&
+        );
+
+        //- Construct and return a clone
+        virtual tmp<fvPatchField<Type> > clone() const = 0;
+
+        //- Construct as copy setting internal field reference
+        transformFvPatchField
+        (
+            const transformFvPatchField<Type>&,
+            const Field<Type>&
+        );
+
+        //- Construct and return a clone setting internal field reference
+        virtual tmp<fvPatchField<Type> > clone(const Field<Type>&) const = 0;
+
+
+    // Member functions
+
+        // Evaluation functions
+
+            //- Return gradient at boundary
+            virtual tmp<Field<Type> > snGrad() const = 0;
+
+            //- Return face-gradient transform diagonal
+            virtual tmp<Field<Type> > snGradTransformDiag() const = 0;
+
+            //- Return the matrix diagonal coefficients corresponding to the
+            //  evaluation of the value of this patchField with given weights
+            virtual tmp<Field<Type> > valueInternalCoeffs
+            (
+                const tmp<scalarField>&
+            ) const;
+
+            //- Return the matrix source coefficients corresponding to the
+            //  evaluation of the value of this patchField with given weights
+            virtual tmp<Field<Type> > valueBoundaryCoeffs
+            (
+                const tmp<scalarField>&
+            ) const;
+
+            //- Return the matrix diagonal coefficients corresponding to the
+            //  evaluation of the gradient of this patchField
+            virtual tmp<Field<Type> > gradientInternalCoeffs() const;
+
+            //- Return the matrix source coefficients corresponding to the
+            //  evaluation of the gradient of this patchField
+            virtual tmp<Field<Type> > gradientBoundaryCoeffs() const;
+
+
+    // Member operators
+
+        virtual void operator=(const fvPatchField<Type>&);
+};
+
+
+// * * * * * * * * * * * Template Specialisations  * * * * * * * * * * * * * //
+
+template<>
+tmp<scalarField > transformFvPatchField<scalar>::gradientInternalCoeffs() const;
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#ifdef NoRepository
+#   include "transformFvPatchField.C"
+#endif
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

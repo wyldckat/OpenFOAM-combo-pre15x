@@ -1,0 +1,34 @@
+default
+{
+
+applicationClass    bubbleFoam;
+
+startFrom           startTime;
+
+startTime           0;
+
+stopAt              endTime;
+
+endTime             0.02;
+
+deltaT              0.002;
+
+writeControl        timeStep;
+
+writeInterval       10;
+
+cycleWrite          0;
+
+writeFormat         ascii;
+
+writePrecision      6;
+
+writeCompression    uncompressed;
+
+timeFormat          general;
+
+timePrecision       6;
+
+runTimeModifiable   yes;
+
+};

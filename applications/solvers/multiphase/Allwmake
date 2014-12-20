@@ -1,0 +1,8 @@
+#!/bin/sh
+set -x
+
+wmake interFoam
+wmake lesInterFoam
+wmake rasInterFoam
+wmake bubbleFoam
+wmake settlingFoam

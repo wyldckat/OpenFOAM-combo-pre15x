@@ -1,0 +1,35 @@
+default
+{
+
+
+applicationClass    stressFemFoam;
+
+startFrom           startTime;
+
+startTime           0;
+
+stopAt              endTime;
+
+endTime             100;
+
+deltaT              1;
+
+writeControl        timeStep;
+
+writeInterval       20;
+
+cycleWrite          0;
+
+writeFormat         ascii;
+
+writePrecision      6;
+
+writeCompression    uncompressed;
+
+timeFormat          general;
+
+timePrecision       6;
+
+runTimeModifiable   yes;
+
+};

@@ -1,0 +1,6 @@
+EXE_INC = \
+	-Wno-deprecated \
+    -I$(LIB_SRC)/cfdTools/compressible \
+    -I$(LIB_SRC)/cfdTools/lnInclude
+
+EXE_LIBS = 

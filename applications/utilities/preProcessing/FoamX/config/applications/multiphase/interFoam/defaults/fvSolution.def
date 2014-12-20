@@ -1,0 +1,20 @@
+default
+{
+
+solvers
+{
+    pcorr           ICCG  1e-10 0.0;
+    pd              ICCG  1e-10 0.0;
+    gamma           BICCG 1e-6 0.0;
+}
+
+PISO
+{
+    nCorrectors         2;
+    nNonOrthogonalCorrectors 0;
+    nGammaCorr          1;
+    nGammaSubCycles     4;
+    cGamma              1.0; 
+}
+
+}

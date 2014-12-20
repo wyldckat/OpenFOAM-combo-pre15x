@@ -1,0 +1,155 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    IPstream
+
+Description
+    Input inter-processor communications stream.
+
+SourceFiles
+    IPstream.C
+    IPread.C
+
+\*---------------------------------------------------------------------------*/
+
+#include "Pstream.H"
+
+#ifndef IPstream_H
+#define IPstream_H
+
+#include "Istream.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class IPstream Declaration
+\*---------------------------------------------------------------------------*/
+
+class IPstream
+:
+    public Pstream,
+    public Istream
+{
+    // Private data
+
+        int fromProcNo_;
+
+
+    // Private member functions
+
+        //- Read a T from the transfer buffer
+        template<class T>
+        inline void readFromBuffer(T&);
+
+        //- Read data from the transfer buffer
+        inline void readFromBuffer(void* data, size_t count);
+
+
+public:
+
+    // Constructors
+
+        //- Construct given process index to read from and optional buffer size,
+        //  read format and IO version
+        IPstream
+        (
+            const int fromProcNo,
+            const label bufSize = 0,
+            streamFormat format=BINARY,
+            versionNumber version=currentVersion
+        );
+
+
+    // Destructor
+
+        ~IPstream();
+
+
+    // Member functions
+
+        // Inquirery
+
+            //- Return flags of output stream
+            ios_base::fmtflags flags() const
+            {
+                return ios_base::fmtflags(0);
+            }
+
+
+        // Read functions
+
+            //- Return next token from stream
+            Istream& read(token&);
+
+            //- Read a character
+            Istream& read(char&);
+
+            //- Read a word
+            Istream& read(word&);
+
+            // Read a string (including enclosing double-quotes)
+            Istream& read(string&);
+
+            //- Read a label
+            Istream& read(label&);
+
+            //- Read a scalar
+            Istream& read(scalar&);
+
+            //- Read binary block
+            Istream& read(char*, std::streamsize);
+
+            //- Rewind and return the stream so that it may be read again
+            Istream& rewind();
+
+
+        // Edit
+
+            //- Set flags of stream
+            ios_base::fmtflags flags(const ios_base::fmtflags)
+            {
+                return ios_base::fmtflags(0);
+            }
+
+
+        // Print
+
+            //- Print description of IOstream to Ostream
+            void print(Ostream&) const;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

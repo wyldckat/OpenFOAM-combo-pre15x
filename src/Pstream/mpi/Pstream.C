@@ -1,0 +1,411 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    Pstream
+
+\*---------------------------------------------------------------------------*/
+
+#include "Pstream.H"
+#include "PstreamReduceOps.H"
+#include "OSspecific.H"
+
+#include <cstring>
+#include <cstdlib>
+#include <csignal>
+
+#include <mpi.h>
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+void Pstream::addValidParOptions(HashTable<string>& validParOptions)
+{
+    validParOptions.insert("np", "");
+    validParOptions.insert("p4pg", "PI file");
+    validParOptions.insert("p4wd", "directory");
+    validParOptions.insert("p4amslave", "");
+    validParOptions.insert("p4yourname", "hostname");
+}
+
+
+bool Pstream::init(int& argc, char**& argv)
+{
+    // This is a parallel run!
+    parRun_ = true;
+
+    MPI_Init(&argc, &argv);
+
+    int numprocs;
+    MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
+    MPI_Comm_rank(MPI_COMM_WORLD, &myProcNo_);
+
+    if (numprocs <= 1)
+    {
+        FatalErrorIn("Pstream::init(int& argc, char**& argv)")
+            << "bool Pstream::init(int& argc, char**& argv) : "
+               "attempt to run parallel on 1 processor"
+            << endl;
+
+        abort();
+    }
+
+    procIDs_.setSize(numprocs);
+
+    forAll(procIDs_, procNo)
+    {
+        procIDs_[procNo] = procNo;
+    }
+
+#   ifndef SGIMPI
+    string bufferSizeName = getEnv("MPI_BUFFER_SIZE");
+
+    if (bufferSizeName.size())
+    {
+        int bufferSize = atoi(bufferSizeName.c_str());
+
+        if (bufferSize)
+        {
+            MPI_Buffer_attach(new char[bufferSize], bufferSize);
+        }
+    }
+    else
+    {
+        FatalErrorIn("Pstream::init(int& argc, char**& argv)")
+            << "Pstream::init(int& argc, char**& argv) : "
+            << "environment variable MPI_BUFFER_SIZE not defined";
+        abort();
+    }
+#   endif
+
+    int processorNameLen;
+    char processorName[MPI_MAX_PROCESSOR_NAME];
+
+    MPI_Get_processor_name(processorName, &processorNameLen);
+
+    //signal(SIGABRT, stop);
+
+    // Now that nprocs is known construct communication tables.
+    initCommunicationSchedule();
+
+    return true;
+}
+
+
+void Pstream::exit(int errnum)
+{
+#   ifndef SGIMPI
+    int size;
+    char* buff;
+    MPI_Buffer_detach(&buff, &size);
+    delete[] buff;
+#   endif
+
+    if (errnum == 0)
+    {
+        MPI_Finalize();
+        ::exit(errnum);
+    }
+    else
+    {
+        MPI_Abort(MPI_COMM_WORLD, errnum);
+    }
+}
+
+
+void Pstream::abort()
+{
+    MPI_Abort(MPI_COMM_WORLD, 1);
+}
+
+
+void reduce(scalar& Value, sumOp<scalar> bop)
+{
+    if (!Pstream::parRun())
+    {
+        return;
+    }
+
+    if (Pstream::nProcs() <= Pstream::nProcsSimpleSum)
+    {
+        MPI_Status status;
+
+        if (Pstream::master())
+        {
+            for
+            (
+                int slave=Pstream::firstSlave();
+                slave<=Pstream::lastSlave();
+                slave++
+            )
+            {
+                scalar value;
+
+                if
+                (
+                    MPI_Recv
+                    (
+                        &value,
+                        1,
+                        MPI_DOUBLE,
+                        Pstream::procID(slave),
+                        Pstream::msgType(),
+                        MPI_COMM_WORLD,
+                        &status
+                    )
+                )
+                {
+                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
+                        << "MPI_Recv failed"
+                        << abort(FatalError);
+                }
+
+                Value = bop(Value, value);
+            }
+        }
+        else
+        {
+            if
+            (
+                MPI_Send
+                (
+                    &Value,
+                    1,
+                    MPI_DOUBLE,
+                    Pstream::procID(Pstream::masterNo()),
+                    Pstream::msgType(),
+                    MPI_COMM_WORLD
+                )
+            )
+            {
+                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
+                    << "MPI_Send failed"
+                    << abort(FatalError);
+            }
+        }
+
+
+        if (Pstream::master())
+        {
+            for
+            (
+                int slave=Pstream::firstSlave();
+                slave<=Pstream::lastSlave();
+                slave++
+            )
+            {
+                if
+                (
+                    MPI_Send
+                    (
+                        &Value,
+                        1,
+                        MPI_DOUBLE,
+                        Pstream::procID(slave),
+                        Pstream::msgType(),
+                        MPI_COMM_WORLD
+                    )
+                )
+                {
+                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
+                        << "MPI_Send failed"
+                        << abort(FatalError);
+                }
+            }
+        }
+        else
+        {
+            if
+            (
+                MPI_Recv
+                (
+                    &Value,
+                    1,
+                    MPI_DOUBLE,
+                    Pstream::procID(Pstream::masterNo()),
+                    Pstream::msgType(),
+                    MPI_COMM_WORLD,
+                    &status
+                )
+            )
+            {
+                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
+                    << "MPI_Recv failed"
+                    << abort(FatalError);
+            }
+        }
+    }
+    else
+    {
+        //scalar sum;
+        //MPI_Allreduce(&Value, &sum, 1, MPI_DOUBLE, MPI_SUM, MPI_COMM_WORLD);
+        //Value = sum;
+
+        MPI_Status status;
+
+        int myProcNo = Pstream::myProcNo();
+        int nProcs = Pstream::nProcs();
+
+        //
+        // receive from children
+        //
+        int level = 1;
+        int thisLevelOffset = 2;
+        int childLevelOffset = thisLevelOffset/2;
+        int childProcId = 0;
+
+        while
+        (
+            (childLevelOffset < nProcs)
+         && (myProcNo % thisLevelOffset) == 0
+        )
+        {
+            childProcId = myProcNo + childLevelOffset;
+
+            scalar value;
+
+            if (childProcId < nProcs)
+            {
+                if
+                (
+                    MPI_Recv
+                    (
+                        &value,
+                        1,
+                        MPI_DOUBLE,
+                        Pstream::procID(childProcId),
+                        Pstream::msgType(),
+                        MPI_COMM_WORLD,
+                        &status
+                    )
+                )
+                {
+                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
+                        << "MPI_Recv failed"
+                        << abort(FatalError);
+                }
+
+	            Value = bop(Value, value);
+	        }
+
+            level++;
+            thisLevelOffset <<= 1;
+            childLevelOffset = thisLevelOffset/2;
+        }
+
+        //
+        // send and receive from parent
+        //
+        if (!Pstream::master())
+        {
+            int parentId = myProcNo - (myProcNo % thisLevelOffset);
+
+            if
+            (
+                MPI_Send
+                (
+                    &Value,
+                    1,
+                    MPI_DOUBLE,
+                    Pstream::procID(parentId),
+                    Pstream::msgType(),
+                    MPI_COMM_WORLD
+                )
+            )
+            {
+                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
+                    << "MPI_Send failed"
+                    << abort(FatalError);
+            }
+
+            if
+            (
+                MPI_Recv
+                (
+                    &Value,
+                    1,
+                    MPI_DOUBLE,
+                    Pstream::procID(parentId),
+                    Pstream::msgType(),
+                    MPI_COMM_WORLD,
+                    &status
+                )
+            )
+            {
+                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
+                    << "MPI_Recv failed"
+                    << abort(FatalError);
+            }
+        }
+
+
+        //
+        // distribute to my children
+        //
+        level--;
+        thisLevelOffset >>= 1;
+        childLevelOffset = thisLevelOffset/2;
+
+        while (level > 0)
+        {
+            childProcId = myProcNo + childLevelOffset;
+
+            if (childProcId < nProcs)
+            {
+                if
+                (
+                    MPI_Send
+                    (
+                        &Value,
+                        1,
+                        MPI_DOUBLE,
+                        Pstream::procID(childProcId),
+                        Pstream::msgType(),
+                        MPI_COMM_WORLD
+                    )
+                )
+                {
+                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
+                        << "MPI_Send failed"
+                        << abort(FatalError);
+                }
+            }
+
+            level--;
+            thisLevelOffset >>= 1;
+            childLevelOffset = thisLevelOffset/2;
+        }
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

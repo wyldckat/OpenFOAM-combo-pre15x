@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -x
+
+if [ "$ParaView_DIR" -a -r $ParaView_DIR ] ; then
+    (cd PVFoamReader; ./Allwmake)
+fi
+
+if [ "$DXROOT" -a -r $DXROOT ] ; then
+    wmake dxFoamExec
+fi
+
+if [ ! "$WM_ARCH" = solaris ] ; then
+    wmake libso ensight76FoamExec
+fi
+
+#if [ "$FV_HOME" -a -r $FV_HOME ] ; then
+#    wmake fieldview9Reader
+#fi

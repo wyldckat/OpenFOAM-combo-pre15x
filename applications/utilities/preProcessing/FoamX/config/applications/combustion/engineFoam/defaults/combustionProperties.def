@@ -1,0 +1,66 @@
+default
+{
+
+laminarFlameSpeedCorrelation Gulders;
+
+fuel                    IsoOctane;
+
+Su                      Su       [0 1 -1 0 0 0 0] 0;
+
+SuModel                 unstrained;
+
+sigmaExt                sigmaExt     [0 0 -1 0 0 0 0]  100000;
+
+XiModel                 transport;
+
+XiCoef                  XiCoef       [0 0 0 0 0 0 0]   0.62;
+XiShapeCoef             XiShapeCoef  [0 0 0 0 0 0 0]   1;
+uPrimeCoef              uPrimeCoef   [0 0 0 0 0 0 0]   2;
+
+ignite                  yes;
+
+ignitionSites
+(
+	{
+        location                (0.03 0 0.0955);
+        diameter                2e-3;
+        start                   -15;
+        duration                20;
+        strength                4;
+    }
+);
+
+GuldersCoeffs
+{
+    Methane
+    {
+        W       W       [0 0 0 0 0 0 0]   0.422;
+        eta     eta     [0 0 0 0 0 0 0]   0.15;
+        xi      xi      [0 0 0 0 0 0 0]   5.18;
+        alpha   alpha   [0 0 0 0 0 0 0]   2.0;
+        beta    beta    [0 0 0 0 0 0 0]   -0.5;
+        f       f       [0 0 0 0 0 0 0]   2.3;
+    }
+
+    Propane
+    {
+        W       W       [0 0 0 0 0 0 0]   0.446;
+        eta     eta     [0 0 0 0 0 0 0]   0.12;
+        xi      xi      [0 0 0 0 0 0 0]   4.95;
+        alpha   alpha   [0 0 0 0 0 0 0]   1.77;
+        beta    beta    [0 0 0 0 0 0 0]   -0.2;
+        f       f       [0 0 0 0 0 0 0]   2.3;
+    }
+
+    IsoOctane
+    {
+        W       W       [0 0 0 0 0 0 0]   0.4658;
+        eta     eta     [0 0 0 0 0 0 0]   -0.326;
+        xi      xi      [0 0 0 0 0 0 0]   4.48;
+        alpha   alpha   [0 0 0 0 0 0 0]   1.56;
+        beta    beta    [0 0 0 0 0 0 0]   -0.22;
+        f       f       [0 0 0 0 0 0 0]   2.3;
+    }
+}
+
+};

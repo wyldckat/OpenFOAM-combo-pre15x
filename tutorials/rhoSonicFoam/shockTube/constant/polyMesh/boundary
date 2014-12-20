@@ -1,0 +1,44 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version 2.0;
+    format ascii;
+
+    root "/home/storm/chris/OpenFOAM/chris-1.0/run/tutorials/rhoSonicFoam";
+    case "shockTube";
+    instance "constant";
+    local "polyMesh";
+
+    class polyBoundaryMesh;
+    object boundary;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+2
+(
+sides
+{
+    type patch;
+    physicalType outletAdiabatic;
+    nFaces 2;
+    startFace 999;
+}
+
+empty
+{
+    type empty;
+    physicalType empty;
+    nFaces 4000;
+    startFace 1001;
+}
+)
+
+// ************************************************************************* //

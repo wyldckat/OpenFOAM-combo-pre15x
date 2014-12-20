@@ -1,0 +1,20 @@
+default
+
+(
+    {
+        position        (1e-07 0.099 0);
+        direction       (0 -1 0);
+        diameter        0.0002;
+        dischargeCoeff  1;
+        mass            6e-06;
+        temperature     300;
+        nParcels        2000;
+        injectionProfile
+        (
+            (0 1)
+            (0.00125 1)
+        );
+    }
+ 
+)
+;

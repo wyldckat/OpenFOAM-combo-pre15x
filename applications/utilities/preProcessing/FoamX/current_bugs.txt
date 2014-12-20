@@ -1,0 +1,476 @@
+Bugs
+----
+
+2]
+(startup)
+The C++ codes read the ns.ref file as well as the Java.
+They should contact nsd directly. 04/02/03: C++ codes use commandline arguments
+passed through.
+
+3]
+(startup)
+- also if roots are incorrect and cannot be read) you get no warning.
+8/1/02: partially fixed: is warning message from FoamXCaseBrowser
+--> FOAM Warning : User specified root directory '"/aaaa/run/LES"' not found.
+Removing from root directories list.
+
+5]
+(job handling)
+When running from foamX: after run has finished process icoFoam or
+blockMesh is still there (ps -u mattijs):
+     6504 ?        00:00:02 icoFoam <defunct>
+Only closing case (pressing Close button) makes process go away.
+Means that spawning process has not waited for it.
+FIXED. 20/03/02. Put waitpid in ProcessControl::kill.
+
+26]
+(startup)
+If licenseserver gets killed and restarted foamX gets confused.
+Unclear message. Should it be possible to reconnect (by rereading ns.ref?).
+
+116]
+(tools)
+Mesh changing tools do not reread mesh/fields.
+Maybe 'tool' like blockMeshTool?
+FIXED(partially). 03/02/03. CasePanel monitors dictionaries belonging to case.
+Small bug: 'Save Dictionary' doesn't suppress file monitoring.
+
+117]
+(case opening)
+if mesh&fields are not consistent (changing number of patches)
+you get exception:
+FoamXError:
+Type mismatch, expected scalar, got invalidType
+in function FoamX::FoamXAny::SetValue(const FoamXServer::FoamXAny&)
+in file FoamXAny.C at line 87
+CANNOT REPRODUCE. 04/02/03. Adding patch to 'boundaryField' is no problem
+(not used). Deleting patch info from 'boundaryField' just makes it use default
+values.
+
+119]
+(case panel)
+create new case and then import mesh does not work.
+Does work if you save & close new case.
+Henry: Import mesh is file-only business. Rest of case is in memory.
+You want merge but only can be done on file level. Hence save and reopen.
+FIXED. 03/02/03. Create Case now does save immediately.
+
+121]
+(file/directory selection)
+Extend tree to allow browsing inside case to import files.
+FIXED (Partially) 11/02/03. Removed import case.
+
+122]
+(caseBrowser)
+clone case does not allow cloning from different root/case.
+And also does no selection of e.g. time steps to copy (now copies
+all which might be a problem e.g. if transMeshed).
+Chris' idea for cloning:
+ - LatestTime
+ - Zerotime
+ - NoTime
+ - Alltimes
+FIXED. 11/02/03
+
+123]
+(case browser)
+import case does not allow importing from different root/case
+FIXED. 11/02/03. Removed import case.
+
+125]
+(selection editor)
+read-only entries in a selection are greyed out.
+Is confusing since they can still be selected.
+FIXED. 07/02/02
+
+126]
+(create case)
+After 'create case' and close case popup says: 'save' or 'close'. Closing
+at this point creates illegal case. (since system/ directory not written).
+Better: ask 'save' or 'delete'.
+FIXED. 30/01/03. Now caseServer does initial save when called with '-create'.
+
+142]
+(create case)
+Application class is straight pull down instead of now hierarchical.
+
+128]
+(case browser)
+?? Test import case. Chris cannot get it to work.
+Also what is it more than create a new case or open existing case.
+Only controlDict is converted?
+Import is mainly for importing old version cases. Only will work if case
+did work previously. Does not fix anything,
+just changes controlDict to include new application class.
+(clone case is just directory copy).
+FIXED. 30/01/03. Removed import case.
+
+129]
+(dictionary editor)
+Timeformat is Optional but
+- if they don't have it, it is scientific
+- if they do have it, it is general.
+
+130]
+(java1.4)
+CaseBrowser & caseServer cannot be closed. Some communication seems to
+be done even after caseServer has been shut down. E.g. when closing caseBrowser
+from caseBrowserPanel:
+FIXED. 21/03/02 "oneway" attribute in Idl.
+
+140]
+(tools)
+Tools should check whether case has been modified (i.e. disk state not
+consistent with files) before running. Can be stupid, i.e. just check any.
+FIXED. 06/03/02
+
+141]
+(import mesh)
+If import is meshDescription only FoamX pops up box: "no mesh defined"
+Yes? What is the problem?
+
+143]
+(process editor)
+process window not resizable
+FIXED. 25/03/02
+
+144]
+(process editor)
+Select multiple and do remove/end/cont etc.
+Doing last entry gives out-of-bounds in getValueAt
+FIXED.
+
+145]
+(process editor)
+Is modal.
+FIXED.
+
+146]
+(run panel)
+Running cases cannot be done in same way as running utilities
+(the run panel does not get used)
+FIXED. 06/03/02
+
+147]
+(run panel)
+Sort out argument handling (args are not passed to invokeUtility)
+and display as text in JLabel
+FIXED. 06/03/02
+
+
+148]
+ICaseBrowser.invokeUtility throws:
+"Error executing utility magUtrolDict" (should be ".. magU")
+FIXED. 19/03/02
+
+150]
+Utilities cannot be split into subdirectories any further. Gives null
+pointer when building tools menu.
+FIXED.
+
+153]
+Open casebrowser. Open/edit case. Close case.
+Close casebrowser. Now open casebrowser on other machine and try to edit
+case -> coredump.
+FIXED. 15/03/02
+
+154]
+no possibility of hand editing arguments. E.g. parallel running?
+
+155]
+parallel running tool
+
+156]
+Logs/Probes:
+- text tail log (should wait until log appears. Sleep is done on Java side)
+- text view log
+- graph tail var in log
+- graph view var in log
+- graph tail probe
+- graph view probe
+
+157]
+(run panel)
+If log file does not exist FileEditor tries to use the caseBrowser.readFile.
+Does not handle correctly if file does not exist.
+FIXED. 19/03/02
+
+158]
+(startup)
+If nsd is slow to start up (but has already written ns.ref), FoamX.App can
+not start up. ("Default name service could not be contacted.")
+FIXED in runFoamX
+
+159]
+(process editor)
+End/EndNow a job in the Process Editor and it stays in the runningJobs.
+Even 'status' will not recognize it has moved.
+Only 'read' will reread the directories.
+FIXED. 26/03/02
+
+160]
+(mesmdec2)
+Selection editor sized too small.
+Run Panel sized too small.
+Process Editor Panel sized too small.
+FIXED? 10/02/03
+
+161)
+(sgi, process editor)
+RunningJobs panel in process editor has white bar behind end/endNow/etc. buttons
+FIXED. due to vncserver insufficient color depth.
+
+162]
+(process editor)
+On slow machine Corba can timeout (e.g. running foamProcessInfo on turner)
+leaving it in bad state.
+Ok if timeOut set to larger value.
+
+163]
+(selection editor panel)
+Title should be title of entry
+FIXED. 21/03/02
+
+164]
+(run panel)
+Run a case (e.g. icoFoam) in foreground. Kill icoFoam process. 
+Upsets Corba and FoamX does not work anymore.
+CANNOT REPRODUCE. 4/02/03. It pops up panel saying 'icoFoam exited with
+return code 15'
+
+165]
+(process editor)
+Should show number of float licenced jobs
+FIXED. 21/03/02
+
+166]
+(process editor)
+If in runningJobs/ there is jobInfo file of non-licensed machine you
+get a FoamXError "unexpected error" from caseBrowser.checkRunningJobs.
+FIXED. 21/03/02. Exception not mentioned in Idl file.
+
+167]
+(patch editor)
+title says 'fixedValue' instead of patchname.
+NOT A BUG. is name of dictionary.
+
+168]
+(process editor)
+'Compact' button does not do anything
+FIXED. 26/03/02
+
+169]
+(process editor)
+'kill' 'susp' 'cont' gives 'Error continuing process'
+FIXED. 21/03/02. waitpid problem?
+
+170]
+(process editor)
+FoamEndJob does not work on parallel job.
+FIXED. 22/03/02
+
+171]
+(process editor)
+FoamEndJob does not work on relative root.  (e.g. icoFoam .. cavity)
+FIXED. 24/03/02
+
+172]
+(App)
+Do something with command line arguments.
+FIXED. 04/03/02.  runFoamX <host> <root> <case>. Open case does not work yet.
+
+173]
+(process editor)
+If job has no root/case in jobInfo file,  foamEndJob should not be called.
+FIXED. 26/09/02
+
+174]
+(dictionary editor)
+Cannot edit dieselFoam dictionary. Complains about selection() out of bounds.
+FIXED. 31/12/02. Changed 'selection' to 'multivariateSelection'.
+
+175]
+(case browser)
+if already exists a case directory but without controlDict then creating a
+case with this name and then trying to save upsets Java.
+FIXED. 04/03/02. CreateCase now does initial save which overwrites it!
+
+176]
+(runpanel)
+Chris: want no just "root" and "case" recognized and filled with default
+but also "sourceRoot" (for mapping tool)
+FIXED. 11/03/02. Just use caseAndRoot type.
+
+177]
+(case editor)
+'Read Mesh' also rereads fields but only internal values, not boundary values.
+Correct and split into 'Read Mesh' and 'Read Fields'
+FIXED. 05/03/02. Difficult to split though since change of patches also changes
+boundaryField (only things constant are 'internalField' and 'type' for patch)
+
+178]
+(run panel)
+Chris: utilities that update mesh and/or fields should have flag and after
+running throw up panel saying 'Reread mesh?' 'Reread fields?'
+Or even better: automatic detection. Get timestamps on files in mesh and
+files in current set time directory.
+FIXED. 04/02/03
+
+179]
+(reference level)
+Henry: reference level has been removed. Rework into C++ and Java. Update from
+Henry's stuff.
+FIXED. 01/02/03. Hacked from caseEditorModule.
+
+
+180]
+Cannot resolve URL from /FoamX/icons/small/maths/interpolationScheme.gif
+Cannot resolve URL from /FoamX/icons/small/maths/snGradScheme.gif
+
+181]
+DictionaryEntryEditor (e.g. one used for 'patch value' editing has title of
+boundaryType ('fixedValue') instead of patchName ('movingWall')
+FIXED. 04/02/03. Now: 'U/movingWall'
+
+182]
+Chris:When something has been changed in the FoamX buffer you are
+usually prompted  to save if you try to close the case.  However, if
+the thing that is changed is a patch type, you do not get prompted to
+save.
+FIXED. 04/02/03. (added modified() to patchProperties.H)
+
+182]
+in caseChooserDlg you are allowed to 'Open Case Browser'.
+Is not supported internally.
+
+183]
+No possibility of rereading dictionaries. But is supported for mesh & fields.
+
+184]
+caseBrowser tree does not get refreshed sometimes if case gets closed.
+
+185]
+If clone case fails the case list gets messed up. Unlock-case should remove
+any case from caseList in caseBrowser.
+
+186]
+Chris: for his tutorials: no boundary file. When opening case and then saving
+it overwrites fields with ones without all the carefully set boundary info.
+
+187]
+Start with arguments to open case automatically:
+runFoamX penfold $FOAM_RUN/icoFoam cavityTut
+Now in caseBrower busyCursor is still on.
+10/04/03. REMOVED busy cursor from openCase
+
+188]
+View Log file. - Followmode does not work.
+
+189]
+(simpleEditor)
+Does not have key shortcuts.
+
+190]
+(runPanel)
+No default set for root and case. 'arguments' field in dictionary
+FIXED. 10/04/03.
+
+191]
+(runPanel)
+E.g. for fromRoot, fromCase also defaults.
+FIXED. 10/04/03.
+
+
+192]
+(cloneCase)
+Have it detect if nothing has been edited and do nothing.
+FIXED. 10/04/03. Now has confirmation dialog.
+
+
+**** APPEARANCE ***************************************************************
+
+130]
+Close button does not close all dictionary windows.
+Open e.g. field (say U), open boundary condition window.
+This (managed) window does not close.
+
+131]
+(button bar) 
+The four save and close case icons at the left of the icon bar should
+all be removed since: save current case and close current case
+duplicate the save/close case buttons on the right of the button bar;
+save all cases does nothing; close all cases is not particularly
+useful.  
+FIXED.
+
+104] 
+(button bar)
+Remove FoamX_Options button - it does not do anything useful.
+FIXED.
+
+132] 
+(changes to button icons) 
+Open/Close_Case_Broswer (they are the same as start/stop FOAM run)
+perhaps a terminal for Open_Case_Browser 
+Close_case (looks like stop run)
+
+14] 
+(case setup)
+Tools are not accessible from the menu bar at the top of the screen.
+
+108]
+(case panel)
+Icons for fields dont work (icons for dictionary entries do!)
+(Chris)
+
+109]
+(case panel)
+BlockmeshTool does not use SimpleEditor
+FIXED.
+
+110] (dictionary editor) 
+Description of an individual entry in a dictionary in bottom panel of
+toplevel dictionaryEditor appears only in dictionaryEditor, not in any of the
+other editors.
+
+127]
+(case editor)
+Nice to know which time is set in database so when you are editing fields
+you know which one is being edited.
+
+133] 
+(menu bar)
+When editing a case there should be File -> Save Case (and other options)
+
+118] 
+(font)
+Font in FoamX is not very nice.
+(Dx one is much better)
+
+********************************************************************************
+
+**** APP CLASS EDITOR (not for version 2.1) ************************************
+
+11]
+(application class editor)
+The order of a set of entries cannot be changed in the editor, ie no
+swap-up/   swap-down capability.  This is a real problem if you make a
+mistake in the ordering of something like a dimensionedScalar
+
+13]
+(application class editor)
+When you edit `constrained values' the app class editor window gets
+moved to the bottom of the pile of windows - you get the feeling you
+have lost it.
+
+16]
+(application class editor)
+There is no save button in the window - users have to know that they
+are able to save on close
+
+17]
+(application class editor)
+In fact, even if you have just saved, it always asks if you want to
+save. Not sure?
+
+

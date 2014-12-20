@@ -1,0 +1,14 @@
+default
+{
+
+solvers
+{
+    p               ICCG 1e-06 0;
+}
+
+SIMPLE
+{
+    nNonOrthogonalCorrectors 0;
+}
+
+}

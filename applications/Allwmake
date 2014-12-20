@@ -1,0 +1,4 @@
+#!/bin/sh
+
+(cd solvers ; ./Allwmake)
+(cd utilities ; ./Allwmake)

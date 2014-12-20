@@ -1,0 +1,14 @@
+
+/* CCMTEST = ../libccmio/test */
+CCMTEST = .
+
+$(CCMTEST)/Mesh.cpp
+$(CCMTEST)/MeshNGEOM.cpp
+$(CCMTEST)/Vector.cpp
+$(CCMTEST)/polyfile.cpp
+
+
+MeshCCMIO.cpp
+ccm24ToFoam.C
+
+EXE = $(FOAM_APPBIN)/ccm24ToFoam

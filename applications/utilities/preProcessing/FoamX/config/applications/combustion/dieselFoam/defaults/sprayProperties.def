@@ -1,0 +1,97 @@
+default
+{
+
+interpolationSchemes
+{
+    U               cellPoint;
+    rho             cell;
+    p               cell;
+    T               cell;
+    ft              cell;
+    fu              cell;
+}
+
+subCycles       2;
+
+atomizationModel specConstAtomization;
+
+breakupModel    ReitzDiwakar;
+
+collisionModel  off;
+
+evaporationModel standardEvaporationModel;
+
+heatTransferModel RanzMarshall;
+
+dispersionModel off;
+
+dragModel       standardDragModel;
+
+wallModel       reflect;
+
+specConstAtomizationCoeffs
+{
+    dropletNozzleDiameterRatio 
+    (
+        0.8
+    );
+    sprayAngle      
+    (
+        10
+    );
+}
+
+ReitzDiwakarCoeffs
+{
+    Cbag            0.6;
+    Cb              0.785;
+    Cstrip          0.5;
+    Cs              0;
+}
+
+ReitzKHRTCoeffs
+{
+    B0              0.61;
+    B1              40;
+    Ctau            1;
+    CRT             0.1;
+    strippedMassLimit 0.01;
+    WeberLimit      6;
+}
+
+trajectoryCoeffs
+{
+    cSpace                  1.0;
+    cTime                   0.3;
+}
+
+standardDragModelCoeffs
+{
+    preReFactor     0.166667;
+    ReExponent      0.666667;
+    ReLimiter       1000;
+    CdLimiter       0.44;
+	Cdistort        2.632;
+}
+
+standardEvaporationModelCoeffs
+{
+    evaporationScheme explicit;
+    preReScFactor   0.6;
+    ReExponent      0.5;
+    ScExponent      0.333333;
+}
+
+RanzMarshallCoeffs
+{
+    preRePrFactor   0.6;
+    ReExponent      0.5;
+    PrExponent      0;
+}
+
+reflectCoeffs
+{
+    elasticity      0.9;
+}
+
+};

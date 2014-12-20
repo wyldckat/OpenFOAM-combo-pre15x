@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -x
+
+wmake surfaceAdd
+# wmake surfaceBooleanOp
+wmake surfaceCheck
+wmake surfaceCoarsen
+wmake surfaceConvert
+wmake surfaceFind
+wmake surfaceMeshTriangulate
+wmake surfacePointMerge
+wmake surfaceSetOutside
+wmake surfaceSmooth
+wmake surfaceSubset
+wmake surfaceToPatch
+wmake surfaceSplitNonManifolds
+wmake surfaceScale
+wmake surfaceSplitByPatch

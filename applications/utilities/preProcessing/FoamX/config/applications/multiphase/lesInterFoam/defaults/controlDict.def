@@ -1,0 +1,40 @@
+default
+{
+
+applicationClass lesInterFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1e-04;
+
+deltaT          1e-08;
+
+writeControl    timeStep;
+
+writeInterval   1000;
+
+cycleWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  8;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   8;
+
+runTimeModifiable yes;
+
+adjustTimeStep  on;
+
+maxCo           0.25;
+
+maxDeltaT       1e-06;
+
+};

@@ -1,0 +1,188 @@
+OpenFOAM Release notes for version 1.1
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OpenFOAM-1.1 is a significant upgrade to version 1.0.2 in many way which are
+outlined below.  The most significant of these is a massive restructuring of the
+underlying database which handles object IO and lookups.  Although this release
+passes all our standard tests and the tutorials have been checked many of the
+new features have not been fully tested and difficulties may arise.  We will
+endeavour to fix bugs as soon as they are reported and release the bug-fix
+version 1.1.1 as soon as we feel we have resolved the major issues.
+
+Significant Changes
+~~~~~~~~~~~~~~~~~~~
+
+OpenFOAM library
+~~~~~~~~~~~~~~~~
+1)  database and time have been merged
+
+    The concept of time have now been incorporated directly into database
+    because time is the fundamental control structure for the whole of the
+    simulation.  In order to allow multi-region simulations in the future
+    (fully-coupled conjugate heat transfer, some forms of FSI etc.) each region
+    is represented as a mesh which are now regIOobjects and registered with
+    the time database.  For consistency and to avoid name clashes in the time 
+    database field objects are now allocated to the mesh on which they are
+    defined which now has it's own database (objectRegistry).  This new
+    hierarchical database structure is much more flexible than the original one
+    and will allow us to extend OpenFOAM functionality faster and more reliably.
+
+    Care has been taken to ensure backward compatibility at least with respect
+    to running old cases with the new applications, however some small changes
+    are required in top-level codes.  For example in createField.H of most
+    applications there are changes to the field constructors to ensure they are
+    allocated to the mesh database rather than the time database e.g.
+
+    volScalarField p
+    (
+        IOobject
+        (
+            "p",
+            runTime.timeName(),
+            runTime,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
+    becomes
+
+    volScalarField p
+    (
+        IOobject
+        (
+            "p",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
+    );
+
+    If you forget to make the equivalent changes in your own codes they will
+    still run (unless you are using some complex boundary conditions which
+    lookup fields now from the mesh database rather than the time database) you
+    will get a warning message of the form:
+
+--> FOAM Warning : objectRegistry::checkIn(regIOobject&): 
+    Registering object 'p' with objectRegistry 'time'
+    This is only appropriate for registering the regions of a multi-region computation
+    or in other special circumstances.
+    Otherwise please register this object with it's region (mesh)
+
+    If you are unsure what you should change in your code to remove this warning
+    message please take a look at the nearest equivalent piece of code in the
+    release and you will see what need to be done.  Some header-file and
+    function names relating to database have also been changes for consistency
+    e.g. createDatabase.H is now createTime.H, again please refer to code in the
+    release for examples which will help you resolve problems you may have
+    compiling your own applications.
+
+2)  Environment variable SGIFPE renamed to FOAM_SIGFPE.
+
+    FOAM_SIGFPE causes all divisions by zero or overflows to cause an
+    error. Users are advised to always have this variable on since it causes
+    early detection of many problems.
+
+3)  New environment variable FOAM_ABORT
+
+    FOAM_ABORT causes every exit() from any OpenFOAM application/solver to
+    become an abort() so resulting in a core dump which eases debugging.
+
+    Note: with FOAM_ABORT set even mistyping command line arguments will cause a
+    core dump.
+
+
+dynamicMesh library
+~~~~~~~~~~~~~~~~~~~
+    Improved cell splitting (used in refinement).
+
+
+meshTools library
+~~~~~~~~~~~~~~~~~
+    Extended octree with find-in-box and nearest-to-line searching.
+
+
+compressible/rhoTurbFoam
+~~~~~~~~~~~~~~~~~~~~~~~~
+    New solver rhoTurbFoam for variable density transient turbulent flow will
+    heat transfer.
+
+
+preProcessing/FoamX
+~~~~~~~~~~~~~~~~~~~
+1)  Fixed re-patching problem.
+
+    Previously changes to patch types from within FoamX were not exported to the
+    boundary file.  Now all changes to boundary types including changine
+    to and from constraint types are exported to the boundary file.
+
+2)  Writing comments in dictionaries and fields is now optional.
+
+    There is a new Info switch in .OpenFOAM/controlDict which controls the
+    writing of comments from FoamX: 
+
+    InfoSwitches
+    {
+        writeJobInfo         0;
+        FoamXwriteComments   1;
+    }
+
+    the default is true, simple set
+
+    FoamXwriteComments   0;
+
+    to stop the writing of comments.
+
+
+paraFoam
+~~~~~~~~
+    paraFoam is now setup to use paraview-1.8.5 which is included in the
+    release.
+
+
+mesh/conversion/netgenNeutralToFoam
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    netgenNeutralToFoam is a new application which converts the netgen
+    Neutral format (including patch information) to the OpenFOAM format.
+
+
+postProcessing/dataConversion/foamToVTK
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    foamToVTK now optionally writes surfaceScalarFields (e.g. phi) and
+    surfaceVectorFields.
+
+
+mesh/advanced/modifyMesh
+~~~~~~~~~~~~~~~~~~~~~~~~
+    modifyMesh is a new application which makes batch changes to individual
+    mesh elements.
+
+
+parallelProcessing/reconstructParMesh
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   reconstructParMesh is a new application which reconstructs teh mesh from
+   a decomposed mesh whereas reconstructPar only reconstructs the fields and
+   relies on the existence of the complete mesh.
+
+
+Start-up scripts
+~~~~~~~~~~~~~~~~
+The start-up scripts have been significantly improved with the removal of some
+unused environment variables, better organisation of the paths for libraries and
+automatic creation of necessary directories to ensure the $PATH and
+$LD_LIBRARY_PATH are complete for OpenFOAM running and compilation.
+
+
+Compilation
+~~~~~~~~~~~
+With the improvements to the start-up (see above) and some changes to the
+hierachy of Allwmake scripts a new source installation should build cleanly on
+all Linux platforms and many others.
+
+
+Many other changes
+~~~~~~~~~~~~~~~~~~
+We have made many other small changes to the libraries and applications either
+to fix bugs, improve consistency or add functionality

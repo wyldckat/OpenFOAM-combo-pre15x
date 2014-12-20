@@ -1,0 +1,155 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "dynOneEqEddy.H"
+#include "addToRunTimeSelectionTable.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace compressible
+{
+namespace LESmodels
+{
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(dynOneEqEddy, 0);
+addToRunTimeSelectionTable(LESmodel, dynOneEqEddy, dictionary);
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+dimensionedScalar dynOneEqEddy::ck_(const volTensorField& D) const
+{
+    volScalarField KK =
+        0.5*(filter_(U() & U()) - (filter_(U()) & filter_(U())));
+
+    volTensorField LL =
+        dev(filter_(U() * U()) - (filter_(U()) * filter_(U())));
+
+    volTensorField MM =
+        delta()*(filter_(sqrt(k_)*D) - 2*sqrt(KK + filter_(k_))*filter_(D));
+
+    return average(LL && MM)/average(MM && MM);
+}
+
+
+dimensionedScalar dynOneEqEddy::ce_(const volTensorField& D) const
+{
+    volScalarField KK =
+        0.5*(filter_(U() & U()) - (filter_(U()) & filter_(U())));
+
+    volScalarField mm =
+        pow(KK + filter_(k_), 1.5)/(2*delta()) - filter_(pow(k_, 1.5))/delta();
+
+    volScalarField ee =
+        2*delta()*ck_(D)*(filter_(sqrt(k_)*(D && D))
+      - 2*sqrt(KK + filter_(k_))*(filter_(D) && filter_(D)));
+
+    return average(ee*mm)/average(mm*mm);
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// from components
+dynOneEqEddy::dynOneEqEddy
+(
+    const volScalarField& rho,
+    const volVectorField& U,
+    const surfaceScalarField& phi,
+    const basicThermo& thermoPhysicalModel
+)
+:
+    LESmodel(typeName, rho, U, phi, thermoPhysicalModel),
+    GenEddyVisc(rho, U, phi, thermoPhysicalModel),
+
+    filterPtr_(LESfilter::New(U.mesh(), LESmodelProperties())),
+    filter_(filterPtr_())
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+dynOneEqEddy::~dynOneEqEddy()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void dynOneEqEddy::correct(const tmp<volTensorField>& tgradU)
+{
+    const volTensorField& gradU = tgradU();
+
+    GenEddyVisc::correct(gradU);
+
+    volTensorField D = dev(symm(gradU));
+    volScalarField divU = fvc::div(phi()/fvc::interpolate(rho()));
+    volScalarField G = 2*muSgs_*(gradU && D);
+
+    solve
+    (
+        fvm::ddt(rho(), k_)
+      + fvm::div(phi(), k_)
+      - fvm::laplacian(DkEff(), k_)
+     ==
+        G
+      - fvm::SuSp(2.0/3.0*rho()*divU, k_)
+      - fvm::Sp(ce_(D)*rho()*sqrt(k_)/delta(), k_)
+    );
+
+    bound(k_, dimensionedScalar("0", k_.dimensions(), 1.0e-10));
+
+    muSgs_ = ck_(D)*rho()*sqrt(k_)*delta();
+    muSgs_.correctBoundaryConditions();
+}
+
+
+bool dynOneEqEddy::read()
+{
+    if (GenEddyVisc::read())
+    {
+        filter_.read(LESmodelProperties());
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace LESmodels
+} // End namespace compressible
+} // End namespace Foam
+
+// ************************************************************************* //

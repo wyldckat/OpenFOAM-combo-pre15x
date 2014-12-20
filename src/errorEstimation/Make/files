@@ -1,0 +1,8 @@
+errorEstimate                        = errorEstimate
+
+evaluateError                        = evaluateError
+
+$(evaluateError)/evaluateError.C
+
+LIB = $(FOAM_LIBBIN)/liberrorEstimation
+

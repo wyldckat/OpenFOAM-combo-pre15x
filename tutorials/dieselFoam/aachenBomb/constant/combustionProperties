@@ -1,0 +1,34 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+version             1.0;
+format              ascii;
+root                "";
+case                "example";
+instance            "constant";
+local               "";
+class               dictionary;
+form                dictionary;
+object              combustionProperties;
+
+// ************************************************************************* //
+
+Cmix                Cmix [ 0 0 0 0 0 0 0 ] 1.0 ;
+
+ignitionProperties1
+{
+    ignite              off;
+    
+    ignitionPoint       ignitionPoint   [ 0 1 0 0 0 0 0 ] ( 0.2 0 0.02 ) ;
+
+    timing              timing          [ 0 0 1 0 0 0 0 ] 0.0e-1 ;
+
+    duration            duration        [ 0 0 1 0 0 0 0 ] 1.0e-0 ;
+}
+
+// ************************************************************************* //

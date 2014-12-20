@@ -1,0 +1,7 @@
+transportModel/transportModel.C
+transportModel/newTransportModel.C
+Newtonian/Newtonian.C
+CrossPowerLaw/CrossPowerLaw.C
+BirdCarreau/BirdCarreau.C
+
+LIB = $(FOAM_LIBBIN)/libincompressibleTransportModels

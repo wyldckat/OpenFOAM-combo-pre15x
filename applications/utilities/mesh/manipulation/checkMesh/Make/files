@@ -1,0 +1,5 @@
+checkCoords.C
+checkEdges.C
+checkMesh.C
+
+EXE = $(FOAM_APPBIN)/checkMesh

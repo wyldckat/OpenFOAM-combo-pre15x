@@ -1,0 +1,19 @@
+#!/bin/sh
+
+currDir=`pwd`
+application=`basename $currDir`
+case="mixer2D"
+utility="createSlider"
+
+tutorialPath=`dirname $0`/..
+. $tutorialPath/RunFunctions
+
+runApplication blockMesh $case
+#
+if [ "$case" == "mixer2D" ] ; then
+    compileApplication $case $utility
+    runApplication $utility $case
+fi
+#
+runApplication $application $case
+

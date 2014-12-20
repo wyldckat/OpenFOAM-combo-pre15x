@@ -1,0 +1,10 @@
+#!/bin/sh
+
+set -x
+
+wmake Sl
+wmake adiabaticFlameT
+wmake mixtureAdiabaticFlameT
+wmake equilibriumFlameT
+wmake equilibriumCO
+wmake chemkinToFoam

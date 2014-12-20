@@ -1,0 +1,318 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "Cloud.H"
+#include "surfaceFields.H"
+#include "processorPolyPatch.H"
+#include "parallelInfo.H"
+#include "PstreamCombineReduceOps.H"
+#include "mapPolyMesh.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+//- Construct from IOobject, mesh and a list of particles
+template<class particleType>
+Cloud<particleType>::Cloud
+(
+    const polyMesh& pMesh,
+    const IDLList<particleType>& particles,
+    const bool softAlgorithm
+)
+:
+    cloud(pMesh),
+    IDLList<particleType>(particles),
+    polyMesh_(pMesh),
+    allFaces_(pMesh.faces()),
+    points_(pMesh.points()),
+    cellFaces_(pMesh.cells()),
+    allFaceCentres_(pMesh.faceCentres()),
+    owner_(pMesh.faceOwner()),
+    neighbour_(pMesh.faceNeighbour()),
+    softAlgorithm_(softAlgorithm)
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class particleType>
+void Cloud<particleType>::addParticle(particleType* pPtr)
+{
+    append(pPtr);
+}
+
+
+template<class particleType>
+void Cloud<particleType>::deleteParticle(particleType& p)
+{
+    delete(remove(&p));
+}
+
+
+class combineNsTransPs
+{
+
+public:
+
+    void operator()(labelListList& x, const labelListList& y) const
+    {
+        forAll(y, i)
+        {
+            if (y[i].size())
+            {
+                x[i] = y[i];
+            }
+        }
+    }
+};
+
+
+template<class particleType>
+template<class TrackingData>
+void Cloud<particleType>::track(TrackingData& td)
+{
+    const parallelInfo& pData = polyMesh_.parallelData();
+    const labelList& processorPatches = pData.processorPatches();
+    const labelList& processorPatchIndices = pData.processorPatchIndices();
+    const labelList& processorPatchNeighbours =
+        pData.processorPatchNeighbours();
+
+    // Assume there will be particles to transfer
+    bool transfered = true;
+
+    // Pickup first particle on list
+    // After first transfer this is set to the first added
+    iterator pIter = this->begin();
+
+    // While there are particles to transfer
+    while(transfered)
+    {
+        // List of lists of particles to be transfered for all the processor
+        // patches
+        List<IDLList<particleType> > transferList(processorPatches.size());
+        
+        // Loop over all particles
+        while (pIter != this->end())
+        {
+            particleType& p = pIter();
+
+            // Move the particle
+            bool keepParticle = p.move(td);
+            
+            // If the particle is to be kept
+            // (i.e. it hasn't passed through an inlet or outlet)
+            if (keepParticle)
+            {
+                // check if the particle has moved the full integration step
+                // if it hasn't it must have hit a processor boundary 
+                if (Pstream::parRun() && (p.tEnd() > SMALL))
+                {
+                    // for parallell transfers the cell-index is actually the patch face index
+                    label facei = p.cell();
+
+                    if (facei >= 0)
+                    {
+                        // Increment the iterator before transfering the
+                        // particle to the transfer list
+                        ++pIter;
+
+                        label patchi = pMesh().boundaryMesh().whichPatch(facei);
+                        label n = processorPatchIndices[patchi];
+
+                        p.prepareForParallelTransfer(patchi, facei);
+                        transferList[n].append(remove(&p));
+                    }
+                    else
+                    {
+                        FatalErrorIn("Cloud<particleType>::track()")
+                            << "transferList ambiguity"
+                            << exit(FatalError);
+                    }
+                }
+                else
+                {
+                    ++pIter;
+                }
+            }
+            else
+            {
+                // Increment the iterator before deleting the particle
+                ++pIter;
+                deleteParticle(p);
+            }
+        }
+        
+        if (Pstream::parRun())
+        {
+            // List of the numbers of particles to be transfered across the
+            // processor patches
+            labelList nsTransPs(transferList.size());
+
+            forAll(transferList, i)
+            {
+                nsTransPs[i] = transferList[i].size();
+            }
+            
+            // List of the numbers of particles to be transfered across the
+            // processor patches for all the processors
+            labelListList allNTrans(Pstream::nProcs());
+            allNTrans[Pstream::myProcNo()] = nsTransPs;
+            combineReduce(allNTrans, combineNsTransPs());
+
+            transfered = false;
+
+            forAll(allNTrans, i)
+            {
+                forAll(allNTrans[i], j)
+                {
+                    if (allNTrans[i][j])
+                    {
+                        transfered = true;
+                        break;
+                    }
+                }
+            }            
+
+            if (!transfered)
+            {
+                break;
+            }
+
+            forAll(transferList, i)
+            {
+                if (transferList[i].size())
+                {
+                    OPstream particleStream
+                    (
+                        refCast<const processorPolyPatch>
+                        (
+                            pMesh().boundaryMesh()[processorPatches[i]]
+                        ).neighbProcNo()
+                    );
+                    
+                    particleStream << transferList[i];
+                }
+            }
+            
+            forAll(processorPatches, i)
+            {
+                label patchi = processorPatches[i];
+                
+                const processorPolyPatch& procPatch = 
+                    refCast<const processorPolyPatch>
+                    (pMesh().boundaryMesh()[patchi]);
+                
+                label neighbProci =
+                    procPatch.neighbProcNo() - Pstream::masterNo();
+                
+                label neighbProcPatchi = processorPatchNeighbours[patchi];
+
+                label nRecPs = allNTrans[neighbProci][neighbProcPatchi];
+
+                if (nRecPs)
+                {
+                    IPstream particleStream(procPatch.neighbProcNo());
+                    IDLList<particleType> newParticles
+                    (
+                        particleStream,
+                        typename particleType::iNew(*this)
+                    );
+
+                    typename IDLList<particleType>::iterator newpIter =
+                        newParticles.begin();
+
+                    pIter = iterator(DLListBase::iterator(*this, &newpIter()));
+
+                    while (newpIter != newParticles.end())
+                    {
+                        // Keep a reference to the particle before incrementing
+                        // the iterator
+                        particleType& newp = newpIter();
+                        ++newpIter;
+
+                        label facei = newp.cell();
+                        newp.correctAfterParallelTransfer(patchi, facei);
+                        addParticle(newParticles.remove(&newp));
+                    }
+                }
+            }
+        }
+        else
+        {
+            transfered = false;
+        }
+    }
+}
+
+
+template<class particleType>
+void Cloud<particleType>::autoMap(const mapPolyMesh& mapper)
+{
+    if (debug)
+    {
+        Info<< "Cloud<particleType>::autoMap(const morphFieldMapper& map) "
+               "for lagrangian cloud " << name() << endl;
+    }
+
+    const labelList& reverseMap = mapper.reverseFaceMap();
+
+    for
+    (
+        iterator iter = this->begin();
+        iter != this->end();
+        ++iter
+    )
+    {
+        if (reverseMap[iter().celli_] != -1)
+        {
+            iter().celli_ = reverseMap[iter().celli_];
+        }
+        else
+        {
+            vector p = iter().position();
+            (vector&)iter().position() = polyMesh_.cellCentres()[0];
+            scalar fraction = 0;
+            iter().track(p, fraction);
+        }
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * *  IOStream operators * * * * * * * * * * * //
+
+#include "CloudIO.C"
+
+// ************************************************************************* //

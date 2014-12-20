@@ -1,0 +1,157 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "error.H"
+
+#include "SLListBase.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+SLListBase::iterator SLListBase::endIter
+(
+    (SLListBase&)(const SLListBase&)SLListBase(),
+    (link*)0
+);
+
+SLListBase::const_iterator SLListBase::endConstIter
+(
+    (const SLListBase&)SLListBase(),
+    (const link*)0
+);
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+// add at head of list
+void SLListBase::insert(SLListBase::link* a)
+{
+    nElmts_++;
+
+    if (last_)
+    {
+        a->next_ = last_->next_;
+    }
+    else
+    {
+        last_ = a;
+    }
+
+    last_->next_ = a;
+}
+
+
+// add at tail of list
+void SLListBase::append(SLListBase::link* a)
+{
+    nElmts_++;
+
+    if (last_)
+    {
+        a->next_ = last_->next_;
+        last_ = last_->next_ = a;
+    }
+    else
+    {
+        last_ = a->next_ = a;
+    }
+}
+
+
+//remove and return head
+SLListBase::link* SLListBase::removeHead()
+{
+    nElmts_--;
+
+    if (last_ == 0)
+    {
+        FatalErrorIn("SLListBase::remove()")
+            << "remove from empty list"
+            << abort(FatalError);
+    }
+
+    SLListBase::link* f = last_->next_;
+
+    if (f == last_)
+    {
+        last_ = 0;
+    }
+    else
+    {
+        last_->next_ = f->next_;
+    }
+
+    return f;
+}
+
+
+// remove and return element
+SLListBase::link* SLListBase::remove(SLListBase::link* it)
+{
+    SLListBase::iterator iter = begin();
+    SLListBase::link *prev = &(*iter);
+
+    if (it == prev)
+    {
+        return removeHead();
+    }
+
+    nElmts_--;
+
+    for (++iter; iter != end(); ++iter)
+    {
+        SLListBase::link *p = &(*iter);
+
+        if (p == it)
+        {
+            prev->next_ = p->next_;
+
+            if (p == last_)
+            {
+                last_ = prev;
+            }
+
+            return it;
+        }
+
+        prev = p;
+    }
+
+    return 0;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

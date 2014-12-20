@@ -1,0 +1,73 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Application
+    setGamma
+
+Description
+    Set the initial field of gamma for the dam break problem.
+
+\*---------------------------------------------------------------------------*/
+
+#include "database.H"
+
+#include "fvCFD.H"
+#include "OSspecific.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+int main(int argc, char *argv[])
+{
+
+#   include "setRootCase.H"
+
+#   include "createDatabase.H"
+#   include "createMesh.H"
+#   include "createFields.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    const vectorField& centres = mesh.C().internalField();
+
+    forAll(centres, celli)
+    {
+        if (centres[celli].x() < 0.146 && centres[celli].y() < 0.292)
+        {
+            gamma[celli] = 1.0;
+        }
+        else
+        {
+            gamma[celli] = 0.0;
+        }
+    }
+
+    gamma.write();
+
+    Info<< "End\n" << endl;
+
+    return(0);
+}
+
+
+// ************************************************************************* //

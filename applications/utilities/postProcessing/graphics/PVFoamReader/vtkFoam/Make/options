@@ -1,0 +1,5 @@
+EXE_INC = \
+    -I$(ParaView_INST_DIR)/include/vtk \
+    -I../PVFoamReader
+
+LIB_LIBS = $(GLIBS)

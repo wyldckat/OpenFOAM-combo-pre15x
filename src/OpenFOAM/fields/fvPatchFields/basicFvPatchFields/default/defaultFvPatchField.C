@@ -1,0 +1,360 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "defaultFvPatchField.H"
+#include "fvPatchFieldMapper.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+defaultFvPatchField<Type>::defaultFvPatchField
+(
+    const fvPatch& p,
+    const Field<Type>& iF
+)
+:
+    calculatedFvPatchField<Type>(p, iF)
+{
+    notImplemented
+    (
+        "defaultFvPatchField<Type>::defaultFvPatchField"
+        "(const fvPatch& p, const Field<Type>& iF)"
+    );
+}
+
+
+template<class Type>
+defaultFvPatchField<Type>::defaultFvPatchField
+(
+    const defaultFvPatchField<Type>& ptf,
+    const fvPatch& p,
+    const Field<Type>& iF,
+    const fvPatchFieldMapper& mapper
+)
+:
+    calculatedFvPatchField<Type>(ptf, p, iF, mapper),
+    actualTypeName_(ptf.actualTypeName_),
+    dict_(ptf.dict_)
+{
+    for
+    (
+        HashPtrTable<scalarField>::const_iterator iter =
+            ptf.scalarFields_.begin();
+        iter != ptf.scalarFields_.end();
+        ++iter
+    )
+    {
+        scalarFields_.insert(iter.key(), new scalarField(*iter(), mapper));
+    }
+
+    for
+    (
+        HashPtrTable<vectorField>::const_iterator iter =
+            ptf.vectorFields_.begin();
+        iter != ptf.vectorFields_.end();
+        ++iter
+    )
+    {
+        vectorFields_.insert(iter.key(), new vectorField(*iter(), mapper));
+    }
+
+    for
+    (
+        HashPtrTable<tensorField>::const_iterator iter =
+            ptf.tensorFields_.begin();
+        iter != ptf.tensorFields_.end();
+        ++iter
+    )
+    {
+        tensorFields_.insert(iter.key(), new tensorField(*iter(), mapper));
+    }
+}
+
+
+template<class Type>
+defaultFvPatchField<Type>::defaultFvPatchField
+(
+    const fvPatch& p,
+    const Field<Type>& iF,
+    const dictionary& dict
+)
+:
+    calculatedFvPatchField<Type>(p, iF),
+    actualTypeName_(dict.lookup("type")),
+    dict_(dict)
+{
+    if (dict.found("value"))
+    {
+        fvPatchField<Type>::operator=(Field<Type>("value", dict, p.size()));
+    }
+    else
+    {
+        FatalIOErrorIn
+        (
+            "defaultFvPatchField<Type>::defaultFvPatchField"
+            "(const fvPatch&, const Field<Type>&, const dictionary&)",
+            dict
+        )  << "\nCannot find 'value' entry which is required to set the"
+            " values of the default patch field." << nl
+            << "\nPlease add the 'value' entry to the write function of the"
+               " user-defined boundary-condition\n"
+               "or link the boundary-condition into libfoamUtil.so"
+            << exit(FatalIOError);
+    }
+
+    for
+    (
+        dictionary::const_iterator iter = dict_.begin();
+        iter != dict_.end();
+        ++iter
+    )
+    {
+        if (iter().keyword() != "type" && iter().keyword() != "value")
+        {
+            if
+            (
+                iter().isStream()
+             && iter().stream().size()
+            )
+            {
+                ITstream& is = iter().stream();
+
+                // Read first token
+                token firstToken(is);
+
+                if
+                (
+                    firstToken.isWord()
+                 && firstToken.wordToken() == "nonuniform"
+                )
+                {
+                    token fieldToken(is);
+
+                    if (!fieldToken.isCompound())
+                    {
+                        FatalIOErrorIn
+                        (
+                            "defaultFvPatchField<Type>::defaultFvPatchField"
+                            "(const fvPatch&, const Field<Type>&, "
+                            "const dictionary&)",
+                            dict
+                        )  << "\ntoken following 'nonuniform' is not a compound"
+                            << exit(FatalIOError);
+                    }
+
+                    if
+                    (
+                        fieldToken.compoundToken().type()
+                     == token::Compound<List<scalar> >::typeName
+                    )
+                    {
+                        scalarField* fPtr = new scalarField;
+                        fPtr->transfer
+                        (
+                            dynamicCast<token::Compound<List<scalar> > >
+                            (
+                                fieldToken.transferCompoundToken()
+                            )
+                        );
+
+                        if (fPtr->size() != this->size())
+                        {
+                            FatalIOErrorIn
+                            (
+                                "defaultFvPatchField<Type>::defaultFvPatchField"
+                                "(const fvPatch&, const Field<Type>&, "
+                                "const dictionary&)",
+                                dict
+                            )   << "\nsize of field " << iter().keyword()
+                                << " (" << fPtr->size() << ')'
+                                << " is not the same size as the patch ("
+                                << this->size() << ')'
+                                << exit(FatalIOError);
+                        }
+
+                        scalarFields_.insert(iter().keyword(), fPtr);
+                    }
+                    else if
+                    (
+                        fieldToken.compoundToken().type()
+                     == token::Compound<List<vector> >::typeName
+                    )
+                    {
+                        vectorField* fPtr = new vectorField;
+                        fPtr->transfer
+                        (
+                            dynamicCast<token::Compound<List<vector> > >
+                            (
+                                fieldToken.transferCompoundToken()
+                            )
+                        );
+
+                        if (fPtr->size() != this->size())
+                        {
+                            FatalIOErrorIn
+                            (
+                                "defaultFvPatchField<Type>::defaultFvPatchField"
+                                "(const fvPatch&, const Field<Type>&, "
+                                "const dictionary&)",
+                                dict
+                            )   << "\nsize of field " << iter().keyword()
+                                << " (" << fPtr->size() << ')'
+                                << " is not the same size as the patch ("
+                                << this->size() << ')'
+                                << exit(FatalIOError);
+                        }
+
+                        vectorFields_.insert(iter().keyword(), fPtr);
+                    }
+                    else if
+                    (
+                        fieldToken.compoundToken().type()
+                     == token::Compound<List<tensor> >::typeName
+                    )
+                    {
+                        tensorField* fPtr = new tensorField;
+                        fPtr->transfer
+                        (
+                            dynamicCast<token::Compound<List<tensor> > >
+                            (
+                                fieldToken.transferCompoundToken()
+                            )
+                        );
+
+                        if (fPtr->size() != this->size())
+                        {
+                            FatalIOErrorIn
+                            (
+                                "defaultFvPatchField<Type>::defaultFvPatchField"
+                                "(const fvPatch&, const Field<Type>&, "
+                                "const dictionary&)",
+                                dict
+                            )   << "\nsize of field " << iter().keyword()
+                                << " (" << fPtr->size() << ')'
+                                << " is not the same size as the patch ("
+                                << this->size() << ')'
+                                << exit(FatalIOError);
+                        }
+
+                        tensorFields_.insert(iter().keyword(), fPtr);
+                    }
+                    else
+                    {
+                        FatalIOErrorIn
+                        (
+                            "defaultFvPatchField<Type>::defaultFvPatchField"
+                            "(const fvPatch&, const Field<Type>&, "
+                            "const dictionary&)",
+                            dict
+                        )   << "\ncompound " << fieldToken.compoundToken()
+                            << " not supported"
+                            << exit(FatalIOError);
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+template<class Type>
+defaultFvPatchField<Type>::defaultFvPatchField
+(
+    const defaultFvPatchField<Type>& ptf,
+    const Field<Type>& iF
+)
+:
+    calculatedFvPatchField<Type>(ptf, iF),
+    actualTypeName_(ptf.actualTypeName_),
+    dict_(ptf.dict_),
+    scalarFields_(ptf.scalarFields_),
+    vectorFields_(ptf.vectorFields_),
+    tensorFields_(ptf.tensorFields_)
+{}
+
+
+// Write
+template<class Type>
+void defaultFvPatchField<Type>::write(Ostream& os) const
+{
+    os.writeKeyword("type") << actualTypeName_ << token::END_STATEMENT << nl;
+
+    for
+    (
+        dictionary::const_iterator iter = dict_.begin();
+        iter != dict_.end();
+        ++iter
+    )
+    {
+        if (iter().keyword() != "type" && iter().keyword() != "value")
+        {
+            if
+            (
+                iter().isStream()
+             && iter().stream().size()
+             && iter().stream()[0].isWord()
+             && iter().stream()[0].wordToken() == "nonuniform"
+            )
+            {
+                if (scalarFields_.found(iter().keyword()))
+                {
+                    scalarFields_.find(iter().keyword())()
+                        ->writeEntry(iter().keyword(), os);
+                }
+                else if (vectorFields_.found(iter().keyword()))
+                {
+                    vectorFields_.find(iter().keyword())()
+                        ->writeEntry(iter().keyword(), os);
+                }
+                else if (tensorFields_.found(iter().keyword()))
+                {
+                    tensorFields_.find(iter().keyword())()
+                        ->writeEntry(iter().keyword(), os);
+                }
+            }
+            else
+            {
+               iter().write(os);
+            }
+        }
+    }
+
+    this->writeEntry("value", os);
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

@@ -1,0 +1,671 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+    Generic field type.
+
+\*---------------------------------------------------------------------------*/
+
+#include "FieldMapper.H"
+#include "FieldM.H"
+#include "dictionary.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * Static Members  * * * * * * * * * * * * * * //
+
+template<class Type>
+const char* const Field<Type>::typeName("Field");
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class Type>
+Field<Type>::Field()
+:
+    List<Type>()
+{}
+
+
+template<class Type>
+Field<Type>::Field(const label size)
+:
+    List<Type>(size)
+{}
+
+
+template<class Type>
+Field<Type>::Field(const label size, const Type& t)
+:
+    List<Type>(size, t)
+{}
+
+
+template<class Type>
+Field<Type>::Field
+(
+    const UList<Type>& mapF,
+    const labelList& mapAddressing
+)
+:
+    List<Type>(mapAddressing.size())
+{
+    map(mapF, mapAddressing);
+}
+
+template<class Type>
+Field<Type>::Field
+(
+    const tmp<Field<Type> >& tmapF,
+    const labelList& mapAddressing
+)
+:
+    List<Type>(mapAddressing.size())
+{
+    map(tmapF, mapAddressing);
+}
+
+
+template<class Type>
+Field<Type>::Field
+(
+    const UList<Type>& mapF,
+    const labelListList& mapAddressing,
+    const scalarListList& mapWeights
+)
+:
+    List<Type>(mapAddressing.size())
+{
+    map(mapF, mapAddressing, mapWeights);
+}
+
+template<class Type>
+Field<Type>::Field
+(
+    const tmp<Field<Type> >& tmapF,
+    const labelListList& mapAddressing,
+    const scalarListList& mapWeights
+)
+:
+    List<Type>(mapAddressing.size())
+{
+    map(tmapF, mapAddressing, mapWeights);
+}
+
+
+template<class Type>
+Field<Type>::Field
+(
+    const UList<Type>& mapF,
+    const FieldMapper& mapper
+)
+:
+    List<Type>(mapper.size())
+{
+    map(mapF, mapper);
+}
+
+template<class Type>
+Field<Type>::Field
+(
+    const tmp<Field<Type> >& tmapF,
+    const FieldMapper& mapper
+)
+:
+    List<Type>(mapper.size())
+{
+    map(tmapF, mapper);
+}
+
+
+template<class Type>
+Field<Type>::Field(const Field<Type>& f)
+:
+    refCount(),
+    List<Type>(f)
+{}
+
+
+template<class Type>
+Field<Type>::Field(Field<Type>& f, bool reUse)
+:
+    List<Type>(f, reUse)
+{}
+
+
+template<class Type>
+Field<Type>::Field(const typename Field<Type>::subField& sf)
+:
+    List<Type>(sf)
+{}
+
+
+template<class Type>
+Field<Type>::Field(const UList<Type>& tl)
+:
+    List<Type>(tl)
+{}
+
+
+// Construct as copy of tmp<Field>
+#ifdef ConstructFromTmp
+template<class Type>
+Field<Type>::Field(const tmp<Field<Type> >& tf)
+:
+    List<Type>((Field&)tf(), tf.isTmp())
+{
+    ((Field&)tf()).resetRefCount();
+}
+#endif
+
+
+template<class Type>
+Field<Type>::Field(Istream& is)
+:
+    List<Type>(is)
+{}
+
+
+template<class Type>
+Field<Type>::Field
+(
+    const word& keyword,
+    const dictionary& dict,
+    const label s
+)
+{
+    if (s)
+    {
+        ITstream& is = dict.lookup(keyword);
+
+        // Read first token
+        token firstToken(is);
+
+        if (firstToken.isWord())
+        {
+            if (firstToken.wordToken() == "uniform")
+            {
+                this->setSize(s);
+                operator=(pTraits<Type>(is));
+            }
+            else if (firstToken.wordToken() == "nonuniform")
+            {
+                is >> (List<Type>&)(*this);
+                if (this->size() != s)
+                {
+                    FatalIOErrorIn
+                    (
+                        "Field<Type>::Field(const label s, Istream& is)",
+                        is
+                    )   << "size " << this->size()
+                        << " is not equal to the given value of " << s
+                        << exit(FatalIOError);
+                }
+            }
+            else
+            {
+                FatalIOErrorIn
+                (
+                    "Field<Type>::Field(const label s, Istream& is)",
+                    is
+                )   << "expected keyword 'uniform' or 'nonuniform', found "
+                    << firstToken.wordToken()
+                    << exit(FatalIOError);
+            }
+        }
+        else
+        {
+            if (is.version() == 2.0)
+            {
+                Warning
+                    << "Field<Type>::Field(const label s, Istream& is) : \n"
+                       "expected keyword 'uniform' or 'nonuniform', "
+                       "assuming deprecated Field format from "
+                       "FoamX version 2.0." << endl;
+
+                this->setSize(s);
+
+                is.putBack(firstToken);
+                operator=(pTraits<Type>(is));
+            }
+            else
+            {
+                FatalIOErrorIn
+                (
+                    "Field<Type>::Field(const label s, Istream& is)",
+                    is
+                )   << "extected keyword 'uniform' or 'nonuniform', found "
+                    << firstToken.info()
+                    << exit(FatalIOError);
+            }
+        }
+    }
+}
+
+
+template<class Type>
+tmp<Field<Type> > Field<Type>::clone() const
+{
+    return tmp<Field<Type> >(new Field<Type>(*this));
+}
+
+
+/*
+template<class Type>
+template<class Type2>
+tmp<Field<Type> > Field<Type>::NewCalculatedType
+(
+    const Field<Type2>& f
+)
+{
+    return tmp<Field<Type> >(new Field<Type>(f.size()));
+}
+*/
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+// Return a null Field
+template<class Type>
+Field<Type>& Field<Type>::null()
+{
+    Field<Type>* nullPtr = (Field<Type>*)NULL;
+    return *nullPtr;
+}
+
+
+template<class Type>
+void Field<Type>::map
+(
+    const UList<Type>& mapF,
+    const labelList& mapAddressing
+)
+{
+    Field<Type>& f = *this;
+
+    if (f.size() != mapAddressing.size())
+    {
+        f.setSize(mapAddressing.size());
+    }
+
+    forAll(f, i)
+    {
+        f[i] = mapF[mapAddressing[i]];
+    }
+}
+
+template<class Type>
+void Field<Type>::map
+(
+    const tmp<Field<Type> >& tmapF,
+    const labelList& mapAddressing
+)
+{
+    map(tmapF(), mapAddressing);
+    tmapF.clear();
+}
+
+
+template<class Type>
+void Field<Type>::map
+(
+    const UList<Type>& mapF,
+    const labelListList& mapAddressing,
+    const scalarListList& mapWeights
+)
+{
+    Field<Type>& f = *this;
+
+    if (f.size() != mapAddressing.size())
+    {
+        f.setSize(mapAddressing.size());
+    }
+
+    if (mapWeights.size() != mapAddressing.size())
+    {
+        FatalErrorIn
+        (
+            "void Field<Type>::map\n"
+            "(\n"
+            "    const UList<Type>& mapF,\n"
+            "    const labelListList& mapAddressing,\n"
+            "    const scalarListList& mapWeights\n"
+            ")"
+        ) << "Weights and addressing map have different sizes.  Weights size: "
+            << mapWeights.size() << " map size: " << mapAddressing.size()
+            << abort(FatalError);
+    }
+
+    forAll(f, i)
+    {
+        const labelList& localAddrs = mapAddressing[i];
+        const scalarList& localWeights = mapWeights[i];
+
+        f[i] = pTraits<Type>::zero;
+
+        forAll(localAddrs, j)
+        {
+            f[i] += localWeights[j]*mapF[localAddrs[j]];
+        }
+    }
+}
+
+template<class Type>
+void Field<Type>::map
+(
+    const tmp<Field<Type> >& tmapF,
+    const labelListList& mapAddressing,
+    const scalarListList& mapWeights
+)
+{
+    map(tmapF(), mapAddressing, mapWeights);
+    tmapF.clear();
+}
+
+
+template<class Type>
+void Field<Type>::map
+(
+    const UList<Type>& mapF,
+    const FieldMapper& mapper
+)
+{
+    if (mapper.direct())
+    {
+        map(mapF, mapper.directAddressing());
+    }
+    else
+    {
+        map(mapF, mapper.addressing(), mapper.weights());
+    }
+}
+
+template<class Type>
+void Field<Type>::map
+(
+    const tmp<Field<Type> >& tmapF,
+    const FieldMapper& mapper
+)
+{
+    map(tmapF(), mapper);
+    tmapF.clear();
+}
+
+
+template<class Type>
+void Field<Type>::autoMap
+(
+    const FieldMapper& mapper
+)
+{
+    Field<Type> fCpy(*this);
+    map(fCpy, mapper);
+}
+
+
+template<class Type>
+void Field<Type>::rmap
+(
+    const UList<Type>& mapF,
+    const labelList& mapAddressing
+)
+{
+    Field<Type>& f = *this;
+
+    forAll(mapF, i)
+    {
+        f[mapAddressing[i]] = mapF[i];
+    }
+}
+
+template<class Type>
+void Field<Type>::rmap
+(
+    const tmp<Field<Type> >& tmapF,
+    const labelList& mapAddressing
+)
+{
+    rmap(tmapF(), mapAddressing);
+    tmapF.clear();
+}
+
+
+template<class Type>
+void Field<Type>::rmap
+(
+    const UList<Type>& mapF,
+    const labelList& mapAddressing,
+    const scalarList& mapWeights
+)
+{
+    Field<Type>& f = *this;
+
+    f = pTraits<Type>::zero;
+
+    forAll(mapF, i)
+    {
+        f[mapAddressing[i]] += mapF[i]*mapWeights[i];
+    }
+}
+
+template<class Type>
+void Field<Type>::rmap
+(
+    const tmp<Field<Type> >& tmapF,
+    const labelList& mapAddressing,
+    const scalarList& mapWeights
+)
+{
+    rmap(tmapF(), mapAddressing, mapWeights);
+    tmapF.clear();
+}
+
+
+template<class Type>
+void Field<Type>::negate()
+{
+    TFOR_ALL_F_OP_OP_F(Type, *this, =, -, Type, *this)
+}
+
+
+template<class Type>
+tmp<Field<typename Field<Type>::cmptType> > Field<Type>::component
+(
+    const direction d
+) const
+{
+    tmp<Field<cmptType> > Component(new Field<cmptType>(this->size()));
+    ::Foam::component(Component(), *this, d);
+    return Component;
+}
+
+
+template<class Type>
+void Field<Type>::replace
+(
+    const direction d,
+    const UList<cmptType>& sf
+)
+{
+    TFOR_ALL_F_OP_FUNC_S_F(Type, *this, ., replace, const direction, d,
+        cmptType, sf)
+}
+
+
+template<class Type>
+tmp<Field<Type> > Field<Type>::T() const
+{
+    tmp<Field<Type> > transpose(new Field<Type>(this->size()));
+    ::Foam::T(transpose(), *this);
+    return transpose;
+}
+
+
+template<class Type>
+void Field<Type>::writeEntry(const word& keyword, Ostream& os) const
+{
+    os.writeKeyword(keyword);
+
+    bool uniform = false;
+
+    if (this->size() && writeBinary(this->begin()))
+    {
+        uniform = true;
+
+        forAll(*this, i)
+        {
+            if (this->operator[](i) != this->operator[](0))
+            {
+                uniform = false;
+                break;
+            }
+        }
+    }
+
+    if (uniform)
+    {
+        os << "uniform " << this->operator[](0) << token::END_STATEMENT;
+    }
+    else
+    {
+        List<Type>::writeEntry("nonuniform", os);
+    }
+
+    os << endl;
+}
+
+
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+template<class Type>
+void Field<Type>::operator=(const Field<Type>& f)
+{
+    if (this == &f)
+    {
+        FatalErrorIn("Field<Type>::operator=(const Field<Type>&)")
+            << "attempted assignment to self"
+            << abort(FatalError);
+    }
+
+    List<Type>::operator=(f);
+}
+
+
+template<class Type>
+void Field<Type>::operator=(const SubField<Type>& sf)
+{
+    List<Type>::operator=(sf);
+}
+
+
+template<class Type>
+void Field<Type>::operator=(const UList<Type>& ul)
+{
+    List<Type>::operator=(ul);
+}
+
+
+template<class Type>
+void Field<Type>::operator=(const tmp<Field>& tf)
+{
+    if (this == &(tf()))
+    {
+        FatalErrorIn("Field<Type>::operator=(const tmp<Field>&)")
+            << "attempted assignment to self"
+            << abort(FatalError);
+    }
+
+    // This is dodgy stuff, don't try it at home.
+    Field* fieldPtr = tf.ptr();
+    List<Type>::transfer(*fieldPtr);
+    delete fieldPtr;
+}
+
+
+template<class Type>
+void Field<Type>::operator=(const Type& t)
+{
+    List<Type>::operator=(t);
+}
+
+
+#define COMPUTED_ASSIGNMENT(TYPE, op)                                         \
+                                                                              \
+template<class Type>                                                          \
+void Field<Type>::operator op(const UList<TYPE>& f)                           \
+{                                                                             \
+    TFOR_ALL_F_OP_F(Type, *this, op, TYPE, f)                                 \
+}                                                                             \
+                                                                              \
+template<class Type>                                                          \
+void Field<Type>::operator op(const tmp<Field<TYPE> >& tf)                    \
+{                                                                             \
+    operator op(tf());                                                        \
+    tf.clear();                                                               \
+}                                                                             \
+                                                                              \
+template<class Type>                                                          \
+void Field<Type>::operator op(const TYPE& t)                                  \
+{                                                                             \
+    TFOR_ALL_F_OP_S(Type, *this, op, TYPE, t)                                 \
+}
+
+COMPUTED_ASSIGNMENT(Type, +=)
+COMPUTED_ASSIGNMENT(Type, -=)
+COMPUTED_ASSIGNMENT(scalar, *=)
+COMPUTED_ASSIGNMENT(scalar, /=)
+
+#undef COMPUTED_ASSIGNMENT
+
+
+// * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //
+
+template<class Type>
+Ostream& operator<<(Ostream& os, const Field<Type>& f)
+{
+    os << (const List<Type>&)f;
+    return os;
+}
+
+
+template<class Type>
+Ostream& operator<<(Ostream& os, const tmp<Field<Type> >& tf)
+{
+    os << tf();
+    tf.clear();
+    return os;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#   include "FieldFunctions.C"
+
+// ************************************************************************* //

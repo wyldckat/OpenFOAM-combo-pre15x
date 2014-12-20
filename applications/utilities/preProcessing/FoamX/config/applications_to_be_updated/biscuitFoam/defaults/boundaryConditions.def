@@ -1,0 +1,16 @@
+default
+{
+
+Tair                      Tair               [0 0 0 1 0 0 0]        473;
+
+heatTransferAir           heatTransferAir    [1 2 -3 -1 0 0 0]       35;
+
+Ttin                      Ttin               [0 0 0 1 0 0 0]        473;
+
+heatTransferTin           heatTransferTin    [1 2 -3 -1 0 0 0]       15;
+
+kcWater                   kcWater            [0 1 -1 0 0 0 0]     0.032;
+
+xvInf                     xvInf              [0 0 0 0 0 0 0]      0.012;
+
+};

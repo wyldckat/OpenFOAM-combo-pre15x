@@ -1,0 +1,99 @@
+15/09/03 Test program for blocking/non-blocking communication.
+
+2 procs on spot, 2 on pinky.
+2x2x10000 cells cavity decomposed into 2x2.
+-------------------------------------------
+Done
+    swaps       :1000
+    blockingSend:0
+    blockingRecv:0
+    user time   :2.08
+    wall time   :21
+
+Done 
+    swaps       :1000
+    blockingSend:1
+    blockingRecv:0
+    user time   :1.93
+    wall time   :27
+
+Done 
+    swaps       :1000
+    blockingSend:1
+    blockingRecv:1
+    user time   :1.6
+    wall time   :28
+
+Done 
+    swaps       :1000
+    blockingSend:0
+    blockingRecv:1
+    user time   :1.82
+    wall time   :27
+
+
+1xnero, 1xpinky, 1xspot
+3x10,000 cells cavity decomposed into 3x1
+-----------------------------------------
+Tried two different communication schedules (so that MPI_Send does not hang)
+
+Schedule 1:
+    send to higher
+    receive from lower
+    send to lower
+    receive from higher
+
+
+Schedule 2:
+    send to neighbourI
+    receive from neighbourI
+(so immediately after sending switching to receiving from same neighbour). The
+neighbour to communicate with is globally determined so there is no deadlock.
+
+
+Schedule 1:
+(send to lower - receive from higher)
+MPI_Send  / MPI_Recv  : user time:0.92 wall time:29
+MPI_Bsend / MPI_Recv  : user time:0.73 wall time:21 
+MPI_Isend / MPI_Recv  : user time:0.65 wall time:21
+
+MPI_Send  / MPI_Irecv : user time:0.91 wall time:28 
+MPI_Bsend / MPI_Irecv : user time:0.75 wall time:20
+MPI_Isend / MPI_Irecv : user time:0.99 wall time:21
+
+
+Schedule 2:
+(send to neighbour - receive from same neighbour)
+MPI_Send  / MPI_Recv  : user time:0.66 wall time:30
+MPI_Bsend / MPI_Recv  : user time:0.78 wall time:31
+MPI_Isend / MPI_Recv  : user time:0.79 wall time:31
+
+MPI_Send  / MPI_Irecv : user time:1.15 wall time:29
+MPI_Bsend / MPI_Irecv : user time:0.8  wall time:19
+MPI_Isend / MPI_Irecv : user time:0.93 wall time:19
+
+
+MPI_Bsend v.s. MPI_Send v.s. MPI_ISend:
+Bsend is as good as Isend, Send is much slower.
+
+MPI_Recv v.s. MPI_Irecv:
+Depending on ordering (time between sending and receiving) Recv is about the
+same time or much slower than Irecv:
+
+
+
+/home/ofey4/henry/foam/henry2.2/run/Audi/gutterQuiet90fine1/
+------------------------------------------------------------
+(schedule 1: send to lower - receive from higher)
+MPI_Isend / MPI_Irecv :  user time:4.9 wall time:108(?)
+                                   5.5            50
+                                   5.32           47
+MPI_Send  / MPI_Irecv :  user time:4.41 wall time:51
+                                   5.13           49
+MPI_Bsend  / MPI_Irecv:  user time:4.36 wall time:52
+
+MPI_Isend / MPI_Recv  :  user time:3.31 wall time:51
+                                   3.52           48
+MPI_Send  / MPI_Recv  :  user time:3.42 wall time:49
+                                   3.19           52
+MPI_Bsend  / MPI_Recv :  user time:3.58 wall time:54

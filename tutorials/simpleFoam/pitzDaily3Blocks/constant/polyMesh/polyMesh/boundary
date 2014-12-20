@@ -1,0 +1,70 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+// FoamX Mesh Description File
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           polyBoundaryMesh;
+    object          boundary;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+(    inlet
+    {
+        type            patch;
+        physicalType    inlet;
+        startFace       24170;
+        nFaces          30;
+    }
+
+    outlet
+    {
+        type            patch;
+        physicalType    outlet;
+        startFace       24200;
+        nFaces          57;
+    }
+
+    upperWall
+    {
+        type            wall;
+        physicalType    wall;
+        startFace       24257;
+        nFaces          223;
+    }
+
+    lowerWall
+    {
+        type            wall;
+        physicalType    wall;
+        startFace       24480;
+        nFaces          250;
+    }
+
+    frontAndBack
+    {
+        type            empty;
+        physicalType    empty;
+        startFace       24730;
+        nFaces          24450;
+    }
+
+
+)
+
+// ************************************************************************* //

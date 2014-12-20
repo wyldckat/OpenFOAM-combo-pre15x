@@ -1,0 +1,13 @@
+EXE_INC = \
+    -I../decompositionMethods/lnInclude \
+    -I$(LIB_SRC)/cfdTools/lnInclude \
+    -I$(LIB_SRC)/finiteElement/lnInclude \
+    -I$(LIB_SRC)/lagrangian/basic/lnInclude \
+    $(WM_DECOMP_INC)
+
+EXE_LIBS = \
+    -ldecompositionMethods \
+    -llagrangian \
+    -lmeshTools \
+    -lfoamUtil \
+    $(WM_DECOMP_LIBS)

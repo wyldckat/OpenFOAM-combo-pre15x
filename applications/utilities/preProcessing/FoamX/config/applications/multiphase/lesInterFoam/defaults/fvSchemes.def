@@ -1,0 +1,49 @@
+default
+{
+
+ddtSchemes
+{
+    default backward;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+}
+
+divSchemes
+{
+    div(phi,U)      Gauss localBlended Phi 1 Gamma2V 1;
+    div(phi,gamma)  Gauss Gamma01 0.2;
+    div(phirb,gamma) Gauss Gamma01 0.2;
+    div(phi,k)      Gauss Gamma 0.1;
+    div(phi,B)      Gauss Gamma 0.1;
+    div(B)          Gauss linear;
+    div(phi,nuTilda) Gauss Gamma 0.1;
+    div((nuEff*dev(grad(U).T()))) Gauss linear;
+}
+
+laplacianSchemes
+{
+    default         Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         skewLinear;
+    interpolate(HbyA) skewLinear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    pd;
+    pcorr;
+}
+
+}

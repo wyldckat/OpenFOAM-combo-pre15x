@@ -1,0 +1,114 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    EulerCoordinateRotation
+
+Description
+    The 3 rotations are defined in the Euler convention
+    (around Z, around X' and around Z').
+    For reference and illustration, see
+    http://mathworld.wolfram.com/EulerAngles.html
+
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef EulerCoordinateRotation_H
+#define EulerCoordinateRotation_H
+
+#include "coordinateRotation.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                   Class EulerCoordinateRotation Declaration
+\*---------------------------------------------------------------------------*/
+
+class EulerCoordinateRotation
+:
+    public coordinateRotation
+{
+    // Private data
+
+        //- Local-to-global transformation tensor
+        tensor R_;
+
+
+public:
+
+    // Constructors
+
+        //- Construct from components
+        EulerCoordinateRotation
+        (
+            const scalar phi,
+            const scalar theta,
+            const scalar psi
+        )
+        :
+            R_
+            (
+                cos(psi)*cos(phi) - cos(theta)*sin(phi)*sin(psi),
+                con(psi)*sin(phi) + cos(theta)*cos(phi)*sin(psi),
+                sin(psi)*sin(theta),
+
+               -sin(psi)*cos(phi) - cos(theta)*sin(phi)*cos(psi),
+               -sin(psi)*sin(phi) + cos(theta)*cos(phi)*cos(psi),
+                cos(psi)*sin(theta),
+
+                sin(theta)*sin(phi),
+               -sin(theta)*cos(phi),
+                cos(theta)
+            )
+        {}
+
+
+    // Destructor
+
+        virtual ~EulerCoordinateRotation()
+        {}
+
+
+    // Return local-to-global transformation tensor
+    virtual const tensor& R() const
+    {
+        return R_;
+    }
+
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

@@ -1,0 +1,36 @@
+Probe                       = Probe
+samplingLine                = samplingLine
+
+cuttingPlane                = cuttingPlane
+
+graph                       = graph
+pointSet                    = $(graph)/pointSet
+curve                       = $(graph)/curve
+writers                     = $(graph)/writers
+
+graphField                  = graphField
+
+meshToMeshInterpolation     = meshToMeshInterpolation
+meshToMesh                  = $(meshToMeshInterpolation)/meshToMesh
+
+$(samplingLine)/pointAddressing.C
+$(samplingLine)/samplingLine.C
+
+$(cuttingPlane)/cuttingPlane.C
+
+$(curve)/curve.C
+$(graph)/graph.C
+$(writers)/rawGraph/rawGraph.C
+$(writers)/gnuplotGraph/gnuplotGraph.C
+$(writers)/xmgrGraph/xmgrGraph.C
+$(writers)/jplotGraph/jplotGraph.C
+
+$(graphField)/writePatchGraph.C
+$(graphField)/writeCellGraph.C
+$(graphField)/makeGraph.C
+
+$(meshToMesh)/meshToMesh.C
+$(meshToMesh)/calculateMeshToMeshAddressing.C
+$(meshToMesh)/calculateMeshToMeshWeights.C
+
+LIB = $(FOAM_LIBBIN)/libsampling

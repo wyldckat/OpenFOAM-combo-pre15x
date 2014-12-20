@@ -1,0 +1,9 @@
+.SUFFIXES: .java .class
+
+javac       = javac
+
+include $(GENERAL_RULES)/java$(WM_JAVAC_OPTION)
+
+javaFLAGS   = $(EXE_INC) $(javaOPT) $(javaDBUG) -classpath $(CLASS_PATH):$(CLASSES_DIR):. -deprecation
+
+javatoclass = mkdir -p $(CLASSES_DIR) ; ( $(javac) $(javaFLAGS) $$SOURCE && mkdir -p $(@D) && mv $$SOURCE_DIR/$(@F) $@ )

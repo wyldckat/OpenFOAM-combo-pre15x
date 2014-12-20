@@ -1,0 +1,15 @@
+#!/bin/sh
+case $WM_ARCH in
+  linux*)
+    CMD="wmake libso"
+    ;;
+  *)
+    CMD="wmake lib"
+esac
+
+(cd FoamXServer; $CMD)
+(cd FoamXLib; $CMD)
+(cd FoamXHostBrowser    ; wmake)
+(cd FoamXCaseBrowser    ; wmake)
+(cd FoamXCaseServer     ; wmake)
+#(cd FoamXCasePostServer ; wmake)

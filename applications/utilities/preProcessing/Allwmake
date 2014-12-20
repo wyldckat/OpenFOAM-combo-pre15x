@@ -1,0 +1,9 @@
+#!/bin/sh
+
+set -x
+
+(cd FoamX ; ./Allwmake)
+
+wmake boxTurb
+wmake mapFields
+wmake engineSwirl

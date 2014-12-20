@@ -1,0 +1,110 @@
+#!/bin/sh
+#------------------------------------------------------------------------------
+# =========                 |
+# \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+#  \\    /   O peration     |
+#   \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+#    \\/     M anipulation  |
+#-------------------------------------------------------------------------------
+# License
+#     This file is part of OpenFOAM.
+#
+#     OpenFOAM is free software; you can redistribute it and/or modify it
+#     under the terms of the GNU General Public License as published by the
+#     Free Software Foundation; either version 2 of the License, or (at your
+#     option) any later version.
+#
+#     OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+#     ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+#     FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+#     for more details.
+#
+#     You should have received a copy of the GNU General Public License
+#     along with OpenFOAM; if not, write to the Free Software Foundation,
+#     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#
+# Script
+#     foamDistccd
+#
+# Description
+#     Script to control distccd daemons. (distcc/distccd is a distributed
+#     C/C++ compilation frontend). Distccd daemons need to be running
+#     on all platforms one wants to build on. The platforms are specified
+#     in the DISTCC_HOSTS environment variable.
+#
+#------------------------------------------------------------------------------
+
+printUsage()
+{
+    echo "Usage : `basename $0` start|stop|list"
+    echo ""
+}
+
+RSH='ssh'
+
+if [ ! "$DISTCC_HOSTS" ]; then
+    echo "`basename $0`: variable DISTCC_HOSTS not set."
+    echo "`basename $0`: please set DISTCC_HOSTS to the list of hosts to use."
+    echo ""
+
+    exit 1
+fi
+
+if [ $# -ne 1 ]; then
+    printUsage
+    exit 1
+fi
+
+
+if [ "$1" = 'start' ]; then
+
+    for host in $DISTCC_HOSTS
+    do
+        echo ""
+        echo "Trying to start distccd on host $host ..."
+
+        machine=`echo "$host" | sed -e 's/:.*//'`
+        port=`echo "$host" | sed -e 's/.*://'`
+
+        if [ "$machine" = "$port" ]; then
+            echo "No port specified. Possible conflict with running distccd"
+            $RSH $host 'distccd --daemon --jobs `getHostInfo -nCpus`'
+        else
+            #echo "Machine:$machine  port:$port"
+            $RSH $machine "distccd --daemon --port $port"' --jobs `getHostInfo -nCpus`'
+        fi
+    done
+
+elif [ "$1" = 'stop' ]; then
+
+    for host in $DISTCC_HOSTS
+    do
+        echo ""
+        echo "Trying to stop all distccd on host $host ..."
+
+        machine=`echo "$host" | sed -e 's/:.*//'`
+
+        $RSH $machine killall distccd
+    done
+
+
+elif [ "$1" = 'list' ]; then
+
+    for host in $DISTCC_HOSTS
+    do
+        echo ""
+        echo "Trying to find process distccd on host $host ..."
+
+        machine=`echo "$host" | sed -e 's/:.*//'`
+
+        $RSH $machine "ps -ef | grep distccd | grep -v grep"
+    done
+
+else
+
+    printUsage
+    exit 1
+
+fi
+
+#------------------------------------------------------------------------------

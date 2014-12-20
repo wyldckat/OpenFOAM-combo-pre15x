@@ -1,0 +1,3 @@
+edgeMeshIO.C
+
+LIB = $(FOAM_LIBBIN)/libedgeMesh

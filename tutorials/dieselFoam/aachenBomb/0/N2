@@ -1,0 +1,46 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+version             1.0;
+format              ascii;
+root                "";
+case                "example";
+instance            "0";
+local               "";
+class               volScalarField;
+form                dictionary;
+object              N2;
+
+// ************************************************************************* //
+
+dimensions          [ 0 0 0 0 0 0 0 ];
+
+internalField       uniform 0.766;
+
+referenceLevel      0;
+
+boundaryField
+{
+    walls
+    {
+        type                zeroGradient;
+    }
+
+	front
+	{
+		type				wedge;
+	}
+
+	back
+	{
+		type				wedge;
+	}
+
+}
+
+// ************************************************************************* //

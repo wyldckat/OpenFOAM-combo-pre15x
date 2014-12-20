@@ -1,0 +1,86 @@
+orientedSurface                       = orientedSurface
+
+booleanOps                            = booleanOps
+booleanSurface                        = $(booleanOps)/booleanSurface
+intersectedSurface                    = $(booleanOps)/intersectedSurface
+surfaceIntersection                   = $(booleanOps)/surfaceIntersection
+
+faceTriangulation                     = faceTriangulation
+meshTriangulation                     = meshTriangulation
+
+triSurface                            = triSurface
+octreeData                            = $(triSurface)/octreeData
+triSurfaceTools                       = $(triSurface)/triSurfaceTools
+geometricSurfacePatch                 = $(triSurface)/geometricSurfacePatch
+surfacePatch                          = $(triSurface)/surfacePatch
+triSurfaceSearch                      = $(triSurface)/triSurfaceSearch
+
+interfaces                            = $(triSurface)/interfaces
+DX                                    = $(interfaces)/DX
+GTS                                   = $(interfaces)/GTS
+OBJ                                   = $(interfaces)/OBJ
+SMESH                                 = $(interfaces)/SMESH
+OFF                                   = $(interfaces)/OFF
+STL                                   = $(interfaces)/STL
+TRI                                   = $(interfaces)/TRI
+AC3D                                  = $(interfaces)/AC3D
+
+tools                                 = tools
+hashSignedLabel                       = $(tools)/hashSignedLabel
+labelPair                             = $(tools)/labelPair
+labelledTri                           = $(tools)/labelledTri
+features                              = $(tools)/features
+
+triangleFuncs                         = $(tools)/triangleFuncs
+
+
+$(orientedSurface)/orientedSurface.C
+
+$(surfaceIntersection)/surfaceIntersection.C
+$(surfaceIntersection)/surfaceIntersectionFuncs.C
+$(surfaceIntersection)/edgeIntersections.C
+$(booleanSurface)/booleanSurface.C
+$(intersectedSurface)/intersectedSurface.C
+$(intersectedSurface)/edgeSurface.C
+
+$(faceTriangulation)/faceTriangulation.C
+$(meshTriangulation)/meshTriangulation.C
+
+$(triSurface)/triSurface.C
+$(triSurfaceSearch)/triSurfaceSearch.C
+$(triSurface)/triSurfaceAddressing.C
+$(triSurface)/stitchTriangles.C
+
+$(STL)/writeSTL.C
+$(STL)/readSTL.C
+$(STL)/readSTLASCII.L
+$(STL)/readSTLBINARY.C
+$(GTS)/writeGTS.C
+$(GTS)/readGTS.C
+$(OBJ)/readOBJ.C
+$(OBJ)/writeOBJ.C
+$(SMESH)/writeSMESH.C
+$(OFF)/readOFF.C
+$(OFF)/writeOFF.C
+$(TRI)/writeTRI.C
+$(TRI)/readTRI.C
+$(DX)/writeDX.C
+$(AC3D)/readAC.C
+$(AC3D)/writeAC.C
+
+$(octreeData)/octreeDataTriSurface.C
+$(octreeData)/octreeDataTriSurfaceTreeLeaf.C
+
+$(triSurfaceTools)/triSurfaceTools.C
+
+$(geometricSurfacePatch)/geometricSurfacePatch.C
+$(surfacePatch)/surfacePatch.C
+$(surfacePatch)/surfacePatchIOList.C
+
+$(triangleFuncs)/triangleFuncs.C
+
+$(labelledTri)/sortLabelledTri.C
+
+$(features)/features.C
+
+LIB = $(FOAM_LIBBIN)/libtriSurface

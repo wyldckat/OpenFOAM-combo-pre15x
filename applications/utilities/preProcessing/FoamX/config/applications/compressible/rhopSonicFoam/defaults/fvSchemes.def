@@ -1,0 +1,49 @@
+default
+{
+
+ddtSchemes
+{
+    default Euler;
+}
+
+gradSchemes
+{
+    default         Gauss linear;
+    grad(p)         Gauss linear;
+    grad(U)         Gauss linear;
+}
+
+divSchemes
+{
+    default         none;
+    div(phiv,rho)   Gauss Gamma2 1;
+    div(phiv,rhoU)  Gauss Gamma2V 1;
+    div(phid,p)     Gauss Gamma2 0.2;
+    div(phiv,p)     Gauss Gamma2 0.2;
+    div(phiv2,p)    Gauss Gamma2 1;
+    div(phiv,rhoE)  Gauss Gamma2 1;
+}
+
+laplacianSchemes
+{
+    default         none;
+    laplacian(1|A(rhoU),p) Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    p;
+}
+
+}

@@ -1,0 +1,40 @@
+default
+{
+
+applicationClass XiFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         0.005;
+
+deltaT          5e-06;
+
+writeControl    timeStep;
+
+writeInterval   10;
+
+cycleWrite      0;
+
+writeFormat     ascii;
+
+writePrecision  6;
+
+writeCompression uncompressed;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable yes;
+
+adjustTimeStep no;
+
+maxCo          0.2;
+
+maxDeltaT      1.0;
+
+};

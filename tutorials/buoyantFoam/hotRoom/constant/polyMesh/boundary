@@ -1,0 +1,52 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version 2.0;
+    format ascii;
+
+    root "";
+    case "";
+    instance "";
+    local "";
+
+    class polyBoundaryMesh;
+    object boundary;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+3
+(
+floor
+{
+    type wall;
+    physicalType wallFixedTemp;
+    nFaces 400;
+    startFace 11200;
+}
+
+ceiling
+{
+    type wall;
+    physicalType wallFixedTemp;
+    nFaces 400;
+    startFace 11600;
+}
+
+fixedWalls
+{
+    type wall;
+    physicalType wallAdiabatic;
+    nFaces 800;
+    startFace 12000;
+}
+)
+
+// ************************************************************************* //

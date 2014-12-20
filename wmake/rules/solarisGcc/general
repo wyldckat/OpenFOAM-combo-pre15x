@@ -1,0 +1,19 @@
+CPP        = /usr/ccs/lib/cpp -undef $(WM_CPP_OPTIONS)
+
+GLIBS      = -L$(FOAM_LIBBIN)/dummy -lPstream -lm -lnsl -lsocket
+
+PROJECT_LIBS = -L$(FOAM_LIBBIN)/dummy
+
+include $(RULES)/X
+
+include $(GENERAL_RULES)/sourceToDep
+
+include $(GENERAL_RULES)/java
+include $(GENERAL_RULES)/flex
+include $(GENERAL_RULES)/flex++
+include $(GENERAL_RULES)/byacc
+include $(GENERAL_RULES)/btyacc++
+include $(GENERAL_RULES)/moc
+
+include $(RULES)/c
+include $(RULES)/c++

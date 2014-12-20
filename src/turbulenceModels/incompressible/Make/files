@@ -1,0 +1,18 @@
+turbulenceModel/turbulenceModel.C
+turbulenceModel/newTurbulenceModel.C
+laminar/laminar.C
+LRR/LRR.C
+LamBremhorstKE/LamBremhorstKE.C
+LaunderSharmaKE/LaunderSharmaKE.C
+LienCubicKE/LienCubicKE.C
+LienCubicKELowRe/LienCubicKELowRe.C
+LienLeschzinerLowRe/LienLeschzinerLowRe.C
+NonlinearKEShih/NonlinearKEShih.C
+RNGkEpsilon/RNGkEpsilon.C
+kEpsilon/kEpsilon.C
+QZeta/QZeta.C
+LaunderGibsonRSTM/LaunderGibsonRSTM.C
+SpalartAllmaras/SpalartAllmaras.C
+realizableKE/realizableKE.C
+
+LIB = $(FOAM_LIBBIN)/libincompressibleTurbulenceModels

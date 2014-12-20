@@ -1,0 +1,23 @@
+// Processor - processor connections table.
+
+// 4x3 processor decomposition
+//
+// Gives per processor left-bottom-right-top processor
+(
+// l  b  r  t
+(        1  3)  //0
+(  0     2  4)
+(  1        5)  //2
+
+(     0  4  6)
+(  3  1  5  7)  //4
+(  4  2     8)
+
+(     3  7  9)  //6
+(  6  4  8 10)
+(  7  5    11)  //8
+
+(     6 10   )
+(  9 7  11   ) //10
+( 10 8       )
+)

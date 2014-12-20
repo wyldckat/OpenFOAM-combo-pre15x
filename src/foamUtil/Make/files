@@ -1,0 +1,2 @@
+libfoamUtil.C
+LIB = $(FOAM_LIBBIN)/libfoamUtil

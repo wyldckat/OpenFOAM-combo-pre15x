@@ -1,0 +1,126 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    shapeToCell
+
+Description
+    TopoSetSource. Select cells based on cell shape. Handles all ones from
+    cellModeller and splitHex with 10 degrees feature angle.
+
+SourceFiles
+    shapeToCell.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef shapeToCell_H
+#define shapeToCell_H
+
+#include "topoSetSource.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class shapeToCell Declaration
+\*---------------------------------------------------------------------------*/
+
+class shapeToCell
+:
+    public topoSetSource
+{
+
+    // Private data
+
+        //- Add usage string
+        static addToUsageTable usage_;
+
+        //- Name of cell type
+        word type_;
+
+    // Private Member Functions
+
+        //- Depending on cell type add to or delete from cellSet.
+        void combine(topoSet& set, const bool add) const;
+
+
+public:
+
+    //- Runtime type information
+    TypeName("shapeToCell");
+
+
+    // Static data
+
+        //- cos of feature angle for polyHedral to be splitHex
+        static scalar featureCos;
+
+    // Constructors
+
+        //- Construct from components
+        shapeToCell
+        (
+            const polyMesh& mesh,
+            const word& type
+        );
+
+        //- Construct from dictionary
+        shapeToCell
+        (
+            const polyMesh& mesh,
+            const dictionary& dict
+        );
+
+        //- Construct from Istream
+        shapeToCell
+        (
+            const polyMesh& mesh,
+            Istream&
+        );
+
+
+    // Destructor
+
+        virtual ~shapeToCell();
+
+
+    // Member Functions
+
+        virtual void applyToSet(const topoSetSource::setAction action, topoSet&)
+         const;
+
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

@@ -1,0 +1,19 @@
+#!/bin/sh
+
+for CD in `find . -name "controlDict.def"`
+do
+    mv $CD $CD.bak
+
+    cat $CD.bak | sed s/"^ "/"\%"/g | sed s%'\\'%'\\\\'%g |
+    while read line
+    do
+        echo "$line" |  sed s/"^\%"/" "/g >> $CD
+        case $line in
+            writeFormat*)
+            echo "" >> $CD
+            echo "writePrecision  6;" >> $CD
+            ;;
+        esac
+    done
+done
+

@@ -1,0 +1,5 @@
+vertexMarkup.C
+mixerVessel/mixerMesh.C
+icoTopoFoam.C
+
+EXE = $(FOAM_APPBIN)/icoTopoFoam

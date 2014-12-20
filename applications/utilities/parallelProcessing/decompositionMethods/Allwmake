@@ -1,0 +1,2 @@
+wmake libso metisDecomp/metis-4.0/Lib
+wmake libso

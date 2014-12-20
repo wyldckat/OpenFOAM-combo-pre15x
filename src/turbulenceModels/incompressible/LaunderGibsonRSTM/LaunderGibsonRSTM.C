@@ -1,0 +1,348 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+\*---------------------------------------------------------------------------*/
+
+#include "LaunderGibsonRSTM.H"
+#include "addToRunTimeSelectionTable.H"
+#include "wallFvPatch.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace turbulenceModels
+{
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(LaunderGibsonRSTM, 0);
+addToRunTimeSelectionTable(turbulenceModel, LaunderGibsonRSTM, dictionary);
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// from components
+LaunderGibsonRSTM::LaunderGibsonRSTM
+(
+    const volVectorField& U,
+    const surfaceScalarField& phi,
+    transportModel& lamTransportModel
+)
+:
+    turbulenceModel(typeName, U, phi, lamTransportModel),
+
+    Cmu(turbulenceModelCoeffs_.lookup("Cmu")),
+    Clg1(turbulenceModelCoeffs_.lookup("Clg1")),
+    Clg2(turbulenceModelCoeffs_.lookup("Clg2")),
+    C1(turbulenceModelCoeffs_.lookup("C1")),
+    C2(turbulenceModelCoeffs_.lookup("C2")),
+    Cs(turbulenceModelCoeffs_.lookup("Cs")),
+    Ceps(turbulenceModelCoeffs_.lookup("Ceps")),
+    alphaR(turbulenceModelCoeffs_.lookup("alphaR")),
+    alphaEps(turbulenceModelCoeffs_.lookup("alphaEps")),
+    C1Ref(turbulenceModelCoeffs_.lookup("C1Ref")),
+    C2Ref(turbulenceModelCoeffs_.lookup("C2Ref")),
+    couplingFactor_(0.0),
+
+    yr_(mesh_),
+
+    R_
+    (
+        IOobject
+        (
+            "R",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
+    ),
+
+    k_
+    (
+        IOobject
+        (
+            "k",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
+    ),
+
+    epsilon_
+    (
+        IOobject
+        (
+            "epsilon",
+            runTime_.timeName(),
+            mesh_,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh_
+    ),
+
+    nut_(Cmu*sqr(k_)/(epsilon_ + epsilonSmall_))
+{
+#   include "wallViscosityI.H"
+
+    if (turbulenceModelCoeffs_.found("couplingFactor"))
+    {
+        turbulenceModelCoeffs_.lookup("couplingFactor") >> couplingFactor_;
+
+        if (couplingFactor_ < 0.0 || couplingFactor_ > 1.0)
+        {
+            FatalErrorIn
+            (
+                "LaunderGibsonRSTM::LaunderGibsonRSTM"
+                "(const volVectorField& U, const surfaceScalarField& phi,"
+                "transportModel& lamTransportModel)"
+            )   << "couplingFactor = " << couplingFactor_
+                << " is not in range 0 - 1"
+                << exit(FatalError);
+        }
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+tmp<fvVectorMatrix> LaunderGibsonRSTM::divR(volVectorField& U) const
+{
+    if (couplingFactor_ > 0.0)
+    {
+        return
+        (
+            fvc::div(R_ + couplingFactor_*nut_*fvc::grad(U), "div(R)")
+          + fvc::laplacian((1.0-couplingFactor_)*nut_, U, "laplacian(nuEff,U)")
+          - fvm::laplacian(nuEff(), U)
+        );
+    }
+    else
+    {
+        return
+        (
+            fvc::div(R_)
+          + fvc::laplacian(nut_, U, "laplacian(nuEff,U)")
+          - fvm::laplacian(nuEff(), U)
+        );
+    }
+}
+
+
+bool LaunderGibsonRSTM::read()
+{
+    if (turbulenceModel::read())
+    {
+        turbulenceModelCoeffs_.lookup("Cmu") >> Cmu;
+        turbulenceModelCoeffs_.lookup("Clg1") >> Clg1;
+        turbulenceModelCoeffs_.lookup("Clg2") >> Clg2;
+        turbulenceModelCoeffs_.lookup("C1") >> C1;
+        turbulenceModelCoeffs_.lookup("C2") >> C2;
+        turbulenceModelCoeffs_.lookup("Cs") >> Cs;
+        turbulenceModelCoeffs_.lookup("Ceps") >> Ceps;
+        turbulenceModelCoeffs_.lookup("alphaR") >> alphaR;
+        turbulenceModelCoeffs_.lookup("alphaEps") >> alphaEps;
+        turbulenceModelCoeffs_.lookup("C1Ref") >> C1Ref;
+        turbulenceModelCoeffs_.lookup("C2Ref") >> C2Ref;
+
+        turbulenceModelCoeffs_.lookup("couplingFactor") >> couplingFactor_;
+
+        if (couplingFactor_ < 0.0 || couplingFactor_ > 1.0)
+        {
+            FatalErrorIn("LaunderGibsonRSTM::read()")
+                << "couplingFactor = " << couplingFactor_
+                << " is not in range 0 - 1"
+                << exit(FatalError);
+        }
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+void LaunderGibsonRSTM::correct()
+{
+    transportModel_.correct();
+
+    if (!turbulence_)
+    {
+        return;
+    }
+
+    turbulenceModel::correct();
+
+    if (mesh_.moving())
+    {
+        yr_.correct();
+    }
+
+    volTensorField P = -(R_ & fvc::grad(U_));
+    P += P.T();
+
+    volScalarField G = 0.5*tr(P);
+
+
+    // Dissipation equation
+
+#   include "wallDissipationI.H"
+
+    tmp<fvScalarMatrix> epsEqn
+    (
+        fvm::ddt(epsilon_)
+      + fvm::div(phi_, epsilon_)
+    //- fvm::laplacian(Ceps*(k_/epsilon_)*R_, epsilon_)
+      - fvm::laplacian(DepsilonEff(), epsilon_)
+     ==
+        C1*G*epsilon_/k_ + boundarySource
+      - fvm::Sp(C2*epsilon_/k_ + boundaryCentral, epsilon_)
+    );
+
+    epsEqn().relax();
+    solve(epsEqn);
+    bound(epsilon_, epsilon0_);
+
+
+    // Reynolds stress equation
+
+    const fvPatchList& patches = mesh_.boundary();
+
+    forAll(patches, patchi)
+    {
+        const fvPatch& currPatch = patches[patchi];
+
+        if (typeid(currPatch) == typeid(wallFvPatch))
+        {
+            forAll(currPatch, facei)
+            {
+                label faceCelli = currPatch.faceCells()[facei];
+                P[faceCelli] *=
+                    min(G[faceCelli]/(0.5*tr(P[faceCelli]) + SMALL), 1.0);
+            }
+        }
+    }
+
+    volTensorField reflect = C1Ref*epsilon_/k_*R_ - C2Ref*Clg2*dev(P);
+
+    tmp<fvTensorMatrix> REqn
+    (
+        fvm::ddt(R_)
+      + fvm::div(phi_, R_)
+    //- fvm::laplacian(Cs*(k_/epsilon_)*R_, R_)
+      - fvm::laplacian(DREff(), R_)
+      ==
+        P
+      - fvm::Sp(Clg1*epsilon_/k_, R_)
+      + (2.0/3.0*(Clg1 - 1)*I)*epsilon_
+      - Clg2*dev(P)
+
+        // wall reflection terms
+      + (
+            I*((yr_.n() & reflect) & yr_.n())
+          - 1.5*(yr_.n()*(reflect & yr_.n())
+          + (yr_.n() & reflect)*yr_.n())
+        )*pow(Cmu, 0.75)*pow(k_, 1.5)/(kappa_*yr_*epsilon_)
+    );
+
+    REqn().relax();
+    solve(REqn);
+
+    R_.max
+    (
+        dimensionedTensor
+        (
+            "zero",
+            R_.dimensions(),
+            tensor
+            (
+                k0_.value(), -GREAT, -GREAT,
+                -GREAT, k0_.value(), -GREAT,
+                -GREAT, -GREAT, k0_.value()
+            )
+        )
+    );
+
+    k_ == 0.5*tr(R_);
+    bound(k_, k0_);
+
+
+    // Re-calculate turbulent viscosity
+    nut_ = Cmu*sqr(k_)/(epsilon_ + epsilonSmall_);
+
+
+#   include "wallViscosityI.H"
+
+
+    // Correct wall shear stresses
+
+    forAll(patches, patchi)
+    {
+        const fvPatch& currPatch = patches[patchi];
+
+        if (typeid(currPatch) == typeid(wallFvPatch))
+        {
+            tensorField& Rw = R_.boundaryField()[patchi];
+
+            const scalarField& nutw = nut_.boundaryField()[patchi];
+
+            vectorField snGradU = U_.boundaryField()[patchi].snGrad();
+
+            const vectorField& faceAreas
+                = mesh_.Sf().boundaryField()[patchi];
+
+            const scalarField& magFaceAreas
+                = mesh_.magSf().boundaryField()[patchi];
+
+            forAll(currPatch, facei)
+            {
+                // Calculate near-wall velocity gradient
+                tensor gradUw
+                    = (faceAreas[facei]/magFaceAreas[facei])*snGradU[facei];
+
+                // Calculate near-wall shear-stress tensor
+                tensor tauw = -nutw[facei]*2*symm(gradUw);
+
+                // Reset the shear components of the stress tensor
+                Rw[facei].xy() = Rw[facei].yx() = tauw.xy();
+                Rw[facei].xz() = Rw[facei].zx() = tauw.xz();
+                Rw[facei].yz() = Rw[facei].zy() = tauw.yz();
+            }
+        }
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace turbulenceModels
+} // End namespace Foam
+
+// ************************************************************************* //

@@ -1,0 +1,10 @@
+#!/bin/sh
+set -x
+
+wmake rhoTurbFoam
+wmake sonicFoam
+wmake rhoSonicFoam
+wmake rhopSonicFoam
+wmake sonicFoamAutoMotion
+wmake sonicLiquidFoam
+wmake sonicTurbFoam

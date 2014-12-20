@@ -1,0 +1,291 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "ComponentMixedPointPatchVectorField.H"
+#include "constraints.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+void ComponentMixedPointPatchVectorField<PatchField, PointPatch>
+::checkFieldSize() const
+{
+    if
+    (
+        this->size() != this->patchMesh().size()
+     || refValue_.size() != this->patchMesh().size()
+     || valueFraction_.size() != this->patchMesh().size()
+    )
+    {
+        FatalErrorIn
+        (
+            "void ComponentMixedPointPatchVectorField::checkField() const"
+        )   << "field does not correspond to patch. " << endl
+            << "Field size: " << this->size()
+            << " value size: " << refValue_.size()
+            << " valueFraction size: " << valueFraction_.size()
+            << " patch size: " << this->patchMesh().size()
+            << abort(FatalError);
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+ComponentMixedPointPatchVectorField<PatchField, PointPatch>::
+ComponentMixedPointPatchVectorField
+(
+    const PointPatch& p,
+    const vectorField& iF
+)
+:
+    PatchField<vector>(p, iF),
+    refValue_(p.size()),
+    valueFraction_(p.size())
+{}
+
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+ComponentMixedPointPatchVectorField<PatchField, PointPatch>::
+ComponentMixedPointPatchVectorField
+(
+    const PointPatch& p,
+    const vectorField& iF,
+    const vectorField& v,
+    const vectorField& vf
+)
+:
+    PatchField<vector>(p, iF),
+    refValue_(v),
+    valueFraction_(vf)
+{
+    checkFieldSize();
+}
+
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+ComponentMixedPointPatchVectorField<PatchField, PointPatch>::
+ComponentMixedPointPatchVectorField
+(
+    const PointPatch& p,
+    const vectorField& iF,
+    const dictionary& dict
+)
+:
+    PatchField<vector>(p, iF),
+    refValue_("refValue", dict, p.size()),
+    valueFraction_("valueFraction", dict, p.size())
+{
+    this->updateBoundaryField();
+}
+
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+ComponentMixedPointPatchVectorField<PatchField, PointPatch>::
+ComponentMixedPointPatchVectorField
+(
+    const ComponentMixedPointPatchVectorField<PatchField, PointPatch>& ptf,
+    const PointPatch& p,
+    const vectorField& iF,
+    const PointPatchFieldMapper& mapper
+)
+:
+    PatchField<vector>(p, iF),
+    refValue_(ptf.refValue_, (const FieldMapper&)mapper),
+    valueFraction_(ptf.valueFraction_, (const FieldMapper&)mapper)
+{}
+
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+ComponentMixedPointPatchVectorField<PatchField, PointPatch>::
+ComponentMixedPointPatchVectorField
+(
+    const ComponentMixedPointPatchVectorField<PatchField, PointPatch>& ptf,
+    const vectorField& iF
+)
+:
+    PatchField<vector>(ptf, iF),
+    refValue_(ptf.refValue_),
+    valueFraction_(ptf.valueFraction_)
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::autoMap
+(
+    const PointPatchFieldMapper& m
+)
+{
+    refValue_.autoMap((const FieldMapper&)(m));
+    valueFraction_.autoMap((const FieldMapper&)(m));
+}
+
+
+// Grab the values using rmap
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::rmap
+(
+    const PointPatchField<PatchField, PointPatch, vector>& ptf,
+    const labelList& addr
+)
+{
+    const ComponentMixedPointPatchVectorField& mptf =
+        refCast<const ComponentMixedPointPatchVectorField>(ptf);
+
+    refValue_.rmap(mptf.refValue_, addr);
+    valueFraction_.rmap(mptf.valueFraction_, addr);
+}
+
+
+// Evaluate patch field
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::evaluate()
+{
+    tmp<vectorField> internalValues = this->patchInternalField();
+
+    // Get internal field to insert values into
+    vectorField& iF = ((vectorField&)(this->internalField()));
+
+    vectorField values =
+        scale(refValue_, valueFraction_)
+      + scale(internalValues, vector::one - valueFraction_);
+
+    this->setInInternalField(iF, values);
+}
+
+
+// Set boundary condition to matrix
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::
+setBoundaryCondition
+(
+    Map<constraint<vector> > & fix
+) const
+{
+    // get addressing
+    const labelList& meshPoints = this->patchMesh().meshPoints();
+
+    // The boundary nod eequation expects a list of valueFractions
+    // associated with each component.  In order to enforce
+    // consistency, the valueFraction is stored as a vector.
+
+    forAll (meshPoints, pointI)
+    {
+        const label curPoint = meshPoints[pointI];
+
+        // create a constraint
+        constraint<vector> bc =
+            constraint<vector>
+            (
+                curPoint,
+                refValue_[pointI],
+                cmptMag(valueFraction_[pointI])
+            );
+
+        // If pointer is not set, add it, otherwise combine with
+        // already existing value
+        if (!fix.found(curPoint))
+        {
+            fix.insert(curPoint, bc);
+        }
+        else
+        {
+            fix[curPoint].combine(bc);
+        }
+    }
+}
+
+
+// Write
+template
+<
+    template<class> class PatchField,
+    class PointPatch
+>
+void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::
+write(Ostream& os) const
+{
+    PatchField<vector>::write(os);
+    refValue_.writeEntry("refValue", os);
+    valueFraction_.writeEntry("valueFraction", os);
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

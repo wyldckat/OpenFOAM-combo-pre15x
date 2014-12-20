@@ -1,0 +1,3 @@
+scalePoints.C
+
+EXE = $(FOAM_APPBIN)/scalePoints

@@ -1,0 +1,9 @@
+decomposeMesh.C
+decomposePar.C
+domainDecomposition.C
+distributeCells.C
+geometricFvFieldDecomposer.C
+geometricTetPointFieldDecomposer.C
+lagrangianFieldDecomposer.C
+
+EXE = $(FOAM_APPBIN)/decomposePar

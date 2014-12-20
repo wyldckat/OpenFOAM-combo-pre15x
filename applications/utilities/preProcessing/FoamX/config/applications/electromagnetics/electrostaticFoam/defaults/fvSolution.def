@@ -1,0 +1,10 @@
+default
+{
+
+solvers
+{
+    phi             ICCG 1e-08 0.2;
+    rho             BICCG 1e-08 0.2;
+}
+
+}

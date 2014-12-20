@@ -1,0 +1,10 @@
+#!/bin/sh
+set -x
+
+wmake XiFoam
+wmake Xoodles
+wmake reactingFoam
+wmake coldEngineFoam
+wmake engineFoam
+wmake dieselFoam
+wmake dieselEngineFoam

@@ -1,0 +1,21 @@
+EXE_INC = \
+    -I../lesInterFoam \
+    -I../interFoam \
+    -I../interFoam/Up \
+    -I../interFoam/Up/correctPhi \
+    -I../interFoam/twoPhaseTransportModel \
+    -I../interFoam/interfaceProperties \
+    -I$(LIB_SRC)/cfdTools/incompressible  \
+    -I$(LIB_SRC)/cfdTools/lnInclude \
+    -I$(LIB_SRC)/turbulenceModels \
+    -I$(LIB_SRC)/transportModels \
+    -I$(LIB_SRC)/sampling/lnInclude 
+
+EXE_LIBS = \
+    ../interFoam/Make/$(WM_OPTIONS)/twoPhase.o \
+    ../interFoam/Make/$(WM_OPTIONS)/interfaceProperties.o \
+    ../interFoam/Make/$(WM_OPTIONS)/gammaContactAngleFvPatchScalarField.o \
+    -lincompressibleTransportModels \
+    -lincompressibleTurbulenceModels \
+    -lcfdTools \
+	-lmeshTools

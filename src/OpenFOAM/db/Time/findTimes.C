@@ -1,0 +1,89 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+    Searches the current case directory for valid times
+    and sets the time list to these.
+    This is done if a times File does not exist.
+
+\*---------------------------------------------------------------------------*/
+
+#include "Time.H"
+#include "OSspecific.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+instantList Time::findTimes(const fileName& directory)
+{
+    if (debug)
+    {
+        Info<< "Time::findTimes(const fileName&): finding times in directory "
+            << directory << endl;
+    }
+
+    // Read directory entries into a list
+    fileNameList dirEntries(readDir(directory, fileName::DIRECTORY));
+
+    // Initialise instant list
+    instantList Times(dirEntries.size() + 1);
+    Times[0].value() = 0;
+    Times[0].name() = "constant";
+
+    // Temporary variables and counters
+    label nTimes = 1;
+    double f;
+
+    // Read and parse all the entries in the directory
+    forAll(dirEntries, i)
+    {
+        if (sscanf(dirEntries[i].c_str(), "%lf", &f) == 1)
+        {
+            Times[nTimes].value() = f;
+            Times[nTimes].name() = dirEntries[i];
+            nTimes++;
+        }
+    }
+
+    // Reset the length of the times list
+    Times.setSize(nTimes);
+
+    if (nTimes > 1)
+    {
+        std::sort(&Times[1], Times.end(), instant::less());
+    }
+
+    return Times;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

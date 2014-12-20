@@ -1,0 +1,143 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    faSchemes
+
+Description
+    Selector class for finite area differencing schemes.
+    faMesh is derived from faShemes so that all fields have access to the
+    faSchemes from the mesh reference they hold.
+
+SourceFiles
+    faSchemes.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef faSchemes_H
+#define faSchemes_H
+
+#include "IOdictionary.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class faSchemes Declaration
+\*---------------------------------------------------------------------------*/
+
+class faSchemes
+:
+    public IOdictionary
+{
+
+public:
+
+    enum timeSchemes
+    {
+        SS,
+        EI,
+        BD,
+        CN
+    };
+
+
+private:
+
+    // Private data
+
+        timeSchemes timeScheme_;
+
+        dictionary interpolationSchemes_;
+        ITstream defaultInterpolationScheme_;
+
+        dictionary divSchemes_;
+        ITstream defaultDivScheme_;
+
+        dictionary gradSchemes_;
+        ITstream defaultGradScheme_;
+
+        dictionary snGradSchemes_;
+        ITstream defaultSnGradScheme_;
+
+        dictionary laplacianSchemes_;
+        ITstream defaultLaplacianScheme_;
+
+        dictionary fluxRequired_;
+
+
+    // Private Member Functions
+
+        //- Disallow default bitwise copy construct and assignment
+        faSchemes(const faSchemes&);
+        void operator=(const faSchemes&);
+
+
+public:
+
+    // Constructors
+
+        //- Construct from objectRegistry
+        faSchemes(const objectRegistry& obr);
+
+
+    // Member Functions
+
+        // Access
+
+            const dictionary& schemesDict() const;
+
+            timeSchemes timeScheme() const;
+
+            ITstream& interpolationScheme(const word& name) const;
+
+            ITstream& divScheme(const word& name) const;
+
+            ITstream& gradScheme(const word& name) const;
+
+            ITstream& snGradScheme(const word& name) const;
+
+            ITstream& laplacianScheme(const word& name) const;
+
+            bool fluxRequired(const word& name) const;
+
+
+        // Read
+
+            //- Read the faSchemes
+            bool read();
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

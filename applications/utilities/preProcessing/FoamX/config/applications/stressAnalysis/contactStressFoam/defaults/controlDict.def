@@ -1,0 +1,35 @@
+default
+{
+
+
+applicationClass    contactStressFoam;
+
+startFrom           startTime;
+
+startTime           0;
+
+stopAt              endTime;
+
+endTime             500;
+
+deltaT              1;
+
+writeControl        timeStep;
+
+writeInterval       500;
+
+cycleWrite          0;
+
+writeFormat         ascii;
+
+writePrecision      6;
+
+writeCompression    uncompressed;
+
+timeFormat          general;
+
+timePrecision       6;
+
+runTimeModifiable   yes;
+
+};

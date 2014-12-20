@@ -1,0 +1,147 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    prefixOSstream
+
+Description
+    Version of OSstream which prints a prefix on each line.
+    This is useful for running in parallel as it allows the processor number
+    to be automatically preprended to each message line.
+
+SourceFiles
+    prefixOSwrite.C
+    prefixOSprint.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef prefixOSstream_H
+#define prefixOSstream_H
+
+#include "OSstream.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class prefixOSstream Declaration
+\*---------------------------------------------------------------------------*/
+
+class prefixOSstream
+:
+    public OSstream
+{
+    // Private data
+
+        bool printPrefix_;
+        string prefix_;
+
+
+    // Private member functions
+
+        inline void checkWritePrefix();
+
+
+public:
+
+    // Constructors
+
+        //- Set stream status
+        prefixOSstream
+        (
+            ostream& os,
+            const string& name,
+            streamFormat format=ASCII,
+            versionNumber version=currentVersion,
+            compressionType compression=UNCOMPRESSED
+        )
+        :
+            OSstream(os, name, format, version, compression),
+            printPrefix_(true),
+            prefix_("")
+        {}
+
+
+    // Member functions
+
+        // Enquiry
+
+            //- Return the prefix of the stream
+            const string& prefix() const
+            {
+                return prefix_;
+            }
+
+            //- Return non-const access to the prefix of the stream
+            string& prefix()
+            {
+                return prefix_;
+            }
+
+
+        // Write functions
+
+            //- Write character
+            virtual Ostream& write(const char);
+
+            //- Write character string
+            virtual Ostream& write(const char*);
+
+            //- Write word
+            virtual Ostream& write(const word&);
+
+            //- Write string
+            virtual Ostream& write(const string&);
+
+            //- Write label
+            virtual Ostream& write(const label);
+
+            //- Write scalar
+            virtual Ostream& write(const scalar);
+
+            //- Write binary block
+            virtual Ostream& write(const char*, std::streamsize);
+
+            //- Add indentation characters
+            virtual void indent();
+
+
+        // Print
+
+            //- Print description of IOstream to Ostream
+            virtual void print(Ostream&) const;
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

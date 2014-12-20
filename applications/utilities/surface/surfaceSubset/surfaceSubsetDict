@@ -1,0 +1,38 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "/home/penfold/mattijs/foam/mattijs2.2/run/icoFoam";
+    case            "cavityTut";
+    instance        "system";
+    local           "";
+
+    class           dictionary;
+    object          surfaceSubsetDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+localPoints ( );
+
+edges ();
+
+faces ();
+
+zone (
+(0      -10000  125)
+(10000   10000  10000)
+);
+
+addFaceNeighbours no;
+
+// ************************************************************************* //

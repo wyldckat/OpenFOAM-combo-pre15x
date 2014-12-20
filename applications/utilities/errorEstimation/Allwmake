@@ -1,0 +1,8 @@
+#!/bin/sh
+
+set -x
+
+wmake estimateScalarError
+wmake icoErrorEstimate
+wmake momentScalarError
+wmake icoMomentError

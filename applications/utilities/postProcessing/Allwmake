@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -x
+
+(cd dataConversion ; ./Allwmake)
+(cd graphics ; ./Allwmake)
+(cd scalarField ; ./Allwmake)
+(cd velocityField ; ./Allwmake)
+(cd stressField ; ./Allwmake)
+(cd wall ; ./Allwmake)
+(cd miscellaneous ; ./Allwmake)

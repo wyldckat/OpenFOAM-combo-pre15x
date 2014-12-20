@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -x
+
+(cd ccm24ToFoam ; ./Allwmake)
+wmake starToFoam
+wmake sammToFoam
+wmake ideasToFoam
+wmake cfxToFoam
+wmake gambitToFoam
+wmake fluentMeshToFoam
+wmake kivaToFoam
+wmake plot3dToFoam
+wmake netgenNeutralToFoam
+wmake foamMeshToFluent
+wmake gmshToFoam
+wmake mshToFoam
+wmake tetgenToFoam
+wmake writeMeshObj

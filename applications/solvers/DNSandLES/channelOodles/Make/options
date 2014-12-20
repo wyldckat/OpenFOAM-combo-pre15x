@@ -1,0 +1,14 @@
+EXE_INC = \
+    -I$(LIB_SRC)/LESmodels \
+    -I$(LIB_SRC)/LESmodels/LESdeltas/lnInclude \
+    -I$(LIB_SRC)/transportModels \
+    -I$(LIB_SRC)/cfdTools/incompressible \
+    -I$(LIB_SRC)/cfdTools/lnInclude \
+    -I$(LIB_SRC)/sampling/lnInclude \
+    -I../oodles
+
+EXE_LIBS = \
+    -lincompressibleLESmodels \
+    -lincompressibleTransportModels \
+    -lcfdTools \
+    -lmeshTools

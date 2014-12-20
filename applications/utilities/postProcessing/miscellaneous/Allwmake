@@ -1,0 +1,12 @@
+#!/bin/sh
+
+set -x
+
+wmake sample
+wmake sampleSurface
+wmake liftDrag
+wmake postChannel
+wmake wdot
+wmake ptot
+wmake engineCompRatio
+wmake writeCellCentres

@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Some fun: prostar uses ccmio2.3, Star-ccm+ uses ccmio2.4
+
+set -x
+
+(cd libccmio; wmake libso libadf)
+(cd libccmio; wmake libso libccmio)
+(cd ccm24ToFoam; wmake)

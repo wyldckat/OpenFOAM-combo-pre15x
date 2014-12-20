@@ -1,0 +1,187 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    ignitionSite
+
+Description
+
+SourceFiles
+    ignitionSiteI.H
+    ignitionSite.C
+    ignitionSiteIO.C
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef ignitionSite_H
+#define ignitionSite_H
+
+#include "vector.H"
+#include "labelList.H"
+#include "scalarList.H"
+#include "autoPtr.H"
+#include "dictionary.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+class Time;
+class engineTime;
+class fvMesh;
+
+/*---------------------------------------------------------------------------*\
+                           Class ignitionSite Declaration
+\*---------------------------------------------------------------------------*/
+
+class ignitionSite
+{
+    // Private data
+
+        const Time& db_;
+
+        dictionary ignitionSiteDict_;
+
+        vector location_;
+        scalar diameter_;
+        scalar time_;
+        scalar duration_;
+        scalar strength_;
+
+        labelList cells_;
+        scalarList cellVolumes_;
+
+
+    // Private Member Functions
+
+        void findIgnitionCells(const fvMesh&);
+
+
+public:
+
+    friend class ignition;
+
+
+    // Public classes
+
+        //- Class used for the read-construction of
+        //  ptrLists of ignitionSite
+        class iNew
+        {
+            const Time& db_;
+            const fvMesh& mesh_;
+        
+        public:
+
+            iNew(const Time& db, const fvMesh& mesh)
+            :
+                db_(db),
+                mesh_(mesh)
+            {}
+
+            autoPtr<ignitionSite> operator()(Istream& is) const
+            {
+                return autoPtr<ignitionSite>(new ignitionSite(is, db_, mesh_));
+            }
+        };
+
+
+    // Constructors
+
+        //- Construct from Istream and database
+        ignitionSite(Istream&, const Time&, const fvMesh&);
+
+        //- Construct from Istream and engineTime
+        ignitionSite(Istream&, const engineTime&, const fvMesh&);
+
+        //- Clone
+        autoPtr<ignitionSite> clone() const
+        {
+            return autoPtr<ignitionSite>(new ignitionSite(*this));
+        }
+
+
+    // Member Functions
+
+        // Access
+
+            const vector& location() const
+            {
+                return location_;
+            }
+
+            scalar diameter() const
+            {
+                return diameter_;
+            }
+
+            scalar time() const
+            {
+                return time_;
+            }
+
+            scalar duration() const
+            {
+                return duration_;
+            }
+
+            scalar strength() const
+            {
+                return strength_;
+            }
+
+            const labelList& cells() const
+            {
+                return cells_;
+            }
+
+            const scalarList& cellVolumes() const
+            {
+                return cellVolumes_;
+            }
+
+
+        // Check
+
+            bool igniting() const;
+
+            bool ignited() const;
+
+
+    // Member Operators
+
+        void operator=(const ignitionSite&);
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

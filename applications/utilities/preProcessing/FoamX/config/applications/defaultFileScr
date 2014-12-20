@@ -1,0 +1,33 @@
+#!/bin/sh
+
+WRITE="OFF"
+FOAM_FILE="OFF"
+FOAM_FILE="OFF"
+
+cp $2 $2.bak
+
+echo "default" > temp.$$
+echo "{" >> temp.$$
+echo "" >> temp.$$
+
+cat $1 | sed s/"^ "/"\%"/g | sed s%'\\'%'\\\\'%g |
+while read line
+do
+    if [ "$WRITE" = "ON" ] ; then
+        echo "$line" | sed s/"^\%"/" "/g >> temp.$$
+    fi
+    case $line in
+        FoamFile*) FOAM_FILE="ON";;
+        }*) 
+            if [ "$FOAM_FILE" = "ON" ] ; then
+                WRITE="ON"
+            fi
+            ;;
+    esac
+done
+
+echo "" >> temp.$$
+echo "}" >> temp.$$
+
+sed '/\/\//d' temp.$$ | uniq > $2
+rm temp.$$

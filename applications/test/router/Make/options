@@ -1,0 +1,3 @@
+EXE_INC = \
+    /* -O0 -g -DDEBUGList */ \
+    -IGather

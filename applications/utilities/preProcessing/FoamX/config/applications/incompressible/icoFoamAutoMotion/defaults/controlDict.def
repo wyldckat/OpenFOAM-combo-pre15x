@@ -1,0 +1,34 @@
+default
+{
+
+applicationClass    icoFoamAutoMotion;
+
+startFrom           startTime;
+
+startTime           0;
+
+stopAt              endTime;
+
+endTime             0.5;
+
+deltaT              0.005;
+
+writeControl        timeStep;
+
+writeInterval       20;
+
+cycleWrite          0;
+
+writeFormat         ascii;
+
+writePrecision      6;
+
+writeCompression    uncompressed;
+
+timeFormat          general;
+
+timePrecision       6;
+
+runTimeModifiable   yes;
+
+};

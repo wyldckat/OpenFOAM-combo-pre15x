@@ -1,0 +1,24 @@
+default
+{
+
+solvers
+{
+    pcorr           ICCG 1e-10 0;
+    pd              ICCG 1e-10 0;
+    gamma           BICCG 1e-06 0;
+    k               BICCG 1e-06 0;
+    epsilon         BICCG 1e-06 0;
+    R               BICCG  1e-08 0;
+    nuTilda         BICCG  1e-08 0;
+}
+
+PISO
+{
+    nCorrectors         4;
+    nNonOrthogonalCorrectors 1;
+    nGammaCorr          1;
+    nGammaSubCycles     4;
+    cGamma              1.3; 
+}
+
+}

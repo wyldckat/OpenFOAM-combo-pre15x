@@ -1,0 +1,128 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "processorFvPatch.H"
+#include "addToRunTimeSelectionTable.H"
+#include "IPstream.H"
+#include "OPstream.H"
+#include "transformField.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(processorFvPatch, 0);
+addToRunTimeSelectionTable(fvPatch, processorFvPatch, polyPatch);
+
+
+// * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
+
+// Make patch weighting factors
+void processorFvPatch::makeWeights(scalarField& w) const
+{
+    if (Pstream::parRun())
+    {
+        // The face normals point in the opposite direction on the other side
+        scalarField neighbFaceCentresCn
+        (
+            (
+                procPolyPatch_.neighbFaceAreas()
+               /(mag(procPolyPatch_.neighbFaceAreas()) + VSMALL)
+            )
+          & (
+              procPolyPatch_.neighbFaceCentres()
+            - procPolyPatch_.neighbFaceCellCentres())
+        );
+
+        w = neighbFaceCentresCn/((nf()&fvPatch::delta()) + neighbFaceCentresCn);
+    }
+    else
+    {
+        w = 1.0;
+    }
+}
+
+
+// Make patch face - neighbour cell distances
+void processorFvPatch::makeDeltaCoeffs(scalarField& dc) const
+{
+    if (Pstream::parRun())
+    {
+        dc = (1.0 - weights())/(nf() & fvPatch::delta());
+    }
+    else
+    {
+        dc = 1.0/(nf() & fvPatch::delta());
+    }
+}
+
+
+// Return delta (P to N) vectors across coupled patch
+tmp<vectorField> processorFvPatch::delta() const
+{
+    if (Pstream::parRun())
+    {
+        // To the transformation if necessary
+        if (parallel())
+        {
+            return
+                fvPatch::delta()
+              - (
+                    procPolyPatch_.neighbFaceCentres()
+                  - procPolyPatch_.neighbFaceCellCentres()
+                );
+        }
+        else
+        {
+            return
+                fvPatch::delta()
+              - transform
+                (
+                    forwardT(),
+                    (
+                        procPolyPatch_.neighbFaceCentres()
+                      - procPolyPatch_.neighbFaceCellCentres()
+                    )
+                );
+        }
+    }
+    else
+    {
+        return fvPatch::delta();
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

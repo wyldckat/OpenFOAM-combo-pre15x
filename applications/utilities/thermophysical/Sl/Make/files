@@ -1,0 +1,3 @@
+Sl.C
+
+EXE = $(FOAM_APPBIN)/Sl

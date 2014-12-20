@@ -1,0 +1,25 @@
+#!/bin/sh
+
+currDir=`pwd`
+application=`basename $currDir`
+keepCases="damBreak"
+loseCases="damBreakFine"
+utility=setGammaDamBreak
+
+tutorialPath=`dirname $0`/..
+. $tutorialPath/CleanFunctions
+
+for case in $keepCases
+do
+    cleanCase $case
+    if [ "$case" = "damBreak" ] 
+    then 
+        cp $case/0/gamma.org $case/0/gamma
+        wclean $case/$utility
+    fi
+done
+
+for case in $loseCases
+do
+    removeCase $case
+done

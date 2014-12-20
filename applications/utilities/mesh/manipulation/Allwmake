@@ -1,0 +1,34 @@
+#!/bin/sh
+
+set -x
+
+wmake scalePoints
+wmake checkMesh
+wmake attachMesh
+wmake zipUpMesh
+wmake deformedGeom
+wmake subsetMesh
+wmake mirrorMesh
+wmake flattenMesh
+wmake mergeMeshes
+wmake splitMesh
+wmake renumberMesh
+wmake tetDecomposition
+wmake moveMesh
+wmake moveEngineMesh
+wmake splitMeshRegions
+wmake insideCells
+wmake couplePatches
+wmake stitchMesh
+wmake autoPatch
+wmake refineMesh
+wmake objToVTK
+wmake createPatch
+wmake cellSet
+wmake faceSet
+wmake pointSet
+wmake fieldToCellSet
+wmake alignPatch
+#wmake setSet
+
+(cd patchTool; ./Allwmake)

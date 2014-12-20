@@ -1,0 +1,42 @@
+default
+{
+
+ddtSchemes
+{
+    default Euler;
+}
+
+gradSchemes
+{
+    default         leastSquares;
+}
+
+divSchemes
+{
+    default         none;
+    div(rhoFlux,rho) Gauss Gamma2 1;
+}
+
+laplacianSchemes
+{
+    default         none;
+    laplacian(1,phi) Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default         corrected;
+}
+
+fluxRequired
+{
+    default         no;
+    phi;
+}
+
+}

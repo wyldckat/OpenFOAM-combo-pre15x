@@ -1,0 +1,4 @@
+modifyMesh.C
+boundaryCutter.C
+
+EXE = $(FOAM_USER_APPBIN)/modifyMesh

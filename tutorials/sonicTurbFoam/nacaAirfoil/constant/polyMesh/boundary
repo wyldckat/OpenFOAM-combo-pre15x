@@ -1,0 +1,60 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version 2.0;
+    format ascii;
+
+    root "/home/storm/chris/OpenFOAM/chris-1.0/run/tutorials/sonicTurbFoam";
+    case "nacaAirfoil";
+    instance "constant";
+    local "polyMesh";
+
+    class polyBoundaryMesh;
+    object boundary;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+4
+(
+INLE1
+{
+    type patch;
+    physicalType supersonicFreeStreamInlet;
+    nFaces 400;
+    startFace 79570;
+}
+
+OUTL2
+{
+    type patch;
+    physicalType pressureTransmissiveOutlet;
+    nFaces 200;
+    startFace 79970;
+}
+
+SYMP3
+{
+    type empty;
+    physicalType empty;
+    nFaces 80000;
+    startFace 80170;
+}
+
+WALL10
+{
+    type wall;
+    physicalType wallAdiabatic;
+    nFaces 260;
+    startFace 160170;
+}
+)
+
+// ************************************************************************* //

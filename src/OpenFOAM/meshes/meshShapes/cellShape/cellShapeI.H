@@ -1,0 +1,207 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+
+\*---------------------------------------------------------------------------*/
+
+#include "cellShapeList.H"
+#include "IOstreams.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Construct null
+inline cellShape::cellShape()
+:
+    m(NULL)
+{}
+
+
+// Construct from components
+inline cellShape::cellShape
+(
+    const cellModel& M,
+    const labelList& l,
+    const bool doCollapse
+)
+:
+    labelList(l),
+    m(&M)
+{
+    if (doCollapse)
+    {
+        collapse();
+    }
+}
+
+
+// Construct from Istream
+inline cellShape::cellShape(Istream& is)
+{
+    is >> *this;
+}
+
+
+// Clone
+inline autoPtr<cellShape> cellShape::clone() const
+{
+    return autoPtr<cellShape>(new cellShape(*this));
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+// Return the points associated with this cellShape
+inline pointField cellShape::points(const pointField& meshPoints) const
+{
+    // There are as many points as there labels for them
+    pointField p(size());
+
+    // For each point in list, set it to the point in 'pnts' addressed
+    // by 'labs'
+    forAll(p, i)
+    {
+        p[i] = meshPoints[operator[](i)];
+    }
+
+    // Return list
+    return p;
+}
+
+
+// Return model reference
+inline const cellModel& cellShape::model() const
+{
+    return *m;
+}
+
+
+// Return faces of cell
+inline faceList cellShape::faces() const
+{
+    return m->faces(*this);
+}
+
+
+inline faceList cellShape::collapsedFaces() const
+{
+    faceList oldFaces(faces());
+
+    faceList newFaces(oldFaces.size());
+    label newFaceI = 0;
+
+    forAll(oldFaces, oldFaceI)
+    {
+        const face& f = oldFaces[oldFaceI];
+
+        face& newF = newFaces[newFaceI];
+
+        newF.setSize(f.size());
+
+        label newFp = 0;
+        label prevVertI = -1;
+
+        forAll(f, fp)
+        {
+            label vertI = f[fp];
+
+            if (vertI != prevVertI)
+            {
+                newF[newFp++] = vertI;
+
+                prevVertI = vertI;
+            }
+        }
+
+        if ((newFp > 1) && (newF[newFp-1] == newF[0]))
+        {
+            --newFp;
+        }
+
+        if (newFp > 2)
+        {
+            // Size face and go to next one
+            newF.setSize(newFp);
+
+            newFaceI++;
+        }
+    }
+    newFaces.setSize(newFaceI);
+
+    return newFaces;    
+}
+
+
+// Return number of faces
+inline label cellShape::nFaces() const
+{
+    return m->nFaces();
+}
+
+
+// Return edges of cell
+inline edgeList cellShape::edges() const
+{
+    return m->edges(*this);
+}
+
+
+// Return number of edges
+inline label cellShape::nEdges() const
+{
+    return m->nEdges();
+}
+
+
+// Return number of points
+inline label cellShape::nPoints() const
+{
+    return size();
+}
+
+
+// Centre point of cellShape
+inline point cellShape::centre(const pointField& points) const
+{
+    return m->centre(*this, points);
+}
+
+
+// Return scalar magnitude
+inline scalar cellShape::mag(const pointField& points) const
+{
+    return m->mag(*this, points);
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

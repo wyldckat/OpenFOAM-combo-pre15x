@@ -1,0 +1,3 @@
+engineSwirl2.C
+
+EXE = $(FOAM_APPBIN)/engineSwirl2

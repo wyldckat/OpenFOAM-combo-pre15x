@@ -1,0 +1,16 @@
+EXE_INC = \
+    -DNoFields \
+    -Wno-deprecated \
+    -I$(LIB_SRC)/cfdTools/compressible \
+    -I$(LIB_SRC)/cfdTools/lnInclude \
+    -I$(LIB_SRC)/engine/lnInclude \
+    -I$(LIB_SRC)/sampling/lnInclude \
+    -I$(LIB_SRC)/dynamicMesh/lnInclude \
+    -I$(LIB_SRC)/finiteElement/lnInclude \
+    $(WM_DECOMP_INC)
+
+EXE_LIBS = \
+    -lengine \
+    -lmeshTools \
+    -ldynamicMesh \
+    $(WM_DECOMP_LIBS) 

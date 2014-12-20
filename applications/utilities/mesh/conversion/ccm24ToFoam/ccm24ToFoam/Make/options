@@ -1,0 +1,9 @@
+EXE_INC = \
+    -I../libccmio/libadf \
+    -I../libccmio/libccmio \
+    -I../libccmio/test
+
+EXE_LIBS = \
+    -ladf \
+    -lccmio
+

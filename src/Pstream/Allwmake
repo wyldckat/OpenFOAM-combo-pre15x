@@ -1,0 +1,8 @@
+wmake libso dummy
+
+if [ "$WM_MPLIB" = "MPICH" -o "$WM_MPLIB" = "LAM" ]
+then
+
+wmake libso mpi
+
+fi

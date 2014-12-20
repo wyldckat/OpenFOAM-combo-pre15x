@@ -1,0 +1,8 @@
+default
+{
+
+thermoType      hThermo<pureMixture<constTransport<specieThermo<hConstThermo<perfectGas>>>>>;
+
+mixture air 1.0 28.9 1300.0 2.544e6 1.84e-5 0.7;
+
+};

@@ -1,0 +1,41 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "/home/penfold/mattijs/foam/mattijs2.2/run/icoFoam";
+    case            "cavityTut";
+    instance        "system";
+    local           "";
+
+    class           dictionary;
+    object          modifyMeshDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+pointsToMove
+(
+    (( -0.17861 -0.45073 0.75276)( -0.18 -0.45073 0.75276))
+);
+
+edgesToSplit
+(
+    (( -0.17692 -0.45312 0.74516)( -0.18 -0.45 0.742))
+);
+
+facesToTriangulate
+(
+    (( -0.039123 -0.45045 0.74083) (-0.03844 -0.45049 0.73572))
+);
+
+
+// ************************************************************************* //

@@ -1,0 +1,17 @@
+default
+{
+
+solvers
+{
+    p               BICCG 1e-06 0;
+    U               BICCG 1e-05 0;
+    rho             ICCG 1e-05 0;
+}
+
+PISO
+{
+    nCorrectors     2;
+    nNonOrthogonalCorrectors 0;
+}
+
+}

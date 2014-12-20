@@ -1,0 +1,144 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+\*---------------------------------------------------------------------------*/
+
+#include "dynSmagorinsky.H"
+#include "addToRunTimeSelectionTable.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+namespace LESmodels
+{
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(dynSmagorinsky, 0);
+addToRunTimeSelectionTable(LESmodel, dynSmagorinsky, dictionary);
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+dimensionedScalar dynSmagorinsky::cD(const volTensorField& D) const
+{
+    volTensorField LL = dev(filter_(U() * U()) - (filter_(U()) * filter_(U())));
+
+    volTensorField MM =
+        sqr(delta())*(filter_(mag(D)*(D)) - 4*mag(filter_(D))*filter_(D));
+
+    dimensionedScalar MMMM = average(MM && MM);
+
+    if (MMMM.value() > VSMALL)
+    {
+        return average(LL && MM)/MMMM;
+    }
+    else
+    {
+        return 0.0;
+    }
+}
+
+
+dimensionedScalar dynSmagorinsky::cI(const volTensorField& D) const
+{
+    volScalarField KK =
+        0.5*(filter_(U() & U()) - (filter_(U()) & filter_(U())));
+
+    volScalarField mm =
+        sqr(delta())*(4*sqr(mag(filter_(D))) - filter_(sqr(mag(D))));
+
+    dimensionedScalar mmmm = average(mm && mm);
+
+    if (mmmm.value() > VSMALL)
+    {
+        return average(KK*mm)/mmmm;
+    }
+    else
+    {
+        return 0.0;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+dynSmagorinsky::dynSmagorinsky
+(
+    const volVectorField& U,
+    const surfaceScalarField& phi,
+    transportModel& transport
+)
+:
+    LESmodel(typeName, U, phi, transport),
+    GenEddyVisc(U, phi, transport),
+
+    filterPtr_(LESfilter::New(U.mesh(), LESmodelProperties())),
+    filter_(filterPtr_())
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+dynSmagorinsky::~dynSmagorinsky()
+{}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+void dynSmagorinsky::correct(const tmp<volTensorField>& gradU)
+{
+    LESmodel::correct(gradU);
+
+    volTensorField D = dev(symm(gradU));
+    volScalarField magSqrD = magSqr(D);
+
+    k_ = cI(D)*sqr(delta())*magSqrD;
+
+    nuSgs_ = cD(D)*sqr(delta())*sqrt(magSqrD);
+    nuSgs_.correctBoundaryConditions();
+}
+
+
+bool dynSmagorinsky::read()
+{
+    if (GenEddyVisc::read())
+    {
+        filter_.read(LESmodelProperties());
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace LESmodels
+} // End namespace Foam
+
+// ************************************************************************* //

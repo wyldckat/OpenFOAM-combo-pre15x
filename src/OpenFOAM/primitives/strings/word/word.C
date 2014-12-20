@@ -1,0 +1,150 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+    A class for handling words, derived from string.
+    A word is a string of characters containing no white space and
+    may be constructed from a string by removing white space.
+    Words are delimited be white space.
+
+\*---------------------------------------------------------------------------*/
+
+#include "word.H"
+#include <iostream>
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+//- Null word
+const word word::null;
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+void word::stripInvalid()
+{
+    /*
+    if (size() && !isalpha(operator[](0)))
+    {
+        cerr<< "--> FOAM Warning : "
+            "First character of word " << *this << " is not alpha"
+            << endl;
+    }
+    */
+
+    register size_type nValid=0;
+    iterator iter2 = begin();
+
+    for
+    (
+        iterator iter1 = begin();
+        iter1 != end();
+        iter1++
+    )
+    {
+        register char c = *iter1;
+
+        if (valid(c))
+        {
+            *iter2 = c;
+            ++iter2;
+            ++nValid;
+        }
+        else if (c == '/')
+        {
+            *iter2 = '|';
+            ++iter2;
+            ++nValid;
+        }
+    }
+
+    resize(nValid);
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+word::word(const string& str)
+:
+    string(str)
+{
+    stripInvalid();
+}
+
+
+word::word(const std::string& stdStr)
+:
+    string(stdStr)
+{
+    stripInvalid();
+}
+
+
+word::word(const char* chars)
+:
+    string(chars)
+{
+    stripInvalid();
+}
+
+
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+void word::operator=(const word& q)
+{
+    string::operator=(q);
+}
+
+
+void word::operator=(const string& q)
+{
+    string::operator=(q);
+    stripInvalid();
+}
+
+
+void word::operator=(const std::string& q)
+{
+    string::operator=(q);
+    stripInvalid();
+}
+
+
+void word::operator=(const char* q)
+{
+    string::operator=(q);
+    stripInvalid();
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //
+

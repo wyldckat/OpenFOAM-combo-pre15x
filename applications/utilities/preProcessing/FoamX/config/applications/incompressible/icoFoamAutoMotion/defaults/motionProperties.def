@@ -1,0 +1,16 @@
+default
+{
+
+twoDMotion      yes;
+
+motionPlaneNormal (0 0 1);
+
+diffusion       linear;
+
+frozenDiffusion off;
+
+distancePatches
+(
+);
+
+}

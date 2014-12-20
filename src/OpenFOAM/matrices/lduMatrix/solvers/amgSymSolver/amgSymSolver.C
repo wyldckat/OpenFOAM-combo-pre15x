@@ -1,0 +1,218 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Description
+    Agglomerated algebraic multigrid solver tuned for the FV elliptic matrices.
+
+\*---------------------------------------------------------------------------*/
+
+#include "error.H"
+
+#include "amgSymSolver.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+defineTypeNameAndDebug(amgSymSolver, 0);
+lduMatrix::solver::addsymMatrixConstructorToTable<amgSymSolver>
+    addamgSymSolverMatrixConstructorToTable_;
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+// Max number of levels
+label amgSymSolver::maxLevels_ = 50;
+
+// Max number of cycles
+label amgSymSolver::maxCycles_ = 500;
+
+// Number of post-smoothing sweeps
+label amgSymSolver::nPostSweeps_ = 2;
+
+// Number of smoothing sweeps on finest mesh
+label amgSymSolver::nBottomSweeps_ = 2;
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+// Construct from lduMatrix
+amgSymSolver::amgSymSolver
+(
+    const word& fieldName,
+    scalarField& psi,
+    const lduMatrix& matrix,
+    const scalarField& source,
+    const FieldField<Field, scalar>& coupleBouCoeffs,
+    const FieldField<Field, scalar>& coupleIntCoeffs,
+    const lduCoupledInterfacePtrsList& interfaces,
+    const direction cmpt,
+    Istream& solverData
+)
+:
+    lduMatrix::solver
+    (
+        fieldName,
+        psi,
+        matrix,
+        source,
+        coupleBouCoeffs,
+        coupleIntCoeffs,
+        interfaces,
+        cmpt
+    ),
+    tolerance_(readScalar(solverData)),
+    relTol_(readScalar(solverData)),
+    nCellsInTopLevel_(readLabel(solverData)),
+
+    restrictAddressing_(maxLevels_),
+    addrLevels_(maxLevels_),
+    matrixLevels_(maxLevels_),
+    interfaceLevels_(maxLevels_),
+    interfaceCoeffs_(maxLevels_),
+    cpu_()
+{
+    // Create coarse levels and calculate agglomeration
+    label nCreatedLevels = 0;
+
+#   ifdef FULLDEBUG
+    if (lduMatrix::debug >= 2)
+    {
+        Info << "number of cells per level: ";
+    }
+#   endif
+
+    while (nCreatedLevels < maxLevels_ - 1)
+    {
+        if (!calcAgglomeration(nCreatedLevels)) break;
+
+        makeCoarseMatrix(nCreatedLevels);
+
+#       ifdef FULLDEBUG
+        if (lduMatrix::debug >= 2)
+        {
+            Info << addrLevels_[nCreatedLevels].size() << " ";
+        }
+#       endif
+
+        nCreatedLevels++;
+    }
+
+#   ifdef FULLDEBUG
+    if (lduMatrix::debug >= 3)
+    {
+        Info << endl;
+
+        Info<< "coarse levels construction " << cpu_.cpuTimeIncrement() << endl;
+    }
+#   endif
+
+    restrictAddressing_.setSize(nCreatedLevels);
+    addrLevels_.setSize(nCreatedLevels);
+    matrixLevels_.setSize(nCreatedLevels);
+    interfaceLevels_.setSize(nCreatedLevels);
+    interfaceCoeffs_.setSize(nCreatedLevels);
+
+#   ifdef FULLDEBUG
+    if (lduMatrix::debug >= 3)
+    {
+        Info<< "coarse levels addressing " << cpu_.cpuTimeIncrement() << endl;
+    }
+#   endif
+}
+
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+amgSymSolver::~amgSymSolver()
+{
+    // Clear the interface storage by hand.  It is a list of ptrs not a ptrList
+    // for consistency of the interface
+    forAll (interfaceLevels_, levelI)
+    {
+        lduCoupledInterfacePtrsList& curLevel = interfaceLevels_[levelI];
+
+        forAll (curLevel, i)
+        {
+            delete curLevel[i];
+            curLevel[i] = (lduCoupledInterface*)NULL;
+        }
+    }
+}
+
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+const lduMatrix& amgSymSolver::matrixLevel(const label i) const
+{
+    if (i == 0)
+    {
+        return matrix_;
+    }
+    else
+    {
+        return matrixLevels_[i - 1];
+    }
+}
+
+
+const lduCoupledInterfacePtrsList& amgSymSolver::interfaceLevel
+(
+    const label i
+) const
+{
+    if (i == 0)
+    {
+        return interfaces_;
+    }
+    else
+    {
+        return interfaceLevels_[i - 1];
+    }
+}
+
+
+const FieldField<Field, scalar>& amgSymSolver::interfaceCoeffsLevel
+(
+    const label i
+) const
+{
+    if (i == 0)
+    {
+        return coupleBouCoeffs_;
+    }
+    else
+    {
+        return interfaceCoeffs_[i - 1];
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

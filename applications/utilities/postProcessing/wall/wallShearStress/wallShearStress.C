@@ -1,0 +1,97 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Application
+    wallShearStress
+
+Description
+    Calculates and writes the wall shear stress for the current
+    time step.
+
+\*---------------------------------------------------------------------------*/
+
+#include "fvCFD.H"
+#include "incompressible/transportModel/transportModel.H"
+#include "incompressible/turbulenceModel/turbulenceModel.H"
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+int main(int argc, char *argv[])
+{
+
+#   include "addTimeOptions.H"
+#   include "setRootCase.H"
+
+#   include "createTime.H"
+#   include "createMesh.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+    // Get times list
+    instantList Times = runTime.times();
+
+    // set startTime and endTime depending on -time and -latestTime options
+#   include "checkTimeOptions.H"
+
+    for (label i=startTime; i<endTime; i++)
+    {
+        runTime.setTime(Times[i], i);
+
+        Info<< "Time = " << runTime.timeName() << endl;
+
+        mesh.readUpdate();
+
+#       include "createFields.H"
+
+        volTensorField R(turbulence->R());
+
+        volVectorField wallShearStress
+        (
+            IOobject
+            (
+                "wallShearStress",
+                runTime.timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+            mesh,
+            dimensionedVector("wallShearStress", R.dimensions(), vector::zero)
+        );
+
+        wallShearStress.boundaryField() =
+            (-mesh.Sf().boundaryField()/mesh.magSf().boundaryField())
+          & R.boundaryField();
+
+        wallShearStress.write();
+    }
+
+    Info<< "End" << endl;
+
+    return(0);
+}
+
+
+// ************************************************************************* //

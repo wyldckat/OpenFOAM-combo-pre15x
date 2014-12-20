@@ -1,0 +1,249 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+\*---------------------------------------------------------------------------*/
+
+#include "FixedList.H"
+#include "Istream.H"
+#include "Ostream.H"
+#include "token.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+// * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
+
+// Construct from Istream
+template<class T, label Size>
+FixedList<T, Size>::FixedList(Istream& is)
+{
+    operator>>(is, *this);
+}
+
+
+template<class T, label Size>
+Istream& operator>>(Istream& is, FixedList<T, Size>& L)
+{
+    is.fatalCheck("operator>>(Istream&, FixedList<T, Size>&)");
+
+    if (is.format() == IOstream::ASCII || !writeBinary(L.begin()))
+    {
+        token firstToken(is);
+
+        is.fatalCheck
+        (
+            "operator>>(Istream&, FixedList<T, Size>&) : reading first token"
+        );
+
+        if (firstToken.isCompound())
+        {
+            L = dynamicCast<token::Compound<List<T> > >
+            (
+                firstToken.transferCompoundToken()
+            );
+        }
+        else if (firstToken.isLabel())
+        {
+            label s = firstToken.labelToken();
+
+            // Set list length to that read
+            L.checkSize(s);
+        }
+        else if (!firstToken.isPunctuation())
+        {
+            FatalIOErrorIn("operator>>(Istream&, FixedList<T, Size>&)", is)
+                << "incorrect first token, expected <label> "
+                   "or '(' or '{', found "
+                << firstToken.info()
+                << exit(FatalIOError);
+        }
+        else
+        {
+            // Putback the openning bracket
+            is.putBack(firstToken);
+        }
+
+        // Read beginning of contents
+        char listDelimiter = is.readBeginList("FixedList");
+
+        if (listDelimiter == token::BEGIN_LIST)
+        {
+            for (register label i=0; i<Size; i++)
+            {
+                is >> L[i];
+
+                is.fatalCheck
+                (
+                    "operator>>(Istream&, FixedList<T, Size>&) : "
+                    "reading entry"
+                );
+            }
+        }
+        else
+        {
+            T element;
+            is >> element;
+
+            is.fatalCheck
+            (
+                "operator>>(Istream&, FixedList<T, Size>&) : "
+                "reading the single entry"
+            );
+
+            for (register label i=0; i<Size; i++)
+            {
+                L[i] = element;
+            }
+        }
+
+        // Read end of contents
+        is.readEndList("FixedList");
+    }
+    else
+    {
+        is.read((char*)L.begin(), Size*sizeof(T));
+
+        is.fatalCheck
+        (
+            "operator>>(Istream&, FixedList<T, Size>&) : "
+            "reading the binary block"
+        );
+    }
+
+    return is;
+}
+
+
+// * * * * * * * * * * * * * * * Ostream Operator *  * * * * * * * * * * * * //
+
+template<class T, label Size>
+void FixedList<T, Size>::writeEntry(Ostream& os) const
+{
+    if
+    (
+        size()
+     && token::compound::isCompound
+        (
+            "List<" + word(pTraits<T>::typeName) + '>'
+        )
+    )
+    {
+        os  << word("List<" + word(pTraits<T>::typeName) + '>') << " ";
+    }
+    
+    os << *this;
+}
+
+
+template<class T, label Size>
+void FixedList<T, Size>::writeEntry(const word& keyword, Ostream& os) const
+{
+    os.writeKeyword(keyword);
+    writeEntry(os);
+    os << token::END_STATEMENT << endl;
+}
+
+
+template<class T, label Size>
+Ostream& operator<<(Ostream& os, const FixedList<T, Size>& L)
+{
+    // Write list contents depending on data format
+    if (os.format() == IOstream::ASCII || !writeBinary(L.v_))
+    {
+        bool uniform = false;
+
+        if (Size > 1 && writeBinary(L.v_))
+        {
+            uniform = true;
+
+            forAll(L, i)
+            {
+                if (L[i] != L[0])
+                {
+                    uniform = false;
+                    break;
+                }
+            }
+        }
+
+        if (uniform)
+        {
+            // Write size of list and start contents delimiter
+            os << token::BEGIN_BLOCK;
+
+            // Write list contents
+            os << L[0];
+
+            // Write end of contents delimiter
+            os << token::END_BLOCK;
+        }
+        else if (Size < 11 && writeBinary(L.v_))
+        {
+            // Write size of list and start contents delimiter
+            os << token::BEGIN_LIST;
+
+            // Write list contents
+            forAll(L, i)
+            {
+                if (i > 0) os << token::SPACE;
+                os << L[i];
+            }
+
+            // Write end of contents delimiter
+            os << token::END_LIST;
+        }
+        else
+        {
+            // Write size of list and start contents delimiter
+            os << nl << token::BEGIN_LIST;
+
+            // Write list contents
+            forAll(L, i)
+            {
+                os << nl << L[i];
+            }
+
+            // Write end of contents delimiter
+            os << nl << token::END_LIST << nl;
+        }
+    }
+    else
+    {
+        os.write((const char*)L.v_, Size*sizeof(T));
+    }
+
+    // Check state of IOstream
+    os.check("Ostream& operator<<(Ostream&, const FixedList&)");
+
+    return os;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// ************************************************************************* //

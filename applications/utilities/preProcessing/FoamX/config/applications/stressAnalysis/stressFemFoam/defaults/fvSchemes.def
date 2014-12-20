@@ -1,0 +1,21 @@
+default
+{
+
+d2dt2Schemes
+{
+    default Euler;
+}
+
+gradSchemes
+{
+}
+
+divSchemes
+{
+}
+
+laplacianSchemes
+{
+}
+
+};

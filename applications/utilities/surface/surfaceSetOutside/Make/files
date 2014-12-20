@@ -1,0 +1,3 @@
+surfaceSetOutside.C
+
+EXE = $(FOAM_APPBIN)/surfaceSetOutside

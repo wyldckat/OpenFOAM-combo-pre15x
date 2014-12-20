@@ -1,0 +1,112 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     |
+    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+     \\/     M anipulation  |
+-------------------------------------------------------------------------------
+License
+    This file is part of OpenFOAM.
+
+    OpenFOAM is free software; you can redistribute it and/or modify it
+    under the terms of the GNU General Public License as published by the
+    Free Software Foundation; either version 2 of the License, or (at your
+    option) any later version.
+
+    OpenFOAM is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+    for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with OpenFOAM; if not, write to the Free Software Foundation,
+    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+
+Class
+    STLpoint
+
+Description
+
+SourceFiles
+    STLpointI.H
+
+\*---------------------------------------------------------------------------*/
+
+#ifndef STLpoint_H
+#define STLpoint_H
+
+#include "point.H"
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+
+/*---------------------------------------------------------------------------*\
+                           Class STLpoint Declaration
+\*---------------------------------------------------------------------------*/
+
+class STLpoint
+{
+    // Private data
+
+        float x_, y_, z_;
+
+public:
+
+    // Constructors
+
+        //- Construct null
+        inline STLpoint();
+
+        //- Construct from components
+        inline STLpoint(float x, float y, float z);
+
+        //- Construct from point
+        inline STLpoint(const point&);
+
+        //- Construct from istream
+        inline STLpoint(Istream&);
+
+
+    // Member Functions
+
+        // Access
+
+            inline float x() const;
+            inline float y() const;
+            inline float z() const;
+
+
+        // Check
+
+        // Edit
+
+        // Write
+
+    // Member Operators
+
+        inline operator point() const;
+
+
+    // Ostream operator
+
+        inline friend Istream& operator>>(Istream&, STLpoint&);
+        inline friend Ostream& operator<<(Ostream&, const STLpoint&);
+};
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+} // End namespace Foam
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "STLpointI.H"
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#endif
+
+// ************************************************************************* //

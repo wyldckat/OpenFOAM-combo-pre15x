@@ -1,0 +1,51 @@
+volScalarField AU = UEqn().A();
+U = UEqn().H()/AU;
+UEqn.clear();
+phi = fvc::interpolate(rho*U) & mesh.Sf();
+bool closedVolume = adjustPhi(phi, U, p);
+
+for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
+{
+    fvScalarMatrix pEqn
+    (
+        fvm::laplacian(rho/AU, p) == fvc::div(phi)
+    );
+
+    fvScalarMatrix::reference pRef = pEqn.setReference(pRefCell, pRefValue);
+    pEqn.solve();
+    pEqn.unsetReference(pRef);
+
+    if (nonOrth == nNonOrthCorr)
+    {
+        phi -= pEqn.flux();
+    }
+}
+
+#include "incompressible/continuityErrs.H"
+
+// Explicitly relax pressure for momentum corrector
+p.relax();
+
+if (min(p).value() < 0.0)
+{
+    FatalErrorIn(args.executable())
+        << "pressure has become negative\n"
+           "    try reducing the p relaxation factor "
+           "during the start-up phase of the flow evolution"
+        << exit(FatalError);
+}
+
+U -= fvc::grad(p)/AU;
+U.correctBoundaryConditions();
+
+// For closed-volume cases adjust the pressure and density levels
+// to obey overall mass continuity
+if (closedVolume)
+{
+    p += (initialMass - fvc::domainIntegrate(thermo->psi()*p))
+        /fvc::domainIntegrate(thermo->psi());
+}
+
+rho = thermo->rho();
+rho.relax();
+Info<< "rho max/min : " << max(rho).value() << " " << min(rho).value() << endl;

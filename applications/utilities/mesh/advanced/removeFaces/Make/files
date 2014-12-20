@@ -1,0 +1,4 @@
+doRemoveFaces.C
+
+EXE = $(FOAM_APPBIN)/removeFaces
+

@@ -1,0 +1,16 @@
+#!/bin/sh
+
+currDir=`pwd`
+application=`basename $currDir`
+cases="nacaAirfoil prism"
+
+tutorialPath=`dirname $0`/..
+. $tutorialPath/CleanFunctions
+
+for case in $cases
+do
+    if [ "$case" = "nacaAirfoil" ] ; then
+        cp ${case}/prostar/${case}.vrt.org ${case}/prostar/${case}.vrt
+    fi    
+    cleanCase $case
+done
