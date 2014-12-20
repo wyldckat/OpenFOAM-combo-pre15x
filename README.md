@@ -154,6 +154,7 @@ rm -rf ./applications/utilities/preProcessing/FoamX/lib
 rm applications/test/Field/OpenFOAM.out
 rm -rf applications/utilities/mesh/manipulation/setSet/readline-5.0
 rm -rf applications/utilities/parallelProcessing/decompositionMethods/parMetisDecomp/ParMetis-3.1
+rm -rf ./src/MGridGenGamgAgglomeration/ParMGridGen-1.0
 find . -name "wmkdep" | xargs rm
 find . -name "dirToString" | xargs rm
 
@@ -200,6 +201,7 @@ rmdir OpenFOAM-1.5
 find . -name lnInclude | xargs rm -r
 rm applications/utilities/surface/surfaceCoarsen/bunnylod/rab*
 rm -rf doc/Doxygen/html
+gzip tutorials/snappyHexMesh/motorBike/constant/triSurface/motorBike.stl
 find . -name "wmkdep" | xargs rm
 find . -name "dirToString" | xargs rm
 
@@ -207,4 +209,3 @@ git add -u
 git add * .timeStamp .gitignore
 git commit -m "Source code for OpenFOAM 1.5, without third-party source code and generated data ('lnInclude', 'html' and '*.jar')."
 ```
-
