@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,15 +28,9 @@ License
 #include "Time.H"
 #include "cellIOList.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Set instance for mesh files
-void polyMesh::setInstance(const fileName& inst)
+void Foam::polyMesh::setInstance(const fileName& inst)
 {
     if (debug)
     {
@@ -50,11 +44,11 @@ void polyMesh::setInstance(const fileName& inst)
     faces_.writeOpt() = IOobject::AUTO_WRITE;
     faces_.instance() = inst;
 
-    allOwner_.writeOpt() = IOobject::AUTO_WRITE;
-    allOwner_.instance() = inst;
+    owner_.writeOpt() = IOobject::AUTO_WRITE;
+    owner_.instance() = inst;
 
-    allNeighbour_.writeOpt() = IOobject::AUTO_WRITE;
-    allNeighbour_.instance() = inst;
+    neighbour_.writeOpt() = IOobject::AUTO_WRITE;
+    neighbour_.instance() = inst;
 
     boundary_.writeOpt() = IOobject::AUTO_WRITE;
     boundary_.instance() = inst;
@@ -70,7 +64,7 @@ void polyMesh::setInstance(const fileName& inst)
 }
 
 
-polyMesh::readUpdateState polyMesh::readUpdate()
+Foam::polyMesh::readUpdateState Foam::polyMesh::readUpdate()
 {
     if (debug)
     {
@@ -133,7 +127,7 @@ polyMesh::readUpdateState polyMesh::readUpdate()
             )
         );
 
-        allOwner_ = labelIOList
+        owner_ = labelIOList
         (
             IOobject
             (
@@ -147,7 +141,7 @@ polyMesh::readUpdateState polyMesh::readUpdate()
             )
         );
 
-        allNeighbour_ = labelIOList
+        neighbour_ = labelIOList
         (
             IOobject
             (
@@ -239,7 +233,7 @@ polyMesh::readUpdateState polyMesh::readUpdate()
         // Boundary is set so can use initMesh now (uses boundary_ to
         // determine internal and active faces)
 
-        if (exists(allOwner_.objectPath()))
+        if (exists(owner_.objectPath()))
         {
             initMesh();
         }
@@ -369,7 +363,8 @@ polyMesh::readUpdateState polyMesh::readUpdate()
                 meshSubDir,
                 *this,
                 IOobject::MUST_READ,
-                IOobject::NO_WRITE
+                IOobject::NO_WRITE,
+                false
             )
         );
         
@@ -386,9 +381,5 @@ polyMesh::readUpdateState polyMesh::readUpdate()
     }
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

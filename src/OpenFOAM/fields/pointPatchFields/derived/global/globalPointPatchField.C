@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,7 +54,7 @@ globalPointPatchField<Type>::globalPointPatchField
     const dictionary& dict
 )
 :
-    coupledPointPatchField<Type>(p, iF),
+    coupledPointPatchField<Type>(p, iF, dict),
     globalPointPatch_(refCast<const globalPointPatch>(p))
 {
     if (!isType<globalPointPatch>(p))
@@ -82,10 +82,10 @@ globalPointPatchField<Type>::globalPointPatchField
     const globalPointPatchField<Type>& ptf,
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
-    const pointPatchFieldMapper&
+    const pointPatchFieldMapper& mapper
 )
 :
-    coupledPointPatchField<Type>(p, iF),
+    coupledPointPatchField<Type>(ptf, p, iF, mapper),
     globalPointPatch_(refCast<const globalPointPatch>(ptf.patch()))
 {
     if (!isType<globalPointPatch>(this->patch()))

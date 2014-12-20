@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,14 +23,15 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    wallPointYPlus
+    Foam::wallPointYPlus
 
 Description
     Holds information (coordinate and yStar) regarding nearest wall point.
+
     Used in VanDriest wall damping where the interest is in y+ but only
-    needs to be calculated upto e.g. y+ < 200. In all other cells/faces
-    (since y gets initialized to GREAT and yStar to 1) the damping function
-    becomes 1
+    needs to be calculated up to e.g. y+ < 200. In all other cells/faces
+    the damping function becomes 1, since y gets initialized to GREAT and
+    yStar to 1.
 
 SourceFiles
     wallPointYPlusI.H

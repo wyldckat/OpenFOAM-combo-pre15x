@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -162,11 +162,15 @@ void surfaceInterpolation::makeWeights() const
 
 
     // Set local references to mesh data
-    const surfaceVectorField& Cf = mesh_.Cf();
-    const volVectorField& C = mesh_.C();
+    // (note that we should not use fvMesh sliced fields at this point yet
+    //  since this causes a loop when generating weighting factors in
+    //  coupledFvPatchField evaluation phase)
     const unallocLabelList& owner = mesh_.owner();
     const unallocLabelList& neighbour = mesh_.neighbour();
-    const surfaceVectorField& Sf = mesh_.Sf();
+
+    const vectorField& Cf = mesh_.faceCentres();
+    const vectorField& C = mesh_.cellCentres();
+    const vectorField& Sf = mesh_.faceAreas();
 
     // ... and reference to the internal field of the weighting factors
     scalarField& w = weightingFactors.internalField();
@@ -338,7 +342,8 @@ void surfaceInterpolation::makeCorrectionVectors() const
 
     scalar NonOrthogCoeff = 0.0;
 
-    if (magSf.size() > 0)
+    // Calculate the non-orthogonality for meshes with 1 face or more
+    if (returnReduce(magSf.size(), sumOp<label>()) > 0)
     {
         NonOrthogCoeff =
             asin

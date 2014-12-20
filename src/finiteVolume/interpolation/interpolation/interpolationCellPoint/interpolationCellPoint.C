@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,15 +27,10 @@ License
 #include "interpolationCellPoint.H"
 #include "volPointInterpolation.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Constructor * * * * * * * * * * * * * * * //
 
 template<class Type>
-interpolationCellPoint<Type>::interpolationCellPoint
+Foam::interpolationCellPoint<Type>::interpolationCellPoint
 (
     const volPointInterpolation& pInterp,
     const GeometricField<Type, fvPatchField, volMesh>& psi
@@ -45,9 +40,5 @@ interpolationCellPoint<Type>::interpolationCellPoint
     psip_(pInterp.interpolate(psi))
 {}
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

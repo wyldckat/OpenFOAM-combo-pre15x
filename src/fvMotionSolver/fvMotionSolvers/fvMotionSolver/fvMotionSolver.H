@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    fvMotionSolver
+    Foam::fvMotionSolver
 
 Description
     Virtual base class for finite volume mesh motion solvers.
@@ -114,8 +114,11 @@ public:
         //- Solve for motion
         virtual void solve() = 0;
 
-        //- Update topology
-        virtual void updateMesh();
+        //- Update the pointMesh corresponding to the new points
+        void movePoints(const pointField&);
+
+        //- Update the mesh corresponding to given map
+        virtual void updateMesh(const mapPolyMesh&);
 };
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -106,7 +106,7 @@ void fixedNormalSlipFvPatchField<Type>::autoMap
     const fvPatchFieldMapper& m
 )
 {
-    Field<Type>::autoMap(m);
+    transformFvPatchField<Type>::autoMap(m);
     fixedValue_.autoMap(m);
 }
 
@@ -141,7 +141,7 @@ tmp<Field<Type> > fixedNormalSlipFvPatchField<Type>::snGrad() const
 
 
 template<class Type>
-void fixedNormalSlipFvPatchField<Type>::evaluate()
+void fixedNormalSlipFvPatchField<Type>::evaluate(const Pstream::commsTypes)
 {
     if (!this->updated())
     {

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,8 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    mapClouds
+InNamespace
+    Foam::mapClouds
 
 Description
     Generic Geometric field mapper.  For "real" mapping, add template
@@ -43,6 +43,9 @@ Description
 namespace Foam
 {
 
+//- Generic Geometric field mapper.
+//  For "real" mapping, add template specialisations for mapping of internal
+//  fields depending on mesh type.
 inline void mapClouds(const objectRegistry& db, const mapPolyMesh& mapper)
 {
     HashTable<const cloud*> clouds(db.lookupClass<cloud>());

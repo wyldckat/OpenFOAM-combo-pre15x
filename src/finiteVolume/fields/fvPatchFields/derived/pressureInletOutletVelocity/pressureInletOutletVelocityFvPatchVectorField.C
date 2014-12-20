@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -147,8 +147,11 @@ void pressureInletOutletVelocityFvPatchVectorField::autoMap
     const fvPatchFieldMapper& m
 )
 {
-    vectorField::autoMap(m);
-    tangentialVelocity_.autoMap(m);
+    directionMixedFvPatchVectorField::autoMap(m);
+    if (tangentialVelocity_.size())
+    {
+        tangentialVelocity_.autoMap(m);
+    }
 }
 
 
@@ -160,10 +163,13 @@ void pressureInletOutletVelocityFvPatchVectorField::rmap
 {
     directionMixedFvPatchVectorField::rmap(ptf, addr);
 
-    const pressureInletOutletVelocityFvPatchVectorField& tiptf =
-        refCast<const pressureInletOutletVelocityFvPatchVectorField>(ptf);
+    if (tangentialVelocity_.size())
+    {
+        const pressureInletOutletVelocityFvPatchVectorField& tiptf =
+            refCast<const pressureInletOutletVelocityFvPatchVectorField>(ptf);
 
-    tangentialVelocity_.rmap(tiptf.tangentialVelocity_, addr);
+        tangentialVelocity_.rmap(tiptf.tangentialVelocity_, addr);
+    }
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    emptyPolyPatch
+    Foam::emptyPolyPatch
 
 Description
     Empty front and back plane patch.  Used for 2-D geometries.
@@ -68,9 +68,6 @@ public:
             const label index,
             const polyBoundaryMesh& bm
         );
-
-        //- Construct from Istream
-        emptyPolyPatch(Istream&, const label index, const polyBoundaryMesh&);
 
         //- Construct from dictionary
         emptyPolyPatch

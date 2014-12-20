@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -61,6 +61,20 @@ pointBoundaryMesh::pointBoundaryMesh
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
+void pointBoundaryMesh::calcGeometry()
+{
+    forAll(*this, patchi)
+    {
+        operator[](patchi).initGeometry();
+    }
+
+    forAll(*this, patchi)
+    {
+        operator[](patchi).calcGeometry();
+    }
+}
+
+
 const globalPointPatch& pointBoundaryMesh::globalPatch() const
 {
     const pointPatchList& patches = *this;
@@ -82,6 +96,38 @@ const globalPointPatch& pointBoundaryMesh::globalPatch() const
 
     // Dummy return
     return refCast<const globalPointPatch>(patches[0]);
+}
+
+
+void pointBoundaryMesh::movePoints(const pointField& p)
+{
+    pointPatchList& patches = *this;
+
+    forAll(patches, patchi)
+    {
+        patches[patchi].initMovePoints(p);
+    }
+
+    forAll(patches, patchi)
+    {
+        patches[patchi].movePoints(p);
+    }
+}
+
+
+void pointBoundaryMesh::updateMesh()
+{
+    pointPatchList& patches = *this;
+
+    forAll(patches, patchi)
+    {
+        patches[patchi].initUpdateMesh();
+    }
+
+    forAll(patches, patchi)
+    {
+        patches[patchi].updateMesh();
+    }
 }
 
 

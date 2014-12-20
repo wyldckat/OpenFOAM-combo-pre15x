@@ -1,27 +1,43 @@
 EXE_LIBS = \
-    -lGstream -lGL \
-    -lLESfilters \
-    -lODE \
-    -lcompressibleLESmodels \
-    \
+    -lautoMesh \
     -lbasicThermophysicalModels \
-    -lfiniteVolume \
+    -lchemistryModel \
     -lcombustionThermophysicalModels \
-    -lcompressibleTurbulenceModels \
+    -lcompressibleLESModels \
+    -lcompressibleRASModels \
+    -ldecompositionMethods \
     -ldieselSpray \
+    -ldynamicFvMesh \
+    -ldynamicMesh \
     -ledgeMesh \
     -lengine \
     -lerrorEstimation \
-    -ldynamicMesh \
+    -lfiniteVolume \
+    -lforces \
+    -lfvMotionSolvers \
+    -lincompressibleLESModels \
     -lincompressibleTransportModels \
-    -lincompressibleTurbulenceModels \
-    -lincompressibleLESmodels \
+    -lincompressibleRASModels \
+    -linterfaceProperties \
+    -llagrangianIntermediate \
     -llagrangian \
     -llaminarFlameSpeedModels \
+    -lLESdeltas \
+    -lLESfilters \
+    -lliquidMixture \
     -lliquids \
+    -lmeshTools \
+    -lODE \
+    -lOpenFOAM \
+    -lpdf \
+    -lphaseModel \
+    -lradiation \
     -lrandomProcesses \
     -lsampling \
+    -lsolidMixture \
+    -lsolids \
     -lspecie \
     -lthermophysicalFunctions \
-    -ltriSurface \
-    -lpdf
+    -ltopoChangerFvMesh \
+    -ltriSurface
+

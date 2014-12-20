@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,18 +22,14 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "boundaryPatch.H"
 #include "dictionary.H"
 #include "Ostream.H"
 
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct from components
 Foam::boundaryPatch::boundaryPatch
 (
     const word& name,
@@ -49,7 +45,6 @@ Foam::boundaryPatch::boundaryPatch
 {}
 
 
-// Construct as copy
 Foam::boundaryPatch::boundaryPatch(const boundaryPatch& sp)
 :
     patchIdentifier(sp.name(), sp.index(), sp.physicalType()),
@@ -58,16 +53,6 @@ Foam::boundaryPatch::boundaryPatch(const boundaryPatch& sp)
 {}
 
 
-// Construct from Istream
-Foam::boundaryPatch::boundaryPatch(Istream& is, const label index)
-:
-    patchIdentifier(is, index),
-    size_(readLabel(is)),
-    start_(readLabel(is))
-{}
-
-
-// Construct from dictionary
 Foam::boundaryPatch::boundaryPatch
 (
     const word& name,
@@ -76,12 +61,11 @@ Foam::boundaryPatch::boundaryPatch
 )
 :
     patchIdentifier(name, dict, index),
-    size_(readLabel(dict.lookup("size"))),
-    start_(readLabel(dict.lookup("start")))
+    size_(readLabel(dict.lookup("nFaces"))),
+    start_(readLabel(dict.lookup("startFace")))
 {}
 
 
-// Clone
 Foam::autoPtr<Foam::boundaryPatch> Foam::boundaryPatch::clone() const
 {
     return autoPtr<boundaryPatch>(new boundaryPatch(*this));
@@ -96,24 +80,11 @@ Foam::boundaryPatch::~boundaryPatch()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Write
 void Foam::boundaryPatch::write(Ostream& os) const
 {
-    os  << nl;
     patchIdentifier::write(os);
-    os  << nl;
-    os << size_ << nl;
-    os << start_ << nl;
-}
-
-
-void Foam::boundaryPatch::writeDict(Ostream& os) const
-{
-    patchIdentifier::writeDict(os);
-
-    os << "    size " << size_ << token::END_STATEMENT << nl;
-
-    os << "    start " << start_ << token::END_STATEMENT << nl;
+    os.writeKeyword("nFaces") << size_ << token::END_STATEMENT << nl;
+    os.writeKeyword("startFace") << start_ << token::END_STATEMENT << nl;
 }
 
 

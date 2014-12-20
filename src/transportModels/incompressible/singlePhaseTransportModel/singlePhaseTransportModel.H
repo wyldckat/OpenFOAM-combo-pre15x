@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    singlePhaseTransportModel
+    Foam::singlePhaseTransportModel
 
 Description
-    Simple single-phase transport model based on viscosityModel used by the
-    incompressible single-phase solvers like simpleFoam, turbFoam etc.
+    A simple single-phase transport model based on viscosityModel.
+
+    Used by the incompressible single-phase solvers like simpleFoam,
+    turbFoam etc.
 
 SourceFiles
     singlePhaseTransportModel.C

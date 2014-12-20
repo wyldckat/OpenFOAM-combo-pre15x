@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -103,7 +103,7 @@ CompactListList<T>::CompactListList(CompactListList<T>& cll, bool reUse)
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class T>
-CompactListList<T>& CompactListList<T>::null()
+const CompactListList<T>& CompactListList<T>::null()
 {
     CompactListList<T>* nullPtr = reinterpret_cast<CompactListList<T>*>(NULL);
     return *nullPtr;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 #   include "createTime.H"
 
-    fileName starMeshFile(args.args()[3]);
+    fileName starMeshFile(args.additionalArgs()[0]);
     starMesh makeMesh(starMeshFile, runTime, scaleFactor);
 
     // Set the precision of the points data to 10

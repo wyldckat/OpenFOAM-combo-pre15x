@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "geomCellLooper.H"
@@ -35,6 +33,7 @@ Description
 #include "triSurfaceTools.H"
 #include "labelHashSet.H"
 #include "ListOps.H"
+#include "transform.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -410,7 +409,7 @@ bool Foam::geomCellLooper::cut
         vector toCtr(loopPoints[i] - ctr);
         toCtr /= mag(toCtr);
 
-        sortedAngles[i] = triSurfaceTools::pseudoAngle(e0, e1, toCtr);
+        sortedAngles[i] = pseudoAngle(e0, e1, toCtr);
     }
     sortedAngles.sort();
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -539,7 +539,7 @@ public:
     typedef SymmTensor<Cmpt> type;
 };
 
-
+#ifndef __CINT__
 template<class Cmpt>
 class innerProduct<SymmTensor<Cmpt>, SymmTensor<Cmpt> >
 {
@@ -566,7 +566,6 @@ public:
 };
 
 
-
 template<class Cmpt>
 class typeOfSum<SphericalTensor<Cmpt>, SymmTensor<Cmpt> >
 {
@@ -583,7 +582,6 @@ public:
     typedef SymmTensor<Cmpt> type;
 };
 
-
 template<class Cmpt>
 class innerProduct<SphericalTensor<Cmpt>, SymmTensor<Cmpt> >
 {
@@ -599,7 +597,7 @@ public:
 
     typedef SymmTensor<Cmpt> type;
 };
-
+#endif
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

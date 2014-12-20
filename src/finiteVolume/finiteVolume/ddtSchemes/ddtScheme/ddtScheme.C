@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -148,7 +148,8 @@ tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
       - min
         (
             mag(phi - (mesh().Sf() & fvc::interpolate(U)))
-           /(mag(phi) + dimensionedScalar("small", phi.dimensions(), SMALL)),
+           /(mag(phi) + dimensionedScalar("small", phi.dimensions(), VSMALL)),
+           //(rDeltaT*mesh().magSf()/mesh().deltaCoeffs()),
             scalar(1)
         );
 
@@ -190,10 +191,9 @@ tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
         (
             mag(phi - (mesh().Sf() & fvc::interpolate(rhoU)))
            /(
-                mag(phi)
+                mag(phi) + dimensionedScalar("small", phi.dimensions(), VSMALL)
                 //fvc::interpolate(rho)*rDeltaT
                 //*mesh().magSf()/mesh().deltaCoeffs()
-              + dimensionedScalar("small", phi.dimensions(), SMALL)
             ),
             scalar(1)
         );

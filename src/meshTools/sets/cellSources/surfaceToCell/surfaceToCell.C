@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -142,7 +142,7 @@ bool Foam::surfaceToCell::differingPointNormals
                     pointToNearest
                 );
 
-            if (pointTriI != cellTriI)
+            if (pointTriI != -1 && pointTriI != cellTriI)
             {
                 scalar cosAngle = normals[pointTriI] & normals[cellTriI];
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,12 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    RutlandFlashBoil
+    Foam::RutlandFlashBoil
 
 Description
-    standard evaporation model based on the logarithmic expression
-    of the ration of pressure differences.
+    Evaporation model with flash boiling.
 
+    Evaporation model that takes into account of:
+      - flash boiling of the liquid core and droplets
+      - superheated vaporization of a boiling droplet
+
+    Accurated description in
+    @verbatim
+    B. Zuo, A.M. Gomes, C.J. Rutland
+    "Modeling Superheated Fuel Spray Vaporization"
+    Int. Journal of Engine Research, 2000. Vol. 1, pp. 321-326
+    @endverbatim
 \*---------------------------------------------------------------------------*/
 
 #ifndef RutlandFlashBoil_H
@@ -58,7 +67,7 @@ private:
         scalar preReScFactor_;
         scalar ReExponent_;
         scalar ScExponent_;
-    
+
         word evaporationScheme_;
         label nEvapIter_;
 
@@ -127,7 +136,7 @@ public:
             const scalar vapourFarEnthalpy,
             const scalar cpGas,
             const scalar Xs,
-            const scalar Xf,    
+            const scalar Xf,
             const scalar temperature,
             const scalar kLiquid
         ) const;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,67 +25,12 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "primitiveMesh.H"
+#include "ListOps.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-void primitiveMesh::calcCellPoints() const
-{
-    if (debug)
-    {
-        Pout<< "primitiveMesh::calcCellPoints() : "
-            << "calculating cellPoints"
-            << endl;
-    }
-    
-    // It is an error to attempt to recalculate pointPoints
-    // if the pointer is already set
-    if (cpPtr_)
-    {
-        FatalErrorIn("primitiveMesh::calcCellPoints() const")
-            << "cellPoints already calculated"
-            << abort(FatalError);
-    }
-    else
-    {
-        // Need pointCells to calculate cellPoints
-        const labelListList& pc = pointCells();
-
-        cpPtr_ = new labelListList(nCells());
-        labelListList& cp = *cpPtr_;
-        
-        labelList cellPointCounter(nCells(), 0);
-        
-        forAll(pc, pci)
-        {
-            forAll(pc[pci], ci)
-            {
-                label cellI = pc[pci][ci];
-                cellPointCounter[cellI]++;
-            }
-        }
-      
-        labelList cellPointIndex(nCells(),-1);
-        forAll(pc, pci)
-        {
-            forAll(pc[pci], ci)
-            {
-                label cellI = pc[pci][ci];
-                if(cellPointIndex[cellI] == -1)
-                {
-                    cp[cellI].setSize(cellPointCounter[cellI]);
-                }
-                cellPointIndex[cellI]++;
-                cp[cellI][cellPointIndex[cellI]] = pci;
-            }
-        }
-    }
-}
-
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -93,7 +38,9 @@ const labelListList& primitiveMesh::cellPoints() const
 {
     if (!cpPtr_)
     {
-        calcCellPoints();
+        // Invert pointCells
+        cpPtr_ = new labelListList(nCells());
+        invertManyToMany(nCells(), pointCells(), *cpPtr_);
     }
     
     return *cpPtr_;

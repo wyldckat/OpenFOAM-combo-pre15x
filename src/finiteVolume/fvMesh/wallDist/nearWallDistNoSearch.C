@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -100,7 +100,7 @@ Foam::nearWallDistNoSearch::~nearWallDistNoSearch()
 
 void Foam::nearWallDistNoSearch::correct()
 {
-    if (mesh_.moving())
+    if (mesh_.changing())
     {
         // Update size of GeometricBoundaryField
         forAll(mesh_.boundary(), patchI)

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,12 +23,12 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    Dictionary
+    Foam::Dictionary
 
 Description
     Gerneral purpose template dictionary class which manages the storage
     associated with it.  It is derived from DictionaryBase instantiated on
-    a memory managed form of intrusive doubly-linked list of T.
+    a memory managed form of intrusive doubly-linked list of \<T\>.
 
 SourceFiles
     Dictionary.C

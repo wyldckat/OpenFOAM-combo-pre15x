@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -383,6 +383,22 @@ scalar sumProd(const UList<Type>& f1, const UList<Type>& f2)
 
 
 template<class Type>
+Type sumCmptProd(const UList<Type>& f1, const UList<Type>& f2)
+{
+    if (f1.size() && (f1.size() == f2.size()))
+    {
+        Type SumProd = pTraits<Type>::zero;
+        TFOR_ALL_S_OP_FUNC_F_F(Type, SumProd, +=, cmptMultiply, Type, f1, Type, f2)
+        return SumProd;
+    }
+    else
+    {
+        return pTraits<Type>::zero;
+    }
+}
+
+
+template<class Type>
 scalar sumSqr(const UList<Type>& f)
 {
     if (f.size())
@@ -415,6 +431,24 @@ scalar sumMag(const UList<Type>& f)
 }
 
 TMP_UNARY_FUNCTION(scalar, sumMag)
+
+
+template<class Type>
+Type sumCmptMag(const UList<Type>& f)
+{
+    if (f.size())
+    {
+        Type SumMag = pTraits<Type>::zero;
+        TFOR_ALL_S_OP_FUNC_F(scalar, SumMag, +=, cmptMag, Type, f)
+        return SumMag;
+    }
+    else
+    {
+        return pTraits<Type>::zero;
+    }
+}
+
+TMP_UNARY_FUNCTION(Type, sumCmptMag)
 
 template<class Type>
 Type average(const UList<Type>& f)
@@ -453,17 +487,25 @@ G_UNARY_FUNCTION(Type, gMin, min, min)
 G_UNARY_FUNCTION(Type, gSum, sum, sum)
 G_UNARY_FUNCTION(scalar, gSumSqr, sumSqr, sum)
 G_UNARY_FUNCTION(scalar, gSumMag, sumMag, sum)
+G_UNARY_FUNCTION(Type, gSumCmptMag, sumCmptMag, sum)
 
 #undef G_UNARY_FUNCTION
 
 template<class Type>
 scalar gSumProd(const UList<Type>& f1, const UList<Type>& f2)
 {
-    Type SumProd = sumProd(f1, f2);
+    scalar SumProd = sumProd(f1, f2);
     reduce(SumProd, sumOp<Type>());
     return SumProd;
 }
 
+template<class Type>
+Type gSumCmptProd(const UList<Type>& f1, const UList<Type>& f2)
+{
+    Type SumProd = sumCmptProd(f1, f2);
+    reduce(SumProd, sumOp<Type>());
+    return SumProd;
+}
 
 template<class Type>
 Type gAverage(const UList<Type>& f)
@@ -493,11 +535,13 @@ TMP_UNARY_FUNCTION(Type, gAverage)
 
 BINARY_FUNCTION(Type, Type, Type, max)
 BINARY_FUNCTION(Type, Type, Type, min)
-BINARY_FUNCTION(Type, Type, Type, scale)
+BINARY_FUNCTION(Type, Type, Type, cmptMultiply)
+BINARY_FUNCTION(Type, Type, Type, cmptDivide)
 
 BINARY_TYPE_FUNCTION(Type, Type, Type, max)
 BINARY_TYPE_FUNCTION(Type, Type, Type, min)
-BINARY_TYPE_FUNCTION(Type, Type, Type, scale)
+BINARY_TYPE_FUNCTION(Type, Type, Type, cmptMultiply)
+BINARY_TYPE_FUNCTION(Type, Type, Type, cmptDivide)
 
 
 /* * * * * * * * * * * * * * * * Global operators  * * * * * * * * * * * * * */

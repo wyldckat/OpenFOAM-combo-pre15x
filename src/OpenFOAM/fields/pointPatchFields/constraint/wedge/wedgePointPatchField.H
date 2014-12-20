@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    wedgePointPatchField
+    Foam::wedgePointPatchField
 
 Description
     Wedge front and back plane patch field
@@ -123,8 +123,13 @@ public:
 
     // Member functions
 
-        //- Update the patch field
-        virtual void evaluate();
+        // Evaluation functions
+
+            //- Update the patch field
+            virtual void evaluate
+            (
+                const Pstream::commsTypes commsType=Pstream::blocking
+            );
 };
 
 

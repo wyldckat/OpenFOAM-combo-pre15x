@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -33,30 +33,24 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-defineNamedTemplateTypeNameAndDebug(pointPatchScalarField, 0);
-defineTemplateRunTimeSelectionTable(pointPatchScalarField, pointPatch);
-defineTemplateRunTimeSelectionTable(pointPatchScalarField, patchMapper);
-defineTemplateRunTimeSelectionTable(pointPatchScalarField, dictionary);
+#define makePointPatchField(pointPatchTypeField)                              \
+                                                                              \
+defineNamedTemplateTypeNameAndDebug(pointPatchTypeField, 0);                  \
+template<>                                                                    \
+int pointPatchTypeField::disallowGenericPointPatchField                       \
+(                                                                             \
+    debug::debugSwitch("disallowGenericPointPatchField", 0)                   \
+);                                                                            \
+defineTemplateRunTimeSelectionTable(pointPatchTypeField, pointPatch);         \
+defineTemplateRunTimeSelectionTable(pointPatchTypeField, patchMapper);        \
+defineTemplateRunTimeSelectionTable(pointPatchTypeField, dictionary);
 
-defineNamedTemplateTypeNameAndDebug(pointPatchVectorField, 0);
-defineTemplateRunTimeSelectionTable(pointPatchVectorField, pointPatch);
-defineTemplateRunTimeSelectionTable(pointPatchVectorField, patchMapper);
-defineTemplateRunTimeSelectionTable(pointPatchVectorField, dictionary);
+makePointPatchField(pointPatchScalarField)
+makePointPatchField(pointPatchVectorField)
+makePointPatchField(pointPatchSphericalTensorField)
+makePointPatchField(pointPatchSymmTensorField)
+makePointPatchField(pointPatchTensorField)
 
-defineNamedTemplateTypeNameAndDebug(pointPatchSphericalTensorField, 0);
-defineTemplateRunTimeSelectionTable(pointPatchSphericalTensorField, pointPatch);
-defineTemplateRunTimeSelectionTable(pointPatchSphericalTensorField, patchMapper);
-defineTemplateRunTimeSelectionTable(pointPatchSphericalTensorField, dictionary);
-
-defineNamedTemplateTypeNameAndDebug(pointPatchSymmTensorField, 0);
-defineTemplateRunTimeSelectionTable(pointPatchSymmTensorField, pointPatch);
-defineTemplateRunTimeSelectionTable(pointPatchSymmTensorField, patchMapper);
-defineTemplateRunTimeSelectionTable(pointPatchSymmTensorField, dictionary);
-
-defineNamedTemplateTypeNameAndDebug(pointPatchTensorField, 0);
-defineTemplateRunTimeSelectionTable(pointPatchTensorField, pointPatch);
-defineTemplateRunTimeSelectionTable(pointPatchTensorField, patchMapper);
-defineTemplateRunTimeSelectionTable(pointPatchTensorField, dictionary);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

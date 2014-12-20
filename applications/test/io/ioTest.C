@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -50,6 +50,8 @@ int main(void)
     Info<< setw(20) << setprecision(3) << 1.234234 << endl;
 
     Info<< hex << 255 << endl;
+
+    Info.operator Foam::OSstream&() << "stop" << endl;
 }
 
 // ************************************************************************* //

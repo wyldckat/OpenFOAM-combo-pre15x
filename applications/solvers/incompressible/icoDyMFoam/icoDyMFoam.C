@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,8 +54,7 @@ int main(int argc, char *argv[])
 
     while (runTime.run())
     {
-#       include "readPISOControls.H"
-#       include "readTimeControls.H"
+#       include "readControls.H"
 #       include "CourantNo.H"
 
         // Make the fluxes absolute
@@ -67,9 +66,9 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
-        bool meshChanged = mesh.update();
+        mesh.update();
 
-        if (mesh.moving() || meshChanged)
+        if (mesh.changing() && correctPhi)
         {
 #           include "correctPhi.H"
         }
@@ -77,11 +76,16 @@ int main(int argc, char *argv[])
         // Make the fluxes relative to the mesh motion
         fvc::makeRelative(phi, U);
 
-        //#       include "meshCourantNo.H"
+        if (mesh.changing() && checkMeshCourantNo)
+        {
+#           include "meshCourantNo.H"
+        }
 
         // --- PIMPLE loop
         for (int ocorr=0; ocorr<nOuterCorr; ocorr++)
         {
+            p.storePrevIter();
+
 #           include "UEqn.H"
 
             // --- PISO loop
@@ -91,9 +95,13 @@ int main(int argc, char *argv[])
 
                 U = rAU*UEqn.H();
                 phi = (fvc::interpolate(U) & mesh.Sf());
-                  //+ fvc::ddtPhiCorr(rAU, U, phi);
 
-                adjustPhi(phi, U, p);
+                if (p.needReference())
+                {
+                    fvc::makeRelative(phi, U);
+                    adjustPhi(phi, U, p);
+                    fvc::makeAbsolute(phi, U);
+                }
 
                 for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
                 {
@@ -112,7 +120,7 @@ int main(int argc, char *argv[])
                     {
                         pEqn.solve(mesh.solver(p.name()));
                     }
-                
+
                     if (nonOrth == nNonOrthCorr)
                     {
                         phi -= pEqn.flux();

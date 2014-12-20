@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -280,7 +280,11 @@ Foam::combineFaces::combineFaces
 )
 :
     mesh_(mesh),
-    undoable_(undoable)
+    undoable_(undoable),
+    masterFace_(0),
+    faceSetsVertices_(0),
+    savedPointLabels_(0),
+    savedPoints_(0)
 {}
 
 
@@ -289,27 +293,10 @@ Foam::combineFaces::combineFaces
 Foam::labelListList Foam::combineFaces::getMergeSets
 (
     const scalar featureCos,
-    const scalar minConcaveCos
+    const scalar minConcaveCos,
+    const labelHashSet& boundaryCells
 ) const
 {
-    const polyBoundaryMesh& patches = mesh_.boundaryMesh();
-
-    // Pick up all cells on boundary
-    labelHashSet boundaryCells(mesh_.nFaces()-mesh_.nInternalFaces());
-
-    forAll(patches, patchI)
-    {
-        const polyPatch& patch = patches[patchI];
-
-        if (!patch.coupled())
-        {
-            forAll(patch, i)
-            {
-                boundaryCells.insert(mesh_.faceOwner()[patch.start()+i]);
-            }
-        }
-    }
-
     // Lists of faces that can be merged.
     DynamicList<labelList> allFaceSets(boundaryCells.size() / 10);
 
@@ -380,6 +367,34 @@ Foam::labelListList Foam::combineFaces::getMergeSets
     }
 
     return allFaceSets.shrink();
+}
+
+
+Foam::labelListList Foam::combineFaces::getMergeSets
+(
+    const scalar featureCos,
+    const scalar minConcaveCos
+) const
+{
+    const polyBoundaryMesh& patches = mesh_.boundaryMesh();
+
+    // Pick up all cells on boundary
+    labelHashSet boundaryCells(mesh_.nFaces()-mesh_.nInternalFaces());
+
+    forAll(patches, patchI)
+    {
+        const polyPatch& patch = patches[patchI];
+
+        if (!patch.coupled())
+        {
+            forAll(patch, i)
+            {
+                boundaryCells.insert(mesh_.faceOwner()[patch.start()+i]);
+            }
+        }
+    }
+
+    return getMergeSets(featureCos, minConcaveCos, boundaryCells);
 }
 
 
@@ -697,47 +712,66 @@ void Foam::combineFaces::setRefinement
         false               // no separation
     );
 
-    label n = 0;
-    forAll(nPointFaces, pointI)
+    // Remove all unused points. Store position if undoable.
+    if (!undoable_)
     {
-        if (nPointFaces[pointI] > 0)
+        forAll(nPointFaces, pointI)
         {
-            n++;
-        }
-    }
-
-    savedPoints_.setSize(n);
-    Map<label> meshToSaved(2*n);
-
-    n = 0;
-    forAll(nPointFaces, pointI)
-    {
-        if (nPointFaces[pointI] == 0)
-        {
-            meshMod.setAction(polyRemovePoint(pointI));
-
-            savedPoints_[n] = mesh_.points()[pointI];
-            meshToSaved.insert(pointI, n);
-            n++;
-        }
-    }
-
-    // Update stored vertex labels. Negative indices index into local points
-    forAll(faceSetsVertices_, setI)
-    {
-        faceList& setFaces = faceSetsVertices_[setI];
-
-        forAll(setFaces, i)
-        {
-            face& f = setFaces[i];
-
-            forAll(f, fp)
+            if (nPointFaces[pointI] == 0)
             {
-                label pointI = f[fp];
+                meshMod.setAction(polyRemovePoint(pointI));
+            }
+        }
+    }
+    else
+    {
+        // Count removed points 
+        label n = 0;
+        forAll(nPointFaces, pointI)
+        {
+            if (nPointFaces[pointI] == 0)
+            {
+                n++;
+            }
+        }
 
-                if (nPointFaces[pointI] == 0)
+        savedPointLabels_.setSize(n);
+        savedPoints_.setSize(n);
+        Map<label> meshToSaved(2*n);
+
+        // Remove points and store position
+        n = 0;
+        forAll(nPointFaces, pointI)
+        {
+            if (nPointFaces[pointI] == 0)
+            {
+                meshMod.setAction(polyRemovePoint(pointI));
+
+                savedPointLabels_[n] = pointI;
+                savedPoints_[n] = mesh_.points()[pointI];
+
+                meshToSaved.insert(pointI, n);
+                n++;
+            }
+        }
+
+        // Update stored vertex labels. Negative indices index into local points
+        forAll(faceSetsVertices_, setI)
+        {
+            faceList& setFaces = faceSetsVertices_[setI];
+
+            forAll(setFaces, i)
+            {
+                face& f = setFaces[i];
+
+                forAll(f, fp)
                 {
-                    f[fp] = -meshToSaved[pointI]-1;
+                    label pointI = f[fp];
+
+                    if (nPointFaces[pointI] == 0)
+                    {
+                        f[fp] = -meshToSaved[pointI]-1;
+                    }
                 }
             }
         }
@@ -749,8 +783,11 @@ void Foam::combineFaces::updateMesh(const mapPolyMesh& map)
 {
     if (undoable_)
     {
+        // Master face just renumbering of point labels
         inplaceRenumber(map.reverseFaceMap(), masterFace_);
 
+        // Stored faces refer to backed-up vertices (not changed)
+        // and normal vertices (need to be renumbered)
         forAll(faceSetsVertices_, setI)
         {
             faceList& faces = faceSetsVertices_[setI];
@@ -768,7 +805,7 @@ void Foam::combineFaces::updateMesh(const mapPolyMesh& map)
                     {
                         f[fp] = map.reversePointMap()[pointI];
 
-                        if (f[fp] == -1)
+                        if (f[fp] < 0)
                         {
                             FatalErrorIn
                             (
@@ -796,7 +833,10 @@ void Foam::combineFaces::updateMesh(const mapPolyMesh& map)
 void Foam::combineFaces::setUnrefinement
 (
     const labelList& masterFaces,
-    polyTopoChange& meshMod
+    polyTopoChange& meshMod,
+    Map<label>& restoredPoints,
+    Map<label>& restoredFaces,
+    Map<label>& restoredCells
 )
 {
     if (!undoable_)
@@ -804,7 +844,8 @@ void Foam::combineFaces::setUnrefinement
         FatalErrorIn
         (
             "combineFaces::setUnrefinement"
-            "(const labelList&, polyTopoChange&)"
+            "(const labelList&, polyTopoChange&"
+            ", Map<label>&, Map<label>&, Map<label>&)"
         )   << "Can only call setUnrefinement if constructed with"
             << " unrefinement capability." << exit(FatalError);
     }
@@ -835,7 +876,8 @@ void Foam::combineFaces::setUnrefinement
             FatalErrorIn
             (
                 "combineFaces::setUnrefinement"
-                "(const labelList&, polyTopoChange&)"
+                "(const labelList&, polyTopoChange&"
+                ", Map<label>&, Map<label>&, Map<label>&)"
             )   << "Master face " << masterFaceI
                 << " is not the master of one of the merge sets"
                 << " or has already been merged"
@@ -855,7 +897,8 @@ void Foam::combineFaces::setUnrefinement
             FatalErrorIn
             (
                 "combineFaces::setUnrefinement"
-                "(const labelList&, polyTopoChange&)"
+                "(const labelList&, polyTopoChange&"
+                ", Map<label>&, Map<label>&, Map<label>&)"
             )   << "Set " << setI << " with master face " << masterFaceI
                 << " has already been merged." << abort(FatalError);
         }
@@ -885,6 +928,12 @@ void Foam::combineFaces::setUnrefinement
                                 true                    // supports a cell
                             )
                         );
+                        restoredPoints.insert
+                        (
+                            addedPoints[localI],        // current point label
+                            savedPointLabels_[localI]   // point label when it
+                                                        // was stored
+                        );
                     }
                     f[fp] = addedPoints[localI];
                 }
@@ -910,7 +959,8 @@ void Foam::combineFaces::setUnrefinement
             FatalErrorIn
             (
                 "combineFaces::setUnrefinement"
-                "(const labelList&, polyTopoChange&)"
+                "(const labelList&, polyTopoChange&"
+                ", Map<label>&, Map<label>&, Map<label>&)"
             )   << "Master face " << masterFaceI << " is on coupled patch "
                 << mesh_.boundaryMesh()[patchI].name()
                 << abort(FatalError);

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,6 +47,7 @@ Foam::functionObject::functionObject()
 
 Foam::autoPtr<Foam::functionObject> Foam::functionObject::New
 (
+    const word& name,
     const Time& t,
     const dictionary& functionDict
 )
@@ -86,14 +87,14 @@ Foam::autoPtr<Foam::functionObject> Foam::functionObject::New
         (
             "functionObject::New"
             "(const word& functionType, const Time&, const dictionary&)"
-        )   << "Unknown functiont type "
+        )   << "Unknown function type "
             << functionType << endl << endl
             << "Valid functions are : " << endl
             << dictionaryConstructorTablePtr_->toc()
             << exit(FatalError);
     }
 
-    return autoPtr<functionObject>(cstrIter()(t, functionDict));
+    return autoPtr<functionObject>(cstrIter()(name, t, functionDict));
 }
 
 
@@ -107,11 +108,12 @@ Foam::functionObject::~functionObject()
 
 Foam::autoPtr<Foam::functionObject> Foam::functionObject::iNew::operator()
 (
+    const word& name,
     Istream& is
 ) const
 {
     dictionary dict(is);
-    return functionObject::New(time_, dict);
+    return functionObject::New(name, time_, dict);
 }
 
 

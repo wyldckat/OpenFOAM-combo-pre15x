@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -212,11 +212,11 @@ void Foam::mixerFvMesh::calcMovingMasks() const
     }
 
     // Set the point mask
-    movingPointsMaskPtr_ = new scalarField(allPoints().size(), 0);
+    movingPointsMaskPtr_ = new scalarField(points().size(), 0);
     scalarField& movingPointsMask = *movingPointsMaskPtr_;
 
     const cellList& c = cells();
-    const faceList& f = allFaces();
+    const faceList& f = faces();
 
     const labelList& cellAddr =
         cellZones()[cellZones().findZoneID("movingCells")];
@@ -348,7 +348,7 @@ bool Foam::mixerFvMesh::update()
     (
         csPtr_->globalPosition
         (
-            csPtr_->localPosition(allPoints())
+            csPtr_->localPosition(points())
           + vector(0, rpm_*360.0*time().deltaT().value()/60.0, 0)
             *movingPointsMask()
         )
@@ -371,7 +371,7 @@ bool Foam::mixerFvMesh::update()
     (
         csPtr_->globalPosition
         (
-            csPtr_->localPosition(oldAllPoints())
+            csPtr_->localPosition(oldPoints())
           + vector(0, rpm_*360.0*time().deltaT().value()/60.0, 0)
             *movingPointsMask()
         )

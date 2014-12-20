@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    cyclicGAMGInterfaceField
+    Foam::cyclicGAMGInterfaceField
 
 Description
     GAMG agglomerated cyclic interface field.
@@ -116,7 +116,8 @@ public:
                 scalarField& result,
                 const lduMatrix&,
                 const scalarField& coeffs,
-                const direction cmpt
+                const direction cmpt,
+                const Pstream::commsTypes commsType
             ) const;
 
 

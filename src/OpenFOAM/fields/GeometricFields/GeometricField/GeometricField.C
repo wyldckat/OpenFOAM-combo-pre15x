@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -125,7 +125,7 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
                     "readIfPresent()",
                     this->readStream(typeName)
                 )   << "   number of field elements = " << this->size()
-                    << " number of mesh elements = " 
+                    << " number of mesh elements = "
                     << GeoMesh::size(this->mesh())
                     << exit(FatalIOError);
             }
@@ -152,7 +152,7 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readOldTimeIfPresent()
         IOobject::MUST_READ,
         IOobject::AUTO_WRITE
     );
-        
+
     if (field0.headerOk())
     {
         if (debug)
@@ -168,12 +168,12 @@ bool Foam::GeometricField<Type, PatchField, GeoMesh>::readOldTimeIfPresent()
         );
 
         field0Ptr_->timeIndex_ = timeIndex_ - 1;
-        
+
         if (!field0Ptr_->readOldTimeIfPresent())
         {
             field0Ptr_->oldTime();
         }
-        
+
         return true;
     }
 
@@ -788,8 +788,11 @@ void Foam::GeometricField<Type, PatchField, GeoMesh>::storePrevIter() const
                 << this->info() << endl;
         }
 
-        fieldPrevIterPtr_ =
-            new GeometricField<Type, PatchField, GeoMesh>(*this);
+        fieldPrevIterPtr_ = new GeometricField<Type, PatchField, GeoMesh>
+        (
+            this->name() + "PrevIter",
+            *this
+        );
     }
     else
     {
@@ -889,10 +892,10 @@ writeData(Ostream& os) const
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type, template<class> class PatchField, class GeoMesh>
-Foam::GeometricField<Type, PatchField, GeoMesh>&
+const Foam::GeometricField<Type, PatchField, GeoMesh>&
 Foam::GeometricField<Type, PatchField, GeoMesh>::null()
 {
-    GeometricField<Type, PatchField, GeoMesh>* nullPtr = 
+    GeometricField<Type, PatchField, GeoMesh>* nullPtr =
         reinterpret_cast<GeometricField<Type, PatchField, GeoMesh>*>(NULL);
     return *nullPtr;
 }

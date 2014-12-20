@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    refinementHistory
-
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "DynamicList.H"
@@ -34,6 +29,7 @@ Description
 #include "ListOps.H"
 #include "mapPolyMesh.H"
 #include "mapDistributePolyMesh.H"
+#include "polyMesh.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -668,9 +664,11 @@ void Foam::refinementHistory::distribute(const mapDistributePolyMesh& map)
     // Per visible cell the processor it goes to.
     labelList destination(visibleCells_.size());
 
-    forAll(map.subCellMap(), procI)
+    const labelListList& subCellMap = map.cellMap().subMap();
+
+    forAll(subCellMap, procI)
     {
-        const labelList& newToOld = map.subCellMap()[procI];
+        const labelList& newToOld = subCellMap[procI];
 
         forAll(newToOld, i)
         {
@@ -797,7 +795,7 @@ Pout<< "refinementHistory::distribute :"
         }
 
 
-        const labelList& subMap = map.subCellMap()[procI];
+        const labelList& subMap = subCellMap[procI];
 
         // New visible cells.
         labelList newVisibleCells(subMap.size(), -1);
@@ -820,7 +818,7 @@ Pout<< "refinementHistory::distribute :"
 
 
         // Send to neighbours
-        OPstream toNbr(procI);
+        OPstream toNbr(Pstream::blocking, procI);
         toNbr << newSplitCells << newVisibleCells;
     }
 
@@ -836,7 +834,7 @@ Pout<< "refinementHistory::distribute :"
 
     for (label procI = 0; procI < Pstream::nProcs(); procI++)
     {
-        IPstream fromNbr(procI);
+        IPstream fromNbr(Pstream::blocking, procI);
         List<splitCell8> newSplitCells(fromNbr);
         labelList newVisibleCells(fromNbr);
 
@@ -878,7 +876,7 @@ Pout<< "refinementHistory::distribute :"
 
 
         // Combine visibleCell.
-        const labelList& constructMap = map.constructCellMap()[procI];
+        const labelList& constructMap = map.cellMap().constructMap()[procI];
 
         forAll(newVisibleCells, i)
         {

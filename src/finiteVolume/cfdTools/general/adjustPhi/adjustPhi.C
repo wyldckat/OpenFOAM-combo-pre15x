@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -97,12 +97,17 @@ bool Foam::adjustPhi
         reduce(adjustableMassOut, sumOp<scalar>());
 
         scalar massCorr = 1.0;
+        scalar magAdjustableMassOut = mag(adjustableMassOut);
 
-        if (mag(adjustableMassOut)/totalFlux > SMALL)
+        if
+        (
+            magAdjustableMassOut > VSMALL
+         && magAdjustableMassOut/totalFlux > SMALL
+        )
         {
             massCorr = (massIn - fixedMassOut)/adjustableMassOut;
         }
-        else if(mag(fixedMassOut - massIn)/totalFlux > SMALL)
+        else if(mag(fixedMassOut - massIn)/totalFlux > 1e-10)
         {
             FatalErrorIn
             (

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    timeVaryingMappedFixedValueFvPatchField
+    Foam::timeVaryingMappedFixedValueFvPatchField
 
 Description
+    Foam::timeVaryingMappedFixedValueFvPatchField
 
 SourceFiles
     timeVaryingMappedFixedValueFvPatchField.C
@@ -38,6 +39,7 @@ SourceFiles
 #include "fixedValueFvPatchFields.H"
 #include "coordinateSystem.H"
 #include "FixedList.H"
+#include "instantList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -68,9 +70,6 @@ class timeVaryingMappedFixedValueFvPatchField
         //- Current interpolation factors to face centres of underlying
         //  patch
         List<FixedList<scalar, 3> > nearestVertexWeight_;
-
-        //- Current field name
-        word fieldName_;
 
         //- List of boundaryData time directories
         instantList sampleTimes_;
@@ -197,6 +196,22 @@ public:
             {
                 return referenceCS_;
             }
+
+
+        // Mapping functions
+
+            //- Map (and resize as needed) from self given a mapping object
+            virtual void autoMap
+            (
+                const fvPatchFieldMapper&
+            );
+
+            //- Reverse map the given fvPatchField onto this fvPatchField
+            virtual void rmap
+            (
+                const fvPatchField<Type>&,
+                const labelList&
+            );
 
 
         // Evaluation functions

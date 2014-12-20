@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,10 +30,9 @@ Description
 #include "meshSearch.H"
 #include "triPointRef.H"
 #include "octree.H"
-#include "Cloud.H"
-#include "passiveParticle.H"
 #include "pointIndexHit.H"
 #include "DynamicList.H"
+#include "demandDrivenData.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -270,6 +269,7 @@ Foam::meshSearch::meshSearch(const polyMesh& mesh, const bool faceDecomp)
 :
     mesh_(mesh),
     faceDecomp_(faceDecomp),
+    cloud_(mesh_, IDLList<passiveParticle>()),
     boundaryTreePtr_(NULL),
     cellTreePtr_(NULL),
     cellCentreTreePtr_(NULL)
@@ -518,9 +518,7 @@ Foam::label Foam::meshSearch::findCell
             do
             {
                 // Walk neighbours (using tracking) to get closer
-                Cloud<passiveParticle> cloud(mesh_, IDLList<passiveParticle>());
-
-                passiveParticle tracker(cloud, curPoint, nearCellI);
+                passiveParticle tracker(cloud_, curPoint, nearCellI);
 
                 if (debug)
                 {
@@ -742,24 +740,9 @@ bool Foam::meshSearch::isInside(const point& p) const
 // Delete all storage
 void Foam::meshSearch::clearOut()
 {
-    if (boundaryTreePtr_)
-    {
-        delete boundaryTreePtr_;
-
-        boundaryTreePtr_ = NULL;
-    }
-    if (cellTreePtr_)
-    {
-        delete cellTreePtr_;
-
-        cellTreePtr_ = NULL;
-    }
-    if (cellCentreTreePtr_)
-    {
-        delete cellCentreTreePtr_;
-
-        cellCentreTreePtr_ = NULL;
-    }
+    deleteDemandDrivenData(boundaryTreePtr_);
+    deleteDemandDrivenData(cellTreePtr_);
+    deleteDemandDrivenData(cellCentreTreePtr_);
 }
 
 

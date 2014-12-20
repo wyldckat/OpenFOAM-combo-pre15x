@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -59,27 +57,27 @@ void Foam::ODESolver::solve
     scalar& hEst
 ) const
 {
-	const label MAXSTP = 10000;
+    const label MAXSTP = 10000;
 
-	scalar x = xStart;
-	scalar h = hEst;
+    scalar x = xStart;
+    scalar h = hEst;
 
-	for (label nStep=0; nStep<MAXSTP; nStep++)
+    for (label nStep=0; nStep<MAXSTP; nStep++)
     {
-		ode.derivatives(x, y, dydx_);
+        ode.derivatives(x, y, dydx_);
 
-		for (label i=0; i<n_; i++)
+        for (label i=0; i<n_; i++)
         {
-			yScale_[i] = mag(y[i]) + mag(dydx_[i]*h) + SMALL;
+            yScale_[i] = mag(y[i]) + mag(dydx_[i]*h) + SMALL;
         }
 
-		if ((x + h - xEnd)*(x + h - xStart) > 0.0)
+        if ((x + h - xEnd)*(x + h - xStart) > 0.0)
         {
             h = xEnd - x;
         }
 
         scalar hNext, hDid;
-		solve(ode, x, y, dydx_, eps, yScale_, h, hDid, hNext);
+        solve(ode, x, y, dydx_, eps, yScale_, h, hDid, hNext);
 
         if ((x - xEnd)*(xEnd - xStart) >= 0.0)
         {
@@ -87,10 +85,10 @@ void Foam::ODESolver::solve
             return;
         }
 
-		h = hNext;
-	}
+        h = hNext;
+    }
 
-	FatalErrorIn
+    FatalErrorIn
     (
         "ODESolver::solve"
         "(const ODE& ode, const scalar xStart, const scalar xEnd,"
@@ -98,6 +96,5 @@ void Foam::ODESolver::solve
     )   << "Too many integration steps"
         << exit(FatalError);
 }
-
 
 // ************************************************************************* //

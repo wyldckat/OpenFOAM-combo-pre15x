@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,14 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
-    lesInterFoam
+    rasInterFoam
 
 Description
-    Solver for 2 incompressible fluids capturing the interface.  Turbulence is
-    modelled using a runtime selectable incompressible RAS model.
+    Solver for 2 incompressible, isothermal immiscible fluids using a VOF
+    (volume of fluid) phase-fraction based interface capturing approach.
+    The momentum and other fluid properties are of the "mixture" and a single
+    momentum equation is solved.  Turbulence is modelled using a run-time
+    selectable incompressible RAS model.
 
 \*---------------------------------------------------------------------------*/
 
@@ -36,23 +39,23 @@ Description
 #include "subCycle.H"
 #include "interfaceProperties.H"
 #include "twoPhaseMixture.H"
-#include "incompressible/turbulenceModel/turbulenceModel.H"
+#include "incompressible/RASModel/RASModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 int main(int argc, char *argv[])
 {
-
-#   include "setRootCase.H"
-#   include "createTime.H"
-#   include "createMesh.H"
-#   include "readEnvironmentalProperties.H"
-#   include "readPISOControls.H"
-#   include "initContinuityErrs.H"
-#   include "createFields.H"
-#   include "readTimeControls.H"
-#   include "correctPhi.H"
-#   include "setInitialDeltaT.H"
+    #include "setRootCase.H"
+    #include "createTime.H"
+    #include "createMesh.H"
+    #include "readEnvironmentalProperties.H"
+    #include "readPISOControls.H"
+    #include "initContinuityErrs.H"
+    #include "createFields.H"
+    #include "readTimeControls.H"
+    #include "correctPhi.H"
+    #include "CourantNo.H"
+    #include "setInitialDeltaT.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -60,26 +63,28 @@ int main(int argc, char *argv[])
 
     while (runTime.run())
     {
-#       include "readPISOControls.H"
-#       include "readTimeControls.H"
-#       include "CourantNo.H"
-#       include "setDeltaT.H"
+        #include "readPISOControls.H"
+        #include "readTimeControls.H"
+        #include "CourantNo.H"
+        #include "setDeltaT.H"
 
         runTime++;
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
-#       include "gammaEqnSubCycle.H"
+        #include "gammaEqnSubCycle.H"
 
-#       include "UEqn.H"
+        #include "UEqn.H"
 
         // --- PISO loop
         for (int corr=0; corr < nCorr; corr++)
         {
-#           include "pEqn.H"
+            #include "pEqn.H"
         }
 
-#       include "continuityErrs.H"
+        #include "continuityErrs.H"
+
+        p = pd + rho*gh;
 
         turbulence->correct();
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,16 +22,17 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Global
-    fft
+Class
+    Foam::fft
 
 Description
-    Fast fourier transform subroutine derived from the Numerical
-    Recipes in C routine.  The complex transform field is returned
-    in the field supplied.  The direction of transform is supplied
-    as an argument (1 = forward, -1 = reverse).  The dimensionality
-    and organisation of the array of values in space is supplied
-    in the nn indexing array.
+    Fast fourier transform derived from the Numerical
+    Recipes in C routine.
+
+    The complex transform field is returned in the field supplied.  The
+    direction of transform is supplied as an argument (1 = forward, -1 =
+    reverse).  The dimensionality and organisation of the array of values
+    in space is supplied in the nn indexing array.
 
 SourceFiles
     fft.C

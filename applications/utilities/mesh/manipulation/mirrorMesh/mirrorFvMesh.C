@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -67,8 +67,8 @@ Foam::mirrorFvMesh::mirrorFvMesh(const IOobject& io)
         readScalar(mirrorMeshDict_.lookup("planeTolerance"))
     );
 
-    const pointField& oldPoints = allPoints();
-    const faceList& oldFaces = allFaces();
+    const pointField& oldPoints = points();
+    const faceList& oldFaces = faces();
     const cellList& oldCells = cells();
     const label nOldInternalFaces = nInternalFaces();
     const polyPatchList& oldPatches = boundaryMesh();

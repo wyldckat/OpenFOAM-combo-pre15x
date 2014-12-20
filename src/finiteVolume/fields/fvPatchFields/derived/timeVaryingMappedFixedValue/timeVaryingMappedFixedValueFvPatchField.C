@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,6 +25,7 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "timeVaryingMappedFixedValueFvPatchField.H"
+#include "Time.H"
 #include "triSurfaceTools.H"
 #include "triSurface.H"
 #include "cartesianCS.H"
@@ -53,7 +54,6 @@ timeVaryingMappedFixedValueFvPatchField
     referenceCS_(NULL),
     nearestVertex_(0),
     nearestVertexWeight_(0),
-    fieldName_("Undefined"),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -85,7 +85,6 @@ timeVaryingMappedFixedValueFvPatchField
     referenceCS_(NULL),
     nearestVertex_(0),
     nearestVertexWeight_(0),
-    fieldName_("Undefined"),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -116,7 +115,6 @@ timeVaryingMappedFixedValueFvPatchField
     referenceCS_(NULL),
     nearestVertex_(0),
     nearestVertexWeight_(0),
-    fieldName_("Undefined"),
     sampleTimes_(0),
     startSampleTime_(-1),
     startSampledValues_(0),
@@ -154,7 +152,6 @@ timeVaryingMappedFixedValueFvPatchField
     referenceCS_(ptf.referenceCS_),
     nearestVertex_(ptf.nearestVertex_),
     nearestVertexWeight_(ptf.nearestVertexWeight_),
-    fieldName_(ptf.fieldName_),
     sampleTimes_(ptf.sampleTimes_),
     startSampleTime_(ptf.startSampleTime_),
     startSampledValues_(ptf.startSampledValues_),
@@ -204,36 +201,37 @@ timeVaryingMappedFixedValueFvPatchField
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
+void timeVaryingMappedFixedValueFvPatchField<Type>::autoMap
+(
+    const fvPatchFieldMapper& m
+)
+{
+    fixedValueFvPatchField<Type>::autoMap(m);
+    startSampledValues_.autoMap(m);
+    endSampledValues_.autoMap(m);
+}
+
+
+template<class Type>
+void timeVaryingMappedFixedValueFvPatchField<Type>::rmap
+(
+    const fvPatchField<Type>& ptf,
+    const labelList& addr
+)
+{
+    fixedValueFvPatchField<Type>::rmap(ptf, addr);
+
+    const timeVaryingMappedFixedValueFvPatchField<Type>& tiptf =
+        refCast<const timeVaryingMappedFixedValueFvPatchField<Type> >(ptf);
+
+    startSampledValues_.rmap(tiptf.startSampledValues_, addr);
+    endSampledValues_.rmap(tiptf.endSampledValues_, addr);
+}
+
+
+template<class Type>
 void timeVaryingMappedFixedValueFvPatchField<Type>::readSamplePoints()
 {
-    // Get (bit convoluted) the name of the field
-    {
-        typedef GeometricField<Type, fvPatchField, volMesh> volField;
-
-        const Field<Type>& myInternalField = this->internalField();
-
-        const objectRegistry& reg = this->db();
-
-        HashTable<const volField*> flds = reg.lookupClass<volField>();
-
-        for
-        (
-            typename HashTable<const volField*>::const_iterator iter =
-                flds.begin();
-            iter != flds.end();
-            ++iter
-        )
-        {
-            const volField& fld = *iter();
-
-            if (&(fld.internalField()) == &myInternalField)
-            {
-                fieldName_ = iter.key();
-                break;
-            }
-        }
-    }
-
     // Read the sample points
 
     pointIOField samplePoints
@@ -563,7 +561,7 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
             (
                 IOobject
                 (
-                    fieldName_,
+                    this->dimensionedInternalField().name(),
                     this->db().time().constant(),
                     "boundaryData"
                    /this->patch().name()
@@ -608,7 +606,7 @@ void timeVaryingMappedFixedValueFvPatchField<Type>::checkTable()
             (
                 IOobject
                 (
-                    fieldName_,
+                    this->dimensionedInternalField().name(),
                     this->db().time().constant(),
                     "boundaryData"
                    /this->patch().name()

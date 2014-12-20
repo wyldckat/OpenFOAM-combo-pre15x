@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,12 +23,14 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    SubDimensionedField
+    Foam::SubDimensionedField
 
 Description
     SubDimensionedField is a DimensionedField obtained as a section of another
-    DimensionedField.  Thus it is itself unallocated so that no storage is
-    allocated or de-allocated during it's use.  To achieve this behaviour,
+    DimensionedField.
+
+    Thus it is itself unallocated so that no storage is allocated or
+    deallocated during its use.  To achieve this behaviour,
     SubDimensionedField is derived from SubField rather than Field.
 
 SourceFiles
@@ -99,7 +101,7 @@ public:
     // Member functions
 
         //- Return a null SubDimensionedField
-        static inline SubDimensionedField<Type, GeoMesh>& null();
+        static inline const SubDimensionedField<Type, GeoMesh>& null();
 
         //- Return a component field of the field
         inline tmp<DimensionedField<cmptType, GeoMesh> > component

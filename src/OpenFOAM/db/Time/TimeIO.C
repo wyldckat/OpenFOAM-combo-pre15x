@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -147,7 +147,7 @@ void Foam::Time::readDict()
 
     if (controlDict_.found("writeFormat"))
     {
-        writeFormat_ = IOstream::format
+        writeFormat_ = IOstream::formatEnum
         (
             controlDict_.lookup("writeFormat")
         );
@@ -169,7 +169,7 @@ void Foam::Time::readDict()
 
     if (controlDict_.found("writeCompression"))
     {
-        writeCompression_ = IOstream::compression
+        writeCompression_ = IOstream::compressionEnum
         (
             controlDict_.lookup("writeCompression")
         );
@@ -256,7 +256,10 @@ bool Foam::Time::writeObject
                 "time",
                 timeName(),
                 "uniform",
-                *this
+                *this,
+                IOobject::NO_READ,
+                IOobject::NO_WRITE,
+                false
             )
         );
 

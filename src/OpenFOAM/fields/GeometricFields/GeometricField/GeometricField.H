@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    GeometricField<Type, PatchField, GeoMesh>
+    Foam::GeometricField
 
 Description
     Generic GeometricField class.
@@ -53,7 +53,7 @@ namespace Foam
 
 class dictionary;
 
-// * * * * * * Forward declaration of template friend fuctions * * * * * * * //
+// Forward declaration of friend functions and operators
 
 template<class Type, template<class> class PatchField, class GeoMesh>
 class GeometricField;
@@ -436,7 +436,7 @@ public:
         bool needReference() const;
 
         //- Return a null geometric field
-        static GeometricField<Type, PatchField, GeoMesh>& null();
+        static const GeometricField<Type, PatchField, GeoMesh>& null();
 
         //- Return a component of the field
         tmp<GeometricField<cmptType, PatchField, GeoMesh> > component

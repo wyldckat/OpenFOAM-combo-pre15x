@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,14 +23,14 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyMesh
+    Foam::polyMesh
 
 Description
     Mesh consisting of general polyhedral cells.
 
 SourceFiles
     polyMesh.C
-    polyMeshCalcFaceCells.C
+    polyMeshInitMesh.C
     polyMeshClear.C
     polyMeshFromShapeMesh.C
     polyMeshIO.C
@@ -104,10 +104,14 @@ private:
             faceIOList faces_;
 
             //- Face owner
-            labelIOList allOwner_;
+            labelIOList owner_;
 
             //- Face neighbour
-            labelIOList allNeighbour_;
+            labelIOList neighbour_;
+
+            //- Have the primitives been cleared
+            bool clearedPrimitives_;
+
 
             //- Boundary mesh
             mutable polyBoundaryMesh boundary_;
@@ -142,6 +146,9 @@ private:
             //- Is the mesh moving
             bool moving_;
 
+            //- Is the mesh changing (moving and/or topology changing)
+            bool changing_;
+
             //- Current time index for mesh motion
             mutable label curMotionTimeIndex_;
 
@@ -172,7 +179,7 @@ private:
 
 
         // Helper functions for constructor from cell shapes
-    
+
             labelListList cellShapePointCells(const cellShapeList&) const;
 
             labelList facePatchFaceCells
@@ -214,8 +221,8 @@ public:
             const IOobject& io,
             const pointField& points,
             const faceList& faces,
-            const labelList& allOwner,
-            const labelList& allNeighbour,
+            const labelList& owner,
+            const labelList& neighbour,
             const bool syncPar = true
         );
 
@@ -240,6 +247,7 @@ public:
             const faceListList& boundaryFaces,
             const wordList& boundaryPatchNames,
             const wordList& boundaryPatchTypes,
+            const word& defaultBoundaryPatchName,
             const word& defaultBoundaryPatchType,
             const wordList& boundaryPatchPhysicalTypes,
             const bool syncPar = true
@@ -277,19 +285,19 @@ public:
         // Access
 
             //- Return raw points
-            const pointField& allPoints() const;
+            virtual const pointField& points() const;
 
             //- Return raw faces
-            const faceList& allFaces() const;
-
-            //- Return old mesh motion points
-            const pointField& oldAllPoints() const;
+            virtual const faceList& faces() const;
 
             //- Return face owner
-            const labelList& allOwner() const;
+            virtual const labelList& faceOwner() const;
 
             //- Return face neighbour
-            const labelList& allNeighbour() const;
+            virtual const labelList& faceNeighbour() const;
+
+            //- Return old points for mesh motion
+            virtual const pointField& oldPoints() const;
 
             //- Return boundary mesh
             const polyBoundaryMesh& boundaryMesh() const
@@ -347,9 +355,26 @@ public:
             }
 
             //- Set the mesh to be moving
-            void setMoving()
+            bool moving(const bool m)
             {
-                moving_ = true;
+                bool m0 = moving_;
+                moving_ = m;
+                changing_ = changing_ || moving_;
+                return m0;
+            }
+
+            //- Is mesh changing (topology changing and/or moving)
+            bool changing() const
+            {
+                return changing_;
+            }
+
+            //- Set the mesh to be changing
+            bool changing(const bool c)
+            {
+                bool c0 = changing_;
+                changing_ = c;
+                return c0;
             }
 
             //- Move points, returns volumes swept by faces in motion
@@ -412,10 +437,10 @@ public:
             void resetPrimitives
             (
                 const label nUsedFaces,
-                const pointField& allPoints,
-                const faceList& allFaces,
-                const labelList& allOwner,
-                const labelList& allNeighbour,
+                const pointField& points,
+                const faceList& faces,
+                const labelList& owner,
+                const labelList& neighbour,
                 const labelList& patchSizes,
                 const labelList& patchStarts,
                 const bool validBoundary = true
@@ -438,7 +463,7 @@ public:
 
             //- Remove all files from mesh instance
             void removeFiles(const fileName& instanceDir) const;
-   
+
             //- Remove all files from mesh instance()
             void removeFiles() const;
 };

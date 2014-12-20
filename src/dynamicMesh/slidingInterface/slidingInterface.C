@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -369,7 +369,7 @@ bool Foam::slidingInterface::changeTopology() const
     if
     (
         attached_
-     && !topoChanger().mesh().moving()
+     && !topoChanger().mesh().changing()
     )
     {
         // If the mesh is not moving or morphing and the interface is

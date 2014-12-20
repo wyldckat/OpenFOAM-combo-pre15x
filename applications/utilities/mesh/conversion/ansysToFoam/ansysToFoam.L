@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -70,7 +70,11 @@ PtrList<SLList<label> > slPatchCellFaces;
 // Dummy yywrap to keep yylex happy at compile time.
 // It is called by yylex but is not used as the mechanism to change file.
 // See <<EOF>>
+#if YY_FLEX_SUBMINOR_VERSION < 34
 extern "C" int yywrap()
+#else
+int yyFlexLexer::yywrap()
+#endif
 {
     return 1;
 }
@@ -249,7 +253,7 @@ int main(int argc, char *argv[])
 
 #   include "createTime.H"
 
-    fileName ansysFile(args.args()[3]);
+    fileName ansysFile(args.additionalArgs()[0]);
     ifstream ansysStream(ansysFile.c_str());
 
     if (!ansysStream)
@@ -261,7 +265,8 @@ int main(int argc, char *argv[])
     }
 
     yyFlexLexer lexer(&ansysStream);
-    while(lexer.yylex() != 0);
+    while(lexer.yylex() != 0)
+    {}
 
     Info << "Creating points" << endl;
 
@@ -393,7 +398,7 @@ int main(int argc, char *argv[])
     }
 
     // Warning: tet face order has changed between version 1.9.6 and 2.0
-    // 
+    //
     label faceIndex[7][6] =
     {
         {-1, -1, -1, -1, -1, -1}, // 0
@@ -450,6 +455,7 @@ int main(int argc, char *argv[])
         << endl;
 
     wordList patchTypes(boundary.size(), polyPatch::typeName);
+    word defaultFacesName = "defaultFaces";
     word defaultFacesType = emptyPolyPatch::typeName;
     wordList patchPhysicalTypes(boundary.size());
 
@@ -460,6 +466,7 @@ int main(int argc, char *argv[])
         polyMesh::defaultRegion,
         patchNames,
         patchTypes,
+        defaultFacesName,
         defaultFacesType,
         patchPhysicalTypes
     );
@@ -477,6 +484,7 @@ int main(int argc, char *argv[])
         boundary,
         patchNames,
         patchTypes,
+        defaultFacesName,
         defaultFacesType,
         patchPhysicalTypes
     );

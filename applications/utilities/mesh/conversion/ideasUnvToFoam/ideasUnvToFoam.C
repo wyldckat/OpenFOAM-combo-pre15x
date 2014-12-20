@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -236,7 +236,7 @@ void readPoints
 
 
 // Reads cells section. Read region as well? Not handled yet but should just
-// be a matter of reading corresponding to boundarryFaces the correct property
+// be a matter of reading corresponding to boundaryFaces the correct property
 // and sorting it later on.
 void readCells
 (
@@ -250,9 +250,12 @@ void readCells
     Sout<< "Starting reading cells at line " << is.lineNumber() << '.' << endl;
 
     const cellModel& hex = *(cellModeller::lookup("hex"));
+    const cellModel& prism = *(cellModeller::lookup("prism"));
     const cellModel& tet = *(cellModeller::lookup("tet"));
 
     labelHashSet skippedElements;
+
+    labelHashSet foundFeType;
 
     while (true)
     {
@@ -268,6 +271,12 @@ void readCells
         label cellI, feID, physProp, matProp, colour, nNodes;
         lineStr >> cellI >> feID >> physProp >> matProp >> colour >> nNodes;
 
+        if (foundFeType.insert(feID))
+        {
+            Info<< "First occurrence of element type " << feID
+                << " for cell " << cellI << " at line "
+                << is.lineNumber() << endl;
+        }
 
         if (feID == 11)
         {
@@ -280,7 +289,7 @@ void readCells
             // Rod. Skip.
             is.getLine(line);
         }
-        else if (feID == 41)
+        else if (feID == 41 || feID == 91)
         {
             // Triangle. Save - used for patching later on.
             is.getLine(line);
@@ -291,7 +300,7 @@ void readCells
             boundaryFaces.append(cVerts);
             boundaryFaceIndices.append(cellI);
         }
-        else if (feID == 94)
+        else if (feID == 44 || feID == 94)
         {
             // Quad. Save - used for patching later on.
             is.getLine(line);
@@ -313,6 +322,39 @@ void readCells
 
             cellVerts.append(cellShape(tet, cVerts, true));
             cellMaterial.append(physProp);
+
+            if (cellVerts[cellVerts.size()-1].size() != cVerts.size())
+            {
+                Pout<< "Line:" << is.lineNumber()
+                    << " element:" << cellI
+                    << " type:" << feID
+                    << " collapsed from " << cVerts << nl
+                    << " to:" << cellVerts[cellVerts.size()-1]
+                    << endl;
+            }
+        }
+        else if (feID == 112)
+        {
+            // Wedge.
+            is.getLine(line);
+
+            labelList cVerts(6);
+            IStringStream lineStr(line);
+            lineStr >> cVerts[0] >> cVerts[1] >> cVerts[2] >> cVerts[3]
+                    >> cVerts[4] >> cVerts[5];
+
+            cellVerts.append(cellShape(prism, cVerts, true));
+            cellMaterial.append(physProp);
+
+            if (cellVerts[cellVerts.size()-1].size() != cVerts.size())
+            {
+                Pout<< "Line:" << is.lineNumber()
+                    << " element:" << cellI
+                    << " type:" << feID
+                    << " collapsed from " << cVerts << nl
+                    << " to:" << cellVerts[cellVerts.size()-1]
+                    << endl;
+            }
         }
         else if (feID == 115)
         {
@@ -327,6 +369,16 @@ void readCells
 
             cellVerts.append(cellShape(hex, cVerts, true));
             cellMaterial.append(physProp);
+
+            if (cellVerts[cellVerts.size()-1].size() != cVerts.size())
+            {
+                Pout<< "Line:" << is.lineNumber()
+                    << " element:" << cellI
+                    << " type:" << feID
+                    << " collapsed from " << cVerts << nl
+                    << " to:" << cellVerts[cellVerts.size()-1]
+                    << endl;
+            }
         }
         else
         {
@@ -393,21 +445,30 @@ void readPatches
         {
             is.getLine(line);
             IStringStream lineStr(line);
-            label typeCode1, tag1, nodeLeaf1, component1,
-                typeCode2, tag2, nodeLeaf2, component2;
-            lineStr
-                >> typeCode1 >> tag1 >> nodeLeaf1 >> component1
-                >> typeCode2 >> tag2 >> nodeLeaf2 >> component2;
 
-            if (typeCode1 != 8 || typeCode2 != 8)
+            // Read one (for last face) or two entries from line.
+            label nRead = 2;
+            if (faceI == faceIndices.size()-1)
             {
-                FatalErrorIn("readPatches")
-                    << "When reading patches expect Entity Type Code 8" << nl
-                    << "At line " << is.lineNumber() << exit(FatalError);
+                nRead = 1;
             }
 
-            faceIndices[faceI++] = tag1;
-            faceIndices[faceI++] = tag2;
+            for (label i = 0; i < nRead; i++)
+            {
+                label typeCode, tag, nodeLeaf, component;
+
+                lineStr >> typeCode >> tag >> nodeLeaf >> component;
+
+                if (typeCode != 8)
+                {
+                    FatalErrorIn("readPatches")
+                        << "When reading patches expect Entity Type Code 8"
+                        << nl << "At line " << is.lineNumber()
+                        << exit(FatalError);
+                }
+
+                faceIndices[faceI++] = tag;
+            }
         }
     }
 
@@ -515,7 +576,7 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "createTime.H"
 
-    fileName ideasName(args.args()[3]);
+    fileName ideasName(args.additionalArgs()[0]);
 
     IFstream inFile(ideasName.c_str());
 
@@ -692,7 +753,7 @@ int main(int argc, char *argv[])
 
     if (dofVertIndices.size() > 0)
     {
-        // Use the vertex constraints to patch. Is of course bit dodge since
+        // Use the vertex constraints to patch. Is of course bit dodgy since
         // face goes on patch if all its vertices are on a constraint.
         // Note: very inefficient since goes through all faces (including
         // internal ones) twice. Should do a construct without patches
@@ -851,6 +912,7 @@ int main(int argc, char *argv[])
         patchFaceVerts,             //boundaryFaces,
         patchNames,                 //boundaryPatchNames,
         wordList(patchNames.size(), polyPatch::typeName), //boundaryPatchTypes,
+        "defaultFaces",             //defaultFacesName
         polyPatch::typeName,        //defaultFacesType,
         wordList(0)                 //boundaryPatchPhysicalTypes
     );

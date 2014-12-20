@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,15 +27,10 @@ License
 #include "fvScalarMatrix.H"
 #include "zeroGradientFvPatchFields.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<>
-void fvMatrix<scalar>::setComponentReference
+void Foam::fvMatrix<Foam::scalar>::setComponentReference
 (
     const label patchi,
     const label facei,
@@ -59,7 +54,8 @@ void fvMatrix<scalar>::setComponentReference
 
 
 template<>
-autoPtr<fvMatrix<scalar>::fvSolver> fvMatrix<scalar>::solver
+Foam::autoPtr<Foam::fvMatrix<Foam::scalar>::fvSolver>
+Foam::fvMatrix<Foam::scalar>::solver
 (
     Istream& solverControls
 )
@@ -98,7 +94,7 @@ autoPtr<fvMatrix<scalar>::fvSolver> fvMatrix<scalar>::solver
 
 
 template<>
-lduMatrix::solverPerformance fvMatrix<scalar>::fvSolver::solve
+Foam::lduMatrix::solverPerformance Foam::fvMatrix<Foam::scalar>::fvSolver::solve
 (
     Istream& solverControls
 )
@@ -124,7 +120,10 @@ lduMatrix::solverPerformance fvMatrix<scalar>::fvSolver::solve
 
 
 template<>
-lduMatrix::solverPerformance fvMatrix<scalar>::solve(Istream& solverControls)
+Foam::lduMatrix::solverPerformance Foam::fvMatrix<Foam::scalar>::solve
+(
+    Istream& solverControls
+)
 {
     if (debug)
     {
@@ -161,7 +160,7 @@ lduMatrix::solverPerformance fvMatrix<scalar>::solve(Istream& solverControls)
 
 
 template<>
-tmp<scalarField> fvMatrix<scalar>::residual() const
+Foam::tmp<Foam::scalarField> Foam::fvMatrix<Foam::scalar>::residual() const
 {
     scalarField boundaryDiag(psi_.size(), 0.0);
     addBoundaryDiag(boundaryDiag, 0);
@@ -185,7 +184,7 @@ tmp<scalarField> fvMatrix<scalar>::residual() const
 
 
 template<>
-tmp<volScalarField> fvMatrix<scalar>::H() const
+Foam::tmp<Foam::volScalarField> Foam::fvMatrix<Foam::scalar>::H() const
 {
     tmp<volScalarField> tHphi
     (
@@ -217,7 +216,7 @@ tmp<volScalarField> fvMatrix<scalar>::H() const
 
 
 template<>
-tmp<volScalarField> fvMatrix<scalar>::H1() const
+Foam::tmp<Foam::volScalarField> Foam::fvMatrix<Foam::scalar>::H1() const
 {
     tmp<volScalarField> tH1
     (
@@ -247,9 +246,5 @@ tmp<volScalarField> fvMatrix<scalar>::H1() const
     return tH1;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -42,7 +42,7 @@ tmp<scalarField> wedgeFvPatchField<scalar>::snGrad() const
 
 
 template<>
-void wedgeFvPatchField<scalar>::evaluate()
+void wedgeFvPatchField<scalar>::evaluate(const Pstream::commsTypes)
 {
     if (!updated())
     {

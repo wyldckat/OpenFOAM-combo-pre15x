@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -80,7 +80,7 @@ mixedPointPatchField<Type>::mixedPointPatchField
     const dictionary& dict
 )
 :
-    valuePointPatchField<Type>(p, iF),
+    valuePointPatchField<Type>(p, iF, dict, false),
     refValue_("refValue", dict, p.size()),
     valueFraction_("valueFraction", dict, p.size())
 {}
@@ -155,7 +155,7 @@ void mixedPointPatchField<Type>::rmap
 
 // Evaluate patch field
 template<class Type>
-void mixedPointPatchField<Type>::evaluate()
+void mixedPointPatchField<Type>::evaluate(const Pstream::commsTypes)
 {
     Field<Type>::operator=
     (

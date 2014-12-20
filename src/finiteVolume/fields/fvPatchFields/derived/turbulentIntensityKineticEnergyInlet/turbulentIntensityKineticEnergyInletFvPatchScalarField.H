@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 2006-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 2006-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,19 +23,21 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    turbulentIntensityKineticEnergyInletFvPatchScalarField
+    Foam::turbulentIntensityKineticEnergyInletFvPatchScalarField
 
 Description
-    Calculate turbulent kinetic energy from the intensity provided as a fraction
-    of the mean velocity
+    Calculate turbulent kinetic energy from the intensity provided as a
+    fraction of the mean velocity
 
-    Example of the BC specification:
-
+    Example of the boundary condition specification:
+    @verbatim
         inlet
         {
-            type            turbulentIntensityKineticEnergy;
-            intensity       0.05;    // 5% turbulence
+            type        turbulentIntensityKineticEnergyInlet;
+            intensity   0.05;           // 5% turbulence
+            value       uniform 1;      // placeholder
         }
+    @endverbatim
 
 SourceFiles
     turbulentIntensityKineticEnergyInletFvPatchScalarField.C

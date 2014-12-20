@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,20 +27,17 @@ License
 #include "objectRegistry.H"
 #include "Time.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
+    defineTypeNameAndDebug(objectRegistry, 0);
+}
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-defineTypeNameAndDebug(objectRegistry, 0);
-
-// * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
 // * * * * * * * * * * * * * * * * Constructors *  * * * * * * * * * * * * * //
 
-objectRegistry::objectRegistry
+Foam::objectRegistry::objectRegistry
 (
     const Time& t,
     const label nIoObjects
@@ -50,7 +47,7 @@ objectRegistry::objectRegistry
     (
         IOobject
         (
-            "",
+            string::validate<word>(t.caseName()),
             "",
             t,
             IOobject::NO_READ,
@@ -65,7 +62,7 @@ objectRegistry::objectRegistry
 {}
 
 
-objectRegistry::objectRegistry
+Foam::objectRegistry::objectRegistry
 (
     const IOobject& io,
     const label nIoObjects
@@ -75,7 +72,7 @@ objectRegistry::objectRegistry
     HashTable<regIOobject*>(nIoObjects),
     time_(io.time()),
     parent_(io.db()),
-    dbDir_(parent_.dbDir()/name())
+    dbDir_(parent_.dbDir()/local()/name())
 {
     writeOpt() = IOobject::AUTO_WRITE;
 }
@@ -83,7 +80,7 @@ objectRegistry::objectRegistry
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-objectRegistry::~objectRegistry()
+Foam::objectRegistry::~objectRegistry()
 {
     for (iterator iter = begin(); iter != end(); ++iter)
     {
@@ -99,7 +96,7 @@ objectRegistry::~objectRegistry()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-wordList objectRegistry::names() const
+Foam::wordList Foam::objectRegistry::names() const
 {
     wordList objectNames(size());
 
@@ -113,7 +110,7 @@ wordList objectRegistry::names() const
 }
 
 
-wordList objectRegistry::names(const word& ClassName) const
+Foam::wordList Foam::objectRegistry::names(const word& ClassName) const
 {
     wordList objectNames(size());
 
@@ -132,18 +129,21 @@ wordList objectRegistry::names(const word& ClassName) const
 }
 
 
-const objectRegistry& objectRegistry::subRegistry(const word& name) const
+const Foam::objectRegistry& Foam::objectRegistry::subRegistry
+(
+    const word& name
+) const
 {
     return lookupObject<objectRegistry>(name);
 }
 
 
-bool objectRegistry::checkIn(regIOobject& io) const
+bool Foam::objectRegistry::checkIn(regIOobject& io) const
 {
     if (objectRegistry::debug)
     {
         Pout<< "objectRegistry::checkIn(regIOobject&) : "
-            << "checking in " << io.name()
+            << name() << " : checking in " << io.name()
             << endl;
     }
 
@@ -151,7 +151,7 @@ bool objectRegistry::checkIn(regIOobject& io) const
 }
 
 
-bool objectRegistry::checkOut(regIOobject& io) const
+bool Foam::objectRegistry::checkOut(regIOobject& io) const
 {
     iterator iter = const_cast<objectRegistry&>(*this).find(io.name());
 
@@ -160,7 +160,7 @@ bool objectRegistry::checkOut(regIOobject& io) const
         if (objectRegistry::debug)
         {
             Pout<< "objectRegistry::checkOut(regIOobject&) : "
-                << "checking out " << io.name()
+                << name() << " : checking out " << io.name()
                 << endl;
         }
 
@@ -169,7 +169,7 @@ bool objectRegistry::checkOut(regIOobject& io) const
             if (objectRegistry::debug)
             {
                 WarningIn("objectRegistry::checkOut(regIOobject&)")
-                    << "attempt to checkOut copy of " << io.name()
+                    << name() << " : attempt to checkOut copy of " << io.name()
                     << endl;
             }
 
@@ -190,7 +190,8 @@ bool objectRegistry::checkOut(regIOobject& io) const
         if (objectRegistry::debug)
         {
             Pout<< "objectRegistry::checkOut(regIOobject&) : "
-                << "could not find " << io.name()
+                << name() << " : could not find " << io.name()
+                << " in registry " << name()
                 << endl;
         }
 
@@ -199,7 +200,7 @@ bool objectRegistry::checkOut(regIOobject& io) const
 }
 
 
-bool objectRegistry::modified() const
+bool Foam::objectRegistry::modified() const
 {
     bool anyModified = false;
 
@@ -216,14 +217,14 @@ bool objectRegistry::modified() const
 }
 
 
-void objectRegistry::readModifiedObjects()
+void Foam::objectRegistry::readModifiedObjects()
 {
     for (iterator iter = begin(); iter != end(); ++iter)
     {
         if (objectRegistry::debug)
         {
             Pout<< "objectRegistry::readModifiedObjects() : "
-                << "Considering reading object "
+                << name() << " : Considering reading object "
                 << iter()->name()
                 << endl;
         }
@@ -233,14 +234,14 @@ void objectRegistry::readModifiedObjects()
 }
 
 
-bool objectRegistry::readIfModified()
+bool Foam::objectRegistry::readIfModified()
 {
     readModifiedObjects();
     return true;
 }
 
 
-bool objectRegistry::writeObject
+bool Foam::objectRegistry::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
@@ -254,9 +255,10 @@ bool objectRegistry::writeObject
         if (objectRegistry::debug)
         {
             Pout<< "objectRegistry::write() : "
-                << "Considering writing object "
+                << name() << " : Considering writing object "
                 << iter()->name()
                 << " with writeOpt " << iter()->writeOpt()
+                << " to file " << iter()->objectPath()
                 << endl;
         }
 
@@ -269,9 +271,5 @@ bool objectRegistry::writeObject
     return ok;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

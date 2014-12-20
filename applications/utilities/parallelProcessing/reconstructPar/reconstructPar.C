@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,9 +27,12 @@ Application
 
 Description
     Reconstructs a mesh and fields of a case that is decomposed for parallel
-    execution of FOAM.
+    execution of OpenFOAM.
 
 \*---------------------------------------------------------------------------*/
+
+#include "argList.H"
+#include "timeSelector.H"
 
 #include "fvCFD.H"
 #include "IOobjectList.H"
@@ -43,35 +46,24 @@ Description
 int main(int argc, char *argv[])
 {
     argList::noParallel();
-#   include "addTimeOptions.H"
+    timeSelector::addOptions();
+#   include "addRegionOption.H"
 #   include "setRootCase.H"
 #   include "createTime.H"
 
-    Info<< "Create mesh\n" << endl;
-    fvMesh mesh
-    (
-        IOobject
-        (
-            fvMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
+    // determine the processor count directly
+    label nProcs = 0;
+    while (dir(args.path()/(word("processor") + name(nProcs))))
+    {
+        ++nProcs;
+    }
 
-    IOdictionary decompositionDict
-    (
-        IOobject
-        (
-            "decomposeParDict",
-            runTime.system(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        )
-    );
-
-    int nProcs(readInt(decompositionDict.lookup("numberOfSubdomains")));
-
+    if (!nProcs)
+    {
+        FatalErrorIn(args.executable())
+            << "No processor* directories found"
+            << exit(FatalError);
+    }
 
     // Create the processor databases
     PtrList<Time> databases(nProcs);
@@ -90,44 +82,57 @@ int main(int argc, char *argv[])
         );
     }
 
+    // use the times list from the master processor
+    // and select a subset based on the command-line options
+    instantList timeDirs = timeSelector::select
+    (
+        databases[0].times(),
+        args
+    );
 
-    // Get times list from first database
-    const instantList Times = databases[0].times();
+    if (!timeDirs.size())
+    {
+        FatalErrorIn(args.executable())
+            << "No times selected"
+            << exit(FatalError);
+    }
 
-#   include "checkTimeOptions.H"
+#   include "createNamedMesh.H"
+    fileName regionPrefix = "";
+    if (regionName != fvMesh::defaultRegion)
+    {
+        regionPrefix = regionName;
+    }
+
 
     // Set all times (on reconstructed mesh and on processor meshes)
-    runTime.setTime(Times[startTime], startTime);
+    runTime.setTime(timeDirs[0], 0);
     mesh.readUpdate();
 
     forAll (databases, procI)
     {
-        databases[procI].setTime(Times[startTime], startTime);
+        databases[procI].setTime(timeDirs[0], 0);
     }
 
     // Read all meshes and addressing to reconstructed mesh
-    processorMeshes procMeshes(databases);
+    processorMeshes procMeshes(databases, regionName);
 
-    // Foam version 2.1 changes the addressing of faces in faceProcAddressing
-    // The following code checks and modifies the addressing for cases where
-    // the decomposition has been done with the foam2.0 and earlier tools, but
-    // the reconstruction is attempted with version 2.1 or later
-    // 
+    // check face addressing for meshes that have been decomposed
+    // with a very old foam version
 #   include "checkFaceAddressingComp.H"
 
     // Loop over all times
-    for (label timei = startTime; timei < endTime; timei++)
+    forAll (timeDirs, timeI)
     {
         // Set time for global database
-        runTime.setTime(Times[timei], timei);
+        runTime.setTime(timeDirs[timeI], timeI);
 
         Info << "Time = " << runTime.timeName() << endl << endl;
 
         // Set time for all databases
-
         forAll (databases, procI)
         {
-            databases[procI].setTime(Times[timei], timei);
+            databases[procI].setTime(timeDirs[timeI], timeI);
         }
 
         // Check if any new meshes need to be read.
@@ -233,62 +238,122 @@ int main(int argc, char *argv[])
         }
 
 
-        // If there is any proc with lagrangian, assume all have.        
-        label lagrangianProcI = -1;
+        // If there are any clouds, reconstruct them.
+        // The problem is that a cloud of size zero will not get written so
+        // in pass 1 we determine the cloud names and per cloud name the
+        // fields. Note that the fields are stored as IOobjectList from
+        // the first processor that has them. They are in pass2 only used
+        // for name and type (scalar, vector etc).
+
+        HashTable<IOobjectList> cloudObjects;
 
         forAll (databases, procI)
         {
-            if 
+            fileNameList cloudDirs
             (
-                IOobject
+                readDir
                 (
-                    "positions",
-                    databases[procI].timeName(),
-                    "lagrangian",
-                    databases[procI],
-                    IOobject::NO_READ
-                ).headerOk()
-            )
+                    databases[procI].timePath()/regionPrefix/"lagrangian",
+                    fileName::DIRECTORY
+                )
+            );
+
+            forAll (cloudDirs, i)
             {
-                lagrangianProcI = procI;
-                break;
+                // Check if we already have cloud objects for this cloudname.
+                HashTable<IOobjectList>::const_iterator iter =
+                    cloudObjects.find(cloudDirs[i]);
+
+                if (iter == cloudObjects.end())
+                {
+                    // Do local scan for valid cloud objects.
+                    IOobjectList sprayObjs
+                    (
+                        procMeshes.meshes()[procI],
+                        databases[procI].timeName(),
+                        "lagrangian"/cloudDirs[i]
+                    );
+
+                    IOobject* positionsPtr = sprayObjs.lookup("positions");
+
+                    if (positionsPtr)
+                    {
+                        cloudObjects.insert(cloudDirs[i], sprayObjs);
+                    }
+                }
             }
         }
 
-        if (lagrangianProcI != -1)
+
+        if (cloudObjects.size() > 0)
         {
-            Info << "Reconstructing lagrangian fields" << nl << endl;
+            // Pass2: reconstruct the cloud
+            forAllConstIter(HashTable<IOobjectList>, cloudObjects, iter)
+            {
+                const word cloudName = string::validate<word>(iter.key());
 
-            // Get list of objects from processor0 database
-            IOobjectList objects
-            (
-                databases[lagrangianProcI],
-                databases[lagrangianProcI].timeName(),
-                "lagrangian"
-            );
+                // Objects (on arbitrary processor)
+                const IOobjectList& sprayObjs = iter();
 
-            PtrList<polyMesh>& meshes = 
-                reinterpret_cast<PtrList<polyMesh>&>(procMeshes.meshes());
+                Info<< "Reconstructing lagrangian fields for cloud "
+                    << cloudName << nl << endl;
 
-            reconstructLagrangianPositions
-            (
-                mesh,
-                meshes,
-                procMeshes.faceProcAddressing(),
-                procMeshes.cellProcAddressing()
-            );
-            reconstructLagrangianFields<label>(mesh, meshes, objects);
-            reconstructLagrangianFields<scalar>(mesh, meshes, objects);
-            reconstructLagrangianFields<vector>(mesh, meshes, objects);
-            reconstructLagrangianFields<sphericalTensor>(mesh, meshes, objects);
-            reconstructLagrangianFields<symmTensor>(mesh, meshes, objects);
-            reconstructLagrangianFields<tensor>(mesh, meshes, objects);
+                reconstructLagrangianPositions
+                (
+                    mesh,
+                    cloudName,
+                    procMeshes.meshes(),
+                    procMeshes.faceProcAddressing(),
+                    procMeshes.cellProcAddressing()
+                );
+                reconstructLagrangianFields<label>
+                (
+                    cloudName,
+                    mesh,
+                    procMeshes.meshes(),
+                    sprayObjs
+                );
+                reconstructLagrangianFields<scalar>
+                (
+                    cloudName,
+                    mesh,
+                    procMeshes.meshes(),
+                    sprayObjs
+                );
+                reconstructLagrangianFields<vector>
+                (
+                    cloudName,
+                    mesh,
+                    procMeshes.meshes(),
+                    sprayObjs
+                );
+                reconstructLagrangianFields<sphericalTensor>
+                (
+                    cloudName,
+                    mesh,
+                    procMeshes.meshes(),
+                    sprayObjs
+                );
+                reconstructLagrangianFields<symmTensor>
+                (
+                    cloudName,
+                    mesh,
+                    procMeshes.meshes(),
+                    sprayObjs
+                );
+                reconstructLagrangianFields<tensor>
+                (
+                    cloudName,
+                    mesh,
+                    procMeshes.meshes(),
+                    sprayObjs
+                );
+            }
         }
         else
         {
             Info << "No lagrangian fields" << nl << endl;
         }
-
 
         // If there are any "uniform" directories copy them from
         // the master processor.

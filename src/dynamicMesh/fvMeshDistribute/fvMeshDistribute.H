@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,12 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    fvMeshDistribute
+    Foam::fvMeshDistribute
 
 Description
     Sends/receives parts of mesh+fvfields to neighbouring processors.
     Used in load balancing.
+
     Input is per local cell the processor it should move to. Moves meshes
     and volFields/surfaceFields and returns map which can be used to
     distribute other.
@@ -60,7 +61,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class mapAddedPolyMesh;
 class mapDistributePolyMesh;
 
@@ -325,7 +326,7 @@ class fvMeshDistribute
                 const wordList& pointZoneNames,
                 const wordList& facesZoneNames,
                 const wordList& cellZoneNames,
-                Time& runTime,
+                const Time& runTime,
                 labelList& domainSourceFace,
                 labelList& domainSourceProc,
                 labelList& domainSourceNewProc
@@ -360,7 +361,7 @@ public:
 
     // Member Functions
 
-        //- Helper funntion: count cells per processor in wanted distribution
+        //- Helper function: count cells per processor in wanted distribution
         static labelList countCells(const labelList&);
 
         //- Send cells to neighbours according to distribution

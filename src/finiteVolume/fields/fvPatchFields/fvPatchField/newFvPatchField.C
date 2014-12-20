@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,13 +24,10 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Selectors * * * * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<fvPatchField<Type> > fvPatchField<Type>::New
+Foam::tmp<Foam::fvPatchField<Type> > Foam::fvPatchField<Type>::New
 (
     const word& patchFieldType,
     const fvPatch& p,
@@ -40,8 +37,8 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
     if (debug)
     {
         Info<< "fvPatchField<Type>::New(const word&, const fvPatch&, "
-               "const Field<Type>&) : "
-               "constructing fvPatchField<Type>"
+               "const DimensionedField<Type, volMesh>&) : patchFieldType="
+            << patchFieldType
             << endl;
     }
 
@@ -53,7 +50,7 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
         FatalErrorIn
         (
             "fvPatchField<Type>::New(const word&, const fvPatch&, "
-            "const Field<Type>&)"
+            "const DimensionedField<Type, volMesh>&)"
         )   << "Unknown patchTypefield type " << patchFieldType
             << endl << endl
             << "Valid patchField types are :" << endl
@@ -76,38 +73,39 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
 
 
 template<class Type>
-tmp<fvPatchField<Type> > fvPatchField<Type>::New
+Foam::tmp<Foam::fvPatchField<Type> > Foam::fvPatchField<Type>::New
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
     const dictionary& dict
 )
 {
+    word patchFieldType(dict.lookup("type"));
+
     if (debug)
     {
-        Info<< "fvPatchField<Type>::New(const fvPatch&, const Field<Type>&, "
-               "const dictionary&) : "
-               "constructing fvPatchField<Type>"
+        Info<< "fvPatchField<Type>::New(const fvPatch&, "
+               "const DimensionedField<Type, volMesh>&, "
+               "const dictionary&) : patchFieldType="  << patchFieldType
             << endl;
     }
-
-    word patchFieldType(dict.lookup("type"));
 
     typename dictionaryConstructorTable::iterator cstrIter
         = dictionaryConstructorTablePtr_->find(patchFieldType);
 
     if (cstrIter == dictionaryConstructorTablePtr_->end())
     {
-        if (!disallowDefaultFvPatchField)
+        if (!disallowGenericFvPatchField)
         {
-            cstrIter = dictionaryConstructorTablePtr_->find("default");
+            cstrIter = dictionaryConstructorTablePtr_->find("generic");
         }
 
         if (cstrIter == dictionaryConstructorTablePtr_->end())
         {
             FatalIOErrorIn
             (
-                "fvPatchField<Type>::New(const fvPatch&, const Field<Type>&, "
+                "fvPatchField<Type>::New(const fvPatch&, "
+                "const DimensionedField<Type, volMesh>&, "
                 "const dictionary&)",
                 dict
             )   << "Unknown patchField type " << patchFieldType
@@ -118,24 +116,32 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
         }
     }
 
-    typename dictionaryConstructorTable::iterator patchTypeCstrIter
-        = dictionaryConstructorTablePtr_->find(p.type());
-
     if
     (
-        patchTypeCstrIter != dictionaryConstructorTablePtr_->end()
-     && patchTypeCstrIter() != cstrIter()
+       !dict.found("patchType")
+     || word(dict.lookup("patchType")) != p.type()
     )
     {
-        FatalIOErrorIn
+        typename dictionaryConstructorTable::iterator patchTypeCstrIter
+            = dictionaryConstructorTablePtr_->find(p.type());
+
+        if
         (
-            "fvPatchField<Type>const fvPatch&, const Field<Type>&, "
-            "const dictionary&)",
-            dict
-        ) << "inconsistent patch and patchField types for \n"
-             "    patch type " << p.type()
-            << " and patchField type " << patchFieldType
-            << exit(FatalIOError);
+            patchTypeCstrIter != dictionaryConstructorTablePtr_->end()
+         && patchTypeCstrIter() != cstrIter()
+        )
+        {
+            FatalIOErrorIn
+            (
+                "fvPatchField<Type>::New(const fvPatch&, "
+                "const DimensionedField<Type, volMesh>&, "
+                "const dictionary&)",
+                dict
+            )   << "inconsistent patch and patchField types for \n"
+                   "    patch type " << p.type()
+                << " and patchField type " << patchFieldType
+                << exit(FatalIOError);
+        }
     }
 
     return cstrIter()(p, iF, dict);
@@ -143,7 +149,7 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
 
 
 template<class Type>
-tmp<fvPatchField<Type> > fvPatchField<Type>::New
+Foam::tmp<Foam::fvPatchField<Type> > Foam::fvPatchField<Type>::New
 (
     const fvPatchField<Type>& ptf,
     const fvPatch& p,
@@ -153,8 +159,8 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
 {
     if (debug)
     {
-        Info<< "fvPatchField<Type>::New(const fvPatchField<Type>&,"
-               " const fvPatch&, const Field<Type>&, "
+        Info<< "fvPatchField<Type>::New(const fvPatchField<Type>&, "
+               "const fvPatch&, const DimensionedField<Type, volMesh>&, "
                "const fvPatchFieldMapper&) : "
                "constructing fvPatchField<Type>"
             << endl;
@@ -168,7 +174,7 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
         FatalErrorIn
         (
             "fvPatchField<Type>::New(const fvPatchField<Type>&, "
-            "const fvPatch&, const Field<Type>&, "
+            "const fvPatch&, const DimensionedField<Type, volMesh>&, "
             "const fvPatchFieldMapper&)"
         )   << "unknown patchTypefield type " << ptf.type() << endl << endl
             << "Valid patchField types are :" << endl
@@ -176,22 +182,8 @@ tmp<fvPatchField<Type> > fvPatchField<Type>::New
             << exit(FatalError);
     }
 
-    typename patchMapperConstructorTable::iterator
-        patchTypeCstrIter = patchMapperConstructorTablePtr_->find(p.type());
-
-    if (patchTypeCstrIter != patchMapperConstructorTablePtr_->end())
-    {
-        return patchTypeCstrIter()(ptf, p, iF, pfMapper);
-    }
-    else
-    {
-        return cstrIter()(ptf, p, iF, pfMapper);
-    }
+    return cstrIter()(ptf, p, iF, pfMapper);
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

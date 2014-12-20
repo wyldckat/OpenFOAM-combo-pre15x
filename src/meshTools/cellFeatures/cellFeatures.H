@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    cellFeatures
+    Foam::cellFeatures
 
 Description
-    Cell analysis class. Constructs feature edges, feature points which are
-    edges/points with angle > given specification.
+    Cell analysis class.
+
+    Constructs feature edges and feature points, which are edges/points with
+    and angle > given specification.
     Can be asked for 'superFaces' which can be used to see if a cell is a
     'splitHex'.
 
@@ -51,7 +53,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class primitiveMesh;
 
 /*---------------------------------------------------------------------------*\

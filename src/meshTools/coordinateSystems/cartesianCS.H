@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,11 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    cartesianCS
+    Foam::cartesianCS
 
 Description
-    General coordinate transformations
-    from arbitary coordinate systems to the global Cartesian system.
+    General coordinate transformations from arbitrary coordinate systems
+    to the global Cartesian system
 
 SourceFiles
     cartesianCS.C
@@ -46,7 +46,7 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class cartesianCS Declaration
+                        Class cartesianCS Declaration
 \*---------------------------------------------------------------------------*/
 
 class cartesianCS

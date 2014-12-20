@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -222,6 +222,43 @@ DLListBase::link* DLListBase::remove(DLListBase::link* l)
     {
         l->next_->prev_ = l->prev_;
         l->prev_->next_ = l->next_;
+    }
+
+    ret->deregister();
+    return ret;
+}
+
+
+DLListBase::link* DLListBase::replace
+(
+    DLListBase::link* oldLink,
+    DLListBase::link* newLink
+)
+{
+    link* ret = oldLink;
+
+    newLink->prev_ = oldLink->prev_;
+    newLink->next_ = oldLink->next_;
+
+    if (oldLink == first_ && first_ == last_)
+    {
+        first_ = newLink;
+        last_  = newLink;
+    }
+    else if (oldLink == first_)
+    {
+        first_ = newLink;
+        newLink->next_->prev_ = newLink;
+    }
+    else if (oldLink == last_)
+    {
+        last_ = newLink;
+        newLink->prev_->next_ = newLink;
+    }
+    else
+    {
+        newLink->prev_->next_ = newLink;
+        newLink->next_->prev_ = newLink;
     }
 
     ret->deregister();

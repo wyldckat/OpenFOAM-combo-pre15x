@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,25 +23,26 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    polyTopoChange
+    Foam::polyTopoChange
 
 Description
-    Direct mesh changes based on polyTopoChange syntax.
+    Direct mesh changes based on v1.3 polyTopoChange syntax.
 
-    Instead of recording changes and executing them all in one go (as does
-    polyTopoChange) this class actually holds the current points/faces/cells
-    and does the change immediately.
+    Instead of recording changes and executing them all in one go (as did
+    v1.3 polyTopoChange) this class actually holds the current
+    points/faces/cells and does the change immediately.
     It can be asked to compress out all unused points/faces/cells and
     renumber everything to be consistent.
 
     Note:
+    - polyTopoChange can be copied.
     - adding a face using non-existing cells causes all intermediate cells
     to be added. So always first add cells/points and then faces.
     (or set strict checking)
     - strict checking:
-        -any added/modified face can only use already existing vertices
-        -any added face                 ,,                     cells
-        -no item can be removed more than once.
+        - any added/modified face can only use already existing vertices
+        - any added face can only use already existing cells
+        - no item can be removed more than once.
     - removed cell: cell set to 0 faces.
     - removed face: face set to 0 vertices.
     - removed point: coordinate set to greatPoint (GREAT,GREAT,GREAT).
@@ -74,13 +75,15 @@ SourceFiles
 #include "Map.H"
 #include "labelHashSet.H"
 #include "mapPolyMesh.H"
+#include "CompactListList.H"
+#include "PackedList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class face;
 class primitiveMesh;
 class polyMesh;
@@ -99,75 +102,6 @@ class objectMap;
 
 class polyTopoChange
 {
-        ////- Less function class used by upper-triangular face ordering
-        ////  - internal faces according to owner or for same owner according to
-        ////    neighbour
-        ////  - boundary faces according to region
-        //class faceLess
-        //{
-        //    const unallocLabelList& own_;
-        //    const unallocLabelList& nei_;
-        //    const unallocLabelList& region_;
-        //
-        //public:
-        //
-        //    faceLess
-        //    (
-        //        const unallocLabelList& own,
-        //        const unallocLabelList& nei,
-        //        const unallocLabelList& region
-        //    )
-        //    :
-        //        own_(own),
-        //        nei_(nei),
-        //        region_(region)
-        //    {}
-        //
-        //    bool operator()(const label a, const label b)
-        //    {
-        //        if (nei_[a] == -1)
-        //        {
-        //            if (nei_[b] == -1)
-        //            {
-        //                // Two boundary faces
-        //                return region_[a] < region_[b];
-        //            }
-        //            else
-        //            {
-        //                // b is internal face.
-        //                return false;
-        //            }
-        //        }
-        //        else
-        //        {
-        //            if (nei_[b] == -1)
-        //            {
-        //                return true;
-        //            }
-        //            else
-        //            {
-        //                // two internal faces.
-        //                if (own_[a] < own_[b])
-        //                {
-        //                    return true;
-        //                }
-        //                else if (own_[a] > own_[b])
-        //                {
-        //                    return false;
-        //                }
-        //                else
-        //                {
-        //                    return nei_[a] < nei_[b];
-        //                }
-        //            }
-        //        }
-        //    }
-        //};
-
-
-
-private:
-
     // Static data members
 
         //- Value of deleted point
@@ -178,7 +112,7 @@ private:
 
         //- Whether to allow referencing illegal points/cells/faces
         //  when adding/removing data.
-        const bool strict_;
+        bool strict_;
 
 
         // Patches
@@ -220,7 +154,7 @@ private:
             //- Neighbour for internal faces (-1 for external faces)
             DynamicList<label> faceNeighbour_;
 
-            //- Original face label. Or master face for added-from-faces; 
+            //- Original face label. Or master face for added-from-faces;
             //  -1 for faces added-from-edge or added-from-point)
             DynamicList<label> faceMap_;
 
@@ -333,6 +267,16 @@ private:
             labelList& cellFaceOffsets
         ) const;
 
+        //- Construct cellCells (in packed storage)
+        void makeCellCells
+        (
+            const label nActiveFaces,
+            CompactListList<label>& cellCells
+        ) const;
+
+        //- Cell ordering (bandCompression). Returns number of remaining cells.
+        label getCellOrder(const CompactListList<label>&, labelList&) const;
+
         //- Do upper-triangular ordering and patch ordering.
         void getFaceOrder
         (
@@ -353,9 +297,15 @@ private:
         );
 
         //- Remove all unused/removed points/faces/cells and update
-        //  face ordering.
+        //  face ordering (always), cell ordering (bandcompression,
+        //  orderCells=true),
+        //  point ordering (sorted into internal and boundary points,
+        //  orderPoints=true)
         void compact
         (
+            const bool orderCells,
+            const bool orderPoints,
+            label& nInternalPoints,
             labelList& patchSizes,
             labelList& patchStarts
         );
@@ -372,7 +322,6 @@ private:
         void calcPatchPointMap
         (
             const List<Map<label> >&,
-            const labelList&,
             const polyBoundaryMesh&,
             labelListList&
         ) const;
@@ -391,7 +340,7 @@ private:
             List<objectMap>&,
             List<objectMap>&,
             List<objectMap>&,
-            List<objectMap>& 
+            List<objectMap>&
         ) const;
 
         void resetZones
@@ -430,6 +379,9 @@ private:
         (
             const polyMesh&,
             const bool syncParallel,
+            const bool orderCells,
+            const bool orderPoints,
+            label& nInternalPoints,
             pointField& newPoints,
             labelList& patchSizes,
             labelList& patchStarts,
@@ -455,6 +407,10 @@ public:
 
 
     // Constructors
+
+        //- Construct without mesh. Either specify nPatches or use
+        //  setNumPatches before trying to make a mesh (makeMesh, changeMesh)
+        polyTopoChange(const label nPatches, const bool strict = true);
 
         //- Construct from mesh. Adds all points/face/cells from mesh.
         polyTopoChange(const polyMesh& mesh, const bool strict = true);
@@ -594,6 +550,9 @@ public:
             //- Remove/merge cell.
             void removeCell(const label, const label);
 
+            //- Explicitly set the number of patches if construct-without-mesh
+            //  used.
+            inline void setNumPatches(const label nPatches);
 
         // Other
 
@@ -605,11 +564,18 @@ public:
             //  points out of nothing (appended points) are vector::zero.
             //  inflate = false: set mesh points directly. Empty preMotionPoints
             //  in the map.
+            //  orderCells :  whether to order the cells (see bandCompression.H)
+            //  orderPoints : whether to order the points into internal first
+            //  followed by boundary points. This is not fully consistent
+            //  with upper-triangular ordering of points and edges so
+            //  is only done when explicitly asked for.
             autoPtr<mapPolyMesh> changeMesh
             (
                 polyMesh& mesh,
                 const bool inflate,
-                const bool syncParallel = true
+                const bool syncParallel = true,
+                const bool orderCells = false,
+                const bool orderPoints = false
             );
 
             //- Create new mesh with old mesh patches
@@ -618,8 +584,11 @@ public:
                 autoPtr<fvMesh>& newMesh,
                 const IOobject& io,
                 const fvMesh& mesh,
-                const bool syncParallel = true
+                const bool syncParallel = true,
+                const bool orderCells = false,
+                const bool orderPoints = false
             );
+
 };
 
 

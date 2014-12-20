@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,13 +23,14 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    ICCG
+    Foam::ICCG
 
 Description
     Incomplete Cholesky preconditioned CG solver derived from the general
     preconditioned CG solver PCG but with the choice of preconditioner
     pre-selected.
 
+Deprecated
     This solver is present for backward-compatibility and the PCG solver
     should be used for preference.
 

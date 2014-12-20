@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Class
-    fvMeshDistribute
 
 \*---------------------------------------------------------------------------*/
 
@@ -88,7 +85,7 @@ void Foam::fvMeshDistribute::addPatchFields(const word& patchFieldType)
             );
 
         label sz = bfld.size();
-        bfld.setSize(sz+1);
+        bfld.setSize(sz + 1);
         bfld.set
         (
             sz,
@@ -127,10 +124,8 @@ void Foam::fvMeshDistribute::deleteTrailingPatchFields()
                 fld.boundaryField()
             );
 
-        label sz = bfld.size();
-
         // Shrink patchFields
-        bfld.setSize(sz-1);
+        bfld.setSize(bfld.size() - 1);
     }
 }
 
@@ -301,7 +296,7 @@ void Foam::fvMeshDistribute::sendFields
         tmp<GeoField> tsubfld = subsetter.interpolate(fld);
 
         // Send
-        OPstream toNbr(domain);
+        OPstream toNbr(Pstream::blocking, domain);
         toNbr << tsubfld();
     }
 }
@@ -325,7 +320,7 @@ void Foam::fvMeshDistribute::receiveFields
         //    << " from domain:" << domain
         //    << endl;
 
-        IPstream fromNbr(domain);
+        IPstream fromNbr(Pstream::blocking, domain);
 
         fields.set
         (

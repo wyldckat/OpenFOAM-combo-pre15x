@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    cyclicFvPatchField
+    Foam::cyclicFvPatchField
 
 Description
+    Foam::cyclicFvPatchField
 
 SourceFiles
     cyclicFvPatchField.C
@@ -51,7 +52,7 @@ namespace Foam
 template<class Type>
 class cyclicFvPatchField
 :
-    public cyclicLduInterfaceField,
+    virtual public cyclicLduInterfaceField,
     public coupledFvPatchField<Type>
 {
     // Private data
@@ -139,6 +140,15 @@ public:
 
     // Member functions
 
+        // Access
+
+            //- Retirn local reference cast into the cyclic patch
+            const cyclicFvPatch& cyclicPatch() const
+            {
+                return cyclicPatch_;
+            }
+
+
         // Evaluation functions
 
             //- Return neighbour coupled given internal cell data
@@ -151,7 +161,8 @@ public:
                 scalarField& result,
                 const lduMatrix&,
                 const scalarField& coeffs,
-                const direction cmpt
+                const direction cmpt,
+                const Pstream::commsTypes commsType
             ) const;
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,11 +32,13 @@ License
 
 void Foam::bound(volScalarField& vsf, const dimensionedScalar& vsf0)
 {
-    if (min(vsf).value() < vsf0.value())
+    scalar minVsf = min(vsf).value();
+
+    if (minVsf < vsf0.value())
     {
         Info<< "bounding " << vsf.name()
-            << ", min: " << gMin(vsf.internalField())
-            << " max: " << gMax(vsf.internalField())
+            << ", min: " << minVsf
+            << " max: " << max(vsf).value()
             << " average: " << gAverage(vsf.internalField())
             << endl;
 

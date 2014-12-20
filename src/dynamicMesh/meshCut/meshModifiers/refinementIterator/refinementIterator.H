@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,12 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    refinementIterator
+    Foam::refinementIterator
 
 Description
-    Utility class to do iterating meshCutter until all requests
-    satisfied. Needed since cell cutting can only cut cell once in one go so
-    if refinement pattern is not compatible on a cell by cell basis it will
+    Utility class to do iterating meshCutter until all requests satisfied.
+ 
+    Needed since cell cutting can only cut cell once in one go so if
+    refinement pattern is not compatible on a cell by cell basis it will
     refuse to cut.
 
     Parallel: communicates. All decisions done on 'reduce'd variable.
@@ -52,7 +53,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class polyMesh;
 class refineCell;
 class undoableMeshCutter;

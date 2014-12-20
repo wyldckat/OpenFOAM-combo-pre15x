@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -108,7 +108,7 @@ void pressureDirectedInletVelocityFvPatchVectorField::autoMap
     const fvPatchFieldMapper& m
 )
 {
-    vectorField::autoMap(m);
+    fixedValueFvPatchVectorField::autoMap(m);
     inletDir_.autoMap(m);
 }
 
@@ -159,7 +159,7 @@ void pressureDirectedInletVelocityFvPatchVectorField::updateCoeffs()
     {
         FatalErrorIn
         (
-            "pressureDirectedInletVelocityFvPatchVectorField::evaluate()"
+            "pressureDirectedInletVelocityFvPatchVectorField::updateCoeffs()"
         )   << "dimensions of phi are not correct"
             << "\n    on patch " << this->patch().name()
             << " of field " << this->dimensionedInternalField().name()

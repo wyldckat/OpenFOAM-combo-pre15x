@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,13 +36,13 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-Foam::cloud::cloud(const objectRegistry& obr)
+Foam::cloud::cloud(const objectRegistry& obr, const word& cloudName)
 :
-    regIOobject
+    objectRegistry
     (
         IOobject
         (
-            "positions",
+            cloudName,
             obr.time().timeName(),
             "lagrangian",
             obr,

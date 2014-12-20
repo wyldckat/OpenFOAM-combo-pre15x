@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    pointPatchInterpolation
+    Foam::pointPatchInterpolation
 
 Description
+    Foam::pointPatchInterpolation
 
 SourceFiles
     pointPatchInterpolation.C
@@ -36,6 +37,7 @@ SourceFiles
 #define pointPatchInterpolation_H
 
 #include "primitivePatchInterpolation.H"
+#include "PtrList.H"
 #include "volFieldsFwd.H"
 #include "pointFieldsFwd.H"
 #include "scalarList.H"
@@ -46,6 +48,7 @@ SourceFiles
 namespace Foam
 {
 
+// Forward declaration of classes
 class fvMesh;
 class pointMesh;
 
@@ -91,7 +94,7 @@ class pointPatchInterpolation
 
 public:
 
-    // Declare name of the class and it's debug switch
+    // Declare name of the class and its debug switch
     ClassName("pointPatchInterpolation");
 
 

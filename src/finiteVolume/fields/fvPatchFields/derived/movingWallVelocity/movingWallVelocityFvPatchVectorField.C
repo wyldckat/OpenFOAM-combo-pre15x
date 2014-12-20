@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -103,15 +103,13 @@ void movingWallVelocityFvPatchVectorField::updateCoeffs()
     const fvPatch& p = patch();
     const polyPatch& pp = p.patch();
     const fvMesh& mesh = dimensionedInternalField().mesh();
-
-
-    const pointField& oldAllPoints = mesh.oldAllPoints();
+    const pointField& oldPoints = mesh.oldPoints();
 
     vectorField oldFc(pp.size());
 
     forAll(oldFc, i)
     {
-        oldFc[i] = pp[i].centre(oldAllPoints);
+        oldFc[i] = pp[i].centre(oldPoints);
     }
 
     vectorField Up = (pp.faceCentres() - oldFc)/mesh.time().deltaT().value();

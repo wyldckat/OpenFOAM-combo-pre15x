@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -105,11 +105,11 @@ inline Cmpt& Vector<Cmpt>::z()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return itself vector as the centre of vector
-// used in the form of point
-
 template <class Cmpt>
-inline const Vector<Cmpt>& Vector<Cmpt>::centre(const List<Vector<Cmpt> >&)const
+inline const Vector<Cmpt>& Vector<Cmpt>::centre
+(
+    const Foam::List<Vector<Cmpt> >&
+)const
 {
     return *this;
 }

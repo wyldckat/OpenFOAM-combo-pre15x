@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,34 +36,44 @@ bool Foam::primitiveMesh::checkEdgeLength
 ) const
 {
     const pointField& points = this->points();
-    const edgeList& edges = this->edges();
+    const faceList& faces = this->faces();
 
     scalar minLenSqr = sqr(GREAT);
     scalar maxLenSqr = -sqr(GREAT);
-    label nSmall = 0;
 
-    forAll (edges, edgeI)
+    labelHashSet smallEdgeSet(nPoints()/100);
+
+    forAll(faces, faceI)
     {
-        const edge& e = edges[edgeI];
-        scalar magSqrE = magSqr(points[e[1]] - points[e[0]]);
+        const face& f = faces[faceI];
 
-        if (magSqrE < reportLenSqr)
+        forAll(f, fp)
         {
-            if (setPtr)
-            {
-                setPtr->insert(e[0]);
-                setPtr->insert(e[1]);
-            }
-            nSmall++;
-        }
+            label fp1 = f.fcIndex(fp);
 
-        minLenSqr = min(minLenSqr, magSqrE);
-        maxLenSqr = max(maxLenSqr, magSqrE);
+            scalar magSqrE = magSqr(points[f[fp]] - points[f[fp1]]);
+
+            if (magSqrE < reportLenSqr)
+            {
+                smallEdgeSet.insert(f[fp]);
+                smallEdgeSet.insert(f[fp1]);
+            }
+
+            minLenSqr = min(minLenSqr, magSqrE);
+            maxLenSqr = max(maxLenSqr, magSqrE);
+        }
     }
 
     reduce(minLenSqr, minOp<scalar>());
     reduce(maxLenSqr, maxOp<scalar>());
+
+    label nSmall = smallEdgeSet.size();
     reduce(nSmall, sumOp<label>());
+
+    if (setPtr)
+    {
+        setPtr->transfer(smallEdgeSet);
+    }
 
     if (nSmall > 0)
     {

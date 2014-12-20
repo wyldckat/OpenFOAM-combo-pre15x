@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,7 +41,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-const scalar twoDPointCorrector::edgeOrthogonalityTol = 1.0 - 1e-5;
+const scalar twoDPointCorrector::edgeOrthogonalityTol = 1.0 - 1e-4;
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -173,7 +173,7 @@ void twoDPointCorrector::calcAddressing() const
             )   << "The number of points in the mesh is "
                 << "not equal to twice the number of edges normal to the plane "
                 << "- this may be OK only for wedge geometries.\n"
-                << "Please check the geometry or adjust "
+                << "    Please check the geometry or adjust "
                 << "the orthogonality tolerance.\n" << endl
                 << "Number of normal edges: " << nNormalEdges
                 << " number of points: " << meshPoints.size()

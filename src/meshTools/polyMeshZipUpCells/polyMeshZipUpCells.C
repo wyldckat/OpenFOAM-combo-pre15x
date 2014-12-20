@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -70,11 +70,11 @@ bool Foam::polyMeshZipUpCells(polyMesh& mesh)
         nChangedFacesInMesh = 0;
 
         const cellList& Cells = mesh.cells();
-        const pointField& Points = mesh.allPoints();
+        const pointField& Points = mesh.points();
 
-        faceList newFaces = mesh.allFaces();
+        faceList newFaces = mesh.faces();
 
-        const faceList& oldFaces = mesh.allFaces();
+        const faceList& oldFaces = mesh.faces();
         const labelListList& pFaces = mesh.pointFaces();
 
         forAll (Cells, cellI)
@@ -757,10 +757,10 @@ bool Foam::polyMeshZipUpCells(polyMesh& mesh)
         mesh.resetPrimitives
         (
             patchStarts[bMesh.size()-1] + patchSizes[bMesh.size()-1],
-            mesh.allPoints(),
+            mesh.points(),
             newFaces,
-            mesh.allOwner(),
-            mesh.allNeighbour(),
+            mesh.faceOwner(),
+            mesh.faceNeighbour(),
             patchSizes,
             patchStarts,
             true                // boundary forms valid boundary mesh.

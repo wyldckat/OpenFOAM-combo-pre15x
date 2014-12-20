@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    spray
+    Foam::spray
 
 Description
+    A spray is a cloud of parcels
 
 \*---------------------------------------------------------------------------*/
 
@@ -109,7 +110,7 @@ class spray
             autoPtr<dispersionModel> dispersionModel_;
             autoPtr<liquidMixture> fuels_;
             autoPtr<injectorModel> injectorModel_;
-    
+
 
         //- Minimum number of lagrangian subcycles
         const label subCycles_;
@@ -164,13 +165,12 @@ class spray
 
             //- The (total added) injected kinetic energy of the liquid
             scalar injectedLiquidKE_;
-        
+
             //- Ambient Pressure
             scalar ambientPressure_;
-        
+
             //- Ambient Temperature
             scalar ambientTemperature_;
-        
 
 
     // Private Member Functions
@@ -287,7 +287,7 @@ public:
             inline const PtrList<scalarField>& srhos() const;
 
             inline const scalar& ambientPressure() const;
-            
+
             inline const scalar& ambientTemperature() const;
 
 
@@ -336,12 +336,18 @@ public:
 
             //- Return Maximum Diameter
             scalar maxD() const;
-            
+
             //- Return Ambient Pressure
             void calculateAmbientPressure();
-            
+
             //- Return Ambient Temperature
             void calculateAmbientTemperature();
+
+
+    // I/O
+
+            //- Write fields
+            void writeFields() const;
 };
 
 

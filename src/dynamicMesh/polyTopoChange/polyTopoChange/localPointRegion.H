@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    localPointRegion
+    Foam::localPointRegion
 
 Description
     Takes mesh with 'baffles' (= boundary faces sharing points).
@@ -53,7 +53,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class primitiveMesh;
 class polyMesh;
 class face;
@@ -126,16 +126,6 @@ class localPointRegion
             labelHashSet& changedFaces
         );
 
-        //- See walkPointConnectedFaces
-        static label walkCellFaceCell
-        (
-            const primitiveMesh&,
-            const label startCellI,
-            const label startPointI,
-            const label regionI,
-            labelList& regionPerFace
-        );
-
         //- Check if two faces are equal. If forward = false checks f1 in
         //  reverse order.
         static bool isDuplicate
@@ -183,6 +173,18 @@ public:
             (
                 const primitiveMesh& mesh,
                 const label pointI
+            );
+
+            //- See walkPointConnectedFaces. Temporarily exposed so as to
+            //  use outside since par problem with localPointRegion (which is
+            //  probably fixed now with plusEqOp v.s. sumOp in gather/scatter)
+            static label walkCellFaceCell
+            (
+                const primitiveMesh&,
+                const label startCellI,
+                const label startPointI,
+                const label regionI,
+                labelList& regionPerFace
             );
 
 

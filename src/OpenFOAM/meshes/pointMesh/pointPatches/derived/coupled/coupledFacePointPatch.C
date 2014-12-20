@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,57 +47,34 @@ coupledFacePointPatch::coupledFacePointPatch
 :
     facePointPatch(patch, bm),
     coupledPointPatch(bm),
-    coupledPolyPatch_(refCast<const coupledPolyPatch>(patch)),
-    nonGlobalPatchPointsPtr_(NULL),
-    meshPointsPtr_(NULL)
+    coupledPolyPatch_(refCast<const coupledPolyPatch>(patch))
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 coupledFacePointPatch::~coupledFacePointPatch()
-{
-    deleteDemandDrivenData(nonGlobalPatchPointsPtr_);
-    deleteDemandDrivenData(meshPointsPtr_);
-}
+{}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 const labelList& coupledFacePointPatch::nonGlobalPatchPoints() const
 {
-    if (!nonGlobalPatchPointsPtr_)
-    {
-        calcMeshPoints();
-    }
-
-    return *nonGlobalPatchPointsPtr_;
+    return nonGlobalPatchPoints_;
 }
 
-
-const labelList& coupledFacePointPatch::meshPoints() const
+const labelList& coupledFacePointPatch::loneMeshPoints() const
 {
-    if (!meshPointsPtr_)
-    {
-        calcMeshPoints();
-    }
-
-    return *meshPointsPtr_;
+    return loneMeshPoints_;
 }
-
-
-const pointField& coupledFacePointPatch::localPoints() const
-{
-    notImplemented("coupledFacePointPatch::localPoints() const");
-    return Field<point>::null();
-}
-
 
 const vectorField& coupledFacePointPatch::pointNormals() const
 {
     notImplemented("coupledFacePointPatch::pointNormals() const");
     return Field<vector>::null();
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

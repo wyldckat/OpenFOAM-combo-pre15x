@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -124,7 +124,7 @@ Foam::tmp<Foam::volScalarField> Foam::multiphaseMixture::rho() const
 
     tmp<volScalarField> trho = iter()*iter().rho();
 
-    for(; iter != phases_.end(); ++iter)
+    for(++iter; iter != phases_.end(); ++iter)
     {
         trho() += iter()*iter().rho();
     }
@@ -139,7 +139,7 @@ Foam::tmp<Foam::volScalarField> Foam::multiphaseMixture::mu() const
 
     tmp<volScalarField> tmu = iter()*iter().rho()*iter().nu();
 
-    for(; iter != phases_.end(); ++iter)
+    for(++iter; iter != phases_.end(); ++iter)
     {
         tmu() += iter()*iter().rho()*iter().nu();
     }
@@ -152,12 +152,12 @@ Foam::tmp<Foam::surfaceScalarField> Foam::multiphaseMixture::muf() const
 {
     PtrDictionary<phase>::const_iterator iter = phases_.begin();
 
-    tmp<surfaceScalarField> tmuf = 
+    tmp<surfaceScalarField> tmuf =
         fvc::interpolate(iter())*iter().rho()*fvc::interpolate(iter().nu());
 
-    for(; iter != phases_.end(); ++iter)
+    for(++iter; iter != phases_.end(); ++iter)
     {
-        tmuf() += 
+        tmuf() +=
             fvc::interpolate(iter())*iter().rho()*fvc::interpolate(iter().nu());
     }
 
@@ -311,7 +311,7 @@ Foam::tmp<Foam::surfaceVectorField> Foam::multiphaseMixture::nHatfv
     surfaceVectorField gradAlphaf = fvc::interpolate(gradAlpha);
     */
 
-    surfaceVectorField gradAlphaf = 
+    surfaceVectorField gradAlphaf =
         fvc::interpolate(alpha2)*fvc::interpolate(fvc::grad(alpha1))
       - fvc::interpolate(alpha1)*fvc::interpolate(fvc::grad(alpha2));
 
@@ -344,7 +344,8 @@ void Foam::multiphaseMixture::correctContactAngle
     surfaceVectorField::GeometricBoundaryField& nHatb
 ) const
 {
-    const volScalarField::GeometricBoundaryField& gbf = refPhase_.boundaryField();
+    const volScalarField::GeometricBoundaryField& gbf
+        = refPhase_.boundaryField();
 
     const fvBoundaryMesh& boundary = mesh_.boundary();
 
@@ -352,7 +353,7 @@ void Foam::multiphaseMixture::correctContactAngle
     {
         if (typeid(gbf[patchi]) == typeid(alphaContactAngleFvPatchScalarField))
         {
-            const alphaContactAngleFvPatchScalarField& acap = 
+            const alphaContactAngleFvPatchScalarField& acap =
                 refCast<const alphaContactAngleFvPatchScalarField>(gbf[patchi]);
 
             vectorField& nHatPatch = nHatb[patchi];
@@ -469,7 +470,7 @@ void Foam::multiphaseMixture::solveAlphas
     tmp<fv::convectionScheme<scalar> > mvConvection
     (
         fv::convectionScheme<scalar>::New
-        ( 
+        (
             mesh_,
             alphaTable_,
             phi_,

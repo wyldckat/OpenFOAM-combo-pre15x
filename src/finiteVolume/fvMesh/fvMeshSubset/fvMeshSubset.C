@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,7 +48,7 @@ namespace Foam
 
 bool Foam::fvMeshSubset::checkCellSubset() const
 {
-    if (!fvMeshSubsetPtr_)
+    if (!fvMeshSubsetPtr_.valid())
     {
         FatalErrorIn("bool fvMeshSubset::checkCellSubset() const")
             << "Mesh subset not set.  Please set the cell map using "
@@ -116,7 +116,11 @@ void Foam::fvMeshSubset::doCoupledPatches
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(pp);
 
-                OPstream toNeighbour(procPatch.neighbProcNo());
+                OPstream toNeighbour
+                (
+                    Pstream::blocking,
+                    procPatch.neighbProcNo()
+                );
 
                 toNeighbour
                     << SubList<label>(nCellsUsingFace, pp.size(), pp.start());
@@ -134,7 +138,11 @@ void Foam::fvMeshSubset::doCoupledPatches
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(pp);
 
-                IPstream fromNeighbour(procPatch.neighbProcNo());
+                IPstream fromNeighbour
+                (
+                    Pstream::blocking,
+                    procPatch.neighbProcNo()
+                );
 
                 labelList nbrCellsUsingFace(fromNeighbour);
 
@@ -259,7 +267,7 @@ void Foam::fvMeshSubset::subsetZones()
             pz.name(),
             subset(baseMesh().nPoints(), pz, pointMap()),
             i,
-            fvMeshSubsetPtr_->pointZones()
+            fvMeshSubsetPtr_().pointZones()
         );
     }
 
@@ -307,7 +315,7 @@ void Foam::fvMeshSubset::subsetZones()
             subAddressing,
             subFlipStatus,
             i,
-            fvMeshSubsetPtr_->faceZones()
+            fvMeshSubsetPtr_().faceZones()
         );
     }
 
@@ -325,13 +333,13 @@ void Foam::fvMeshSubset::subsetZones()
             cz.name(),
             subset(baseMesh().nCells(), cz, cellMap()),
             i,
-            fvMeshSubsetPtr_->cellZones()
+            fvMeshSubsetPtr_().cellZones()
         );
     }
 
 
     // Add the zones
-    fvMeshSubsetPtr_->addZones(pZonePtrs, fZonePtrs, cZonePtrs);
+    fvMeshSubsetPtr_().addZones(pZonePtrs, fZonePtrs, cZonePtrs);
 }
 
 
@@ -347,14 +355,6 @@ Foam::fvMeshSubset::fvMeshSubset(const fvMesh& baseMesh)
     cellMap_(0),
     patchMap_(0)
 {}
-
-
-// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
-
-Foam::fvMeshSubset::~fvMeshSubset()
-{
-    deleteDemandDrivenData(fvMeshSubsetPtr_);
-}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -663,20 +663,24 @@ void Foam::fvMeshSubset::setCellSubset
 
 
     // Make a new mesh
-    fvMeshSubsetPtr_ = new fvMesh
+    fvMeshSubsetPtr_.reset
     (
-        IOobject
+        new fvMesh
         (
-            baseMesh().name() + "SubSet",
-            baseMesh().time().timeName(),
-            baseMesh().time(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        newPoints,
-        newFaces,
-        newCells
+            IOobject
+            (
+                baseMesh().name() + "SubSet",
+                baseMesh().time().timeName(),
+                baseMesh().time(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            newPoints,
+            newFaces,
+            newCells
+        )
     );
+    pointMeshSubsetPtr_.clear();
 
 
     // Add old patches
@@ -692,7 +696,7 @@ void Foam::fvMeshSubset::setCellSubset
             // Patch still exists. Add it
             newBoundary[nNewPatches] = oldPatches[patchI].clone
             (
-                fvMeshSubsetPtr_->boundaryMesh(),
+                fvMeshSubsetPtr_().boundaryMesh(),
                 nNewPatches,
                 boundaryPatchSizes[patchI],
                 patchStart
@@ -715,7 +719,7 @@ void Foam::fvMeshSubset::setCellSubset
                 boundaryPatchSizes[oldInternalPatchID],
                 patchStart,
                 nNewPatches,
-                fvMeshSubsetPtr_->boundaryMesh()
+                fvMeshSubsetPtr_().boundaryMesh()
             );
 
             // The index for the first patch is -1 as it originates from
@@ -730,7 +734,7 @@ void Foam::fvMeshSubset::setCellSubset
     patchMap_.setSize(nNewPatches);
 
     // Add the fvPatches
-    fvMeshSubsetPtr_->addFvPatches(newBoundary);
+    fvMeshSubsetPtr_().addFvPatches(newBoundary);
 
     // Subset and add any zones
     subsetZones();
@@ -1158,22 +1162,25 @@ void Foam::fvMeshSubset::setLargeCellSubset
     // not proper but cannot be avoided since otherwise surfaceInterpolation
     // cannot find its fvSchemes (it will try to read e.g.
     // system/region0SubSet/fvSchemes)
-    fvMeshSubsetPtr_ = new fvMesh
+    fvMeshSubsetPtr_.reset
     (
-        IOobject
+        new fvMesh
         (
-            baseMesh().name(),
-            baseMesh().time().timeName(),
-            baseMesh().time(),
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        newPoints,
-        newFaces,
-        newCells,
-        syncPar           // parallel synchronisation
+            IOobject
+            (
+                baseMesh().name(),
+                baseMesh().time().timeName(),
+                baseMesh().time(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            newPoints,
+            newFaces,
+            newCells,
+            syncPar           // parallel synchronisation
+        )
     );
-
+    pointMeshSubsetPtr_.clear();
 
     // Add old patches
     List<polyPatch*> newBoundary(nbSize);
@@ -1243,7 +1250,7 @@ void Foam::fvMeshSubset::setLargeCellSubset
         // Clone (even if 0 size)
         newBoundary[nNewPatches] = oldPatches[oldPatchI].clone
         (
-            fvMeshSubsetPtr_->boundaryMesh(),
+            fvMeshSubsetPtr_().boundaryMesh(),
             nNewPatches,
             newSize,
             patchStart
@@ -1274,7 +1281,7 @@ void Foam::fvMeshSubset::setLargeCellSubset
                 boundaryPatchSizes[oldInternalPatchID],
                 patchStart,
                 nNewPatches,
-                fvMeshSubsetPtr_->boundaryMesh()
+                fvMeshSubsetPtr_().boundaryMesh()
             );
 
             //Pout<< "    oldInternalFaces : "
@@ -1302,7 +1309,7 @@ void Foam::fvMeshSubset::setLargeCellSubset
         // Patch still exists. Add it
         newBoundary[nNewPatches] = oldPatches[oldPatchI].clone
         (
-            fvMeshSubsetPtr_->boundaryMesh(),
+            fvMeshSubsetPtr_().boundaryMesh(),
             nNewPatches,
             newSize,
             patchStart
@@ -1323,7 +1330,7 @@ void Foam::fvMeshSubset::setLargeCellSubset
 
 
     // Add the fvPatches
-    fvMeshSubsetPtr_->addFvPatches(newBoundary);
+    fvMeshSubsetPtr_().addFvPatches(newBoundary);
 
     // Subset and add any zones
     subsetZones();
@@ -1351,7 +1358,7 @@ const fvMesh& Foam::fvMeshSubset::subMesh() const
 {
     checkCellSubset();
 
-    return *fvMeshSubsetPtr_;
+    return fvMeshSubsetPtr_();
 }
 
 
@@ -1359,7 +1366,27 @@ fvMesh& Foam::fvMeshSubset::subMesh()
 {
     checkCellSubset();
 
-    return *fvMeshSubsetPtr_;
+    return fvMeshSubsetPtr_();
+}
+
+
+const pointMesh& Foam::fvMeshSubset::subPointMesh() const
+{
+    if (!pointMeshSubsetPtr_.valid())
+    {
+        pointMeshSubsetPtr_.reset(new pointMesh(subMesh()));
+    }
+    return pointMeshSubsetPtr_();
+}
+
+
+pointMesh& Foam::fvMeshSubset::subPointMesh()
+{
+    if (!pointMeshSubsetPtr_.valid())
+    {
+        pointMeshSubsetPtr_.reset(new pointMesh(subMesh()));
+    }
+    return pointMeshSubsetPtr_();
 }
 
 

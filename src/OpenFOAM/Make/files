@@ -1,22 +1,8 @@
-OSspecific = OSspecific/Unix
-$(OSspecific)/signals/sigFpe.C
-$(OSspecific)/signals/sigSegv.C
-$(OSspecific)/signals/sigInt.C
-$(OSspecific)/signals/sigQuit.C
-$(OSspecific)/timer.C
-$(OSspecific)/fileStat.C
-$(OSspecific)/Unix.C
-$(OSspecific)/cpuTime/cpuTime.C
-$(OSspecific)/clockTime/clockTime.C
-$(OSspecific)/printStack.C
-/*$(OSspecific)/dummyPrintStack.C*/
-
-global/global.C
+global/global.Cver
 global/dimensionedConstants/dimensionedConstants.C
 global/argList/argList.C
 global/clock/clock.C
 
-primitives/zero/zero.C
 primitives/bool/bool.C
 primitives/bool/boolIO.C
 primitives/char/charIO.C
@@ -32,16 +18,19 @@ primitives/Scalar/scalar/scalar.C
 primitives/labelVector/labelVector.C
 primitives/vector/vector.C
 primitives/vector2D/vector2D.C
-primitives/labelTensor/labelTensor.C
 primitives/sphericalTensor/sphericalTensor.C
 primitives/sphericalTensor2D/sphericalTensor2D.C
 primitives/diagTensor/diagTensor.C
 primitives/symmTensor/symmTensor.C
-primitives/labelSymmTensor/labelSymmTensor.C
 primitives/tensor/tensor.C
 primitives/tensor2D/tensor2D.C
+primitives/labelSphericalTensor/labelSphericalTensor.C
+primitives/labelSymmTensor/labelSymmTensor.C
+primitives/labelTensor/labelTensor.C
 primitives/complex/complex.C
 primitives/complexVector/complexVector.C
+primitives/quaternion/quaternion.C
+primitives/septernion/septernion.C
 
 strings = primitives/strings
 $(strings)/string/string.C
@@ -129,9 +118,17 @@ dictionaryEntry = $(dictionary)/dictionaryEntry
 $(dictionaryEntry)/dictionaryEntry.C
 $(dictionaryEntry)/dictionaryEntryIO.C
 
-IOdictionary = db/IOdictionary
+functionEntries = $(dictionary)/functionEntries
+$(functionEntries)/functionEntry/functionEntry.C
+$(functionEntries)/includeEntry/includeEntry.C
+$(functionEntries)/inputModeEntry/inputModeEntry.C
+$(functionEntries)/removeEntry/removeEntry.C
+
+IOdictionary = db/IOobjects/IOdictionary
 $(IOdictionary)/IOdictionary.C
 $(IOdictionary)/IOdictionaryIO.C
+
+db/IOobjects/IOMap/IOMapName.C
 
 IOobject = db/IOobject
 $(IOobject)/IOobject.C
@@ -163,8 +160,12 @@ $(Time)/TimeIO.C
 $(Time)/findTimes.C
 $(Time)/subCycleTime.C
 $(Time)/findInstance.C
+$(Time)/timeSelector.C
 
 $(Time)/instant/instant.C
+
+db/scalarRange/scalarRange.C
+db/scalarRange/scalarRanges.C
 
 dimensionSet/dimensionSet.C
 dimensionSet/dimensionSetIO.C
@@ -190,7 +191,6 @@ $(lduMatrix)/lduMatrix/lduMatrixOperations.C
 $(lduMatrix)/lduMatrix/lduMatrixATmul.C
 $(lduMatrix)/lduMatrix/lduMatrixTests.C
 $(lduMatrix)/lduMatrix/lduMatrixUpdateMatrixInterfaces.C
-$(lduMatrix)/lduMatrix/lduMatrixBufferedUpdateMatrixInterfaces.C
 $(lduMatrix)/lduMatrix/lduMatrixSolver.C
 $(lduMatrix)/lduMatrix/lduMatrixSmoother.C
 $(lduMatrix)/lduMatrix/lduMatrixPreconditioner.C
@@ -220,9 +220,11 @@ $(lduAddressing)/lduAddressing.C
 $(lduAddressing)/lduInterface/lduInterface.C
 $(lduAddressing)/lduInterface/processorLduInterface.C
 $(lduAddressing)/lduInterface/cyclicLduInterface.C
-$(lduAddressing)/lduInterfaceField/lduInterfaceField.C
-$(lduAddressing)/lduInterfaceField/processorLduInterfaceField.C
-$(lduAddressing)/lduInterfaceField/cyclicLduInterfaceField.C
+
+lduInterfaceFields = $(lduAddressing)/lduInterfaceFields
+$(lduInterfaceFields)/lduInterfaceField/lduInterfaceField.C
+$(lduInterfaceFields)/processorLduInterfaceField/processorLduInterfaceField.C
+$(lduInterfaceFields)/cyclicLduInterfaceField/cyclicLduInterfaceField.C
 
 GAMG = $(lduMatrix)/solvers/GAMG
 $(GAMG)/GAMGSolver.C
@@ -260,10 +262,12 @@ meshes/lduMesh/lduMesh.C
 
 primitiveShapes = meshes/primitiveShapes
 
+$(primitiveShapes)/line/line.C
 $(primitiveShapes)/plane/plane.C
 $(primitiveShapes)/triangle/intersection.C
 
 meshShapes = meshes/meshShapes
+$(meshShapes)/edge/edge.C
 $(meshShapes)/edge/edgeIOList.C
 
 face = $(meshShapes)/face
@@ -305,6 +309,7 @@ $(polyPatches)/polyPatch/newPolyPatch.C
 
 basicPolyPatches = $(polyPatches)/basic
 $(basicPolyPatches)/coupled/coupledPolyPatch.C
+$(basicPolyPatches)/generic/genericPolyPatch.C
 
 constraintPolyPatches = $(polyPatches)/constraint
 $(constraintPolyPatches)/empty/emptyPolyPatch.C
@@ -321,11 +326,11 @@ $(polyBoundaryMesh)/polyBoundaryMesh.C
 $(polyBoundaryMesh)/polyBoundaryMeshEntries.C
 
 meshes/ProcessorTopology/commSchedule.C
-meshes/ProcessorTopology/dataSchedule.C
 
 globalMeshData = $(polyMesh)/globalMeshData
 $(globalMeshData)/globalMeshData.C
 $(globalMeshData)/globalPoints.C
+$(globalMeshData)/globalIndex.C
 
 $(polyMesh)/syncTools/syncTools.C
 
@@ -339,16 +344,15 @@ faceZone = $(zones)/faceZone
 $(faceZone)/faceZone.C
 $(faceZone)/newFaceZone.C
 
-pointZones = $(zones)/pointZones
-pointZone = $(pointZones)/pointZone
+pointZone = $(zones)/pointZone
 $(pointZone)/pointZone.C
 $(pointZone)/newPointZone.C
 
 $(polyMesh)/polyMesh.C
 $(polyMesh)/polyMeshFromShapeMesh.C
 $(polyMesh)/polyMeshIO.C
+$(polyMesh)/polyMeshInitMesh.C
 $(polyMesh)/polyMeshClear.C
-$(polyMesh)/polyMeshCalcFaceCells.C
 $(polyMesh)/polyMeshUpdate.C
 
 primitiveMesh = meshes/primitiveMesh
@@ -364,7 +368,6 @@ $(primitiveMesh)/primitiveMeshEdges.C
 $(primitiveMesh)/primitiveMeshFaceCentresAndAreas.C
 $(primitiveMesh)/primitiveMeshFindCell.C
 $(primitiveMesh)/primitiveMeshPointCells.C
-$(primitiveMesh)/primitiveMeshPointEdges.C
 $(primitiveMesh)/primitiveMeshPointFaces.C
 $(primitiveMesh)/primitiveMeshPointPoints.C
 $(primitiveMesh)/primitiveMeshCellPoints.C
@@ -376,7 +379,7 @@ $(primitiveMeshCheck)/primitiveMeshCheckMotion.C
 $(primitiveMeshCheck)/primitiveMeshCheckPointNearness.C
 $(primitiveMeshCheck)/primitiveMeshCheckEdgeLength.C
 
-primitivePatch = meshes/primitivePatch
+primitivePatch = $(primitiveMesh)/primitivePatch
 $(primitivePatch)/patchZones.C
 $(primitivePatch)/walkPatch.C
 
@@ -392,17 +395,21 @@ $(cellMatcher)/degenerateMatcher.C
 
 mapPolyMesh = $(polyMesh)/mapPolyMesh
 $(mapPolyMesh)/mapPolyMesh.C
-$(mapPolyMesh)/pointMapper/pointMapper.C
 $(mapPolyMesh)/faceMapper/faceMapper.C
 $(mapPolyMesh)/cellMapper/cellMapper.C
-$(mapPolyMesh)/mapDistributePolyMesh/mapDistributePolyMesh.C
+$(mapPolyMesh)/mapDistribute/mapDistribute.C
+$(mapPolyMesh)/mapDistribute/mapDistributePolyMesh.C
 $(mapPolyMesh)/mapAddedPolyMesh.C
 
-PrimitivePatch = meshes/PrimitivePatch
+PrimitivePatch = $(primitiveMesh)/PrimitivePatch
 $(PrimitivePatch)/PrimitivePatchName.C
 
 pointMesh = meshes/pointMesh
 $(pointMesh)/pointMesh.C
+
+pointMeshMapper = $(pointMesh)/pointMeshMapper
+$(pointMeshMapper)/pointMapper.C
+$(pointMeshMapper)/pointPatchMapper.C
 
 pointPatches = $(pointMesh)/pointPatches
 $(pointPatches)/pointPatch/pointPatch.C
@@ -411,6 +418,7 @@ $(pointPatches)/facePointPatch/newFacePointPatch.C
 
 basicPointPatches = $(pointPatches)/basic
 $(basicPointPatches)/coupled/coupledPointPatch.C
+$(basicPointPatches)/generic/genericPointPatch.C
 
 constraintPointPatches = $(pointPatches)/constraint
 $(constraintPointPatches)/empty/emptyPointPatch.C
@@ -452,13 +460,13 @@ $(Fields)/sphericalTensorField/sphericalTensorIOField.C
 $(Fields)/diagTensorField/diagTensorIOField.C
 $(Fields)/symmTensorField/symmTensorIOField.C
 $(Fields)/tensorField/tensorIOField.C
-
+$(Fields)/transformField/transformField.C
 pointPatchFields = fields/pointPatchFields
 $(pointPatchFields)/pointPatchField/pointPatchFields.C
 
 basicPointPatchFields = $(pointPatchFields)/basic
 $(basicPointPatchFields)/calculated/calculatedPointPatchFields.C
-$(basicPointPatchFields)/default/defaultPointPatchFields.C
+$(basicPointPatchFields)/generic/genericPointPatchFields.C
 $(basicPointPatchFields)/coupled/coupledPointPatchFields.C
 $(basicPointPatchFields)/value/valuePointPatchFields.C
 $(basicPointPatchFields)/fixedValue/fixedValuePointPatchFields.C
@@ -475,6 +483,8 @@ $(constraintPointPatchFields)/processor/processorPointPatchFields.C
 derivedPointPatchFields = $(pointPatchFields)/derived
 $(derivedPointPatchFields)/slip/slipPointPatchFields.C
 $(derivedPointPatchFields)/global/globalPointPatchFields.C
+$(derivedPointPatchFields)/uniformFixedValue/uniformFixedValuePointPatchFields.C
+$(derivedPointPatchFields)/timeVaryingUniformFixedValue/timeVaryingUniformFixedValuePointPatchFields.C
 
 fields/GeometricFields/pointFields/pointFields.C
 

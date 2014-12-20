@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,16 +23,17 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    enrichedPatch
+    Foam::enrichedPatch
 
 Description
     The enriched patch contains a double set of faces from the two
-    sides of the sliding interface before the cutting.  The patch
-    basically consists of two over-lapping sets of faces sitting on a
-    common point support, where every edge may be shared by more than
-    2 faces.  The patch points are collected in a map.  Additional information
-    needed for cutting is the point insertion into every edge of
-    master and slave.
+    sides of the sliding interface before the cutting.
+
+    The patch basically consists of two over-lapping sets of faces sitting
+    on a common point support, where every edge may be shared by more than
+    2 faces.  The patch points are collected in a map.  Additional
+    information needed for cutting is the point insertion into every edge
+    of master and slave.
 
     Note:
     If new points are created during master-slave edge cutting, they
@@ -61,7 +62,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 
 /*---------------------------------------------------------------------------*\
                           Class enrichedPatch Declaration

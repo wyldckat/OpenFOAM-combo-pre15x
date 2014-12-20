@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,17 +23,18 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    processorPointPatch
+    Foam::processorPointPatch
 
 Description
     Processor patch boundary needs to be such that the ordering of
-    points in the patch is the same on both sides. Looking at the
-    creation of the faces on both sides of the processor patch they
-    need to be identical on both sides with the normals pointing in
-    opposite directions.  This is achieved by calling the reverseFace
-    function in the decomposition.  It is therefore possible to
-    re-create the ordering of patch points on the slave side by
-    reversing all the patch faces of the owner.
+    points in the patch is the same on both sides.
+
+    Looking at the creation of the faces on both sides of the processor
+    patch they need to be identical on both sides with the normals pointing
+    in opposite directions.  This is achieved by calling the reverseFace
+    function in the decomposition.  It is therefore possible to re-create
+    the ordering of patch points on the slave side by reversing all the
+    patch faces of the owner.
 
 SourceFiles
     processorPointPatch.C
@@ -66,24 +67,40 @@ class processorPointPatch
 
     // Private Member Functions
 
+        //- Initialise the calculation of the patch geometry
+        virtual void initGeometry();
+
+        //- Calculate the patch geometry
+        virtual void calcGeometry();
+
+        //- Initialise the points on this patch which are should also be 
+        //  on a neighbouring patch but are not part of faces of that patch
+        void initPatchPatchPoints();
+
+        //- Calculate the points on this patch which are should also be 
+        //  on a neighbouring patch but are not part of faces of that patch
+        void calcPatchPatchPoints();
+
+        //- Initialise the patches for moving points
+        virtual void initMovePoints(const pointField&);
+
+        //- Correct patches after moving points
+        virtual void movePoints(const pointField&);
+
+        //- Initialise the update of the patch topology
+        virtual void initUpdateMesh();
+
+        //- Update of the patch topology
+        virtual void updateMesh();
+
+
         //- Disallow default construct as copy
         processorPointPatch(const processorPointPatch&);
 
         //- Disallow default assignment
         void operator=(const processorPointPatch&);
 
-
-        // Construction of demand-driven data
-
-            //- Calculate mesh points
-            virtual void calcMeshPoints() const;
-
-
 public:
-
-    typedef coupledPointPatch CoupledPointPatch;
-    typedef pointBoundaryMesh BoundaryMesh;
-
 
     //- Runtime type information
     TypeName(processorPolyPatch::typeName_());

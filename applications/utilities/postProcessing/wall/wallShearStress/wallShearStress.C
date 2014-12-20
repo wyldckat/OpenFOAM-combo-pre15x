@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,47 +26,33 @@ Application
     wallShearStress
 
 Description
-    Calculates and writes the wall shear stress for the current
-    time step.
+    Calculates and writes the wall shear stress, for the specified times.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
 #include "incompressible/singlePhaseTransportModel/singlePhaseTransportModel.H"
-#include "incompressible/turbulenceModel/turbulenceModel.H"
-
+#include "incompressible/RASModel/RASModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 int main(int argc, char *argv[])
 {
-
-#   include "addTimeOptions.H"
-#   include "setRootCase.H"
-
+    timeSelector::addOptions();
+    #include "setRootCase.H"
 #   include "createTime.H"
-
-    // Get times list
-    instantList Times = runTime.times();
-
-    // set startTime and endTime depending on -time and -latestTime options
-#   include "checkTimeOptions.H"
-
-    runTime.setTime(Times[startTime], startTime);
-
+    instantList timeDirs = timeSelector::select0(runTime, args);
 #   include "createMesh.H"
 
-    for (label i=startTime; i<endTime; i++)
+    forAll(timeDirs, timeI)
     {
-        runTime.setTime(Times[i], i);
-
+        runTime.setTime(timeDirs[timeI], timeI);
         Info<< "Time = " << runTime.timeName() << endl;
-
         mesh.readUpdate();
 
 #       include "createFields.H"
 
-        volSymmTensorField R(turbulence->R());
+        volSymmTensorField Reff(RASModel->devReff());
 
         volVectorField wallShearStress
         (
@@ -79,7 +65,12 @@ int main(int argc, char *argv[])
                 IOobject::AUTO_WRITE
             ),
             mesh,
-            dimensionedVector("wallShearStress", R.dimensions(), vector::zero)
+            dimensionedVector
+            (
+                "wallShearStress",
+                Reff.dimensions(),
+                vector::zero
+            )
         );
 
         forAll(wallShearStress.boundaryField(), patchi)
@@ -88,7 +79,7 @@ int main(int argc, char *argv[])
             (
                 -mesh.Sf().boundaryField()[patchi]
                 /mesh.magSf().boundaryField()[patchi]
-            ) & R.boundaryField()[patchi];
+            ) & Reff.boundaryField()[patchi];
         }
 
         wallShearStress.write();
@@ -96,7 +87,7 @@ int main(int argc, char *argv[])
 
     Info<< "End" << endl;
 
-    return(0);
+    return 0;
 }
 
 

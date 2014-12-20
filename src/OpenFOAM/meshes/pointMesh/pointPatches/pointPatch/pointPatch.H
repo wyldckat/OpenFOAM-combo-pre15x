@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    pointPatch
+    Foam::pointPatch
 
 Description
     Basic pointPatch represents a set of points from the mesh.
@@ -45,7 +45,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 
 class pointBoundaryMesh;
 class pointConstraint;
@@ -69,6 +69,38 @@ class pointPatch
 
         //- Disallow default bitwise assignment
         void operator=(const pointPatch&);
+
+
+protected:
+
+    // Protected Member Functions
+
+        // The pointPatch geometry initialisation is called by pointBoundaryMesh
+        friend class pointBoundaryMesh;
+
+        //- Initialise the calculation of the patch geometry
+        virtual void initGeometry()
+        {}
+
+        //- Calculate the patch geometry
+        virtual void calcGeometry()
+        {}
+
+        //- Initialise the patches for moving points
+        virtual void initMovePoints(const pointField&)
+        {}
+
+        //- Correct patches after moving points
+        virtual void movePoints(const pointField&)
+        {}
+
+        //- Initialise the update of the patch topology
+        virtual void initUpdateMesh()
+        {}
+
+        //- Update of the patch topology
+        virtual void updateMesh()
+        {}
 
 
 public:
@@ -101,9 +133,6 @@ public:
 
         //- Return size
         virtual label size() const = 0;
-
-        //- Return number of faces
-        virtual label nFaces() const = 0;
 
         //- Return the index of this patch in the pointBoundaryMesh
         virtual label index() const = 0;

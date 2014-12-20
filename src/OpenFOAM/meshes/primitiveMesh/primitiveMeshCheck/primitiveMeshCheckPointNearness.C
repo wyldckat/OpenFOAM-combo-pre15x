@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,13 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Class
-    primitiveMesh
-
-Description
-    Check for point-point-nearness, e.g. colocated points which may be part of
-    baffles.
 
 \*---------------------------------------------------------------------------*/
 
@@ -66,21 +59,21 @@ bool Foam::primitiveMesh::checkPointNearness
 
             if (magSqr(points[pti] - points[prevPtI]) < reportDistSqr)
             {
-                // Check if unconnected.
-                const labelList& pEdges = pointEdges()[pti];
-
-                bool connected = false;
-
-                forAll(pEdges, pEdgei)
-                {
-                    if (edges()[pEdges[pEdgei]].otherVertex(prevPtI) != -1)
-                    {
-                        connected = true;
-                        break;
-                    }
-                }
-
-                if (!connected)
+                //// Check if unconnected.
+                //const labelList& pEdges = pointEdges()[pti];
+                //
+                //bool connected = false;
+                //
+                //forAll(pEdges, pEdgei)
+                //{
+                //    if (edges()[pEdges[pEdgei]].otherVertex(prevPtI) != -1)
+                //    {
+                //        connected = true;
+                //        break;
+                //    }
+                //}
+                //
+                //if (!connected)
                 {
                     nClose++;
 
@@ -100,7 +93,8 @@ bool Foam::primitiveMesh::checkPointNearness
     {
         if (report)
         {
-            Info<< "   *Points too close together found, number: " << nClose
+            Info<< "  <<Points closer than " << Foam::sqrt(reportDistSqr)
+                << " together found, number: " << nClose
                 << endl;
         }
 

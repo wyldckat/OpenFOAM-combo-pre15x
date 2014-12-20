@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,8 +26,6 @@ License
 
 #include "processorFvPatch.H"
 #include "addToRunTimeSelectionTable.H"
-#include "IPstream.H"
-#include "OPstream.H"
 #include "transformField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -127,39 +125,41 @@ tmp<labelField> processorFvPatch::interfaceInternalField
 
 void processorFvPatch::initTransfer
 (
-    const unallocLabelList& interfaceData,
-    const bool bufferdTransfer
+    const Pstream::commsTypes commsType,
+    const unallocLabelList& interfaceData
 ) const
 {
-    send(interfaceData, bufferdTransfer);
+    send(commsType, interfaceData);
 }
 
 
 tmp<labelField> processorFvPatch::transfer
 (
+    const Pstream::commsTypes commsType,
     const unallocLabelList&
 ) const
 {
-    return receive<label>(this->size());
+    return receive<label>(commsType, this->size());
 }
 
 
 void processorFvPatch::initInternalFieldTransfer
 (
-    const unallocLabelList& iF,
-    const bool bufferdTransfer
+    const Pstream::commsTypes commsType,
+    const unallocLabelList& iF
 ) const
 {
-    send(patchInternalField(iF)(), bufferdTransfer);
+    send(commsType, patchInternalField(iF)());
 }
 
 
 tmp<labelField> processorFvPatch::internalFieldTransfer
 (
+    const Pstream::commsTypes commsType,
     const unallocLabelList&
 ) const
 {
-    return receive<label>(this->size());
+    return receive<label>(commsType, this->size());
 }
 
 

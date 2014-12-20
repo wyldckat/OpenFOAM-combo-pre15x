@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,17 +32,15 @@ Description
 #include "primitiveMesh.H"
 #include "DynamicList.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-labelListList polyMesh::cellShapePointCells(const cellShapeList& c) const
+Foam::labelListList Foam::polyMesh::cellShapePointCells
+(
+    const cellShapeList& c
+) const
 {
     List<DynamicList<label, primitiveMesh::cellsPerPoint_> > 
-        pc(allPoints().size());
+        pc(points().size());
 
     // For each cell
     forAll(c, i)
@@ -73,7 +71,7 @@ labelListList polyMesh::cellShapePointCells(const cellShapeList& c) const
 }
 
 
-labelList polyMesh::facePatchFaceCells
+Foam::labelList Foam::polyMesh::facePatchFaceCells
 (
     const faceList& patchFaces,
     const labelListList& pointCells,
@@ -135,8 +133,7 @@ labelList polyMesh::facePatchFaceCells
 }
 
 
-// Construct from cell shapes
-polyMesh::polyMesh
+Foam::polyMesh::polyMesh
 (
     const IOobject& io,
     const pointField& points,
@@ -144,6 +141,7 @@ polyMesh::polyMesh
     const faceListList& boundaryFaces,
     const wordList& boundaryPatchNames,
     const wordList& boundaryPatchTypes,
+    const word& defaultBoundaryPatchName,
     const word& defaultBoundaryPatchType,
     const wordList& boundaryPatchPhysicalTypes,
     const bool syncPar
@@ -177,7 +175,7 @@ polyMesh::polyMesh
         ),
         0
     ),
-    allOwner_
+    owner_
     (
         IOobject
         (
@@ -190,7 +188,7 @@ polyMesh::polyMesh
         ),
         0
     ),
-    allNeighbour_
+    neighbour_
     (
         IOobject
         (
@@ -203,6 +201,7 @@ polyMesh::polyMesh
         ),
         0
     ),
+    clearedPrimitives_(false),
     boundary_
     (
         IOobject
@@ -584,7 +583,7 @@ polyMesh::polyMesh
             polyPatch::New
             (
                 defaultBoundaryPatchType,
-                "defaultFaces",
+                defaultBoundaryPatchName,
                 nFaces - defaultPatchStart,
                 defaultPatchStart,
                 boundary_.size() - 1,
@@ -619,9 +618,5 @@ polyMesh::polyMesh
     }
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,8 +22,8 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Type
-    labelSymmTensor
+Typedef
+    Foam::labelSymmTensor
 
 Description
     SymmTensor or labels.
@@ -47,14 +47,6 @@ namespace Foam
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 typedef SymmTensor<label> labelSymmTensor;
-
-// Identity labelSymmTensor
-static const labelSymmTensor labelI
-(
-    1, 0, 0,
-       1, 0,
-          1
-);
 
 //- Specify data associated with labelSymmTensor type is contiguous
 template<>

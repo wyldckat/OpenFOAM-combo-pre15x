@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,15 +24,10 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-void fvMatrix<Type>::setComponentReference
+void Foam::fvMatrix<Type>::setComponentReference
 (
     const label patchi,
     const label facei,
@@ -56,7 +51,10 @@ void fvMatrix<Type>::setComponentReference
 
 
 template<class Type>
-lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
+Foam::lduMatrix::solverPerformance Foam::fvMatrix<Type>::solve
+(
+    Istream& solverControls
+)
 {
     if (debug)
     {
@@ -74,7 +72,11 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
     scalarField saveDiag = diag();
 
     Field<Type> source = source_;
-    addBoundarySource(source, false);
+
+    // At this point include the boundary source from the coupled boundaries.
+    // This is corrected for the implict part by updateMatrixInterfaces within
+    // the component loop.
+    addBoundarySource(source);
 
     typename Type::labelType validComponents
     (
@@ -108,6 +110,27 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
 
         lduInterfaceFieldPtrsList interfaces = 
             psi_.boundaryField().interfaces();
+
+        // Use the initMatrixInterfaces and updateMatrixInterfaces to correct
+        // bouCoeffsCmpt for the explicit part of the coupled boundary
+        // conditions
+        initMatrixInterfaces
+        (
+            bouCoeffsCmpt,
+            interfaces,
+            psiCmpt,
+            sourceCmpt,
+            cmpt
+        );
+
+        updateMatrixInterfaces
+        (
+            bouCoeffsCmpt,
+            interfaces,
+            psiCmpt,
+            sourceCmpt,
+            cmpt
+        );
 
         lduMatrix::solverPerformance solverPerf;
 
@@ -144,27 +167,28 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
 
 
 template<class Type>
-autoPtr<typename fvMatrix<Type>::fvSolver> fvMatrix<Type>::solver()
+Foam::autoPtr<typename Foam::fvMatrix<Type>::fvSolver>
+Foam::fvMatrix<Type>::solver()
 {
     return solver(psi_.mesh().solver(psi_.name()));
 }
 
 template<class Type>
-lduMatrix::solverPerformance fvMatrix<Type>::fvSolver::solve()
+Foam::lduMatrix::solverPerformance Foam::fvMatrix<Type>::fvSolver::solve()
 {
     return solve(psi_.mesh().solver(psi_.name()));
 }
 
 
 template<class Type>
-lduMatrix::solverPerformance fvMatrix<Type>::solve()
+Foam::lduMatrix::solverPerformance Foam::fvMatrix<Type>::solve()
 {
     return solve(psi_.mesh().solver(psi_.name()));
 }
 
 
 template<class Type>
-tmp<Field<Type> > fvMatrix<Type>::residual() const
+Foam::tmp<Foam::Field<Type> > Foam::fvMatrix<Type>::residual() const
 {
     tmp<Field<Type> > tres(source_);
     Field<Type>& res = tres();
@@ -201,9 +225,5 @@ tmp<Field<Type> > fvMatrix<Type>::residual() const
     return tres;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

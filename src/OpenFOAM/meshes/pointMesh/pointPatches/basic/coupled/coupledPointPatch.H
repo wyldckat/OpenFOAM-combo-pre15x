@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    coupledPointPatch
+    Foam::coupledPointPatch
 
 Description
     coupled patch for post-processing.  Used as the base class for processor
@@ -61,10 +61,30 @@ class coupledPointPatch
         void operator=(const coupledPointPatch&);
 
 
+protected:
+
+    // Protected Member Functions
+
+        //- Initialise the calculation of the patch geometry
+        virtual void initGeometry() = 0;
+
+        //- Calculate the patch geometry
+        virtual void calcGeometry() = 0;
+
+        //- Initialise the patches for moving points
+        virtual void initMovePoints(const pointField&) = 0;
+
+        //- Correct patches after moving points
+        virtual void movePoints(const pointField&) = 0;
+
+        //- Initialise the update of the patch topology
+        virtual void initUpdateMesh() = 0;
+
+        //- Update of the patch topology
+        virtual void updateMesh() = 0;
+
+
 public:
-
-    typedef pointBoundaryMesh BoundaryMesh;
-
 
     //- Runtime type information
     TypeName(coupledPolyPatch::typeName_());

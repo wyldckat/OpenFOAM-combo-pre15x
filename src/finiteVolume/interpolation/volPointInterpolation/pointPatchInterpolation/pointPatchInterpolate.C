@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,7 @@ License
 #include "emptyFvPatch.H"
 #include "valuePointPatchField.H"
 #include "coupledPointPatchField.H"
-#include "coupledPointPatch.H"
+#include "coupledFacePointPatch.H"
 #include "transform.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -60,7 +60,9 @@ void pointPatchInterpolation::interpolate
     // Interpolate patch values: over-ride the internal values for the points
     // on the patch with the interpolated point values from the faces of the
     // patch
+
     const fvBoundaryMesh& bm = fvMesh_.boundary();
+    const pointBoundaryMesh& pbm = pointMesh_.boundary();
 
     forAll(bm, patchi)
     {
@@ -68,11 +70,14 @@ void pointPatchInterpolation::interpolate
         {
             pointPatchField<Type>& ppf = pf.boundaryField()[patchi];
 
+            // Only map the values corresponding to the points associated with
+            // faces, not "lone" points due to decomposition
             ppf.setInInternalField
             (
                 pf.internalField(),
                 patchInterpolators_[patchi]
-               .faceToPointInterpolate(vf.boundaryField()[patchi])()
+               .faceToPointInterpolate(vf.boundaryField()[patchi])(),
+                bm[patchi].patch().meshPoints()
             );
 
             if
@@ -84,6 +89,21 @@ void pointPatchInterpolation::interpolate
                 refCast<valuePointPatchField<Type> >(ppf) = ppf;
             }
         }
+        else if (bm[patchi].coupled())
+        {
+            // Initialise the "lone" points on the coupled patch to zero,
+            // these values are obtained from the couple-transfer
+
+            const labelList& loneMeshPoints =
+                refCast<const coupledFacePointPatch>(pbm[patchi])
+               .loneMeshPoints();
+
+            forAll(loneMeshPoints, i)
+            {
+                pf[loneMeshPoints[i]] = pTraits<Type>::zero;
+            }
+        }
+
     }
 
 
@@ -122,7 +142,6 @@ void pointPatchInterpolation::interpolate
             }
         }
     }
-
 
     // Update coupled boundaries
     forAll(pf.boundaryField(), patchi)

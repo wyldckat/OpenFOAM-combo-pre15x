@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,7 +47,19 @@ coupledPointPatchField<Type>::coupledPointPatchField
 template<class Type>
 coupledPointPatchField<Type>::coupledPointPatchField
 (
-    const coupledPointPatchField<Type>&,
+    const pointPatch& p,
+    const DimensionedField<Type, pointMesh>& iF,
+    const dictionary& dict
+)
+:
+    pointPatchField<Type>(p, iF, dict)
+{}
+
+
+template<class Type>
+coupledPointPatchField<Type>::coupledPointPatchField
+(
+    const coupledPointPatchField<Type>& ptf,
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
     const pointPatchFieldMapper&

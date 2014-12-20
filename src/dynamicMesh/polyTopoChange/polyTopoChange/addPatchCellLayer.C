@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,6 +35,7 @@ License
 #include "polyModifyFace.H"
 #include "polyAddCell.H"
 #include "wallPoint.H"
+#include "globalIndex.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -43,18 +44,88 @@ defineTypeNameAndDebug(Foam::addPatchCellLayer, 0);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::label Foam::addPatchCellLayer::nbrFace
+// Calculate global faces per pp edge.
+Foam::labelListList Foam::addPatchCellLayer::calcGlobalEdgeFaces
 (
+    const polyMesh& mesh,
+    const globalIndex& globalFaces,
     const indirectPrimitivePatch& pp,
-    const label patchEdgeI,
-    const label patchFaceI
+    const labelList& meshEdges
 )
 {
-    const labelList& eFaces = pp.edgeFaces()[patchEdgeI];
+    //// Determine coupled edges just so we don't have to have storage
+    //// for all non-coupled edges.
+    //
+    //PackedList<1> isCoupledEdge(mesh.nEdges(), 0);
+    //
+    //const polyBoundaryMesh& patches = mesh.boundaryMesh();
+    //
+    //forAll(patches, patchI)
+    //{
+    //    const polyPatch& pp = patches[patchI];
+    //
+    //    if (pp.coupled())
+    //    {
+    //        const labelList& meshEdges = pp.meshEdges();
+    //
+    //        forAll(meshEdges, i)
+    //        {
+    //            isCoupledEdge.set(meshEdges[i], 1);
+    //        }
+    //    }
+    //}
+
+    // From mesh edge to global face labels. Sized only for pp edges.
+    labelListList globalEdgeFaces(mesh.nEdges());
+
+    const labelListList& edgeFaces = pp.edgeFaces();
+
+    forAll(edgeFaces, edgeI)
+    {
+        label meshEdgeI = meshEdges[edgeI];
+
+        //if (isCoupledEdge.get(meshEdgeI) == 1)
+        {
+            const labelList& eFaces = edgeFaces[edgeI];
+
+            // Store face and processor as unique tag.
+            labelList& globalEFaces = globalEdgeFaces[meshEdgeI];
+            globalEFaces.setSize(eFaces.size());
+            forAll(eFaces, i)
+            {
+                globalEFaces[i] =
+                    globalFaces.toGlobal(pp.addressing()[eFaces[i]]);
+            }
+        }
+    }
+
+    // Synchronise across coupled edges.
+    syncTools::syncEdgeList
+    (
+        mesh,
+        globalEdgeFaces,
+        uniqueEqOp(),
+        labelList(),    // null value
+        false           // no separation
+    );
+
+    // Extract pp part
+    return IndirectList<labelList>(globalEdgeFaces, meshEdges)();
+}
+
+
+Foam::label Foam::addPatchCellLayer::nbrFace
+(
+    const labelListList& edgeFaces,
+    const label edgeI,
+    const label faceI
+)
+{
+    const labelList& eFaces = edgeFaces[edgeI];
 
     if (eFaces.size() == 2)
     {
-        return (eFaces[0] != patchFaceI ? eFaces[0] : eFaces[1]);
+        return (eFaces[0] != faceI ? eFaces[0] : eFaces[1]);
     }
     else
     {
@@ -95,8 +166,11 @@ void Foam::addPatchCellLayer::addVertex
                 if (n == 2)
                 {
                     f.setSize(fp);
-                    FatalErrorIn("addPatchCellLayer::addVertex")
-                        << "Point " << pointI << " already present in face "
+                    FatalErrorIn
+                    (
+                        "addPatchCellLayer::addVertex(const label, face&"
+                        ", label&)"
+                    )   << "Point " << pointI << " already present in face "
                         << f << abort(FatalError);
                 }
             }
@@ -110,9 +184,10 @@ void Foam::addPatchCellLayer::addVertex
 bool Foam::addPatchCellLayer::sameEdgeNeighbour
 (
     const indirectPrimitivePatch& pp,
+    const labelListList& globalEdgeFaces,
     const boolList& doneEdge,
-    const label thisFaceI,
-    const label nbrFaceI,
+    const label thisGlobalFaceI,
+    const label nbrGlobalFaceI,
     const label edgeI
 ) const
 {
@@ -124,24 +199,29 @@ bool Foam::addPatchCellLayer::sameEdgeNeighbour
             addedPoints_[e[0]].size() != 0          // is extruded
          || addedPoints_[e[1]].size() != 0
         )
-     && nbrFace(pp, edgeI, thisFaceI) == nbrFaceI;  // is to same neighbour
+     && (
+            nbrFace(globalEdgeFaces, edgeI, thisGlobalFaceI)
+         == nbrGlobalFaceI  // is to same neighbour
+        );
 }
 
 
-// Get index on face that hasn't been handled yet.
-void Foam::addPatchCellLayer::getStartEdge
+// Collect consecutive string of edges that connects the same two
+// (possibly coupled) faces. Returns -1 if no unvisited edge can be found.
+// Otherwise returns start and end index in face.
+Foam::labelPair Foam::addPatchCellLayer::getEdgeString
 (
     const indirectPrimitivePatch& pp,
+    const labelListList& globalEdgeFaces,
     const boolList& doneEdge,
     const label patchFaceI,
-    label& startFp,
-    label& nbrFaceI
+    const label globalFaceI
 ) const
 {
     const labelList& fEdges = pp.faceEdges()[patchFaceI];
 
-    startFp = -1;
-    nbrFaceI = -1;
+    label startFp = -1;
+    label endFp = -1;
 
     // Get edge that hasn't been done yet but needs extrusion
     forAll(fEdges, fp)
@@ -165,9 +245,21 @@ void Foam::addPatchCellLayer::getStartEdge
 
     if (startFp != -1)
     {
-        nbrFaceI = nbrFace(pp, fEdges[startFp], patchFaceI);
+        // We found an edge that needs extruding but hasn't been done yet.
+        // Now find the face on the other side
+        label nbrGlobalFaceI = nbrFace
+        (
+            globalEdgeFaces,
+            fEdges[startFp],
+            globalFaceI
+        );
 
-        if (nbrFaceI != -1)
+        if (nbrGlobalFaceI == -1)
+        {
+            // Proper boundary edge. Only extrude single edge.
+            endFp = startFp;
+        }
+        else
         {
             // Search back for edge
             // - which hasn't been handled yet
@@ -182,9 +274,10 @@ void Foam::addPatchCellLayer::getStartEdge
                     !sameEdgeNeighbour
                     (
                         pp,
+                        globalEdgeFaces,
                         doneEdge,
-                        patchFaceI,
-                        nbrFaceI,
+                        globalFaceI,
+                        nbrGlobalFaceI,
                         fEdges[prevFp]
                     )
                 )
@@ -193,37 +286,53 @@ void Foam::addPatchCellLayer::getStartEdge
                 }
                 startFp = prevFp;
             }
+
+            // Search forward for end of string
+            endFp = startFp;
+            while(true)
+            {
+                label nextFp = fEdges.fcIndex(endFp);
+
+                if
+                (
+                    !sameEdgeNeighbour
+                    (
+                        pp,
+                        globalEdgeFaces,
+                        doneEdge,
+                        globalFaceI,
+                        nbrGlobalFaceI,
+                        fEdges[nextFp]
+                    )
+                )
+                {
+                    break;
+                }
+                endFp = nextFp;
+            }
         }
     }
+
+    return labelPair(startFp, endFp);
 }
 
 
+// Adds a side face i.e. extrudes a patch edge.
 Foam::label Foam::addPatchCellLayer::addSideFace
 (
     const indirectPrimitivePatch& pp,
-    const labelList& patchID,
-    const labelListList& addedCells,
+    const labelList& patchID,           // prestored patch per pp face
+    const labelListList& addedCells,    // per pp face the new extruded cell
     const face& newFace,
-    const label ownFaceI,
+    const label ownFaceI,               // pp face that provides owner
     const label nbrFaceI,
-    const label patchEdgeI,
-    const label layerI,
-
+    const label patchEdgeI,             // edge to add to
+    const label meshEdgeI,              // corresponding mesh edge
+    const label layerI,                 // layer
+    const label numEdgeFaces,           // number of layers for edge
     polyTopoChange& meshMod
 ) const
 {
-    const edge& patchE = pp.edges()[patchEdgeI];
-    label v0 = pp.meshPoints()[patchE[0]];
-    label v1 = pp.meshPoints()[patchE[1]];
-
-    label meshEdgeI = meshTools::findEdge
-    (
-        mesh_.edges(),
-        mesh_.pointEdges()[v0],
-        v0,
-        v1
-    );
-
     // Edge to 'inflate' from
     label inflateEdgeI = -1;
 
@@ -274,8 +383,32 @@ Foam::label Foam::addPatchCellLayer::addSideFace
             }
         }
 
+        // Determine if different number of layer on owner and neighbour side
+        // (relevant only for coupled faces). See section for internal edge
+        // below.
+
+        label layerOwn;
+
+        if (addedCells[ownFaceI].size() < numEdgeFaces)
+        {
+            label offset = numEdgeFaces - addedCells[ownFaceI].size();
+            if (layerI <= offset)
+            {
+                layerOwn = 0;
+            }
+            else
+            {
+                layerOwn = layerI - offset;
+            }
+        }
+        else
+        {
+            layerOwn = layerI;
+        }
+
+
         //Pout<< "Added boundary face:" << newFace
-        //    << " own:" << addedCells[ownFaceI][layerI]
+        //    << " own:" << addedCells[ownFaceI][layerOwn]
         //    << " patch:" << otherPatchID
         //    << endl;
 
@@ -284,7 +417,7 @@ Foam::label Foam::addPatchCellLayer::addSideFace
             polyAddFace
             (
                 newFace,                    // face
-                addedCells[ownFaceI][layerI],   // owner
+                addedCells[ownFaceI][layerOwn],   // owner
                 -1,                         // neighbour
                 -1,                         // master point
                 inflateEdgeI,               // master edge
@@ -298,13 +431,60 @@ Foam::label Foam::addPatchCellLayer::addSideFace
     }
     else
     {
+        // When adding side faces we need to modify neighbour and owners
+        // in region where layer mesh is stopped. Determine which side
+        // has max number of faces and make sure layers match closest to
+        // original pp if there are different number of layers.
+
+        label layerNbr;
+        label layerOwn;
+
+        if (addedCells[ownFaceI].size() > addedCells[nbrFaceI].size())
+        {
+            label offset =
+                addedCells[ownFaceI].size() - addedCells[nbrFaceI].size();
+
+            layerOwn = layerI;
+
+            if (layerI <= offset)
+            {
+                layerNbr = 0;
+            }
+            else
+            {
+                layerNbr = layerI - offset;
+            }
+        }
+        else if (addedCells[nbrFaceI].size() > addedCells[ownFaceI].size())
+        {
+            label offset =
+                addedCells[nbrFaceI].size() - addedCells[ownFaceI].size();
+
+            layerNbr = layerI;
+
+            if (layerI <= offset)
+            {
+                layerOwn = 0;
+            }
+            else
+            {
+                layerOwn = layerI - offset;
+            }
+        }
+        else
+        {
+            // Same number of layers on both sides.
+            layerNbr = layerI;
+            layerOwn = layerI;
+        }
+
         addedFaceI = meshMod.setAction
         (
             polyAddFace
             (
                 newFace,                    // face
-                addedCells[ownFaceI][layerI],   // owner
-                addedCells[nbrFaceI][layerI],   // neighbour
+                addedCells[ownFaceI][layerOwn],   // owner
+                addedCells[nbrFaceI][layerNbr],   // neighbour
                 -1,                         // master point
                 inflateEdgeI,               // master edge
                 -1,                         // master face
@@ -315,9 +495,9 @@ Foam::label Foam::addPatchCellLayer::addSideFace
             )
         );
 
-        //Pout<< "Added internal face:" << newFace
-        //    << " own:" << addedCells[ownFaceI][layerI]
-        //    << " nei:" << addedCells[nbrFaceI][layerI]
+       //Pout<< "Added internal face:" << newFace
+        //    << " own:" << addedCells[ownFaceI][layerOwn]
+        //    << " nei:" << addedCells[nbrFaceI][layerNbr]
         //    << endl;
     }
 
@@ -373,9 +553,10 @@ Foam::labelListList Foam::addPatchCellLayer::addedCells() const
 
 void Foam::addPatchCellLayer::setRefinement
 (
-    const scalar expansionRatio,
+    const scalarField& expansionRatio,
     const indirectPrimitivePatch& pp,
-    const labelList& nLayers,
+    const labelList& nFaceLayers,
+    const labelList& nPointLayers,
     const vectorField& firstLayerDisp,
     polyTopoChange& meshMod
 )
@@ -383,12 +564,17 @@ void Foam::addPatchCellLayer::setRefinement
     if (debug)
     {
         Pout<< "addPatchCellLayer::setRefinement : Adding up to "
-            << max(nLayers)
+            << max(nPointLayers)
             << " layers of cells to indirectPrimitivePatch with "
             << pp.nPoints() << " points" << endl;
     }
 
-    if (pp.nPoints() != firstLayerDisp.size() || pp.nPoints() != nLayers.size())
+    if
+    (
+        pp.nPoints() != firstLayerDisp.size()
+     || pp.nPoints() != nPointLayers.size()
+     || pp.size() != nFaceLayers.size()
+    )
     {
         FatalErrorIn
         (
@@ -399,25 +585,43 @@ void Foam::addPatchCellLayer::setRefinement
             << " the face subset" << endl
             << "  patch.nPoints:" << pp.nPoints()
             << "  displacement:" << firstLayerDisp.size()
-            << "  nLayers:" << nLayers.size()
+            << "  nPointLayers:" << nPointLayers.size() << nl
+            << " patch.nFaces:" << pp.size()
+            << "  nFaceLayers:" << nFaceLayers.size()
             << abort(FatalError);
     }
 
-    forAll(nLayers, i)
+    forAll(nPointLayers, i)
     {
-        if (nLayers[i] < 0)
+        if (nPointLayers[i] < 0)
         {
             FatalErrorIn
             (
                 "addPatchCellLayer::setRefinement"
                 "(const scalar, const indirectPrimitivePatch&"
                 ", const labelList&, const vectorField&, polyTopoChange&)"
-            )   << "Illegal number of layers:" << nLayers[i]
-                << abort(FatalError);
+            )   << "Illegal number of layers " << nPointLayers[i]
+                << " at patch point " << i << abort(FatalError);
+        }
+    }
+    forAll(nFaceLayers, i)
+    {
+        if (nFaceLayers[i] < 0)
+        {
+            FatalErrorIn
+            (
+                "addPatchCellLayer::setRefinement"
+                "(const scalar, const indirectPrimitivePatch&"
+                ", const labelList&, const vectorField&, polyTopoChange&)"
+            )   << "Illegal number of layers " << nFaceLayers[i]
+                << " at patch face " << i << abort(FatalError);
         }
     }
 
     const labelList& meshPoints = pp.meshPoints();
+
+    // Precalculate mesh edges for pp.edges.
+    labelList meshEdges(calcMeshEdges(mesh_, pp));
 
     if (debug)
     {
@@ -426,14 +630,15 @@ void Foam::addPatchCellLayer::setRefinement
 
         {
             labelList n(mesh_.nPoints(), 0);
-            IndirectList<label>(n, meshPoints) = nLayers;
+            IndirectList<label>(n, meshPoints) = nPointLayers;
             syncTools::syncPointList(mesh_, n, maxEqOp<label>(), 0, false);
 
+            // Non-synced
             forAll(meshPoints, i)
             {
                 label meshPointI = meshPoints[i];
 
-                if (n[meshPointI] != nLayers[i])
+                if (n[meshPointI] != nPointLayers[i])
                 {
                     FatalErrorIn
                     (
@@ -443,9 +648,58 @@ void Foam::addPatchCellLayer::setRefinement
                         ", polyTopoChange&)"
                     )   << "At mesh point:" << meshPointI
                         << " coordinate:" << mesh_.points()[meshPointI]
-                        << " specified nLayers:" << nLayers[i] << endl
+                        << " specified nLayers:" << nPointLayers[i] << endl
                         << "On coupled point a different nLayers:"
                         << n[meshPointI] << " was specified."
+                        << abort(FatalError);
+                }
+            }
+
+
+            // Check that nPointLayers equals the max layers of connected faces
+            // (or 0). Anything else makes no sense.
+            labelList nFromFace(mesh_.nPoints(), 0);
+            forAll(nFaceLayers, i)
+            {
+                const face& f = pp[i];
+
+                forAll(f, fp)
+                {
+                    label pointI = f[fp];
+
+                    nFromFace[pointI] = max(nFromFace[pointI], nFaceLayers[i]);
+                }
+            }
+            syncTools::syncPointList
+            (
+                mesh_,
+                nFromFace,
+                maxEqOp<label>(),
+                0,
+                false
+            );
+
+            forAll(nPointLayers, i)
+            {
+                label meshPointI = meshPoints[i];
+
+                if
+                (
+                    nPointLayers[i] > 0
+                 && nPointLayers[i] != nFromFace[meshPointI]
+                )
+                {
+                    FatalErrorIn
+                    (
+                        "addPatchCellLayer::setRefinement"
+                        "(const scalar, const indirectPrimitivePatch&"
+                        ", const labelList&, const vectorField&"
+                        ", polyTopoChange&)"
+                    )   << "At mesh point:" << meshPointI
+                        << " coordinate:" << mesh_.points()[meshPointI]
+                        << " specified nLayers:" << nPointLayers[i] << endl
+                        << "but the max nLayers of surrounding faces is:"
+                        << nFromFace[meshPointI]
                         << abort(FatalError);
                 }
             }
@@ -490,18 +744,15 @@ void Foam::addPatchCellLayer::setRefinement
         // connect to only one boundary face. Guarantees uniqueness of
         // patch that they go into so if this is a coupled patch both
         // sides decide the same.
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        // ~~~~~~~~~~~~~~~~~~~~~~
 
         for (label edgeI = pp.nInternalEdges(); edgeI < pp.nEdges(); edgeI++)
         {
             const edge& e = pp.edges()[edgeI];
 
-            if (nLayers[e[0]] > 0 || nLayers[e[1]] > 0)
+            if (nPointLayers[e[0]] > 0 || nPointLayers[e[1]] > 0)
             {
                 // Edge is to become a face
-
-                label v0 = pp.meshPoints()[e[0]];
-                label v1 = pp.meshPoints()[e[1]];
 
                 const labelList& eFaces = pp.edgeFaces()[edgeI];
 
@@ -523,13 +774,8 @@ void Foam::addPatchCellLayer::setRefinement
 
                 label myFaceI = pp.addressing()[eFaces[0]];
 
-                label meshEdgeI = meshTools::findEdge
-                (
-                    mesh_.edges(),
-                    mesh_.pointEdges()[v0],
-                    v0,
-                    v1
-                );
+                label meshEdgeI = meshEdges[edgeI];
+
                 // Mesh faces using edge
                 const labelList& meshFaces = mesh_.edgeFaces()[meshEdgeI];
 
@@ -587,11 +833,11 @@ void Foam::addPatchCellLayer::setRefinement
     // Mark points that do not get extruded by setting size of addedPoints_ to 0
     label nTruncated = 0;
 
-    forAll(nLayers, patchPointI)
+    forAll(nPointLayers, patchPointI)
     {
-        if (nLayers[patchPointI] > 0)
+        if (nPointLayers[patchPointI] > 0)
         {
-            addedPoints_[patchPointI].setSize(nLayers[patchPointI]);
+            addedPoints_[patchPointI].setSize(nPointLayers[patchPointI]);
         }
         else
         {
@@ -604,81 +850,6 @@ void Foam::addPatchCellLayer::setRefinement
         Pout<< "Not adding points at " << nTruncated << " out of "
             << pp.nPoints() << " points" << endl;
     }
-
-//    if (debug)
-//    {
-//        // Check only one edge between two faces
-//        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-//        // Otherwise extrusion would lead to more than one face
-//        // between two cells.
-//        const labelListList& faceEdges = pp.faceEdges();
-//        const labelListList& edgeFaces = pp.edgeFaces();
-//
-//        forAll(faceEdges, faceI)
-//        {
-//            const labelList& fEdges = faceEdges[faceI];
-//
-//            // Neighbouring face and edge through which it is connected
-//            Map<label> nbrFaces(2*fEdges.size());
-//
-//            forAll(fEdges, i)
-//            {
-//                label edgeI = fEdges[i];
-//
-//                const edge& e = pp.edges()[edgeI];
-//
-//                // Check if edge is to be extruded.
-//                //if
-//                //(
-//                //    addedPoints_[e[0]].size() > 0
-//                // || addedPoints_[e[1]].size() > 0
-//                //)
-//                {
-//                    const labelList& eFaces = edgeFaces[edgeI];
-//
-//                    if (eFaces.size() > 2 || eFaces.size() == 0)
-//                    {
-//                        FatalErrorIn
-//                        (
-//                            "addPatchCellLayer::setRefinement
-//                            "(const label"
-//                            ", const scalar, const indirectPrimitivePatch&"
-//                            ", const vectorField&, polyTopoChange&)"
-//                        )   << "Edge to be extruded ("
-//                            << pp.points()[meshPoints[e[0]]]
-//                            << ' ' << pp.points()[meshPoints[e[1]]]
-//                            << ") has " << eFaces.size() << " faces using it."
-//                            << endl
-//                            << "Only manifold edges can be extruded."
-//                            << abort(FatalError);
-//                    }
-//                    else if (eFaces.size() == 2)
-//                    {
-//                        label nbrFaceI =
-//                            (eFaces[0] != faceI ? eFaces[0] : eFaces[1]);
-//
-//                        if (!nbrFaces.insert(nbrFaceI, edgeI))
-//                        {
-//                            FatalErrorIn
-//                            (
-//                                "addPatchCellLayer::setRefinement"
-//                                "(const label"
-//                                ", const scalar"
-//                                ", const indirectPrimitivePatch&"
-//                                ", const vectorField&, polyTopoChange&)"
-//                            )   << "Faces " << faceI << " and " << nbrFaceI
-//                                << " are connected through two edges:"
-//                                << edgeI << " and " << nbrFaces[nbrFaceI]
-//                                << endl
-//                                << "This would create an illegal topology"
-//                                << when extruded." << abort(FatalError);
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-
 
 
     //
@@ -714,7 +885,7 @@ void Foam::addPatchCellLayer::setRefinement
 
                 addedPoints_[patchPointI][i] = addedVertI;
 
-                disp *= expansionRatio;
+                disp *= expansionRatio[patchPointI];
             }
         }
     }
@@ -728,26 +899,9 @@ void Foam::addPatchCellLayer::setRefinement
 
     forAll(pp, patchFaceI)
     {
-        // Add a cell (layer) to faceI
-
-        const face& f = pp.localFaces()[patchFaceI];
-
-        // Do not add cell if none of the vertices of the face gets duplicated
-        label nCellLayers = 0;
-
-        forAll(f, fp)
+        if (nFaceLayers[patchFaceI] > 0)
         {
-            if (addedPoints_[f[fp]].size() > 0)
-            {
-                nCellLayers = addedPoints_[f[fp]].size();
-
-                break;       
-            }
-        }
-
-        if (nCellLayers > 0)
-        {
-            addedCells[patchFaceI].setSize(nCellLayers);
+            addedCells[patchFaceI].setSize(nFaceLayers[patchFaceI]);
 
             label meshFaceI = pp.addressing()[patchFaceI];
 
@@ -756,16 +910,18 @@ void Foam::addPatchCellLayer::setRefinement
                 mesh_.faceOwner()[meshFaceI]
             );
 
-            for (label i = 0; i < nCellLayers; i++)
+            for (label i = 0; i < nFaceLayers[patchFaceI]; i++)
             {
+                // Note: add from cell (owner of patch face) or from face?
+                // for now add from cell so we can map easily.
                 addedCells[patchFaceI][i] = meshMod.setAction
                 (
                     polyAddCell
                     (
                         -1,             // master point
                         -1,             // master edge
-                        meshFaceI,      // master face
-                        -1,             // master cell id
+                        -1,             // master face
+                        mesh_.faceOwner()[meshFaceI],   // master cell id
                         ownZoneI        // zone for cell
                     )
                 );
@@ -829,7 +985,10 @@ void Foam::addPatchCellLayer::setRefinement
                     else
                     {
                         // Get new outside point
-                        newFace[fp] = addedPoints_[f[fp]][i];
+                        label offset =
+                            addedPoints_[f[fp]].size()
+                          - addedCells[patchFaceI].size();
+                        newFace[fp] = addedPoints_[f[fp]][i+offset];
                     }
                 }
 
@@ -910,87 +1069,142 @@ void Foam::addPatchCellLayer::setRefinement
         }
     }
 
+
     //
     // Create 'side' faces, one per edge that is being extended.
     //
+
     const labelListList& faceEdges = pp.faceEdges();
     const faceList& localFaces = pp.localFaces();
+    const edgeList& edges = pp.edges();
 
+    // Get number of layers per edge. This is 0 if edge is not extruded;
+    // max of connected faces otherwise.
+    labelList edgeLayers(pp.nEdges());
+
+    {
+        // Use list over mesh.nEdges() since syncTools does not yet support
+        // partial list synchronisation.
+        labelList meshEdgeLayers(mesh_.nEdges(), -1);
+
+        forAll(meshEdges, edgeI)
+        {
+            const edge& e = edges[edgeI];
+
+            label meshEdgeI = meshEdges[edgeI];
+
+            if ((nPointLayers[e[0]] == 0) && (nPointLayers[e[1]] == 0))
+            {
+                meshEdgeLayers[meshEdgeI] = 0;
+            }
+            else
+            {
+                const labelList& eFaces = pp.edgeFaces()[edgeI];
+
+                forAll(eFaces, i)
+                {
+                    meshEdgeLayers[meshEdgeI] = max
+                    (
+                        nFaceLayers[eFaces[i]],
+                        meshEdgeLayers[meshEdgeI]
+                    );
+                }
+            }
+        }
+
+        syncTools::syncEdgeList
+        (
+            mesh_,
+            meshEdgeLayers,
+            maxEqOp<label>(),
+            0,                  // initial value
+            false               // no separation
+        );
+
+        forAll(meshEdges, edgeI)
+        {
+            edgeLayers[edgeI] = meshEdgeLayers[meshEdges[edgeI]];
+        }
+    }
+
+
+    // Global indices engine
+    const globalIndex globalFaces(mesh_.nFaces());
+
+    // Get for all pp edgeFaces a unique faceID
+    labelListList globalEdgeFaces
+    (
+         calcGlobalEdgeFaces
+         (
+            mesh_,
+            globalFaces,
+            pp,
+            meshEdges
+        )
+    );
+
+
+    // Mark off which edges have been extruded
     boolList doneEdge(pp.nEdges(), false);
 
+
+    // Create faces. Per face walk connected edges and find string of edges
+    // between the same two faces and extrude string into a single face.
     forAll(pp, patchFaceI)
     {
         const labelList& fEdges = faceEdges[patchFaceI];
 
         forAll(fEdges, fp)
         {
-            // Get starting edge that hasn't been done yet.
-            label startFp;
-            label nbrFaceI;
-            getStartEdge
+            // Get string of edges that needs to be extruded as a single face.
+            // Returned as indices in fEdges.
+            labelPair indexPair
             (
-                pp,
-                doneEdge,
-                patchFaceI,
-                startFp,
-                nbrFaceI
+                getEdgeString
+                (
+                    pp,
+                    globalEdgeFaces,
+                    doneEdge,
+                    patchFaceI,
+                    globalFaces.toGlobal(pp.addressing()[patchFaceI])
+                )
             );
+
+            //Pout<< "Found unextruded edges in edges:" << fEdges
+            //    << " start:" << indexPair[0]
+            //    << " end:" << indexPair[1]
+            //    << endl;
+
+            const label startFp = indexPair[0];
+            const label endFp = indexPair[1];
 
             if (startFp != -1)
             {
-                label startEdgeI = fEdges[startFp];
-
+                // Extrude edges from indexPair[0] up to indexPair[1]
+                // (note indexPair = indices of edges. There is one more vertex
+                //  than edges)
                 const face& f = localFaces[patchFaceI];
 
-                DynamicList<label> stringedVerts(fEdges.size());
-
-                if (nbrFaceI != -1)
+                labelList stringedVerts;
+                if (endFp >= startFp)
                 {
-                    // Start walking edge from f[startFp] to f[startFp+1],
-                    // crossing to connected edges that have the same neighbour
-                    stringedVerts.append(f[startFp]);
-
-                    for (label i = 0; i < f.size()-1; i++)
-                    {
-                        doneEdge[fEdges[startFp]] = true;
-
-                        startFp = f.fcIndex(startFp);
-                        stringedVerts.append(f[startFp]);
-
-                        if
-                        (
-                            !sameEdgeNeighbour
-                            (
-                                pp,
-                                doneEdge,
-                                patchFaceI,
-                                nbrFaceI,
-                                fEdges[startFp]
-                            )
-                        )
-                        {
-                            break;
-                        }
-                    }
-
-                    //Pout<< "Betweeen face:" << patchFaceI
-                    //    << " verts:" << localFaces[patchFaceI]
-                    //    << " and face:" << nbrFaceI
-                    //    << " verts:" << localFaces[nbrFaceI]
-                    //    << " found vertices:" << stringedVerts << endl;
+                    stringedVerts.setSize(endFp-startFp+2);
                 }
                 else
                 {
-                    // External edge.
-                    doneEdge[fEdges[startFp]] = true;
-                    stringedVerts.append(f[startFp]);
-                    stringedVerts.append(f.nextLabel(startFp));
-
-                    //Pout<< "At external edge " << edges[fEdges[startFp]]
-                    //    << " on face:" << patchFaceI
-                    //    << " verts:" << localFaces[patchFaceI]
-                    //    << " found vertices:" << stringedVerts << endl;
+                    stringedVerts.setSize(endFp+f.size()-startFp+2);
                 }
+
+                label fp = startFp;
+
+                for (label i = 0; i < stringedVerts.size()-1; i++)
+                {
+                    stringedVerts[i] = f[fp];
+                    doneEdge[fEdges[fp]] = true;
+                    fp = f.fcIndex(fp);
+                }
+                stringedVerts[stringedVerts.size()-1] = f[fp];
+
 
                 // Now stringedVerts contains the vertices in order of face f.
                 // This is consistent with the order if f becomes the owner cell
@@ -999,10 +1213,39 @@ void Foam::addPatchCellLayer::setRefinement
                 // because we loop in incrementing order as well we will
                 // always have nbrFaceI > patchFaceI.
 
-                for (label i = 0; i < addedCells[patchFaceI].size(); i++)
+                label startEdgeI = fEdges[startFp];
+
+                label meshEdgeI = meshEdges[startEdgeI];
+
+                label numEdgeSideFaces = edgeLayers[startEdgeI];
+
+                for (label i = 0; i < numEdgeSideFaces; i++)
                 {
-                    face newFace(2*stringedVerts.size());
-                    label newFp = 0;
+                    label vEnd = stringedVerts[stringedVerts.size()-1];
+                    label vStart = stringedVerts[0];
+
+                    // calculate number of points making up a face
+                    label newFp = 2*stringedVerts.size();
+
+                    if (i == 0)
+                    {
+                        // layer 0 gets all the truncation of neighbouring
+                        // faces with more layers.
+                        if (addedPoints_[vEnd].size() != 0)
+                        {
+                            newFp +=
+                                addedPoints_[vEnd].size() - numEdgeSideFaces;
+                        }
+                        if (addedPoints_[vStart].size() != 0)
+                        {
+                            newFp +=
+                                addedPoints_[vStart].size()  - numEdgeSideFaces;
+                        }
+                    }
+
+                    face newFace(newFp);
+
+                    newFp = 0;
 
                     // For layer 0 get pp points, for all other layers get
                     // points of layer-1.
@@ -1021,11 +1264,37 @@ void Foam::addPatchCellLayer::setRefinement
                             label v = stringedVerts[stringedI];
                             if (addedPoints_[v].size() > 0)
                             {
-                                addVertex(addedPoints_[v][i-1], newFace, newFp);
+                                label offset =
+                                    addedPoints_[v].size() - numEdgeSideFaces;
+                                addVertex
+                                (
+                                    addedPoints_[v][i+offset-1],
+                                    newFace,
+                                    newFp
+                                );
                             }
                             else
                             {
                                 addVertex(meshPoints[v], newFace, newFp);
+                            }
+                        }
+                    }
+
+                    // add points between stringed vertices (end)
+                    if (numEdgeSideFaces < addedPoints_[vEnd].size())
+                    {
+                        if (i == 0 && addedPoints_[vEnd].size() != 0)
+                        {
+                            label offset =
+                                addedPoints_[vEnd].size() - numEdgeSideFaces;
+                            for (label ioff = 0; ioff < offset; ioff++)
+                            {
+                                addVertex
+                                (
+                                    addedPoints_[vEnd][ioff],
+                                    newFace,
+                                    newFp
+                                );
                             }
                         }
                     }
@@ -1035,7 +1304,14 @@ void Foam::addPatchCellLayer::setRefinement
                         label v = stringedVerts[stringedI];
                         if (addedPoints_[v].size() > 0)
                         {
-                            addVertex(addedPoints_[v][i], newFace, newFp);
+                            label offset =
+                                addedPoints_[v].size() - numEdgeSideFaces;
+                            addVertex
+                            (
+                                addedPoints_[v][i+offset],
+                                newFace,
+                                newFp
+                            );
                         }
                         else
                         {
@@ -1043,19 +1319,40 @@ void Foam::addPatchCellLayer::setRefinement
                         }
                     }
 
-                    newFace.setSize(newFp);
-                    //Pout<< "Betweeen face:" << patchFaceI
-                    //    << " verts:" << pp[patchFaceI]
-                    //    << " and face:" << nbrFaceI
-                    //    << " layer:" << i
-                    //    << " stringedVerts:" << stringedVerts
-                    //    << " adding face:" << newFace << endl;
+
+                    // add points between stringed vertices (start)
+                    if (numEdgeSideFaces < addedPoints_[vStart].size())
+                    {
+                        if (i == 0 && addedPoints_[vStart].size() != 0)
+                        {
+                            label offset =
+                                addedPoints_[vStart].size() - numEdgeSideFaces;
+                            for (label ioff = offset; ioff > 0; ioff--)
+                            {
+                                addVertex
+                                (
+                                    addedPoints_[vStart][ioff-1],
+                                    newFace,
+                                    newFp
+                                );
+                            }
+                        }
+                    }
 
                     if (newFp >= 3)
                     {
+                        // Add face inbetween faces patchFaceI and nbrFaceI
+                        // (possibly -1 for external edges)
+
                         newFace.setSize(newFp);
 
-                        // Add face inbetween faces
+                        label nbrFaceI = nbrFace
+                        (
+                            pp.edgeFaces(),
+                            startEdgeI,
+                            patchFaceI
+                        );
+
                         addSideFace
                         (
                             pp,
@@ -1064,9 +1361,10 @@ void Foam::addPatchCellLayer::setRefinement
                             newFace,
                             patchFaceI,
                             nbrFaceI,
-                            startEdgeI,   // edge to inflate from
+                            startEdgeI,     // edge to inflate from
+                            meshEdgeI,      // corresponding mesh edge
                             i,
-
+                            numEdgeSideFaces,
                             meshMod
                         );
                     }
@@ -1137,6 +1435,32 @@ void Foam::addPatchCellLayer::updateMesh
         }
         layerFaces_.transfer(newLayerFaces);
     }
+}
+
+
+Foam::labelList Foam::addPatchCellLayer::calcMeshEdges
+(
+    const primitiveMesh& mesh,
+    const indirectPrimitivePatch& pp
+)
+{
+    labelList meshEdges(pp.nEdges());
+
+    forAll(meshEdges, patchEdgeI)
+    {
+        const edge& e = pp.edges()[patchEdgeI];
+
+        label v0 = pp.meshPoints()[e[0]];
+        label v1 = pp.meshPoints()[e[1]];
+        meshEdges[patchEdgeI] = meshTools::findEdge
+        (
+            mesh.edges(),
+            mesh.pointEdges()[v0],
+            v0,
+            v1
+        );
+    }
+    return meshEdges;
 }
 
 

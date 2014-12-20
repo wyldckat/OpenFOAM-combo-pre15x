@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,15 +23,17 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    filteredLinearLimiter
+    Foam::filteredLinearLimiter
 
 Description
-    Class to generate weighting factors for the filtered-linear differencing
-    scheme.  The aim is to remove high-frequency modes with "staggering"
-    characteristics by comparing the face gradient relative to the background
-    distribution represented by the neighbouring cell gradients with those
-    gradients and introduce small amounts of upwind in order to damp these
-    modes.
+    Class to generate weighting factors for the filtered-linear
+    differencing scheme.
+
+    The aim is to remove high-frequency modes with "staggering"
+    characteristics by comparing the face gradient relative to the
+    background distribution represented by the neighbouring cell gradients
+    with those gradients and introduce small amounts of upwind in order to
+    damp these modes.
 
     Used in conjunction with the template class LimitedScheme.
 

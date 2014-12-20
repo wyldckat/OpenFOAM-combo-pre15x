@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,30 +22,20 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
-#include "cellShapeList.H"
-#include "IOstreams.H"
+#include "Istream.H"
 #include "cell.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct null
-inline cellShape::cellShape()
+inline Foam::cellShape::cellShape()
 :
     m(NULL)
 {}
 
 
-// Construct from components
-inline cellShape::cellShape
+inline Foam::cellShape::cellShape
 (
     const cellModel& M,
     const labelList& l,
@@ -62,15 +52,13 @@ inline cellShape::cellShape
 }
 
 
-// Construct from Istream
-inline cellShape::cellShape(Istream& is)
+inline Foam::cellShape::cellShape(Istream& is)
 {
     is >> *this;
 }
 
 
-// Clone
-inline autoPtr<cellShape> cellShape::clone() const
+inline Foam::autoPtr<Foam::cellShape> Foam::cellShape::clone() const
 {
     return autoPtr<cellShape>(new cellShape(*this));
 }
@@ -78,8 +66,10 @@ inline autoPtr<cellShape> cellShape::clone() const
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return the points associated with this cellShape
-inline pointField cellShape::points(const pointField& meshPoints) const
+inline Foam::pointField Foam::cellShape::points
+(
+    const pointField& meshPoints
+) const
 {
     // There are as many points as there labels for them
     pointField p(size());
@@ -96,15 +86,13 @@ inline pointField cellShape::points(const pointField& meshPoints) const
 }
 
 
-// Return model reference
-inline const cellModel& cellShape::model() const
+inline const Foam::cellModel& Foam::cellShape::model() const
 {
     return *m;
 }
 
 
-// Mesh face labels of this cell (in order of model)
-inline labelList cellShape::meshFaces
+inline Foam::labelList Foam::cellShape::meshFaces
 (
     const faceList& allFaces,
     const cell& cFaces
@@ -138,8 +126,7 @@ inline labelList cellShape::meshFaces
 }
 
 
-// Mesh edge labels of this cell (in order of model)
-inline labelList cellShape::meshEdges
+inline Foam::labelList Foam::cellShape::meshEdges
 (
     const edgeList& allEdges,
     const labelList& cEdges
@@ -173,14 +160,13 @@ inline labelList cellShape::meshEdges
 }
 
 
-// Return faces of cell
-inline faceList cellShape::faces() const
+inline Foam::faceList Foam::cellShape::faces() const
 {
     return m->faces(*this);
 }
 
 
-inline faceList cellShape::collapsedFaces() const
+inline Foam::faceList Foam::cellShape::collapsedFaces() const
 {
     faceList oldFaces(faces());
 
@@ -229,50 +215,40 @@ inline faceList cellShape::collapsedFaces() const
 }
 
 
-// Return number of faces
-inline label cellShape::nFaces() const
+inline Foam::label Foam::cellShape::nFaces() const
 {
     return m->nFaces();
 }
 
 
-// Return edges of cell
-inline edgeList cellShape::edges() const
+inline Foam::edgeList Foam::cellShape::edges() const
 {
     return m->edges(*this);
 }
 
 
-// Return number of edges
-inline label cellShape::nEdges() const
+inline Foam::label Foam::cellShape::nEdges() const
 {
     return m->nEdges();
 }
 
 
-// Return number of points
-inline label cellShape::nPoints() const
+inline Foam::label Foam::cellShape::nPoints() const
 {
     return size();
 }
 
 
-// Centre point of cellShape
-inline point cellShape::centre(const pointField& points) const
+inline Foam::point Foam::cellShape::centre(const pointField& points) const
 {
     return m->centre(*this, points);
 }
 
 
-// Return scalar magnitude
-inline scalar cellShape::mag(const pointField& points) const
+inline Foam::scalar Foam::cellShape::mag(const pointField& points) const
 {
     return m->mag(*this, points);
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

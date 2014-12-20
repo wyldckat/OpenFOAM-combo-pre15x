@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -68,12 +68,12 @@ void Foam::faceZone::calcFaceZonePatch() const
         new primitiveFacePatch
         (
             faceList(size()),
-            zoneMesh().mesh().allPoints()
+            zoneMesh().mesh().points()
         );
 
     primitiveFacePatch& patch = *patchPtr_;
 
-    const faceList& f = zoneMesh().mesh().allFaces();
+    const faceList& f = zoneMesh().mesh().faces();
 
     const labelList& addr = *this;
     const boolList& flip = flipMap();
@@ -169,8 +169,8 @@ void Foam::faceZone::calcCellLayers() const
         // Go through all the faces in the master zone.  Choose the
         // master or slave cell based on the face flip
 
-        const labelList& own = zoneMesh().mesh().allOwner();
-        const labelList& nei = zoneMesh().mesh().allNeighbour();
+        const labelList& own = zoneMesh().mesh().faceOwner();
+        const labelList& nei = zoneMesh().mesh().faceNeighbour();
 
         const labelList& mf = *this;
 
@@ -451,7 +451,7 @@ bool Foam::faceZone::checkDefinition(const bool report) const
 
     forAll(addr, i)
     {
-        if (addr[i] < 0 || addr[i] >= zoneMesh().mesh().allFaces().size())
+        if (addr[i] < 0 || addr[i] >= zoneMesh().mesh().faces().size())
         {
             boundaryError = true;
 
@@ -464,7 +464,7 @@ bool Foam::faceZone::checkDefinition(const bool report) const
                 )   << "Zone " << name()
                     << " contains invalid face label " << addr[i] << nl
                     << "Valid face labels are 0.."
-                    << zoneMesh().mesh().allFaces().size()-1 << endl;
+                    << zoneMesh().mesh().faces().size()-1 << endl;
             }
         }
     }

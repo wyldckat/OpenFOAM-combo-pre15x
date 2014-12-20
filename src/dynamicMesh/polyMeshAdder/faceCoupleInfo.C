@@ -1,8 +1,8 @@
-/*---------------------------------------------------------------------------*\
+/*---------------------------------------------------------------------------*	\
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*----------------------------------------------------------------------------*/
 
@@ -333,7 +333,7 @@ Foam::labelList Foam::faceCoupleInfo::findMappedEdges
         label v0 = pointMap[e[0]];
         label v1 = pointMap[e[1]];
 
-        toPatchEdges[edgeI] = 
+        toPatchEdges[edgeI] =
             meshTools::findEdge
             (
                 patch.edges(),
@@ -517,7 +517,7 @@ void Foam::faceCoupleInfo::setCutEdgeToPoints(const labelList& cutToMasterEdges)
     labelListList masterToCutEdges
     (
         invertOneToMany
-        (   
+        (
             masterPatch().nEdges(),
             cutToMasterEdges
         )
@@ -577,7 +577,7 @@ void Foam::faceCoupleInfo::setCutEdgeToPoints(const labelList& cutToMasterEdges)
 
             while (startVertI != unsplitEdge[1])
             {
-                // Loop over all string of edges. Update 
+                // Loop over all string of edges. Update
                 // - startVertI : previous vertex
                 // - startEdgeI : previous edge
                 // and insert any points into splitPoints
@@ -995,7 +995,7 @@ void Foam::faceCoupleInfo::findPerfectMatchingFaces
             nMatched++;
         }
     }
-    
+
     mesh0Faces.setSize(nMatched);
     mesh1Faces.setSize(nMatched);
 }
@@ -1050,7 +1050,7 @@ void Foam::faceCoupleInfo::findSlavesCoveringMaster
         point fc(f1.centre(mesh1.points()));
 
         // Search in bounding box of face only.
-        treeBoundBox tightest(f1.points(mesh1.points()));
+        treeBoundBox tightest(static_cast<const pointField&>(f1.points(mesh1.points())));
 
         scalar tightestDist = GREAT;
 
@@ -1509,7 +1509,7 @@ void Foam::faceCoupleInfo::perfectPointMatch
 
     // Cut faces to slave patch.
     bool matchedAllFaces = false;
- 
+
     if (slaveFacesOrdered)
     {
         cutToSlaveFaces_ = identity(cutFaces().size());
@@ -1576,7 +1576,7 @@ void Foam::faceCoupleInfo::perfectPointMatch
         compactToCut                // compaction map: from compacted to cut
     );
 
-    
+
     // Use compaction lists to renumber cutPoints.
     cutPoints_ = IndirectList<point>(cutPoints_, compactToCut)();
     {
@@ -1882,7 +1882,7 @@ void Foam::faceCoupleInfo::subDivisionMatch
             break;
         }
     }
-    
+
 
     // All cut faces matched?
     forAll(cutToMasterFaces_, cutFaceI)

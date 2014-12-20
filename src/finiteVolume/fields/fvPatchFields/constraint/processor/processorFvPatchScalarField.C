@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,13 +41,13 @@ void processorFvPatchField<scalar>::initInterfaceMatrixUpdate
     const lduMatrix&,
     const scalarField&,
     const direction,
-    const bool bufferdTransfer
+    const Pstream::commsTypes commsType
 ) const
 {
     procPatch_.compressedSend
     (
-        patch().patchInternalField(psiInternal)(),
-        bufferdTransfer
+        commsType,
+        patch().patchInternalField(psiInternal)()
     );
 }
 
@@ -59,10 +59,14 @@ void processorFvPatchField<scalar>::updateInterfaceMatrix
     scalarField& result,
     const lduMatrix&,
     const scalarField& coeffs,
-    const direction
+    const direction,
+    const Pstream::commsTypes commsType
 ) const
 {
-    scalarField pnf(procPatch_.compressedReceive<scalar>(this->size())());
+    scalarField pnf
+    (
+        procPatch_.compressedReceive<scalar>(commsType, this->size())()
+    );
 
     const unallocLabelList& faceCells = patch().faceCells();
 

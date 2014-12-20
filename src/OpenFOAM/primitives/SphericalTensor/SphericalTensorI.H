@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -202,6 +202,7 @@ public:
 };
 
 
+#ifndef __CINT__
 template<class Cmpt>
 class innerProduct<SphericalTensor<Cmpt>, SphericalTensor<Cmpt> >
 {
@@ -226,6 +227,7 @@ public:
 
     typedef Vector<Cmpt> type;
 };
+#endif
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

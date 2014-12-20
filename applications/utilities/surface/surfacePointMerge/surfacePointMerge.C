@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,7 +35,6 @@ Description
 #include "boundBox.H"
 
 using namespace Foam;
-using namespace Foam::triSurfaceTools;
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -50,9 +49,9 @@ int main(int argc, char *argv[])
     argList::validArgs.append("output file");
     argList args(argc, argv);
 
-    fileName surfFileName(args.args()[1]);
-    scalar mergeTol(readScalar(IStringStream(args.args()[2])()));
-    fileName outFileName(args.args()[3]);
+    fileName surfFileName(args.additionalArgs()[0]);
+    scalar mergeTol(readScalar(IStringStream(args.additionalArgs()[1])()));
+    fileName outFileName(args.additionalArgs()[2]);
 
     Info<< "Reading surface from " << surfFileName << " ..." << endl;
     Info<< "Merging points within " << mergeTol << " meter." << endl;
@@ -70,7 +69,7 @@ int main(int argc, char *argv[])
     {
         label nOldVert = cleanSurf.nPoints();
 
-        cleanSurf = mergePoints(cleanSurf, mergeTol);
+        cleanSurf = triSurfaceTools::mergePoints(cleanSurf, mergeTol);
 
         Info<< "After merging points:" << endl;
 

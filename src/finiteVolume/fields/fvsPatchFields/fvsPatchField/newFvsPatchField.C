@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -120,24 +120,31 @@ tmp<fvsPatchField<Type> > fvsPatchField<Type>::New
         }
     }
 
-    typename dictionaryConstructorTable::iterator patchTypeCstrIter
-        = dictionaryConstructorTablePtr_->find(p.type());
-
-    if
+    if 
     (
-        patchTypeCstrIter != dictionaryConstructorTablePtr_->end()
-     && patchTypeCstrIter() != cstrIter()
+        !dict.found("patchType")
+     || word(dict.lookup("patchType")) != p.type()
     )
     {
-        FatalIOErrorIn
+        typename dictionaryConstructorTable::iterator patchTypeCstrIter
+            = dictionaryConstructorTablePtr_->find(p.type());
+
+        if
         (
-            "fvsPatchField<Type>const fvPatch&, const Field<Type>&, "
-            "const dictionary&)",
-            dict
-        ) << "inconsistent patch and patchField types for \n"
-             "    patch type " << p.type()
-            << " and patchField type " << patchFieldType
-            << exit(FatalIOError);
+            patchTypeCstrIter != dictionaryConstructorTablePtr_->end()
+         && patchTypeCstrIter() != cstrIter()
+        )
+        {
+            FatalIOErrorIn
+            (
+                "fvsPatchField<Type>const fvPatch&, const Field<Type>&, "
+                "const dictionary&)",
+                dict
+            )   << "inconsistent patch and patchField types for \n"
+                   "    patch type " << p.type()
+                << " and patchField type " << patchFieldType
+                << exit(FatalIOError);
+        }
     }
 
     return cstrIter()(p, iF, dict);

@@ -3,7 +3,7 @@
 # =========                 |
 # \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
 #  \\    /   O peration     |
-#   \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+#   \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
 #    \\/     M anipulation  |
 #-------------------------------------------------------------------------------
 # License
@@ -39,17 +39,15 @@ then
 fi
 
 
-if [ -d lib ]
-then
-    rm -rf lib/*
-fi
+for dir in lib applications/bin
+do
+   if [ -d $dir ]
+   then
+      rm -rf $dir/*
+   fi
+done
 
-if [ applications/bin ]
-then
-    rm -rf applications/bin/*
-fi
-
-cd tutorials ; ./Allclean ; cd ..
+( cd tutorials && ./Allclean )
 
 find . -name '*~' -exec rm {} \;
 find . -name '*.dep' -exec rm {} \;
@@ -60,7 +58,6 @@ find . -depth -type d \( -name lnInclude -o -name ii_files -o -name Templates.DB
 
 find . \( -name exe -o -name log -o -name so_locations \) -exec rm {} \;
 
-#rm -rf src/mpich-${MPICH_VERSION}/platforms
-#rm -rf src/mico-${MICO_VERSION}/platforms
+# rm -rf src/mpich-${MPICH_VERSION}/platforms
 
 #------------------------------------------------------------------------------

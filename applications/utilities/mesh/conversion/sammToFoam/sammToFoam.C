@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 
 #   include "createTime.H"
 
-    fileName sammFile(args.args()[3]);
+    fileName sammFile(args.additionalArgs()[0]);
     sammMesh makeMesh(sammFile, runTime, scaleFactor);
 
     // Set the precision of the points data to 10

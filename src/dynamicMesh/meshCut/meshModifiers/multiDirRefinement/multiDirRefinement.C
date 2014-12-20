@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -347,8 +347,8 @@ void Foam::multiDirRefinement::refineHex8
 
     hexRefiner.setRefinement(consistentCells, meshMod);
 
-    // Use inflation
-    autoPtr<mapPolyMesh> morphMapPtr = meshMod.changeMesh(mesh, true, true);
+    // Change mesh, no inflation
+    autoPtr<mapPolyMesh> morphMapPtr = meshMod.changeMesh(mesh, false, true);
     const mapPolyMesh& morphMap = morphMapPtr();
 
     if (morphMap.hasMotionPoints())
@@ -369,25 +369,13 @@ void Foam::multiDirRefinement::refineHex8
 
     hexRefiner.updateMesh(morphMap);
 
-    // Take over split pattern from hex refiner. (should be empty at this
-    // point)
-
-    // From old cell label to index
-    Map<label> consistentSet(2*consistentCells.size());
+    // Collect all cells originating from same old cell (original + 7 extra)
 
     forAll(consistentCells, i)
     {
-        consistentSet.insert(consistentCells[i], i);
+        addedCells_[consistentCells[i]].setSize(8);
     }
-
-    // Collect all cells originating from same old cell (original + 7 extra)
-
-    addedCells_.setSize(consistentCells.size());
-    forAll(addedCells_, i)
-    {
-        addedCells_[i].setSize(8);
-    }
-    labelList nAddedCells(consistentCells.size(), 0);
+    labelList nAddedCells(addedCells_.size(), 0);
 
     const labelList& cellMap = morphMap.cellMap();
 
@@ -395,13 +383,9 @@ void Foam::multiDirRefinement::refineHex8
     {
         label oldCellI = cellMap[cellI];
 
-        Map<label>::const_iterator iter = consistentSet.find(oldCellI);
-
-        if (iter != consistentSet.end())
+        if (addedCells_[oldCellI].size() > 0)
         {
-            label index = iter();
-
-            addedCells_[nAddedCells[index]++] = cellI;
+            addedCells_[oldCellI][nAddedCells[oldCellI]++] = cellI;
         }
     }
 }

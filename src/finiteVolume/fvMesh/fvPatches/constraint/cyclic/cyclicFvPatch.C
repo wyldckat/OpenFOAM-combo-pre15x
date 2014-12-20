@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -137,6 +137,7 @@ tmp<labelField> cyclicFvPatch::interfaceInternalField
 
 tmp<labelField> cyclicFvPatch::transfer
 (
+    const Pstream::commsTypes,
     const unallocLabelList& interfaceData
 ) const
 {
@@ -157,6 +158,7 @@ tmp<labelField> cyclicFvPatch::transfer
 
 tmp<labelField> cyclicFvPatch::internalFieldTransfer
 (
+    const Pstream::commsTypes commsType,
     const unallocLabelList& iF
 ) const
 {

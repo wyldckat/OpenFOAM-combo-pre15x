@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    globalPointPatch
+    Foam::globalPointPatch
 
 Description
+    Foam::globalPointPatch
 
 SourceFiles
     globalPointPatch.C
@@ -38,6 +39,7 @@ SourceFiles
 #include "pointPatch.H"
 #include "coupledPointPatch.H"
 #include "globalMeshData.H"
+#include "pointMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -55,11 +57,38 @@ class globalPointPatch
 {
     // Private data
 
-        //- Reference to the basic globalMeshData
-        const globalMeshData& globalMeshData_;
+        ////- Reference to the basic globalMeshData
+        //const globalMeshData& globalMeshData_;
 
         //- Index in the boundary mesh
         label boundaryIndex_;
+
+
+    // Protected Member Functions
+
+        //- Initialise the calculation of the patch geometry
+        virtual void initGeometry()
+        {}
+
+        //- Calculate the patch geometry
+        virtual void calcGeometry()
+        {}
+
+        //- Initialise the patches for moving points
+        virtual void initMovePoints(const pointField&)
+        {}
+
+        //- Correct patches after moving points
+        virtual void movePoints(const pointField&)
+        {}
+
+        //- Initialise the update of the patch topology
+        virtual void initUpdateMesh()
+        {}
+
+        //- Update of the patch topology
+        virtual void updateMesh()
+        {}
 
 
     // Private Member Functions
@@ -76,10 +105,6 @@ class globalPointPatch
 
 public:
 
-    typedef coupledPointPatch CoupledPointPatch;
-    typedef pointBoundaryMesh BoundaryMesh;
-
-
     //- Runtime type information
     TypeName("global");
 
@@ -88,7 +113,6 @@ public:
         //- Construct from components
         globalPointPatch
         (
-            const globalMeshData& pi,
             const pointBoundaryMesh& bm,
             const label index
         );
@@ -143,7 +167,7 @@ public:
         //- Return mesh points
         virtual const labelList& meshPoints() const
         {
-            return globalMeshData_.sharedPointLabels();
+            return boundaryMesh().mesh().globalData().sharedPointLabels();
         }
 
         //- Return local points.  Not implemented
@@ -163,13 +187,13 @@ public:
         //- Return total number of shared points
         virtual label globalPointSize() const
         {
-            return globalMeshData_.nGlobalPoints();
+            return boundaryMesh().mesh().globalData().nGlobalPoints();
         }
 
         //- Return addressing into the global points list
         const labelList& sharedPointAddr() const
         {
-            return globalMeshData_.sharedPointAddr();
+            return boundaryMesh().mesh().globalData().sharedPointAddr();
         }
 };
 

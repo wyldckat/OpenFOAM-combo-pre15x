@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,15 +29,10 @@ License
 #include "token.H"
 #include "contiguous.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * Ostream Operator *  * * * * * * * * * * * * //
 
 template<class T>
-void UList<T>::writeEntry(Ostream& os) const
+void Foam::UList<T>::writeEntry(Ostream& os) const
 {
     if
     (
@@ -56,7 +51,7 @@ void UList<T>::writeEntry(Ostream& os) const
 
 
 template<class T>
-void UList<T>::writeEntry(const word& keyword, Ostream& os) const
+void Foam::UList<T>::writeEntry(const word& keyword, Ostream& os) const
 {
     os.writeKeyword(keyword);
     writeEntry(os);
@@ -65,7 +60,7 @@ void UList<T>::writeEntry(const word& keyword, Ostream& os) const
 
 
 template<class T>
-Ostream& operator<<(Ostream& os, const UList<T>& L)
+Foam::Ostream& Foam:: operator<<(Foam::Ostream& os, const Foam::UList<T>& L)
 {
     // Write list contents depending on data format
     if (os.format() == IOstream::ASCII || !contiguous<T>())
@@ -142,9 +137,5 @@ Ostream& operator<<(Ostream& os, const UList<T>& L)
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

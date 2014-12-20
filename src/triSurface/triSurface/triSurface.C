@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,7 +30,6 @@ License
 #include "OFstream.H"
 #include "Time.H"
 #include "boundBox.H"
-#include "triSurfaceTools.H"
 #include "SortableList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -427,32 +426,14 @@ boolList triSurface::checkOrientation(const bool verbose)
         {
             // Two triangles, A and B. Check if edge orientation is
             // anticlockwise on both.
-            FixedList<label, 3> edgeLabelsA =
-                triSurfaceTools::sortedFaceEdges(*this, neighbours[0]);
+            const labelList& fEdgesA = faceEdges()[neighbours[0]];
 
             // Get next edge after edgei
-            label nextEdgeA = -1;
-            forAll(edgeLabelsA, ei)
-            {
-                if (edgeLabelsA[ei] == edgei)
-                {
-                    nextEdgeA = edgeLabelsA[(ei + 1) % 3];
-                    break;
-                }
-            }
+            label nextEdgeA = fEdgesA.fcIndex(findIndex(fEdgesA, edgei));
 
-            FixedList<label, 3> edgeLabelsB =
-                triSurfaceTools::sortedFaceEdges(*this, neighbours[1]);
+            const labelList& fEdgesB = faceEdges()[neighbours[1]];
 
-            label nextEdgeB = -1;
-            forAll(edgeLabelsB, ei)
-            {
-                if (edgeLabelsB[ei] == edgei)
-                {
-                    nextEdgeB = edgeLabelsB[(ei + 1) % 3];
-                    break;
-                }
-            }
+            label nextEdgeB = fEdgesB.fcIndex(findIndex(fEdgesB, edgei));
 
             // Now check if nextEdgeA and nextEdgeB have any common points
             if
@@ -470,24 +451,24 @@ boolList triSurface::checkOrientation(const bool verbose)
                         << "Triangle orientation incorrect." << endl
                         << "edge neighbours:" << neighbours << endl
                         << "triangle " << neighbours[0] << " has edges "
-                        << edgeLabelsA << endl
+                        << fEdgesA << endl
                         << "    with points " << endl
-                        << "    " << es[edgeLabelsA[0]].start() << ' '
-                        << es[edgeLabelsA[0]].end() << endl
-                        << "    " << es[edgeLabelsA[1]].start() << ' '
-                        << es[edgeLabelsA[1]].end() << endl
-                        << "    " << es[edgeLabelsA[2]].start() << ' '
-                        << es[edgeLabelsA[2]].end() << endl
+                        << "    " << es[fEdgesA[0]].start() << ' '
+                        << es[fEdgesA[0]].end() << endl
+                        << "    " << es[fEdgesA[1]].start() << ' '
+                        << es[fEdgesA[1]].end() << endl
+                        << "    " << es[fEdgesA[2]].start() << ' '
+                        << es[fEdgesA[2]].end() << endl
 
                         << "triangle " << neighbours[1] << " has edges "
-                        << edgeLabelsB << endl
+                        << fEdgesB << endl
                         << "    with points " << endl
-                        << "    " << es[edgeLabelsB[0]].start() << ' '
-                        << es[edgeLabelsB[0]].end() << endl
-                        << "    " << es[edgeLabelsB[1]].start() << ' '
-                        << es[edgeLabelsB[1]].end() << endl
-                        << "    " << es[edgeLabelsB[2]].start() << ' '
-                        << es[edgeLabelsB[2]].end() << endl
+                        << "    " << es[fEdgesB[0]].start() << ' '
+                        << es[fEdgesB[0]].end() << endl
+                        << "    " << es[fEdgesB[1]].start() << ' '
+                        << es[fEdgesB[1]].end() << endl
+                        << "    " << es[fEdgesB[2]].start() << ' '
+                        << es[fEdgesB[2]].end() << endl
                         << endl;
                 }
             }
@@ -523,13 +504,22 @@ bool triSurface::read(Istream& is)
 
 
 // Read from file in given format
-bool triSurface::read(const fileName& name, const word& ext)
+bool triSurface::read(const fileName& name, const word& ext, const bool check)
 {
+    if (check && !exists(name))
+    {
+        FatalErrorIn
+        (
+            "triSurface::read(const fileName&, const word&, const bool)"
+        )   << "Cannnot read " << name << exit(FatalError);
+    }
+
     if (ext == "gz")
     {
         fileName unzipName = name.lessExt();
 
-        return read(unzipName, unzipName.ext());
+        // Do not check for existence. Let IFstream do the unzipping.
+        return read(unzipName, unzipName.ext(), false);
     }
     else if (ext == "ftr")
     {
@@ -661,7 +651,7 @@ surfacePatchList triSurface::calcPatches(labelList& faceMap) const
     {
         sortedRegion[faceI] = operator[](faceI).region();
     }
-    sortedRegion.sort();
+    sortedRegion.stableSort();
 
     faceMap = sortedRegion.indices();
 
@@ -1222,10 +1212,31 @@ void triSurface::write(const Time& d) const
 
 void triSurface::writeStats(Ostream& os) const
 {
+    // Calculate bounding box without any additional addressing
+    // Copy of treeBoundBox code. Cannot use meshTools from triSurface...
+    boundBox bb
+    (
+        point(VGREAT, VGREAT, VGREAT),
+        point(-VGREAT, -VGREAT, -VGREAT)
+    );
+    forAll(*this, triI)
+    {
+        const labelledTri& f = operator[](triI);
+
+        forAll(f, fp)
+        {
+            const point& pt = points()[f[fp]];
+            bb.min() = ::Foam::min(bb.min(), pt);
+            bb.max() = ::Foam::max(bb.max(), pt);
+        }
+    }
+
+    // Unfortunately nPoints constructs meshPoints() ...
+
     os  << "Triangles    : " << size() << endl
-        << "Edges        : " << nEdges() << endl
+        //<< "Edges        : " << nEdges() << endl
         << "Vertices     : " << nPoints() << endl
-        << "Bounding Box : " << boundBox(localPoints()) << endl;
+        << "Bounding Box : " << bb << endl;
 }
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -122,7 +122,7 @@ Foam::polyMesh::polyMesh(const IOobject& io)
             IOobject::NO_WRITE
         )
     ),
-    allOwner_
+    owner_
     (
         IOobject
         (
@@ -134,7 +134,7 @@ Foam::polyMesh::polyMesh(const IOobject& io)
             IOobject::NO_WRITE
         )
     ),
-    allNeighbour_
+    neighbour_
     (
         IOobject
         (
@@ -146,6 +146,7 @@ Foam::polyMesh::polyMesh(const IOobject& io)
             IOobject::NO_WRITE
         )
     ),
+    clearedPrimitives_(false),
     boundary_
     (
         IOobject
@@ -217,10 +218,11 @@ Foam::polyMesh::polyMesh(const IOobject& io)
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
+    changing_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
 {
-    if (exists(allOwner_.objectPath()))
+    if (exists(owner_.objectPath()))
     {
         initMesh();
     }
@@ -243,8 +245,8 @@ Foam::polyMesh::polyMesh(const IOobject& io)
         // Set the primitive mesh
         initMesh(c);
 
-        allOwner_.write();
-        allNeighbour_.write();
+        owner_.write();
+        neighbour_.write();
     }
 
     // Calculate topology for the patches (processor-processor comms etc.)
@@ -272,8 +274,8 @@ Foam::polyMesh::polyMesh
     const IOobject& io,
     const pointField& points,
     const faceList& faces,
-    const labelList& allOwner,
-    const labelList& allNeighbour,
+    const labelList& owner,
+    const labelList& neighbour,
     const bool syncPar
 )
 :
@@ -305,7 +307,7 @@ Foam::polyMesh::polyMesh
         ),
         faces
     ),
-    allOwner_
+    owner_
     (
         IOobject
         (
@@ -316,9 +318,9 @@ Foam::polyMesh::polyMesh
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        allOwner
+        owner
     ),
-    allNeighbour_
+    neighbour_
     (
         IOobject
         (
@@ -329,8 +331,9 @@ Foam::polyMesh::polyMesh
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
-        allNeighbour
+        neighbour
     ),
+    clearedPrimitives_(false),
     boundary_
     (
         IOobject
@@ -391,6 +394,7 @@ Foam::polyMesh::polyMesh
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
+    changing_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
 {
@@ -458,7 +462,7 @@ Foam::polyMesh::polyMesh
         ),
         faces
     ),
-    allOwner_
+    owner_
     (
         IOobject
         (
@@ -471,7 +475,7 @@ Foam::polyMesh::polyMesh
         ),
         0
     ),
-    allNeighbour_
+    neighbour_
     (
         IOobject
         (
@@ -484,6 +488,7 @@ Foam::polyMesh::polyMesh
         ),
         0
     ),
+    clearedPrimitives_(false),
     boundary_
     (
         IOobject
@@ -544,6 +549,7 @@ Foam::polyMesh::polyMesh
     ),
     globalMeshDataPtr_(NULL),
     moving_(false),
+    changing_(false),
     curMotionTimeIndex_(time().timeIndex()),
     oldPointsPtr_(NULL)
 {
@@ -622,13 +628,13 @@ void Foam::polyMesh::resetPrimitives
     {
         faces_ = faces;
     }
-    if (&allOwner_ != &owner)
+    if (&owner_ != &owner)
     {
-        allOwner_ = owner;
+        owner_ = owner;
     }
-    if (&allNeighbour_ != &neighbour)
+    if (&neighbour_ != &neighbour)
     {
-        allNeighbour_ = neighbour;
+        neighbour_ = neighbour;
     }
 
     // Reset patch sizes and starts
@@ -674,7 +680,7 @@ void Foam::polyMesh::resetPrimitives
     }
 
 
-    // Set the primitive mesh from the allOwner_, allNeighbour_. Works
+    // Set the primitive mesh from the owner_, neighbour_. Works
     // out from patch end where the active faces stop.
     initMesh();
 
@@ -910,38 +916,52 @@ void Foam::polyMesh::addZones
 }
 
 
-const Foam::pointField& Foam::polyMesh::allPoints() const
+const Foam::pointField& Foam::polyMesh::points() const
 {
+    if (clearedPrimitives_)
+    {
+        FatalErrorIn("const pointField& polyMesh::points() const")
+            << "points deallocated"
+            << abort(FatalError);
+    }
+
     return points_;
 }
 
 
-const Foam::faceList& Foam::polyMesh::allFaces() const
+const Foam::faceList& Foam::polyMesh::faces() const
 {
+    if (clearedPrimitives_)
+    {
+        FatalErrorIn("const faceList& polyMesh::faces() const")
+            << "faces deallocated"
+            << abort(FatalError);
+    }
+
     return faces_;
 }
 
 
-const Foam::labelList& Foam::polyMesh::allOwner() const
+const Foam::labelList& Foam::polyMesh::faceOwner() const
 {
-    return allOwner_;
+    return owner_;
 }
 
 
-const Foam::labelList& Foam::polyMesh::allNeighbour() const
+const Foam::labelList& Foam::polyMesh::faceNeighbour() const
 {
-    return allNeighbour_;
+    return neighbour_;
 }
 
 
 // Return old mesh motion points
-const Foam::pointField& Foam::polyMesh::oldAllPoints() const
+const Foam::pointField& Foam::polyMesh::oldPoints() const
 {
     if (!oldPointsPtr_)
     {
         if (debug)
         {
-            WarningIn("const pointField& polyMesh::oldAllPoints() const")
+            WarningIn("const pointField& polyMesh::oldPoints() const")
                 << "Old points not available.  Forcing storage of old points"
                 << endl;
         }
@@ -954,7 +974,6 @@ const Foam::pointField& Foam::polyMesh::oldAllPoints() const
 }
 
 
-// Move points
 Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
 (
     const pointField& newPoints
@@ -967,7 +986,7 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
             << " index " << time().timeIndex() << endl;
     }
 
-    moving_ = true;
+    moving(true);
 
     // Pick up old points
     if (curMotionTimeIndex_ != time().timeIndex())
@@ -1000,7 +1019,7 @@ Foam::tmp<Foam::scalarField> Foam::polyMesh::movePoints
     tmp<scalarField> sweptVols = primitiveMesh::movePoints
     (
         points_,
-        oldAllPoints()
+        oldPoints()
     );
 
     // Adjust parallel shared points
@@ -1054,7 +1073,7 @@ const Foam::globalMeshData& Foam::polyMesh::globalData() const
 void Foam::polyMesh::removeFiles(const fileName& instanceDir) const
 {
     fileName meshFilesPath = db().path()/instanceDir/meshSubDir;
-    
+
     rm(meshFilesPath/"points");
     rm(meshFilesPath/"faces");
     rm(meshFilesPath/"owner");

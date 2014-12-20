@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,6 +37,7 @@ void Foam::preservePatchTypes
     const fileName& meshDir,
     const wordList& patchNames,
     wordList& patchTypes,
+    const word& defaultFacesName,
     word& defaultFacesType,
     wordList& patchPhysicalTypes
 )
@@ -92,10 +93,10 @@ void Foam::preservePatchTypes
             }
         }
 
-        if (patchDictionary.found("defaultFaces"))
+        if (patchDictionary.found(defaultFacesName))
         {
             const dictionary& patchDict = 
-                patchDictionary.subDict("defaultFaces");
+                patchDictionary.subDict(defaultFacesName);
 
             if (patchDict.found("geometricType"))
             {

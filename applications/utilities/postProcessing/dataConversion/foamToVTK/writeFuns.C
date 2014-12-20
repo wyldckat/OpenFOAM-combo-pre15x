@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,8 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
 
 \*---------------------------------------------------------------------------*/
 
@@ -226,6 +224,8 @@ void Foam::writeFuns::insert(const scalar& pt, DynamicList<floatScalar>& dest)
 {
     dest.append(float(pt));
 }
+
+
 void Foam::writeFuns::insert(const vector& pt, DynamicList<floatScalar>& dest)
 {
     for (direction cmpt = 0; cmpt < vector::nComponents; cmpt++)
@@ -233,6 +233,34 @@ void Foam::writeFuns::insert(const vector& pt, DynamicList<floatScalar>& dest)
         dest.append(float(pt[cmpt]));
     }
 }
+
+
+void Foam::writeFuns::insert
+(
+    const sphericalTensor& pt,
+    DynamicList<floatScalar>& dest
+)
+{
+    for (direction cmpt = 0; cmpt < sphericalTensor::nComponents; cmpt++)
+    {
+        dest.append(float(pt[cmpt]));
+    }
+}
+
+
+void Foam::writeFuns::insert
+(
+    const symmTensor& pt,
+    DynamicList<floatScalar>& dest
+)
+{
+    for (direction cmpt = 0; cmpt < symmTensor::nComponents; cmpt++)
+    {
+        dest.append(float(pt[cmpt]));
+    }
+}
+
+
 void Foam::writeFuns::insert(const tensor& pt, DynamicList<floatScalar>& dest)
 {
     for (direction cmpt = 0; cmpt < tensor::nComponents; cmpt++)
@@ -240,7 +268,8 @@ void Foam::writeFuns::insert(const tensor& pt, DynamicList<floatScalar>& dest)
         dest.append(float(pt[cmpt]));
     }
 }
-// Store labelList in dest.
+
+
 void Foam::writeFuns::insert(const labelList& source, DynamicList<label>& dest)
 {
     forAll(source, i)

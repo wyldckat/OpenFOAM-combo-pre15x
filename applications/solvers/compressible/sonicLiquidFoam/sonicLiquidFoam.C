@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ Application
     sonicLiquidFoam
 
 Description
-    Transient solver for trans-sonic/supersonic, laminar flow of a 
+    Transient solver for trans-sonic/supersonic, laminar flow of a
     compressible liquid.
 
 \*---------------------------------------------------------------------------*/
@@ -76,11 +76,15 @@ int main(int argc, char *argv[])
             volScalarField rUA = 1.0/UEqn.A();
             U = rUA*UEqn.H();
 
-            surfaceScalarField phid = psi*
+            surfaceScalarField phid
             (
-                (fvc::interpolate(rho*U) & mesh.Sf())
-              + fvc::ddtPhiCorr(rUA, rho, U, phi)
-            )/fvc::interpolate(rho);
+                "phid",
+                psi*
+                (
+                    (fvc::interpolate(U) & mesh.Sf())
+                  + fvc::ddtPhiCorr(rUA, rho, U, phi)
+                )
+            );
 
             phi = (rhoO/psi)*phid;
 
@@ -88,7 +92,7 @@ int main(int argc, char *argv[])
             (
                 fvm::ddt(psi, p)
               + fvc::div(phi)
-              + fvm::div(phid, p, "div(phid,p)")
+              + fvm::div(phid, p)
               - fvm::laplacian(rho*rUA, p)
             );
 

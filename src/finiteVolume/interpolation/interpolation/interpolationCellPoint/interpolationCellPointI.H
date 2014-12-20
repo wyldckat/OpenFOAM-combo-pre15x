@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,13 +24,10 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-inline Type interpolationCellPoint<Type>::interpolate
+inline Type Foam::interpolationCellPoint<Type>::interpolate
 (
     const cellPointWeight& cpw
 ) const
@@ -48,7 +45,7 @@ inline Type interpolationCellPoint<Type>::interpolate
 
 
 template<class Type>
-inline Type interpolationCellPoint<Type>::interpolate
+inline Type Foam::interpolationCellPoint<Type>::interpolate
 (
     const vector& position,
     const label celli,
@@ -58,9 +55,5 @@ inline Type interpolationCellPoint<Type>::interpolate
     return interpolate(cellPointWeight(this->pMesh_, position, celli, facei));
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

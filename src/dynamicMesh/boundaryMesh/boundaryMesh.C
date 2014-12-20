@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -224,7 +224,7 @@ void Foam::boundaryMesh::markEdges
         {
             markEdges
             (
-                maxDistance, 
+                maxDistance,
                 startEdges[pEdgeI],
                 distance+1,
                 minDistance,
@@ -239,7 +239,7 @@ void Foam::boundaryMesh::markEdges
         {
             markEdges
             (
-                maxDistance, 
+                maxDistance,
                 endEdges[pEdgeI],
                 distance+1,
                 minDistance,
@@ -855,7 +855,7 @@ void Foam::boundaryMesh::writeTriSurface(const fileName& fName) const
 // find only one. We could detect that it was probably finding the wrong one
 // (based on normal) but could not 'tell' the octree to retrieve the other
 // one (since they occupy exactly the same space)
-// So now faces get put into different octrees depending on normal. 
+// So now faces get put into different octrees depending on normal.
 // !It still will not be possible to differentiate between two faces on top
 // of each other having the same normal
 Foam::labelList Foam::boundaryMesh::getNearest
@@ -1282,7 +1282,7 @@ void Foam::boundaryMesh::patchify
 
         // Change patch > 0. (since above we put all faces into the zeroth
         // patch)
-        
+
         for (label newPatchI = 1; newPatchI < patchFaces.size(); newPatchI++)
         {
             const labelList& pFaces = patchFaces[newPatchI];
@@ -1504,7 +1504,7 @@ void Foam::boundaryMesh::setExtraEdges(const label edgeI)
     labelList minDistance(mesh().nEdges(), -1);
 
    // All edge labels encountered
-    
+
     DynamicList<label> visitedEdges;
 
     // Floodfill from edgeI starting from distance 0. Stop at distance.
@@ -1799,7 +1799,7 @@ void Foam::boundaryMesh::changeFaces
         newFaces[oldToNew[faceI]] = mesh()[faceI];
         newMeshFace[oldToNew[faceI]] = meshFace_[faceI];
     }
-    
+
     // Reconstruct 'mesh' from new faces and (copy of) existing points.
     bMesh* newMeshPtr_ = new bMesh(newFaces, mesh().points());
 

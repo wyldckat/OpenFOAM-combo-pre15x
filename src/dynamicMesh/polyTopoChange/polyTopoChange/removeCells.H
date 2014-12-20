@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,12 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    removeCells
+    Foam::removeCells
 
 Description
-    Given list of cells to remove insert all the topology changes. Works in
-    two passes:
+    Given list of cells to remove insert all the topology changes.
+
+    Works in two passes:
     - get faces that will become boundary faces
     - given these faces and the patches they have to go into make the
       changes.
@@ -48,7 +49,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class polyMesh;
 class polyTopoChange;
 class mapPolyMesh;

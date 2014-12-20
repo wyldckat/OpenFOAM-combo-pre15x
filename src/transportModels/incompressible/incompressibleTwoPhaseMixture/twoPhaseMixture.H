@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    twoPhaseMixture
+    Foam::twoPhaseMixture
 
 Description
+    A two-phase incompressible transportModel
 
 SourceFiles
     twoPhaseMixture.C
@@ -46,14 +47,16 @@ namespace Foam
 {
 
 /*---------------------------------------------------------------------------*\
-                           Class twoPhaseMixture Declaration
+                      Class twoPhaseMixture Declaration
 \*---------------------------------------------------------------------------*/
 
 class twoPhaseMixture
 :
     public transportModel
 {
-    // Private data
+protected:
+
+    // Protected data
 
         word phase1Name_;
         word phase2Name_;
@@ -140,7 +143,7 @@ public:
         tmp<surfaceScalarField> muf() const;
 
         //- Return the kinematic laminar viscosity
-        tmp<volScalarField> nu() const
+        virtual tmp<volScalarField> nu() const
         {
             return nu_;
         }
@@ -148,14 +151,14 @@ public:
         //- Return the face-interpolated dynamic laminar viscosity
         tmp<surfaceScalarField> nuf() const;
 
-        //- Correct the laminar viscosity 
-        void correct()
+        //- Correct the laminar viscosity
+        virtual void correct()
         {
             calcNu();
         }
 
         //- Read base transportProperties dictionary
-        bool read();
+        virtual bool read();
 };
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,7 +37,7 @@ void starMesh::fixCollapsedEdges()
 
     forAll (cellShapes_, cellI)
     {
-        cellFaces_[cellI] = (const faceList&)cellShapes_[cellI].faces();
+        cellFaces_[cellI] = cellShapes_[cellI].faces();
     }
 
     // go through the faces and find if there exist faces with duplicate

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -191,7 +191,7 @@ void Foam::mergePolyMesh::addMesh(const polyMesh& m)
 
     label zoneID = -1;
 
-    const pointField& p = m.allPoints();
+    const pointField& p = m.points();
     labelList renumberPoints(p.size());
 
     const pointZoneMesh& pz = m.pointZones();
@@ -283,11 +283,11 @@ void Foam::mergePolyMesh::addMesh(const polyMesh& m)
         faceZoneIndices[zoneI] = zoneIndex(faceZoneNames_, fz[zoneI].name());
     }
 
-    const faceList& f = m.allFaces();
+    const faceList& f = m.faces();
     labelList renumberFaces(f.size());
 
-    const labelList& own = m.allOwner();
-    const labelList& nei = m.allNeighbour();
+    const labelList& own = m.faceOwner();
+    const labelList& nei = m.faceNeighbour();
 
     label newOwn, newNei, newPatch, newZone;
     bool newZoneFlip;

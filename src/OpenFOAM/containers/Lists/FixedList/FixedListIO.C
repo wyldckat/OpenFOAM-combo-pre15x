@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,23 +30,17 @@ License
 #include "token.H"
 #include "contiguous.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
-// Construct from Istream
-template<class T, label Size>
-FixedList<T, Size>::FixedList(Istream& is)
+template<class T, Foam::label Size>
+Foam::FixedList<T, Size>::FixedList(Istream& is)
 {
     operator>>(is, *this);
 }
 
 
-template<class T, label Size>
-Istream& operator>>(Istream& is, FixedList<T, Size>& L)
+template<class T, Foam::label Size>
+Foam::Istream& Foam::operator>>(Foam::Istream& is, FixedList<T, Size>& L)
 {
     is.fatalCheck("operator>>(Istream&, FixedList<T, Size>&)");
 
@@ -140,8 +134,8 @@ Istream& operator>>(Istream& is, FixedList<T, Size>& L)
 
 // * * * * * * * * * * * * * * * Ostream Operator *  * * * * * * * * * * * * //
 
-template<class T, label Size>
-void FixedList<T, Size>::writeEntry(Ostream& os) const
+template<class T, Foam::label Size>
+void Foam::FixedList<T, Size>::writeEntry(Ostream& os) const
 {
     if
     (
@@ -159,8 +153,12 @@ void FixedList<T, Size>::writeEntry(Ostream& os) const
 }
 
 
-template<class T, label Size>
-void FixedList<T, Size>::writeEntry(const word& keyword, Ostream& os) const
+template<class T, Foam::label Size>
+void Foam::FixedList<T, Size>::writeEntry
+(
+    const word& keyword,
+    Ostream& os
+) const
 {
     os.writeKeyword(keyword);
     writeEntry(os);
@@ -168,8 +166,8 @@ void FixedList<T, Size>::writeEntry(const word& keyword, Ostream& os) const
 }
 
 
-template<class T, label Size>
-Ostream& operator<<(Ostream& os, const FixedList<T, Size>& L)
+template<class T, Foam::label Size>
+Foam::Ostream& Foam::operator<<(Ostream& os, const FixedList<T, Size>& L)
 {
     // Write list contents depending on data format
     if (os.format() == IOstream::ASCII || !contiguous<T>())
@@ -242,9 +240,5 @@ Ostream& operator<<(Ostream& os, const FixedList<T, Size>& L)
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

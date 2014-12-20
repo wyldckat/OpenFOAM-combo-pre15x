@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,12 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    edgeSurface
+    Foam::edgeSurface
 
 Description
+    Description of surface in form of 'cloud of edges'.
 
-    Description of surface in form of 'cloud of edges':
+    The 'cloud of edges':
     - points
     - edges
     - faceEdges
@@ -41,8 +42,8 @@ Description
 
     Used to easily insert cuts and split faces.
 
-    Note:
-    - points with surface (local)points first , intersection points last
+Note
+    - points with surface (local)points first, intersection points last
     - edges with (split) surface edges first, intersection edges last.
 
 SourceFiles
@@ -63,7 +64,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class triSurface;
 class surfaceIntersection;
 

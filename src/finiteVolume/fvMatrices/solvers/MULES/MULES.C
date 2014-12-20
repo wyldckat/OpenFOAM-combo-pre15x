@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -48,30 +48,36 @@ void Foam::MULES::explicitSolve
     const scalar psiMin
 )
 {
-    explicitSolve(psi, phi, phiPsi, zero, zero, psiMax, psiMin);
+    explicitSolve
+    (
+        oneField(),
+        psi,
+        phi,
+        phiPsi,
+        zeroField(), zeroField(),
+        psiMax, psiMin
+    );
 }
 
 
-void Foam::MULES::explicitSolve01
+void Foam::MULES::implicitSolve
 (
     volScalarField& psi,
     const surfaceScalarField& phi,
-    surfaceScalarField& phiPsi
+    surfaceScalarField& phiPsi,
+    const scalar psiMax,
+    const scalar psiMin
 )
 {
-    explicitSolve01(psi, phi, phiPsi, zero, zero);
-}
-
-
-void Foam::MULES::implicitSolve01
-(
-    volScalarField& psi,
-    const surfaceScalarField& phi,
-    const dimensionedScalar& Dpsi,
-    surfaceScalarField& phiPsi
-)
-{
-    implicitSolve01(psi, phi, Dpsi, phiPsi, zero, zero);
+    implicitSolve
+    (
+        oneField(),
+        psi,
+        phi,
+        phiPsi,
+        zeroField(), zeroField(),
+        psiMax, psiMin
+    );
 }
 
 

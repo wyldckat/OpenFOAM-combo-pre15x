@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -135,8 +135,7 @@ tmp<Field<symmTensor> > transformFieldMask<symmTensor>
     const tmp<tensorField>& ttf
 )
 {
-    tmp<Field<symmTensor> > ret =
-        transformFieldMask<symmTensor>(ttf());
+    tmp<Field<symmTensor> > ret = transformFieldMask<symmTensor>(ttf());
     ttf.clear();
     return ret;
 }
@@ -157,10 +156,7 @@ tmp<Field<symmTensor> > transformFieldMask<symmTensor>
     const tmp<symmTensorField>& tstf
 )
 {
-    tmp<Field<symmTensor> > ret =
-        transformFieldMask<symmTensor>(tstf());
-    tstf.clear();
-    return ret;
+    return tstf;
 }
 
 

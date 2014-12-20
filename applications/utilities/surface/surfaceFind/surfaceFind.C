@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
 
     Info<< "Reading surf1 ..." << endl;
-    triSurface surf1(args.args()[1]);
+    triSurface surf1(args.additionalArgs()[0]);
 
     //
     // Nearest vertex

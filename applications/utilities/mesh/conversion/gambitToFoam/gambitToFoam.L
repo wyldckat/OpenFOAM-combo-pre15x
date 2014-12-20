@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -78,7 +78,11 @@ label nValuesForPatchFaces = 0;
 // Dummy yywrap to keep yylex happy at compile time.
 // It is called by yylex but is not used as the mechanism to change file.
 // See <<EOF>>
+#if YY_FLEX_SUBMINOR_VERSION < 34
 extern "C" int yywrap()
+#else
+int yyFlexLexer::yywrap()
+#endif
 {
     return 1;
 }
@@ -308,7 +312,7 @@ mtype                 {space}"MTYPE:"{space}
 
         label nodeI(readLabel(nodeStream));
 
-        // Note: coordinates must be read one at the time.  
+        // Note: coordinates must be read one at the time.
         scalar x = readScalar(nodeStream);
         scalar y = readScalar(nodeStream);
         scalar z = readScalar(nodeStream);
@@ -649,7 +653,7 @@ int main(int argc, char *argv[])
 
 #   include "createTime.H"
 
-    fileName gambitFile(args.args()[3]);
+    fileName gambitFile(args.additionalArgs()[0]);
     ifstream gambitStream(gambitFile.c_str());
 
     if (!gambitStream)
@@ -661,7 +665,8 @@ int main(int argc, char *argv[])
     }
 
     yyFlexLexer lexer(&gambitStream);
-    while(lexer.yylex() != 0);
+    while(lexer.yylex() != 0)
+    {}
 
     Info << "Finished lexing" << endl;
 
@@ -676,7 +681,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    
+
     labelList pointLookup(maxPointIndex + 1, -1);
 
     forAll (pointMap, pointI)
@@ -806,7 +811,7 @@ int main(int argc, char *argv[])
                     ]
                     [curFaces[faceI] - 1] // this gives a fluent face - 1
                 ];
-                
+
         }
     }
 
@@ -821,6 +826,7 @@ int main(int argc, char *argv[])
     points *= scaleFactor;
 
     wordList patchTypes(boundary.size(), polyPatch::typeName);
+    word defaultFacesName = "defaultFaces";
     word defaultFacesType = emptyPolyPatch::typeName;
     wordList patchPhysicalTypes(boundary.size());
 
@@ -831,6 +837,7 @@ int main(int argc, char *argv[])
         polyMesh::defaultRegion,
         patchNames,
         patchTypes,
+        defaultFacesName,
         defaultFacesType,
         patchPhysicalTypes
     );
@@ -849,6 +856,7 @@ int main(int argc, char *argv[])
         boundary,
         patchNames,
         patchTypes,
+        defaultFacesName,
         defaultFacesType,
         patchPhysicalTypes
     );

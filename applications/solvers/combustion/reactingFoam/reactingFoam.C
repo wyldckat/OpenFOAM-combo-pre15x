@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,7 +32,7 @@ Description
 
 #include "fvCFD.H"
 #include "hCombustionThermo.H"
-#include "compressible/turbulenceModel/turbulenceModel.H"
+#include "compressible/RASModel/RASModel.H"
 #include "chemistryModel.H"
 #include "chemistrySolver.H"
 #include "multivariateScheme.H"
@@ -49,6 +49,7 @@ int main(int argc, char *argv[])
 #   include "createFields.H"
 #   include "initContinuityErrs.H"
 #   include "readTimeControls.H"
+#   include "compressibleCourantNo.H"
 #   include "setInitialDeltaT.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -75,7 +76,7 @@ int main(int argc, char *argv[])
 
 #           define Db turbulence->alphaEff()
 #           include "hEqn.H"
-            
+
             // --- PISO loop
             for (int corr=1; corr<=nCorr; corr++)
             {

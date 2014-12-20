@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    pointMesh
+    Foam::pointMesh
 
 Description
     Mesh representing a set of points created from polyMesh.
@@ -57,6 +57,9 @@ class pointMesh
 
 
     // Private Member Functions
+
+        //- Map all fields
+        void mapFields(const mapPolyMesh&);
 
         //- Disallow default bitwise copy construct
         pointMesh(const pointMesh&);
@@ -106,6 +109,15 @@ public:
         {
             return mesh_.globalData();
         }
+
+
+        // Mesh motion
+
+            //- Move points, returns volumes swept by faces in motion
+            void movePoints(const pointField&);
+
+            //- Update the mesh corresponding to given map
+            void updateMesh(const mapPolyMesh& mpm);
 
 
     // Member Operators

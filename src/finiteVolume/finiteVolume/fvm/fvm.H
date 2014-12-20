@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,12 +23,15 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Namespace
-    fvm
+    Foam::fvm
 
 Description
-    Namespace of functions to calculate implicit derivatives returning a matrix.
-    Time derivatives are calculated using Euler-implicit, backward differencing
-    or Crank-Nicholson. Spatial derivatives are calculated using Gauss' Theorem.
+    Namespace of functions to calculate implicit derivatives returning a
+    matrix.
+
+    Temporal derivatives are calculated using Euler-implicit, backward
+    differencing or Crank-Nicholson. Spatial derivatives are calculated
+    using Gauss' Theorem.
 
 
 \*---------------------------------------------------------------------------*/

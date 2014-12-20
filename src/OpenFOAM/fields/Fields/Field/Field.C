@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -251,7 +251,7 @@ Field<Type>::Field
                     dict
                 )   << "expected keyword 'uniform' or 'nonuniform', "
                        "assuming deprecated Field format from "
-                       "FoamX version 2.0." << endl;
+                       "Foam version 2.0." << endl;
 
                 this->setSize(s);
 
@@ -284,9 +284,8 @@ tmp<Field<Type> > Field<Type>::clone() const
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return a null Field
 template<class Type>
-Field<Type>& Field<Type>::null()
+const Field<Type>& Field<Type>::null()
 {
     Field<Type>* nullPtr = reinterpret_cast<Field<Type>*>(NULL);
     return *nullPtr;
@@ -314,7 +313,7 @@ void Field<Type>::map
             label mapI = mapAddressing[i];
 
             if (mapI >= 0)
-            { 
+            {
                 f[i] = mapF[mapI];
             }
         }

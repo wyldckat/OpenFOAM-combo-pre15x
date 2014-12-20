@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    fvMeshSubset
+    Foam::fvMeshSubset
 
 Description
     Post-processing mesh subset tool.  Given the original mesh and the
@@ -56,11 +56,11 @@ SourceFiles
 #define fvMeshSubset_H
 
 #include "fvMesh.H"
+#include "pointMesh.H"
 #include "fvPatchFieldMapper.H"
+#include "pointPatchFieldMapper.H"
 #include "GeometricField.H"
-#include "emptyFvPatchFields.H"
 #include "labelHashSet.H"
-#include "SubField.H"
 #include "surfaceMesh.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -82,55 +82,63 @@ public:
     :
         public fvPatchFieldMapper
     {
-        labelField directAddressing_;
+        const labelList& directAddressing_;
 
     public:
 
         // Constructors
 
             //- Construct given addressing
-            patchFieldSubset(const fvMeshSubset& ms, const label patchNo)
+            patchFieldSubset(const labelList& directAddressing)
             :
-                directAddressing_
-                (
-                    static_cast<const labelField&>
-                    (
-                        labelField::subField
-                        (
-                            ms.faceMap(),
-                            ms.subMesh().boundary()[patchNo].size(),
-                            ms.subMesh().boundary()[patchNo].patch().start()
-                        )
-                    )
-                  - ms.baseMesh().boundary()
-                    [
-                        ms.patchMap()[patchNo]
-                    ].patch().start()
-                )
-            {
-                // If patchID supplied so exposed internal faces or uncoupled
-                // patch faces get into existing patch what to do with
-                // mapping? Truncate to 0 for now.
-                const label sz = ms.baseMesh().boundary()
-                    [
-                        ms.patchMap()[patchNo]
-                    ].patch().size();
-
-                forAll(directAddressing_, i)
-                {
-                    label& address = directAddressing_[i];
-
-                    if (address < 0 || address >= sz)
-                    {
-                        address = 0;
-                    }
-                }
-            }
-
+                directAddressing_(directAddressing)
+            {}
 
         // Destructor
 
             virtual ~patchFieldSubset()
+            {}
+
+
+        // Member Functions
+
+            label size() const
+            {
+                return directAddressing_.size();
+            }
+
+            bool direct() const
+            {
+                return true;
+            }
+
+            const unallocLabelList& directAddressing() const
+            {
+                return directAddressing_;
+            }
+    };
+
+
+    //- Patch-field subset interpolation class
+    class pointPatchFieldSubset
+    :
+        public pointPatchFieldMapper
+    {
+        const labelList& directAddressing_;
+
+    public:
+
+        // Constructors
+
+            //- Construct given addressing
+            pointPatchFieldSubset(const labelList& directAddressing)
+            :
+                directAddressing_(directAddressing)
+            {}
+
+        // Destructor
+
+            virtual ~pointPatchFieldSubset()
             {}
 
 
@@ -161,7 +169,9 @@ private:
         const fvMesh& baseMesh_;
 
         //- Subset mesh pointer
-        fvMesh* fvMeshSubsetPtr_;
+        autoPtr<fvMesh> fvMeshSubsetPtr_;
+
+        mutable autoPtr<pointMesh> pointMeshSubsetPtr_;
 
         //- Point mapping array
         labelList pointMap_;
@@ -188,7 +198,11 @@ private:
         static void markPoints(const labelList&, labelList&); 
 
         //- Adapt nCellsUsingFace for coupled faces becoming 'uncoupled'.
-        void doCoupledPatches(const bool, labelList& nCellsUsingFace) const;
+        void doCoupledPatches
+        (
+            const bool syncPar,
+            labelList& nCellsUsingFace
+        ) const;
 
         //- Subset of subset
         static labelList subset
@@ -213,11 +227,6 @@ public:
 
         //- Construct given a mesh to subset
         explicit fvMeshSubset(const fvMesh&);
-
-
-    // Destructor
-
-        ~fvMeshSubset();
 
 
     // Member Functions
@@ -266,7 +275,13 @@ public:
 
             //- Return reference to subset mesh
             const fvMesh& subMesh() const;
+
             fvMesh& subMesh();
+
+            //- Return reference to demand-driven subset pointMesh
+            const pointMesh& subPointMesh() const;
+
+            pointMesh& subPointMesh();
 
             //- Return point map
             const labelList& pointMap() const;
@@ -285,16 +300,58 @@ public:
 
             //- Map volume field
             template<class Type>
-            tmp<GeometricField<Type, fvPatchField, volMesh> > interpolate
+            static tmp<GeometricField<Type, fvPatchField, volMesh> >
+            interpolate
+            (
+                const GeometricField<Type, fvPatchField, volMesh>&,
+                const fvMesh& sMesh,
+                const labelList& patchMap,
+                const labelList& cellMap,
+                const labelList& faceMap
+            );
+
+            template<class Type>
+            tmp<GeometricField<Type, fvPatchField, volMesh> >
+            interpolate
             (
                 const GeometricField<Type, fvPatchField, volMesh>&
             ) const;
 
             //- Map surface field
             template<class Type>
-            tmp<GeometricField<Type, fvsPatchField, surfaceMesh> > interpolate
+            static tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
+            interpolate
+            (
+                const GeometricField<Type, fvsPatchField, surfaceMesh>&,
+                const fvMesh& sMesh,
+                const labelList& patchMap,
+                const labelList& faceMap
+            );
+
+            template<class Type>
+            tmp<GeometricField<Type, fvsPatchField, surfaceMesh> >
+            interpolate
             (
                 const GeometricField<Type, fvsPatchField, surfaceMesh>&
+            ) const;
+
+            //- Map point field
+            template<class Type>
+            static tmp<GeometricField<Type, pointPatchField, pointMesh> >
+            interpolate
+            (
+                const GeometricField<Type, pointPatchField, pointMesh>&,
+                const pointMesh& sMesh,
+                const objectRegistry& reg,
+                const labelList& patchMap,
+                const labelList& pointMap
+            );
+
+            template<class Type>
+            tmp<GeometricField<Type, pointPatchField, pointMesh> >
+            interpolate
+            (
+                const GeometricField<Type, pointPatchField, pointMesh>&
             ) const;
 };
 

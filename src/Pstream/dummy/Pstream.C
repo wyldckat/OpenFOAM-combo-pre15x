@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,6 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    Pstream
-
-Description
-
 \*---------------------------------------------------------------------------*/
 
 #include "Pstream.H"
@@ -34,16 +29,13 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void Pstream::addValidParOptions(HashTable<string>& validParOptions)
+void Foam::Pstream::addValidParOptions(HashTable<string>& validParOptions)
 {}
 
 
-bool Pstream::init(int& argc, char**& argv)
+bool Foam::Pstream::init(int& argc, char**& argv)
 {
     FatalErrorIn("Pstream::init(int& argc, char**& argv)")
         << "Trying to use the dummy Pstream library." << nl
@@ -54,24 +46,21 @@ bool Pstream::init(int& argc, char**& argv)
 }
 
 
-void Pstream::exit(int errnum)
+void Foam::Pstream::exit(int errnum)
 {
     notImplemented("Pstream::exit(int errnum)");
 }
 
 
-void Pstream::abort()
+void Foam::Pstream::abort()
 {
     notImplemented("Pstream::abort()");
 }
 
 
-void reduce(scalar&, const sumOp<scalar>&)
+void Foam::reduce(scalar&, const sumOp<scalar>&)
 {}
 
-
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

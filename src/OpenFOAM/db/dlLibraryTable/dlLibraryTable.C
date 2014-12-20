@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -86,9 +86,12 @@ bool Foam::dlLibraryTable::open(const fileName& functionLibName)
             if (!loadedLibraries.found(functionLibPtr))
             {
                 loadedLibraries.insert(functionLibPtr, functionLibName);
+                return true;
             }
-
-            return true;
+            else
+            {
+                return false;
+            }
         }
     }
     else
@@ -108,7 +111,7 @@ bool Foam::dlLibraryTable::open
     {
         fileNameList libNames(dict.lookup(libsEntry));
 
-        bool allOpened = false;
+        bool allOpened = (libNames.size() > 0);
 
         forAll(libNames, i)
         {

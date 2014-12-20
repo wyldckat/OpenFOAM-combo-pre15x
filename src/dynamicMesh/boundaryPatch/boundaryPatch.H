@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    boundaryPatch
+    Foam::boundaryPatch
 
 Description
     Like polyPatch but without reference to mesh. patchIdentifier::index
@@ -45,8 +45,6 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
-
 /*---------------------------------------------------------------------------*\
                            Class boundaryPatch Declaration
 \*---------------------------------------------------------------------------*/
@@ -58,7 +56,6 @@ class boundaryPatch
     // Private data
 
         label size_;
-
         label start_;
 
 public:
@@ -74,9 +71,6 @@ public:
             const label start,
             const word& physicalType = word::null
         );
-
-        //- Construct from Istream
-        boundaryPatch(Istream&, const label index);
 
         //- Construct from dictionary
         boundaryPatch
@@ -120,11 +114,9 @@ public:
             return start_;
         }
 
-        //- Write
-        void write(Ostream&) const;
 
         //- Write dictionary
-        void writeDict(Ostream&) const;
+        virtual void write(Ostream&) const;
 
 
     // Ostream Operator

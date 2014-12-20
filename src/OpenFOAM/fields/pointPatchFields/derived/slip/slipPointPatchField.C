@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -49,23 +49,23 @@ slipPointPatchField<Type>::slipPointPatchField
 (
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
-    const dictionary&
+    const dictionary& dict
 )
 :
-    basicSymmetryPointPatchField<Type>(p, iF)
+    basicSymmetryPointPatchField<Type>(p, iF, dict)
 {}
 
 
 template<class Type>
 slipPointPatchField<Type>::slipPointPatchField
 (
-    const slipPointPatchField<Type>&,
+    const slipPointPatchField<Type>& ptf,
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
-    const pointPatchFieldMapper&
+    const pointPatchFieldMapper& mapper
 )
 :
-    basicSymmetryPointPatchField<Type>(p, iF)
+    basicSymmetryPointPatchField<Type>(ptf, p, iF, mapper)
 {}
 
 

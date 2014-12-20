@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -165,6 +165,8 @@ tmp<surfaceScalarField> limitedSurfaceInterpolationScheme<Type>::weights
 {
     const fvMesh& mesh = this->mesh();
 
+    // Note that here the weights field is initialised as the limiter
+    // from which the weight is calculated using the limiter value
     tmp<surfaceScalarField> tWeights(this->limiter(phi));
     surfaceScalarField& Weights = tWeights();
 

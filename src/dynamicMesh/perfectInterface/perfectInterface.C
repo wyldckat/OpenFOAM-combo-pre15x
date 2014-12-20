@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -209,7 +209,7 @@ void Foam::perfectInterface::setRefinement(polyTopoChange& ref) const
         // Determine pointMapping in mesh point labels. Uses geometric
         // comparison to find correspondence between patch points.
 
-        labelList renumberPoints(mesh.allPoints().size());
+        labelList renumberPoints(mesh.points().size());
         forAll(renumberPoints, i)
         {
             renumberPoints[i] = i;

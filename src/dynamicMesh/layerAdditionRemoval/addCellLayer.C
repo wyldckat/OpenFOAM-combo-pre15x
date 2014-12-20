@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -35,6 +35,54 @@ License
 #include "polyModifyFace.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+//- Calculate the offset to the next layer
+Foam::tmp<Foam::vectorField> Foam::layerAdditionRemoval::extrusionDir() const
+{
+    const polyMesh& mesh = topoChanger().mesh();
+    const primitiveFacePatch& masterFaceLayer =
+        mesh.faceZones()[faceZoneID_.index()]();
+
+    const pointField& points = mesh.points();
+    const labelList& mp = masterFaceLayer.meshPoints();
+
+    tmp<vectorField> textrusionDir(new vectorField(mp.size()));
+    vectorField& extrusionDir = textrusionDir();
+
+    if (setLayerPairing())
+    {
+        if (debug)
+        {
+            Pout<< "void layerAdditionRemoval::extrusionDir() const "
+                << " for object " << name() << " : "
+                << "Using edges for point insertion" << endl;
+        }
+
+        // Detected a valid layer.  Grab the point and face collapse mapping
+        const labelList& ptc = pointsPairing();
+
+        forAll (extrusionDir, mpI)
+        {
+            extrusionDir[mpI] = points[ptc[mpI]] - points[mp[mpI]];
+        }
+    }
+    else
+    {
+        if (debug)
+        {
+            Pout<< "void layerAdditionRemoval::extrusionDir() const "
+                << " for object " << name() << " : "
+                << "A valid layer could not be found in front of "
+                << "the addition face layer.  Using face-based "
+                << "point normals for point addition"
+                << endl;
+        }
+
+        extrusionDir = minLayerThickness_*masterFaceLayer.pointNormals();
+    }
+    return textrusionDir;
+}
+
 
 void Foam::layerAdditionRemoval::addCellLayer
 (
@@ -71,43 +119,9 @@ void Foam::layerAdditionRemoval::addCellLayer
     const pointField& points = mesh.points();
     const labelList& mp = masterFaceLayer.meshPoints();
 
-    // Calculation of point normals, using point pairing
+    // Get the extrusion direction for the added points
 
-    vectorField extrusionDir(mp.size());
-
-    if (setLayerPairing())
-    {
-        if (debug)
-        {
-            Pout<< "void layerAdditionRemoval::addCellLayer("
-                << "polyTopoChange& ref) const "
-                << " for object " << name() << " : "
-                << "Using edges for point insertion" << endl;
-        }
-
-        // Detected a valid layer.  Grab the point and face collapse mapping
-        const labelList& ptc = pointsPairing();
-
-        forAll (extrusionDir, mpI)
-        {
-            extrusionDir[mpI] = points[ptc[mpI]] - points[mp[mpI]];
-        }
-    }
-    else
-    {
-        if (debug)
-        {
-            Pout<< "void layerAdditionRemoval::addCellLayer("
-                << "polyTopoChange& ref) const "
-                << " for object " << name() << " : "
-                << "A valid layer could not be found in front of "
-                << "the addition face layer.  Using face-based "
-                << "point normals for point addition"
-                << endl;
-        }
-
-        extrusionDir = minLayerThickness_*masterFaceLayer.pointNormals();
-    }
+    tmp<vectorField> tpointOffsets = extrusionDir();
 
     // Add the new points
     labelList addedPoints(mp.size());
@@ -122,8 +136,7 @@ void Foam::layerAdditionRemoval::addCellLayer
                 polyAddPoint
                 (
                     points[mp[pointI]]                  // point
-//                   + addDelta_*maxLayerThickness_*extrusionDir[pointI],
-                  + addDelta_*extrusionDir[pointI],
+                  + addDelta_*tpointOffsets()[pointI],
                     mp[pointI],                         // master point
                     -1,                                 // zone for point
                     true                                // supports a cell
@@ -142,8 +155,8 @@ void Foam::layerAdditionRemoval::addCellLayer
     const labelList& mf = mesh.faceZones()[faceZoneID_.index()];
     const boolList& mfFlip = mesh.faceZones()[faceZoneID_.index()].flipMap();
 
-    const labelList& own = mesh.allOwner();
-    const labelList& nei = mesh.allNeighbour();
+    const labelList& own = mesh.faceOwner();
+    const labelList& nei = mesh.faceNeighbour();
 
     labelList addedCells(mf.size());
 
@@ -375,7 +388,7 @@ void Foam::layerAdditionRemoval::addCellLayer
 
             if (!mesh.isInternalFace(cf))
             {
-                // Face not internal. Check if it's in the zone
+                // Face not internal. Check if it is in the zone
                 if (zoneMesh.whichZone(cf) != faceZoneID_.index())
                 {
                     // Found the face in a boundary patch which is not in zone

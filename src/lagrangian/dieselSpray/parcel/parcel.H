@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,16 +23,17 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    parcel
+    Foam::parcel
 
 Description
+    A parcel of particles
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef parcel_H
 #define parcel_H
 
-#include "particle.H"
+#include "Particle.H"
 #include "contiguous.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -48,12 +49,12 @@ class spray;
 
 class parcel
 :
-    public particle<parcel>
+    public Particle<parcel>
 {
     // Private member data
 
         // Reference to the names of the liquid components
-            List<word> fuelNames_;
+            List<word> liquidComponents_;
 
         // Defining data (read and written to field files)
 
@@ -84,7 +85,7 @@ class parcel
             //- Part of liquid core (1-fully liquid, 0-droplet)
             scalar liquidCore_;
 
-            //- injected from injector 
+            //- injected from injector
             //  Should really be a label, but is scalar due to
             //  post-processing reasons
             scalar injector_;
@@ -99,7 +100,7 @@ class parcel
             //  in which the particle moves
             vector n_;
 
-            //- Liquid fuel molar fractions
+            //- Liquid components molar fractions
             scalarField X_;
 
         // Derived state information (not read or written)
@@ -165,7 +166,7 @@ public:
             const vector& U,
             const vector& Uturb,
             const scalarField& X,
-            const List<word>& fuelNames
+            const List<word>& liquidNames
         );
 
         //- Construct from Istream reading field values if required
@@ -181,7 +182,10 @@ public:
 
         // Access
 
-            //- Return the names of the liquid fuel components
+            //- Return the names of the liquid components
+            inline const List<word>& liquidNames() const;
+
+            //- Return the names of the liquid fuel components - identical with liquidNames
             inline const List<word>& fuelNames() const;
 
             //- Return diameter of droplets in parcel
@@ -264,10 +268,10 @@ public:
             //- Return the normal used for 2D purposes
             inline vector& n();
 
-            //- Return the liquid fuel molar fractions
+            //- Return the liquid components molar fractions
             inline const scalarField& X() const;
 
-            //- Return the liquid fuel molar fractions
+            //- Return the liquid components molar fractions
             inline scalarField& X();
 
             //- Return the momentum relaxation time of droplets in parcel
@@ -354,9 +358,16 @@ public:
             void transformProperties(const vector& separation);
 
             //- fix the 2D plane normal,
-            // when particle hits a face it is slightly perturbed 
+            // when particle hits a face it is slightly perturbed
             // towards the face centre and n_ will no longer be valid
             inline void correctNormal(const vector& sym);
+
+
+    // I/O
+
+            static void readFields(Cloud<parcel>& c);
+
+            static void writeFields(const Cloud<parcel>& c);
 
 
     // Ostream Operator
@@ -370,10 +381,6 @@ inline bool contiguous<parcel>()
 {
     return true;
 }
-
-
-template<>
-void Cloud<parcel>::readFields();
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

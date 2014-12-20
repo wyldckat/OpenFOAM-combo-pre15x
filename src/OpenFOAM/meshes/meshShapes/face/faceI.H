@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -120,6 +120,20 @@ inline label face::nextLabel(const label i) const
 inline label face::prevLabel(const label i) const
 {
     return operator[](rcIndex(i));
+}
+
+
+// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
+
+inline bool operator==(const face& a, const face& b)
+{
+    return face::compare(a,b) != 0;
+}
+
+
+inline bool operator!=(const face& a, const face& b)
+{
+    return face::compare(a,b) == 0;
 }
 
 

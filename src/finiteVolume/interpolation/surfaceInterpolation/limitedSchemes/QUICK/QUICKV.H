@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,14 +23,16 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    QUICKVLimiter
+    Foam::QUICKVLimiter
 
 Description
     Class with limiter function which returns the limiter for the
-    quadratic-upwind differencing scheme.  Note that the weighting factors are
-    not bounded between upwind and central-differencing, some downwind
-    contribution is possible although the interpolate is limited to be between
-    the upwind and downwind cell values.
+    quadratic-upwind differencing scheme.
+
+    Note that the weighting factors are not bounded between upwind and
+    central-differencing, some downwind contribution is possible although
+    the interpolate is limited to be between the upwind and downwind cell
+    values.
 
     Used in conjunction with the template class LimitedScheme.
 

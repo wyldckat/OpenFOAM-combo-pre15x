@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    OStringStream
+    Foam::OStringStream
 
 Description
     Output to memory buffer stream.
@@ -67,10 +67,30 @@ public:
         :
             OSstream
             (
-                *(new std::ostringstream()),
+               *(new std::ostringstream()),
                 "OStringStream.sinkFile",
                 format,
                 version
+            )
+        {}
+
+        //- Construct as copy
+        OStringStream(const OStringStream& oss)
+        :
+            OSstream
+            (
+               *(
+                    new std::ostringstream
+                    (
+                        dynamic_cast<const std::ostringstream&>
+                        (
+                            oss.stream()
+                        ).str()
+                    )
+                ),
+                oss.name(),
+                oss.format(),
+                oss.version()
             )
         {}
 

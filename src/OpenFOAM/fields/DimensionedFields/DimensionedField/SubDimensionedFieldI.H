@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -78,7 +78,7 @@ inline SubDimensionedField<Type, GeoMesh>::SubDimensionedField
 
 // Return a null Field
 template<class Type, class GeoMesh>
-inline SubDimensionedField<Type, GeoMesh>&
+inline const SubDimensionedField<Type, GeoMesh>&
 SubDimensionedField<Type, GeoMesh>::null()
 {
     SubDimensionedField<Type, GeoMesh>* nullPtr

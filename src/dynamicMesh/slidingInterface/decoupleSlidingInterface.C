@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -62,11 +62,11 @@ void Foam::slidingInterface::decoupleInterface
     clearCouple(ref);
 
     const polyMesh& mesh = topoChanger().mesh();
-    const faceList& faces = mesh.allFaces();
+    const faceList& faces = mesh.faces();
     const cellList& cells = mesh.cells();
 
-    const labelList& own = mesh.allOwner();
-    const labelList& nei = mesh.allNeighbour();
+    const labelList& own = mesh.faceOwner();
+    const labelList& nei = mesh.faceNeighbour();
 
     // Master side
 
@@ -374,7 +374,7 @@ void Foam::slidingInterface::decoupleInterface
     }
 
     // Bring all slave patch points back to life
-    const pointField& points = mesh.allPoints();
+    const pointField& points = mesh.points();
 
     const labelList& slaveMeshPoints =
         mesh.faceZones()[slaveFaceZoneID_.index()]().meshPoints();

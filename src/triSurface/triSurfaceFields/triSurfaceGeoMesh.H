@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    triSurfaceGeoMesh
+    Foam::triSurfaceGeoMesh
 
 Description
+    The triSurface geoMesh
 
 \*---------------------------------------------------------------------------*/
 
@@ -54,10 +55,18 @@ public:
         s_(s)
     {}
 
+    //- Return size
     label size() const
     {
-        return s_.size();
+        return size(s_);
     }
+
+    //- Return size
+    static label size(const Mesh& mesh)
+    {
+        return mesh.size();
+    }
+
 };
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,12 +23,11 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    pressureSwirlInjector
+    Foam::pressureSwirlInjector
 
 Description
+    Randomly distribute the parcels between the inner and outer cone angle.
 
-    Randomly distribute the parcels between the inner-
-    and outer cone angle.
     Set inner angle to zero for solid cone.
 
 \*---------------------------------------------------------------------------*/

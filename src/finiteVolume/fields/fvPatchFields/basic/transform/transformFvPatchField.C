@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -112,7 +112,7 @@ tmp<Field<Type> > transformFvPatchField<Type>::valueBoundaryCoeffs
 {
     return
         *this
-      - scale
+      - cmptMultiply
         (
             valueInternalCoeffs(this->patch().weights()),
             this->patchInternalField()
@@ -132,7 +132,7 @@ tmp<Field<Type> > transformFvPatchField<Type>::gradientBoundaryCoeffs() const
 {
     return 
         snGrad()
-      - scale(gradientInternalCoeffs(), this->patchInternalField());
+      - cmptMultiply(gradientInternalCoeffs(), this->patchInternalField());
 }
 
 

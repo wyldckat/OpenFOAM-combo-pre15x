@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -211,8 +211,8 @@ void Foam::fieldToCell::applyToSet
             mesh().time().path()/mesh().time().timeName()/fieldName_
         );
 
-        // Read dictionary upto/including internalField
-        dictionary fieldDict(str, "internalField");
+        // Read dictionary
+        dictionary fieldDict(str);
 
         scalarField internalVals("internalField", fieldDict, mesh().nCells());
 
@@ -225,8 +225,8 @@ void Foam::fieldToCell::applyToSet
             mesh().time().path()/mesh().time().timeName()/fieldName_
         );
 
-        // Read dictionary upto/including internalField
-        dictionary fieldDict(str, "internalField");
+        // Read dictionary
+        dictionary fieldDict(str);
 
         vectorField internalVals("internalField", fieldDict, mesh().nCells());
 

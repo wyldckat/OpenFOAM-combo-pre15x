@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,101 +25,21 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "Cloud.H"
-#include "particle.H"
+#include "Particle.H"
 #include "Time.H"
+#include "IOPosition.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * * //
 
-namespace Foam
+template<class ParticleType>
+void Foam::Cloud<ParticleType>::initCloud(const bool checkClass)
 {
+    IOPosition<ParticleType> ioP(*this);
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
-
-template<class particleType>
-Cloud<particleType>::Cloud
-(
-    const polyMesh& pMesh
-)
-:
-    cloud(pMesh),
-    polyMesh_(pMesh),
-    allFaces_(pMesh.faces()),
-    points_(pMesh.points()),
-    cellFaces_(pMesh.cells()),
-    allFaceCentres_(pMesh.faceCentres()),
-    owner_(pMesh.faceOwner()),
-    neighbour_(pMesh.faceNeighbour())
-{
-    readOpt() = IOobject::MUST_READ;
-
-    if (headerOk())
+    if (ioP.headerOk())
     {
-        Istream& is = readStream(typeName);
-
-        token firstToken(is);
-
-        if (firstToken.isLabel())
-        {
-            label s = firstToken.labelToken();
-
-            // Read beginning of contents
-            is.readBeginList("Cloud<particleType>");
-
-            for (label i=0; i<s; i++)
-            {
-                append(new particleType(*this, is, false));
-            }
-
-            // Read end of contents
-            is.readEndList("Cloud<particleType>");
-        }
-        else if (firstToken.isPunctuation())
-        {
-            if (firstToken.pToken() != token::BEGIN_LIST)
-            {
-                FatalIOErrorIn
-                (
-                    "Cloud<particleType>::Cloud(const IOobject&, "
-                    "const polyMesh&)",
-                    is
-                )   << "incorrect first token, '(', found "
-                    << firstToken.info()
-                    << exit(FatalIOError);
-            }
-
-            token lastToken(is);
-            while
-            (
-                !(
-                    lastToken.isPunctuation()
-                 && lastToken.pToken() == token::END_LIST
-                )
-            )
-            {
-                is.putBack(lastToken);
-                append(new particleType(*this, is, false));
-                is >> lastToken;
-            }
-        }
-        else
-        {
-            FatalIOErrorIn
-            (
-                "Cloud<particleType>::Cloud(const IOobject&, "
-                "const polyMesh&)",
-                is
-            )   << "incorrect first token, expected <int> or '(', found "
-                << firstToken.info()
-                << exit(FatalIOError);
-        }
-
-        // Check state of IOstream
-        is.check
-        (
-            "Cloud<particleType>::Cloud(const IOobject&, const polyMesh&)"
-        );
-
-        close();
+        ioP.readData(*this, checkClass);
+        ioP.close();
 
         if (this->size())
         {
@@ -129,17 +49,85 @@ Cloud<particleType>::Cloud
 }
 
 
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class ParticleType>
+Foam::Cloud<ParticleType>::Cloud
+(
+    const polyMesh& pMesh,
+    const bool checkClass
+)
+:
+    cloud(pMesh),
+    polyMesh_(pMesh),
+    allFaces_(pMesh.faces()),
+    points_(pMesh.points()),
+    cellFaces_(pMesh.cells()),
+    allFaceCentres_(pMesh.faceCentres()),
+    owner_(pMesh.faceOwner()),
+    neighbour_(pMesh.faceNeighbour()),
+    meshInfo_(polyMesh_)
+{
+    initCloud(checkClass);
+}
+
+
+template<class ParticleType>
+Foam::Cloud<ParticleType>::Cloud
+(
+    const polyMesh& pMesh,
+    const word& cloudName,
+    const bool checkClass
+)
+:
+    cloud(pMesh, cloudName),
+    polyMesh_(pMesh),
+    allFaces_(pMesh.faces()),
+    points_(pMesh.points()),
+    cellFaces_(pMesh.cells()),
+    allFaceCentres_(pMesh.faceCentres()),
+    owner_(pMesh.faceOwner()),
+    neighbour_(pMesh.faceNeighbour()),
+    meshInfo_(polyMesh_)
+{
+    initCloud(checkClass);
+}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class particleType>
-IOobject Cloud<particleType>::fieldIOobject(const word& fieldName) const
+template<class ParticleType>
+template<class DataType>
+void Foam::Cloud<ParticleType>::checkFieldIOobject
+(
+    const Cloud<ParticleType>& c,
+    const IOField<DataType>& data
+) const
+{
+    if (data.size() != c.size())
+    {
+        FatalErrorIn
+        (
+            "void Cloud<ParticleType>::checkFieldIOobject"
+            "(Cloud<ParticleType>, IOField<DataType>)"
+        )   << "Size of " << data.name()
+            << " field does not match the number of particles"
+            << abort(FatalError);
+    }
+}
+
+
+template<class ParticleType>
+Foam::IOobject Foam::Cloud<ParticleType>::fieldIOobject
+(
+    const word& fieldName
+) const
 {
     return IOobject
     (
         fieldName,
-        polyMesh_.time().timeName(),
-        "lagrangian",
-        polyMesh_,
+        time().timeName(),
+        *this,
         IOobject::MUST_READ,
         IOobject::NO_WRITE,
         false
@@ -147,52 +135,29 @@ IOobject Cloud<particleType>::fieldIOobject(const word& fieldName) const
 }
 
 
-template<class particleType>
+template<class ParticleType>
 template<class Type>
-tmp<IOField<Type> > Cloud<particleType>::readField(const word& fieldName) const
+Foam::tmp<Foam::IOField<Type> > Foam::Cloud<ParticleType>::readField
+(
+    const word& fieldName
+) const
 {
     return tmp<IOField<Type> >(new IOField<Type>(fieldIOobject(fieldName)));
 }
 
 
-template<class particleType>
-void Cloud<particleType>::readFields()
+template<class ParticleType>
+void Foam::Cloud<ParticleType>::readFields()
 {}
 
 
-template<class particleType>
-bool Cloud<particleType>::writeData(Ostream& os) const
-{
-    os  << this->size() << nl << token::BEGIN_LIST << nl;
-
-    for
-    (
-        const_iterator iter = this->begin();
-        iter != this->end();
-        ++iter
-    )
-    {
-        os << static_cast<const particle<particleType>&>(iter()) << nl;
-    }
-
-    os  << token::END_LIST << endl;
-
-    if (this->size())
-    {
-        writeFields();
-    }
-
-    return os.good();
-}
-
-
-template<class particleType>
-void Cloud<particleType>::writeFields() const
+template<class ParticleType>
+void Foam::Cloud<ParticleType>::writeFields() const
 {}
 
 
-template<class particleType>
-bool Cloud<particleType>::writeObject
+template<class ParticleType>
+bool Foam::Cloud<ParticleType>::writeObject
 (
     IOstream::streamFormat fmt,
     IOstream::versionNumber ver,
@@ -201,7 +166,8 @@ bool Cloud<particleType>::writeObject
 {
     if (this->size())
     {
-        return regIOobject::writeObject(fmt, ver, cmp);
+        writeFields();
+        return cloud::writeObject(fmt, ver, cmp);
     }
     else
     {
@@ -212,20 +178,16 @@ bool Cloud<particleType>::writeObject
 
 // * * * * * * * * * * * * * * * Ostream Operators * * * * * * * * * * * * * //
 
-template<class particleType>
-Ostream& operator<<(Ostream& os, const Cloud<particleType>& pc)
+template<class ParticleType>
+Foam::Ostream& Foam::operator<<(Ostream& os, const Cloud<ParticleType>& pc)
 {
     pc.writeData(os);
 
     // Check state of Ostream
-    os.check("Ostream& operator<<(Ostream&, const Cloud<particleType>&)");
+    os.check("Ostream& operator<<(Ostream&, const Cloud<ParticleType>&)");
 
     return os;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

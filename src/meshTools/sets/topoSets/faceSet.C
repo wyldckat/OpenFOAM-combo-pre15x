@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -130,7 +130,11 @@ void faceSet::sync(const polyMesh& mesh)
                 }
                 setFaces.shrink();
 
-                OPstream toNeighbour(procPatch.neighbProcNo());
+                OPstream toNeighbour
+                (
+                    Pstream::blocking,
+                    procPatch.neighbProcNo()
+                );
 
                 toNeighbour << setFaces;
             }
@@ -146,7 +150,11 @@ void faceSet::sync(const polyMesh& mesh)
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(pp);
 
-                IPstream fromNeighbour(procPatch.neighbProcNo());
+                IPstream fromNeighbour
+                (
+                    Pstream::blocking,
+                    procPatch.neighbProcNo()
+                );
 
                 labelList setFaces(fromNeighbour);
 

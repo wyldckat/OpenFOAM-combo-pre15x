@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,7 +43,7 @@ labelList blockMesh::createMergeList()
 
     const pointField& blockPoints = topology().points();
     const cellList& blockCells = topology().cells();
-    const faceList& blockFaces = topology().allFaces();
+    const faceList& blockFaces = topology().faces();
     const labelList& faceOwnerBlocks = topology().faceOwner();
 
     // For efficiency, create merge pairs in the first pass

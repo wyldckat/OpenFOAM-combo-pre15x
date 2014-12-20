@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,10 +41,11 @@ void Foam::lagrangianWriter::writeIOField(const wordList& objects)
         (
             object,
             vMesh_.mesh().time().timeName(),
-            "lagrangian",
+            "lagrangian"/cloudName_,
             vMesh_.mesh(),
             IOobject::MUST_READ,
-            IOobject::NO_WRITE
+            IOobject::NO_WRITE,
+            false
         );
 
         IOField<Type> fld(header);

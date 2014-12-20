@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,10 +22,11 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    cellZoneMeshFwd
+Typedef
+    Foam::cellZoneMesh
 
 Description
+    A ZoneMesh with the type cellZone
 
 \*---------------------------------------------------------------------------*/
 
@@ -36,10 +37,11 @@ Description
 
 namespace Foam
 {
-    template<class Zone> class ZoneMesh;
+    template<class Zone, class MeshType> class ZoneMesh;
     class cellZone;
+    class polyMesh;
 
-    typedef ZoneMesh<cellZone> cellZoneMesh;
+    typedef ZoneMesh<cellZone, polyMesh> cellZoneMesh;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

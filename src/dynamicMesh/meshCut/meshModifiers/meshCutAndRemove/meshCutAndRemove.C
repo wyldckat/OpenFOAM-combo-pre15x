@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -653,7 +653,7 @@ void Foam::meshCutAndRemove::setRefinement
             const edge& e = mesh().edges()[edgeI];
 
             // Check if there is any cell using this edge.
-            if (debug & findCutCell(cuts, mesh().edgeCells()[edgeI]) == -1)
+            if (debug && findCutCell(cuts, mesh().edgeCells()[edgeI]) == -1)
             {
                 FatalErrorIn
                 (

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    cellCuts
+    Foam::cellCuts
 
 Description
     Description of cuts across cells.
@@ -39,27 +39,27 @@ Description
     or a edge.
 
     Input can either be
-    A. list of cut vertices and list of cut edges. Constructs cell circumference
-    walks ('cellLoops').
+    -# list of cut vertices and list of cut edges. Constructs cell
+       circumference walks ('cellLoops').
 
-    B. list of cell circumference walks. Will filter them so they
-    don't overlap.
+    -# list of cell circumference walks. Will filter them so they
+       don't overlap.
 
-    C. cellWalker and list of cells to refine (refineCell). Constructs cellLoops
-    and does B. cellWalker is class which can cut a single cell using a
-    plane through the cell centre and in a certain normal direction
-
+    -# cellWalker and list of cells to refine (refineCell). Constructs
+       cellLoops and does B. cellWalker is class which can cut a single
+       cell using a plane through the cell centre and in a certain normal
+       direction
 
     CellCuts constructed from cellLoops (B, C) can have multiple cut-edges
     and/or cut-point as long as there is per face only one (or none) cut across
     a face, i.e. a face can only be split into two faces.
 
     The information available after construction:
-    - pointIsCut, edgeIsCut.
-    - faceSplitCut : the cross-cut of a face.
-    - cellLoops : the loop which cuts across a cell
-    - cellAnchorPoints : per cell the vertices on one side which are considered
-        the anchor points.
+      - pointIsCut, edgeIsCut.
+      - faceSplitCut : the cross-cut of a face.
+      - cellLoops : the loop which cuts across a cell
+      - cellAnchorPoints : per cell the vertices on one side which are
+        considered the anchor points.
 
     AnchorPoints: connected loops have to be oriented in the same way to 
     be able to grow new internal faces out of the same bottom faces.
@@ -97,7 +97,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class polyMesh;
 class cellLooper;
 class refineCell;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    wedgeFvPatchField
+    Foam::wedgeFvPatchField
 
 Description
+    Foam::wedgeFvPatchField
 
 SourceFiles
     wedgeFvPatchField.C
@@ -128,7 +129,10 @@ public:
             virtual tmp<Field<Type> > snGrad() const;
 
             //- Evaluate the patch field
-            virtual void evaluate();
+            virtual void evaluate
+            (
+                const Pstream::commsTypes commsType=Pstream::blocking
+            );
 
             //- Return face-gradient transform diagonal
             virtual tmp<Field<Type> > snGradTransformDiag() const;
@@ -141,7 +145,10 @@ template<>
 tmp<scalarField > wedgeFvPatchField<scalar>::snGrad() const;
 
 template<>
-void wedgeFvPatchField<scalar>::evaluate();
+void wedgeFvPatchField<scalar>::evaluate
+(
+    const Pstream::commsTypes commsType
+);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -73,7 +73,8 @@ long long readLongLong(Istream& is)
     static const label zeroOffset = int('0');
 
     // Get next non-whitespace character
-    while (is.read(c) && isspace(c));
+    while (is.read(c) && isspace(c))
+    {}
 
     do
     {

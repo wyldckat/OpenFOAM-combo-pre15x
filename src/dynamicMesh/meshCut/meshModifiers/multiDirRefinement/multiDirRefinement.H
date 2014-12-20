@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,10 +23,11 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    multiDirRefinement
+    Foam::multiDirRefinement
 
 Description
     Does multiple pass refinement to refine cells in multiple directions.
+
     Gets a list of cells to refine and vectorFields for the whole mesh.
     It then tries to refine in one direction after the other the wanted cells.
     After construction the mesh will have been refined in multiple directions.
@@ -63,7 +64,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class undoableMeshCutter;
 class cellLooper;
 class topoSet;

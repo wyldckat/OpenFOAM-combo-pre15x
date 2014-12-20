@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,127 +36,6 @@ namespace Foam
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 makePatchFields(timeVaryingUniformFixedValue);
-
-// Update the coefficients associated with the patch field
-template<>
-void timeVaryingUniformFixedValueFvPatchField<scalar>::updateCoeffs()
-{
-    if (this->updated())
-    {
-        return;
-    }
-
-    checkTable();
-
-    operator==
-    (
-        interpolateXY
-        (
-            this->db().time().value(),
-            timeDataPtr_().x(),
-            timeDataPtr_().y()
-        )
-    );
-
-    fixedValueFvPatchField<scalar>::updateCoeffs();
-}
-
-
-template<>
-void timeVaryingUniformFixedValueFvPatchField<vector>::updateCoeffs()
-{
-    if (this->updated())
-    {
-        return;
-    }
-
-    checkTable();
-
-    operator==
-    (
-       -interpolateXY
-        (
-            this->db().time().value(),
-            timeDataPtr_().x(),
-            timeDataPtr_().y()
-        )*patch().nf()
-    );
-
-    fixedValueFvPatchField<vector>::updateCoeffs();
-}
-
-
-template<>
-void timeVaryingUniformFixedValueFvPatchField<sphericalTensor>::updateCoeffs()
-{
-    if (this->updated())
-    {
-        return;
-    }
-
-    checkTable();
-
-    operator==
-    (
-        interpolateXY
-        (
-            this->db().time().value(),
-            timeDataPtr_().x(),
-            timeDataPtr_().y()
-        )*sphericalTensor::I
-    );
-
-    fixedValueFvPatchField<sphericalTensor>::updateCoeffs();
-}
-
-
-template<>
-void timeVaryingUniformFixedValueFvPatchField<symmTensor>::updateCoeffs()
-{
-    if (this->updated())
-    {
-        return;
-    }
-
-    checkTable();
-
-    operator==
-    (
-        interpolateXY
-        (
-            this->db().time().value(),
-            timeDataPtr_().x(),
-            timeDataPtr_().y()
-        )*sqr(patch().nf())
-    );
-
-    fixedValueFvPatchField<symmTensor>::updateCoeffs();
-}
-
-
-template<>
-void timeVaryingUniformFixedValueFvPatchField<tensor>::updateCoeffs()
-{
-    if (this->updated())
-    {
-        return;
-    }
-
-    checkTable();
-
-    operator==
-    (
-        interpolateXY
-        (
-            this->db().time().value(),
-            timeDataPtr_().x(),
-            timeDataPtr_().y()
-        )*(patch().nf()*patch().nf())
-    );
-
-    fixedValueFvPatchField<tensor>::updateCoeffs();
-}
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

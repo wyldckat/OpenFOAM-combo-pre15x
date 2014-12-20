@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
-    Specialisation of Field<T> for scalar.
+    Specialisation of Field\<T\> for scalar.
 
 \*---------------------------------------------------------------------------*/
 
@@ -107,6 +107,8 @@ BINARY_TYPE_FUNCTION(scalar, scalar, scalar, atan2)
 
 UNARY_FUNCTION(scalar, scalar, pow3)
 UNARY_FUNCTION(scalar, scalar, pow4)
+UNARY_FUNCTION(scalar, scalar, pow5)
+UNARY_FUNCTION(scalar, scalar, pow6)
 UNARY_FUNCTION(scalar, scalar, sqrt)
 UNARY_FUNCTION(scalar, scalar, sign)
 UNARY_FUNCTION(scalar, scalar, pos)

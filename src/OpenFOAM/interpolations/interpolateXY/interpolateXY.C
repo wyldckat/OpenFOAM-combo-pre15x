@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,13 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Class
-    interpolateXY
-
-Description
-    Interpolates y values from one curve to another with a different x
-    distribution.
 
 \*---------------------------------------------------------------------------*/
 
@@ -71,7 +64,8 @@ Type interpolateXY
     label n = xOld.size();
 
     label lo = 0;
-    for (lo=0; lo<n && xOld[lo]>x; ++lo);
+    for (lo=0; lo<n && xOld[lo]>x; ++lo)
+    {}
 
     label low = lo;
     if (low < n)
@@ -86,7 +80,8 @@ Type interpolateXY
     }
 
     label hi = 0;
-    for (hi=0; hi<n && xOld[hi]<x; ++hi);
+    for (hi=0; hi<n && xOld[hi]<x; ++hi)
+    {}
 
     label high = hi;
     if (high < n)

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,16 +36,24 @@ namespace Foam
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 template<>
+const word triSurfaceLabelField::typeName("triSurfaceLabelField");
+
+template<>
 const word triSurfaceScalarField::typeName("triSurfaceScalarField");
 
 template<>
 const word triSurfaceVectorField::typeName("triSurfaceVectorField");
 
 template<>
-const word triSurfaceTensorField::typeName("triSurfaceTensorField");
+const word triSurfaceSphericalTensorField::typeName
+("triSurfaceSphericalTensorField");
 
 template<>
-const word triSurfaceSphericalTensorField::typeName("triSurfaceSphericalTensorField");
+const word triSurfaceSymmTensorField::typeName
+("triSurfaceSymmTensorField");
+
+template<>
+const word triSurfaceTensorField::typeName("triSurfaceTensorField");
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

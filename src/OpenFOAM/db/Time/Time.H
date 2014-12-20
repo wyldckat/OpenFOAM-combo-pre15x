@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    Time
+    Foam::Time
 
 Description
     Class to control time during FOAM simulations which is also the
@@ -124,6 +124,9 @@ protected:
         label purgeWrite_;
         mutable FIFOStack<word> previousOutputTimes_;
 
+        //- Is the time currently being sub-cycled
+        bool subCycling_;
+
         //- Time directory name format
         static fmtflags format_;
 
@@ -168,7 +171,7 @@ public:
 
     TypeName("time");
 
-    //- Return the default control dictionary name
+    //- The default control dictionary name
     static word controlDictName;
 
 

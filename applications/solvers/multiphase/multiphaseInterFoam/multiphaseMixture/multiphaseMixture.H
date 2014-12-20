@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,10 +20,10 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    multiphaseMixture
+    Foam::multiphaseMixture
 
 Description
     Incompressible multi-phase mixture with built in solution for the
@@ -123,8 +123,8 @@ public:
             {
                 return
                 (
-                    (a.first() == b.first()) && (a.second() == b.second())
-                 || (a.first() == b.second()) && (a.second() == b.first())
+                    ((a.first() == b.first()) && (a.second() == b.second()))
+                 || ((a.first() == b.second()) && (a.second() == b.first()))
                 );
             }
 
@@ -143,7 +143,7 @@ private:
 
     // Private data
 
-        //- Dictionary of phases 
+        //- Dictionary of phases
         PtrDictionary<phase> phases_;
 
         //- The phase chosen as reference, the one which is derived from

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Class
-    fvMeshDistribute
 
 \*----------------------------------------------------------------------------*/
 
@@ -199,29 +196,38 @@ void Foam::fvMeshDistribute::printMeshInfo(const fvMesh& mesh)
             << endl;
     }
 
-    Pout<< "PointZones:" << endl;
-    forAll(mesh.pointZones(), zoneI)
+    if (mesh.pointZones().size() > 0)
     {
-        const pointZone& pz = mesh.pointZones()[zoneI];
-        Pout<< "    " << zoneI << " name:" << pz.name()
-            << " size:" << pz.size()
-            << endl;
+        Pout<< "PointZones:" << endl;
+        forAll(mesh.pointZones(), zoneI)
+        {
+            const pointZone& pz = mesh.pointZones()[zoneI];
+            Pout<< "    " << zoneI << " name:" << pz.name()
+                << " size:" << pz.size()
+                << endl;
+        }
     }
-    Pout<< "FaceZones:" << endl;
-    forAll(mesh.faceZones(), zoneI)
+    if (mesh.faceZones().size() > 0)
     {
-        const faceZone& fz = mesh.faceZones()[zoneI];
-        Pout<< "    " << zoneI << " name:" << fz.name()
-            << " size:" << fz.size()
-            << endl;
+        Pout<< "FaceZones:" << endl;
+        forAll(mesh.faceZones(), zoneI)
+        {
+            const faceZone& fz = mesh.faceZones()[zoneI];
+            Pout<< "    " << zoneI << " name:" << fz.name()
+                << " size:" << fz.size()
+                << endl;
+        }
     }
-    Pout<< "CellZones:" << endl;
-    forAll(mesh.cellZones(), zoneI)
+    if (mesh.cellZones().size() > 0)
     {
-        const cellZone& cz = mesh.cellZones()[zoneI];
-        Pout<< "    " << zoneI << " name:" << cz.name()
-            << " size:" << cz.size()
-            << endl;
+        Pout<< "CellZones:" << endl;
+        forAll(mesh.cellZones(), zoneI)
+        {
+            const cellZone& cz = mesh.cellZones()[zoneI];
+            Pout<< "    " << zoneI << " name:" << cz.name()
+                << " size:" << cz.size()
+                << endl;
+        }
     }
 }
 
@@ -263,7 +269,7 @@ Foam::label Foam::fvMeshDistribute::findNonEmptyPatch() const
     {
         const polyPatch& pp = patches[patchI];
 
-        if (!isA<emptyPolyPatch>(pp) && !isA<processorPolyPatch>(pp))
+        if (!isA<emptyPolyPatch>(pp) && !pp.coupled())
         {
             nonEmptyPatchI = patchI;
             break;
@@ -272,9 +278,9 @@ Foam::label Foam::fvMeshDistribute::findNonEmptyPatch() const
 
     if (nonEmptyPatchI == -1)
     {
-        FatalErrorIn("findNonEmptyPatch() const")
+        FatalErrorIn("fvMeshDistribute::findNonEmptyPatch() const")
             << "Cannot find a patch which is neither of type empty nor"
-            << " of type processor in patches " << patches.names() << endl
+            << " coupled in patches " << patches.names() << endl
             << "There has to be at least one such patch for"
             << " distribution to work" << abort(FatalError);
     }
@@ -300,7 +306,7 @@ Foam::label Foam::fvMeshDistribute::findNonEmptyPatch() const
         }
         else if (procPatchI != -1)
         {
-            FatalErrorIn("findNonEmptyPatch() const")
+            FatalErrorIn("fvMeshDistribute::findNonEmptyPatch() const")
                 << "Processor patches should be at end of patch list."
                 << endl
                 << "Have processor patch " << procPatchI
@@ -331,7 +337,7 @@ Foam::label Foam::fvMeshDistribute::addProcPatch
 
     if (polyPatches.findPatchID(patchName) != -1)
     {
-        FatalErrorIn("addProcPatch(const word&, const label)")
+        FatalErrorIn("fvMeshDistribute::addProcPatch(const word&, const label)")
             << "Cannot create patch " << patchName << " since already exists."
             << nl
             << "Current patch names:" << polyPatches.names()
@@ -388,7 +394,7 @@ void Foam::fvMeshDistribute::deleteTrailingPatch()
 
     if (polyPatches.size() == 0)
     {
-        FatalErrorIn("deleteTrailingPatch(fvMesh&)")
+        FatalErrorIn("fvMeshDistribute::deleteTrailingPatch(fvMesh&)")
             << "No patches in mesh"
             << abort(FatalError);
     }
@@ -406,7 +412,7 @@ void Foam::fvMeshDistribute::deleteTrailingPatch()
 
     if (nFaces != 0)
     {
-        FatalErrorIn("deleteTrailingPatch()")
+        FatalErrorIn("fvMeshDistribute::deleteTrailingPatch()")
             << "There are still " << nFaces << " faces in patch to be deleted "
             << sz-1 << ' ' << polyPatches[sz-1].name()
             << abort(FatalError);
@@ -566,10 +572,6 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::fvMeshDistribute::repatch
     {
         mesh_.movePoints(map().preMotionPoints());
     }
-    else
-    {
-        mesh_.clearOut();
-    }
 
     // Adapt constructMaps.
 
@@ -642,10 +644,6 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::fvMeshDistribute::mergeSharedPoints
     {
         mesh_.movePoints(map().preMotionPoints());
     }
-    else
-    {
-        mesh_.clearOut();
-    }
 
     // Adapt constructMaps for merged points.
     // 1.4.1: use reversePointMap < -1 feature.
@@ -710,7 +708,7 @@ void Foam::fvMeshDistribute::getNeighbourData
                 IndirectList<label>(distribution, pp.faceCells())
             );
 
-            OPstream toNeighbour(procPatch.neighbProcNo());
+            OPstream toNeighbour(Pstream::blocking, procPatch.neighbProcNo());
 
             toNeighbour << meshFaceLabels << newProc;
         }
@@ -729,7 +727,7 @@ void Foam::fvMeshDistribute::getNeighbourData
                 refCast<const processorPolyPatch>(pp);
 
             // Receive the data
-            IPstream fromNeighbour(procPatch.neighbProcNo());
+            IPstream fromNeighbour(Pstream::blocking, procPatch.neighbProcNo());
             labelList nbrFaces(fromNeighbour);
             labelList nbrNewProc(fromNeighbour);
 
@@ -978,10 +976,6 @@ Foam::autoPtr<Foam::mapPolyMesh> Foam::fvMeshDistribute::doRemoveCells
     {
         mesh_.movePoints(map().preMotionPoints());
     }
-    else
-    {
-        mesh_.clearOut();
-    }
 
     return map;
 }
@@ -1190,12 +1184,12 @@ void Foam::fvMeshDistribute::sendMesh
     //}
 
     // Send
-    OPstream toDomain(domain);
+    OPstream toDomain(Pstream::blocking, domain);
     toDomain
         << mesh.points()
         << mesh.faces()
-        << mesh.allOwner()
-        << mesh.allNeighbour()
+        << mesh.faceOwner()
+        << mesh.faceNeighbour()
         << mesh.boundaryMesh()
 
         << zonePoints
@@ -1216,13 +1210,13 @@ Foam::autoPtr<Foam::fvMesh> Foam::fvMeshDistribute::receiveMesh
     const wordList& pointZoneNames,
     const wordList& faceZoneNames,
     const wordList& cellZoneNames,
-    Time& runTime,
+    const Time& runTime,
     labelList& domainSourceFace,
     labelList& domainSourceProc,
     labelList& domainSourceNewProc
 )
 {
-    IPstream fromNbr(domain);
+    IPstream fromNbr(Pstream::blocking, domain);
 
     pointField domainPoints(fromNbr);
     faceList domainFaces(fromNbr);
@@ -1471,6 +1465,7 @@ Foam::autoPtr<Foam::mapDistributePolyMesh> Foam::fvMeshDistribute::distribute
     // during topo changes and we have to guarantee that all the fields
     // can be sent.
     mesh_.clearOut();
+    mesh_.resetMotion();
 
     const wordList volScalars(mesh_.names(volScalarField::typeName));
     checkEqualWordList(volScalars);
@@ -1578,6 +1573,8 @@ Foam::autoPtr<Foam::mapDistributePolyMesh> Foam::fvMeshDistribute::distribute
     nSendCells[Pstream::myProcNo()] = countCells(distribution);
     Pstream::gatherList(nSendCells);
     Pstream::scatterList(nSendCells);
+
+
 
     // What to send to neighbouring domains
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -43,20 +43,14 @@ License
 
 #include "mathematicalConstants.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-//defineTemplateTypeNameAndDebug(Cloud<parcel>, 0);
 defineTemplateTypeNameAndDebug(IOPtrList<injector>, 0);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components
-spray::spray
+Foam::spray::spray
 (
     const volPointInterpolation& vpi,
     const volVectorField& U,
@@ -69,7 +63,7 @@ spray::spray
     const dictionary& environmentalProperties
 )
 :
-    Cloud<parcel>(U.mesh()),
+    Cloud<parcel>(U.mesh(), false), // suppress className checking on positions
     runTime_(U.time()),
     time0_(runTime_.value()),
     mesh_(U.mesh()),
@@ -183,7 +177,7 @@ spray::spray
             sprayProperties_,
             *this
         )
-    ),    
+    ),
 
     subCycles_(readLabel(sprayProperties_.lookup("subCycles"))),
     g_(dimensionedVector(environmentalProperties.lookup("g")).value()),
@@ -213,10 +207,10 @@ spray::spray
 
     totalInjectedLiquidMass_(0.0),
     injectedLiquidKE_(0.0),
-    
+
     ambientPressure_(p_.average().value()),
     ambientTemperature_(T_.average().value())
-    
+
 {
     // create the evaporation source fields
     forAll(srhos_, i)
@@ -325,7 +319,7 @@ spray::spray
     {
         word liquidName(fuels_->components()[i]);
 
-        for(label j=0; j<Ns; j++)
+        for (label j=0; j<Ns; j++)
         {
             word specieName(composition_.Y()[j].name());
 
@@ -338,9 +332,8 @@ spray::spray
         }
         if (liquidToGasIndex_[i] == -1)
         {
-            
             Info << "In composition:" << endl;
-            for(label k=0; k<Ns; k++)
+            for (label k=0; k<Ns; k++)
             {
                 word specieName(composition_.Y()[k].name());
                 Info << specieName << endl;
@@ -353,17 +346,23 @@ spray::spray
                 << abort(FatalError);
         }
     }
+
+    parcel::readFields(*this);
 }
 
 
 // * * * * * * * * * * * * * * * * Destructor * * * * * * * * * * * * * * * //
 
-spray::~spray()
+Foam::spray::~spray()
 {}
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-} // End namespace Foam
+void Foam::spray::writeFields() const
+{
+    parcel::writeFields(*this);
+}
+
 
 // ************************************************************************* //

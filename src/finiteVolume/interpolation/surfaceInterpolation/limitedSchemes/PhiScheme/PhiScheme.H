@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,19 +23,20 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    PhiScheme
+    Foam::PhiScheme
 
 Description
     Class to create the weighting-factors based on the face-flux.
-    The particular differencing scheme class is supplied as a template argument,
-    the weight function of which is called by the weight function of this class
-    for the internal faces as well as faces of coupled patches
-    (e.g. processor-processor patches). The weight function is supplied with the
-    central-differencing weighting factor, the face-flux, the face neighbour
-    cell values and the face area.
 
-    This code organisation is both neat and efficient, allowing for convenient
-    implementation of new schemes to run on parallelised cases.
+    The particular differencing scheme class is supplied as a template
+    argument, the weight function of which is called by the weight function
+    of this class for the internal faces as well as faces of coupled
+    patches (e.g. processor-processor patches). The weight function is
+    supplied with the central-differencing weighting factor, the face-flux,
+    the face neighbour cell values and the face area.
+
+    This code organisation is both neat and efficient, allowing for
+    convenient implementation of new schemes to run on parallelised cases.
 
 SourceFiles
     PhiScheme.C

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,6 +40,13 @@ template<class T>
 inline label PtrList<T>::size() const
 {
     return ptrs_.size();
+}
+
+
+template<class T>
+inline bool PtrList<T>::set(const label i) const
+{
+    return ptrs_[i] != NULL;
 }
 
 

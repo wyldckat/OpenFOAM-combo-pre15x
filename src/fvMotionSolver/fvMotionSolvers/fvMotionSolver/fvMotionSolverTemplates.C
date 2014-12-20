@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,6 +47,13 @@ Foam::wordList Foam::fvMotionSolver::cellMotionBoundaryTypes
         if (isA<fixedValuePointPatchField<Type> >(pmUbf[patchi]))
         {
             cmUbf[patchi] = cellMotionFvPatchField<Type>::typeName;
+        }
+
+        if (debug)
+        {
+            Pout<< "Patch:" << fvMesh_.boundary()[patchi].patch().name()
+                << " pointType:" << pmUbf.types()[patchi]
+                << " cellType:" << cmUbf[patchi] << endl;
         }
     }
 

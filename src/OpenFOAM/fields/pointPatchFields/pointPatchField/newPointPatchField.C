@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,13 +24,10 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class Type>
-autoPtr<pointPatchField<Type> > pointPatchField<Type>::New
+Foam::autoPtr<Foam::pointPatchField<Type> > Foam::pointPatchField<Type>::New
 (
     const word& patchFieldType,
     const pointPatch& p,
@@ -50,21 +47,16 @@ autoPtr<pointPatchField<Type> > pointPatchField<Type>::New
 
     if (cstrIter == pointPatchConstructorTablePtr_->end())
     {
-        cstrIter = pointPatchConstructorTablePtr_->find("default");
-
-        if (cstrIter == pointPatchConstructorTablePtr_->end())
-        {
-            FatalErrorIn
-            (
-                "PointPatchField<Type>::New"
-                "(const word&, const pointPatch&, const Field<Type>&)"
-            )   << "Unknown patchTypefield type "
-                << patchFieldType
-                << endl << endl
-                << "Valid patchField types are :" << endl
-                << pointPatchConstructorTablePtr_->toc()
-                << exit(FatalError);
-        }
+        FatalErrorIn
+        (
+            "PointPatchField<Type>::New"
+            "(const word&, const pointPatch&, const Field<Type>&)"
+        )   << "Unknown patchTypefield type "
+            << patchFieldType
+            << endl << endl
+            << "Valid patchField types are :" << endl
+            << pointPatchConstructorTablePtr_->toc()
+            << exit(FatalError);
     }
 
     typename pointPatchConstructorTable::iterator patchTypeCstrIter =
@@ -81,10 +73,84 @@ autoPtr<pointPatchField<Type> > pointPatchField<Type>::New
 }
 
 
+template<class Type>
+Foam::autoPtr<Foam::pointPatchField<Type> > Foam::pointPatchField<Type>::New
+(
+    const pointPatch& p,
+    const DimensionedField<Type, pointMesh>& iF,
+    const dictionary& dict
+)
+{
+    if (debug)
+    {
+        Info<< "PointPatchField<Type>::"
+               "New(const pointPatch&, const Field<Type>&, const dictionary&)"
+               " : constructing pointPatchField<Type>"
+            << endl;
+    }
+
+    word patchFieldType(dict.lookup("type"));
+
+    typename dictionaryConstructorTable::iterator cstrIter
+        = dictionaryConstructorTablePtr_->find(patchFieldType);
+
+    if (cstrIter == dictionaryConstructorTablePtr_->end())
+    {
+        if (!disallowGenericPointPatchField)
+        {
+            cstrIter = dictionaryConstructorTablePtr_->find("generic");
+        }
+
+        if (cstrIter == dictionaryConstructorTablePtr_->end())
+        {
+            FatalIOErrorIn
+            (
+                "PointPatchField<Type>::"
+                "New(const pointPatch&, const Field<Type>&, const dictionary&)",
+                dict
+            )   << "Unknown patchField type " << patchFieldType
+                << " for patch type " << p.type() << endl << endl
+                << "Valid patchField types are :" << endl
+                << dictionaryConstructorTablePtr_->toc()
+                << exit(FatalIOError);
+        }
+    }
+
+    if
+    (
+       !dict.found("patchType")
+     || word(dict.lookup("patchType")) != p.type()
+    )
+    {
+        typename dictionaryConstructorTable::iterator patchTypeCstrIter
+            = dictionaryConstructorTablePtr_->find(p.type());
+
+        if
+        (
+            patchTypeCstrIter != dictionaryConstructorTablePtr_->end()
+         && patchTypeCstrIter() != cstrIter()
+        )
+        {
+            FatalIOErrorIn
+            (
+                "PointPatchField<Type>const pointPatch&, "
+                "const Field<Type>&, const dictionary&)",
+                dict
+            )   << "inconsistent patch and patchField types for \n"
+                << "    patch type " << p.type()
+                << " and patchField type " << patchFieldType
+                << exit(FatalIOError);
+        }
+    }
+
+    return autoPtr<pointPatchField<Type> >(cstrIter()(p, iF, dict));
+}
+
+
 // Return a pointer to a new patch created on freestore from
 // a given pointPatchField<Type> mapped onto a new patch
 template<class Type>
-autoPtr<pointPatchField<Type> > pointPatchField<Type>::New
+Foam::autoPtr<Foam::pointPatchField<Type> > Foam::pointPatchField<Type>::New
 (
     const pointPatchField<Type>& ptf,
     const pointPatch& p,
@@ -107,107 +173,21 @@ autoPtr<pointPatchField<Type> > pointPatchField<Type>::New
 
     if (cstrIter == patchMapperConstructorTablePtr_->end())
     {
-        cstrIter = patchMapperConstructorTablePtr_->find("default");
-
-        if (cstrIter == patchMapperConstructorTablePtr_->end())
-        {
-            FatalErrorIn
-            (
-                "PointPatchField<Type>::"
-                "New(const pointPatchField<Type>&, "
-                "const pointPatch&, const Field<Type>&, "
-                "const pointPatchFieldMapper&)"
-            )   << "unknown patchTypefield type "
-                << ptf.type() << endl << endl
-                << "Valid patchField types are :" << endl
-                << patchMapperConstructorTablePtr_->toc()
-                << exit(FatalError);
-        }
-    }
-
-    typename patchMapperConstructorTable::iterator
-        patchTypeCstrIter = patchMapperConstructorTablePtr_->find(p.type());
-
-    if (patchTypeCstrIter != patchMapperConstructorTablePtr_->end())
-    {
-        return autoPtr<pointPatchField<Type> >
+        FatalErrorIn
         (
-            patchTypeCstrIter()(ptf, p, iF, pfMapper)
-        );
+            "PointPatchField<Type>::"
+            "New(const pointPatchField<Type>&, "
+            "const pointPatch&, const Field<Type>&, "
+            "const pointPatchFieldMapper&)"
+        )   << "unknown patchTypefield type "
+            << ptf.type() << endl << endl
+            << "Valid patchField types are :" << endl
+            << patchMapperConstructorTablePtr_->toc()
+            << exit(FatalError);
     }
-    else
-    {
-        return autoPtr<pointPatchField<Type> >(cstrIter()(ptf, p, iF, pfMapper));
-    }
+
+    return autoPtr<pointPatchField<Type> >(cstrIter()(ptf, p, iF, pfMapper));
 }
 
-
-template<class Type>
-autoPtr<pointPatchField<Type> > pointPatchField<Type>::New
-(
-    const pointPatch& p,
-    const DimensionedField<Type, pointMesh>& iF,
-    const dictionary& dict
-)
-{
-    if (debug)
-    {
-        Info<< "PointPatchField<Type>::"
-               "New(const pointPatch&, const Field<Type>&, const dictionary&)"
-               " : constructing pointPatchField<Type>"
-            << endl;
-    }
-
-    word patchFieldType(dict.lookup("type"));
-
-    typename dictionaryConstructorTable::iterator cstrIter
-        = dictionaryConstructorTablePtr_->find(patchFieldType);
-
-    if (cstrIter == dictionaryConstructorTablePtr_->end())
-    {
-        cstrIter = dictionaryConstructorTablePtr_->find("default");
-
-        if (cstrIter == dictionaryConstructorTablePtr_->end())
-        {
-            FatalIOErrorIn
-            (
-                "PointPatchField<Type>::"
-                "New(const pointPatch&, const Field<Type>&, const dictionary&)",
-                dict
-            )   << "Unknown patchField type " << patchFieldType
-                << " for patch type " << p.type() << endl << endl
-                << "Valid patchField types are :" << endl
-                << dictionaryConstructorTablePtr_->toc()
-                << exit(FatalIOError);
-        }
-    }
-
-    typename dictionaryConstructorTable::iterator patchTypeCstrIter
-        = dictionaryConstructorTablePtr_->find(p.type());
-
-    if
-    (
-        patchTypeCstrIter != dictionaryConstructorTablePtr_->end()
-     && patchTypeCstrIter() != cstrIter()
-    )
-    {
-        FatalIOErrorIn
-        (
-            "PointPatchField<Type>const pointPatch&, "
-            "const Field<Type>&, const dictionary&)",
-            dict
-        )   << "inconsistent patch and patchField types for \n"
-            << "    patch type " << p.type()
-            << " and patchField type " << patchFieldType
-            << exit(FatalIOError);
-    }
-
-    return autoPtr<pointPatchField<Type> >(cstrIter()(p, iF, dict));
-}
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

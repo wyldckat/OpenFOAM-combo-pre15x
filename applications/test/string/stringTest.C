@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -36,7 +36,7 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-    string test("$HOME kjhkjhkjh \" \\$HOME/tyetyery ${FOAM_RUN} ~\\~~ \n ; hkjh ;$~");
+    string test("$HOME kjhkjhkjh \" \\$HOME/tyetyery ${FOAM_RUN} \n ; hkjh ;$");
 
     Info<< test << endl;
 
@@ -47,9 +47,12 @@ int main(int argc, char *argv[])
 
     Info<< string(test).expand() << endl;
 
+    string test2("~OpenFOAM/controlDict");
+    Info<< test2.expand() << endl;
+
     string s;
     Sin.getLine(s);
-    Info<< s << endl;
+    Info<< s.expand() << endl;
 
     Info << "End\n" << endl;
 

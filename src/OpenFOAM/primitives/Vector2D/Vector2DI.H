@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -97,6 +97,13 @@ inline typename innerProduct<Vector2D<Cmpt>, Vector2D<Cmpt> >::type
 operator&(const Vector2D<Cmpt>& v1, const Vector2D<Cmpt>& v2)
 {
     return Cmpt(v1.x()*v2.x() + v1.y()*v2.y());
+}
+
+
+template <class Cmpt>
+inline scalar Vector2D<Cmpt>::perp(const Vector2D<Cmpt>& b) const
+{
+    return x()*b.y()-y()*b.x();
 }
 
 

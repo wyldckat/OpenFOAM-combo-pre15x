@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -75,11 +75,11 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 
     const polyMesh& mesh = topoChanger().mesh();
 
-    const pointField& points = mesh.allPoints();
+    const pointField& points = mesh.points();
     const faceList& faces = mesh.faces();
 
-    const labelList& own = mesh.allOwner();
-    const labelList& nei = mesh.allNeighbour();
+    const labelList& own = mesh.faceOwner();
+    const labelList& nei = mesh.faceNeighbour();
     const faceZoneMesh& faceZones = mesh.faceZones();
 
     const primitiveFacePatch& masterPatch =
@@ -804,7 +804,7 @@ void Foam::slidingInterface::coupleInterface(polyTopoChange& ref) const
 //                 Pout << "Face is equal to master and is ";
 
                 // If the face has got both master and slave, it is an
-                // internal face; othewise it's a patch face in the
+                // internal face; otherwise it is a patch face in the
                 // master patch.  Keep it in the master face zone.
 
                 if (curSlave >= 0)

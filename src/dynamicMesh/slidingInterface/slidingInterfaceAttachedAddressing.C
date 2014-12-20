@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -47,9 +47,8 @@ void Foam::slidingInterface::calcAttachedAddressing() const
         clearAttachedAddressing();
 
         const polyMesh& mesh = topoChanger().mesh();
-
-        const labelList& own = mesh.allOwner();
-        const labelList& nei = mesh.allNeighbour();
+        const labelList& own = mesh.faceOwner();
+        const labelList& nei = mesh.faceNeighbour();
         const faceZoneMesh& faceZones = mesh.faceZones();
 
         // Master side

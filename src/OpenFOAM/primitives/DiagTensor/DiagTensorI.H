@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -259,6 +259,15 @@ inline DiagTensor<Cmpt>
 operator/(const scalar s, const DiagTensor<Cmpt>& dt)
 {
     return DiagTensor<Cmpt>(s/dt.xx(), s/dt.yy(), s/dt.zz());
+}
+
+
+//- Division of a vector by a diagonalTensor
+template <class Cmpt>
+inline Vector<Cmpt>
+operator/(const Vector<Cmpt> v, const DiagTensor<Cmpt>& dt)
+{
+    return Vector<Cmpt>(v.x()/dt.xx(), v.y()/dt.yy(), v.z()/dt.zz());
 }
 
 

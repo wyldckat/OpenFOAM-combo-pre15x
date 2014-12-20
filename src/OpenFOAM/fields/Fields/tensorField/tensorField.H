@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,11 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    tensorField
+Typedef
+    Foam::tensorField
 
 Description
-    Specialisation of Field<T> for tensor.
+    Specialisation of Field\<T\> for tensor.
 
 SourceFiles
     tensorField.C
@@ -74,6 +74,9 @@ UNARY_FUNCTION(tensor, symmTensor, eigenVectors)
 
 UNARY_OPERATOR(vector, tensor, *, hdual)
 UNARY_OPERATOR(tensor, vector, *, hdual)
+
+BINARY_OPERATOR(vector, vector, tensor, /, divide)
+BINARY_TYPE_OPERATOR(vector, vector, tensor, /, divide)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

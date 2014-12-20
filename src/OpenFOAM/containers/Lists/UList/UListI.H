@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -27,15 +27,10 @@ License
 #include "error.H"
 #include "Swap.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class T>
-inline UList<T>::UList()
+inline Foam::UList<T>::UList()
 :
     size_(0),
     v_(0)
@@ -43,7 +38,7 @@ inline UList<T>::UList()
 
 
 template<class T>
-inline UList<T>::UList(T* __restrict__ v, label size)
+inline Foam::UList<T>::UList(T* __restrict__ v, label size)
 :
     size_(size),
     v_(v)
@@ -53,14 +48,14 @@ inline UList<T>::UList(T* __restrict__ v, label size)
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class T>
-inline label UList<T>::fcIndex(const label i) const
+inline Foam::label Foam::UList<T>::fcIndex(const label i) const
 {
     return (i == size()-1 ? 0 : i+1); 
 }
 
 
 template<class T>
-inline label UList<T>::rcIndex(const label i) const
+inline Foam::label Foam::UList<T>::rcIndex(const label i) const
 {
     return (i == 0 ? size()-1 : i-1); 
 }
@@ -68,7 +63,7 @@ inline label UList<T>::rcIndex(const label i) const
 
 // Check start is within valid range (0 ... size-1).
 template<class T>
-inline void UList<T>::checkStart(const label start) const
+inline void Foam::UList<T>::checkStart(const label start) const
 {
     if (start<0 || (start && start>=size_))
     {
@@ -81,7 +76,7 @@ inline void UList<T>::checkStart(const label start) const
 
 // Check size is within valid range (0 ... size).
 template<class T>
-inline void UList<T>::checkSize(const label size) const
+inline void Foam::UList<T>::checkSize(const label size) const
 {
     if (size<0 || size>size_)
     {
@@ -94,7 +89,7 @@ inline void UList<T>::checkSize(const label size) const
 
 // Check index i is within valid range (0 ... size-1).
 template<class T>
-inline void UList<T>::checkIndex(const label i) const
+inline void Foam::UList<T>::checkIndex(const label i) const
 {
     if (!size_)
     {
@@ -115,7 +110,7 @@ inline void UList<T>::checkIndex(const label i) const
 
 // Return subscript-checked element access
 template<class T>
-inline T& UList<T>::operator[](const label i)
+inline T& Foam::UList<T>::operator[](const label i)
 {
 #   ifdef FULLDEBUG
     checkIndex(i);
@@ -126,7 +121,7 @@ inline T& UList<T>::operator[](const label i)
 
 // Return subscript-checked const element access
 template<class T>
-inline const T& UList<T>::operator[](const label i) const
+inline const T& Foam::UList<T>::operator[](const label i) const
 {
 #   ifdef FULLDEBUG
     checkIndex(i);
@@ -137,7 +132,7 @@ inline const T& UList<T>::operator[](const label i) const
 
 // Allow cast to a const List<T>&
 template<class T>
-inline UList<T>::operator const List<T>&() const
+inline Foam::UList<T>::operator const Foam::List<T>&() const
 {
     return *reinterpret_cast<const List<T>*>(this);
 }
@@ -146,84 +141,77 @@ inline UList<T>::operator const List<T>&() const
 // * * * * * * * * * * * * * * STL Member Functions  * * * * * * * * * * * * //
 
 template<class T>
-inline typename UList<T>::iterator
-UList<T>::begin()
+inline typename Foam::UList<T>::iterator
+Foam::UList<T>::begin()
 {
     return v_;
 }
 
-
 template<class T>
-inline typename UList<T>::const_iterator
-UList<T>::begin() const
+inline typename Foam::UList<T>::const_iterator
+Foam::UList<T>::begin() const
 {
     return v_;
 }
 
-
 template<class T>
-inline typename UList<T>::iterator
-UList<T>::end()
-{
-    return &v_[size_];
-}
-
-
-template<class T>
-inline typename UList<T>::const_iterator
-UList<T>::end() const
+inline typename Foam::UList<T>::iterator
+Foam::UList<T>::end()
 {
     return &v_[size_];
 }
 
 template<class T>
-inline typename UList<T>::iterator
-UList<T>::rbegin()
+inline typename Foam::UList<T>::const_iterator
+Foam::UList<T>::end() const
+{
+    return &v_[size_];
+}
+
+template<class T>
+inline typename Foam::UList<T>::iterator
+Foam::UList<T>::rbegin()
 {
     return &v_[size_-1];
 }
 
-
 template<class T>
-inline typename UList<T>::const_iterator
-UList<T>::rbegin() const
+inline typename Foam::UList<T>::const_iterator
+Foam::UList<T>::rbegin() const
 {
     return &v_[size_-1];
 }
 
-
 template<class T>
-inline typename UList<T>::iterator
-UList<T>::rend()
+inline typename Foam::UList<T>::iterator
+Foam::UList<T>::rend()
 {
     return &v_[-1];
 }
 
-
 template<class T>
-inline typename UList<T>::const_iterator
-UList<T>::rend() const
+inline typename Foam::UList<T>::const_iterator
+Foam::UList<T>::rend() const
 {
     return &v_[-1];
 }
 
-
 template<class T>
-inline label UList<T>::size() const
+inline Foam::label Foam::UList<T>::size() const
 {
     return size_;
 }
 
 
 template<class T>
-inline label UList<T>::max_size() const
+inline Foam::label Foam::UList<T>::max_size() const
 {
     return labelMax;
 }
 
 
 template<class T>
-inline bool UList<T>::empty() const
+inline bool Foam::UList<T>::empty() const
 {
     return (size_ == 0);
 }
@@ -232,7 +220,7 @@ inline bool UList<T>::empty() const
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
 
 template<class T>
-inline void reverse(UList<T>& ul, const label n)
+inline void Foam::reverse(UList<T>& ul, const label n)
 {
     for (int i=0; i<n/2; i++)
     {
@@ -241,14 +229,10 @@ inline void reverse(UList<T>& ul, const label n)
 }
 
 template<class T>
-inline void reverse(UList<T>& ul)
+inline void Foam::reverse(UList<T>& ul)
 {
     reverse(ul, ul.size());
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

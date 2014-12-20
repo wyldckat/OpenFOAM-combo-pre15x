@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,12 +32,9 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-OPstream::~OPstream()
+Foam::OPstream::~OPstream()
 {
     notImplemented("OPstream::~OPstream()");
 }
@@ -45,22 +42,22 @@ OPstream::~OPstream()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool OPstream::write
+bool Foam::OPstream::write
 (
+    const commsTypes commsType,
     const int toProcNo,
     const char* buf,
-    const std::streamsize bufSize,
-    const bool bufferedTransfer
+    const std::streamsize bufSize
 )
 {
      notImplemented
      (
          "IPstream::write"
          "("
+             "const commsTypes commsType,"
              "const int fromProcNo,"
              "char* buf,"
-             "const label bufSize,"
-             "const bool bufferedTransfer"
+             "const label bufSize"
          ")"
      );
 
@@ -68,8 +65,17 @@ bool OPstream::write
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+void Foam::OPstream::waitRequests()
+{}
 
-} // End namespace Foam
+
+bool Foam::OPstream::finishedRequest(const label)
+{
+    notImplemented("OPstream::finishedRequest()");
+    return false;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // ************************************************************************* //

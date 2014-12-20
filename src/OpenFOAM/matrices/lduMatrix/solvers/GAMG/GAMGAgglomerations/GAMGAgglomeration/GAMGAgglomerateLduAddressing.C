@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -228,7 +228,11 @@ void Foam::GAMGAgglomeration::agglomerateLduAddressing
     {
         if (fineInterfaces.set(inti))
         {
-            fineInterfaces[inti].initInternalFieldTransfer(restrictMap, true);
+            fineInterfaces[inti].initInternalFieldTransfer
+            (
+                Pstream::blocking,
+                restrictMap
+            );
         }
     }
 
@@ -244,7 +248,11 @@ void Foam::GAMGAgglomeration::agglomerateLduAddressing
                 (
                     fineInterfaces[inti],
                     fineInterfaces[inti].interfaceInternalField(restrictMap),
-                    fineInterfaces[inti].internalFieldTransfer(restrictMap)
+                    fineInterfaces[inti].internalFieldTransfer
+                    (
+                        Pstream::blocking,
+                        restrictMap
+                    )
                 ).ptr()
             );
             

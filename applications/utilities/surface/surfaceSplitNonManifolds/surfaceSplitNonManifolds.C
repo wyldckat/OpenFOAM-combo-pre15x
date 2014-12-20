@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -707,8 +707,8 @@ int main(int argc, char *argv[])
 
     argList args(argc, argv);
 
-    fileName inSurfName(args.args()[1]);
-    fileName outSurfName(args.args()[2]);
+    fileName inSurfName(args.additionalArgs()[0]);
+    fileName outSurfName(args.additionalArgs()[1]);
     bool debug = args.options().found("debug");
 
 

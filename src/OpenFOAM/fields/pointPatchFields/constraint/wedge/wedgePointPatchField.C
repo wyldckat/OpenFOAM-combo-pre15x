@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -53,7 +53,7 @@ wedgePointPatchField<Type>::wedgePointPatchField
     const dictionary& dict
 )
 :
-    pointPatchField<Type>(p, iF)
+    pointPatchField<Type>(p, iF, dict)
 {
     if (!isType<wedgePointPatch>(p))
     {
@@ -76,7 +76,7 @@ wedgePointPatchField<Type>::wedgePointPatchField
 template<class Type>
 wedgePointPatchField<Type>::wedgePointPatchField
 (
-    const wedgePointPatchField<Type>&,
+    const wedgePointPatchField<Type>& ptf,
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
     const pointPatchFieldMapper&
@@ -118,7 +118,7 @@ wedgePointPatchField<Type>::wedgePointPatchField
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-void wedgePointPatchField<Type>::evaluate()
+void wedgePointPatchField<Type>::evaluate(const Pstream::commsTypes)
 {
     // In order to ensure that the wedge patch is always flat, take the
     // normal vector from the first point

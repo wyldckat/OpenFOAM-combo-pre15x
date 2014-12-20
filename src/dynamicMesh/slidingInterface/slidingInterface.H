@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,15 +23,16 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    slidingInterface
+    Foam::slidingInterface
 
 Description
     Sliding interface mesh modifier.  Given two face zones, couple the
-    master and slave side using a cutting procedure.  The coupled
-    faces are collected into the "coupled" zone and can become either
-    internal or placed into a master and slave coupled zone.  The
-    remaining faces (uncovered master or slave) are placed into the
-    master and slave patch.
+    master and slave side using a cutting procedure.
+
+    The coupled faces are collected into the "coupled" zone and can become
+    either internal or placed into a master and slave coupled zone.  The
+    remaining faces (uncovered master or slave) are placed into the master
+    and slave patch.
 
     The definition of the sliding interface can be either integral or partial.
     Integral interface implies that the slave side completely covers
@@ -64,7 +65,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class objectHit;
 
 /*---------------------------------------------------------------------------*\

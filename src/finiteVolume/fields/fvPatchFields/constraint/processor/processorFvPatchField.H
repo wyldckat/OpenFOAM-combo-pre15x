@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    processorFvPatchField
+    Foam::processorFvPatchField
 
 Description
+    Foam::processorFvPatchField
 
 SourceFiles
     processorFvPatchField.C
@@ -161,10 +162,10 @@ public:
         // Evaluation functions
 
             //- Initialise the evaluation of the patch field
-            virtual void initEvaluate(const bool bufferdTransfer);
+            virtual void initEvaluate(const Pstream::commsTypes commsType);
 
             //- Evaluate the patch field
-            virtual void evaluate();
+            virtual void evaluate(const Pstream::commsTypes commsType);
 
             //- Return patch-normal gradient
             virtual tmp<Field<Type> > snGrad() const;
@@ -177,7 +178,7 @@ public:
                 const lduMatrix& m,
                 const scalarField& coeffs,
                 const direction cmpt,
-                const bool bufferdTransfer
+                const Pstream::commsTypes commsType
             ) const;
 
             //- Update result field based on interface functionality
@@ -187,7 +188,8 @@ public:
                 scalarField& result,
                 const lduMatrix& m,
                 const scalarField& coeffs,
-                const direction cmpt
+                const direction cmpt,
+                const Pstream::commsTypes commsType
             ) const;
 
         //- Processor coupled interface functions

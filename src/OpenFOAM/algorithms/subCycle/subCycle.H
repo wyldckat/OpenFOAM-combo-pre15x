@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    subCycle
+    Foam::subCycle
 
 Description
+    Perform a subCycleTime on a field
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,7 +51,7 @@ class subCycle
 {
     // Private data
 
-        //- Referene to the field being sub-cycled
+        //- Reference to the field being sub-cycled
         GeometricField& gf_;
 
         //- Copy of the "real" old-time value of the field

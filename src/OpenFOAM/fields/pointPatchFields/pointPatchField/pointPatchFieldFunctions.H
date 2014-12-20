@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -124,7 +124,8 @@ inline void func                                                              \
 
 BINARY_FUNCTION(max)
 BINARY_FUNCTION(min)
-BINARY_FUNCTION(scale)
+BINARY_FUNCTION(cmptMultiply)
+BINARY_FUNCTION(cmptDivide)
 
 #undef BINARY_FUNCTION
 
@@ -218,8 +219,6 @@ BINARY_TYPE_OPERATOR_FT(scalar, /, divide)
                                                                               \
 template                                                                      \
 <                                                                             \
-    template<class> class PatchField,                                         \
-    class pointPatch,                                                         \
     class Type1,                                                              \
     class Type2                                                               \
 >                                                                             \
@@ -234,8 +233,6 @@ inline void opFunc                                                            \
                                                                               \
 template                                                                      \
 <                                                                             \
-    template<class> class PatchField,                                         \
-    class pointPatch,                                                         \
     class Type,                                                               \
     class Form,                                                               \
     class Cmpt,                                                               \
@@ -252,8 +249,6 @@ inline void opFunc                                                            \
                                                                               \
 template                                                                      \
 <                                                                             \
-    template<class> class PatchField,                                         \
-    class pointPatch,                                                         \
     class Form,                                                               \
     class Cmpt,                                                               \
     int nCmpt,                                                                \
@@ -276,104 +271,91 @@ PRODUCT_OPERATOR(scalarProduct, &&, dotdot)
 #undef PRODUCT_OPERATOR
 
 
-template<template<class> class PatchField, class pointPatch>
-void hdual
+inline void hdual
 (
     pointPatchField<vector>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void hdual
+inline void hdual
 (
     pointPatchField<tensor>&,
     const pointPatchField<vector>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void diag
+inline void diag
 (
     pointPatchField<vector>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void tr
+inline void tr
 (
     pointPatchField<scalar>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void dev
+inline void dev
 (
     pointPatchField<tensor>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void dev2
+inline void dev2
 (
     pointPatchField<tensor>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void det
+inline void det
 (
     pointPatchField<scalar>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void inv
+inline void inv
 (
     pointPatchField<tensor>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void symm
+inline void symm
 (
     pointPatchField<tensor>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void twoSymm
+inline void twoSymm
 (
     pointPatchField<tensor>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void skew
+inline void skew
 (
     pointPatchField<tensor>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void eigenValues
+inline void eigenValues
 (
     pointPatchField<vector>&,
     const pointPatchField<tensor>&
 )
 {}
 
-template<template<class> class PatchField, class pointPatch>
-void eigenVectors
+inline void eigenVectors
 (
     pointPatchField<tensor>&,
     const pointPatchField<tensor>&

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -24,15 +24,10 @@ License
 
 \*---------------------------------------------------------------------------*/
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 template<class T>
-inline SubList<T>::SubList
+inline Foam::SubList<T>::SubList
 (
     const UList<T>& list,
     const label subSize
@@ -47,7 +42,7 @@ inline SubList<T>::SubList
 
 
 template<class T>
-inline SubList<T>::SubList
+inline Foam::SubList<T>::SubList
 (
     const UList<T>& list,
     const label subSize,
@@ -77,9 +72,8 @@ inline SubList<T>::SubList
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return a null SubList
 template<class T>
-SubList<T>& SubList<T>::null()
+const Foam::SubList<T>& Foam::SubList<T>::null()
 {
     SubList<T>* nullPtr = reinterpret_cast<SubList<T>*>(NULL);
     return *nullPtr;
@@ -88,16 +82,11 @@ SubList<T>& SubList<T>::null()
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-// Allow cast to a const List<T>&
 template<class T>
-inline SubList<T>::operator const List<T>&() const
+inline Foam::SubList<T>::operator const Foam::List<T>&() const
 {
     return *reinterpret_cast<const List<T>*>(this);
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

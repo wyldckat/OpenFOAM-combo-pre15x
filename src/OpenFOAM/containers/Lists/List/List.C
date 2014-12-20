@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -327,9 +327,8 @@ List<T>::~List()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Return a null List
 template<class T>
-List<T>& List<T>::null()
+const List<T>& List<T>::null()
 {
     List<T>* nullPtr = reinterpret_cast<List<T>*>(NULL);
     return *nullPtr;
@@ -433,6 +432,20 @@ template<class T, class Cmp>
 void sort(List<T>& a, const Cmp& cmp)
 {
     std::sort(a.begin(), a.end(), cmp);
+}
+
+
+template<class T>
+void stableSort(List<T>& a)
+{
+    std::stable_sort(a.begin(), a.end());
+}
+
+
+template<class T, class Cmp>
+void stableSort(List<T>& a, const Cmp& cmp)
+{
+    std::stable_sort(a.begin(), a.end(), cmp);
 }
 
 

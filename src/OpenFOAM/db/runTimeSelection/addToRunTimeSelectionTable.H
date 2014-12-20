@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,22 +22,16 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    runTimeSelectionTables
+InClass
+    Foam::runTimeSelectionTables
 
 Description
+    Macros to enable the easy insertion into run-time selection tables.
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef addToRunTimeSelectionTable_H
 #define addToRunTimeSelectionTable_H
-
-#include "HashTable.H"
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-namespace Foam
-{
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -58,10 +52,6 @@ namespace Foam
     /* Add the thisType constructor function to the table */                  \
     baseType::add##argNames##ConstructorToTable<thisType<Targ> >              \
         add##thisType##Targ##argNames##ConstructorTo##baseType##Table_
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

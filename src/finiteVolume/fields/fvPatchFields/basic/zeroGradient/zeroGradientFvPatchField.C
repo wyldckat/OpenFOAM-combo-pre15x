@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -63,10 +63,10 @@ zeroGradientFvPatchField<Type>::zeroGradientFvPatchField
 (
     const fvPatch& p,
     const DimensionedField<Type, volMesh>& iF,
-    const dictionary&
+    const dictionary& dict
 )
 :
-    fvPatchField<Type>(p, iF)
+    fvPatchField<Type>(p, iF, dict)
 {
     fvPatchField<Type>::operator=(this->patchInternalField());
 }
@@ -96,7 +96,7 @@ zeroGradientFvPatchField<Type>::zeroGradientFvPatchField
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template<class Type>
-void zeroGradientFvPatchField<Type>::evaluate()
+void zeroGradientFvPatchField<Type>::evaluate(const Pstream::commsTypes)
 {
     if (!this->updated())
     {

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -58,7 +58,7 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "createTime.H"
 
-    fileName outFileName(runTime.path()/args.args()[3]);
+    fileName outFileName(runTime.path()/args.additionalArgs()[0]);
 
     Info<< "Extracting triSurface from boundaryMesh ..."
         << endl << endl;
@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
             (
                 runTime.rootPath()
               / globalCasePath
-              / args.args()[3]
+              / args.additionalArgs()[0]
             );
 
             allSurf.write(globalPath);

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    chemistryReader
+    Foam::chemistryReader
 
 Description
+    Abstract class for reading chemistry
 
 SourceFiles
     chemistryReader.C
@@ -117,7 +118,7 @@ public:
     // Member Functions
 
         virtual const speciesTable& species() const = 0;
-        virtual const HashPtrTable<reactionThermo>& specieThermo() const = 0;
+        virtual const HashPtrTable<reactionThermo>& speciesThermo() const = 0;
         virtual const SLPtrList<reaction>& reactions() const = 0;
 };
 

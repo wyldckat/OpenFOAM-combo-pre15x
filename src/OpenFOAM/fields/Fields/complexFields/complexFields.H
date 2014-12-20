@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,17 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    complexFields
+Typedef
+    Foam::complexField
 
 Description
-    Specialisation of Field<T> for complex and complexVector.
+    Specialisation of Field\<T\> for complex.
+
+Typedef
+    Foam::complexVectorField
+
+Description
+    Specialisation of Field\<T\> for complexVector.
 
 SourceFiles
     complexFields.C

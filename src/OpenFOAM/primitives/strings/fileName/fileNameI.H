@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -31,11 +31,14 @@ inline void Foam::fileName::stripInvalid()
     if (debug && string::stripInvalid<fileName>(*this))
     {
         std::cerr
-            << "fileName::stripInvalid() called for string "
+            << "fileName::stripInvalid() called for invalid fileName "
             << this->c_str() << std::endl;
 
         if (debug > 1)
         {
+            std::cerr
+                << "    For debug level (= " << debug
+                << ") > 1 this is considered fatal" << std::endl;
             std::abort();
         }
 

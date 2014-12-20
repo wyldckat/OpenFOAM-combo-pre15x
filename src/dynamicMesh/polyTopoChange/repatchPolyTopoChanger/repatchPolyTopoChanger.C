@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -90,7 +90,7 @@ void Foam::repatchPolyTopoChanger::changePatchID
         // Check that the request is possible
         if
         (
-            faceID >= mesh_.allFaces().size()
+            faceID >= mesh_.faces().size()
          || patchID >= mesh_.boundaryMesh().size()
          || mesh_.isInternalFace(faceID)
         )
@@ -124,9 +124,9 @@ void Foam::repatchPolyTopoChanger::changePatchID
     (
         polyModifyFace
         (
-            mesh_.allFaces()[faceID],           // face
+            mesh_.faces()[faceID],              // face
             faceID,                             // face ID
-            mesh_.allOwner()[faceID],           // owner
+            mesh_.faceOwner()[faceID],          // owner
             -1,                                 // neighbour
             false,                              // flip flux
             patchID,                            // patch ID
@@ -148,7 +148,7 @@ void Foam::repatchPolyTopoChanger::setFaceZone
     if (polyTopoChanger::debug)
     {
         // Check that the request is possible
-        if (faceID > mesh_.allFaces().size())
+        if (faceID > mesh_.faces().size())
         {
             FatalErrorIn
             (
@@ -168,10 +168,10 @@ void Foam::repatchPolyTopoChanger::setFaceZone
     (
         polyModifyFace
         (
-            mesh_.allFaces()[faceID],           // face
+            mesh_.faces()[faceID],              // face
             faceID,                             // face ID
-            mesh_.allOwner()[faceID],           // owner
-            mesh_.allNeighbour()[faceID],       // neighbour
+            mesh_.faceOwner()[faceID],          // owner
+            mesh_.faceNeighbour()[faceID],      // neighbour
             false,                              // flip flux
             mesh_.boundaryMesh().whichPatch(faceID),  // patch ID
             true,                               // remove from zone
@@ -191,7 +191,7 @@ void Foam::repatchPolyTopoChanger::changeAnchorPoint
     if (polyTopoChanger::debug)
     {
         // Check that the request is possible
-        if (faceID > mesh_.allFaces().size())
+        if (faceID > mesh_.faces().size())
         {
             FatalErrorIn
             (
@@ -207,7 +207,7 @@ void Foam::repatchPolyTopoChanger::changeAnchorPoint
         }
     }
 
-    const face& f = mesh_.allFaces()[faceID];
+    const face& f = mesh_.faces()[faceID];
 
     if ((fp < 0) || (fp >= f.size()))
     {
@@ -245,7 +245,7 @@ void Foam::repatchPolyTopoChanger::changeAnchorPoint
             (
                 f,                                  // face
                 faceID,                             // face ID
-                mesh_.allOwner()[faceID],           // owner
+                mesh_.faceOwner()[faceID],          // owner
                 -1,                                 // neighbour
                 false,                              // flip flux
                 patchID,                            // patch ID
@@ -280,7 +280,7 @@ void Foam::repatchPolyTopoChanger::changeAnchorPoint
             (
                 newFace,                            // face
                 faceID,                             // face ID
-                mesh_.allOwner()[faceID],           // owner
+                mesh_.faceOwner()[faceID],          // owner
                 -1,                                 // neighbour
                 false,                              // flip flux
                 patchID,                            // patch ID

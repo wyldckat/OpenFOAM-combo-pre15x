@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -45,13 +45,14 @@ namespace Foam
 
 IPstream::IPstream
 (
+    const commsTypes commsType,
     const int fromProcNo,
     const label bufSize,
     streamFormat format,
     versionNumber version
 )
 :
-    Pstream(bufSize),
+    Pstream(commsType, bufSize),
     Istream(format, version),
     fromProcNo_(fromProcNo),
     messageSize_(0)
@@ -99,6 +100,7 @@ IPstream::IPstream
 
 label IPstream::read
 (
+    const commsTypes commsType,
     const int fromProcNo,
     char* buf,
     const std::streamsize bufSize

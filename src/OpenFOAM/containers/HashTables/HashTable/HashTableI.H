@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,12 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Class
-    HashTable
-
-Description
-    STL conforming hash table.
 
 \*---------------------------------------------------------------------------*/
 
@@ -61,6 +55,19 @@ inline label HashTable<T, Key, Hash>::size() const
     return nElmts_;
 }
 
+
+template<class T, class Key, class Hash>
+inline bool HashTable<T, Key, Hash>::insert(const Key& key, const T& newEntry)
+{
+    return set(key, newEntry, true);
+}
+
+
+template<class T, class Key, class Hash>
+inline bool HashTable<T, Key, Hash>::set(const Key& key, const T& newEntry)
+{
+    return set(key, newEntry, false);
+}
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
@@ -213,7 +220,8 @@ HashTable<T, Key, Hash>::iterator::operator++()
     (
         ++hashIndex_ < curHashTable_.tableSize_
      && !(elmtPtr_ = curHashTable_.table_[hashIndex_])
-    );
+    )
+    {}
 
     if (hashIndex_ == curHashTable_.tableSize_)
     {
@@ -252,7 +260,8 @@ HashTable<T, Key, Hash>::begin()
 {
     label i = 0;
 
-    while (table_ && !table_[i] && ++i < tableSize_);
+    while (table_ && !table_[i] && ++i < tableSize_)
+    {}
 
     if (i == tableSize_)
     {
@@ -298,7 +307,7 @@ inline HashTable<T, Key, Hash>::const_iterator::const_iterator
 
 template<class T, class Key, class Hash>
 inline HashTable<T, Key, Hash>::const_iterator::const_iterator
-(   
+(
     const iterator& iter
 )
 :
@@ -365,13 +374,13 @@ inline const T& HashTable<T, Key, Hash>::const_iterator::operator*()
     return elmtPtr_->obj_;
 }
 
-
+#ifndef __CINT__
 template<class T, class Key, class Hash>
 inline const T& HashTable<T, Key, Hash>::const_iterator::operator()()
 {
     return operator*();
 }
-
+#endif
 
 template<class T, class Key, class Hash>
 inline
@@ -389,7 +398,8 @@ HashTable<T, Key, Hash>::const_iterator::operator++()
         (
             ++hashIndex_ < curHashTable_.tableSize_
          && !(elmtPtr_ = curHashTable_.table_[hashIndex_])
-        );
+        )
+        {}
     }
 
     return *this;
@@ -423,7 +433,8 @@ HashTable<T, Key, Hash>::begin() const
 {
     label i = 0;
 
-    while (table_ && !table_[i] && ++i < tableSize_);
+    while (table_ && !table_[i] && ++i < tableSize_)
+    {}
 
     if (i == tableSize_)
     {

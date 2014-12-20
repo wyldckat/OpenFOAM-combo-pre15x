@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,9 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    processorPointPatchField
+    Foam::processorPointPatchField
 
 Description
+    Foam::processorPointPatchField
 
 SourceFiles
     processorPointPatchField.C
@@ -151,7 +152,7 @@ public:
             //- Does the patch field perform the transfromation
             virtual bool doTransform() const
             {
-                return 
+                return
                    !(
                         procPatch_.procPolyPatch().parallel()
                      || pTraits<Type>::rank == 0
@@ -159,15 +160,20 @@ public:
             }
 
 
-        //- Evaluate the patch field
-        virtual void evaluate()
-        {}
+        // Evaluation functions
 
-        //- Initialise swap of patch point values
-        virtual void initSwapAdd(Field<Type>&) const;
+            //- Evaluate the patch field
+            virtual void evaluate
+            (
+                const Pstream::commsTypes commsType=Pstream::blocking
+            )
+            {}
 
-        //- Complete swap of patch point values and add to local values
-        virtual void swapAdd(Field<Type>&) const;
+            //- Initialise swap of patch point values
+            virtual void initSwapAdd(Field<Type>&) const;
+
+            //- Complete swap of patch point values and add to local values
+            virtual void swapAdd(Field<Type>&) const;
 };
 
 

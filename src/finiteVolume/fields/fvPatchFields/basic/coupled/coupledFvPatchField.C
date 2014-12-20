@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -110,7 +110,6 @@ coupledFvPatchField<Type>::coupledFvPatchField
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// return gradient at boundary
 template<class Type>
 tmp<Field<Type> > coupledFvPatchField<Type>::snGrad() const
 {
@@ -120,9 +119,8 @@ tmp<Field<Type> > coupledFvPatchField<Type>::snGrad() const
 }
 
 
-//- Initialise the evaluation of the patch field
 template<class Type>
-void coupledFvPatchField<Type>::initEvaluate(const bool)
+void coupledFvPatchField<Type>::initEvaluate(const Pstream::commsTypes)
 {
     if (!this->updated())
     {
@@ -131,9 +129,8 @@ void coupledFvPatchField<Type>::initEvaluate(const bool)
 }
 
 
-// Evaluate the patch field
 template<class Type>
-void coupledFvPatchField<Type>::evaluate()
+void coupledFvPatchField<Type>::evaluate(const Pstream::commsTypes)
 {
     if (!this->updated())
     {
@@ -145,11 +142,11 @@ void coupledFvPatchField<Type>::evaluate()
         this->patch().weights()*this->patchInternalField()
       + (1.0 - this->patch().weights())*this->patchNeighbourField()
     );
+
+    fvPatchField<Type>::evaluate();
 }
 
 
-//- Return the matrix diagonal coefficients corresponding to the
-//  evaluation of the value of this patchField
 template<class Type>
 tmp<Field<Type> > coupledFvPatchField<Type>::valueInternalCoeffs
 (
@@ -159,8 +156,6 @@ tmp<Field<Type> > coupledFvPatchField<Type>::valueInternalCoeffs
     return Type(pTraits<Type>::one)*w;
 }
 
-//- Return the matrix source coefficients corresponding to the
-//  evaluation of the value of this patchField
 template<class Type>
 tmp<Field<Type> > coupledFvPatchField<Type>::valueBoundaryCoeffs
 (
@@ -170,16 +165,13 @@ tmp<Field<Type> > coupledFvPatchField<Type>::valueBoundaryCoeffs
     return Type(pTraits<Type>::one)*(1.0 - w);
 }
 
-//- Return the matrix diagonal coefficients corresponding to the
-//  evaluation of the gradient of this patchField
 template<class Type>
 tmp<Field<Type> > coupledFvPatchField<Type>::gradientInternalCoeffs() const
 {
     return -Type(pTraits<Type>::one)*this->patch().deltaCoeffs();
 }
 
-//- Return the matrix source coefficients corresponding to the
-//  evaluation of the gradient of this patchField
+
 template<class Type>
 tmp<Field<Type> > coupledFvPatchField<Type>::gradientBoundaryCoeffs() const
 {
@@ -187,7 +179,6 @@ tmp<Field<Type> > coupledFvPatchField<Type>::gradientBoundaryCoeffs() const
 }
 
 
-// Write
 template<class Type>
 void coupledFvPatchField<Type>::write(Ostream& os) const
 {

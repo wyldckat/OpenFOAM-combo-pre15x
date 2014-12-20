@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -246,39 +246,41 @@ Foam::processorGAMGInterface::~processorGAMGInterface()
 
 void Foam::processorGAMGInterface::initTransfer
 (
-    const unallocLabelList& interfaceData,
-    const bool bufferedTransfer
+    const Pstream::commsTypes commsType,
+    const unallocLabelList& interfaceData
 ) const
 {
-    send(interfaceData, bufferedTransfer);
+    send(commsType, interfaceData);
 }
 
 
 Foam::tmp<Foam::labelField> Foam::processorGAMGInterface::transfer
 (
+    const Pstream::commsTypes commsType,
     const unallocLabelList& interfaceData
 ) const
 {
-    return receive<label>(this->size());
+    return receive<label>(commsType, this->size());
 }
 
 
 void Foam::processorGAMGInterface::initInternalFieldTransfer
 (
-    const unallocLabelList& iF,
-    const bool bufferedTransfer
+    const Pstream::commsTypes commsType,
+    const unallocLabelList& iF
 ) const
 {
-    send(interfaceInternalField(iF)(), bufferedTransfer);
+    send(commsType, interfaceInternalField(iF)());
 }
 
 
 Foam::tmp<Foam::labelField> Foam::processorGAMGInterface::internalFieldTransfer
 (
+    const Pstream::commsTypes commsType,
     const unallocLabelList& iF
 ) const
 {
-    return receive<label>(this->size());
+    return receive<label>(commsType, this->size());
 }
 
 

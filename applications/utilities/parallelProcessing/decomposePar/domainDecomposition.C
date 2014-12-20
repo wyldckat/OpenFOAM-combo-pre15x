@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -132,7 +132,7 @@ bool domainDecomposition::writeDecomposition()
     // for the duplicate elements
 
     // Point zones
-    labelList pointToZone(allPoints().size(), -1);
+    labelList pointToZone(points().size(), -1);
 
     forAll(pointZones(), zoneI)
     {
@@ -140,7 +140,7 @@ bool domainDecomposition::writeDecomposition()
     }
 
     // Face zones
-    labelList faceToZone(allFaces().size(), -1);
+    labelList faceToZone(faces().size(), -1);
 
     forAll(faceZones(), zoneI)
     {
@@ -193,7 +193,7 @@ bool domainDecomposition::writeDecomposition()
         {
             // Mark the original face as used
             // Remember to decrement the index by one (turning index)
-            // 
+            //
             label curF = mag(curFaceLabels[facei]) - 1;
 
             faceLookup[curF] = facei;
@@ -258,7 +258,9 @@ bool domainDecomposition::writeDecomposition()
         (
             Time::controlDictName,
             time().rootPath(),
-            processorCasePath
+            processorCasePath,
+            "system",
+            "constant"
         );
 
         // create the mesh
@@ -431,7 +433,7 @@ bool domainDecomposition::writeDecomposition()
             forAll (curFaceLabels, facei)
             {
                 // Remember to decrement the index by one (turning index)
-                // 
+                //
                 label curF = mag(curFaceLabels[facei]) - 1;
 
                 label zoneI = faceToZone[curF];
@@ -592,7 +594,7 @@ bool domainDecomposition::writeDecomposition()
                     procMesh.boundaryMesh()[patchi]
                 );
 
-                Info<< "    Number of faces shared with processor " 
+                Info<< "    Number of faces shared with processor "
                     << ppp.neighbProcNo() << " = " << ppp.size() << endl;
 
                 nProcPatches++;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -32,32 +32,30 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-namespace Foam
-{
-
 // * * * * * * * * * * * * * * * * Constructor * * * * * * * * * * * * * * * //
 
-IPstream::IPstream
+Foam::IPstream::IPstream
 (
+    const commsTypes commsType,
     const int fromProcNo,
     const label bufSize,
     streamFormat format,
     versionNumber version
 )
 :
-    Pstream(bufSize),
+    Pstream(commsType, bufSize),
     Istream(format, version),
     fromProcNo_(fromProcNo),
     messageSize_(0)
 {
      notImplemented
      (
-         "IPstream::IPstream"
+         "IPsream::IPstream"
          "("
-             "const int fromProcNo,"
+             "const commsTypes,"
+             "const int fromProcNo," 
              "const label bufSize,"
-             "streamFormat format,"
-             "versionNumber version"
+             "streamFormat, versionNumber"
          ")"
      );
 }
@@ -65,29 +63,40 @@ IPstream::IPstream
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-int IPstream::read
+int Foam::IPstream::read
 (
+    const commsTypes commsType,
     const int fromProcNo,
     char* buf,
     const std::streamsize bufSize
 )
 {
-     notImplemented
-     (
-         "IPstream::read"
-         "("
-             "const int fromProcNo,"
-             "char* buf,"
-             "const label bufSize"
-         ")"
+    notImplemented
+    (
+        "IPstream::read"
+        "("
+            "const commsTypes,"
+            "const int fromProcNo,"
+            "char* buf,"
+            "const label bufSize"
+        ")"
      );
 
      return 0;
 }
 
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+void Foam::IPstream::waitRequests()
+{}
 
-} // End namespace Foam
+
+bool Foam::IPstream::finishedRequest(const label)
+{
+    notImplemented("IPstream::finishedRequest()");
+    return false;
+}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 // ************************************************************************* //

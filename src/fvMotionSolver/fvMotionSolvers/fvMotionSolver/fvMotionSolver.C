@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -53,8 +53,17 @@ Foam::fvMotionSolver::~fvMotionSolver()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::fvMotionSolver::updateMesh()
+void Foam::fvMotionSolver::movePoints(const pointField& p)
 {
+    pointMesh_.movePoints(p);
+    vpi_.movePoints();
+}
+
+
+void Foam::fvMotionSolver::updateMesh(const mapPolyMesh& mpm)
+{
+    motionSolver::updateMesh(mpm);
+    pointMesh_.updateMesh(mpm);
     vpi_.updateMesh();
 }
 

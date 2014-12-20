@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -69,12 +69,40 @@ valuePointPatchField<Type>::valuePointPatchField
 (
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
-    const dictionary& dict
+    const dictionary& dict,
+    const bool valueRequired
 )
 :
-    pointPatchField<Type>(p, iF),
-    Field<Type>("value", dict, p.size())
-{}
+    pointPatchField<Type>(p, iF, dict),
+    Field<Type>(p.size())
+{
+    if (dict.found("value"))
+    {
+        Field<Type>::operator=
+        (
+            Field<Type>("value", dict, p.size())
+        );
+    }
+    else if (!valueRequired)
+    {
+        Field<Type>::operator=(pTraits<Type>::zero);
+    }
+    else
+    {
+        FatalIOErrorIn
+        (
+            "pointPatchField<Type>::pointPatchField"
+            "("
+            "const fvPatch& p,"
+            "const DimensionedField<Type, pointMesh>& iF,"
+            "const dictionary& dict,"
+            "const bool valueRequired"
+            ")",
+            dict
+        )   << "Essential entry 'value' missing"
+            << exit(FatalIOError);
+    }
+}
 
 
 template<class Type>
@@ -151,7 +179,7 @@ void valuePointPatchField<Type>::updateCoeffs()
 
 
 template<class Type>
-void valuePointPatchField<Type>::evaluate()
+void valuePointPatchField<Type>::evaluate(const Pstream::commsTypes)
 {
     // Get internal field to insert values into
     Field<Type>& iF = const_cast<Field<Type>&>(this->internalField());

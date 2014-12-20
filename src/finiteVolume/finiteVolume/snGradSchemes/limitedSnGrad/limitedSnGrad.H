@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,10 +23,11 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    limitedSnGrad
+    Foam::fv::limitedSnGrad
 
 Description
     Central-difference snGrad scheme with limited non-orthogonal correction.
+
     The limiter is controlled by a coefficient with a value between 0 and 1
     which when 0 switches the correction off and the scheme behaves as
     uncorrectedSnGrad, when set to 1 the full correction is applied and the

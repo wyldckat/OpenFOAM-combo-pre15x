@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -362,6 +362,15 @@ operator*(const Vector<Cmpt>& v1, const Vector<Cmpt>& v2)
 }
 
 
+//- Division of a vector by a tensor, i.e. dot-product with the tensor inverse
+template <class Cmpt>
+inline typename innerProduct<Vector<Cmpt>, Tensor<Cmpt> >::type
+operator/(const Vector<Cmpt>& v, const Tensor<Cmpt>& t)
+{
+    return inv(t) & v;
+}
+
+
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
 
 //- Return the trace of a tensor
@@ -654,7 +663,7 @@ operator&&(const Tensor<Cmpt>& t1, const SphericalTensor<Cmpt>& st2)
     return(t1.xx()*st2.ii() + t1.yy()*st2.ii() + t1.zz()*st2.ii());
 }
 
-
+#ifndef __CINT__
 template<class Cmpt>
 class typeOfSum<SphericalTensor<Cmpt>, Tensor<Cmpt> >
 {
@@ -671,7 +680,6 @@ public:
     typedef Tensor<Cmpt> type;
 };
 
-
 template<class Cmpt>
 class innerProduct<SphericalTensor<Cmpt>, Tensor<Cmpt> >
 {
@@ -687,7 +695,7 @@ public:
 
     typedef Tensor<Cmpt> type;
 };
-
+#endif
 
 // * * * * * * * * * * Mixed Tensor SymmTensor Operators * * * * * * * * * * //
 
@@ -711,7 +719,7 @@ operator+(const Tensor<Cmpt>& t1, const SymmTensor<Cmpt>& st2)
     return Tensor<Cmpt>
     (
         t1.xx() + st2.xx(), t1.xy() + st2.xy(), t1.xz() + st2.xz(),
-        t1.yx() + st2.xy(), t1.yy() + st2.yy(), t1.yz() + st2.yy(),
+        t1.yx() + st2.xy(), t1.yy() + st2.yy(), t1.yz() + st2.yz(),
         t1.zx() + st2.xz(), t1.zy() + st2.yz(), t1.zz() + st2.zz()
     );
 }
@@ -737,7 +745,7 @@ operator-(const Tensor<Cmpt>& t1, const SymmTensor<Cmpt>& st2)
     return Tensor<Cmpt>
     (
         t1.xx() - st2.xx(), t1.xy() - st2.xy(), t1.xz() - st2.xz(),
-        t1.yx() - st2.xy(), t1.yy() - st2.yy(), t1.yz() - st2.yy(),
+        t1.yx() - st2.xy(), t1.yy() - st2.yy(), t1.yz() - st2.yz(),
         t1.zx() - st2.xz(), t1.zy() - st2.yz(), t1.zz() - st2.zz()
     );
 }
@@ -794,17 +802,9 @@ operator&&(const SymmTensor<Cmpt>& st1, const Tensor<Cmpt>& t2)
 {
     return
     (
-        st1.xx()*t2.xx() + st1.xy()*t2.yx() + st1.xz()*t2.zx() +
-        st1.xx()*t2.xy() + st1.xy()*t2.yy() + st1.xz()*t2.zy() +
-        st1.xx()*t2.xz() + st1.xy()*t2.yz() + st1.xz()*t2.zz() +
-
-        st1.xy()*t2.xx() + st1.yy()*t2.yx() + st1.yz()*t2.zx() +
-        st1.xy()*t2.xy() + st1.yy()*t2.yy() + st1.yz()*t2.zy() +
-        st1.xy()*t2.xz() + st1.yy()*t2.yz() + st1.yz()*t2.zz() +
-
-        st1.xz()*t2.xx() + st1.yz()*t2.yx() + st1.zz()*t2.zx() +
-        st1.xz()*t2.xy() + st1.yz()*t2.yy() + st1.zz()*t2.zy() +
-        st1.xz()*t2.xz() + st1.yz()*t2.yz() + st1.zz()*t2.zz()
+        st1.xx()*t2.xx() + st1.xy()*t2.xy() + st1.xz()*t2.xz() +
+        st1.xy()*t2.yx() + st1.yy()*t2.yy() + st1.yz()*t2.yz() +
+        st1.xz()*t2.zx() + st1.yz()*t2.zy() + st1.zz()*t2.zz()
     );
 }
 
@@ -817,20 +817,12 @@ operator&&(const Tensor<Cmpt>& t1, const SymmTensor<Cmpt>& st2)
     return
     (
         t1.xx()*st2.xx() + t1.xy()*st2.xy() + t1.xz()*st2.xz() +
-        t1.xx()*st2.xy() + t1.xy()*st2.yy() + t1.xz()*st2.yz() +
-        t1.xx()*st2.xz() + t1.xy()*st2.yz() + t1.xz()*st2.zz() +
-
-        t1.yx()*st2.xx() + t1.yy()*st2.xy() + t1.yz()*st2.xz() +
         t1.yx()*st2.xy() + t1.yy()*st2.yy() + t1.yz()*st2.yz() +
-        t1.yx()*st2.xz() + t1.yy()*st2.yz() + t1.yz()*st2.zz() +
-
-        t1.zx()*st2.xx() + t1.zy()*st2.xy() + t1.zz()*st2.xz() +
-        t1.zx()*st2.xy() + t1.zy()*st2.yy() + t1.zz()*st2.yz() +
         t1.zx()*st2.xz() + t1.zy()*st2.yz() + t1.zz()*st2.zz()
     );
 }
 
-
+#ifndef __CINT__
 template<class Cmpt>
 class typeOfSum<SymmTensor<Cmpt>, Tensor<Cmpt> >
 {
@@ -863,6 +855,7 @@ public:
 
     typedef Tensor<Cmpt> type;
 };
+#endif
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

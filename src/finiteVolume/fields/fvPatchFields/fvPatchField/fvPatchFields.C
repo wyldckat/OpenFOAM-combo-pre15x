@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -37,9 +37,9 @@ namespace Foam
                                                                               \
 defineNamedTemplateTypeNameAndDebug(fvPatchTypeField, 0);                     \
 template<>                                                                    \
-int fvPatchTypeField::disallowDefaultFvPatchField                             \
+int fvPatchTypeField::disallowGenericFvPatchField                             \
 (                                                                             \
-    debug::debugSwitch("disallowDefaultFvPatchField", 0)                      \
+    debug::debugSwitch("disallowGenericFvPatchField", 0)                      \
 );                                                                            \
 defineTemplateRunTimeSelectionTable(fvPatchTypeField, patch);                 \
 defineTemplateRunTimeSelectionTable(fvPatchTypeField, patchMapper);           \

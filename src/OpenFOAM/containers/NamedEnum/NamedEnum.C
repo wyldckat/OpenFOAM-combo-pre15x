@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,9 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Initialise the NamedEnum HashTable from the static list of names.
 
 \*---------------------------------------------------------------------------*/
 
@@ -57,6 +54,36 @@ Foam::NamedEnum<Enum, nEnum>::NamedEnum()
         }
         insert(names[i], i);
     }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Enum, int nEnum>
+Enum Foam::NamedEnum<Enum, nEnum>::read(Istream& is) const
+{
+    word name(is);
+
+    HashTable<int>::const_iterator iter = find(name);
+
+    if (iter == HashTable<int>::end())
+    {
+        FatalIOErrorIn
+        (
+            "NamedEnum<Enum, nEnum>::read(Istream& is) const",
+            is
+        ) << name << " is not in enumeration " << toc()
+            << exit(FatalIOError);
+    }
+
+    return Enum(iter());
+}
+
+
+template<class Enum, int nEnum>
+void Foam::NamedEnum<Enum, nEnum>::write(const Enum e, Ostream& os) const
+{
+    os << operator[](e);
 }
 
 

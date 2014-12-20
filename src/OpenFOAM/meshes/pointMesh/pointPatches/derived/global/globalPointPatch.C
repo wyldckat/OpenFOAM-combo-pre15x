@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -41,14 +41,13 @@ defineTypeNameAndDebug(globalPointPatch, 0);
 
 globalPointPatch::globalPointPatch
 (
-    const globalMeshData& pi,
     const pointBoundaryMesh& bm,
-    const label
+    const label bi
 )
 :
     pointPatch(bm),
     coupledPointPatch(bm),
-    globalMeshData_(pi)
+    boundaryIndex_(bi)
 {}
 
 

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -25,7 +25,6 @@ License
 \*---------------------------------------------------------------------------*/
 
 #include "processorLduInterface.H"
-#include "diagTensorField.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -34,13 +33,35 @@ namespace Foam
     defineTypeNameAndDebug(processorLduInterface, 0);
 }
 
+
+// * * * * * * * * * * * * * Private Member Functions *  * * * * * * * * * * //
+
+void Foam::processorLduInterface::resizeBuf
+(
+    List<char>& buf, 
+    const label size
+) const
+{
+    if (buf.size() < size)
+    {
+        buf.setSize(size);
+    }
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+Foam::processorLduInterface::processorLduInterface()
+:
+    sendBuf_(0),
+    receiveBuf_(0)
+{}
+
+
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 Foam::processorLduInterface::~processorLduInterface()
 {}
-
-
-// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
 // ************************************************************************* //

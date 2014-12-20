@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -29,20 +29,18 @@ License
 #include "volFields.H"
 #include "mathematicalConstants.H"
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 namespace Foam
 {
+    defineTypeNameAndDebug(dynamicInkJetFvMesh, 0);
+    addToRunTimeSelectionTable(dynamicFvMesh, dynamicInkJetFvMesh, IOobject);
+}
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-defineTypeNameAndDebug(dynamicInkJetFvMesh, 0);
-
-addToRunTimeSelectionTable(dynamicFvMesh, dynamicInkJetFvMesh, IOobject);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-dynamicInkJetFvMesh::dynamicInkJetFvMesh(const IOobject& io)
+Foam::dynamicInkJetFvMesh::dynamicInkJetFvMesh(const IOobject& io)
 :
     dynamicFvMesh(io),
     dynamicMeshCoeffs_
@@ -67,7 +65,8 @@ dynamicInkJetFvMesh::dynamicInkJetFvMesh(const IOobject& io)
         IOobject
         (
             "points",
-            io.time().constant()/defaultRegion,
+            io.time().constant(),
+            meshSubDir,
             *this,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
@@ -82,13 +81,13 @@ dynamicInkJetFvMesh::dynamicInkJetFvMesh(const IOobject& io)
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
-dynamicInkJetFvMesh::~dynamicInkJetFvMesh()
+Foam::dynamicInkJetFvMesh::~dynamicInkJetFvMesh()
 {}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-bool dynamicInkJetFvMesh::update()
+bool Foam::dynamicInkJetFvMesh::update()
 {
     scalar scalingFunction =
         0.5*(::cos(2*mathematicalConstant::pi*frequency_*time().value()) - 1.0);
@@ -121,9 +120,5 @@ bool dynamicInkJetFvMesh::update()
     return true;
 }
 
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-} // End namespace Foam
 
 // ************************************************************************* //

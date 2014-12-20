@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -54,7 +54,7 @@ cyclicPointPatchField<Type>::cyclicPointPatchField
     const dictionary& dict
 )
 :
-    coupledPointPatchField<Type>(p, iF),
+    coupledPointPatchField<Type>(p, iF, dict),
     cyclicPatch_(refCast<const cyclicPointPatch>(p))
 {
     if (!isType<cyclicPointPatch>(p))
@@ -78,13 +78,13 @@ cyclicPointPatchField<Type>::cyclicPointPatchField
 template<class Type>
 cyclicPointPatchField<Type>::cyclicPointPatchField
 (
-    const cyclicPointPatchField<Type>&,
+    const cyclicPointPatchField<Type>& ptf,
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
-    const pointPatchFieldMapper&
+    const pointPatchFieldMapper& mapper
 )
 :
-    coupledPointPatchField<Type>(p, iF),
+    coupledPointPatchField<Type>(ptf, p, iF, mapper),
     cyclicPatch_(refCast<const cyclicPointPatch>(p))
 {
     if (!isType<cyclicPointPatch>(this->patch()))

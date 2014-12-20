@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -160,7 +160,7 @@ tmp<fvsPatchField<Type> > slicedFvsPatchField<Type>::clone
 template<class Type>
 slicedFvsPatchField<Type>::~slicedFvsPatchField<Type>()
 {
-    // Set the fvsPatchField storage pointer to NULL before it's destruction
+    // Set the fvsPatchField storage pointer to NULL before its destruction
     // to protect the field it a slice of.
     UList<Type>::operator=(UList<Type>(NULL, 0));
 }

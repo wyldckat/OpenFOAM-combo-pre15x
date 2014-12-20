@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    faceMesh
+    Foam::faceMesh
 
 Description
     Storage for surface mesh i.e. points and faces.
@@ -51,12 +51,14 @@ class faceMesh
 :
     public PrimitivePatch<face, List, pointField>
 {
-    PrimitivePatch<face, List, pointField> read(Istream& is)
-    {
-        pointField points(is);
-        faceList faces(is);
-        return PrimitivePatch<face, Foam::List, pointField>(faces, points);
-    }
+    // Private member functions
+
+        PrimitivePatch<face, List, pointField> read(Istream& is)
+        {
+            pointField points(is);
+            faceList faces(is);
+            return PrimitivePatch<face, Foam::List, pointField>(faces, points);
+        }
 
 
 public:

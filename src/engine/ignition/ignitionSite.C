@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -90,7 +90,7 @@ void ignitionSite::findIgnitionCells(const fvMesh& mesh)
 
 const labelList& ignitionSite::cells() const
 {
-    if (mesh_.moving() && timeIndex_ != db_.timeIndex())
+    if (mesh_.changing() && timeIndex_ != db_.timeIndex())
     {
         const_cast<ignitionSite&>(*this).findIgnitionCells(mesh_);
     }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -46,7 +46,7 @@ namespace Foam
 \*---------------------------------------------------------------------------*/
 
 //- Determine correspondence between pointFields. Gets passed
-//  local tolerance per point. Returns map from 0 to 1. Returns
+//  local matching distance per point. Returns map from 0 to 1. Returns
 //  true if found corresponding point in 1 for every point in 0; false
 //  otherwise. Compares mag(pt - origin) and does proper comparison for points
 //  with (almost) identical mag. pts0 can be subset of pts1.
@@ -54,7 +54,7 @@ bool matchPoints
 (
     const UList<point>& pts0,
     const UList<point>& pts1,
-    const UList<scalar>& tols,
+    const UList<scalar>& matchDistance,
     const bool verbose,
     labelList& from0To1,
     const point& origin = point::zero

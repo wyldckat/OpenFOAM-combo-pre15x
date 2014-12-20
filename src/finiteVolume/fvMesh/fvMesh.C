@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -176,7 +176,7 @@ fvMesh::fvMesh(const IOobject& io)
             );
         }
 
-        setMoving();
+        moving(true);
     }
 }
 
@@ -365,14 +365,28 @@ void fvMesh::mapFields(const mapPolyMesh& meshMap)
     const fvMeshMapper mapper(*this, meshMap);
 
     // Map all the volFields in the objectRegistry
-    MapGeometricFields<scalar, fvPatchField, fvMeshMapper, volMesh>(mapper);
-    MapGeometricFields<vector, fvPatchField, fvMeshMapper, volMesh>(mapper);
-    MapGeometricFields<tensor, fvPatchField, fvMeshMapper, volMesh>(mapper);
+    MapGeometricFields<scalar, fvPatchField, fvMeshMapper, volMesh>
+    (mapper);
+    MapGeometricFields<vector, fvPatchField, fvMeshMapper, volMesh>
+    (mapper);
+    MapGeometricFields<sphericalTensor, fvPatchField, fvMeshMapper, volMesh>
+    (mapper);
+    MapGeometricFields<symmTensor, fvPatchField, fvMeshMapper, volMesh>
+    (mapper);
+    MapGeometricFields<tensor, fvPatchField, fvMeshMapper, volMesh>
+    (mapper);
 
     // Map all the surfaceFields in the objectRegistry
-    MapGeometricFields<scalar, fvsPatchField, fvMeshMapper, surfaceMesh>(mapper);
-    MapGeometricFields<vector, fvsPatchField, fvMeshMapper, surfaceMesh>(mapper);
-    MapGeometricFields<tensor, fvsPatchField, fvMeshMapper, surfaceMesh>(mapper);
+    MapGeometricFields<scalar, fvsPatchField, fvMeshMapper, surfaceMesh>
+    (mapper);
+    MapGeometricFields<vector, fvsPatchField, fvMeshMapper, surfaceMesh>
+    (mapper);
+    MapGeometricFields<symmTensor, fvsPatchField, fvMeshMapper, surfaceMesh>
+    (mapper);
+    MapGeometricFields<symmTensor, fvsPatchField, fvMeshMapper, surfaceMesh>
+    (mapper);
+    MapGeometricFields<tensor, fvsPatchField, fvMeshMapper, surfaceMesh>
+    (mapper);
 
     // Map all the clouds in the objectRegistry
     mapClouds(*this, meshMap);
@@ -421,26 +435,6 @@ void fvMesh::mapFields(const mapPolyMesh& meshMap)
             }
         }
     }
-}
-
-
-void fvMesh::updateMesh(const mapPolyMesh& mpm)
-{
-    // Update polyMesh. This needs to keep volume existent!
-    polyMesh::updateMesh(mpm);
-
-    // Map all fields using current (i.e. not yet mapped) volume
-    mapFields(mpm);
-
-    // Clear the current volume and other geometry factors
-    surfaceInterpolation::clearOut();
-    clearGeomNotOldVol();
-
-    clearAddressing();
-
-    // handleMorph() should also clear out the surfaceInterpolation.
-    // This is a temporary solution
-    surfaceInterpolation::movePoints();
 }
 
 
@@ -532,6 +526,28 @@ tmp<scalarField> fvMesh::movePoints(const pointField& p)
     surfaceInterpolation::movePoints();
 
     return tsweptVols;
+}
+
+
+void fvMesh::updateMesh(const mapPolyMesh& mpm)
+{
+    // Update polyMesh. This needs to keep volume existent!
+    polyMesh::updateMesh(mpm);
+
+    // Clear the sliced fields
+    clearGeomNotOldVol();
+
+    // Map all fields using current (i.e. not yet mapped) volume
+    mapFields(mpm);
+
+    // Clear the current volume and other geometry factors
+    surfaceInterpolation::clearOut();
+
+    clearAddressing();
+
+    // handleMorph() should also clear out the surfaceInterpolation.
+    // This is a temporary solution
+    surfaceInterpolation::movePoints();
 }
 
 

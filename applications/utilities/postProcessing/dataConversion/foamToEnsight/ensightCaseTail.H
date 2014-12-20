@@ -28,4 +28,6 @@ if (Pstream::master())
             ensightCaseFile << nl;
         }
     }
+
+    ensightCaseFile << nl;
 }

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -22,11 +22,11 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
-    diagTensorField
+Typedef
+    Foam::diagTensorField
 
 Description
-    Specialisation of Field<T> for diagTensor.
+    Specialisation of Field\<T\> for diagTensor.
 
 SourceFiles
     diagTensorField.C
@@ -63,6 +63,9 @@ BINARY_OPERATOR(tensor, diagTensor, tensor, -, subtract)
 
 BINARY_TYPE_OPERATOR(tensor, diagTensor, tensor, +, add)
 BINARY_TYPE_OPERATOR(tensor, diagTensor, tensor, -, subtract)
+
+BINARY_OPERATOR(vector, vector, diagTensor, /, divide)
+BINARY_TYPE_OPERATOR(vector, vector, diagTensor, /, divide)
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

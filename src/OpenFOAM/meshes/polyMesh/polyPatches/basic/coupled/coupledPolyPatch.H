@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,11 +23,12 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    coupledPolyPatch
+    Foam::coupledPolyPatch
 
 Description
-    coupledPolyPatch is an abstract base class for patches that couple regions
-    of the computational domain e.g. cyclic and processor-processor links.
+    The coupledPolyPatch is an abstract base class for patches that couple
+    regions of the computational domain e.g. cyclic and processor-processor
+    links.
 
 SourceFiles
     coupledPolyPatch.C
@@ -64,31 +65,29 @@ class coupledPolyPatch
         //- Neighbour-cell transformation tensor
         mutable tensorField reverseT_;
 
+public:
 
-    // Private static data
+    // Static data members
 
-        //- Relative tolerance (for geometric matching). Is factor of
-        //  maximum edge length per face.
-        static scalar matchTol_;
+        //- Relative tolerance (for geometric matching).
+        static scalar matchTol;
+
 
 protected:
 
-        //- Calculate the uniform transformation tensors
-        void calcTransformTensors
-        (
-            const vector& Cf,
-            const vector& Cr,
-            const vector& nf,
-            const vector& nr
-        ) const;
+    // Protected Member Functions
 
         //- Calculate the transformation tensors
+        //  smallDist : matching distance per face
+        //  absTol    : absolute error in normal
         void calcTransformTensors
         (
             const vectorField& Cf,
             const vectorField& Cr,
             const vectorField& nf,
-            const vectorField& nr
+            const vectorField& nr,
+            const scalarField& smallDist,
+            const scalar absTol = matchTol
         ) const;
 
         //- Initialise the calculation of the patch geometry
@@ -103,6 +102,13 @@ protected:
         //- Correct patches after moving points
         virtual void movePoints(const pointField&) = 0;
 
+        //- Initialise the update of the patch topology
+        virtual void initUpdateMesh() = 0;
+
+        //- Update of the patch topology
+        virtual void updateMesh() = 0;
+
+
         //- Write point in OBJ format
         static void writeOBJ(Ostream& os, const point& pt);
 
@@ -113,7 +119,7 @@ protected:
         static void writeOBJ
         (
             const fileName&,
-            const faceList&,
+            const UList<face>&,
             const pointField&
         );
 
@@ -127,10 +133,18 @@ protected:
         );
 
         //- Calculate face centres
-        static pointField calcFaceCentres(const faceList&, const pointField&);
+        static pointField calcFaceCentres
+        (
+            const UList<face>&,
+            const pointField&
+        );
 
         //- Get f[0] for all faces
-        static pointField getAnchorPoints(const faceList&, const pointField&);
+        static pointField getAnchorPoints
+        (
+            const UList<face>&,
+            const pointField&
+        );
 
         //- Is face (in old face labels) in current patch?
         bool inPatch
@@ -151,7 +165,7 @@ protected:
         //  from face centre to any of the face vertices.
         static scalarField calcFaceTol
         (
-            const faceList& faces,
+            const UList<face>& faces,
             const pointField& points,
             const pointField& faceCentres
         );
@@ -183,13 +197,6 @@ public:
             const label start,
             const label index,
             const polyBoundaryMesh& bm
-        );
-
-        //- Construct from Istream
-        coupledPolyPatch
-        (
-            Istream&,
-            const label index, const polyBoundaryMesh&
         );
 
         //- Construct from dictionary

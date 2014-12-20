@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -44,7 +44,23 @@ pointPatchField<Type>::pointPatchField
 :
     patch_(p),
     internalField_(iF),
-    updated_(false)
+    updated_(false),
+    patchType_(word::null)
+{}
+
+
+template<class Type>
+pointPatchField<Type>::pointPatchField
+(
+    const pointPatch& p,
+    const DimensionedField<Type, pointMesh>& iF,
+    const dictionary& dict
+)
+:
+    patch_(p),
+    internalField_(iF),
+    updated_(false),
+    patchType_(dict.lookupOrDefault<word>("patchType", word::null))
 {}
 
 
@@ -56,7 +72,8 @@ pointPatchField<Type>::pointPatchField
 :
     patch_(ptf.patch_),
     internalField_(ptf.internalField_),
-    updated_(false)
+    updated_(false),
+    patchType_(ptf.patchType_)
 {}
 
 
@@ -69,7 +86,8 @@ pointPatchField<Type>::pointPatchField
 :
     patch_(ptf.patch_),
     internalField_(iF),
-    updated_(false)
+    updated_(false),
+    patchType_(ptf.patchType_)
 {}
 
 
@@ -86,6 +104,12 @@ template<class Type>
 void pointPatchField<Type>::write(Ostream& os) const
 {
     os.writeKeyword("type") << type() << token::END_STATEMENT << nl;
+
+    if (patchType_ != word::null)
+    {
+        os.writeKeyword("patchType") << patchType_
+            << token::END_STATEMENT << nl;
+    }
 }
 
 
@@ -182,7 +206,8 @@ template<class Type1>
 void pointPatchField<Type>::setInInternalField
 (
     Field<Type1>& iF,
-    const Field<Type1>& pF
+    const Field<Type1>& pF,
+    const labelList& meshPoints
 ) const
 {
     // Check size
@@ -199,37 +224,46 @@ void pointPatchField<Type>::setInInternalField
             << abort(FatalError);
     }
 
-    if (pF.size() != size())
+    if (pF.size() != meshPoints.size())
     {
         FatalErrorIn
         (
             "void pointPatchField<Type>::"
             "setInInternalField("
             "Field<Type1>& iF, const Field<Type1>& iF) const"
-        )   << "given patch field does not correspond to the mesh. "
+        )   << "given patch field does not correspond to the meshPoints. "
             << "Field size: " << pF.size()
-            << " mesh size: " << size()
+            << " meshPoints size: " << size()
             << abort(FatalError);
     }
 
-    // Get the addressing
-    const labelList& mp = patch().meshPoints();
-
-    forAll (mp, pointI)
+    forAll (meshPoints, pointI)
     {
-        iF[mp[pointI]] = pF[pointI];
+        iF[meshPoints[pointI]] = pF[pointI];
     }
 }
 
 
 template<class Type>
-void pointPatchField<Type>::evaluate()
+template<class Type1>
+void pointPatchField<Type>::setInInternalField
+(
+    Field<Type1>& iF,
+    const Field<Type1>& pF
+) const
+{
+    setInInternalField(iF, pF, patch().meshPoints());
+}
+
+
+template<class Type>
+void pointPatchField<Type>::evaluate(const Pstream::commsTypes)
 {
     if (!updated_)
     {
         updateCoeffs();
     }
-    
+
     updated_ = false;
 }
 

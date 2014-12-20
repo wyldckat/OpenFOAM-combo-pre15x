@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,7 +52,7 @@ fixedValueFvPatchField<Type>::fixedValueFvPatchField
     const dictionary& dict
 )
 :
-    fvPatchField<Type>(p, iF, Field<Type>("value", dict, p.size()))
+    fvPatchField<Type>(p, iF, dict, true)
 {}
 
 

@@ -34,6 +34,7 @@ polyTopoChange/polyTopoChange/hexRef8.C
 polyTopoChange/polyTopoChange/removeCells.C
 polyTopoChange/polyTopoChange/removeFaces.C
 polyTopoChange/polyTopoChange/refinementData.C
+polyTopoChange/polyTopoChange/refinementDistanceData.C
 polyTopoChange/polyTopoChange/refinementHistory.C
 polyTopoChange/polyTopoChange/removePoints.C
 polyTopoChange/polyTopoChange/combineFaces.C

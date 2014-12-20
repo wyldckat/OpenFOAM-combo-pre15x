@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,13 +23,13 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    undoableMeshCutter
+    Foam::undoableMeshCutter
 
 Description
-    Is main refinement handler. Gets cellCuts which is structure that describes
-    which cells are to be cut and in what way. Maintains an undo list
-    (if told so during construction). Apart from undo list is just wrapper
-    around meshCutter.
+    The main refinement handler. Gets cellCuts which is structure that
+    describes which cells are to be cut and in what way. Maintains an undo
+    list (if told so during construction). Apart from undo list is just
+    wrapper around meshCutter.
 
     Undo list: contains a refinement tree (of type splitCell; cell labels are
     of no consequence) and a list of visible splitCells, i.e. the top of the
@@ -59,6 +59,7 @@ Description
     - liveSplitCells contains pointers to splitCells with null children.
 
 
+
 SourceFiles
     undoableMeshCutter.C
 
@@ -81,7 +82,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class polyMesh;
 class polyTopoChange;
 class refineCell;

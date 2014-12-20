@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    fvMatrix<Type>
+    Foam::fvMatrix
 
 Description
     Finite-Volume matrix.
@@ -44,7 +44,7 @@ SourceFiles
 #include "tmp.H"
 #include "autoPtr.H"
 #include "dimensionedTypes.H"
-#include "Zero.H"
+#include "zeroField.H"
 #include "className.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -52,37 +52,51 @@ SourceFiles
 namespace Foam
 {
 
-// * * * * * * Forward declaration of template friend fuctions * * * * * * * //
+// Forward declaration of friend functions and operators
 
 template<class Type>
 class fvMatrix;
 
 template<class Type>
-tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
 (
     const fvMatrix<Type>&,
-    const GeometricField<Type,fvPatchField,volMesh>&
+    const DimensionedField<Type, volMesh>&
 );
 
 template<class Type>
-tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
 (
     const fvMatrix<Type>&,
-    const tmp<GeometricField<Type,fvPatchField,volMesh> >&
+    const tmp<DimensionedField<Type, volMesh> >&
 );
 
 template<class Type>
-tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
 (
-    const tmp<fvMatrix<Type> >&,
-    const GeometricField<Type,fvPatchField,volMesh>&
+    const fvMatrix<Type>&,
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
 );
 
 template<class Type>
-tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
 (
     const tmp<fvMatrix<Type> >&,
-    const tmp<GeometricField<Type,fvPatchField,volMesh> >&
+    const DimensionedField<Type, volMesh>&
+);
+
+template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<DimensionedField<Type, volMesh> >&
+);
+
+template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
 );
 
 template<class Type>
@@ -99,6 +113,8 @@ class fvMatrix
     public refCount,
     public lduMatrix
 {
+public:
+
     // Private data
 
         // Reference to GeometricField<Type, fvPatchField, volMesh>
@@ -388,29 +404,38 @@ public:
 
         void operator+=
         (
-            const GeometricField<Type, fvPatchField,volMesh>&
+            const DimensionedField<Type, volMesh>&
         );
         void operator+=
         (
-            const tmp<GeometricField<Type, fvPatchField,volMesh> >&
+            const tmp<DimensionedField<Type, volMesh> >&
+        );
+        void operator+=
+        (
+            const tmp<GeometricField<Type, fvPatchField, volMesh> >&
         );
 
         void operator-=
         (
-            const GeometricField<Type, fvPatchField,volMesh>&
+            const DimensionedField<Type, volMesh>&
         );
         void operator-=
         (
-            const tmp<GeometricField<Type, fvPatchField,volMesh> >&
+            const tmp<DimensionedField<Type, volMesh> >&
+        );
+        void operator-=
+        (
+            const tmp<GeometricField<Type, fvPatchField, volMesh> >&
         );
 
         void operator+=(const dimensioned<Type>&);
         void operator-=(const dimensioned<Type>&);
 
-        void operator+=(const Zero&);
-        void operator-=(const Zero&);
+        void operator+=(const zeroField&);
+        void operator-=(const zeroField&);
 
-        void operator*=(const volScalarField&);
+        void operator*=(const DimensionedField<scalar, volMesh>&);
+        void operator*=(const tmp<DimensionedField<scalar, volMesh> >&);
         void operator*=(const tmp<volScalarField>&);
 
         void operator*=(const dimensioned<scalar>&);
@@ -418,25 +443,29 @@ public:
 
     // Friend operators
 
-        friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
+        friend tmp<GeometricField<Type, fvPatchField, volMesh> >
+        operator& <Type>
         (
             const fvMatrix<Type>&,
-            const GeometricField<Type, fvPatchField, volMesh>&
+            const DimensionedField<Type, volMesh>&
         );
 
-        friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
+        friend tmp<GeometricField<Type, fvPatchField, volMesh> >
+        operator& <Type>
         (
             const fvMatrix<Type>&,
-            const tmp<GeometricField<Type,fvPatchField,volMesh> >&
+            const tmp<GeometricField<Type, fvPatchField, volMesh> >&
         );
 
-        friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
+        friend tmp<GeometricField<Type, fvPatchField, volMesh> >
+        operator& <Type>
         (
             const tmp<fvMatrix<Type> >&,
-            const GeometricField<Type, fvPatchField, volMesh>&
+            const DimensionedField<Type, volMesh>&
         );
 
-        friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
+        friend tmp<GeometricField<Type, fvPatchField, volMesh> >
+        operator& <Type>
         (
             const tmp<fvMatrix<Type> >&,
             const tmp<GeometricField<Type, fvPatchField, volMesh> >&
@@ -467,7 +496,7 @@ template<class Type>
 void checkMethod
 (
     const fvMatrix<Type>&,
-    const GeometricField<Type, fvPatchField, volMesh>&,
+    const DimensionedField<Type, volMesh>&,
     const char*
 );
 
@@ -509,74 +538,6 @@ lduMatrix::solverPerformance solve(const tmp<fvMatrix<Type> >&);
 // * * * * * * * * * * * * * * * Global operators  * * * * * * * * * * * * * //
 
 template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const fvMatrix<Type>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const tmp<fvMatrix<Type> >&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator+
-(
-    const fvMatrix<Type>&,
-    const fvMatrix<Type>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator+
-(
-    const tmp<fvMatrix<Type> >&,
-    const fvMatrix<Type>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator+
-(
-    const fvMatrix<Type>&,
-    const tmp<fvMatrix<Type> >&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator+
-(
-    const tmp<fvMatrix<Type> >&,
-    const tmp<fvMatrix<Type> >&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const fvMatrix<Type>&,
-    const fvMatrix<Type>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const tmp<fvMatrix<Type> >&,
-    const fvMatrix<Type>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const fvMatrix<Type>&,
-    const tmp<fvMatrix<Type> >&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const tmp<fvMatrix<Type> >&,
-    const tmp<fvMatrix<Type> >&
-);
-
-template<class Type>
 tmp<fvMatrix<Type> > operator==
 (
     const fvMatrix<Type>&,
@@ -604,18 +565,133 @@ tmp<fvMatrix<Type> > operator==
     const tmp<fvMatrix<Type> >&
 );
 
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const fvMatrix<Type>&,
+    const DimensionedField<Type, volMesh>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const fvMatrix<Type>&,
+    const tmp<DimensionedField<Type, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const fvMatrix<Type>&,
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const tmp<fvMatrix<Type> >&,
+    const DimensionedField<Type, volMesh>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<DimensionedField<Type, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const fvMatrix<Type>&,
+    const dimensioned<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const tmp<fvMatrix<Type> >&,
+    const dimensioned<Type>&
+);
+
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const fvMatrix<Type>&,
+    const zeroField&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator==
+(
+    const tmp<fvMatrix<Type> >&,
+    const zeroField&
+);
+
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<fvMatrix<Type> >&
+);
+
+
 template<class Type>
 tmp<fvMatrix<Type> > operator+
 (
     const fvMatrix<Type>&,
-    const GeometricField<Type, fvPatchField, volMesh>&
+    const fvMatrix<Type>&
 );
 
 template<class Type>
 tmp<fvMatrix<Type> > operator+
 (
     const tmp<fvMatrix<Type> >&,
-    const GeometricField<Type, fvPatchField, volMesh>&
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator+
+(
+    const fvMatrix<Type>&,
+    const tmp<fvMatrix<Type> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator+
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<fvMatrix<Type> >&
+);
+
+
+template<class Type>
+tmp<fvMatrix<Type> > operator+
+(
+    const fvMatrix<Type>&,
+    const DimensionedField<Type, volMesh>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator+
+(
+    const fvMatrix<Type>&,
+    const tmp<DimensionedField<Type, volMesh> >&
 );
 
 template<class Type>
@@ -629,21 +705,35 @@ template<class Type>
 tmp<fvMatrix<Type> > operator+
 (
     const tmp<fvMatrix<Type> >&,
+    const DimensionedField<Type, volMesh>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator+
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<DimensionedField<Type, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator+
+(
+    const tmp<fvMatrix<Type> >&,
     const tmp<GeometricField<Type, fvPatchField, volMesh> >&
 );
 
 template<class Type>
 tmp<fvMatrix<Type> > operator+
 (
-    const GeometricField<Type, fvPatchField, volMesh>&,
+    const DimensionedField<Type, volMesh>&,
     const fvMatrix<Type>&
 );
 
 template<class Type>
 tmp<fvMatrix<Type> > operator+
 (
-    const GeometricField<Type, fvPatchField, volMesh>&,
-    const tmp<fvMatrix<Type> >&
+    const tmp<DimensionedField<Type, volMesh> >&,
+    const fvMatrix<Type>&
 );
 
 template<class Type>
@@ -656,61 +746,19 @@ tmp<fvMatrix<Type> > operator+
 template<class Type>
 tmp<fvMatrix<Type> > operator+
 (
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
+    const DimensionedField<Type, volMesh>&,
     const tmp<fvMatrix<Type> >&
 );
 
 template<class Type>
-tmp<fvMatrix<Type> > operator-
+tmp<fvMatrix<Type> > operator+
 (
-    const fvMatrix<Type>&,
-    const GeometricField<Type, fvPatchField, volMesh>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const tmp<fvMatrix<Type> >&,
-    const GeometricField<Type, fvPatchField, volMesh>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const fvMatrix<Type>&,
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const tmp<fvMatrix<Type> >&,
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const GeometricField<Type, fvPatchField, volMesh>&,
-    const fvMatrix<Type>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const GeometricField<Type, fvPatchField, volMesh>&,
+    const tmp<DimensionedField<Type, volMesh> >&,
     const tmp<fvMatrix<Type> >&
 );
 
 template<class Type>
-tmp<fvMatrix<Type> > operator-
-(
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
-    const fvMatrix<Type>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator-
+tmp<fvMatrix<Type> > operator+
 (
     const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
     const tmp<fvMatrix<Type> >&
@@ -745,6 +793,121 @@ tmp<fvMatrix<Type> > operator+
     const tmp<fvMatrix<Type> >&
 );
 
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const fvMatrix<Type>&,
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<fvMatrix<Type> >&,
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const fvMatrix<Type>&,
+    const tmp<fvMatrix<Type> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<fvMatrix<Type> >&
+);
+
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const fvMatrix<Type>&,
+    const DimensionedField<Type, volMesh>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const fvMatrix<Type>&,
+    const tmp<DimensionedField<Type, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const fvMatrix<Type>&,
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<fvMatrix<Type> >&,
+    const DimensionedField<Type, volMesh>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<DimensionedField<Type, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const DimensionedField<Type, volMesh>&,
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<DimensionedField<Type, volMesh> >&,
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
+    const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const DimensionedField<Type, volMesh>&,
+    const tmp<fvMatrix<Type> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<DimensionedField<Type, volMesh> >&,
+    const tmp<fvMatrix<Type> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator-
+(
+    const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
+    const tmp<fvMatrix<Type> >&
+);
+
+
 template<class Type>
 tmp<fvMatrix<Type> > operator-
 (
@@ -771,79 +934,21 @@ tmp<fvMatrix<Type> > operator-
 (
     const dimensioned<Type>&,
     const tmp<fvMatrix<Type> >&
-);
-
-
-template<class Type>
-tmp<fvMatrix<Type> > operator==
-(
-    const fvMatrix<Type>&,
-    const GeometricField<Type, fvPatchField, volMesh>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator==
-(
-    const tmp<fvMatrix<Type> >&,
-    const GeometricField<Type, fvPatchField, volMesh>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator==
-(
-    const fvMatrix<Type>&,
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator==
-(
-    const tmp<fvMatrix<Type> >&,
-    const tmp<GeometricField<Type, fvPatchField, volMesh> >&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator==
-(
-    const fvMatrix<Type>&,
-    const dimensioned<Type>&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator==
-(
-    const tmp<fvMatrix<Type> >&,
-    const dimensioned<Type>&
-);
-
-
-template<class Type>
-tmp<fvMatrix<Type> > operator==
-(
-    const fvMatrix<Type>&,
-    const Zero&
-);
-
-template<class Type>
-tmp<fvMatrix<Type> > operator==
-(
-    const tmp<fvMatrix<Type> >&,
-    const Zero&
 );
 
 
 template<class Type>
 tmp<fvMatrix<Type> > operator*
 (
-    const volScalarField&,
+    const DimensionedField<scalar, volMesh>&,
     const fvMatrix<Type>&
 );
 
 template<class Type>
 tmp<fvMatrix<Type> > operator*
 (
-    const volScalarField&,
-    const tmp<fvMatrix<Type> >&
+    const tmp<DimensionedField<scalar, volMesh> >&,
+    const fvMatrix<Type>&
 );
 
 template<class Type>
@@ -851,6 +956,20 @@ tmp<fvMatrix<Type> > operator*
 (
     const tmp<volScalarField>&,
     const fvMatrix<Type>&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator*
+(
+    const DimensionedField<scalar, volMesh>&,
+    const tmp<fvMatrix<Type> >&
+);
+
+template<class Type>
+tmp<fvMatrix<Type> > operator*
+(
+    const tmp<DimensionedField<scalar, volMesh> >&,
+    const tmp<fvMatrix<Type> >&
 );
 
 template<class Type>

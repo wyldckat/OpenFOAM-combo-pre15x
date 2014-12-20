@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,13 +23,14 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    SubList
+    Foam::SubList
 
 Description
-    SubList is a List obtained as a section of another List.  Thus it is
-    itself unallocated so that no storage is allocated or de-allocated
-    during it's use.  To achieve this behaviour, SubList is derived from
-    UList rather than List.
+    A List obtained as a section of another List.
+
+    Since the SubList is itself unallocated, no storage is allocated or
+    de-allocated during its use.  To achieve this behaviour, SubList is
+    derived from UList rather than List.
 
 SourceFiles
     SubListI.H
@@ -79,13 +80,13 @@ public:
     // Member functions
 
         //- Return a null SubList
-        static inline SubList<T>& null();
+        static inline const SubList<T>& null();
 
 
     // Member operators
 
         //- Allow cast to a const List<T>&
-        inline operator const List<T>&() const;
+        inline operator const Foam::List<T>&() const;
 };
 
 

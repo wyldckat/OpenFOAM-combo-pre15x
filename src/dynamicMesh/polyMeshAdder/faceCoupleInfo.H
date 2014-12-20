@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,30 +20,33 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    faceCoupleInfo
+    Foam::faceCoupleInfo
 
 Description
-    Container for information needed to couple to meshes. When constructed from
-    two meshes and a geometric tolerance finds the corresponding boundary faces.
+    Container for information needed to couple to meshes. When constructed
+    from two meshes and a geometric tolerance finds the corresponding
+    boundary faces.
 
-    The information it keeps is the set of faces&points (cutFaces, cutPoints)
-    that should replace a set of faces on the master (masterPatch) and
-    a set of faces on the slave (slavePatch)
+    The information it keeps is the set of faces&points (cutFaces,
+    cutPoints) that should replace a set of faces on the master
+    (masterPatch) and a set of faces on the slave (slavePatch)
 
 
     Uses same tolerance to match faces and points on matched faces since
     they both originate from the same points and the tolerance usually
     comes from writing these points with limited precision (6 by default)
 
-    1) Perfect match:
-    - one-to-one match for faces and points.
-    - the cut is always the 'most connected' of the master and slave so
-    multiple master or slave points might point to the same cut point.
+    -# Perfect match:
+       - one-to-one match for faces and points.
+       - the cut is always the 'most connected' of the master and slave so
+         multiple master or slave points might point to the same cut point.
 
+    @verbatim
     e.g. master:
+    
         +--+
         |  |
         |  |
@@ -61,15 +64,16 @@ Description
         |  |
         |  |
         +--+
+    @endverbatim
     adding both together creates a singly connected 2x2 cavity so suddenly
     the duplicate master points and the duplicate slave points all become
     a single cut point.
 
 
-    2) Subdivision match:
-    - Can be constructed from slave being subdivision of master with the
-    polyPatch constructor.
-    - Does not include above shared-point detection!
+    -# Subdivision match:
+       - Can be constructed from slave being subdivision of master with the
+         polyPatch constructor.
+       - Does not include above shared-point detection!
 
     Notes on multiple slave faces per master:
 
@@ -78,6 +82,7 @@ Description
     - slave can have extra edges/points/faces BUT all subfaces have to have
       at least one point on a maste face.
 
+    @verbatim
     So master:
     +-------+
     |       |
@@ -99,8 +104,8 @@ Description
     | / | \ |
     |/  |  \|
     +---+---+
-
     is ok.
+    @endverbatim
 
     For this kind of matching the order is:
     - match cutpoint to masterpoint
@@ -141,7 +146,7 @@ namespace Foam
 typedef HashTable<labelList, edge, Hash<edge> > edgeLookup;
 
 
-// Class forward declarations
+// Forward declaration of classes
 class face;
 class primitiveMesh;
 class polyPatch;

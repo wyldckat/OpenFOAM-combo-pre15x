@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -62,6 +62,7 @@ extern const dimensionSet dimDensity;
 extern const dimensionSet dimForce;
 
 extern const dimensionSet dimVelocity;
+extern const dimensionSet dimAcceleration;
 extern const dimensionSet dimPressure;
 extern const dimensionSet dimGasConstant;
 extern const dimensionSet dimSpecificHeatCapacity;

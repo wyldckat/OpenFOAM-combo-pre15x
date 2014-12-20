@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,11 +30,12 @@ License
 #include "passiveParticle.H"
 
 // * * * * * * * * * * * * * * * Global Functions  * * * * * * * * * * * * * //
-          
+
 void Foam::reconstructLagrangianPositions
 (
     const polyMesh& mesh,
-    PtrList<polyMesh>& meshes,
+    const word& cloudName,
+    const PtrList<fvMesh>& meshes,
     const PtrList<labelIOList>& faceProcAddressing,
     const PtrList<labelIOList>& cellProcAddressing
 )
@@ -42,6 +43,7 @@ void Foam::reconstructLagrangianPositions
     Cloud<passiveParticle> lagrangianPositions
     (
         mesh,
+        cloudName,
         IDLList<passiveParticle>()
     );
 
@@ -49,14 +51,9 @@ void Foam::reconstructLagrangianPositions
     {
         const labelList& cellMap = cellProcAddressing[i];
 
-        Cloud<passiveParticle> lpi(meshes[i]);
+        Cloud<passiveParticle> lpi(meshes[i], cloudName, false);
 
-        for
-        (
-            Cloud<passiveParticle>::iterator iter = lpi.begin();
-            iter != lpi.end();
-            ++iter
-        )
+        forAllIter(Cloud<passiveParticle>, lpi, iter)
         {
             const passiveParticle& ppi = iter();
 
@@ -71,8 +68,8 @@ void Foam::reconstructLagrangianPositions
             );
         }
     }
-    
-    lagrangianPositions.write();
+
+    IOPosition<passiveParticle>(lagrangianPositions).write();
 }
 
 

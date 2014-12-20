@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -78,7 +78,7 @@ bool Foam::layerAdditionRemoval::validCollapse() const
             << nBoundaryHits << endl;
     }
 
-    if (nBoundaryHits > 0)
+    if (returnReduce(nBoundaryHits, sumOp<label>()) > 0)
     {
         return false;
     }
@@ -175,8 +175,8 @@ void Foam::layerAdditionRemoval::removeCellLayer
     const labelListList& pf = mesh.pointFaces();
 
     const faceList& faces = mesh.faces();
-    const labelList& own = mesh.allOwner();
-    const labelList& nei = mesh.allNeighbour();
+    const labelList& own = mesh.faceOwner();
+    const labelList& nei = mesh.faceNeighbour();
 
     // Make a list of faces to be modified using the map to avoid duplicates
     labelHashSet facesToModify(ptc.size()*primitiveMesh::facesPerPoint_);

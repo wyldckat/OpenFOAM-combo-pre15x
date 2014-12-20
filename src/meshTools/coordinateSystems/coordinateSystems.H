@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,18 +23,15 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    coordinateSystems
+    Foam::coordinateSystems
 
 Description
-    Container class for a set of coordinateSystems with the
-    coordinateSystem member functions implemented to loop over
-    the functions for each coordinateSystem.
+    Provides a centralized coordinateSystem collection.
 
 SourceFiles
     coordinateSystems.C
 
 \*---------------------------------------------------------------------------*/
-
 #ifndef coordinateSystems_H
 #define coordinateSystems_H
 
@@ -99,6 +96,42 @@ public:
         wordList toc() const;
 
         //- Rewrite coordinateSystem entry with appropriate dictionary entry
+        //
+        //  This replaces coordinateSystems entries with their contents.
+        //  For example,
+        //  @verbatim
+        //  cat1
+        //  {
+        //      coordinateSystem    system_10;
+        //      porosity        0.781;
+        //      Darcy
+        //      {
+        //          d   d [0 -2 0 0 0]  (-1000 -1000 0.50753e+08);
+        //          f   f [0 -1 0 0 0]  (-1000 -1000 12.83);
+        //      }
+        //  }
+        //  @endverbatim
+        //  might get re-written as the following (depending on the value of
+        //  @c system_10 in the @c constant/coordinateSystems file):
+        //  @verbatim
+        //  cat1
+        //  {
+        //      coordinateSystem
+        //      {
+        //          origin  (0 0 0);
+        //          e3      (1 0 0);
+        //          e1      (0 0 -1);
+        //      }
+        //      porosity        0.781;
+        //      Darcy
+        //      {
+        //          d   d [0 -2 0 0 0]  (-1000 -1000 0.50753e+08);
+        //          f   f [0 -1 0 0 0]  (-1000 -1000 12.83);
+        //      }
+        //  }
+        //  @endverbatim
+        //  When this form of re-writing is used, the coordinateRotation is
+        //  reduced to the axes specification.
         bool rewriteDict(dictionary& dict, bool noType = false) const;
 
         //- write data

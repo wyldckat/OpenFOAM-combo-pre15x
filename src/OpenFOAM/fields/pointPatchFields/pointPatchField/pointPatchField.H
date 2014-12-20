@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,12 +23,12 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    pointPatchField
+    Foam::pointPatchField
 
 Description
     Abstract base class for point-mesh patch fields.
 
-    The base-field does not store values as they are part of the 
+    The base-field does not store values as they are part of the
     "internal field".  There are derived classes to store constraint values
     e.g. fixedValuePointPatchField derived from the generic
     valuePointPatchField which ensures the values in the "internal field"
@@ -52,14 +52,14 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 
 class objectRegistry;
 class dictionary;
 class pointPatchFieldMapper;
 class pointMesh;
 
-// * * * * * * Forward declaration of template friend fuctions * * * * * * * //
+// Forward declaration of friend functions and operators
 
 template<class Type>
 class pointPatchField;
@@ -91,6 +91,11 @@ class pointPatchField
         //  the construction of the matrix
         bool updated_;
 
+        //- Optional patch type, used to allow specified boundary conditions
+        //  to be applied to constraint patches by providing the constraint
+        //  patch type as 'patchType'
+        word patchType_;
+
 
 public:
 
@@ -99,6 +104,9 @@ public:
 
     //- Runtime type information
     TypeName("pointPatchField");
+
+    //- Debug switch to disallow the use of genericPointPatchField
+    static int disallowGenericPointPatchField;
 
 
     // Declare run-time constructor selection tables
@@ -150,6 +158,14 @@ public:
         (
             const pointPatch&,
             const DimensionedField<Type, pointMesh>&
+        );
+
+        //- Construct from patch, internal field and dictionary
+        pointPatchField
+        (
+            const pointPatch&,
+            const DimensionedField<Type, pointMesh>&,
+            const dictionary&
         );
 
         //- Construct as copy
@@ -290,6 +306,16 @@ public:
             void setInInternalField
             (
                 Field<Type1>& iF,
+                const Field<Type1>& pF,
+                const labelList& meshPoints
+            ) const;
+
+            //- Given the internal field and a patch field,
+            //  set the patch field in the internal field
+            template<class Type1>
+            void setInInternalField
+            (
+                Field<Type1>& iF,
                 const Field<Type1>& pF
             ) const;
 
@@ -325,11 +351,17 @@ public:
             }
 
             //- Initialise evaluation of the patch field (do nothing)
-            virtual void initEvaluate(const bool=false)
+            virtual void initEvaluate
+            (
+                const Pstream::commsTypes commsType=Pstream::blocking
+            )
             {}
 
             //- Evaluate the patch field
-            virtual void evaluate();
+            virtual void evaluate
+            (
+                const Pstream::commsTypes commsType=Pstream::blocking
+            );
 
 
         //- Write
@@ -383,7 +415,7 @@ public:
 
 
         // Force an assignment irrespective of form of patch
-        // By default these do nothing unless the patch actually has boundary
+        // By generic these do nothing unless the patch actually has boundary
         // values
 
             virtual void operator==
@@ -498,7 +530,7 @@ makePointPatchTypeField                                                       \
     pointPatchTensorField,                                                    \
     type##PointPatchTensorField                                               \
 );
-             
+
 
 #define makePointPatchFieldTypedefs(type)                                     \
                                                                               \

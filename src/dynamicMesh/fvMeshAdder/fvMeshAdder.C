@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,10 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Class
-    fvMeshAdder
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -102,10 +99,14 @@ Foam::autoPtr<Foam::mapAddedPolyMesh> Foam::fvMeshAdder::add
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     fvMeshAdder::MapVolFields<scalar>(mapPtr, mesh0, mesh1);
     fvMeshAdder::MapVolFields<vector>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapVolFields<sphericalTensor>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapVolFields<symmTensor>(mapPtr, mesh0, mesh1);
     fvMeshAdder::MapVolFields<tensor>(mapPtr, mesh0, mesh1);
 
     fvMeshAdder::MapSurfaceFields<scalar>(mapPtr, mesh0, mesh1);
     fvMeshAdder::MapSurfaceFields<vector>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapSurfaceFields<sphericalTensor>(mapPtr, mesh0, mesh1);
+    fvMeshAdder::MapSurfaceFields<symmTensor>(mapPtr, mesh0, mesh1);
     fvMeshAdder::MapSurfaceFields<tensor>(mapPtr, mesh0, mesh1);
 
     return mapPtr;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -26,7 +26,7 @@ Application
     potentialFoam
 
 Description
-    Simple potential flow solver which can be used to generate starting fields 
+    Simple potential flow solver which can be used to generate starting fields
     for full Navier-Stokes codes.
 
 \*---------------------------------------------------------------------------*/
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     phi.write();
 
     if (args.options().found("writep"))
-    {    
+    {
         p.write();
     }
 

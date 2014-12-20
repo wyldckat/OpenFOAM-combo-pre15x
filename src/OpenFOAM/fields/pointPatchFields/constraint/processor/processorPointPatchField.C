@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -55,7 +55,7 @@ processorPointPatchField<Type>::processorPointPatchField
     const dictionary& dict
 )
 :
-    coupledPointPatchField<Type>(p, iF),
+    coupledPointPatchField<Type>(p, iF, dict),
     procPatch_(refCast<const processorPointPatch>(p))
 {}
 
@@ -66,10 +66,10 @@ processorPointPatchField<Type>::processorPointPatchField
     const processorPointPatchField<Type>& ptf,
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
-    const pointPatchFieldMapper&
+    const pointPatchFieldMapper& mapper
 )
 :
-    coupledPointPatchField<Type>(p, iF),
+    coupledPointPatchField<Type>(ptf, p, iF, mapper),
     procPatch_(refCast<const processorPointPatch>(ptf.patch()))
 {}
 
@@ -98,56 +98,64 @@ processorPointPatchField<Type>::~processorPointPatchField()
 template<class Type>
 void processorPointPatchField<Type>::initSwapAdd(Field<Type>& pField) const
 {
-    Field<Type> pf(this->patchInternalField(pField));
+    if (Pstream::parRun())
+    {
+        Field<Type> pf(this->patchInternalField(pField));
 
-    OPstream::write
-    (
-        procPatch_.neighbProcNo(),
-        reinterpret_cast<const char*>(pf.begin()),
-        pf.byteSize()
-    );
+        OPstream::write
+        (
+            Pstream::blocking,
+            procPatch_.neighbProcNo(),
+            reinterpret_cast<const char*>(pf.begin()),
+            pf.byteSize()
+        );
+    }
 }
 
 
 template<class Type>
 void processorPointPatchField<Type>::swapAdd(Field<Type>& pField) const
 {
-    Field<Type> pnf(this->size());
-
-    IPstream::read
-    (
-        procPatch_.neighbProcNo(),
-        reinterpret_cast<char*>(pnf.begin()),
-        pnf.byteSize()
-    );
-
-    if (doTransform())
+    if (Pstream::parRun())
     {
-        const labelList& nonGlobalPatchPoints =
-            procPatch_.nonGlobalPatchPoints();
+        Field<Type> pnf(this->size());
 
-        const processorPolyPatch& ppp = procPatch_.procPolyPatch();
-        const labelListList& pointFaces = ppp.pointFaces();
-        const tensorField& forwardT = ppp.forwardT();
+        IPstream::read
+        (
+            Pstream::blocking,
+            procPatch_.neighbProcNo(),
+            reinterpret_cast<char*>(pnf.begin()),
+            pnf.byteSize()
+        );
 
-        if (forwardT.size() == 1)
+        if (doTransform())
         {
-            transform(pnf, forwardT[0], pnf);
-        }
-        else
-        {
-            forAll(nonGlobalPatchPoints, pfi)
+            const labelList& nonGlobalPatchPoints =
+                procPatch_.nonGlobalPatchPoints();
+
+            const processorPolyPatch& ppp = procPatch_.procPolyPatch();
+            const labelListList& pointFaces = ppp.pointFaces();
+            const tensorField& forwardT = ppp.forwardT();
+
+            if (forwardT.size() == 1)
             {
-                pnf[pfi] = transform
-                (
-                    forwardT[pointFaces[nonGlobalPatchPoints[pfi]][0]],
-                    pnf[pfi]
-                );
+                transform(pnf, forwardT[0], pnf);
+            }
+            else
+            {
+                forAll(nonGlobalPatchPoints, pfi)
+                {
+                    pnf[pfi] = transform
+                    (
+                        forwardT[pointFaces[nonGlobalPatchPoints[pfi]][0]],
+                        pnf[pfi]
+                    );
+                }
             }
         }
-    }
 
-    addToInternalField(pField, pnf);
+        addToInternalField(pField, pnf);
+    }
 }
 
 

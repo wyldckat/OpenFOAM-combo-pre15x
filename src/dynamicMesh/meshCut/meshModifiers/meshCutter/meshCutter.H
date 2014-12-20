@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    meshCutter
+    Foam::meshCutter
 
 Description
     Cuts (splits) cells.
@@ -43,7 +43,9 @@ Description
     the middle of the cell (inflation).
 
 
-    1. Start: cell with anchor points at bottom
+    -# Start:
+       cell with anchor points at bottom
+    @verbatim
     +-------+
     |       +
     |       +
@@ -54,10 +56,13 @@ Description
     |       +
     +-------+
     anchor  anchor
+    @endverbatim
 
 
-    2. Topo change: splitface introduced at bottom of cell, introducing a new
-      cell and splitting the side faces into two.
+    -# Topo change:
+       splitface introduced at bottom of cell, introducing a new
+       cell and splitting the side faces into two.
+    @verbatim
     +-------+
     |       +
     |       +
@@ -68,9 +73,12 @@ Description
     +-------+ <- splitFace
     +-------+ <- original cell
     anchor  anchor
+    @endverbatim
 
 
-    3. Inflation: splitface shifted up to middle of cell (or wherever cut was)
+    -# Inflation:
+       splitface shifted up to middle of cell (or wherever cut was)
+    @verbatim
     +-------+
     |       +
     |       + <- addedCell
@@ -81,6 +89,7 @@ Description
     |       +
     +-------+
     anchor  anchor
+    @endverbatim
 
     Anyway this was the original idea. Inflation was meant to handle
     conservative properties distribution without interpolation.
@@ -94,7 +103,7 @@ Description
     - the splitFace is owned by the master cell (since it has the lower number)
     - the side faces get split and get either the original cell as neighbour
       or the added cell (if the faces contain the cell anchor points)
-    
+
 SourceFiles
     meshCutter.C
 
@@ -115,7 +124,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class Time;
 class polyTopoChange;
 class cellCuts;
@@ -132,7 +141,7 @@ class meshCutter
 {
     // Private data
 
-        //- Cells added in last setRefinement. Per splitcell label of added 
+        //- Cells added in last setRefinement. Per splitcell label of added
         //  cell
         Map<label> addedCells_;
 
@@ -194,7 +203,7 @@ class meshCutter
             const label neighbour
         );
 
-        //- Modifies existing faceI for either new owner/neighbour or 
+        //- Modifies existing faceI for either new owner/neighbour or
         //  new face points. Checks if anything changed and flips face
         //  if owner>neighbour
         void modFace

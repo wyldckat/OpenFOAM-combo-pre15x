@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -30,11 +30,25 @@ Description
 
 #include "Switch.H"
 #include "error.H"
+#include "dictionary.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
+
+Switch Switch::lookupOrAddToDict
+(
+    const word& name,
+    dictionary& dict,
+    const Switch& defaultValue
+)
+{
+    return dict.lookupOrAddDefault<Switch>(name, defaultValue);
+}
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -71,6 +85,14 @@ bool Switch::boolValue(const word& w) const
     }
 
     return l;
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions * * * * * * * * * * * * * * //
+
+bool Switch::readIfPresent(const word& name, const dictionary& dict)
+{
+    return dict.readIfPresent(name, logicalSwitch_);
 }
 
 

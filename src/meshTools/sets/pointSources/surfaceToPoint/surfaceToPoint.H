@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,13 +23,16 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    surfaceToPoint
+    Foam::surfaceToPoint
 
 Description
-    Selects points based relation to surface. Select based on:
+    A topoSetSource to selects points based on relation to surface.
+
+    Select based on:
     - distance to surface
-    - inside/outside status to surface (Uses normal of nearest surface triangle
-    so requires valid surface topology!)
+    - inside/outside status to surface
+      (Uses normal of nearest surface triangle so requires valid surface
+      topology!)
 
 SourceFiles
     surfaceToPoint.C
@@ -122,8 +125,11 @@ public:
 
     // Member Functions
 
-        virtual void applyToSet(const topoSetSource::setAction action, topoSet&)
-         const;
+        virtual void applyToSet
+        (
+            const topoSetSource::setAction action,
+            topoSet&
+        ) const;
 
 };
 

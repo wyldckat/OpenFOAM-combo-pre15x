@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,10 +23,10 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    Field<T>
+    Foam::Field
 
 Description
-    Generic field type.
+    Generic templated field type.
 
 SourceFiles
     FieldFunctions.H
@@ -53,7 +53,7 @@ SourceFiles
 namespace Foam
 {
 
-// * * * * * * Forward declaration of template friend fuctions * * * * * * * //
+// Forward declaration of friend functions and operators
 
 template<class Type>
 class Field;
@@ -74,6 +74,8 @@ class dictionary;
 /*---------------------------------------------------------------------------*\
                            Class Field Declaration
 \*---------------------------------------------------------------------------*/
+
+#include "CintDefs.H"
 
 template<class Type>
 class Field
@@ -181,17 +183,19 @@ public:
 
         //- Return a pointer to a new calculatedFvPatchFieldField created on
         //  freestore without setting patchField values
+        #ifndef __CINT__
         template<class Type2>
         static tmp<Field<Type> > NewCalculatedType(const Field<Type2>& f)
         {
             return tmp<Field<Type> >(new Field<Type>(f.size()));
         }
+        #endif
 
 
     // Member functions
 
         //- Return a null Field
-        static Field<Type>& null();
+        static const Field<Type>& null();
 
 
         //- 1 to 1 map from the given field
@@ -328,10 +332,20 @@ public:
 
     // IOstream operators
 
-        friend Ostream& operator<< <Type>(Ostream&, const Field<Type>&);
-        friend Ostream& operator<< <Type>(Ostream&, const tmp<Field<Type> >&);
+        friend Ostream& operator<<
+        #ifndef __CINT__
+        <Type>
+        #endif
+        (Ostream&, const Field<Type>&);
+
+        friend Ostream& operator<<
+        #ifndef __CINT__
+        <Type>
+        #endif
+        (Ostream&, const tmp<Field<Type> >&);
 };
 
+#include "CintUndefs.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

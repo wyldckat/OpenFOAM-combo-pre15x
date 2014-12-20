@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -21,10 +21,6 @@ License
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
-
-Description
-    Transport package using Sutherland's formula.  Templated ito a given
-    thermodynamics package (needed for thermal conductivity).
 
 \*---------------------------------------------------------------------------*/
 
@@ -154,7 +150,7 @@ inline scalar sutherlandTransport<thermo>::alpha(const scalar T) const
     scalar Cp_ = Cv_ + R_;
 
     scalar deltaT = T - specie::Tstd;
-    scalar CpBar = 
+    scalar CpBar =
         (deltaT*(this->H(T) - this->H(specie::Tstd)) + Cp_)/(sqr(deltaT) + 1);
 
     return mu(T)*Cv_*(1.32 + 1.77*this->R()/Cv_)/CpBar;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -40,7 +40,7 @@ namespace Foam
 
 cellModel::cellModel(Istream& is)
 {
-    dictionaryEntry entry(is);
+    dictionaryEntry entry(dictionary::null, is);
     name_ = entry.keyword();
     entry.lookup("index") >> index_;
     entry.lookup("numberOfPoints") >> nPoints_;

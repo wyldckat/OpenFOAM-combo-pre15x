@@ -25,7 +25,8 @@ DIV.tabs LI, DIV.tabs FORM
 
 DIV.tabs FORM
 {
-   float            : right;
+   float            : left;
+   padding          : 0px 9px;
 }
 
 DIV.tabs A

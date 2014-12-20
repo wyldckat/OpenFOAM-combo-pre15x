@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,7 +23,7 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    cyclicPointPatch
+    Foam::cyclicPointPatch
 
 Description
     Cyclic patch for post-processing.
@@ -71,20 +71,28 @@ class cyclicPointPatch
 
         //- The set of pairs of points that require transformation
         //  and/or mapping
-        mutable edgeList* transformPairsPtr_;
+        edgeList transformPairs_;
 
+        //- Initialise the calculation of the patch geometry
+        virtual void initGeometry();
 
-        // Construction of demand-driven data
+        //- Calculate the patch geometry
+        virtual void calcGeometry();
 
-            //- Calculate mesh points
-            virtual void calcMeshPoints() const;
+        //- Initialise the patches for moving points
+        virtual void initMovePoints(const pointField&);
+
+        //- Correct patches after moving points
+        virtual void movePoints(const pointField&);
+
+        //- Initialise the update of the patch topology
+        virtual void initUpdateMesh();
+
+        //- Update of the patch topology
+        virtual void updateMesh();
 
 
 public:
-
-    typedef coupledPointPatch CoupledPointPatch;
-    typedef pointBoundaryMesh BoundaryMesh;
-
 
     //- Runtime type information
     TypeName(cyclicPolyPatch::typeName_());

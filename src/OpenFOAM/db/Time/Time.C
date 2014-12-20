@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -65,7 +65,7 @@ const Foam::NamedEnum<Foam::Time::writeControls, 5>
 Foam::Time::fmtflags Foam::Time::format_(Foam::Time::general);
 int Foam::Time::precision_(6);
 
-Foam::word Foam::Time::controlDictName = "controlDict";
+Foam::word Foam::Time::controlDictName("controlDict");
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -171,7 +171,8 @@ void Foam::Time::setControls()
             "uniform",
             *this,
             IOobject::READ_IF_PRESENT,
-            IOobject::NO_WRITE
+            IOobject::NO_WRITE,
+            false
         )
     );
 
@@ -231,6 +232,7 @@ Foam::Time::Time
     writeControl_(wcTimeStep),
     writeInterval_(GREAT),
     purgeWrite_(0),
+    subCycling_(false),
 
     writeFormat_(IOstream::ASCII),
     writeVersion_(IOstream::currentVersion),
@@ -286,6 +288,7 @@ Foam::Time::Time
     writeControl_(wcTimeStep),
     writeInterval_(GREAT),
     purgeWrite_(0),
+    subCycling_(false),
 
     writeFormat_(IOstream::ASCII),
     writeVersion_(IOstream::currentVersion),
@@ -339,6 +342,7 @@ Foam::Time::Time
     writeControl_(wcTimeStep),
     writeInterval_(GREAT),
     purgeWrite_(0),
+    subCycling_(false),
 
     writeFormat_(IOstream::ASCII),
     writeVersion_(IOstream::currentVersion),
@@ -385,7 +389,7 @@ Foam::instantList Foam::Time::times() const
 
 Foam::word Foam::Time::findInstancePath(const instant& t) const
 {
-    instantList times = Time::findTimes(rootPath()/caseName());
+    instantList times = Time::findTimes(path());
 
     forAllReverse(times, i)
     {
@@ -401,9 +405,9 @@ Foam::word Foam::Time::findInstancePath(const instant& t) const
 
 Foam::instant Foam::Time::findClosestTime(const scalar t) const
 {
-    instantList times = Time::findTimes(rootPath()/caseName());
+    instantList times = Time::findTimes(path());
 
-    // If there is only one time it's "constant" so return it
+    // If there is only one time it is "constant" so return it
     if (times.size() == 1)
     {
         return times[0];
@@ -456,7 +460,7 @@ bool Foam::Time::run() const
 {
     bool running = value() < (endTime_ - 0.5*deltaT_);
 
-    if (!running && timeIndex_ != startTimeIndex_)
+    if (!subCycling_ && !running && timeIndex_ != startTimeIndex_)
     {
         const_cast<functionObjectList&>(functionObjects_).execute();
     }
@@ -494,7 +498,8 @@ void Foam::Time::setTime(const instant& inst, const label newIndex)
             "uniform",
             *this,
             IOobject::READ_IF_PRESENT,
-            IOobject::NO_WRITE
+            IOobject::NO_WRITE,
+            false
         )
     );
 
@@ -557,6 +562,8 @@ void Foam::Time::setDeltaT(const scalar deltaT)
 
 Foam::TimeState Foam::Time::subCycle(const label nSubCycles)
 {
+    subCycling_ = true;
+
     TimeState ts = *this;
     setTime(*this - deltaT(), (timeIndex() - 1)*nSubCycles);
     deltaT_ /= nSubCycles;
@@ -569,6 +576,7 @@ Foam::TimeState Foam::Time::subCycle(const label nSubCycles)
 
 void Foam::Time::endSubCycle(const TimeState& ts)
 {
+    subCycling_ = false;
     TimeState::operator=(ts);
 }
 
@@ -585,13 +593,16 @@ Foam::Time& Foam::Time::operator+=(const scalar deltaT)
 {
     readModifiedObjects();
 
-    if (timeIndex_ == startTimeIndex_)
+    if (!subCycling_)
     {
-        functionObjects_.start();
-    }
-    else
-    {
-        functionObjects_.execute();
+        if (timeIndex_ == startTimeIndex_)
+        {
+            functionObjects_.start();
+        }
+        else
+        {
+            functionObjects_.execute();
+        }
     }
 
     setDeltaT(deltaT);
@@ -605,13 +616,16 @@ Foam::Time& Foam::Time::operator++()
 {
     readModifiedObjects();
 
-    if (timeIndex_ == startTimeIndex_)
+    if (!subCycling_)
     {
-        functionObjects_.start();
-    }
-    else
-    {
-        functionObjects_.execute();
+        if (timeIndex_ == startTimeIndex_)
+        {
+            functionObjects_.start();
+        }
+        else
+        {
+            functionObjects_.execute();
+        }
     }
 
     deltaT0_ = deltaTSave_;
@@ -619,7 +633,7 @@ Foam::Time& Foam::Time::operator++()
     setTime(value() + deltaT_, timeIndex_ + 1);
 
     // If the time is very close to zero reset to zero
-    if (mag(value()) < 10*SMALL)
+    if (mag(value()) < 10*SMALL*deltaT_)
     {
         setTime(0.0, timeIndex_);
     }

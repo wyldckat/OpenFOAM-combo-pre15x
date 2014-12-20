@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -28,10 +28,9 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-// The undefined token used as a return to indicate an input failure
+const char* const Foam::token::typeName = "token";
 Foam::token Foam::token::undefinedToken;
 
-// Define the runTime selection table for the compound type Istream constructors
 defineTypeNameAndDebug(Foam::token::compound, 0);
 defineRunTimeSelectionTable(Foam::token::compound, Istream);
 
@@ -78,7 +77,6 @@ Foam::autoPtr<Foam::token::compound> Foam::token::compound::New
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-//- Return true if name is a compound type
 bool Foam::token::compound::isCompound(const Foam::word& name)
 {
     return

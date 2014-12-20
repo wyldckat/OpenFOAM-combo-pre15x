@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -52,7 +52,7 @@ symmetryPointPatchField<Type>::symmetryPointPatchField
     const dictionary& dict
 )
 :
-    basicSymmetryPointPatchField<Type>(p, iF)
+    basicSymmetryPointPatchField<Type>(p, iF, dict)
 {
     if (!isType<symmetryPointPatch>(p))
     {
@@ -75,14 +75,13 @@ symmetryPointPatchField<Type>::symmetryPointPatchField
 template<class Type>
 symmetryPointPatchField<Type>::symmetryPointPatchField
 (
-    const symmetryPointPatchField
-        <Type>&,
+    const symmetryPointPatchField<Type>& ptf,
     const pointPatch& p,
     const DimensionedField<Type, pointMesh>& iF,
-    const pointPatchFieldMapper&
+    const pointPatchFieldMapper& mapper
 )
 :
-    basicSymmetryPointPatchField<Type>(p, iF)
+    basicSymmetryPointPatchField<Type>(ptf, p, iF, mapper)
 {
     if (!isType<symmetryPointPatch>(this->patch()))
     {

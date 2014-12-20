@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,13 +23,15 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    directions
+    Foam::directions
 
 Description
     Set of directions for each cell in the mesh. Either uniform and size=1
-    or one set of directions per cell. Used in splitting cells.
-    Either all cells have similar refinement direction ('global') or direction
-    is dependent on local cell geometry. Controlled by dictionary.
+    or one set of directions per cell.
+
+    Used in splitting cells.
+    Either all cells have similar refinement direction ('global') or 
+    direction is dependent on local cell geometry. Controlled by dictionary.
 
 SourceFiles
     directions.C
@@ -49,7 +51,7 @@ SourceFiles
 namespace Foam
 {
 
-// Class forward declarations
+// Forward declaration of classes
 class polyMesh;
 class twoDPointCorrector;
 class primitiveMesh;

@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2007 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2008 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -23,13 +23,14 @@ License
     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
-    lduMatrix
+    Foam::lduMatrix
 
 Description
     lduMatrix is a general matrix class in which the coefficients are
     stored as three arrays, one for the upper triangle, one for the
-    lower triangle and a third for the diagonal.  Addressing arrays must
-    be supplied for the upper and lower triangles.
+    lower triangle and a third for the diagonal.
+
+    Addressing arrays must be supplied for the upper and lower triangles.
 
     It might be better if this class were organised as a hierachy starting
     from an empty matrix, then deriving diagonal, symmetric and asymmetric
@@ -44,7 +45,6 @@ SourceFiles
     lduMatrixPreconditioner.C
     lduMatrixTests.C
     lduMatrixUpdateMatrixInterfaces.C
-    lduMatrixBufferedUpdateMatrixInterfaces.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -64,6 +64,12 @@ SourceFiles
 namespace Foam
 {
 
+// Forward declaration of friend functions and operators
+
+class lduMatrix;
+Ostream& operator<<(Ostream&, const lduMatrix&);
+
+
 /*---------------------------------------------------------------------------*\
                            Class lduMatrix Declaration
 \*---------------------------------------------------------------------------*/
@@ -72,10 +78,10 @@ class lduMatrix
 {
     // private data
 
-        // LDU mesh reference
+        //- LDU mesh reference
         const lduMesh& lduMesh_;
 
-        //- Coefficients (not including interfaces
+        //- Coefficients (not including interfaces)
         scalarField *lowerPtr_, *diagPtr_, *upperPtr_;
 
 
@@ -631,7 +637,7 @@ public:
 
     // Static data
 
-        // Declare name of the class and it's debug switch
+        // Declare name of the class and its debug switch
         ClassName("lduMatrix");
 
         //- Large scalar for the use in solvers
@@ -805,28 +811,6 @@ public:
                 const direction cmpt
             ) const;
     
-            //- Initialise the update of interfaced interfaces
-            //  for matrix operations using buffered unscheduled transfer
-            void bufferedInitMatrixInterfaces
-            (
-                const FieldField<Field, scalar>& interfaceCoeffs,
-                const lduInterfaceFieldPtrsList& interfaces,
-                const scalarField& psiif,
-                scalarField& result,
-                const direction cmpt
-            ) const;
-    
-            //- Update interfaced interfaces for matrix operations
-            //  using buffered unscheduled transfer
-            void bufferedUpdateMatrixInterfaces
-            (
-                const FieldField<Field, scalar>& interfaceCoeffs,
-                const lduInterfaceFieldPtrsList& interfaces,
-                const scalarField& psiif,
-                scalarField& result,
-                const direction cmpt
-            ) const;
-
 
             template<class Type>
             tmp<Field<Type> > H(const Field<Type>&) const;
