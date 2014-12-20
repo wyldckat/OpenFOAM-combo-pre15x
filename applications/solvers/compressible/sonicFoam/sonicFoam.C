@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     sonicFoam
@@ -52,7 +52,7 @@ int main(int argc, char *argv[])
 
     for (runTime++; !runTime.end(); runTime++)
     {
-        Info<< "\n Time = " << runTime.timeName() << nl << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
 #       include "readPISOControls.H"
 #       include "CourantNo.H"
@@ -85,18 +85,14 @@ int main(int argc, char *argv[])
         // --- PISO loop
         for (int corr=0; corr<nCorr; corr++)
         {
-            volScalarField A = UEqn.A();
-            U = UEqn.H()/A;
+            volScalarField rUA = 1.0/UEqn.A();
+            U = rUA*UEqn.H();
 
-            surfaceScalarField phid = 
+            surfaceScalarField phid =
             (
-                fvc::interpolate
-                (
-                    psi*(U + UphiCoeff*fvc::ddt0(rho, U)/A),
-                    "interpolate((H(U)|A(U)))"
-                ) & mesh.Sf()
-            ) - UphiCoeff*fvc::interpolate(rho/A)*fvc::ddt0(phi)
-               /fvc::interpolate(p);
+                (fvc::interpolate(rho*U) & mesh.Sf())
+              + fvc::ddtPhiCorr(rUA, rho, U, phi)
+            )/fvc::interpolate(p);
 
             for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
             {
@@ -104,7 +100,7 @@ int main(int argc, char *argv[])
                 (
                     fvm::ddt(psi, p)
                   + fvm::div(phid, p, "div(phid,p)")
-                  - fvm::laplacian(rho/A, p)
+                  - fvm::laplacian(rho*rUA, p)
                 );
 
                 pEqn.solve();
@@ -114,18 +110,20 @@ int main(int argc, char *argv[])
 
 #           include "continuityErrs.H"
 
-            U -= fvc::grad(p)/A;
+            U -= rUA*fvc::grad(p);
             U.correctBoundaryConditions();
         }
 
+        rho = psi*p;
+
         runTime.write();
 
-        Info<< "\n    ExecutionTime = "
+        Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl;
+            << " s\n\n" << endl;
     }
 
-    Info<< "\n end \n";
+    Info<< "End\n" << endl;
 
     return(0);
 }

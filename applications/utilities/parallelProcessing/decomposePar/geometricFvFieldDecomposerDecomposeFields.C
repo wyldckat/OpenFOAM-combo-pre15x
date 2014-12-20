@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -42,7 +42,7 @@ void geometricFvFieldDecomposer::readFields
 (
     const fvMesh& mesh,
     const IOobjectList& objects,
-    ptrList<GeoField>& fields
+    PtrList<GeoField>& fields
 )
 {
     // Search list of objects for volScalarFields
@@ -88,7 +88,7 @@ geometricFvFieldDecomposer::decomposeField
     Field<Type> internalField(field.internalField(), cellAddressing_);
 
     // Create and map the patch field values
-    ptrList<fvPatchField<Type> > patchFields(boundaryAddressing_.size());
+    PtrList<fvPatchField<Type> > patchFields(boundaryAddressing_.size());
 
     forAll (boundaryAddressing_, patchI)
     {
@@ -213,7 +213,7 @@ geometricFvFieldDecomposer::decomposeField
     }
 
     // Create and map the patch field values
-    ptrList<fvPatchField<Type> > patchFields(boundaryAddressing_.size());
+    PtrList<fvPatchField<Type> > patchFields(boundaryAddressing_.size());
 
     forAll (boundaryAddressing_, patchI)
     {
@@ -251,10 +251,12 @@ geometricFvFieldDecomposer::decomposeField
                         allFaceField,
                         processorFvPatchSurfaceFieldDecomposer
                         (
-                            (const unallocLabelList&)
-                            processorMesh_.boundary()[patchI].patchSlice
+                            static_cast<const unallocLabelList&>
                             (
-                                faceAddressing_
+                                processorMesh_.boundary()[patchI].patchSlice
+                                (
+                                    faceAddressing_
+                                )
                             )
                         )
                     )
@@ -288,7 +290,7 @@ geometricFvFieldDecomposer::decomposeField
 template<class GeoField>
 void geometricFvFieldDecomposer::decomposeFields
 (
-    const ptrList<GeoField>& fields
+    const PtrList<GeoField>& fields
 ) const
 {
     forAll (fields, fieldI)

@@ -20,19 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-// Foam header files.
+
+// Foam header files
+#include "IFstream.H"
 #include "OSspecific.H"
-#include "word.H"
-#include "string.H"
-#include "dictionary.H"
-#include "wordList.H"
-#include "stringList.H"
-#include "dimensionSet.H"
 
 // Project header files.
 #include "FoamX.H"
@@ -48,8 +42,8 @@ Description
 FoamX::RootDictionary::RootDictionary
 (
     ITypeDescriptor_ptr typeDesc,
-    const Foam::fileName& caseRoot,
-    const Foam::fileName& caseName
+    const fileName& caseRoot,
+    const fileName& caseName
 )
 :
     IDictionaryEntryImpl(typeDesc),
@@ -58,7 +52,7 @@ FoamX::RootDictionary::RootDictionary
 {
     static const char* functionName = 
         "FoamX::RootDictionary::RootDictionary"
-        "(ITypeDescriptor_ptr, const Foam::fileName&, const Foam::fileName&)";
+        "(ITypeDescriptor_ptr, const fileName&, const fileName&)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 }
@@ -70,10 +64,49 @@ FoamX::RootDictionary::~RootDictionary()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::RootDictionary::load(Foam::Istream& is)
+Foam::fileName FoamX::RootDictionary::path
+(
+    const fileName& rootDir,
+    const fileName& caseName,
+    const fileName& dictPath
+)
+{
+    // If path is relative prepend root and case
+    if (dictPath[0] != '/')
+    {
+        return rootDir/caseName/dictPath;
+    }
+    else
+    {
+        return dictPath;
+    }
+}
+
+Foam::fileName FoamX::RootDictionary::pathName()
+{
+    return 
+        path(caseRoot_, caseName_, typeDescriptor_->dictionaryPath())
+       /word(typeDescriptor_->name());
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+void FoamX::RootDictionary::load()
+{
+    fileName dictPathName = pathName();
+
+    // See if the dictionary file exists.
+    if (exists(dictPathName))
+    {
+        // Load the values from the file.
+        load((IFstream(dictPathName)()));
+    }
+}
+
+void FoamX::RootDictionary::load(Istream& is)
 {
     static const char* functionName =
-        "FoamX::RootDictionary::load(Foam::Istream&)";
+        "FoamX::RootDictionary::load(Istream&)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -119,10 +152,9 @@ void FoamX::RootDictionary::save()
     try
     {
         // Make sure that this entry is a top-level compound type.
-        CORBA::String_var dictPath = typeDescriptor_->dictionaryPath();
-        CORBA::String_var dictName = typeDescriptor_->name();
+        fileName dictName(typeDescriptor_->name());
 
-        if (!typeDescriptor_->isCompoundType() || strlen(dictName) == 0)
+        if (!typeDescriptor_->isCompoundType() || !dictName.size())
         {
             throw FoamXError
             (
@@ -134,25 +166,57 @@ void FoamX::RootDictionary::save()
         }
 
         // Get the dictionaries path and file name.
-        Foam::fileName dictFilePath = caseRoot_/caseName_/fileName(dictPath);
-        Foam::fileName dictFileName = dictFilePath/fileName(dictName);
+        fileName dictPath(typeDescriptor_->dictionaryPath());
+        fileName dictPathName = dictPath/dictName;
 
-        log << "Saving root dictionary " << dictFileName << "." << endl;
+        log << "Saving root dictionary " << dictName << "." << endl;
 
-        DictionaryWriter dictWriter
-        (
-            caseRoot_,
-            caseName_,
-            (const char*)dictPath,
-            (const char*)dictName
-        );
+        if (dictPath[0] != '/')
+        {
+            DictionaryWriter dictWriter
+            (
+                caseRoot_,
+                caseName_,
+                dictPath,
+                dictName
+            );
 
-        dictWriter.writeHeader
-        (
-            "FoamX Case Dictionary.",
-            "dictionary"
-        );
+            dictWriter.writeHeader
+            (
+                "FoamX Case Dictionary.",
+                "dictionary"
+            );
 
+            writeEntries(dictWriter);
+        }
+        else
+        {
+            DictionaryWriter dictWriter(pathName());
+
+            dictWriter.writeHeader
+            (
+                "Foam Dictionary.",
+                "dictionary"
+            );
+
+            writeEntries(dictWriter);
+        }
+    }
+    CATCH_ALL(functionName);
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+void FoamX::RootDictionary::writeEntries(DictionaryWriter& dictWriter)
+{
+    static const char* functionName =
+        "FoamX::RootDictionary::writeEntries(DictionaryWriter& dictWriter)";
+
+    // Overridden for root dictionary entries.
+    LogEntry log(functionName, __FILE__, __LINE__);
+
+    try
+    {
         // Write the comment if required.
         const char* comment = typeDescriptor_->comment();
         if (strlen(comment) > 0)
@@ -171,7 +235,7 @@ void FoamX::RootDictionary::save()
         // Save all sub-elements.
         for
         (
-            Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+            DLList<IDictionaryEntryImpl*>::iterator iter =
                 subElements_.begin();
             iter != subElements_.end();
             ++iter

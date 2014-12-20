@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Simple central-difference snGrad scheme with non-orthogonal correction.
@@ -103,36 +103,6 @@ correctedSnGrad<Type>::correction
             )
         );
     }
-
-#   ifdef NEW_NON_ORTH
-    // Set reference to difference factors array
-    const scalarField& DeltaCoeffs = mesh.deltaCoeffs().internalField();
-
-    // Owner/neighbour addressing
-    const volVectorField& cellCentres = mesh.C();
-    const unallocLabelList& owner = mesh.owner();
-    const unallocLabelList& neighbour = mesh.neighbour();
-    const surfaceVectorField& areas = mesh.Sf();
-    const surfaceScalarField& magAreas = mesh.magSf();
-    const surfaceVectorField& corrVecs = mesh.correctionVectors();
-
-    forAll(owner, faceI)
-    {
-        vector delta =
-            cellCentres[neighbour[faceI]] - cellCentres[owner[faceI]];
-
-        vector unitArea = areas[faceI]/magAreas[faceI];
-
-        scalar orthCorrCoeff =
-            (delta & (unitArea - corrVecs[faceI]))/mag(delta);
-
-        Type orthCorr =
-            (orthCorrCoeff/mag(delta) - DeltaCoeffs[faceI])
-           *(vf[neighbour[faceI]] - vf[owner[faceI]]);
-
-        ssf[faceI] += orthCorr;
-    }
-#   endif
 
     return tssf;
 }

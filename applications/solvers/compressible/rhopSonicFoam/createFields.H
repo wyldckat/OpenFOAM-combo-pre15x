@@ -11,7 +11,7 @@
         ),
         mesh
     );
-
+    p.oldTime();
 
     Info<< "Reading field T\n" << endl;
     volScalarField T
@@ -19,20 +19,6 @@
         IOobject
         (
             "T",
-            runTime.timeName(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh
-    );
-
-    Info<< "Reading field U\n" << endl;
-    volVectorField U
-    (
-        IOobject
-        (
-            "U",
             runTime.timeName(),
             mesh,
             IOobject::MUST_READ,
@@ -49,22 +35,40 @@
             runTime.timeName(),
             mesh,
             IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::AUTO_WRITE
         ),
         1.0/(R*T)
     );
     psi.oldTime();
 
+    Info<< "Reading field rho\n" << endl;
     volScalarField rho
     (
         IOobject
         (
             "rho",
             runTime.timeName(),
-            mesh
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
         ),
-        psi*p,
-        p.boundaryField().types()
+        mesh 
+    );
+
+    rho == p*psi;
+
+    Info<< "Reading field U\n" << endl;
+    volVectorField U
+    (
+        IOobject
+        (
+            "U",
+            runTime.timeName(),
+            mesh,
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh
     );
 
     volVectorField rhoU
@@ -74,12 +78,13 @@
             "rhoU",
             runTime.timeName(),
             mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
         ),
-        rho*U,
-        U.boundaryField().types()
+        mesh
     );
+
+    rhoU == rho*U;
 
     volScalarField rhoE
     (
@@ -88,11 +93,25 @@
             "rhoE",
             runTime.timeName(),
             mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
+            IOobject::MUST_READ,
+            IOobject::AUTO_WRITE
         ),
-        rho*Cv*T + 0.5*rho*magSqr(rhoU/rho),
-        T.boundaryField().types()
+        mesh
     );
 
+    rhoE == rho*Cv*T + 0.5*rho*magSqr(rhoU/rho);
+
 #   include "createPhi.H"
+    phi.oldTime();
+
+    surfaceScalarField phiv
+    (
+        IOobject
+        (
+            "phiv",
+            runTime.timeName(),
+            mesh
+        ),
+        phi/fvc::interpolate(rho),
+        phi.boundaryField().types()
+    );

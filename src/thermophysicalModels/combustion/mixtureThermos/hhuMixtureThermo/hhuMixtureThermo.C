@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     hhuMixtureThermo
@@ -64,7 +64,7 @@ hhuMixtureThermo<MixtureType>::hhuMixtureThermo(const fvMesh& mesh)
     }
 
     hBoundaryCorrection(h_);
-    hBoundaryCorrection(hu_);
+    huBoundaryCorrection(hu_);
 
     calculate();
     psi_.oldTime();   // Switch on saving old time
@@ -258,6 +258,45 @@ tmp<volScalarField> hhuMixtureThermo<MixtureType>::Cp() const
     }
 
     return tCp;
+}
+
+
+
+template<class MixtureType>
+tmp<scalarField> hhuMixtureThermo<MixtureType>::hu
+(
+    const scalarField& Tu,
+    const labelList& cells
+) const
+{
+    tmp<scalarField> thu(new scalarField(Tu.size()));
+    scalarField& hu = thu();
+
+    forAll(Tu, celli)
+    {
+        hu[celli] = this->cellReactants(cells[celli]).H(Tu[celli]);
+    }
+
+    return thu;
+}
+
+
+template<class MixtureType>
+tmp<scalarField> hhuMixtureThermo<MixtureType>::hu
+(
+    const scalarField& Tu,
+    const label patchi
+) const
+{
+    tmp<scalarField> thu(new scalarField(Tu.size()));
+    scalarField& hu = thu();
+
+    forAll(Tu, facei)
+    {
+        hu[facei] = this->patchFaceReactants(patchi, facei).H(Tu[facei]);
+    }
+
+    return thu;
 }
 
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     partialSlipFvPatchField
@@ -115,8 +115,8 @@ void partialSlipFvPatchField<Type>::autoMap
     }
     else
     {
-        Field<Type>::autoMap((const FieldMapper&)m);
-        valueFraction_.autoMap((const FieldMapper&)m);
+        Field<Type>::autoMap(m);
+        valueFraction_.autoMap(m);
     }
 }
 
@@ -142,13 +142,13 @@ void partialSlipFvPatchField<Type>::rmap
 template<class Type>
 tmp<Field<Type> > partialSlipFvPatchField<Type>::snGrad() const
 {
-    vectorField nHat = this->patchMesh().nf();
+    vectorField nHat = this->patch().nf();
     Field<Type> pif = this->patchInternalField();
 
     return
     (
         (1.0 - valueFraction_)*transform(I - nHat*nHat, pif) - pif
-    )*this->patchMesh().deltaCoeffs();
+    )*this->patch().deltaCoeffs();
 }
 
 
@@ -161,7 +161,7 @@ void partialSlipFvPatchField<Type>::evaluate()
         this->updateCoeffs();
     }
 
-    vectorField nHat = this->patchMesh().nf();
+    vectorField nHat = this->patch().nf();
 
     Field<Type>::operator=
     (
@@ -177,7 +177,7 @@ void partialSlipFvPatchField<Type>::evaluate()
 template<class Type>
 tmp<Field<Type> > partialSlipFvPatchField<Type>::snGradTransformDiag() const
 {
-    vectorField nHat = this->patchMesh().nf();
+    vectorField nHat = this->patch().nf();
     vectorField diag(nHat.size());
 
     diag.replace(vector::X, mag(nHat.component(vector::X)));

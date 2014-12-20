@@ -21,7 +21,7 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with OpenFOAM; if not, write to the Free Software Foundation,
-#     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Script
 #     foamCheckJobs
@@ -157,7 +157,7 @@ if the program is no longer running.
 
 Requirements: the environment variable FOAM_JOB_DIR needs to point to the
 license directory and all machines have to be reachable using rsh/ssh.
-(as set in \$FOAMX_USER_CONFIG/FoamX.cfg)
+(as set in \$FOAMX_CONFIG/FoamX.cfg)
 
 The output from checking all running jobs is collected in an optional
 file.
@@ -212,9 +212,9 @@ fi
 
 #- obtain rsh method
 RSH='rsh'
-if [ -f $FOAMX_USER_CONFIG/FoamX.cfg ]; then
-    if grep 'remoteShell' $FOAMX_USER_CONFIG/FoamX.cfg >/dev/null; then
-        RSH=`getEntry $FOAMX_USER_CONFIG/FoamX.cfg remoteShell`
+if [ -f $FOAMX_CONFIG/FoamX.cfg ]; then
+    if grep 'remoteShell' $FOAMX_CONFIG/FoamX.cfg >/dev/null; then
+        RSH=`getEntry $FOAMX_CONFIG/FoamX.cfg remoteShell`
     fi
 fi
 echo "Using remote shell type : $RSH"

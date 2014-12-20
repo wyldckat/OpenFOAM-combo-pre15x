@@ -1,0 +1,16 @@
+EXE_INC = \
+    -I$(LIB_SRC)/cfdTools/incompressible \
+    -I$(LIB_SRC)/cfdTools/general/lnInclude \
+    -I$(LIB_SRC)/transportModels/incompressible/lnInclude \
+    -IturbulenceModel \
+	-IkineticTheoryModel/lnInclude \
+	-IinterfacialModels/lnInclude \
+	-IphaseModel/lnInclude
+	
+EXE_LIBS = \
+	-lEulerianInterfacialModels \
+    -lcfdTools \
+    -lmeshTools \
+	-lincompressibleTransportModels \
+	-lphaseModel \
+	-lkineticTheoryModel

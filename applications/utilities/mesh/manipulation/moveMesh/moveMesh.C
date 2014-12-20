@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Solver for moving meshes
@@ -43,13 +43,13 @@ int main(int argc, char *argv[])
 #   include "createTime.H"
 #   include "createMesh.H"
 
-    motionSolver ms(mesh);
+    autoPtr<Foam::motionSolver> motionPtr = motionSolver::New(mesh);
 
     for (runTime++; !runTime.end(); runTime++)
     {
         Info<< "Time = " << runTime.timeName() << endl;
 
-        mesh.movePoints(ms.newPoints());
+        mesh.movePoints(motionPtr->newPoints());
 
         Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()

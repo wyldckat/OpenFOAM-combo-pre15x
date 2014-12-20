@@ -37,17 +37,20 @@ boundaryField
 
     outlet          
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform 2e-05;
     }
 
     upperWall       
     {
-        type            zeroGradient;
+        type            fixedValue;
+        value           uniform 0;
     }
 
     lowerWall       
     {
-        type            zeroGradient;
+        type            fixedValue;
+        value           uniform 0;
     }
 
     frontAndBack    

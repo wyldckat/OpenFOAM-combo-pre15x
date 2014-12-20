@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -82,10 +82,10 @@ Foam::vtkTopo::vtkTopo(const polyMesh& mesh)
             {
                 const face& f = mesh_.faces()[cFaces[cFaceI]];
 
-                label nFacePoints = f.size();
+                label nQuads = 0;
+                label nTris = 0;
+                f.nTrianglesQuads(mesh_.points(), nTris, nQuads);
 
-                label nQuads = (nFacePoints - 2)/2;
-                label nTris = (nFacePoints - 2)%2;
                 nAddCells += nQuads + nTris;
             }
 
@@ -202,14 +202,19 @@ Foam::vtkTopo::vtkTopo(const polyMesh& mesh)
             {
                 const face& f = mesh_.faces()[cFaces[cFaceI]];
 
-                label nFacePoints = f.size();
+                // Number of triangles and quads in decomposition
+                label nTris = 0;
+                label nQuads = 0;
+                f.nTrianglesQuads(mesh_.points(), nTris, nQuads);
 
-                label nQuads = (nFacePoints - 2)/2;
-                label nTris = (nFacePoints - 2)%2;
+                // Do actual decomposition into triFcs and quadFcs.
+                faceList triFcs(nTris);
+                faceList quadFcs(nQuads);
+                label trii = 0;
+                label quadi = 0;
+                f.trianglesQuads(mesh_.points(), trii, quadi, triFcs, quadFcs);
 
-                label qpi = 0;
-
-                for (label quadi=0; quadi<nQuads; quadi++)
+                forAll(quadFcs, quadi)
                 {
                     label thisCellI = -1;
 
@@ -231,18 +236,19 @@ Foam::vtkTopo::vtkTopo(const polyMesh& mesh)
                     labelList& addVtkVerts = vertLabels_[thisCellI];
 
                     addVtkVerts.setSize(5);
-                    addVtkVerts[0] = f[0];
-                    addVtkVerts[1] = f[qpi + 1];
-                    addVtkVerts[2] = f[qpi + 2];
-                    addVtkVerts[3] = f[qpi + 3];
+
+                    const face& quad = quadFcs[quadi];
+
+                    addVtkVerts[0] = quad[0];
+                    addVtkVerts[1] = quad[1];
+                    addVtkVerts[2] = quad[2];
+                    addVtkVerts[3] = quad[3];
                     addVtkVerts[4] = mesh_.nPoints() + api;
 
                     cellTypes_[thisCellI] = VTK_PYRAMID;
-
-                    qpi += 2;
                 }
 
-                if (nTris)
+                forAll(triFcs, trii)
                 {
                     label thisCellI = -1;
 
@@ -264,10 +270,12 @@ Foam::vtkTopo::vtkTopo(const polyMesh& mesh)
 
                     labelList& addVtkVerts = vertLabels_[thisCellI];
 
+                    const face& tri = triFcs[trii];
+
                     addVtkVerts.setSize(4);
-                    addVtkVerts[0] = f[0];
-                    addVtkVerts[1] = f[qpi + 1];
-                    addVtkVerts[2] = f[qpi + 2];
+                    addVtkVerts[0] = tri[0];
+                    addVtkVerts[1] = tri[1];
+                    addVtkVerts[2] = tri[2];
                     addVtkVerts[3] = mesh_.nPoints() + api;
 
                     cellTypes_[thisCellI] = VTK_TETRA;
@@ -277,6 +285,12 @@ Foam::vtkTopo::vtkTopo(const polyMesh& mesh)
             api++;
         }
     }
+
+    Info<< "    Original cells:" << mesh_.nCells()
+        << " points:" << mesh_.nPoints()
+        << "   Additional cells:" << superCells_.size()
+        << "  additional points:" << addPointCellLabels_.size()
+        << nl << endl;
 }
 
 // ************************************************************************* //

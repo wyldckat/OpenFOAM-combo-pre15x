@@ -33,6 +33,8 @@ PISO
 {
     nCorrectors     4;
     nNonOrthogonalCorrectors 1;
+    pRefCell        0;
+    pRefValue       0;
 }
 
 

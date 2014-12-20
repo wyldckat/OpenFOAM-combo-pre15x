@@ -5,7 +5,7 @@ autoPtr<hCombustionThermo> thermo
 );
 
 combustionMixture& composition = thermo->composition();
-ptrList<volScalarField>& Y = composition.Y();
+PtrList<volScalarField>& Y = composition.Y();
 
 word inertSpecie(thermo->lookup("inertSpecie"));
 

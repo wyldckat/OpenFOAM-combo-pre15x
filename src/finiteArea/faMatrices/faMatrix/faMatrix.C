@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Finite-Area matrix
@@ -163,7 +163,8 @@ void faMatrix<Type>::addBoundarySource(Field<Type>& source) const
 
         if (ptf.coupled())
         {
-            ((coupledFaPatchField<scalar>&)ptf).initPatchNeighbourField();
+            dynamic_cast<const coupledFaPatchField<Type>&>(ptf)
+           .initPatchNeighbourField();
         }
     }
 
@@ -271,6 +272,7 @@ faMatrix<Type>::faMatrix
 template<class Type>
 faMatrix<Type>::faMatrix(const faMatrix<Type>& fam)
 :
+    refCount(),
     lduMatrix(fam),
     psi_(fam.psi_),
     dimensions_(fam.dimensions_),
@@ -1083,7 +1085,7 @@ lduMatrix::solverPerformance solve
 )
 {
     lduMatrix::solverPerformance solverPerf = 
-        ((faMatrix<Type>&)tfam()).solve(solverControls);
+        const_cast<faMatrix<Type>&>(tfam()).solve(solverControls);
 
     tfam.clear();
     return solverPerf;
@@ -1100,7 +1102,7 @@ template<class Type>
 lduMatrix::solverPerformance solve(const tmp<faMatrix<Type> >& tfam)
 {
     lduMatrix::solverPerformance solverPerf =
-        ((faMatrix<Type>&)tfam()).solve();
+        const_cast<faMatrix<Type>&>(tfam()).solve();
 
     tfam.clear();
     return solverPerf;
@@ -1799,7 +1801,7 @@ tmp<faMatrix<Type> > operator*
 template<class Type>
 Ostream& operator<<(Ostream& os, const faMatrix<Type>& fam)
 {
-    os  << (const lduMatrix&)(fam) << nl
+    os  << static_cast<const lduMatrix&>(fam) << nl
         << fam.dimensions_ << nl
         << fam.source_ << nl
         << fam.internalCoeffs_ << nl

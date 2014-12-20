@@ -29,7 +29,6 @@ Description
 #include "error.H"
 
 #include "primitiveMesh.H"
-#include "DynamicList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,7 +41,7 @@ void primitiveMesh::calcEdgeCells() const
 {
     if (debug)
     {
-        Info<< "primitiveMesh::calcEdgeCells() : "
+        Pout<< "primitiveMesh::calcEdgeCells() : "
             << "calculating edgeCells"
             << endl;
     }
@@ -59,8 +58,7 @@ void primitiveMesh::calcEdgeCells() const
     {
         const labelListList& ce = cellEdges();
 
-        // Set up temporary storage
-        List<DynamicList<label, cellsPerEdge_> > ec(nEdges());
+        labelList nec(nEdges(), 0);
 
         forAll (ce, cellI)
         {
@@ -68,17 +66,29 @@ void primitiveMesh::calcEdgeCells() const
 
             forAll (curEdges, edgeI)
             {
-                ec[curEdges[edgeI]].append(cellI);
+                nec[curEdges[edgeI]]++;
             }
         }
 
-        // Copy into a plain list
-        ecPtr_ = new labelListList(ec.size());
+        ecPtr_ = new labelListList(nec.size());
         labelListList& edgeCellAddr = *ecPtr_;
 
-        forAll (ec, edgeI)
+        forAll (edgeCellAddr, edgeI)
         {
-            edgeCellAddr[edgeI].transfer(ec[edgeI].shrink());
+            edgeCellAddr[edgeI].setSize(nec[edgeI]);
+        }
+        nec = 0;
+
+        forAll (ce, cellI)
+        {
+            const labelList& curEdges = ce[cellI];
+
+            forAll (curEdges, edgeI)
+            {
+                label eI = curEdges[edgeI];
+
+                edgeCellAddr[eI][nec[eI]++] = cellI;
+            }
         }
     }
 }

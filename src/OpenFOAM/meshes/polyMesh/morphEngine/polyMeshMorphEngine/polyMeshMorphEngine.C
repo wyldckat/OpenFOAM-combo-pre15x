@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -46,7 +46,7 @@ Foam::polyMeshMorphEngine::polyMeshMorphEngine
     const polyMesh& mesh
 )
 :
-    ptrList<polyMeshModifier>(),
+    PtrList<polyMeshModifier>(),
     regIOobject(io),
     mesh_(mesh)
 {
@@ -56,12 +56,12 @@ Foam::polyMeshMorphEngine::polyMeshMorphEngine
      || (readOpt() == IOobject::READ_IF_PRESENT && headerOk())
     )
     {
-        ptrList<polyMeshModifier>& modifiers = *this;
+        PtrList<polyMeshModifier>& modifiers = *this;
 
         // Read modifiers
         Istream& is = readStream(typeName);
 
-        ptrList<entry> patchEntries(is);
+        PtrList<entry> patchEntries(is);
         modifiers.setSize(patchEntries.size());
 
         forAll(modifiers, modifierI)
@@ -73,7 +73,7 @@ Foam::polyMeshMorphEngine::polyMeshMorphEngine
                     patchEntries[modifierI].keyword(),
                     patchEntries[modifierI].dict(),
                     modifierI,
-                    *this
+                    mesh
                 )
             );
         }
@@ -98,7 +98,7 @@ Foam::polyMeshMorphEngine::polyMeshMorphEngine
     const label size
 )
 :
-    ptrList<polyMeshModifier>(size),
+    PtrList<polyMeshModifier>(size),
     regIOobject(io),
     mesh_(pm)
 {}
@@ -107,7 +107,7 @@ Foam::polyMeshMorphEngine::polyMeshMorphEngine
 // Return a list of modifier types
 Foam::wordList Foam::polyMeshMorphEngine::types() const
 {
-    const ptrList<polyMeshModifier>& modifiers = *this;
+    const PtrList<polyMeshModifier>& modifiers = *this;
 
     wordList t(modifiers.size());
 
@@ -123,7 +123,7 @@ Foam::wordList Foam::polyMeshMorphEngine::types() const
 // Return a list of modifier names
 Foam::wordList Foam::polyMeshMorphEngine::names() const
 {
-    const ptrList<polyMeshModifier>& modifiers = *this;
+    const PtrList<polyMeshModifier>& modifiers = *this;
 
     wordList t(modifiers.size());
 
@@ -140,7 +140,7 @@ Foam::wordList Foam::polyMeshMorphEngine::names() const
 bool Foam::polyMeshMorphEngine::changeTopology() const
 {
     // Go through all mesh modifiers and accumulate the morphing information
-    const ptrList<polyMeshModifier>& morphs = *this;
+    const PtrList<polyMeshModifier>& morphs = *this;
 
     bool triggerChange = false;
 
@@ -187,7 +187,7 @@ Foam::tmp<Foam::polyTopoChange>
 Foam::polyMeshMorphEngine::topoChangeRequest() const
 {
     // Collect changes from all modifiers
-    const ptrList<polyMeshModifier>& morphs = *this;
+    const PtrList<polyMeshModifier>& morphs = *this;
 
     tmp<polyTopoChange> tref(new polyTopoChange(mesh()));
     polyTopoChange& ref = tref();
@@ -207,7 +207,7 @@ Foam::polyMeshMorphEngine::topoChangeRequest() const
 // Correct polyMeshMorphEngine after moving points
 void Foam::polyMeshMorphEngine::modifyMotionPoints(pointField& p) const
 {
-    const ptrList<polyMeshModifier>& morphs = *this;
+    const PtrList<polyMeshModifier>& morphs = *this;
 
     forAll (morphs, morphI)
     {
@@ -223,7 +223,7 @@ void Foam::polyMeshMorphEngine::modifyMotionPoints(pointField& p) const
 void Foam::polyMeshMorphEngine::updateTopology(const mapPolyMesh& m)
 {
     // Go through all mesh modifiers and accumulate the morphing information
-    ptrList<polyMeshModifier>& morphs = *this;
+    PtrList<polyMeshModifier>& morphs = *this;
 
     forAll (morphs, morphI)
     {
@@ -237,7 +237,7 @@ Foam::label Foam::polyMeshMorphEngine::findModifierID
     const word& modName
 ) const
 {
-    const ptrList<polyMeshModifier>& morphs = *this;
+    const PtrList<polyMeshModifier>& morphs = *this;
 
     forAll (morphs, morphI)
     {

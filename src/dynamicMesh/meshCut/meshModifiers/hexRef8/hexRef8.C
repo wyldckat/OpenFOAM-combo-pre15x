@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -30,7 +30,7 @@ Description
 #include "polyMesh.H"
 #include "polyTopoChange.H"
 #include "meshTools.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "processorPolyPatch.H"
 #include "cyclicPolyPatch.H"
 #include "cellModeller.H"
@@ -51,8 +51,7 @@ void Foam::hexRef8::syncCoupledCutFaces(labelHashSet& cutFaces) const
 {
     if (debug)
     {
-        Sout.prefix() = '[' + Pstream::myProcNo() + "] " ;
-        Sout<< "hexRef8::syncCoupledCutFaces : cutFaces before sync:"
+        Pout<< "hexRef8::syncCoupledCutFaces : cutFaces before sync:"
             << cutFaces.size() << endl;
     }
 
@@ -84,7 +83,7 @@ void Foam::hexRef8::syncCoupledCutFaces(labelHashSet& cutFaces) const
 
                 if (debug)
                 {
-                    Sout<< "hexRef8::syncCoupledCutFaces : Sending "
+                    Pout<< "hexRef8::syncCoupledCutFaces : Sending "
                         << cutPatchFaces.size() << " cut faces on "
                         << pp.name() << endl;
                 }
@@ -170,17 +169,18 @@ void Foam::hexRef8::syncCoupledCutFaces(labelHashSet& cutFaces) const
 
     if (debug)
     {
-        Sout<< "hexRef8::syncCoupledCutFaces : cutFaces after sync:"
+        Pout<< "hexRef8::syncCoupledCutFaces : cutFaces after sync:"
             << cutFaces.size() << endl;
     }
 }
 
 
-// Collect all boundary edges of pp that are in cutEdges.
+// Collect all boundary edges of pp that are in cutEdges. Express edges in
+// terms of patchface and starting index in face.
 void Foam::hexRef8::collectCutEdges
 (
     const labelHashSet& cutEdges,
-    const primitivePatch& pp,
+    const polyPatch& pp,
     DynamicList<label>& cutFaces,
     DynamicList<label>& cutIndex
 ) const
@@ -195,12 +195,7 @@ void Foam::hexRef8::collectCutEdges
         label v0 = meshPoints[e[0]];
         label v1 = meshPoints[e[1]];
 
-        label meshEdgeI = meshTools::findEdge(mesh_, v0, v1);
-
-        if (meshEdgeI == -1)
-        {
-            FatalErrorIn("collectCutEdges") << "Problem" << abort(FatalError);
-        }
+        label meshEdgeI = pp.meshEdges()[edgeI];
 
         if (cutEdges.found(meshEdgeI))
         {
@@ -240,14 +235,13 @@ void Foam::hexRef8::collectCutEdges
 }
 
 
-void Foam::hexRef8::syncCoupledCutEdges(labelHashSet& cutEdges) const
+bool Foam::hexRef8::syncCoupledCutEdges(labelHashSet& cutEdges) const
 {
     const polyBoundaryMesh& patches = mesh_.boundaryMesh();
 
     if (debug)
     {
-        Sout.prefix() = '[' + Pstream::myProcNo() + "] " ;
-        Sout<< "hexRef8::syncCoupledCutEdges : cutEdges before sync:"
+        Pout<< "hexRef8::syncCoupledCutEdges : cutEdges before sync:"
             << cutEdges.size() << endl;
     }
 
@@ -267,7 +261,7 @@ void Foam::hexRef8::syncCoupledCutEdges(labelHashSet& cutEdges) const
 
                 if (debug)
                 {
-                    Sout<< "hexRef8::syncCoupledCutEdges : Sending "
+                    Pout<< "hexRef8::syncCoupledCutEdges : Sending "
                         << cutFaces.size() << " cut edges on "
                         << pp.name() << endl;
                 }
@@ -282,6 +276,7 @@ void Foam::hexRef8::syncCoupledCutEdges(labelHashSet& cutEdges) const
         }
     }
 
+    label nOldCutEdges = cutEdges.size();
 
     // Receive all cut patch edges and merge.
     forAll(patches, patchI)
@@ -314,7 +309,7 @@ void Foam::hexRef8::syncCoupledCutEdges(labelHashSet& cutEdges) const
 
                 // Next mesh point of edge. Is fp+1 on other side so fp-1 on
                 // this side.
-                label v1 = f[(fp == 0 ? f.size()-1 : fp-1)];
+                label v1 = f.prevLabel(fp);
                 
                 // Find edge
                 label edgeI = meshTools::findEdge
@@ -358,7 +353,7 @@ void Foam::hexRef8::syncCoupledCutEdges(labelHashSet& cutEdges) const
 
                 // Next mesh point of edge. Is fp+1 on other side so fp-1 on
                 // this side.
-                label v1 = f[(fp == 0 ? f.size()-1 : fp-1)];
+                label v1 = f.prevLabel(fp);
                 
                 // Find edge
                 label edgeI = meshTools::findEdge
@@ -381,9 +376,11 @@ void Foam::hexRef8::syncCoupledCutEdges(labelHashSet& cutEdges) const
 
     if (debug)
     {
-        Sout<< "hexRef8::syncCoupledCutEdges : cutEdges after sync:"
+        Pout<< "hexRef8::syncCoupledCutEdges : cutEdges after sync:"
             << cutEdges.size() << endl;
     }
+
+    return cutEdges.size() > nOldCutEdges;
 }
 
 
@@ -506,8 +503,8 @@ void Foam::hexRef8::getEdgeFaces
 
     if
     (
-        faceA[(indexA+1) % faceA.size()] == nextPointI
-     || faceA[(indexA == 0 ? faceA.size()-1 : indexA-1)] == nextPointI
+        faceA.nextLabel(indexA) == nextPointI
+     || faceA.prevLabel(indexA) == nextPointI
     )
     {
         // fA uses two consecutive points of baseFace so ordering is the
@@ -876,7 +873,7 @@ void Foam::hexRef8::setRefinement
 {
     if (debug)
     {
-        Info<< "hexRef8:" << endl;
+        Pout<< "hexRef8:" << endl;
     }
 
     //
@@ -900,7 +897,7 @@ void Foam::hexRef8::setRefinement
                 "hexRef8::setRefinement(const labelList&, polyTopoChange&)"
             )   << "cell to refine:" << cellI
                 << " is not a hex" << nl
-                << "cellShape:" << cellShapes[cellI] << exit(FatalError);
+                << "cellShape:" << cellShapes[cellI] << abort(FatalError);
         }
     }
 
@@ -969,7 +966,17 @@ void Foam::hexRef8::setRefinement
     // Synchronize cut edges on both sides of coupled patches
     if (hasCouples)
     {
-        syncCoupledCutEdges(cutEdges);
+        while (true)
+        {
+            bool changed = syncCoupledCutEdges(cutEdges);
+
+            reduce(changed, orOp<bool>());
+
+            if (!changed)
+            {
+                break;
+            }
+        }
     }
 
 
@@ -1001,7 +1008,7 @@ void Foam::hexRef8::setRefinement
 
     if (debug)
     {
-        Info<< "    Cells cut     : " << cellLabels.size() << endl
+        Pout<< "    Cells cut     : " << cellLabels.size() << endl
             << "    Faces cut     : " << cutFaces.size() << endl
             << "    Edges cut     : " << cutEdges.size() << endl
             << "    Faces affected: " << affectedFaces.size() << endl;
@@ -1042,7 +1049,7 @@ void Foam::hexRef8::setRefinement
 
     if (debug)
     {
-        Info<< "    Points added: " << cellLabels.size() << " cell centres"
+        Pout<< "    Points added: " << cellLabels.size() << " cell centres"
             << endl;
     }
 
@@ -1073,7 +1080,7 @@ void Foam::hexRef8::setRefinement
 
     if (debug)
     {
-        Info<< "    Points added: " << cutFaces.size() << " face centres"
+        Pout<< "    Points added: " << cutFaces.size() << " face centres"
             << endl;
     }
 
@@ -1112,7 +1119,7 @@ void Foam::hexRef8::setRefinement
 
     if (debug)
     {
-        Info<< "    Points added: " << cutEdges.size() << " edge mids"
+        Pout<< "    Points added: " << cutEdges.size() << " edge mids"
             << endl;
     }
 
@@ -1152,7 +1159,7 @@ void Foam::hexRef8::setRefinement
 
     if (debug)
     {
-        Info<< "    Cells added: " << nAdded << endl;
+        Pout<< "    Cells added: " << nAdded << endl;
     }
 
 
@@ -1214,7 +1221,7 @@ void Foam::hexRef8::setRefinement
 
     if (debug)
     {
-        Info<< "    Faces split: " << cutFaces.size()
+        Pout<< "    Faces split: " << cutFaces.size()
             << "   modified:" << cutFaces.size()
             << " added:" << nAdded << endl;
     }
@@ -1287,7 +1294,7 @@ void Foam::hexRef8::setRefinement
 
     if (debug)
     {
-        Info<< "    Faces added: " << nAdded
+        Pout<< "    Faces added: " << nAdded
             << " faces internal to original cells" << endl;
     }
 
@@ -1312,7 +1319,7 @@ void Foam::hexRef8::setRefinement
 
             verts.append(f[fp]);
 
-            label v1 = f[(fp + 1) % f.size()];
+            label v1 = f.nextLabel(fp);
 
             label edgeI = meshTools::findEdge(mesh_, v0, v1);
 
@@ -1337,7 +1344,7 @@ void Foam::hexRef8::setRefinement
 
     if (debug)
     {
-        Info<< "    Faces modified: " << affectedFaces.size() << " for"
+        Pout<< "    Faces modified: " << affectedFaces.size() << " for"
             << " split edges" << endl;
     }
 }

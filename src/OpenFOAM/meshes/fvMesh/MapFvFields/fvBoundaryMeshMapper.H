@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     fvBoundaryMeshMapper
@@ -33,7 +33,7 @@ Description
 #ifndef fvBoundaryMeshMapper_H
 #define fvBoundaryMeshMapper_H
 
-#include "ptrList.H"
+#include "PtrList.H"
 #include "fvPatchMapper.H"
 #include "pointMapper.H"
 
@@ -50,7 +50,7 @@ namespace Foam
 
 class fvBoundaryMeshMapper
 :
-    public ptrList<fvPatchMapper>
+    public PtrList<fvPatchMapper>
 {
     // Private Member Functions
 
@@ -72,7 +72,7 @@ public:
             const faceMapper& faceMap
         )
         :
-            ptrList<fvPatchMapper>(mesh.boundary().size())
+            PtrList<fvPatchMapper>(mesh.boundary().size())
         {
             const fvBoundaryMesh& patches = mesh.boundary();
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     A multi-block mesh generator.
@@ -29,7 +29,7 @@ Description
 
 #include "Time.H"
 #include "IOdictionary.H"
-#include "IOptrList.H"
+#include "IOPtrList.H"
 
 #include "blockMesh.H"
 #include "attachPolyMesh.H"
@@ -285,7 +285,7 @@ int main(int argc, char *argv[])
                     (
                         "couple" + name(pairI),
                         pairI,
-                        pMesh.morphEngine(),
+                        pMesh,
                         mergeName + "MasterZone",
                         mergeName + "SlaveZone",
                         mergeName + "CutPointZone",

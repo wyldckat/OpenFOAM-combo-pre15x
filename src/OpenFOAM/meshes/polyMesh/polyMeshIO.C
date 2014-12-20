@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     write function : write points, cells and boundary mesh
@@ -192,8 +192,7 @@ polyMesh::readUpdateState polyMesh::readUpdate()
 
         if (boundaryChanged)
         {
-            Warning
-                << "polyMesh::readUpdateState polyMesh::readUpdate() : "
+            WarningIn("polyMesh::readUpdateState polyMesh::readUpdate()")
                 << "Number of patches has changed.  This may have "
                 << "unexpected consequences.  Proceed with care." << endl;
 
@@ -219,6 +218,16 @@ polyMesh::readUpdateState polyMesh::readUpdate()
                 );
             }
         }
+
+        // Even if number of patches stayed same still recalculate boundary
+        // data.
+
+        // Calculate topology for the patches (processor-processor comms etc.)
+        boundary_.updateTopology();
+
+        // Calculate the geometry for the patches (transformation tensors etc.)
+        boundary_.calcGeometry();
+
 
         pointZoneMesh newPointZones
         (

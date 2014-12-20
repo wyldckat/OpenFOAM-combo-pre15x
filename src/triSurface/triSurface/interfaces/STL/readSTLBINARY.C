@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -51,7 +51,7 @@ bool triSurface::readSTLBINARY(const fileName& STLfileName)
 
     // Read the STL header
     char header[STLheaderSize];
-    STLfile.read((char *) header, STLheaderSize);
+    STLfile.read(header, STLheaderSize);
 
     // Check that stream is OK, if not this maybe an ASCII file
     if (!STLfile)
@@ -62,7 +62,7 @@ bool triSurface::readSTLBINARY(const fileName& STLfileName)
     // Read the number of triangles in the STl file
     // (note: read as int so we can check whether >2^31)
     int nTris;
-    STLfile.read((char *) &nTris, sizeof(unsigned int));
+    STLfile.read(reinterpret_cast<char*>(&nTris), sizeof(unsigned int));
 
     // Check that stream is OK and number of triangles is positive,
     // if not this maybe an ASCII file

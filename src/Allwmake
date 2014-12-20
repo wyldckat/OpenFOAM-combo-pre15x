@@ -97,11 +97,13 @@ wmake libso meshTools
 
 wmake libso sampling
 wmake libso edgeMesh
-wmake libso cfdTools
+wmake libso cfdTools/general
 
 (cd finiteElement ; ./Allwmake)
 wmake libso dynamicMesh
 wmake libso engine
+wmake libso topoFvMesh
+wmake libso movingFvMesh
 
 wmake libso ODE
 wmake libso randomProcesses

@@ -1,0 +1,13 @@
+FatalError      
+{
+    type            FoamXServer::FoamXIOError;
+    message         "Non-optional dictionary entry 'ft' not found in dictionary\
+/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/applications/solvers/combustion/dieselFoam/FoamX/defaults/system/fvSolution::solvers";
+    ioFileName      "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/applications/solvers/combustion/dieselFoam/FoamX/defaults/system/fvSolution::solvers";
+    ioStartLineNumber 27;
+    ioEndLineNumber 33;
+    function        "FoamX::IDictionaryEntryImpl::load(const dictionary&, bool allowNonOptional)";
+    sourceFile      "IDictionaryEntryImpl.C";
+    sourceFileLineNumber 968;
+}
+

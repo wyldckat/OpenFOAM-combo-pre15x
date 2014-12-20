@@ -1,0 +1,21 @@
+findRefCell/findRefCell.C
+adjustPhi/adjustPhi.C
+
+wallDist/wallPointYPlus/wallPointYPlus.C
+wallDist/nearWallDistNoSearch.C
+wallDist/nearWallDist.C
+wallDist/wallDist.C
+wallDist/reflectionVectors.C
+wallDist/wallDistReflection.C
+
+bound/bound.C
+
+derivedFvPatchFields/totalPressure/totalPressureFvPatchScalarField.C
+derivedFvPatchFields/wallBuoyantPressure/wallBuoyantPressureFvPatchScalarField.C
+derivedFvPatchFields/pressureTransmissive/pressureTransmissiveFvPatchScalarField.C
+derivedFvPatchFields/supersonicFreestream/supersonicFreestreamFvPatchVectorField.C
+derivedFvPatchFields/turbulentInlet/turbulentInletFvPatchFields.C
+derivedFvPatchFields/timeVaryingUniformFixedValue/timeVaryingUniformFixedValueFvPatchFields.C
+derivedFvPatchFields/oscillatingFixedValue/oscillatingFixedValueFvPatchFields.C
+
+LIB = $(FOAM_LIBBIN)/libcfdTools

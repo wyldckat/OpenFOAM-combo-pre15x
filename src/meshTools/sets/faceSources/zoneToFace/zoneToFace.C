@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -28,8 +28,6 @@ Description
 
 #include "zoneToFace.H"
 #include "polyMesh.H"
-#include "pointSet.H"
-#include "Map.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -76,7 +74,7 @@ void Foam::zoneToFace::combine(topoSet& set, const bool add) const
     }
     else
     {
-        Warning<< "zoneToFace::combine(topoSet&, const bool) : "
+        WarningIn("zoneToFace::combine(topoSet&, const bool)")
             << "Cannot find zone named " << zoneName_ << endl
             << "Valid zones are " << mesh_.faceZones().names() << endl;
     }

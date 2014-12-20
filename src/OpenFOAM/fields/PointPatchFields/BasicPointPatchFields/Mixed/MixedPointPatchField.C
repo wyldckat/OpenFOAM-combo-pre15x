@@ -20,17 +20,16 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "MixedPointPatchField.H"
 #include "Map.H"
 #include "constraints.H"
+#include "PointPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,9 +43,9 @@ void MixedPointPatchField<PatchField, PointPatch, Type>::checkFieldSize() const
 {
     if
     (
-        this->size() != this->patchMesh().size()
-     || refValue_.size() != this->patchMesh().size()
-     || valueFraction_.size() != this->patchMesh().size()
+        this->size() != this->patch().size()
+     || refValue_.size() != this->patch().size()
+     || valueFraction_.size() != this->patch().size()
     )
     {
         FatalErrorIn
@@ -57,7 +56,7 @@ void MixedPointPatchField<PatchField, PointPatch, Type>::checkFieldSize() const
             << "Field size: " << this->size() << " value size: "
             << refValue_.size()
             << " valueFraction size: " << valueFraction_.size()
-            << " patch size: " << this->patchMesh().size()
+            << " patch size: " << this->patch().size()
             << abort(FatalError);
     }
 }
@@ -132,8 +131,8 @@ MixedPointPatchField<PatchField, PointPatch, Type>::MixedPointPatchField
         iF,
         mapper
     ),
-    refValue_(ptf.refValue_, (const FieldMapper&)mapper),
-    valueFraction_(ptf.valueFraction_, (const FieldMapper&)mapper)
+    refValue_(ptf.refValue_, mapper),
+    valueFraction_(ptf.valueFraction_, mapper)
 
 {}
 
@@ -160,9 +159,9 @@ void MixedPointPatchField<PatchField, PointPatch, Type>::autoMap
     const PointPatchFieldMapper& m
 )
 {
-    Field<Type>::autoMap((const FieldMapper&)(m));
-    refValue_.autoMap((const FieldMapper&)(m));
-    valueFraction_.autoMap((const FieldMapper&)(m));
+    Field<Type>::autoMap(m);
+    refValue_.autoMap(m);
+    valueFraction_.autoMap(m);
 }
 
 
@@ -170,7 +169,7 @@ void MixedPointPatchField<PatchField, PointPatch, Type>::autoMap
 template<template<class> class PatchField, class PointPatch, class Type>
 void MixedPointPatchField<PatchField, PointPatch, Type>::rmap
 (
-    const PatchField<Type>& ptf,
+    const PointPatchField<PatchField, PointPatch, Type>& ptf,
     const labelList& addr
 )
 {
@@ -205,7 +204,7 @@ void MixedPointPatchField<PatchField, PointPatch, Type>::setBoundaryCondition
     const Field<Type>& values = *this;
 
     // get addressing
-    const labelList& meshPoints = this->patchMesh().meshPoints();
+    const labelList& meshPoints = this->patch().meshPoints();
 
     forAll (meshPoints, pointI)
     {

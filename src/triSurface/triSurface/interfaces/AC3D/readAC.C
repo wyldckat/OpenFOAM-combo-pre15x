@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -150,7 +150,7 @@ bool triSurface::readAC(const fileName& ACfileName)
 
     if (version != "b")
     {
-        Warning
+        WarningIn("bool triSurface::readAC(const fileName& ACfileName)")
             << "When reading AC3D file " << ACfileName
             << " read header " << line << " with version " << version
             << endl << "Only tested reading with version 'b'."
@@ -163,7 +163,7 @@ bool triSurface::readAC(const fileName& ACfileName)
 
     if (!readUpto("OBJECT", ACfile, args) || (args != "world"))
     {
-        FatalErrorIn("triSurface::readAC(const fileName&)")
+        FatalErrorIn("bool triSurface::readAC(const fileName& ACfileName)")
             << "Cannot find \"OBJECT world\" in file " << ACfileName
             << exit(FatalError);
     }
@@ -223,7 +223,7 @@ bool triSurface::readAC(const fileName& ACfileName)
                     >> rot.yx() >> rot.yy() >> rot.yz()
                     >> rot.zx() >> rot.zy() >> rot.zz();
 
-                Warning
+                WarningIn("triSurface::readAC(const fileName&)")
                     << "rot (rotation tensor) command not implemented"
                     << "Line:" << cmd << ' ' << args << endl
                     << "while reading patch " << patchI << endl;

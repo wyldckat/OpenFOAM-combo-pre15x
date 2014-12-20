@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -97,9 +97,9 @@ Foam::timer::timer(const unsigned int newTimeOut)
         if (debug)
         {
             Info<< "Foam::timer::timer(const unsigned int) : "
-                << " installing timeout " << (int)newTimeOut_
+                << " installing timeout " << int(newTimeOut_)
                 << " seconds"
-                << " (overriding old timeout " << (int)oldTimeOut_
+                << " (overriding old timeout " << int(oldTimeOut_)
                 << ")." << endl;
         }
     }
@@ -115,8 +115,8 @@ Foam::timer::~timer()
         if (debug)
         {
             Info<< "Foam::timer::~timer(const unsigned int) : timeOut="
-                << (int)newTimeOut_
-                << " : resetting timeOut to " << (int)oldTimeOut_ << endl;
+                << int(newTimeOut_)
+                << " : resetting timeOut to " << int(oldTimeOut_) << endl;
         }
 
         // Reset timer

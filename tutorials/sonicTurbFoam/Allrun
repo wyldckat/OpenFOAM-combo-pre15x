@@ -20,7 +20,6 @@ runStarToFoam ()
 for case in $cases
 do
     if [ "$case" = "nacaAirfoil" ] ; then
-#        foamCorrectVrt ${case}/prostar/${case}.vrt
         runStarToFoam $case ${case}/prostar/${case}
         mv ${case}/constant/polyMesh/boundary temp
         sed -e s/"\([\t ]*type[\t ]*\)symmetryPlane"/"\1empty"/g \

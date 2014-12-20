@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -180,8 +180,8 @@ void parcel::setRelaxationTimes
         {
             if (!boiling)
             {
-                // for saturation evaporation, only use 95% for numerical robustness
-                scalar dm = max(SMALL, 0.95*msat[i] - mfg[i]);
+                // for saturation evaporation, only use 99.99% for numerical robustness
+                scalar dm = max(SMALL, 0.9999*msat[i] - mfg[i]);
 
                 tauEvaporation[i] = sDB.evaporation().relaxationTime
                 (

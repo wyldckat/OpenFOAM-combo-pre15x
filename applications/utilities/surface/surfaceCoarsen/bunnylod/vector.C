@@ -10,7 +10,7 @@ float  sqr(float a) {return a*a;}
 // vector (floating point) implementation
 
 float magnitude(Vector v) {
-    return (float)sqrt(sqr(v.x) + sqr( v.y)+ sqr(v.z));
+    return float(sqrt(sqr(v.x) + sqr( v.y)+ sqr(v.z)));
 }
 Vector normalize(Vector v) {
     float d=magnitude(v);
@@ -101,8 +101,8 @@ Quaternion slerp(Quaternion a,Quaternion b,float interp){
 		a.y=-a.y;
 		a.z=-a.z;
 	}
-	float theta = (float)acos(a^b);
+	float theta = float(acos(a^b));
 	if(theta==0.0f) { return(a);}
-	return a*(float)(sin(theta-interp*theta)/sin(theta)) + b*(float)(sin(interp*theta)/sin(theta));
+	return a*float(sin(theta-interp*theta)/sin(theta)) + b*float(sin(interp*theta)/sin(theta));
 }
 

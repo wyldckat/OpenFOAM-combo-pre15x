@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     lesInterFoam
@@ -35,6 +35,7 @@ Description
 
 #include "subCycle.H"
 #include "interfaceProperties.H"
+#include "twoPhaseMixture.H"
 #include "incompressible/turbulenceModel/turbulenceModel.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -66,7 +67,7 @@ int main(int argc, char *argv[])
 
         runTime++;
 
-        Info<< "Time = " << runTime.value() << nl << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
 #       include "gammaEqnSubCycle.H"
 
@@ -86,10 +87,10 @@ int main(int argc, char *argv[])
 
         Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl << endl;
+            << " s\n\n" << endl;
     }
 
-    Info<< "\n end \n";
+    Info<< "End\n" << endl;
 
     return(0);
 }

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Basic thermodynamics type based on the use of fitting functions for
@@ -334,7 +334,7 @@ inline specieThermo<thermo> operator+
 {
     return specieThermo<thermo>
     (
-        (const thermo&)st1 + (const thermo&)st2
+        static_cast<const thermo&>(st1) + static_cast<const thermo&>(st2)
     );
 }
 
@@ -348,7 +348,7 @@ inline specieThermo<thermo> operator-
 {
     return specieThermo<thermo>
     (
-        (const thermo&)st1 - (const thermo&)st2
+        static_cast<const thermo&>(st1) - static_cast<const thermo&>(st2)
     );
 }
 
@@ -362,7 +362,7 @@ inline specieThermo<thermo> operator*
 {
     return specieThermo<thermo>
     (
-        s*(const thermo&)st
+        s*static_cast<const thermo&>(st)
     );
 }
 

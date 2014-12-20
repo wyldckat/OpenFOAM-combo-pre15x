@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     icoFoam
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
-    motionSolver ms(mesh);
+    autoPtr<Foam::motionSolver> motionPtr = motionSolver::New(mesh);
 
     for (runTime++; !runTime.end(); runTime++)
     {
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 #       include "readPISOControls.H"
 #       include "CourantNo.H"
 
-        mesh.movePoints(ms.newPoints());
+        mesh.movePoints(motionPtr->newPoints());
 
         fvVectorMatrix UEqn
         (
@@ -103,15 +103,15 @@ int main(int argc, char *argv[])
             U -= fvc::grad(p)/UEqn.A();
             U.correctBoundaryConditions();
 
-            Info << "Updating motion fluxes" << endl;
-            phi -= mesh.phi();
+            // Make the fluxes relative
+            phi -= fvc::meshPhi(U);
         }
 
         runTime.write();
 
         Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl << endl;
+            << " s\n\n" << endl;
     }
 
     Info<< "End\n" << endl;

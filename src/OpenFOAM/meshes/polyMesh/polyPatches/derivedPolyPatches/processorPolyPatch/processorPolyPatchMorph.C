@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Implements patch face ordering on processor patches.
@@ -33,7 +33,7 @@ Description
     master: lowest numbered processor
 
 
-    sendOrder:
+    initOrder:
         - master:
             geometric:get face centres and f[0] coords. Send to neighbour.
             topological:get seed faces and walk order. Send to neighbour.
@@ -52,7 +52,7 @@ Description
     We cannot do this on processor patches since this would require the
     seed faces to be synchronized on both patches (since both of them would have
     to be unmodified). Synchronization would require an extra communication
-    phase (since already in sendOrder the master would need the synchronized
+    phase (since already in initOrder the master would need the synchronized
     seed faces). So instead we choose to consider the ordering of the master
     patch to be ok and only do something to the slave.
 
@@ -93,7 +93,7 @@ void processorPolyPatch::sendGeometricOrder
     {
         if (polyMesh::morphDebug)
         {
-            Sout<< "processorPolyPatch::sendOrder :"
+            Pout<< "processorPolyPatch::initOrder :"
                 << " sending face centres:" << ctrs.size()
                 << " sending anchors:" << anchorPoints.size()
                 << endl;
@@ -136,7 +136,7 @@ bool processorPolyPatch::geometricOrder
     {
         fileName ccName(name() + "_faceCentres.obj");
 
-        Sout<< "processorPolyPatch::order : "
+        Pout<< "processorPolyPatch::order : "
             << "Dumping newly found match as lines between"
             << " corresponding face centres to OBJ file " << ccName
             << endl;
@@ -160,8 +160,8 @@ bool processorPolyPatch::geometricOrder
 
     if (!matchedAll)
     {
-        SeriousError
-            << "processorPolyPatch::order : patch:" << name() << " : "
+        SeriousErrorIn("processorPolyPatch::geometricOrder")
+            << "in patch:" << name() << " : "
             << "Cannot match vectors to faces on both sides of patch" << endl
             << "masterCtrs[0]:" << masterCtrs[0] << endl
             << "ctrs[0]:" << ctrs[0] << endl
@@ -195,8 +195,8 @@ bool processorPolyPatch::geometricOrder
 
         if (rotation[newFaceI] == -1)
         {
-            SeriousError
-                << "processorPolyPatch::order : patch:" << name()
+            SeriousErrorIn("processorPolyPatch::geometricOrder")
+                << "in patch:" << name()
                 << " : "
                 << "Cannot find point on face " << operator[](oldFaceI)
                 << " with vertices:"
@@ -253,7 +253,7 @@ void processorPolyPatch::sendTopologicalOrder
                 {
                     FatalErrorIn
                     (
-                        "processorPolyPatch::sendOrder"
+                        "processorPolyPatch::initOrder"
                         "(const polyTopoChange&, const mapPolyMesh&)"
                     )   << "Unmodified face " << oldToNew[oldFaceI]
                         << " on processor patch " << name()
@@ -314,7 +314,7 @@ void processorPolyPatch::sendTopologicalOrder
         {
             if (patchWalker.visitOrder().size() > 0)
             {
-                Sout<< "processorPolyPatch::sendOrder : "
+                Pout<< "processorPolyPatch::initOrder : "
                     << "On master walked from unmodified face " << startFaceI
                     << " and visited " << patchWalker.visitOrder().size()
                     << " faces." << endl;
@@ -323,7 +323,7 @@ void processorPolyPatch::sendTopologicalOrder
 
                 fileName ccName(name() + '_' + Foam::name(seedI) + ".obj");
 
-                Sout<< "processorPolyPatch::sendOrder : Dumping visit order for"
+                Pout<< "processorPolyPatch::initOrder : Dumping visit order for"
                     << " seed " << startFaceI << " to OBJ file " << ccName
                     << endl;
 
@@ -337,7 +337,7 @@ void processorPolyPatch::sendTopologicalOrder
     {
         if (polyMesh::morphDebug)
         {
-            Sout<< "processorPolyPatch::sendOrder :"
+            Pout<< "processorPolyPatch::initOrder :"
                 << " Sending seedFaces:" << unmodOldPatchFaces.size()
                 << " sending visitOrder:" << allVisitOrder.size()
                 << endl;
@@ -350,8 +350,8 @@ void processorPolyPatch::sendTopologicalOrder
 
     if (falseIndex != -1)
     {
-        SeriousError
-            << "processorPolyPatch::sendOrder : patch:" << name()
+        SeriousErrorIn("processorPolyPatch::sendTopologicalOrder")
+            << "in patch:" << name()
             << " : " << "Did not visit mesh face "
             << start() + falseIndex
             << " on processor patch " << name()
@@ -389,7 +389,7 @@ bool processorPolyPatch::topologicalOrder
     }
     if (polyMesh::morphDebug)
     {
-        Sout<< "processorPolyPatch::order :"
+        Pout<< "processorPolyPatch::order :"
             << " Received masterSeedFaces:" << masterUnmodOldPatchFaces.size()
             << endl;
     }
@@ -445,8 +445,12 @@ bool processorPolyPatch::topologicalOrder
 
         if (!unmodifiedOldFace[oldFaceI])
         {
-            SeriousError
-                << "processorPolyPatch::order on patch:" << name() << " : "
+            SeriousErrorIn
+            (
+                "processorPolyPatch::topologicalOrder"
+                "(const polyTopoChange&, const mapPolyMesh&"
+                ", labelList& faceMap, labelList& rotation)"
+            )   << "in patch:" << name() << " : "
                 << "Face " << oldToNew[oldFaceI]
                 << " on not modified on processor patch " << name()
                 << " but is on its neighbour patch on processor "
@@ -486,7 +490,7 @@ bool processorPolyPatch::topologicalOrder
         {
             if (visitOrder.size() > 0 && masterVisitOrder[seedI].size() > 0)
             {
-                Sout<< "processorPolyPatch::order : "
+                Pout<< "processorPolyPatch::order : "
                     << "On master walked from unmodified face " << masterFaceI
                     << " and visited " << masterVisitOrder[seedI].size()
                     << " On slave walked from unmodified face " << startFaceI
@@ -496,7 +500,7 @@ bool processorPolyPatch::topologicalOrder
 
                 fileName ccName(name() + '_' + Foam::name(seedI) + ".obj");
 
-                Sout<< "processorPolyPatch::order : Dumping visit order for"
+                Pout<< "processorPolyPatch::order : Dumping visit order for"
                     << " seed " << startFaceI << " to OBJ file " << ccName
                     << endl;
 
@@ -538,8 +542,12 @@ bool processorPolyPatch::topologicalOrder
 
     if (falseIndex != -1)
     {
-        SeriousError
-            << "processorPolyPatch::order on patch:" << name() << " : "
+        SeriousErrorIn
+        (
+            "processorPolyPatch::topologicalOrder"
+            "(const polyTopoChange&, const mapPolyMesh&"
+            ", labelList& faceMap, labelList& rotation)"
+        )   << "in patch:" << name() << " : "
             << "Did not visit mesh face " << start() + falseIndex
             << " on processor patch " << name()
             << " from any of the seed faces." << endl
@@ -559,7 +567,7 @@ bool processorPolyPatch::topologicalOrder
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 //- Initialize ordering (on new mesh)
-void processorPolyPatch::sendOrder
+void processorPolyPatch::initOrder
 (
     const polyTopoChange& ref,
     const mapPolyMesh& map
@@ -574,15 +582,10 @@ void processorPolyPatch::sendOrder
 
     if (polyMesh::morphDebug)
     {
-        Sout.prefix() = '[' + name() + "] ";
-    }
-
-    if (polyMesh::morphDebug)
-    {
         // Dump face centres as vertices.
         fileName ctrName(name() + "_ctrs.obj");
 
-        Sout<< "processorPolyPatch::sendOrder : Dumping faceCentres"
+        Pout<< "processorPolyPatch::initOrder : Dumping faceCentres"
             << " to OBJ file " << ctrName
             << " in patch face order" << endl;
 
@@ -601,16 +604,20 @@ void processorPolyPatch::sendOrder
 
     if (geometricMatch() && (separated() || !parallel()))
     {
-        SeriousError
-            << "processorPolyPatch::order on patch:" << name() << " : "
-            << "Cannot use geometric matching on processor patch " << name()
-            << " since has 'separated' faces (probably contains part of a"
-            << " cyclic patch)" << endl
-            << "Please use topological matching instead"
-            << " (requires at least on unmodified face per connected area)"
-            << " on processor patch " << name()
-            << " from any of the seed faces." << endl
-            << "Continuing with incorrect face ordering from now on!" << endl;
+        WarningIn
+        (
+            "processorPolyPatch::initOrder"
+            "(const polyTopoChange& ref, const mapPolyMesh& map) const"
+        )   << "in patch:" << name() << " : "
+            << "Be careful to use geometric matching on this processor patch"
+            << " since it has 'separated' faces or is not 'parallel'" << nl
+            << "This might be because it contains part of a"
+            << " cyclic patch in which case one has to use"
+            << " topological matching instead"
+            << " (coupledPolyPatch::setGeometricMatch(false))" << endl
+            << "Or the separation might be from the current incorrect ordering"
+            << " and will be correct after the current morphing. Check."
+            << endl;
     }
 
 
@@ -661,7 +668,7 @@ bool processorPolyPatch::order
         // See comment at top.
         forAll(faceMap, patchFaceI)
         {
-            faceMap[patchFaceI] == patchFaceI;
+            faceMap[patchFaceI] = patchFaceI;
         }
     }
     else

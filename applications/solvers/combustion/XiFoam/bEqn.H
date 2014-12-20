@@ -36,6 +36,14 @@ if (ign.ignited())
     // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     surfaceScalarField phiSt = fvc::interpolate(rhou*StCorr*Su*Xi)*nf;
 
+    scalar StCoNum = max
+    (
+        mesh.surfaceInterpolation::deltaCoeffs()
+       *mag(phiSt)/(fvc::interpolate(rho)*mesh.magSf())
+    ).value()*runTime.deltaT().value();
+
+    Info<< "Max St-Courant Number = " << StCoNum << endl;
+
     // Create b equation
     // ~~~~~~~~~~~~~~~~~
     fvScalarMatrix bEqn

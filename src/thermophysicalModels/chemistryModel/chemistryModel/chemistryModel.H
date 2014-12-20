@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     chemistryModel
@@ -69,7 +69,7 @@ private:
     
         const hCombustionThermo& thermo_;
 
-        ptrList<volScalarField>& Y_;
+        PtrList<volScalarField>& Y_;
         const volScalarField& rho_;
 
         IOdictionary chemistryProperties_;
@@ -78,10 +78,10 @@ private:
         Switch chemistry_;
 
         //- The reactions
-        const ptrList<reaction>& reactions_;
+        const PtrList<reaction>& reactions_;
 
         //- thermodynamic data of the species
-        const ptrList<reactionThermo>& specieThermo_;
+        const PtrList<reactionThermo>& specieThermo_;
 
         //- The number of species
         label Ns_;
@@ -93,7 +93,7 @@ private:
         autoPtr<chemistrySolver> solver_;
 
         //- the chemical source term
-        ptrList<scalarField> RR_;
+        PtrList<scalarField> RR_;
 
         //- Latest estimation of integration step in
         scalarField deltaTChem_;
@@ -124,12 +124,12 @@ public:
 
     // Member Functions
 
-        inline const ptrList<reaction>& reactions() const
+        inline const PtrList<reaction>& reactions() const
         {
             return reactions_;
         }
 
-        inline const ptrList<reactionThermo>& specieThermo() const
+        inline const PtrList<reactionThermo>& specieThermo() const
         {
             return specieThermo_;
         }

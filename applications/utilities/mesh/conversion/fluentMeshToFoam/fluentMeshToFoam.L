@@ -20,13 +20,14 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     fluentMeshToFoam
 
 Description
-	Converts a Fluent mesh to FOAM format. 
+    Converts a Fluent mesh to FOAM format
+    including multiple region and region boundary handling.
 
 \*---------------------------------------------------------------------------*/
 
@@ -48,6 +49,9 @@ Description
 
 #include "readHexLabel.H"
 #include "cellShapeRecognition.H"
+
+#include "faceSet.H"
+#include "cellSet.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -234,7 +238,7 @@ endOfSection               {space}")"{space}
 
     // Cell data
     label cellGroupElementType = -1;
-    label cellI = 0;
+    label celli = 0;
 %}
 
 
@@ -581,15 +585,15 @@ endOfSection               {space}")"{space}
         }
 
         // In FOAM, indices start from zero - adjust
-        cellI = cellGroupStartIndex.last() - 1;
+        celli = cellGroupStartIndex.last() - 1;
 
         if (cellGroupElementType != 0)
         {
             label lastIndex = cellGroupEndIndex.last();
 
-            for (; cellI < lastIndex; cellI++)
+            for (; celli < lastIndex; celli++)
             {
-                fluentCellModelID[cellI] = cellGroupElementType;
+                fluentCellModelID[celli] = cellGroupElementType;
             }
         }
     }
@@ -614,16 +618,16 @@ endOfSection               {space}")"{space}
         cellGroupElementType = readHexLabel(cellGroupDataStream);
 
         // In FOAM, indices start from zero - adjust
-        cellI = cellGroupStartIndex.last() - 1;
+        celli = cellGroupStartIndex.last() - 1;
 
         if (cellGroupElementType != 0)
         {
             Info << "Reading uniform cells" << endl;
             label lastIndex = cellGroupEndIndex.last();
 
-            for (; cellI < lastIndex; cellI++)
+            for (; celli < lastIndex; celli++)
             {
-                fluentCellModelID[cellI] = cellGroupElementType;
+                fluentCellModelID[celli] = cellGroupElementType;
             }
         }
     }
@@ -641,23 +645,23 @@ endOfSection               {space}")"{space}
 
         IStringStream fluentCellModelIDStream(YYText());
 
-        label cellID;
-        while (fluentCellModelIDStream.read(cellID))
+        label celliD;
+        while (fluentCellModelIDStream.read(celliD))
         {
-            fluentCellModelID[cellI] = cellID;
-            cellI++;
+            fluentCellModelID[celli] = celliD;
+            celli++;
         }
     }
 
 <readCellsMixed>{spaceNl}{endOfSection} {
 
         // check read of cells
-        if (cellI != cellGroupEndIndex.last())
+        if (celli != cellGroupEndIndex.last())
         {
             Info<< "problem with reading cells: "
                 << "start index: " << cellGroupStartIndex.last()
                 << " end index: " << cellGroupEndIndex.last()
-                << " last cells read: " << cellI << endl;
+                << " last cells read: " << celli << endl;
         }
 
         yy_pop_state();
@@ -804,6 +808,31 @@ endOfSection               {space}")"{space}
 #include "fileName.H"
 #include <fstream>
 
+// Find label of face.
+label findFace(const primitiveMesh& mesh, const face& f)
+{
+    // Get faces using zeroth vertex of face.
+    const labelList& pFaces = mesh.pointFaces()[f[0]];
+
+    forAll(pFaces, i)
+    {
+        label faceI = pFaces[i];
+
+        if (f == mesh.faces()[faceI])
+        {
+            return faceI;
+        }
+    }
+
+    // Didn't find face. Do what?
+    FatalErrorIn("findFace(const primitiveMesh&, const face&)")
+        << "Problem : cannot find a single face in the mesh which uses"
+        << " vertices " << f << exit(FatalError);
+
+    return -1;
+}
+
+
 int main(int argc, char *argv[])
 {
     argList::noParallel();
@@ -853,9 +882,9 @@ int main(int argc, char *argv[])
 
     labelList nFacesInCell(nCells, 0);
 
-    forAll (cellFaces, cellI)
+    forAll (cellFaces, celli)
     {
-        cellFaces[cellI].setSize(fluentModelNFaces[fluentCellModelID[cellI]]);
+        cellFaces[celli].setSize(fluentModelNFaces[fluentCellModelID[celli]]);
     }
 
     // fill in owner and neighbour
@@ -938,19 +967,19 @@ int main(int argc, char *argv[])
         // Set the number of empty faces
         frontAndBackFaces.setSize(2*nCells);
 
-        forAll (fluentCellModelID, cellI)
+        forAll (fluentCellModelID, celli)
         {
-            switch (fluentCellModelID[cellI])
+            switch (fluentCellModelID[celli])
             {
                 case 1:
                 {
-                    cellShapes[cellI] =
+                    cellShapes[celli] =
                         cellShape
                         (
                             extrudedTriangleCellShape
                             (
-                                cellI,
-                                cellFaces[cellI],
+                                celli,
+                                cellFaces[celli],
                                 faces,
                                 owner,
                                 neighbour,
@@ -963,13 +992,13 @@ int main(int argc, char *argv[])
 
                 case 3:
                 {
-                    cellShapes[cellI] =
+                    cellShapes[celli] =
                         cellShape
                         (
                             extrudedQuadCellShape
                             (
-                                cellI,
-                                cellFaces[cellI],
+                                celli,
+                                cellFaces[celli],
                                 faces,
                                 owner,
                                 neighbour,
@@ -984,7 +1013,7 @@ int main(int argc, char *argv[])
                 {
                     FatalErrorIn("fluentToFoam::main(int argc, char *argv[])")
                         << "unrecognised  2-D cell shape: "
-                        << fluentCellModelID[cellI]
+                        << fluentCellModelID[celli]
                         << abort(FatalError);
                 }
             }
@@ -1016,27 +1045,27 @@ int main(int argc, char *argv[])
     {
         // 3-D shape recognition
         Info << "Creating shapes for 3-D cells"<< endl;
-        forAll (fluentCellModelID, cellI)
+        forAll (fluentCellModelID, celli)
         {
             if
             (
-                fluentCellModelID[cellI] == 2    // tet
-             || fluentCellModelID[cellI] == 4    // hex
-             || fluentCellModelID[cellI] == 5    // pyramid
-             || fluentCellModelID[cellI] == 6    // prism
+                fluentCellModelID[celli] == 2    // tet
+             || fluentCellModelID[celli] == 4    // hex
+             || fluentCellModelID[celli] == 5    // pyramid
+             || fluentCellModelID[celli] == 6    // prism
             )
             {
-                cellShapes[cellI] =
+                cellShapes[celli] =
                     cellShape
                     (
                         create3DCellShape
                         (
-                            cellI,
-                            cellFaces[cellI],
+                            celli,
+                            cellFaces[celli],
                             faces,
                             owner,
                             neighbour,
-                            fluentCellModelID[cellI]
+                            fluentCellModelID[celli]
                         )
                     );
             }
@@ -1044,7 +1073,7 @@ int main(int argc, char *argv[])
             {
                 FatalErrorIn("fluentToFoam::main(int argc, char *argv[])")
                     << "unrecognised 3-D cell shape: "
-                    << fluentCellModelID[cellI]
+                    << fluentCellModelID[celli]
                     << abort(FatalError);
             }
         }
@@ -1084,6 +1113,14 @@ int main(int argc, char *argv[])
     wordList patchPhysicalTypes(faceGroupZoneID.size());
 
     label nPatches = 0;
+
+    // Internal boundaries - converted to faceSets.
+    List<label> internalPatchesStart(faceGroupZoneID.size());
+    List<label> internalPatchesEnd(faceGroupZoneID.size());
+    wordList internalPatchNames(faceGroupZoneID.size());
+    
+    label nInternalPatches = 0;
+    faceListList internalBoundary(faceGroupZoneID.size());
 
     for
     (
@@ -1175,6 +1212,7 @@ int main(int argc, char *argv[])
         else if
         (
             curPatchType == "interior"
+         || curPatchType == "internal"
          || curPatchType == "solid"
          || curPatchType == "fan"
          || curPatchType == "radiator"
@@ -1185,6 +1223,25 @@ int main(int argc, char *argv[])
             Info<< "Patch " << faceGroupZoneIDIter()
                 << " contains solid or internal faces. Not added to boundary"
                 << endl;
+
+            if (curPatchName != "default-interior")
+            {
+                Info<< "Adding to internal boundaries" << endl;
+                internalPatchesStart[nInternalPatches] =
+                    faceGroupStartIndexIter()-1;
+                internalPatchesEnd[nInternalPatches] =
+                    faceGroupEndIndexIter()-1;
+                internalPatchNames[nInternalPatches] =
+                    curPatchName;
+
+                internalBoundary[nInternalPatches] = patchFaces;
+
+                nInternalPatches++;
+            }
+            else
+            {
+                Info << "Not adding to internal boundaries" << endl;
+            }
         }
         else if
         (
@@ -1220,6 +1277,13 @@ int main(int argc, char *argv[])
     boundary.setSize(nPatches);
     patchTypes.setSize(nPatches);
     patchNames.setSize(nPatches);
+
+    // reset size of internal boundaries.
+    internalPatchesStart.setSize(nInternalPatches);
+    internalPatchesEnd.setSize(nInternalPatches);
+    internalPatchNames.setSize(nInternalPatches);
+    internalBoundary.setSize(nInternalPatches);
+
 
     preservePatchTypes
     (
@@ -1261,6 +1325,71 @@ int main(int argc, char *argv[])
 
     Info << "Writing mesh" << endl;
     pShapeMesh.write();
+
+    if (internalBoundary.size() > 0)
+    {
+        Info << "Writing internal boundaries" << endl;
+
+        // We now have to match the faces in internalBoundary to the
+        // faces in the mesh.
+
+        forAll(internalBoundary, patchI)
+        {
+            const faceList& bFaces = internalBoundary[patchI];
+
+            label sz = bFaces.size();
+
+            Info<< "Writing internal boundary " << internalPatchNames[patchI]
+                << " of size " << sz << " to faceSet." << endl;
+
+            faceSet internal(pShapeMesh, internalPatchNames[patchI], sz);
+
+            forAll(bFaces, j)
+            {
+                const face& f = bFaces[j];
+                internal.insert(findFace(pShapeMesh, f));
+            }
+
+            internal.write();
+        }
+    }
+    
+
+    if (cellGroupZoneID.size() > 1)
+    {
+        Info << "Writing cell groups" << endl;
+
+        SLList<label>::iterator cg = cellGroupZoneID.begin();
+        SLList<label>::iterator start = cellGroupStartIndex.begin();
+        SLList<label>::iterator end = cellGroupEndIndex.begin();
+
+        // Note: cellGroupXXX are all Fluent indices (starting at 1)
+        // so offset before using.
+
+        for (; cg != cellGroupZoneID.end(); ++cg, ++start, ++end)
+        {
+            const word& name=patchNameIDs[cg()];
+            const word& type=patchTypeIDs[cg()];
+
+            Info<< "Writing cell Group: " << name
+                << " of type " << type << " starting at " << start() - 1
+                << " ending at " << end() - 1 << " to cellSet." << endl;
+
+            cellSet internal(pShapeMesh, name, end() - start());
+          
+            // shift cell indizes by 1
+            for(label celli=start() - 1; celli<=end() - 1; celli++)
+            {
+                internal.insert(celli);
+            }
+
+            internal.write();
+        }
+    }
+    else
+    {
+        Info<< "Only one cell group: no set written\n";
+    }
 
     Info<< nl << "End" << endl;
     return 0;

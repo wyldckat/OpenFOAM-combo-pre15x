@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -126,8 +126,12 @@ void Foam::router::fixWeights
 
     if (minNodeI == -1)
     {
-        Warning
-            << "Cannot route from node " << nodeI
+        WarningIn
+        (
+            "Foam::router::fixWeights"
+            "(const label startNodeI, const label endNodeI,"
+            "const label nodeI, const label prevNodeI)"
+        )   << "Cannot route from node " << nodeI
             << " since all neigbours of node "
             << "already allocated:" << endl;
 
@@ -135,8 +139,12 @@ void Foam::router::fixWeights
         {
             label nbrNodeI = myNeighbours[neighbourI];
 
-            Warning
-                << "  neighbour:" << nbrNodeI
+            WarningIn
+            (
+                "Foam::router::fixWeights"
+                "(const label startNodeI, const label endNodeI,"
+                "const label nodeI, const label prevNodeI)"
+            )   << "  neighbour:" << nbrNodeI
                 << "  weight:" << weights_[nbrNodeI] << endl;
         }
         return;

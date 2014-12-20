@@ -10,5 +10,13 @@ int main()
         << vector::dim << endl
         << vector::rank << endl;
 
+    vector d(0.5, 0.5, 0.5);
+    d /= mag(d);
+
+    vector dSmall = (1e-100)*d;
+    dSmall /= mag(dSmall);
+
+    Info<< (dSmall - d) << endl;
+
     return 0;
 }

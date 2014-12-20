@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     dnsFoam
@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
     for (runTime++; !runTime.end(); runTime++)
     {
-        Info<< "Time = " << runTime.timeName() << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
 #       include "readPISOControls.H"
 
@@ -87,20 +87,15 @@ int main(int argc, char *argv[])
 
         for (int corr=1; corr<=1; corr++)
         {
-            volScalarField A = UEqn.A();
+            volScalarField rUA = 1.0/UEqn.A();
 
-            U = UEqn.H()/A;
-            phi = 
-            (
-                fvc::interpolate
-                (
-                    U + UphiCoeff*fvc::ddt0(U)/A, "interpolate((H(U)|A(U)))"
-                ) & mesh.Sf()
-            ) - UphiCoeff*fvc::interpolate(1.0/A)*fvc::ddt0(phi);
+            U = rUA*UEqn.H();
+            phi = (fvc::interpolate(U) & mesh.Sf()) 
+                + fvc::ddtPhiCorr(rUA, U, phi);
 
             fvScalarMatrix pEqn
             (
-                fvm::laplacian(1.0/A, p) == fvc::div(phi)
+                fvm::laplacian(rUA, p) == fvc::div(phi)
             );
 
             pEqn.solve();
@@ -109,7 +104,7 @@ int main(int argc, char *argv[])
 
 #           include "continuityErrs.H"
 
-            U -= fvc::grad(p)/A;
+            U -= rUA*fvc::grad(p);
             U.correctBoundaryConditions();
         }
 
@@ -122,10 +117,10 @@ int main(int argc, char *argv[])
 
         Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl << endl;
+            << " s\n\n" << endl;
     }
 
-    Info<< "end" << endl;
+    Info<< "End\n" << endl;
 
     return(0);
 }

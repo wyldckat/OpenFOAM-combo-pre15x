@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Utility to refine cells near to a surface.
@@ -522,7 +522,7 @@ void subsetMesh
 
     if (writeMesh)
     {
-        ((Time&)runTime)++;
+        const_cast<Time&>(runTime)++;
 
         // Set current time index for morphing (used by polyMesh to known
         // when to delete/create morphmap)
@@ -737,7 +737,7 @@ int main(int argc, char *argv[])
 
     if (nCutLayers > 0 && selectInside)
     {
-        Warning
+        WarningIn(args.executable())
             << "Illogical settings : Both nCutLayers>0 and selectInside true."
             << endl
             << "This would mean that inside cells get removed but should be"

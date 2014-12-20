@@ -1,5 +1,5 @@
     Info<< "Create mesh, no clear-out for time = "
-        << runTime.value() << nl << endl;
+        << runTime.timeName() << nl << endl;
 
     fvMesh mesh
     (

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -39,14 +39,14 @@ namespace Foam
 
 DLListBase::iterator DLListBase::endIter
 (
-    (DLListBase&)(const DLListBase&)DLListBase(),
-    (link*)0
+    const_cast<DLListBase&>(static_cast<const DLListBase&>(DLListBase())),
+    reinterpret_cast<link*>(NULL)
 );
 
 DLListBase::const_iterator DLListBase::endConstIter
 (
-    (const DLListBase&)DLListBase(),
-    (const link*)0
+    static_cast<const DLListBase&>(DLListBase()),
+    reinterpret_cast<const link*>(NULL)
 );
 
 

@@ -20,13 +20,15 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
 \*---------------------------------------------------------------------------*/
 
 #include "error.H"
+#include "IOstreams.H"
+#include "dictionary.H"
 
 using namespace Foam;
 
@@ -35,6 +37,13 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
+    WarningIn("main") << "warning 1" << endl;
+    IOWarningIn("main", Serr) << "warning 2" << endl;
+
+    dictionary dict;
+
+    IOWarningIn("main", dict) << "warning 3" << endl;
+
     FatalErrorIn("main") << "error 1" << endl;
     FatalErrorIn("main") << "error 2" << exit(FatalError);
 

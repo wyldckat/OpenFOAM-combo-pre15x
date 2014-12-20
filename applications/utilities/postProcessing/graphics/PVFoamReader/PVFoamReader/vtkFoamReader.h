@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     vtkFoamReader
@@ -91,7 +91,7 @@ public:
     vtkSetVector2Macro(TimeStepRange, int);
     vtkGetVector2Macro(TimeStepRange, int);
 
-    // Control of the upper and lowwer limits on the number of times
+    // Control of the upper and lower limits on the number of times
     // displayed in the selection list
     vtkSetVector2Macro(TimeStepLimits, int);
     vtkGetVector2Macro(TimeStepLimits, int);

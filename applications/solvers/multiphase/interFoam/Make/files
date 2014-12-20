@@ -1,13 +1,7 @@
-movingFvMeshes/movingFvMesh/movingFvMesh.C
-movingFvMeshes/movingFvMesh/newMovingFvMesh.C
-movingFvMeshes/staticFvMesh/staticFvMesh.C
-movingFvMeshes/movingPinFvMesh/movingPinFvMesh.C
-movingFvMeshes/movingInkJetFvMesh/movingInkJetFvMesh.C
-twoPhaseTransportModel/twoPhase.C
+incompressibleTwoPhaseMixture/twoPhaseMixture.C
 interfaceProperties/interfaceProperties.C
 interfaceProperties/gammaContactAngle/gammaContactAngleFvPatchScalarField.C
-inkJet/inkJetPressure/inkJetPressureFvPatchScalarField.C
-inkJet/inkJetVelocity/inkJetVelocityFvPatchVectorField.C
+interfaceProperties/gammaCompression/gammaCompression.C
 interFoam.C
 
 EXE = $(FOAM_APPBIN)/interFoam

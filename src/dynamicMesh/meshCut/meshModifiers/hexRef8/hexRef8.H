@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     hexRef8
@@ -54,6 +54,7 @@ namespace Foam
 
 // Class forward declarations
 class polyMesh;
+class polyPatch;
 class polyTopoChange;
 
 /*---------------------------------------------------------------------------*\
@@ -82,13 +83,14 @@ class hexRef8
         void collectCutEdges
         (
             const labelHashSet& cutEdges,
-            const primitivePatch& pp,
+            const polyPatch& pp,
             DynamicList<label>& cutFaces,
             DynamicList<label>& cutIndex
         ) const;
 
-        //- Synchronize cut edges across coupled patches
-        void syncCoupledCutEdges(labelHashSet& cutEdges) const;
+        //- Synchronize cut edges across coupled patches. Returns true if
+        //  anything changed (locally)
+        bool syncCoupledCutEdges(labelHashSet& cutEdges) const;
 
         //- Calculate point-cell addressing. Master point first in list.
         void calcSortedCellPoints(labelListList& cellPoints) const;

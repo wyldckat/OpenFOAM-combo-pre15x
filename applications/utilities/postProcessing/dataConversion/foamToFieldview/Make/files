@@ -1,6 +1,0 @@
-write_binary_uns.c
-calcFaceAddressing.C
-writeFunctions.C
-foamToFieldview.C
-
-EXE = $(FOAM_APPBIN)/foamToFieldview

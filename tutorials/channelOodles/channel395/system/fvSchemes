@@ -38,10 +38,10 @@ divSchemes
 {
     default         none;
     div(phi,U)      Gauss linear;
-    div(phi,k)      Gauss Gamma2 0.2;
-    div(phi,B)      Gauss Gamma2 0.2;
+    div(phi,k)      Gauss limitedLinear 1;
+    div(phi,B)      Gauss limitedLinear 1;
     div(B)          Gauss linear;
-    div(phi,nuTilda) Gauss Gamma2 0.2;
+    div(phi,nuTilda) Gauss limitedLinear 1;
     div((nuEff*dev(grad(U).T()))) Gauss linear;
 }
 

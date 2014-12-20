@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.1                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -24,15 +24,17 @@ FoamFile
 
 solvers
 {
-    p               BICCG 1e-15 0;
+    p               ICCG 1e-15 0;
     rho             BICCG 1e-15 0;
     rhoU            BICCG 1e-15 0;
     rhoE            BICCG 1e-15 0;
+    rhoH            BICCG 1e-15 0;
 }
 
 PISO
 {
-    nCorrectors     2;
+    nOuterCorrectors 3;
+    nCorrectors      1;
     nNonOrthogonalCorrectors 0;
 }
 

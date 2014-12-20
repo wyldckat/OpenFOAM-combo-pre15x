@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     UNIX specific functions
@@ -703,8 +703,7 @@ bool Foam::rmDir(const fileName& directory)
     // Attempt to open directory and set the structure pointer
     if ((source = opendir(directory.c_str())) == NULL)
     {
-        Warning
-            << "rmdir(const fileName&) : "
+        WarningIn("rmdir(const fileName&)")
             << "cannot open directory " << directory << endl;
 
         return false;
@@ -724,8 +723,7 @@ bool Foam::rmDir(const fileName& directory)
                 {
                     if (!rmDir(path))
                     {
-                        Warning
-                            << "rmdir(const fileName&) : "
+                        WarningIn("rmdir(const fileName&)")
                             << "failed to remove directory " << fName
                             << " while removing directory " << directory
                             << endl;
@@ -739,8 +737,7 @@ bool Foam::rmDir(const fileName& directory)
                 {
                     if (!rm(path))
                     {
-                        Warning
-                            << "rmdir(const fileName&) : "
+                        WarningIn("rmdir(const fileName&)")
                             << "failed to remove file " << fName
                             << " while removing directory " << directory
                             << endl;
@@ -756,8 +753,7 @@ bool Foam::rmDir(const fileName& directory)
 
         if (!rm(directory))
         {
-            Warning
-                << "rmdir(const fileName&) : "
+            WarningIn("rmdir(const fileName&)")
                 << "failed to remove directory " << directory << endl;
             
             closedir(source);
@@ -818,7 +814,7 @@ bool Foam::ping
 
     // Get first of the SLL of addresses
     serverAddress = *(hostPtr->h_addr_list);
-    ptr = (struct in_addr *) serverAddress;
+    ptr = reinterpret_cast<struct in_addr*>(serverAddress);
     addr = ptr->s_addr;
 
     // Allocate socket
@@ -833,9 +829,9 @@ bool Foam::ping
 	}
 
     // Fill sockaddr_in structure with dest address and port
-    memset ((char *) &destAddr, '\0', sizeof(destAddr));
+    memset (reinterpret_cast<char *>(&destAddr), '\0', sizeof(destAddr));
     destAddr.sin_family = AF_INET;
-    destAddr.sin_port = htons((unsigned short int)destPort);
+    destAddr.sin_port = htons(ushort(destPort));
     destAddr.sin_addr.s_addr = addr;
 
 
@@ -853,7 +849,7 @@ bool Foam::ping
         connect
         (
             sockfd,
-            (struct sockaddr *)&destAddr,
+            reinterpret_cast<struct sockaddr*>(&destAddr),
             sizeof(struct sockaddr)
         ) != 0
     )

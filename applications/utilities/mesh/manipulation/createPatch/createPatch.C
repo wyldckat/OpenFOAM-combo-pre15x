@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Utility to create patches out of selected boundary faces. Faces come either
@@ -33,15 +33,37 @@ Description
 #include "cyclicPolyPatch.H"
 #include "processorPolyPatch.H"
 #include "SortableList.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "repatchPolyMesh.H"
 #include "OFstream.H"
 #include "meshTools.H"
 #include "faceSet.H"
+#include "IOPtrList.H"
 
 using namespace Foam;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+namespace Foam
+{
+    defineTemplateTypeNameAndDebug(IOPtrList<dictionary>, 0);
+}
+
+
+label getPatch(const polyBoundaryMesh& patches, const word& patchName)
+{
+    label patchI = patches.findPatchID(patchName);
+
+    if (patchI == -1)
+    {
+        FatalErrorIn("createPatch")
+            << "Cannot find source patch " << patchName
+            << endl << "Valid patch names are " << patches.names()
+            << exit(FatalError);
+    }
+
+    return patchI;
+}
 
 
 // Main program:
@@ -57,23 +79,8 @@ int main(int argc, char *argv[])
     // Read control dictionary
     //
 
-    Info<< "Reading createPatchDict\n" << endl;
-
-    IOdictionary patchDict
-    (
-        IOobject
-        (
-            "createPatchDict",
-            runTime.system(),
-            runTime,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE,
-            false
-        )
-    );
-
-    Info<< "Create repatchPolyMesh\n" << endl;
-
+    Info<< "Create repatchPolyMesh for time = " << runTime.value() << nl
+        << endl;
     repatchPolyMesh mesh
     (
         IOobject
@@ -84,185 +91,189 @@ int main(int argc, char *argv[])
         )
     );
 
+
+    Info<< "Reading createPatchDict\n" << endl;
+
+    PtrList<dictionary> patchSources
+    (
+        IOdictionary
+        (
+            IOobject
+            (
+                "createPatchDict",
+                runTime.system(),
+                runTime,
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            )
+        ).lookup("patches")
+    );
+
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
+    // New patches.
+    List<polyPatch*> newPatches(patches.size() + patchSources.size());
 
-    word patchName(patchDict.lookup("name"));
-
-    if (patches.findPatchID(patchName) != -1)
+    // Copy old patches.
+    forAll(patches, patchI)
     {
-        FatalErrorIn(args.executable())
-            << "Patch " << patchName << " already exists in mesh" << endl
-            << "Patches are " << patches.names()
-            << exit(FatalError);
-    }
+        const polyPatch& pp = patches[patchI];
 
-    word patchType(patchDict.lookup("type"));
-
-    word sourceType(patchDict.lookup("constructFrom"));
-
-    if (sourceType == "patches")
-    {
-        wordList patchSources(patchDict.lookup("patches"));
-
-        // Add one patch. Keep all the repatched ones (will have 0 faces in
-        // them)
-        List<polyPatch*> newPatches(patches.size() + 1);
-
-        label newPatchI = 0;
-        label meshFaceI = mesh.nInternalFaces();
-
-        forAll(patches, patchI)
-        {
-            const polyPatch& pp = patches[patchI];
-
-            Info<< "Copying patch " << pp.name() << " into position "
-                << newPatchI << " with faces starting at " << meshFaceI
-                << endl;
-
-            newPatches[newPatchI] =
-                pp.clone
-                (
-                    patches,
-                    newPatchI,
-                    pp.size(),
-                    meshFaceI
-                ).ptr();
-
-            meshFaceI += pp.size();
-            newPatchI++;
-        }
-
-        // Add remaining faces as the new patch.
-        Info<< "Adding new patch " << patchName << " into position "
-            << newPatchI << " with faces starting at " << meshFaceI
-            << " and size " << mesh.nFaces() - meshFaceI
-            << endl;
-
-        newPatches[newPatchI] =
-            polyPatch::New
-            (
-                patchType,
-                patchName,
-                mesh.nFaces() - meshFaceI,
-                meshFaceI,
-                newPatchI,
-                patches
-            ).ptr();
-
-        // Repatch faces of the patches.
-        forAll(patchSources, i)
-        {
-            label patchI = patches.findPatchID(patchSources[i]);
-
-            if (patchI == -1)
-            {
-                FatalErrorIn(args.executable())
-                    << "Cannot find source patch " << patchSources[i]
-                    << endl << "Valid patch names are " << patches.names()
-                    << exit(FatalError);
-            }
-
-            const polyPatch& pp = patches[patchI];
-
-            Info<< "Moving faces from " << pp.name() << " starting at "
-                << pp.start() << " to patch " << newPatchI
-                << " starting at " << meshFaceI << endl;
-
-            forAll(pp, i)
-            {
-                mesh.changePatchID(pp.start() + i, newPatchI);
-            }
-        }
-
-        // Actually add new list of patches
-        mesh.changePatches(newPatches);
-    }
-    else if (sourceType == "set")
-    {
-        word setName(patchDict.lookup("set"));
-
-        faceSet faces(mesh, setName);
-
-        Info<< "Read " << faces.size() << " faces from faceSet " << faces.name()
-            << endl;
-
-
-        // Add one patch
-        List<polyPatch*> newPatches(patches.size() + 1);
-
-        forAll(patches, patchI)
-        {
-            const polyPatch& pp = patches[patchI];
-
-            Info<< "Copying patch " << pp.name() << " at position "
-                << patchI << endl;
-
-            newPatches[patchI] =
-                pp.clone
-                (
-                    patches,
-                    patchI,
-                    pp.size(),
-                    pp.start()
-                ).ptr();
-        }
-
-        // Add remaining faces as the new patch.
-        label patchI = newPatches.size() - 1;
-
-        Info<< "Adding new patch " << patchName << " at position "
-            << patchI << " with faces starting at "
-            << mesh.nFaces() - faces.size()
-            << " and size " << faces.size()
-            << endl;
+        Info<< "Copying patch " << pp.name() << " at position "
+            << patchI << endl;
 
         newPatches[patchI] =
+            pp.clone
+            (
+                patches,
+                patchI,
+                pp.size(),
+                pp.start()
+            ).ptr();
+    }
+
+
+    // Add new patches constructed according to dictionary.
+
+    // For every boundary face the new patch (or -1 if nothing changed).
+    labelList newPatchID(mesh.nInternalFaces(), -1);
+
+    forAll(patchSources, addedI)
+    {
+        const dictionary& dict = patchSources[addedI];
+
+        word patchName(dict.lookup("name"));
+
+        if (patches.findPatchID(patchName) != -1)
+        {
+            FatalErrorIn(args.executable())
+                << "Patch " << patchName << " already exists in mesh" << endl
+                << "Existing patches are " << patches.names()
+                << exit(FatalError);
+        }
+
+        word patchType(dict.lookup("type"));
+
+        word sourceType(dict.lookup("constructFrom"));
+
+        Info<< "Adding new patch " << patchName << " of type " << patchType
+            << " as patch " << patches.size()+addedI << endl;
+
+        // Add an empty patch.
+        newPatches[patches.size()+addedI] =
             polyPatch::New
             (
                 patchType,
                 patchName,
                 0,
                 mesh.nFaces(),
-                patchI,
+                patches.size()+addedI,
                 patches
             ).ptr();
 
-        // Sort (since faceSet contains faces in arbitrary order)
-        labelList faceLabels(faces.toc());
 
-        SortableList<label> patchFaces(faceLabels);
-
-        forAll(patchFaces, i)
+        if (sourceType == "patches")
         {
-            label faceI = patchFaces[i];
+            wordList patchSources(dict.lookup("patches"));
 
-            if (mesh.isInternalFace(faceI))
+            // Repatch faces of the patches.
+            forAll(patchSources, sourceI)
             {
-                FatalErrorIn(args.executable())
-                    << "Face " << faceI << " specified in set " << faces.name()
-                    << " is not an external face of the mesh." << endl
-                    << "This application can only repatch existing boundary"
-                    << " faces."
-                    << exit(FatalError);
+                label patchI = getPatch(patches, patchSources[sourceI]);
+
+                const polyPatch& pp = patches[patchI];
+
+                Info<< "Moving faces from patch " << pp.name()
+                    << " to patch " << patches.size()+addedI << endl;
+
+                forAll(pp, i)
+                {
+                    label faceI = pp.start() + i;
+
+                    if (newPatchID[faceI - mesh.nInternalFaces()] != -1)
+                    {
+                        FatalErrorIn(args.executable())
+                            << "Face " << faceI << " on new patch " << patchName
+                            << " has already been marked for repatching to"
+                            << " patch "
+                            << newPatchID[faceI - mesh.nInternalFaces()]
+                            << exit(FatalError);
+                    }
+                    newPatchID[faceI - mesh.nInternalFaces()] =
+                        patches.size()+addedI;
+                }
             }
-
-            mesh.changePatchID(patchFaces[i], patchI);
         }
+        else if (sourceType == "set")
+        {
+            word setName(dict.lookup("set"));
 
-        // Actually add new list of patches
-        mesh.changePatches(newPatches);
+            faceSet faces(mesh, setName);
+
+            Info<< "Read " << faces.size() << " faces from faceSet "
+                << faces.name() << endl;
+
+            // Sort (since faceSet contains faces in arbitrary order)
+            labelList faceLabels(faces.toc());
+
+            SortableList<label> patchFaces(faceLabels);
+
+            forAll(patchFaces, i)
+            {
+                label faceI = patchFaces[i];
+
+                if (mesh.isInternalFace(faceI))
+                {
+                    FatalErrorIn(args.executable())
+                        << "Face " << faceI << " specified in set "
+                        << faces.name()
+                        << " is not an external face of the mesh." << endl
+                        << "This application can only repatch existing boundary"
+                        << " faces." << exit(FatalError);
+                }
+
+                if (newPatchID[faceI - mesh.nInternalFaces()] != -1)
+                {
+                    FatalErrorIn(args.executable())
+                        << "Face " << faceI << " on new patch " << patchName
+                        << " has already been marked for repatching to"
+                        << " patch "
+                        << newPatchID[faceI - mesh.nInternalFaces()]
+                        << exit(FatalError);
+                }
+                newPatchID[faceI - mesh.nInternalFaces()] =
+                    patches.size()+addedI;
+            }
+        }
+        else
+        {
+            FatalErrorIn(args.executable())
+                << "Invalid source type " << sourceType << endl
+                << "Valid source types are 'patches' 'set'" << exit(FatalError);
+        }
     }
-    else
+
+    // Change patch ids
+    forAll(newPatchID, i)
     {
-        FatalErrorIn(args.executable())
-            << "Fatal source type " << sourceType << endl
-            << "Valid source types are 'patches' 'set'"
-            << exit(FatalError);
+        if (newPatchID[i] != -1)
+        {
+            label faceI = i + mesh.nInternalFaces();
+
+            mesh.changePatchID(faceI, newPatchID[i]);
+        }
     }
+
+    // Add new list of patches
+    mesh.changePatches(newPatches);
+
+    // Set the precision of the points data to 10
+    IOstream::defaultPrecision(10);
 
     runTime++;
 
+    // Do all topology changes in one go
     mesh.repatch();
 
     // Write resulting mesh

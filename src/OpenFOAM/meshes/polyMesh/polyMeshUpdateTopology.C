@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Update topology of a polyMesh using the mesh morphing engine.
@@ -84,6 +84,9 @@ void Foam::polyMesh::updateTopology()
             morphEnginePtr_->instance() = time().timeName();
         }
 
+        // Update boundaryMesh (note that patches themselves already ok)
+        boundary_.updateTopology();
+
         // Update zones
         pointZones_.clearAddressing();
         faceZones_.clearAddressing();
@@ -119,6 +122,9 @@ void Foam::polyMesh::updateTopology(const polyTopoChange& ref)
     moving_ = false;
 
     morph(ref);
+
+    // Update boundaryMesh (note that patches themselves already ok)
+    boundary_.updateTopology();
 
     // Update zones
     pointZones_.clearAddressing();

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.CaseManagement;
@@ -36,7 +36,7 @@ import java.awt.*;
 import org.omg.CosNaming.*;
 import org.omg.CORBA.StringHolder;
 
-import FoamXServer.ApplicationClassDescriptor;
+import FoamXServer.ApplicationDescriptor;
 import FoamXServer.FoamXError;
 import FoamXServer.FoamXIOError;
 import FoamXServer.FoamXSYSError;
@@ -49,7 +49,7 @@ import FoamXServer.CasePostServer.ICasePostServer;
 import FoamXServer.CasePostServer.ICasePostServerHolder;
 import FoamXServer.IDictionaryEntry;
 import FoamXServer.IDictionaryEntryHolder;
-import FoamXServer.UtilityDescriptor;
+import FoamXServer.ApplicationDescriptor;
 
 import FoamX.App;
 import FoamX.Exceptions.FoamXException;
@@ -86,6 +86,7 @@ public class CaseBrowserPanel
     StartCaseBrowserAction startCaseBrowserAction_;
     StopCaseBrowserAction stopCaseBrowserAction_;
     StartProcessEditorAction startProcessEditorAction_;
+    EditFoamControlDictAction editFoamControlDictAction_;
     OpenRootAction openRootAction_;
     OpenCaseAction openCaseAction_;
     //OpenCasePostAction openCasePostAction_;
@@ -94,7 +95,6 @@ public class CaseBrowserPanel
     DeleteCaseAction deleteCaseAction_;
     CloneCaseAction cloneCaseAction_;
     UnlockCaseAction unlockCaseAction_;
-    EditApplicationClassesAction editAppClassesAction_;
 
     SelectHostAction selectHostAction_;
     SelectRootAction selectRootAction_;
@@ -157,6 +157,7 @@ public class CaseBrowserPanel
             startCaseBrowserAction_     = new StartCaseBrowserAction();
             stopCaseBrowserAction_      = new StopCaseBrowserAction();
             startProcessEditorAction_   = new StartProcessEditorAction();
+            editFoamControlDictAction_  = new EditFoamControlDictAction();
 
             openRootAction_             = new OpenRootAction();
             openCaseAction_             = new OpenCaseAction();
@@ -166,7 +167,6 @@ public class CaseBrowserPanel
             deleteCaseAction_           = new DeleteCaseAction();
             cloneCaseAction_            = new CloneCaseAction();
             unlockCaseAction_           = new UnlockCaseAction();
-            editAppClassesAction_       = new EditApplicationClassesAction();
 
             selectHostAction_           = new SelectHostAction();
             selectRootAction_           = new SelectRootAction();
@@ -199,7 +199,7 @@ public class CaseBrowserPanel
                 addToolbarButton(cloneCaseAction_);
                 addToolbarButton(unlockCaseAction_);
                 toolBar_.addSeparator();
-                addToolbarButton(editAppClassesAction_);
+                addToolbarButton(editFoamControlDictAction_);
                 toolBar_.addSeparator();
                 addToolbarButton(refreshAction_);
                 addToolbarButton(expandAllAction_);
@@ -650,6 +650,7 @@ public class CaseBrowserPanel
         startCaseBrowserAction_.setEnabled(false);
         stopCaseBrowserAction_.setEnabled(false);
         startProcessEditorAction_.setEnabled(false);
+        editFoamControlDictAction_.setEnabled(false);
         openRootAction_.setEnabled(false);
         openCaseAction_.setEnabled(false);
         //openCasePostAction_.setEnabled(false);
@@ -658,7 +659,6 @@ public class CaseBrowserPanel
         deleteCaseAction_.setEnabled(false);
         cloneCaseAction_.setEnabled(false);
         unlockCaseAction_.setEnabled(false);
-        editAppClassesAction_.setEnabled(false);
 
         selectHostAction_.setEnabled(false);
         selectRootAction_.setEnabled(false);
@@ -702,12 +702,9 @@ public class CaseBrowserPanel
                             }
                             else
                             {
-                                if (selectionMode_ == OPEN_CASE_MODE)
-                                {
-                                    editAppClassesAction_.setEnabled(true);
-                                }
                                 stopCaseBrowserAction_.setEnabled(true);
                                 startProcessEditorAction_.setEnabled(true);
+                                editFoamControlDictAction_.setEnabled(true);
                             }
                         }
                     }
@@ -716,6 +713,7 @@ public class CaseBrowserPanel
                         if (selectionMode_ == OPEN_CASE_MODE)
                         {
                             startProcessEditorAction_.setEnabled(true);
+                            editFoamControlDictAction_.setEnabled(true);
                             createCaseAction_.setEnabled(true);
                             //importCaseAction_.setEnabled(true);
                             openRootAction_.setEnabled(true);
@@ -734,6 +732,7 @@ public class CaseBrowserPanel
                         if (selectionMode_ == OPEN_CASE_MODE)
                         {
                             startProcessEditorAction_.setEnabled(true);
+                            editFoamControlDictAction_.setEnabled(true);
                             openCaseAction_.setEnabled(true);
                             //openCasePostAction_.setEnabled(true);
                             deleteCaseAction_.setEnabled(true);
@@ -794,7 +793,7 @@ public class CaseBrowserPanel
                 contextMenu_.add(utilitiesMenu);
 
                 // Get utility descriptors.
-                UtilityDescriptor[] utilities =
+                ApplicationDescriptor[] utilities =
                     caseBrowser.foamProperties().utilities();
 
                 for (int i = 0; i <utilities.length; i++)
@@ -1323,11 +1322,11 @@ public class CaseBrowserPanel
                             );
                             contextMenu_.add(createCaseAction_).setFont(font);
                             //contextMenu_.add(importCaseAction_).setFont(font);
-                            contextMenu_.add(editAppClassesAction_).setFont
+                            contextMenu_.add(startProcessEditorAction_).setFont
                             (
                                 font
                             );
-                            contextMenu_.add(startProcessEditorAction_).setFont
+                            contextMenu_.add(editFoamControlDictAction_).setFont
                             (
                                 font
                             );
@@ -1344,6 +1343,10 @@ public class CaseBrowserPanel
 
                         // Allow processEditing on rootDir
                         contextMenu_.add(startProcessEditorAction_).setFont
+                        (
+                            font
+                        );
+                        contextMenu_.add(editFoamControlDictAction_).setFont
                         (
                             font
                         );
@@ -1718,6 +1721,90 @@ public class CaseBrowserPanel
                                 context.getCaseBrowser()
                             );
                         processEditor.show();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                App.handleAllExceptions(ex);
+            }
+        }
+    }
+
+    //--------------------------------------------------------------------------
+
+    private class EditFoamControlDictAction
+    extends AbstractAction
+    {
+        EditFoamControlDictAction()
+        {
+            putValue
+            (
+                Action.SMALL_ICON, App.getResources().getIcon
+                (
+                    "CaseBrowser.EditFoamControlDictImage"
+                )
+            );
+            putValue(Action.NAME, "Edit OpenFOAM controlDict");
+            putValue(Action.SHORT_DESCRIPTION, "Edit OpenFOAM controlDict");
+            putValue(Action.LONG_DESCRIPTION, "Edit OpenFOAM controlDict");
+        }
+
+        public void actionPerformed(ActionEvent e)
+        {
+            // Show busy cursor.
+            BusyCursor busyCursor = new BusyCursor(CaseBrowserPanel.this);
+
+            try
+            {
+                // Get currently selected node.
+                TreePath tp = tree_.getSelectionModel().getSelectionPath();
+                if (tp != null)
+                {
+                    // Get node info.
+                    DefaultMutableTreeNode hostNode = 
+                        (DefaultMutableTreeNode)tp.getLastPathComponent();
+                    ContextInfo context = (ContextInfo)hostNode.getUserObject();
+
+                    // Check node type.
+                    if (context.getCaseBrowser() != null)
+                    {
+                        // We have a case browser. Load the system controlDict
+                        // and start editor on it.
+                        ICaseBrowser caseBrowser = context.getCaseBrowser();
+
+                        IDictionaryEntryHolder dictHolder =
+                            new IDictionaryEntryHolder();
+                        caseBrowser.foamProperties().getFoamControlDict
+                        (
+                            dictHolder
+                        );
+
+                        if (dictHolder.value == null)
+                        {
+                            throw new FoamXException
+                            (
+                                "Could not find OpenFOAM controlDict"
+                            );
+                        }
+
+                        CompoundEditor compoundEditor =
+                            new CompoundEditor
+                            (
+                                App.getRootFrame(),
+                                dictHolder.value
+                            );
+                        compoundEditor.setTitle("OpenFOAM Dictionary");
+                        compoundEditor.show();
+
+                        if (dictHolder.value.modified())
+                        {
+                            System.out.println
+                            (
+                                "Saving modified OpenFOAM Dictionary"
+                            );
+                            dictHolder.value.save();
+                        }
                     }
                 }
             }
@@ -2402,8 +2489,8 @@ public class CaseBrowserPanel
 
                         // Get the available application classes
                         // for this browser.
-                        ApplicationClassDescriptor[] appClasses =
-                            caseBrowser.foamProperties().applicationClasses();
+                        ApplicationDescriptor[] appes =
+                            caseBrowser.foamProperties().applicationes();
 
                         String[] caseRoots =
                             caseBrowser.foamProperties().rootDirectories();
@@ -2412,7 +2499,7 @@ public class CaseBrowserPanel
                         CreateCaseDialog dlg = new CreateCaseDialog
                         (
                             App.getRootFrame(),
-                            appClasses,
+                            appes,
                             caseRoots
                         );
 
@@ -2435,7 +2522,7 @@ public class CaseBrowserPanel
                             );
 
                             // Get the application class and case root and name.
-                            String appClass = dlg.getCaseClass();
+                            String app = dlg.getCaseClass();
                             String caseRoot = dlg.getCaseRoot();
                             String caseName = dlg.getCaseName();
 
@@ -2449,7 +2536,7 @@ public class CaseBrowserPanel
                                 (
                                     caseRoot,
                                     caseName,
-                                    appClass
+                                    app
                                 );
 
                                 getCaseServerReference
@@ -2519,176 +2606,6 @@ public class CaseBrowserPanel
             }
         }
     }
-
-    //--------------------------------------------------------------------------
-
-//    private class ImportCaseAction
-//    extends AbstractAction
-//    {
-//        ImportCaseAction()
-//        {
-//            putValue
-//            (
-//                Action.SMALL_ICON,
-//                App.getResources().getIcon("CaseBrowser.ImportCaseImage")
-//            );
-//            putValue(Action.NAME, "Import Case");
-//            putValue(Action.SHORT_DESCRIPTION, "Import Case");
-//            putValue(Action.LONG_DESCRIPTION, "Import Case");
-//        }
-//
-//        public void actionPerformed(ActionEvent e)
-//        {
-//            try
-//            {
-//                // Get currently selected node.
-//                TreePath tp = tree_.getSelectionModel().getSelectionPath();
-//                if (tp != null)
-//                {
-//                    // Get node info.
-//                    DefaultMutableTreeNode nodeItem =
-//                        (DefaultMutableTreeNode)tp.getLastPathComponent();
-//
-//                    ContextInfo contextInfo = 
-//                        (ContextInfo)nodeItem.getUserObject();
-//
-//                    // Check node type.
-//                    if
-//                    (
-//                        contextInfo.isHost()
-//                     || contextInfo.isCaseRoot()
-//                     || (
-//                         contextInfo.isCaseName()
-//                      && !contextInfo.isCaseManaged()
-//                        )
-//                    )
-//                    {
-//                        // Get case browser reference from context info object.
-//                        ICaseBrowser caseBrowser = contextInfo.getCaseBrowser();
-//
-//                        // Get the available application classes
-//                        // for this browser.
-//                        ApplicationClassDescriptor[] appClasses =
-//                            caseBrowser.foamProperties().applicationClasses();
-//
-//                        String[] caseRoots =
-//                            caseBrowser.foamProperties().rootDirectories();
-//
-//
-//                        // Create the create/import case dialog.
-//                        CreateCaseDialog dlg = new CreateCaseDialog
-//                        (
-//                            App.getRootFrame(),
-//                            appClasses,
-//                            caseRoots
-//                        );
-//
-//                        dlg.setTitle("Import Case");
-//
-//                        if (contextInfo.isCaseRoot())
-//                        {
-//                            dlg.setCaseRoot(contextInfo.getCaseRoot());
-//                        }
-//                        else if (contextInfo.isCaseName())
-//                        {
-//                            dlg.setCaseRoot(contextInfo.getCaseRoot());
-//                            dlg.setCaseName(contextInfo.getCaseName());
-//                        }
-//
-//                        // Show the dialog.
-//                        dlg.show();
-//
-//                        if (!dlg.wasCancelled())
-//                        {
-//                            // Show busy cursor.
-//                            BusyCursor busyCursor = new BusyCursor
-//                            (
-//                                CaseBrowserPanel.this
-//                            );
-//
-//                            // Get the application class and case root and name.
-//                            String appClass = dlg.getCaseClass();
-//                            String caseRoot = dlg.getCaseRoot();
-//                            String caseName = dlg.getCaseName();
-//
-//                            // Try and import the case.
-//                            ICaseServerHolder caseHolder =
-//                                new ICaseServerHolder();
-//
-//                            try
-//                            {
-//                                caseBrowser.importCase
-//                                (
-//                                    
-//                                    caseRoot,
-//                                    caseName,
-//                                    appClass
-//                                );
-//
-//                                getCaseServerReference
-//                                (
-//                                    caseRoot,
-//                                    caseName,
-//                                    null,
-//                                    caseBrowser,
-//                                    caseHolder
-//                                );
-//                            }
-//                            catch (FoamXIOError ioErr)
-//                            {
-//                                ioErr.errorMessage =
-//                                    "The Import Case operation failed due to\n"
-//                                  + ioErr.errorMessage;
-//                                throw ioErr;
-//                            }
-//                            catch (FoamXError fxErr)
-//                            {
-//                                fxErr.errorMessage =
-//                                    "The Import Case operation failed due to\n"
-//                                  + fxErr.errorMessage;
-//                                throw fxErr;
-//                            }
-//                            ICaseServer caseServer = caseHolder.value;
-//
-//                            // Fire case opened event.
-//                            fireCaseOpened
-//                            (
-//                                caseRoot,
-//                                caseName,
-//                                caseServer,
-//                                caseBrowser
-//                            );
-//
-//                            if (!caseServer.managed())
-//                            {
-//                                // Fire case closed event.
-//                                fireCaseClosed(caseRoot, caseName);
-//
-//                                // Nobody has picked up this case to manage
-//                                // so close it down.
-//                                caseServer.close();
-//                            }
-//
-//                            // Refresh the case browser tree model.
-//                            refreshRoot(caseBrowser, caseRoot);
-//                        }
-//                    }
-//                }
-//            }
-//            catch (FoamXIOError ioErr)
-//            {
-//                App.handleException(ioErr);
-//            }
-//            catch (FoamXError fxErr)
-//            {
-//                App.handleException(fxErr);
-//            }
-//            catch (Exception ex)
-//            {
-//                App.handleAllExceptions(ex);
-//            }
-//        }
-//    }
 
     //--------------------------------------------------------------------------
 
@@ -2897,37 +2814,8 @@ public class CaseBrowserPanel
 
                         // Get the available application classes
                         // for this browser.
-                        ApplicationClassDescriptor[] appClasses =
-                            caseBrowser.foamProperties().applicationClasses();
-//
-//                        String[] caseRoots =
-//                            caseBrowser.foamProperties().rootDirectories();
-//
-//                        String[] timeTypes = new String[4];
-//                        timeTypes[0] = "firstTime";
-//                        timeTypes[1] = "latestTime";
-//                        timeTypes[2] = "allTime";
-//                        timeTypes[3] = "noTime";
-//
-//                        // Create the clone case dialog.
-//                        CloneCaseDialog dlg = new CloneCaseDialog
-//                        (
-//                            App.getRootFrame(),
-//                            appClasses,
-//                            caseRoots,
-//                            timeTypes
-//                        );
-//
-//                        dlg.setTitle("Clone Case");
-//
-//                        if (contextInfo.isCaseRoot())
-//                        {
-//                            dlg.setCaseRoot(contextInfo.getCaseRoot());
-//                        }
-//
-//                        // Show the dialog.
-//                        dlg.show();
-//
+                        ApplicationDescriptor[] appes =
+                            caseBrowser.foamProperties().applicationes();
 
                         IDictionaryEntryHolder dictHolder =
                             new IDictionaryEntryHolder();
@@ -2963,28 +2851,28 @@ public class CaseBrowserPanel
                         rootEntry.updateValue(contextInfo.getCaseRoot());
 
                         // Convert available appclasses into stringlist
-                        String[] appClassNames = new String[appClasses.length];
-                        for (int i = 0; i < appClasses.length; i++)
+                        String[] appNames = new String[appes.length];
+                        for (int i = 0; i < appes.length; i++)
                         {
-                            appClassNames[i] = appClasses[i].name;
+                            appNames[i] = appes[i].name;
                         }
-                        DictionaryEntryCache appClassEntry =
+                        DictionaryEntryCache appEntry =
                             controlDict.getSubEntry
                             (
-                                "applicationClass"
+                                "application"
                             );
 
-                        // Update 'valueList' of appClassEntry and write
+                        // Update 'valueList' of appEntry and write
                         // to case browser.
-                        appClassEntry.getTypeDescriptor().setValueList
+                        appEntry.getTypeDescriptor().setValueList
                         (
-                            appClassNames
+                            appNames
                         );
-                        appClassEntry.getTypeDescriptor().updateTypeDescriptor
+                        appEntry.getTypeDescriptor().updateTypeDescriptor
                         (
                             true
                         );
-                        appClassEntry.updateValue(caseDescriptor.appClass);
+                        appEntry.updateValue(caseDescriptor.app);
 
                         CompoundEditor compoundEditor =
                             new CompoundEditor
@@ -3022,12 +2910,12 @@ public class CaseBrowserPanel
                         );
                         String times = timesEntry.toString();
 
-                        DictionaryEntryCache appEntry =
+                        DictionaryEntryCache appNameEntry =
                         controlDict.getSubEntry
                         (
-                            "applicationClass"
+                            "application"
                         );
-                        String appClass = appEntry.toString();
+                        String app = appNameEntry.toString();
 
 
                         // Pop up confirmation box
@@ -3057,7 +2945,7 @@ public class CaseBrowserPanel
                                     caseDescriptor,
                                     caseRoot,
                                     caseName,
-                                    appClass,
+                                    app,
                                     times
                                 );
                             }
@@ -3214,95 +3102,6 @@ public class CaseBrowserPanel
             {
                 App.handleAllExceptions(ex);
             }
-        }
-    }
-
-    //--------------------------------------------------------------------------
-
-    private class EditApplicationClassesAction
-    extends AbstractAction
-    {
-        EditApplicationClassesAction()
-        {
-            putValue
-            (
-                Action.SMALL_ICON,
-                App.getResources().getIcon("CaseBrowser.EditAppClassesImage")
-            );
-            putValue(Action.NAME, "Foam Application Classes");
-            putValue(Action.SHORT_DESCRIPTION, "Foam Application Classes");
-            putValue(Action.LONG_DESCRIPTION, "Foam Application Classes");
-        }
-
-        /* Disabled until the application class editor is updated
-        public void actionPerformed(ActionEvent e)
-        {
-            try
-            {
-                // Get currently selected node.
-                TreePath tp = tree_.getSelectionModel().getSelectionPath();
-                if (tp != null)
-                {
-                    // Get node info.
-                    DefaultMutableTreeNode nodeItem =
-                        (DefaultMutableTreeNode)tp.getLastPathComponent();
-                    ContextInfo contextInfo =
-                        (ContextInfo)nodeItem.getUserObject();
-
-                    // Check node type.
-                    if
-                    (
-                        contextInfo.isHost()
-                     && contextInfo.getCaseBrowser() != null
-                    )
-                    {
-                        // Get case browser reference from
-                        // context info object.
-                        ICaseBrowser caseBrowser =
-                            contextInfo.getCaseBrowser();
-
-                        IFoamProperties foamSystemProps =
-                            caseBrowser.foamProperties();
-
-                        // Show the browse application class dialog.
-                        BrowseApplicationClassesDlg dlg =
-                            new BrowseApplicationClassesDlg(foamSystemProps);
-                        dlg.show();
-
-                        // Save the user data.
-                        if (dlg.getModified()) caseBrowser.save();
-                    }
-                }
-            }
-            catch (FoamXIOError ioErr)
-            {
-                App.handleException(ioErr);
-            }
-            catch (FoamXError fxErr)
-            {
-                App.handleException(fxErr);
-            }
-            catch (Exception ex)
-            {
-                App.handleAllExceptions(ex);
-            }
-        }
-        */
-
-        public void actionPerformed(ActionEvent e)
-        {
-            if
-            (
-                JOptionPane.showConfirmDialog
-                (
-                    App.getRootFrame(),
-                    "Editing of application classes not supported",
-                    "Application Class Editing",
-                    JOptionPane.DEFAULT_OPTION,
-                    JOptionPane.INFORMATION_MESSAGE
-                ) == JOptionPane.OK_OPTION
-            )
-            {}
         }
     }
 

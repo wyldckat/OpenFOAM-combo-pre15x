@@ -36,11 +36,11 @@ typedef ObjOut< IDictionaryEntry > IDictionaryEntry_out;
 namespace CaseServer
 {
 
-class IApplicationClass;
-typedef IApplicationClass *IApplicationClass_ptr;
-typedef IApplicationClass_ptr IApplicationClassRef;
-typedef ObjVar< IApplicationClass > IApplicationClass_var;
-typedef ObjOut< IApplicationClass > IApplicationClass_out;
+class IApplication;
+typedef IApplication *IApplication_ptr;
+typedef IApplication_ptr IApplicationRef;
+typedef ObjVar< IApplication > IApplication_var;
+typedef ObjOut< IApplication > IApplication_out;
 
 class IFoamProperties;
 typedef IFoamProperties *IFoamProperties_ptr;
@@ -78,11 +78,11 @@ typedef IGeometricFieldDescriptor_ptr IGeometricFieldDescriptorRef;
 typedef ObjVar< IGeometricFieldDescriptor > IGeometricFieldDescriptor_var;
 typedef ObjOut< IGeometricFieldDescriptor > IGeometricFieldDescriptor_out;
 
-class IBoundaryTypeDescriptor;
-typedef IBoundaryTypeDescriptor *IBoundaryTypeDescriptor_ptr;
-typedef IBoundaryTypeDescriptor_ptr IBoundaryTypeDescriptorRef;
-typedef ObjVar< IBoundaryTypeDescriptor > IBoundaryTypeDescriptor_var;
-typedef ObjOut< IBoundaryTypeDescriptor > IBoundaryTypeDescriptor_out;
+class IPatchPhysicalTypeDescriptor;
+typedef IPatchPhysicalTypeDescriptor *IPatchPhysicalTypeDescriptor_ptr;
+typedef IPatchPhysicalTypeDescriptor_ptr IPatchPhysicalTypeDescriptorRef;
+typedef ObjVar< IPatchPhysicalTypeDescriptor > IPatchPhysicalTypeDescriptor_var;
+typedef ObjOut< IPatchPhysicalTypeDescriptor > IPatchPhysicalTypeDescriptor_out;
 
 }
 
@@ -147,7 +147,7 @@ enum FoamXType {
   Type_Directory,
   Type_Time,
   Type_DimensionSet,
-  Type_VectorSpace,
+  Type_FixedList,
   Type_List,
   Type_Dictionary,
   Type_Selection,
@@ -791,68 +791,35 @@ typedef TSeqOut< SequenceTmpl< HostDescriptor,MICO_TID_DEF> > HostDescriptorList
 
 extern CORBA::TypeCodeConst _tc_HostDescriptorList;
 
-struct ApplicationClassDescriptor;
-typedef TVarVar< ApplicationClassDescriptor > ApplicationClassDescriptor_var;
-typedef TVarOut< ApplicationClassDescriptor > ApplicationClassDescriptor_out;
+struct ApplicationDescriptor;
+typedef TVarVar< ApplicationDescriptor > ApplicationDescriptor_var;
+typedef TVarOut< ApplicationDescriptor > ApplicationDescriptor_out;
 
 
-struct ApplicationClassDescriptor {
+struct ApplicationDescriptor {
   #ifdef HAVE_TYPEDEF_OVERLOAD
-  typedef ApplicationClassDescriptor_var _var_type;
+  typedef ApplicationDescriptor_var _var_type;
   #endif
   #ifdef HAVE_EXPLICIT_STRUCT_OPS
-  ApplicationClassDescriptor();
-  ~ApplicationClassDescriptor();
-  ApplicationClassDescriptor( const ApplicationClassDescriptor& s );
-  ApplicationClassDescriptor& operator=( const ApplicationClassDescriptor& s );
+  ApplicationDescriptor();
+  ~ApplicationDescriptor();
+  ApplicationDescriptor( const ApplicationDescriptor& s );
+  ApplicationDescriptor& operator=( const ApplicationDescriptor& s );
   #endif //HAVE_EXPLICIT_STRUCT_OPS
 
   CORBA::String_var name;
   CORBA::String_var category;
+  CORBA::String_var path;
   CORBA::Boolean systemClass;
 };
 
-extern CORBA::TypeCodeConst _tc_ApplicationClassDescriptor;
+extern CORBA::TypeCodeConst _tc_ApplicationDescriptor;
 
-typedef SequenceTmpl< ApplicationClassDescriptor,MICO_TID_DEF> ApplicationClassDescriptorList;
-typedef TSeqVar< SequenceTmpl< ApplicationClassDescriptor,MICO_TID_DEF> > ApplicationClassDescriptorList_var;
-typedef TSeqOut< SequenceTmpl< ApplicationClassDescriptor,MICO_TID_DEF> > ApplicationClassDescriptorList_out;
+typedef SequenceTmpl< ApplicationDescriptor,MICO_TID_DEF> ApplicationDescriptorList;
+typedef TSeqVar< SequenceTmpl< ApplicationDescriptor,MICO_TID_DEF> > ApplicationDescriptorList_var;
+typedef TSeqOut< SequenceTmpl< ApplicationDescriptor,MICO_TID_DEF> > ApplicationDescriptorList_out;
 
-extern CORBA::TypeCodeConst _tc_ApplicationClassDescriptorList;
-
-struct UtilityDescriptor;
-typedef TVarVar< UtilityDescriptor > UtilityDescriptor_var;
-typedef TVarOut< UtilityDescriptor > UtilityDescriptor_out;
-
-
-struct UtilityDescriptor {
-  #ifdef HAVE_TYPEDEF_OVERLOAD
-  typedef UtilityDescriptor_var _var_type;
-  #endif
-  #ifdef HAVE_EXPLICIT_STRUCT_OPS
-  UtilityDescriptor();
-  ~UtilityDescriptor();
-  UtilityDescriptor( const UtilityDescriptor& s );
-  UtilityDescriptor& operator=( const UtilityDescriptor& s );
-  #endif //HAVE_EXPLICIT_STRUCT_OPS
-
-  CORBA::String_var name;
-  CORBA::String_var description;
-  CORBA::String_var category;
-  CORBA::Boolean systemClass;
-  CORBA::Boolean changesMesh;
-  CORBA::Boolean changesFields;
-  CORBA::String_var clientBean;
-  ITypeDescriptor_var controlDict;
-};
-
-extern CORBA::TypeCodeConst _tc_UtilityDescriptor;
-
-typedef SequenceTmpl< UtilityDescriptor,MICO_TID_DEF> UtilityDescriptorList;
-typedef TSeqVar< SequenceTmpl< UtilityDescriptor,MICO_TID_DEF> > UtilityDescriptorList_var;
-typedef TSeqOut< SequenceTmpl< UtilityDescriptor,MICO_TID_DEF> > UtilityDescriptorList_out;
-
-extern CORBA::TypeCodeConst _tc_UtilityDescriptorList;
+extern CORBA::TypeCodeConst _tc_ApplicationDescriptorList;
 
 struct CaseDescriptor;
 typedef TVarVar< CaseDescriptor > CaseDescriptor_var;
@@ -873,7 +840,7 @@ struct CaseDescriptor {
   CORBA::String_var rootDir;
   CORBA::String_var rawRootDir;
   CORBA::String_var caseName;
-  CORBA::String_var appClass;
+  CORBA::String_var app;
   CORBA::Long nProcs;
   CORBA::Boolean managed;
   CORBA::Boolean locked;
@@ -1078,7 +1045,7 @@ class ICaseServer :
     virtual void managed( CORBA::Boolean value ) = 0;
     virtual char* caseRoot() = 0;
     virtual char* caseName() = 0;
-    virtual ::FoamXServer::CaseServer::IApplicationClass_ptr applicationClass() = 0;
+    virtual ::FoamXServer::CaseServer::IApplication_ptr application() = 0;
     virtual ::FoamXServer::CaseServer::IFoamProperties_ptr foamProperties() = 0;
     virtual ::FoamXServer::StringList* availableTimeSteps() = 0;
     virtual CORBA::Boolean meshDefined() = 0;
@@ -1089,13 +1056,12 @@ class ICaseServer :
     virtual void readMesh() = 0;
     virtual void importMesh( const char* hostName, const char* rootDir, const char* caseName ) = 0;
     virtual void getFieldValues( const char* fieldName, IGeometricField_out fieldValues ) = 0;
-    virtual void addPatch( const char* patchName, const char* boundaryType ) = 0;
+    virtual void addPatch( const char* patchName, const char* patchPhysicalType ) = 0;
     virtual void deletePatch( const char* patchName ) = 0;
     virtual void deleteAllPatches() = 0;
-    virtual void setPatchBoundaryType( const char* patchName, const char* boundaryType ) = 0;
-    virtual void getPatchBoundaryType( const char* patchName, CORBA::String_out boundaryType ) = 0;
+    virtual void setPatchPhysicalType( const char* patchName, const char* patchPhysicalType ) = 0;
+    virtual void getPatchPhysicalType( const char* patchName, CORBA::String_out patchPhysicalType ) = 0;
     virtual void getDictionary( const char* dictionaryName, CORBA::Boolean forceRead, IDictionaryEntry_out dictRoot ) = 0;
-    virtual void copyDefaultDictionary( const char* dictionaryName ) = 0;
     virtual void readFile( const char* name, CORBA::String_out contents ) = 0;
     virtual void writeFile( const char* name, const char* contents ) = 0;
     virtual CORBA::Long fileModificationDate( const char* fileName ) = 0;
@@ -1125,7 +1091,7 @@ class ICaseServer_stub:
     void managed( CORBA::Boolean value );
     char* caseRoot();
     char* caseName();
-    ::FoamXServer::CaseServer::IApplicationClass_ptr applicationClass();
+    ::FoamXServer::CaseServer::IApplication_ptr application();
     ::FoamXServer::CaseServer::IFoamProperties_ptr foamProperties();
     ::FoamXServer::StringList* availableTimeSteps();
     CORBA::Boolean meshDefined();
@@ -1136,13 +1102,12 @@ class ICaseServer_stub:
     void readMesh();
     void importMesh( const char* hostName, const char* rootDir, const char* caseName );
     void getFieldValues( const char* fieldName, IGeometricField_out fieldValues );
-    void addPatch( const char* patchName, const char* boundaryType );
+    void addPatch( const char* patchName, const char* patchPhysicalType );
     void deletePatch( const char* patchName );
     void deleteAllPatches();
-    void setPatchBoundaryType( const char* patchName, const char* boundaryType );
-    void getPatchBoundaryType( const char* patchName, CORBA::String_out boundaryType );
+    void setPatchPhysicalType( const char* patchName, const char* patchPhysicalType );
+    void getPatchPhysicalType( const char* patchName, CORBA::String_out patchPhysicalType );
     void getDictionary( const char* dictionaryName, CORBA::Boolean forceRead, IDictionaryEntry_out dictRoot );
-    void copyDefaultDictionary( const char* dictionaryName );
     void readFile( const char* name, CORBA::String_out contents );
     void writeFile( const char* name, const char* contents );
     CORBA::Long fileModificationDate( const char* fileName );
@@ -1170,7 +1135,7 @@ class ICaseServer_stub_clp :
     void managed( CORBA::Boolean value );
     char* caseRoot();
     char* caseName();
-    ::FoamXServer::CaseServer::IApplicationClass_ptr applicationClass();
+    ::FoamXServer::CaseServer::IApplication_ptr application();
     ::FoamXServer::CaseServer::IFoamProperties_ptr foamProperties();
     ::FoamXServer::StringList* availableTimeSteps();
     CORBA::Boolean meshDefined();
@@ -1181,13 +1146,12 @@ class ICaseServer_stub_clp :
     void readMesh();
     void importMesh( const char* hostName, const char* rootDir, const char* caseName );
     void getFieldValues( const char* fieldName, IGeometricField_out fieldValues );
-    void addPatch( const char* patchName, const char* boundaryType );
+    void addPatch( const char* patchName, const char* patchPhysicalType );
     void deletePatch( const char* patchName );
     void deleteAllPatches();
-    void setPatchBoundaryType( const char* patchName, const char* boundaryType );
-    void getPatchBoundaryType( const char* patchName, CORBA::String_out boundaryType );
+    void setPatchPhysicalType( const char* patchName, const char* patchPhysicalType );
+    void getPatchPhysicalType( const char* patchName, CORBA::String_out patchPhysicalType );
     void getDictionary( const char* dictionaryName, CORBA::Boolean forceRead, IDictionaryEntry_out dictRoot );
-    void copyDefaultDictionary( const char* dictionaryName );
     void readFile( const char* name, CORBA::String_out contents );
     void writeFile( const char* name, const char* contents );
     CORBA::Long fileModificationDate( const char* fileName );
@@ -1244,8 +1208,8 @@ class IFoamProperties :
     virtual ::FoamXServer::StringList* geometryTypes() = 0;
     virtual ::FoamXServer::StringList* patchTypes() = 0;
     virtual ::FoamXServer::StringList* patchFieldTypes() = 0;
-    virtual ::FoamXServer::ApplicationClassDescriptorList* applicationClasses() = 0;
-    virtual ::FoamXServer::UtilityDescriptorList* utilities() = 0;
+    virtual ::FoamXServer::ApplicationDescriptorList* applicationes() = 0;
+    virtual ::FoamXServer::ApplicationDescriptorList* utilities() = 0;
 
     virtual void addRootDirectory( const char* rawRootDir ) = 0;
     virtual void deleteRootDirectory( const char* rawRootDir ) = 0;
@@ -1255,10 +1219,11 @@ class IFoamProperties :
     virtual void findPatchType( const char* patchTypeName, IPatchDescriptor_out patchDesc ) = 0;
     virtual void getPatchFieldType( const char* patchFieldTypeName, ITypeDescriptor_out patchFieldDesc ) = 0;
     virtual void findPatchFieldType( const char* patchFieldTypeName, ITypeDescriptor_out patchFieldDesc ) = 0;
-    virtual void getApplicationClass( const char* appClassName, IApplicationClass_out appClass ) = 0;
-    virtual void addApplicationClass( const char* appClassName, IApplicationClass_out appClass ) = 0;
-    virtual void deleteApplicationClass( const char* appClassName ) = 0;
-    virtual void cloneApplicationClass( const char* appClassNameSrc, const char* appClassNameDest, IApplicationClass_out appClass ) = 0;
+    virtual void getFoamControlDict( IDictionaryEntry_out controlDict ) = 0;
+    virtual void getApplication( const char* appName, IApplication_out app ) = 0;
+    virtual void addApplication( const char* appName, IApplication_out app ) = 0;
+    virtual void deleteApplication( const char* appName ) = 0;
+    virtual void cloneApplication( const char* appNameSrc, const char* appNameDest, const char* appDestPath, IApplication_out app ) = 0;
     virtual void getUtilityControlDict( const char* utilityName, const char* rootDir, const char* caseName, IDictionaryEntry_out controlDict ) = 0;
     virtual void validate() = 0;
     virtual void saveSystemProperties() = 0;
@@ -1286,8 +1251,8 @@ class IFoamProperties_stub:
     ::FoamXServer::StringList* geometryTypes();
     ::FoamXServer::StringList* patchTypes();
     ::FoamXServer::StringList* patchFieldTypes();
-    ::FoamXServer::ApplicationClassDescriptorList* applicationClasses();
-    ::FoamXServer::UtilityDescriptorList* utilities();
+    ::FoamXServer::ApplicationDescriptorList* applicationes();
+    ::FoamXServer::ApplicationDescriptorList* utilities();
 
     void addRootDirectory( const char* rawRootDir );
     void deleteRootDirectory( const char* rawRootDir );
@@ -1297,10 +1262,11 @@ class IFoamProperties_stub:
     void findPatchType( const char* patchTypeName, IPatchDescriptor_out patchDesc );
     void getPatchFieldType( const char* patchFieldTypeName, ITypeDescriptor_out patchFieldDesc );
     void findPatchFieldType( const char* patchFieldTypeName, ITypeDescriptor_out patchFieldDesc );
-    void getApplicationClass( const char* appClassName, IApplicationClass_out appClass );
-    void addApplicationClass( const char* appClassName, IApplicationClass_out appClass );
-    void deleteApplicationClass( const char* appClassName );
-    void cloneApplicationClass( const char* appClassNameSrc, const char* appClassNameDest, IApplicationClass_out appClass );
+    void getFoamControlDict( IDictionaryEntry_out controlDict );
+    void getApplication( const char* appName, IApplication_out app );
+    void addApplication( const char* appName, IApplication_out app );
+    void deleteApplication( const char* appName );
+    void cloneApplication( const char* appNameSrc, const char* appNameDest, const char* appDestPath, IApplication_out app );
     void getUtilityControlDict( const char* utilityName, const char* rootDir, const char* caseName, IDictionaryEntry_out controlDict );
     void validate();
     void saveSystemProperties();
@@ -1326,8 +1292,8 @@ class IFoamProperties_stub_clp :
     ::FoamXServer::StringList* geometryTypes();
     ::FoamXServer::StringList* patchTypes();
     ::FoamXServer::StringList* patchFieldTypes();
-    ::FoamXServer::ApplicationClassDescriptorList* applicationClasses();
-    ::FoamXServer::UtilityDescriptorList* utilities();
+    ::FoamXServer::ApplicationDescriptorList* applicationes();
+    ::FoamXServer::ApplicationDescriptorList* utilities();
 
     void addRootDirectory( const char* rawRootDir );
     void deleteRootDirectory( const char* rawRootDir );
@@ -1337,10 +1303,11 @@ class IFoamProperties_stub_clp :
     void findPatchType( const char* patchTypeName, IPatchDescriptor_out patchDesc );
     void getPatchFieldType( const char* patchFieldTypeName, ITypeDescriptor_out patchFieldDesc );
     void findPatchFieldType( const char* patchFieldTypeName, ITypeDescriptor_out patchFieldDesc );
-    void getApplicationClass( const char* appClassName, IApplicationClass_out appClass );
-    void addApplicationClass( const char* appClassName, IApplicationClass_out appClass );
-    void deleteApplicationClass( const char* appClassName );
-    void cloneApplicationClass( const char* appClassNameSrc, const char* appClassNameDest, IApplicationClass_out appClass );
+    void getFoamControlDict( IDictionaryEntry_out controlDict );
+    void getApplication( const char* appName, IApplication_out app );
+    void addApplication( const char* appName, IApplication_out app );
+    void deleteApplication( const char* appName );
+    void cloneApplication( const char* appNameSrc, const char* appNameDest, const char* appDestPath, IApplication_out app );
     void getUtilityControlDict( const char* utilityName, const char* rootDir, const char* caseName, IDictionaryEntry_out controlDict );
     void validate();
     void saveSystemProperties();
@@ -1356,29 +1323,29 @@ class IFoamProperties_stub_clp :
 
 
 /*
- * Base class and common definitions for interface IApplicationClass
+ * Base class and common definitions for interface IApplication
  */
 
-class IApplicationClass : 
+class IApplication : 
   virtual public CORBA::Object
 {
   public:
-    virtual ~IApplicationClass();
+    virtual ~IApplication();
 
     #ifdef HAVE_TYPEDEF_OVERLOAD
-    typedef IApplicationClass_ptr _ptr_type;
-    typedef IApplicationClass_var _var_type;
+    typedef IApplication_ptr _ptr_type;
+    typedef IApplication_var _var_type;
     #endif
 
-    static IApplicationClass_ptr _narrow( CORBA::Object_ptr obj );
-    static IApplicationClass_ptr _narrow( CORBA::AbstractBase_ptr obj );
-    static IApplicationClass_ptr _duplicate( IApplicationClass_ptr _obj )
+    static IApplication_ptr _narrow( CORBA::Object_ptr obj );
+    static IApplication_ptr _narrow( CORBA::AbstractBase_ptr obj );
+    static IApplication_ptr _duplicate( IApplication_ptr _obj )
     {
       CORBA::Object::_duplicate (_obj);
       return _obj;
     }
 
-    static IApplicationClass_ptr _nil()
+    static IApplication_ptr _nil()
     {
       return 0;
     }
@@ -1395,17 +1362,17 @@ class IApplicationClass :
     virtual void modules( const ::FoamXServer::StringList& value ) = 0;
     virtual CORBA::Boolean systemClass() = 0;
     virtual ::FoamXServer::StringList* fields() = 0;
-    virtual ::FoamXServer::StringList* boundaryTypes() = 0;
+    virtual ::FoamXServer::StringList* patchPhysicalTypes() = 0;
     virtual ::FoamXServer::StringList* dictionaries() = 0;
 
     virtual void getField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor ) = 0;
     virtual void findField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor ) = 0;
     virtual void addField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor ) = 0;
     virtual void deleteField( const char* fieldName ) = 0;
-    virtual void getBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor ) = 0;
-    virtual void findBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor ) = 0;
-    virtual void addBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor ) = 0;
-    virtual void deleteBoundaryType( const char* boundaryTypeName ) = 0;
+    virtual void getPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor ) = 0;
+    virtual void findPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor ) = 0;
+    virtual void addPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor ) = 0;
+    virtual void deletePatchPhysicalType( const char* patchPhysicalTypeName ) = 0;
     virtual void getDictionary( const char* dictName, ITypeDescriptor_out dictTypeDescriptor ) = 0;
     virtual void addDictionary( const char* dictName, ITypeDescriptor_out dictTypeDescriptor ) = 0;
     virtual void deleteDictionary( const char* dictName ) = 0;
@@ -1413,20 +1380,20 @@ class IApplicationClass :
     virtual void save() = 0;
 
   protected:
-    IApplicationClass() {};
+    IApplication() {};
   private:
-    IApplicationClass( const IApplicationClass& );
-    void operator=( const IApplicationClass& );
+    IApplication( const IApplication& );
+    void operator=( const IApplication& );
 };
 
-extern CORBA::TypeCodeConst _tc_IApplicationClass;
+extern CORBA::TypeCodeConst _tc_IApplication;
 
-// Stub for interface IApplicationClass
-class IApplicationClass_stub:
-  virtual public IApplicationClass
+// Stub for interface IApplication
+class IApplication_stub:
+  virtual public IApplication
 {
   public:
-    virtual ~IApplicationClass_stub();
+    virtual ~IApplication_stub();
     char* name();
     void name( const char* value );
     char* description();
@@ -1437,17 +1404,17 @@ class IApplicationClass_stub:
     void modules( const ::FoamXServer::StringList& value );
     CORBA::Boolean systemClass();
     ::FoamXServer::StringList* fields();
-    ::FoamXServer::StringList* boundaryTypes();
+    ::FoamXServer::StringList* patchPhysicalTypes();
     ::FoamXServer::StringList* dictionaries();
 
     void getField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor );
     void findField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor );
     void addField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor );
     void deleteField( const char* fieldName );
-    void getBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor );
-    void findBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor );
-    void addBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor );
-    void deleteBoundaryType( const char* boundaryTypeName );
+    void getPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor );
+    void findPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor );
+    void addPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor );
+    void deletePatchPhysicalType( const char* patchPhysicalTypeName );
     void getDictionary( const char* dictName, ITypeDescriptor_out dictTypeDescriptor );
     void addDictionary( const char* dictName, ITypeDescriptor_out dictTypeDescriptor );
     void deleteDictionary( const char* dictName );
@@ -1455,18 +1422,18 @@ class IApplicationClass_stub:
     void save();
 
   private:
-    void operator=( const IApplicationClass_stub& );
+    void operator=( const IApplication_stub& );
 };
 
 #ifndef MICO_CONF_NO_POA
 
-class IApplicationClass_stub_clp :
-  virtual public IApplicationClass_stub,
+class IApplication_stub_clp :
+  virtual public IApplication_stub,
   virtual public PortableServer::StubBase
 {
   public:
-    IApplicationClass_stub_clp (PortableServer::POA_ptr, CORBA::Object_ptr);
-    virtual ~IApplicationClass_stub_clp ();
+    IApplication_stub_clp (PortableServer::POA_ptr, CORBA::Object_ptr);
+    virtual ~IApplication_stub_clp ();
     char* name();
     void name( const char* value );
     char* description();
@@ -1477,17 +1444,17 @@ class IApplicationClass_stub_clp :
     void modules( const ::FoamXServer::StringList& value );
     CORBA::Boolean systemClass();
     ::FoamXServer::StringList* fields();
-    ::FoamXServer::StringList* boundaryTypes();
+    ::FoamXServer::StringList* patchPhysicalTypes();
     ::FoamXServer::StringList* dictionaries();
 
     void getField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor );
     void findField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor );
     void addField( const char* fieldName, IGeometricFieldDescriptor_out fieldDescriptor );
     void deleteField( const char* fieldName );
-    void getBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor );
-    void findBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor );
-    void addBoundaryType( const char* boundaryTypeName, IBoundaryTypeDescriptor_out boundaryDescriptor );
-    void deleteBoundaryType( const char* boundaryTypeName );
+    void getPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor );
+    void findPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor );
+    void addPatchPhysicalType( const char* patchPhysicalTypeName, IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor );
+    void deletePatchPhysicalType( const char* patchPhysicalTypeName );
     void getDictionary( const char* dictName, ITypeDescriptor_out dictTypeDescriptor );
     void addDictionary( const char* dictName, ITypeDescriptor_out dictTypeDescriptor );
     void deleteDictionary( const char* dictName );
@@ -1495,9 +1462,9 @@ class IApplicationClass_stub_clp :
     void save();
 
   protected:
-    IApplicationClass_stub_clp ();
+    IApplication_stub_clp ();
   private:
-    void operator=( const IApplicationClass_stub_clp & );
+    void operator=( const IApplication_stub_clp & );
 };
 
 #endif // MICO_CONF_NO_POA
@@ -1648,8 +1615,6 @@ class IPatchDescriptor :
     virtual void displayName( const char* value ) = 0;
     virtual char* description() = 0;
     virtual void description( const char* value ) = 0;
-    virtual ::FoamXServer::StringList* patchFieldTypes() = 0;
-    virtual void patchFieldTypes( const ::FoamXServer::StringList& value ) = 0;
 
   protected:
     IPatchDescriptor() {};
@@ -1672,8 +1637,6 @@ class IPatchDescriptor_stub:
     void displayName( const char* value );
     char* description();
     void description( const char* value );
-    ::FoamXServer::StringList* patchFieldTypes();
-    void patchFieldTypes( const ::FoamXServer::StringList& value );
 
   private:
     void operator=( const IPatchDescriptor_stub& );
@@ -1694,8 +1657,6 @@ class IPatchDescriptor_stub_clp :
     void displayName( const char* value );
     char* description();
     void description( const char* value );
-    ::FoamXServer::StringList* patchFieldTypes();
-    void patchFieldTypes( const ::FoamXServer::StringList& value );
 
   protected:
     IPatchDescriptor_stub_clp ();
@@ -1795,29 +1756,29 @@ class IGeometryDescriptor_stub_clp :
 
 
 /*
- * Base class and common definitions for interface IBoundaryTypeDescriptor
+ * Base class and common definitions for interface IPatchPhysicalTypeDescriptor
  */
 
-class IBoundaryTypeDescriptor : 
+class IPatchPhysicalTypeDescriptor : 
   virtual public CORBA::Object
 {
   public:
-    virtual ~IBoundaryTypeDescriptor();
+    virtual ~IPatchPhysicalTypeDescriptor();
 
     #ifdef HAVE_TYPEDEF_OVERLOAD
-    typedef IBoundaryTypeDescriptor_ptr _ptr_type;
-    typedef IBoundaryTypeDescriptor_var _var_type;
+    typedef IPatchPhysicalTypeDescriptor_ptr _ptr_type;
+    typedef IPatchPhysicalTypeDescriptor_var _var_type;
     #endif
 
-    static IBoundaryTypeDescriptor_ptr _narrow( CORBA::Object_ptr obj );
-    static IBoundaryTypeDescriptor_ptr _narrow( CORBA::AbstractBase_ptr obj );
-    static IBoundaryTypeDescriptor_ptr _duplicate( IBoundaryTypeDescriptor_ptr _obj )
+    static IPatchPhysicalTypeDescriptor_ptr _narrow( CORBA::Object_ptr obj );
+    static IPatchPhysicalTypeDescriptor_ptr _narrow( CORBA::AbstractBase_ptr obj );
+    static IPatchPhysicalTypeDescriptor_ptr _duplicate( IPatchPhysicalTypeDescriptor_ptr _obj )
     {
       CORBA::Object::_duplicate (_obj);
       return _obj;
     }
 
-    static IBoundaryTypeDescriptor_ptr _nil()
+    static IPatchPhysicalTypeDescriptor_ptr _nil()
     {
       return 0;
     }
@@ -1832,26 +1793,26 @@ class IBoundaryTypeDescriptor :
     virtual void description( const char* value ) = 0;
     virtual char* patchType() = 0;
     virtual void patchType( const char* value ) = 0;
-    virtual char* superType() = 0;
-    virtual void superType( const char* value ) = 0;
+    virtual char* parentType() = 0;
+    virtual void parentType( const char* value ) = 0;
     virtual ::FoamXServer::StringPairList* patchFieldTypes() = 0;
     virtual void patchFieldTypes( const ::FoamXServer::StringPairList& value ) = 0;
 
   protected:
-    IBoundaryTypeDescriptor() {};
+    IPatchPhysicalTypeDescriptor() {};
   private:
-    IBoundaryTypeDescriptor( const IBoundaryTypeDescriptor& );
-    void operator=( const IBoundaryTypeDescriptor& );
+    IPatchPhysicalTypeDescriptor( const IPatchPhysicalTypeDescriptor& );
+    void operator=( const IPatchPhysicalTypeDescriptor& );
 };
 
-extern CORBA::TypeCodeConst _tc_IBoundaryTypeDescriptor;
+extern CORBA::TypeCodeConst _tc_IPatchPhysicalTypeDescriptor;
 
-// Stub for interface IBoundaryTypeDescriptor
-class IBoundaryTypeDescriptor_stub:
-  virtual public IBoundaryTypeDescriptor
+// Stub for interface IPatchPhysicalTypeDescriptor
+class IPatchPhysicalTypeDescriptor_stub:
+  virtual public IPatchPhysicalTypeDescriptor
 {
   public:
-    virtual ~IBoundaryTypeDescriptor_stub();
+    virtual ~IPatchPhysicalTypeDescriptor_stub();
     char* name();
     void name( const char* value );
     char* displayName();
@@ -1860,24 +1821,24 @@ class IBoundaryTypeDescriptor_stub:
     void description( const char* value );
     char* patchType();
     void patchType( const char* value );
-    char* superType();
-    void superType( const char* value );
+    char* parentType();
+    void parentType( const char* value );
     ::FoamXServer::StringPairList* patchFieldTypes();
     void patchFieldTypes( const ::FoamXServer::StringPairList& value );
 
   private:
-    void operator=( const IBoundaryTypeDescriptor_stub& );
+    void operator=( const IPatchPhysicalTypeDescriptor_stub& );
 };
 
 #ifndef MICO_CONF_NO_POA
 
-class IBoundaryTypeDescriptor_stub_clp :
-  virtual public IBoundaryTypeDescriptor_stub,
+class IPatchPhysicalTypeDescriptor_stub_clp :
+  virtual public IPatchPhysicalTypeDescriptor_stub,
   virtual public PortableServer::StubBase
 {
   public:
-    IBoundaryTypeDescriptor_stub_clp (PortableServer::POA_ptr, CORBA::Object_ptr);
-    virtual ~IBoundaryTypeDescriptor_stub_clp ();
+    IPatchPhysicalTypeDescriptor_stub_clp (PortableServer::POA_ptr, CORBA::Object_ptr);
+    virtual ~IPatchPhysicalTypeDescriptor_stub_clp ();
     char* name();
     void name( const char* value );
     char* displayName();
@@ -1886,15 +1847,15 @@ class IBoundaryTypeDescriptor_stub_clp :
     void description( const char* value );
     char* patchType();
     void patchType( const char* value );
-    char* superType();
-    void superType( const char* value );
+    char* parentType();
+    void parentType( const char* value );
     ::FoamXServer::StringPairList* patchFieldTypes();
     void patchFieldTypes( const ::FoamXServer::StringPairList& value );
 
   protected:
-    IBoundaryTypeDescriptor_stub_clp ();
+    IPatchPhysicalTypeDescriptor_stub_clp ();
   private:
-    void operator=( const IBoundaryTypeDescriptor_stub_clp & );
+    void operator=( const IPatchPhysicalTypeDescriptor_stub_clp & );
 };
 
 #endif // MICO_CONF_NO_POA
@@ -2193,8 +2154,8 @@ class ICaseBrowser :
     virtual void refreshCaseList() = 0;
     virtual void addToCaseList( const char* rootDir ) = 0;
     virtual void openCase( const CaseDescriptor& caseDesc ) = 0;
-    virtual void newCase( const char* rootDir, const char* caseName, const char* appClass ) = 0;
-    virtual void importCase( const char* rootDir, const char* caseName, const char* appClass ) = 0;
+    virtual void newCase( const char* rootDir, const char* caseName, const char* app ) = 0;
+    virtual void importCase( const char* rootDir, const char* caseName, const char* app ) = 0;
     virtual void deleteCase( const CaseDescriptor& caseDesc ) = 0;
     virtual void cloneCase( const CaseDescriptor& caseDesc, const char* newCaseRootDir, const char* newCaseName, const char* newAppClassName, const char* timeSel ) = 0;
     virtual CORBA::Boolean getCaseServerReference( const char* rootDir, const char* caseName, CaseServer::ICaseServer_out caseObj ) = 0;
@@ -2203,7 +2164,7 @@ class ICaseBrowser :
     virtual CORBA::Boolean caseLocked( const CaseDescriptor& caseDesc ) = 0;
     virtual void unlockCase( const char* rootDir, const char* caseName ) = 0;
     virtual void unlockCaseDescriptor( const CaseDescriptor& caseDesc ) = 0;
-    virtual void addCase( const char* rootDir, const char* rawRootDir, const char* caseName, const char* appClass ) = 0;
+    virtual void addCase( const char* rootDir, const char* rawRootDir, const char* caseName, const char* app ) = 0;
     virtual void caseOpen( const char* rootDir, const char* caseName ) = 0;
     virtual CORBA::Boolean isCaseInError( const CaseDescriptor& caseDesc ) = 0;
     virtual void caseIsInError( const CaseDescriptor& caseDesc ) = 0;
@@ -2251,8 +2212,8 @@ class ICaseBrowser_stub:
     void refreshCaseList();
     void addToCaseList( const char* rootDir );
     void openCase( const CaseDescriptor& caseDesc );
-    void newCase( const char* rootDir, const char* caseName, const char* appClass );
-    void importCase( const char* rootDir, const char* caseName, const char* appClass );
+    void newCase( const char* rootDir, const char* caseName, const char* app );
+    void importCase( const char* rootDir, const char* caseName, const char* app );
     void deleteCase( const CaseDescriptor& caseDesc );
     void cloneCase( const CaseDescriptor& caseDesc, const char* newCaseRootDir, const char* newCaseName, const char* newAppClassName, const char* timeSel );
     CORBA::Boolean getCaseServerReference( const char* rootDir, const char* caseName, CaseServer::ICaseServer_out caseObj );
@@ -2261,7 +2222,7 @@ class ICaseBrowser_stub:
     CORBA::Boolean caseLocked( const CaseDescriptor& caseDesc );
     void unlockCase( const char* rootDir, const char* caseName );
     void unlockCaseDescriptor( const CaseDescriptor& caseDesc );
-    void addCase( const char* rootDir, const char* rawRootDir, const char* caseName, const char* appClass );
+    void addCase( const char* rootDir, const char* rawRootDir, const char* caseName, const char* app );
     void caseOpen( const char* rootDir, const char* caseName );
     CORBA::Boolean isCaseInError( const CaseDescriptor& caseDesc );
     void caseIsInError( const CaseDescriptor& caseDesc );
@@ -2307,8 +2268,8 @@ class ICaseBrowser_stub_clp :
     void refreshCaseList();
     void addToCaseList( const char* rootDir );
     void openCase( const CaseDescriptor& caseDesc );
-    void newCase( const char* rootDir, const char* caseName, const char* appClass );
-    void importCase( const char* rootDir, const char* caseName, const char* appClass );
+    void newCase( const char* rootDir, const char* caseName, const char* app );
+    void importCase( const char* rootDir, const char* caseName, const char* app );
     void deleteCase( const CaseDescriptor& caseDesc );
     void cloneCase( const CaseDescriptor& caseDesc, const char* newCaseRootDir, const char* newCaseName, const char* newAppClassName, const char* timeSel );
     CORBA::Boolean getCaseServerReference( const char* rootDir, const char* caseName, CaseServer::ICaseServer_out caseObj );
@@ -2317,7 +2278,7 @@ class ICaseBrowser_stub_clp :
     CORBA::Boolean caseLocked( const CaseDescriptor& caseDesc );
     void unlockCase( const char* rootDir, const char* caseName );
     void unlockCaseDescriptor( const CaseDescriptor& caseDesc );
-    void addCase( const char* rootDir, const char* rawRootDir, const char* caseName, const char* appClass );
+    void addCase( const char* rootDir, const char* rawRootDir, const char* caseName, const char* app );
     void caseOpen( const char* rootDir, const char* caseName );
     CORBA::Boolean isCaseInError( const CaseDescriptor& caseDesc );
     void caseIsInError( const CaseDescriptor& caseDesc );
@@ -2598,7 +2559,7 @@ class ICaseServer : virtual public PortableServer::StaticImplementation
     virtual void managed( CORBA::Boolean value ) = 0;
     virtual char* caseRoot() = 0;
     virtual char* caseName() = 0;
-    virtual ::FoamXServer::CaseServer::IApplicationClass_ptr applicationClass() = 0;
+    virtual ::FoamXServer::CaseServer::IApplication_ptr application() = 0;
     virtual ::FoamXServer::CaseServer::IFoamProperties_ptr foamProperties() = 0;
     virtual ::FoamXServer::StringList* availableTimeSteps() = 0;
     virtual CORBA::Boolean meshDefined() = 0;
@@ -2609,13 +2570,12 @@ class ICaseServer : virtual public PortableServer::StaticImplementation
     virtual void readMesh() = 0;
     virtual void importMesh( const char* hostName, const char* rootDir, const char* caseName ) = 0;
     virtual void getFieldValues( const char* fieldName, ::FoamXServer::CaseServer::IGeometricField_out fieldValues ) = 0;
-    virtual void addPatch( const char* patchName, const char* boundaryType ) = 0;
+    virtual void addPatch( const char* patchName, const char* patchPhysicalType ) = 0;
     virtual void deletePatch( const char* patchName ) = 0;
     virtual void deleteAllPatches() = 0;
-    virtual void setPatchBoundaryType( const char* patchName, const char* boundaryType ) = 0;
-    virtual void getPatchBoundaryType( const char* patchName, CORBA::String_out boundaryType ) = 0;
+    virtual void setPatchPhysicalType( const char* patchName, const char* patchPhysicalType ) = 0;
+    virtual void getPatchPhysicalType( const char* patchName, CORBA::String_out patchPhysicalType ) = 0;
     virtual void getDictionary( const char* dictionaryName, CORBA::Boolean forceRead, ::FoamXServer::IDictionaryEntry_out dictRoot ) = 0;
-    virtual void copyDefaultDictionary( const char* dictionaryName ) = 0;
     virtual void readFile( const char* name, CORBA::String_out contents ) = 0;
     virtual void writeFile( const char* name, const char* contents ) = 0;
     virtual CORBA::Long fileModificationDate( const char* fileName ) = 0;
@@ -2656,8 +2616,8 @@ class IFoamProperties : virtual public PortableServer::StaticImplementation
     virtual ::FoamXServer::StringList* geometryTypes() = 0;
     virtual ::FoamXServer::StringList* patchTypes() = 0;
     virtual ::FoamXServer::StringList* patchFieldTypes() = 0;
-    virtual ::FoamXServer::ApplicationClassDescriptorList* applicationClasses() = 0;
-    virtual ::FoamXServer::UtilityDescriptorList* utilities() = 0;
+    virtual ::FoamXServer::ApplicationDescriptorList* applicationes() = 0;
+    virtual ::FoamXServer::ApplicationDescriptorList* utilities() = 0;
 
     virtual void addRootDirectory( const char* rawRootDir ) = 0;
     virtual void deleteRootDirectory( const char* rawRootDir ) = 0;
@@ -2667,10 +2627,11 @@ class IFoamProperties : virtual public PortableServer::StaticImplementation
     virtual void findPatchType( const char* patchTypeName, ::FoamXServer::CaseServer::IPatchDescriptor_out patchDesc ) = 0;
     virtual void getPatchFieldType( const char* patchFieldTypeName, ::FoamXServer::ITypeDescriptor_out patchFieldDesc ) = 0;
     virtual void findPatchFieldType( const char* patchFieldTypeName, ::FoamXServer::ITypeDescriptor_out patchFieldDesc ) = 0;
-    virtual void getApplicationClass( const char* appClassName, ::FoamXServer::CaseServer::IApplicationClass_out appClass ) = 0;
-    virtual void addApplicationClass( const char* appClassName, ::FoamXServer::CaseServer::IApplicationClass_out appClass ) = 0;
-    virtual void deleteApplicationClass( const char* appClassName ) = 0;
-    virtual void cloneApplicationClass( const char* appClassNameSrc, const char* appClassNameDest, ::FoamXServer::CaseServer::IApplicationClass_out appClass ) = 0;
+    virtual void getFoamControlDict( ::FoamXServer::IDictionaryEntry_out controlDict ) = 0;
+    virtual void getApplication( const char* appName, ::FoamXServer::CaseServer::IApplication_out app ) = 0;
+    virtual void addApplication( const char* appName, ::FoamXServer::CaseServer::IApplication_out app ) = 0;
+    virtual void deleteApplication( const char* appName ) = 0;
+    virtual void cloneApplication( const char* appNameSrc, const char* appNameDest, const char* appDestPath, ::FoamXServer::CaseServer::IApplication_out app ) = 0;
     virtual void getUtilityControlDict( const char* utilityName, const char* rootDir, const char* caseName, ::FoamXServer::IDictionaryEntry_out controlDict ) = 0;
     virtual void validate() = 0;
     virtual void saveSystemProperties() = 0;
@@ -2684,11 +2645,11 @@ class IFoamProperties : virtual public PortableServer::StaticImplementation
     void operator= (const IFoamProperties &);
 };
 
-class IApplicationClass : virtual public PortableServer::StaticImplementation
+class IApplication : virtual public PortableServer::StaticImplementation
 {
   public:
-    virtual ~IApplicationClass ();
-    FoamXServer::CaseServer::IApplicationClass_ptr _this ();
+    virtual ~IApplication ();
+    FoamXServer::CaseServer::IApplication_ptr _this ();
     bool dispatch (CORBA::StaticServerRequest_ptr);
     virtual void invoke (CORBA::StaticServerRequest_ptr);
     virtual CORBA::Boolean _is_a (const char *);
@@ -2696,7 +2657,7 @@ class IApplicationClass : virtual public PortableServer::StaticImplementation
     virtual CORBA::RepositoryId _primary_interface (const PortableServer::ObjectId &, PortableServer::POA_ptr);
 
     virtual void * _narrow_helper (const char *);
-    static IApplicationClass * _narrow (PortableServer::Servant);
+    static IApplication * _narrow (PortableServer::Servant);
     virtual CORBA::Object_ptr _make_stub (PortableServer::POA_ptr, CORBA::Object_ptr);
 
     virtual char* name() = 0;
@@ -2709,17 +2670,17 @@ class IApplicationClass : virtual public PortableServer::StaticImplementation
     virtual void modules( const ::FoamXServer::StringList& value ) = 0;
     virtual CORBA::Boolean systemClass() = 0;
     virtual ::FoamXServer::StringList* fields() = 0;
-    virtual ::FoamXServer::StringList* boundaryTypes() = 0;
+    virtual ::FoamXServer::StringList* patchPhysicalTypes() = 0;
     virtual ::FoamXServer::StringList* dictionaries() = 0;
 
     virtual void getField( const char* fieldName, ::FoamXServer::CaseServer::IGeometricFieldDescriptor_out fieldDescriptor ) = 0;
     virtual void findField( const char* fieldName, ::FoamXServer::CaseServer::IGeometricFieldDescriptor_out fieldDescriptor ) = 0;
     virtual void addField( const char* fieldName, ::FoamXServer::CaseServer::IGeometricFieldDescriptor_out fieldDescriptor ) = 0;
     virtual void deleteField( const char* fieldName ) = 0;
-    virtual void getBoundaryType( const char* boundaryTypeName, ::FoamXServer::CaseServer::IBoundaryTypeDescriptor_out boundaryDescriptor ) = 0;
-    virtual void findBoundaryType( const char* boundaryTypeName, ::FoamXServer::CaseServer::IBoundaryTypeDescriptor_out boundaryDescriptor ) = 0;
-    virtual void addBoundaryType( const char* boundaryTypeName, ::FoamXServer::CaseServer::IBoundaryTypeDescriptor_out boundaryDescriptor ) = 0;
-    virtual void deleteBoundaryType( const char* boundaryTypeName ) = 0;
+    virtual void getPatchPhysicalType( const char* patchPhysicalTypeName, ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor ) = 0;
+    virtual void findPatchPhysicalType( const char* patchPhysicalTypeName, ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor ) = 0;
+    virtual void addPatchPhysicalType( const char* patchPhysicalTypeName, ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out patchPhysicalTypeDescriptor ) = 0;
+    virtual void deletePatchPhysicalType( const char* patchPhysicalTypeName ) = 0;
     virtual void getDictionary( const char* dictName, ::FoamXServer::ITypeDescriptor_out dictTypeDescriptor ) = 0;
     virtual void addDictionary( const char* dictName, ::FoamXServer::ITypeDescriptor_out dictTypeDescriptor ) = 0;
     virtual void deleteDictionary( const char* dictName ) = 0;
@@ -2727,11 +2688,11 @@ class IApplicationClass : virtual public PortableServer::StaticImplementation
     virtual void save() = 0;
 
   protected:
-    IApplicationClass () {};
+    IApplication () {};
 
   private:
-    IApplicationClass (const IApplicationClass &);
-    void operator= (const IApplicationClass &);
+    IApplication (const IApplication &);
+    void operator= (const IApplication &);
 };
 
 class IGeometricFieldDescriptor : virtual public PortableServer::StaticImplementation
@@ -2792,8 +2753,6 @@ class IPatchDescriptor : virtual public PortableServer::StaticImplementation
     virtual void displayName( const char* value ) = 0;
     virtual char* description() = 0;
     virtual void description( const char* value ) = 0;
-    virtual ::FoamXServer::StringList* patchFieldTypes() = 0;
-    virtual void patchFieldTypes( const ::FoamXServer::StringList& value ) = 0;
 
   protected:
     IPatchDescriptor () {};
@@ -2833,11 +2792,11 @@ class IGeometryDescriptor : virtual public PortableServer::StaticImplementation
     void operator= (const IGeometryDescriptor &);
 };
 
-class IBoundaryTypeDescriptor : virtual public PortableServer::StaticImplementation
+class IPatchPhysicalTypeDescriptor : virtual public PortableServer::StaticImplementation
 {
   public:
-    virtual ~IBoundaryTypeDescriptor ();
-    FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr _this ();
+    virtual ~IPatchPhysicalTypeDescriptor ();
+    FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr _this ();
     bool dispatch (CORBA::StaticServerRequest_ptr);
     virtual void invoke (CORBA::StaticServerRequest_ptr);
     virtual CORBA::Boolean _is_a (const char *);
@@ -2845,7 +2804,7 @@ class IBoundaryTypeDescriptor : virtual public PortableServer::StaticImplementat
     virtual CORBA::RepositoryId _primary_interface (const PortableServer::ObjectId &, PortableServer::POA_ptr);
 
     virtual void * _narrow_helper (const char *);
-    static IBoundaryTypeDescriptor * _narrow (PortableServer::Servant);
+    static IPatchPhysicalTypeDescriptor * _narrow (PortableServer::Servant);
     virtual CORBA::Object_ptr _make_stub (PortableServer::POA_ptr, CORBA::Object_ptr);
 
     virtual char* name() = 0;
@@ -2856,17 +2815,17 @@ class IBoundaryTypeDescriptor : virtual public PortableServer::StaticImplementat
     virtual void description( const char* value ) = 0;
     virtual char* patchType() = 0;
     virtual void patchType( const char* value ) = 0;
-    virtual char* superType() = 0;
-    virtual void superType( const char* value ) = 0;
+    virtual char* parentType() = 0;
+    virtual void parentType( const char* value ) = 0;
     virtual ::FoamXServer::StringPairList* patchFieldTypes() = 0;
     virtual void patchFieldTypes( const ::FoamXServer::StringPairList& value ) = 0;
 
   protected:
-    IBoundaryTypeDescriptor () {};
+    IPatchPhysicalTypeDescriptor () {};
 
   private:
-    IBoundaryTypeDescriptor (const IBoundaryTypeDescriptor &);
-    void operator= (const IBoundaryTypeDescriptor &);
+    IPatchPhysicalTypeDescriptor (const IPatchPhysicalTypeDescriptor &);
+    void operator= (const IPatchPhysicalTypeDescriptor &);
 };
 
 class IGeometricField : virtual public PortableServer::StaticImplementation
@@ -2991,8 +2950,8 @@ class ICaseBrowser : virtual public PortableServer::StaticImplementation
     virtual void refreshCaseList() = 0;
     virtual void addToCaseList( const char* rootDir ) = 0;
     virtual void openCase( const ::FoamXServer::CaseDescriptor& caseDesc ) = 0;
-    virtual void newCase( const char* rootDir, const char* caseName, const char* appClass ) = 0;
-    virtual void importCase( const char* rootDir, const char* caseName, const char* appClass ) = 0;
+    virtual void newCase( const char* rootDir, const char* caseName, const char* app ) = 0;
+    virtual void importCase( const char* rootDir, const char* caseName, const char* app ) = 0;
     virtual void deleteCase( const ::FoamXServer::CaseDescriptor& caseDesc ) = 0;
     virtual void cloneCase( const ::FoamXServer::CaseDescriptor& caseDesc, const char* newCaseRootDir, const char* newCaseName, const char* newAppClassName, const char* timeSel ) = 0;
     virtual CORBA::Boolean getCaseServerReference( const char* rootDir, const char* caseName, ::FoamXServer::CaseServer::ICaseServer_out caseObj ) = 0;
@@ -3001,7 +2960,7 @@ class ICaseBrowser : virtual public PortableServer::StaticImplementation
     virtual CORBA::Boolean caseLocked( const ::FoamXServer::CaseDescriptor& caseDesc ) = 0;
     virtual void unlockCase( const char* rootDir, const char* caseName ) = 0;
     virtual void unlockCaseDescriptor( const ::FoamXServer::CaseDescriptor& caseDesc ) = 0;
-    virtual void addCase( const char* rootDir, const char* rawRootDir, const char* caseName, const char* appClass ) = 0;
+    virtual void addCase( const char* rootDir, const char* rawRootDir, const char* caseName, const char* app ) = 0;
     virtual void caseOpen( const char* rootDir, const char* caseName ) = 0;
     virtual CORBA::Boolean isCaseInError( const ::FoamXServer::CaseDescriptor& caseDesc ) = 0;
     virtual void caseIsInError( const ::FoamXServer::CaseDescriptor& caseDesc ) = 0;
@@ -3157,19 +3116,12 @@ CORBA::Boolean operator>>=( const CORBA::Any &_a, const ::FoamXServer::HostDescr
 
 extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_HostDescriptor;
 
-void operator<<=( CORBA::Any &_a, const ::FoamXServer::ApplicationClassDescriptor &_s );
-void operator<<=( CORBA::Any &_a, ::FoamXServer::ApplicationClassDescriptor *_s );
-CORBA::Boolean operator>>=( const CORBA::Any &_a, ::FoamXServer::ApplicationClassDescriptor &_s );
-CORBA::Boolean operator>>=( const CORBA::Any &_a, const ::FoamXServer::ApplicationClassDescriptor *&_s );
+void operator<<=( CORBA::Any &_a, const ::FoamXServer::ApplicationDescriptor &_s );
+void operator<<=( CORBA::Any &_a, ::FoamXServer::ApplicationDescriptor *_s );
+CORBA::Boolean operator>>=( const CORBA::Any &_a, ::FoamXServer::ApplicationDescriptor &_s );
+CORBA::Boolean operator>>=( const CORBA::Any &_a, const ::FoamXServer::ApplicationDescriptor *&_s );
 
-extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_ApplicationClassDescriptor;
-
-void operator<<=( CORBA::Any &_a, const ::FoamXServer::UtilityDescriptor &_s );
-void operator<<=( CORBA::Any &_a, ::FoamXServer::UtilityDescriptor *_s );
-CORBA::Boolean operator>>=( const CORBA::Any &_a, ::FoamXServer::UtilityDescriptor &_s );
-CORBA::Boolean operator>>=( const CORBA::Any &_a, const ::FoamXServer::UtilityDescriptor *&_s );
-
-extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_UtilityDescriptor;
+extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_ApplicationDescriptor;
 
 void operator<<=( CORBA::Any &_a, const ::FoamXServer::CaseDescriptor &_s );
 void operator<<=( CORBA::Any &_a, ::FoamXServer::CaseDescriptor *_s );
@@ -3219,11 +3171,11 @@ CORBA::Boolean operator>>=( const CORBA::Any &a, FoamXServer::CaseServer::IFoamP
 
 extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IFoamProperties;
 
-void operator<<=( CORBA::Any &a, const FoamXServer::CaseServer::IApplicationClass_ptr obj );
-void operator<<=( CORBA::Any &a, FoamXServer::CaseServer::IApplicationClass_ptr* obj_ptr );
-CORBA::Boolean operator>>=( const CORBA::Any &a, FoamXServer::CaseServer::IApplicationClass_ptr &obj );
+void operator<<=( CORBA::Any &a, const FoamXServer::CaseServer::IApplication_ptr obj );
+void operator<<=( CORBA::Any &a, FoamXServer::CaseServer::IApplication_ptr* obj_ptr );
+CORBA::Boolean operator>>=( const CORBA::Any &a, FoamXServer::CaseServer::IApplication_ptr &obj );
 
-extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IApplicationClass;
+extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IApplication;
 
 void operator<<=( CORBA::Any &a, const FoamXServer::CaseServer::IGeometricFieldDescriptor_ptr obj );
 void operator<<=( CORBA::Any &a, FoamXServer::CaseServer::IGeometricFieldDescriptor_ptr* obj_ptr );
@@ -3243,11 +3195,11 @@ CORBA::Boolean operator>>=( const CORBA::Any &a, FoamXServer::CaseServer::IGeome
 
 extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IGeometryDescriptor;
 
-void operator<<=( CORBA::Any &a, const FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr obj );
-void operator<<=( CORBA::Any &a, FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr* obj_ptr );
-CORBA::Boolean operator>>=( const CORBA::Any &a, FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr &obj );
+void operator<<=( CORBA::Any &a, const FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr obj );
+void operator<<=( CORBA::Any &a, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr* obj_ptr );
+CORBA::Boolean operator>>=( const CORBA::Any &a, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr &obj );
 
-extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor;
+extern CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor;
 
 void operator<<=( CORBA::Any &a, const FoamXServer::CaseServer::IGeometricField_ptr obj );
 void operator<<=( CORBA::Any &a, FoamXServer::CaseServer::IGeometricField_ptr* obj_ptr );
@@ -3330,19 +3282,12 @@ CORBA::Boolean operator>>=( const CORBA::Any &_a, const SequenceTmpl< FoamXServe
 
 extern CORBA::StaticTypeInfo *_marshaller__seq_FoamXServer_HostDescriptor;
 
-void operator<<=( CORBA::Any &_a, const SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> &_s );
-void operator<<=( CORBA::Any &_a, SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> *_s );
-CORBA::Boolean operator>>=( const CORBA::Any &_a, SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> &_s );
-CORBA::Boolean operator>>=( const CORBA::Any &_a, const SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> *&_s );
+void operator<<=( CORBA::Any &_a, const SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> &_s );
+void operator<<=( CORBA::Any &_a, SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> *_s );
+CORBA::Boolean operator>>=( const CORBA::Any &_a, SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> &_s );
+CORBA::Boolean operator>>=( const CORBA::Any &_a, const SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> *&_s );
 
-extern CORBA::StaticTypeInfo *_marshaller__seq_FoamXServer_ApplicationClassDescriptor;
-
-void operator<<=( CORBA::Any &_a, const SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> &_s );
-void operator<<=( CORBA::Any &_a, SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> *_s );
-CORBA::Boolean operator>>=( const CORBA::Any &_a, SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> &_s );
-CORBA::Boolean operator>>=( const CORBA::Any &_a, const SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> *&_s );
-
-extern CORBA::StaticTypeInfo *_marshaller__seq_FoamXServer_UtilityDescriptor;
+extern CORBA::StaticTypeInfo *_marshaller__seq_FoamXServer_ApplicationDescriptor;
 
 void operator<<=( CORBA::Any &_a, const SequenceTmpl< FoamXServer::CaseDescriptor,MICO_TID_DEF> &_s );
 void operator<<=( CORBA::Any &_a, SequenceTmpl< FoamXServer::CaseDescriptor,MICO_TID_DEF> *_s );

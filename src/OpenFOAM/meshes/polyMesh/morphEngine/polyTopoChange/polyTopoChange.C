@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Class accumulates information on how to perform mesh refinement.
@@ -71,13 +71,13 @@ Foam::polyTopoChange::~polyTopoChange()
 
 Foam::label Foam::polyTopoChange::setAction(const topoAction& action)
 {
-    if (typeid(action) == typeid(polyAddPoint))
+    if (isType<polyAddPoint>(action))
     {
         addedPoints_.append(refCast<const polyAddPoint>(action));
 
         return mesh_.allPoints().size() + addedPoints_.size() - 1;
     }
-    else if (typeid(action) == typeid(polyModifyPoint))
+    else if (isType<polyModifyPoint>(action))
     {
         const polyModifyPoint& pmp = refCast<const polyModifyPoint>(action);
 
@@ -100,7 +100,7 @@ Foam::label Foam::polyTopoChange::setAction(const topoAction& action)
 
         return -1;
     }
-    else if (typeid(action) == typeid(polyRemovePoint))
+    else if (isType<polyRemovePoint>(action))
     {
         const polyRemovePoint& prp = refCast<const polyRemovePoint>(action);
 
@@ -122,13 +122,13 @@ Foam::label Foam::polyTopoChange::setAction(const topoAction& action)
 
         return -1;
     }
-    else if (typeid(action) == typeid(polyAddFace))
+    else if (isType<polyAddFace>(action))
     {
         addedFaces_.append(refCast<const polyAddFace>(action));
 
         return mesh_.allFaces().size() + addedFaces_.size() - 1;
     }
-    else if (typeid(action) == typeid(polyModifyFace))
+    else if (isType<polyModifyFace>(action))
     {
         const polyModifyFace& pmf = refCast<const polyModifyFace>(action);
 
@@ -151,7 +151,7 @@ Foam::label Foam::polyTopoChange::setAction(const topoAction& action)
 
         return -1;
     }
-    else if (typeid(action) == typeid(polyRemoveFace))
+    else if (isType<polyRemoveFace>(action))
     {
         const polyRemoveFace& prf = refCast<const polyRemoveFace>(action);
 
@@ -173,13 +173,13 @@ Foam::label Foam::polyTopoChange::setAction(const topoAction& action)
 
         return -1;
     }
-    else if (typeid(action) == typeid(polyAddCell))
+    else if (isType<polyAddCell>(action))
     {
         addedCells_.append(refCast<const polyAddCell>(action));
 
         return mesh_.allCells().size() + addedCells_.size() - 1;
     }
-    else if (typeid(action) == typeid(polyModifyCell))
+    else if (isType<polyModifyCell>(action))
     {
         const polyModifyCell& pmc = refCast<const polyModifyCell>(action);
 
@@ -187,7 +187,7 @@ Foam::label Foam::polyTopoChange::setAction(const topoAction& action)
 
         return -1;
     }
-    else if (typeid(action) == typeid(polyRemoveCell))
+    else if (isType<polyRemoveCell>(action))
     {
         const polyRemoveCell& prc = refCast<const polyRemoveCell>(action);
 
@@ -251,8 +251,7 @@ bool Foam::polyTopoChange::check() const
 
     if (mesh_.allPoints().size() + pointBalance() < 4)
     {
-        Warning
-            << "bool polyTopoChange::check() const : "
+        WarningIn("bool polyTopoChange::check() const")
             << "Less than 4 points in the mesh.  This cannot be a valid mesh."
             << endl;
 

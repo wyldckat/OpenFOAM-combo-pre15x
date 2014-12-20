@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -221,12 +221,12 @@ public class FieldPropertiesWindow
 /*
                     // Get current boundary type for this patch.
                     StringHolder bndTypeHolder = new StringHolder();
-                    caseServer.getPatchBoundaryType(patchName, bndTypeHolder);
-                    String boundaryType = bndTypeHolder.value;
+                    caseServer.getPatchPhysicalType(patchName, bndTypeHolder);
+                    String patchPhysicalType = bndTypeHolder.value;
 
                     // Get Boundary Type Descriptor object.
-                    IBoundaryTypeDescriptorHolder bndTypeDescHolder = new IBoundaryTypeDescriptorHolder();
-                    caseServer.applicationClass().getBoundaryType(boundaryType, bndTypeDescHolder);
+                    IPatchPhysicalTypeDescriptorHolder bndTypeDescHolder = new IPatchPhysicalTypeDescriptorHolder();
+                    caseServer.application().getPatchPhysicalType(patchPhysicalType, bndTypeDescHolder);
                     BoundaryDefinitionModelItem bndInfo = new BoundaryDefinitionModelItem(bndTypeDescHolder.value);
 
                     // Get patch field type descriptor for this field.
@@ -315,12 +315,12 @@ public class FieldPropertiesWindow
 /*
                     // Get current boundary type for this patch.
                     StringHolder bndTypeHolder = new StringHolder();
-                    caseServer.getPatchBoundaryType(patchName, bndTypeHolder);
-                    String boundaryType = bndTypeHolder.value;
+                    caseServer.getPatchPhysicalType(patchName, bndTypeHolder);
+                    String patchPhysicalType = bndTypeHolder.value;
 
                     // Get Boundary Type Descriptor object.
-                    IBoundaryTypeDescriptorHolder bndTypeDescHolder = new IBoundaryTypeDescriptorHolder();
-                    caseServer.applicationClass().getBoundaryType(boundaryType, bndTypeDescHolder);
+                    IPatchPhysicalTypeDescriptorHolder bndTypeDescHolder = new IPatchPhysicalTypeDescriptorHolder();
+                    caseServer.application().getPatchPhysicalType(patchPhysicalType, bndTypeDescHolder);
                     BoundaryDefinitionModelItem bndInfo = new BoundaryDefinitionModelItem(bndTypeDescHolder.value);
 
                     // Get patch field type descriptor for this field.

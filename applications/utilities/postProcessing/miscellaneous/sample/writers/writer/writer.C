@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -30,7 +28,6 @@ Description
 #include "coordSet.H"
 #include "OFstream.H"
 #include "OSspecific.H"
-#include "Time.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -66,17 +63,14 @@ template<class Type>
 fileName writer<Type>::getBaseName
 (
     const coordSet& points,
-    const HashTable<Field<Type>*>& valueSets
+    const wordList& valueSets
 ) const
 {
     fileName fName(points.name());
 
-    typename HashTable<Field<Type>*>::const_iterator iter =
-        valueSets.begin();
-
-    for(; iter != valueSets.end(); ++iter)
+    forAll(valueSets, i)
     {
-        fName += '_' + iter.key();
+        fName += '_' + valueSets[i];
     }
 
     return fName;
@@ -127,7 +121,7 @@ template<class Type>
 void writer<Type>::writeTable
 (
     const coordSet& points,
-    const List<List<Type>*>& valuesPtrList,
+    const List<const List<Type>*>& valuesPtrList,
     Ostream& os
 ) const
 {

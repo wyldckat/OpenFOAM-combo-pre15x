@@ -2,19 +2,19 @@
 
 currDir=`pwd`
 application=`basename $currDir`
-cases="shockTube"
+cases="shockTube wedge15Ma5"
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/CleanFunctions
 
 for case in $cases
 do
-    cleanCase $case
     if [ "$case" = "shockTube" ] 
-    then
+    then 
         rm -rf $case/0
         cp -r $case/0.org $case/0
-        cleanSamples $case
-    fi
+    fi 
+    cleanCase $case
 done 
+
 

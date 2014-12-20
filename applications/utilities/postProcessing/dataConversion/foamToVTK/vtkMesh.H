@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     vtkMesh
@@ -37,8 +37,8 @@ SourceFiles
 #ifndef vtkMesh_H
 #define vtkMesh_H
 
-#include "fvMesh.H"
 #include "meshSubset.H"
+#include "vtkTopo.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,7 +46,6 @@ namespace Foam
 {
 
 // Class forward declarations
-class vtkTopo;
 class Time;
 
 /*---------------------------------------------------------------------------*\
@@ -67,7 +66,7 @@ class vtkMesh
         mutable labelList* pMapPtr_;
 
         //- Current decomposition of topology
-        vtkTopo* topoPtr_;
+        mutable vtkTopo* topoPtr_;
 
 
 
@@ -109,6 +108,10 @@ public:
             //- topology
             const vtkTopo& topo() const
             {
+                if (!topoPtr_)
+                {
+                    topoPtr_ = new vtkTopo(mesh());
+                }
                 return *topoPtr_;
             }
 
@@ -167,7 +170,8 @@ public:
             polyMesh::readUpdateState readUpdate();
 
 
-            //- Map volume field
+            //- Map volume field (does in fact do very little interpolation;
+            //  just copied from meshSubset)
             template<class Type>
             tmp<GeometricField<Type, fvPatchField, volMesh> > interpolate
             (
@@ -181,7 +185,7 @@ public:
                 else
                 {
                     tmp<GeometricField<Type, fvPatchField, volMesh> > subFld =
-                        interpolate(fld);
+                        meshSubset::interpolate(fld);
 
                     subFld().rename(fld.name());
 

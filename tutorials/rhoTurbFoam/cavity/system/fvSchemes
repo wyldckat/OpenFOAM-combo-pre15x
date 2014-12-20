@@ -44,13 +44,13 @@ divSchemes
 {
     // Default scheme
     default         none;
-    div(phi,U)      Gauss Gamma2V 1;
-    div(phid,p)     Gauss Gamma2 1;
+    div(phi,U)      Gauss limitedLinearV 1;
+    div(phid,p)     Gauss limitedLinear 1;
     div(phiU,p)     Gauss linear;
-    div(phi,h)      Gauss Gamma2 1;
-    div(phi,k)      Gauss Gamma2 1;
-    div(phi,epsilon) Gauss Gamma2 1;
-    div(phi,R)      Gauss Gamma2 1;
+    div(phi,h)      Gauss limitedLinear 1;
+    div(phi,k)      Gauss limitedLinear 1;
+    div(phi,epsilon) Gauss limitedLinear 1;
+    div(phi,R)      Gauss limitedLinear 1;
     div((rho*R))    Gauss linear;
     div(R)          Gauss linear;
     div(U)          Gauss linear;
@@ -67,7 +67,7 @@ laplacianSchemes
     laplacian(DkEff,k) Gauss linear corrected;
     laplacian(DepsilonEff,epsilon) Gauss linear corrected;
     laplacian(DREff,R) Gauss linear corrected;
-    laplacian((rho|A(U)),p) Gauss linear corrected;
+    laplacian((rho*1|A(U)),p) Gauss linear corrected;
     laplacian(alphaEff,h) Gauss linear corrected;
 }
 

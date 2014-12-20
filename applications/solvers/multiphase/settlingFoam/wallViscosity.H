@@ -7,7 +7,7 @@
     {
         const fvPatch& curPatch = patches[patchi];
 
-        if (typeid(curPatch) == typeid(wallFvPatch))
+        if (isType<wallFvPatch>(curPatch))
         {
             const scalarField& rhow = rho.boundaryField()[patchi];
 

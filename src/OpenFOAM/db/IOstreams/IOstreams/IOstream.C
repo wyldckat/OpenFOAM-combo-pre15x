@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -49,8 +49,8 @@ IOstream::streamFormat IOstream::format(const word& format)
     }
     else
     {
-        Warning
-            << "IOstream::format(const word&) : bad format specifier "
+        WarningIn("IOstream::format(const word&)")
+            << "bad format specifier "
             << format << " using ASCII"
             << endl;
 
@@ -72,8 +72,8 @@ IOstream::compressionType IOstream::compression(const word& compression)
     }
     else
     {
-        Warning
-            << "IOstream::compression(const word&) : bad compression specifier "
+        WarningIn("IOstream::compression(const word&)")
+            << "bad compression specifier "
             << '\'' << compression << '\''
             << ", use 'compressed' or 'uncompressed'.  "
                "Defaulting to uncompressed"

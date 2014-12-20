@@ -23,3 +23,11 @@
     );
 
     dimensionedScalar Cp = Cv + R;
+
+    dimensionedScalar gamma = Cp/Cv;
+
+    dimensionedScalar Pr = dimensionedScalar("Pr", dimless, 1.0);
+    if (thermodynamicProperties.found("Pr"))
+    {
+        Pr = thermodynamicProperties.lookup("Pr");
+    }

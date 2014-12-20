@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -692,7 +692,9 @@ void Foam::intersectedSurface::findNearestVisited
     {
         const labelList& fEdges = eSurf.faceEdges()[faceI];
 
-        SeriousError << "Dumping face edges to faceEdges.obj" << endl;
+        SeriousErrorIn("intersectedSurface::findNearestVisited")
+            << "Dumping face edges to faceEdges.obj" << endl;
+
         writeLocalOBJ(eSurf.points(), eSurf.edges(), fEdges, "faceEdges.obj");
 
         FatalErrorIn("intersectedSurface::findNearestVisited")
@@ -1072,8 +1074,9 @@ Foam::faceList Foam::intersectedSurface::splitFace
 
         if (eSurf.isSurfaceEdge(edgeI) && stat != BOTH)
         {
-            SeriousError << endl << endl
+            SeriousErrorIn("Foam::intersectedSurface::splitFace")
                 << "Dumping face edges to faceEdges.obj" << endl;
+
             writeLocalOBJ(points, edges, fEdges, "faceEdges.obj");
 
             FatalErrorIn("intersectedSurface::splitFace")

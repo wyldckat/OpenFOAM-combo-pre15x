@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Translates a STAR-CD SMAP data file into FOAM field format.
@@ -105,8 +105,17 @@ int main(int argc, char *argv[])
             smapFile >> fieldName;
         }
 
-        List<volScalarField*> sFields(nCols, (volScalarField*)NULL);
-        List<volVectorField*> vFields(nCols, (volVectorField*)NULL);
+        List<volScalarField*> sFields
+        (
+            nCols,
+            reinterpret_cast<volScalarField*>(NULL)
+        );
+
+        List<volVectorField*> vFields
+        (
+            nCols,
+            reinterpret_cast<volVectorField*>(NULL)
+        );
         
         label i=0;
         while (i < nCols)

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     tetFec
@@ -37,6 +37,7 @@ SourceFiles
 #define tetFec_H
 
 #include "tetPointFieldsFwd.H"
+#include "elementFieldsFwd.H"
 #include "tmp.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -63,8 +64,30 @@ namespace tetFec
             >
         > grad
         (
-            GeometricField<Type, tetPolyPatchField, tetPointMesh>&
+            const GeometricField<Type, tetPolyPatchField, tetPointMesh>&
         );
+
+
+        template<class Type>
+        static tmp
+        <
+            GeometricField
+            <
+                typename outerProduct<vector, Type>::type,
+                tetPolyPatchField,
+                elementMesh
+            >
+        > elementGrad
+        (
+            const GeometricField<Type, tetPolyPatchField, tetPointMesh>&
+        );
+
+
+        template<class Type>
+        tmp<GeometricField<Type, tetPolyPatchField, elementMesh> > ddt
+	(
+	    const GeometricField<Type, tetPolyPatchField, elementMesh>&
+	);
 };
 
 

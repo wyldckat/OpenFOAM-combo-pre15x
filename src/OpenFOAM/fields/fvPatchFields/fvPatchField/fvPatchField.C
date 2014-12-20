@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -53,7 +53,7 @@ void fvPatchField<Type>::checkPatch() const
 template<class Type>
 void fvPatchField<Type>::checkInternalField() const
 {
-    if (&internalField_)
+    if (&internalField_ && internalField_.size())
     {
         label iFs = internalField_.size();
 
@@ -65,7 +65,10 @@ void fvPatchField<Type>::checkInternalField() const
         if (iFs != nPoints && iFs != nInternalFaces && iFs != nCells)
         {
             FatalErrorIn("fvPatchField<Type>::checkInternalField() const")
-                << "internal field is not point, surface or vol field"
+                << "internal field size " << iFs << " does not match" << nl
+                << "    the number of points " << nPoints << nl
+                << "    the number of internal faces " << nInternalFaces << nl
+                << "    or the number of cells " << nCells
                 << abort(FatalError);
         }
     }
@@ -209,7 +212,7 @@ bool fvPatchField<Type>::isVolField() const
 {
     return
         internalField().size()
-     == patchMesh().boundaryMesh().mesh().nCells();
+     == patch().boundaryMesh().mesh().nCells();
 }
 
 // Does this patchField correspond to a volTypeField
@@ -338,7 +341,7 @@ void fvPatchField<Type>::autoMap
     }
     else
     {
-        Field<Type>::autoMap((const FieldMapper&)m);
+        Field<Type>::autoMap(m);
     }
 }
 
@@ -427,7 +430,7 @@ void fvPatchField<Type>::operator*=
     const fvPatchField<scalar>& ptf
 )
 {
-    if (&patch_ != &ptf.patchMesh())
+    if (&patch_ != &ptf.patch())
     {
         FatalErrorIn
         (
@@ -446,7 +449,7 @@ void fvPatchField<Type>::operator/=
     const fvPatchField<scalar>& ptf
 )
 {
-    if (&patch_ != &ptf.patchMesh())
+    if (&patch_ != &ptf.patch())
     {
         FatalErrorIn
         (
@@ -556,7 +559,7 @@ void fvPatchField<Type>::operator==
     const fvPatchField<Type>& ptf
 )
 {
-    (Field<Type>&)(*this) = (Field<Type>&)ptf;
+    Field<Type>::operator=(ptf);
 }
 
 
@@ -566,7 +569,7 @@ void fvPatchField<Type>::operator==
     const Field<Type>& tf
 )
 {
-    (Field<Type>&)(*this) = tf;
+    Field<Type>::operator=(tf);
 }
 
 
@@ -576,7 +579,7 @@ void fvPatchField<Type>::operator==
     const Type& t
 )
 {
-    (Field<Type>&)(*this) = t;
+    Field<Type>::operator=(t);
 }
 
 

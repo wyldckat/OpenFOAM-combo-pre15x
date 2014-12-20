@@ -20,11 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
     
 \*---------------------------------------------------------------------------*/
 
 #include "leastSquaresGrad.H"
+#include "leastSquaresVectors.H"
 #include "gaussGrad.H"
 #include "fvMesh.H"
 #include "volMesh.H"
@@ -86,11 +87,9 @@ leastSquaresGrad<Type>::grad
     GeometricField<GradType, fvPatchField, volMesh>& lsGrad = tlsGrad();
 
     // Get reference to least square vectors
-    const surfaceVectorField& ownerLs =
-        mesh.surfaceInterpolation::leastSquarePvectors();
-
-    const surfaceVectorField& neighbourLs =
-        mesh.surfaceInterpolation::leastSquareNvectors();
+    const leastSquaresVectors& lsv = leastSquaresVectors::New(mesh);
+    const surfaceVectorField& ownerLs = lsv.pVectors();
+    const surfaceVectorField& neighbourLs = lsv.nVectors();
 
     // Owner/neighbour addressing
     const unallocLabelList& Owner = mesh.owner();
@@ -112,7 +111,7 @@ leastSquaresGrad<Type>::grad
             ownerLs.boundaryField()[patchI];
 
         const labelList::subList FaceCells =
-            lsGrad.boundaryField()[patchI].patchMesh().faceCells();
+            lsGrad.boundaryField()[patchI].patch().faceCells();
 
         if (vsf.boundaryField()[patchI].coupled())
         {
@@ -136,7 +135,7 @@ leastSquaresGrad<Type>::grad
             forAll(patchVsf, patchFaceI)
             {
                 lsGrad[FaceCells[patchFaceI]] +=
-                    patchOwnerLs[patchFaceI]
+                     patchOwnerLs[patchFaceI]
                     *(patchVsf[patchFaceI] - vsf[FaceCells[patchFaceI]]);
             }
         }

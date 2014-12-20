@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Write out the FOAM mesh in Version 3.0  Fieldview-UNS format (binary).
@@ -143,7 +143,7 @@ static void writeFaceData
 
         fvFile.write
         (
-            (char *)fField.begin(), fField.size()*sizeof(float)
+            reinterpret_cast<char*>(fField.begin()), fField.size()*sizeof(float)
         );
     }
     else
@@ -162,7 +162,7 @@ static void writeFaceData
 
         fvFile.write
         (
-            (char *)fField.begin(), fField.size()*sizeof(float)
+            reinterpret_cast<char*>(fField.begin()), fField.size()*sizeof(float)
         );
     }
 }
@@ -183,6 +183,8 @@ int main(int argc, char *argv[])
     instantList Times = runTime.times();
 
 #   include "checkTimeOptions.H"
+
+    runTime.setTime(Times[startTime], startTime);
 
 #   include "createMesh.H"
 
@@ -365,7 +367,7 @@ int main(int argc, char *argv[])
         fBuf[1] = 0.0;
         fBuf[2] = 0.0;
         fBuf[3] = 1.0;
-        fvFile.write((char *)fBuf, 4*sizeof(float));
+        fvFile.write(reinterpret_cast<char*>(fBuf), 4*sizeof(float));
 
 
         // Output the number of grids
@@ -471,7 +473,11 @@ int main(int argc, char *argv[])
                 fField[pointi] = float(points[pointi][cmpt]);
             }
 
-            fvFile.write((char *)fField.begin(), fField.size()*sizeof(float));
+            fvFile.write
+            (
+                reinterpret_cast<char*>(fField.begin()),
+                fField.size()*sizeof(float)
+            );
         }
 
         //
@@ -491,7 +497,8 @@ int main(int argc, char *argv[])
                 writeInt(fvFile, nQuadFaces);  // number of faces in patch
                 fvFile.write
                 (
-                    (char *)topo.quadFaceLabels()[patchI].begin(),
+                    reinterpret_cast<const char*>
+                        (topo.quadFaceLabels()[patchI].begin()),
                     nQuadFaces*4*sizeof(int)
                 );
             }
@@ -546,22 +553,22 @@ int main(int argc, char *argv[])
         writeInt(fvFile, topo.nPyr());
         fvFile.write
         (
-            (char *)topo.tetLabels().begin(),
+            reinterpret_cast<const char*>(topo.tetLabels().begin()),
             topo.nTet()*(1+4)*sizeof(int)
         );
         fvFile.write
         (
-            (char *)topo.hexLabels().begin(),
+            reinterpret_cast<const char*>(topo.hexLabels().begin()),
             topo.nHex()*(1+8)*sizeof(int)
         );
         fvFile.write
         (
-            (char *)topo.prismLabels().begin(),
+            reinterpret_cast<const char*>(topo.prismLabels().begin()),
             topo.nPrism()*(1+6)*sizeof(int)
         );
         fvFile.write
         (
-            (char *)topo.pyrLabels().begin(),
+            reinterpret_cast<const char*>(topo.pyrLabels().begin()),
             topo.nPyr()*(1+5)*sizeof(int)
         );
 
@@ -658,7 +665,8 @@ int main(int argc, char *argv[])
 
                 fvFile.write
                 (
-                    (char *)fField.begin(), fField.size()*sizeof(float)
+                    reinterpret_cast<char*>(fField.begin()),
+                    fField.size()*sizeof(float)
                 );
             }
             else
@@ -668,7 +676,8 @@ int main(int argc, char *argv[])
 
                 fvFile.write
                 (
-                    (char *)dummyField.begin(), dummyField.size()*sizeof(float)
+                    reinterpret_cast<char*>(dummyField.begin()),
+                    dummyField.size()*sizeof(float)
                 );
             }
         }
@@ -716,7 +725,8 @@ int main(int argc, char *argv[])
 
                     fvFile.write
                     (
-                        (char *)fField.begin(), fField.size()*sizeof(float)
+                        reinterpret_cast<char*>(fField.begin()),
+                        fField.size()*sizeof(float)
                     );
                 }
             }
@@ -756,7 +766,8 @@ int main(int argc, char *argv[])
 
                     fvFile.write
                     (
-                        (char *)fField.begin(), fField.size()*sizeof(float)
+                        reinterpret_cast<char*>(fField.begin()),
+                        fField.size()*sizeof(float)
                     );
                 }
             }
@@ -799,7 +810,8 @@ int main(int argc, char *argv[])
 
                     fvFile.write
                     (
-                        (char *)fField.begin(), fField.size()*sizeof(float)
+                        reinterpret_cast<char*>(fField.begin()),
+                        fField.size()*sizeof(float)
                     );
                 }
             }
@@ -840,7 +852,8 @@ int main(int argc, char *argv[])
 
                     fvFile.write
                     (
-                        (char *)fField.begin(), fField.size()*sizeof(float)
+                        reinterpret_cast<char*>(fField.begin()),
+                        fField.size()*sizeof(float)
                     );
                 }
             }

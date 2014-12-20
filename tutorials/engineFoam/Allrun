@@ -30,7 +30,7 @@ restartApplication ()
 for case in $cases
 do
     if [ "$case" = "kivaTest" ] ; then
-       runKivaToFoam $case $case/otape17 
+       runKivaToFoam $case $case/otape17
        cp $case/system/controlDict.1st $case/system/controlDict
     fi
 #

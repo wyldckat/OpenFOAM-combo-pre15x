@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Abstract base class for finite volume calculus ddt schemes.
@@ -29,6 +29,7 @@ Description
 
 #include "fv.H"
 #include "HashTable.H"
+#include "surfaceInterpolate.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -94,6 +95,97 @@ tmp<ddtScheme<Type> > ddtScheme<Type>::New
 template<class Type>
 ddtScheme<Type>::~ddtScheme()
 {}
+
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+template<class Type>
+tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
+(
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const fluxFieldType& phi
+)
+{
+    dimensionedScalar rDeltaT = 1.0/mesh().time().deltaT();
+
+    tmp<surfaceScalarField> tddtCouplingCoeff = 1.0
+      - min
+        (
+            mag(phi - (mesh().Sf() & fvc::interpolate(U)))
+           /(
+                mag(phi) //rDeltaT*mesh().magSf()/mesh().deltaCoeffs()
+              + dimensionedScalar("small", phi.dimensions(), SMALL)
+            ),
+            1.0
+        );
+
+    surfaceScalarField& ddtCouplingCoeff = tddtCouplingCoeff();
+
+    forAll (U.boundaryField(), patchi)
+    {
+        if (U.boundaryField()[patchi].fixesValue())
+        {
+            ddtCouplingCoeff.boundaryField()[patchi] = 0.0;
+        }
+    }
+
+    if (debug > 1)
+    {
+        Info<< "ddtCouplingCoeff mean max min = "
+            << gAverage(ddtCouplingCoeff.internalField())
+            << " " << gMax(ddtCouplingCoeff.internalField())
+            << " " << gMin(ddtCouplingCoeff.internalField())
+            << endl;
+    }
+
+    return tddtCouplingCoeff;
+}
+
+
+template<class Type>
+tmp<surfaceScalarField> ddtScheme<Type>::fvcDdtPhiCoeff
+(
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& rhoU,
+    const fluxFieldType& phi
+)
+{
+    dimensionedScalar rDeltaT = 1.0/mesh().time().deltaT();
+
+    tmp<surfaceScalarField> tddtCouplingCoeff = 1.0
+      - min
+        (
+            mag(phi - (mesh().Sf() & fvc::interpolate(rhoU)))
+           /(
+                mag(phi)
+                //fvc::interpolate(rho)*rDeltaT
+                //*mesh().magSf()/mesh().deltaCoeffs()
+              + dimensionedScalar("small", phi.dimensions(), SMALL)
+            ),
+            1.0
+        );
+
+    surfaceScalarField& ddtCouplingCoeff = tddtCouplingCoeff();
+
+    forAll (rhoU.boundaryField(), patchi)
+    {
+        if (rhoU.boundaryField()[patchi].fixesValue())
+        {
+            ddtCouplingCoeff.boundaryField()[patchi] = 0.0;
+        }
+    }
+
+    if (debug > 1)
+    {
+        Info<< "ddtCouplingCoeff mean max min = "
+            << gAverage(ddtCouplingCoeff.internalField())
+            << " " << gMax(ddtCouplingCoeff.internalField())
+            << " " << gMin(ddtCouplingCoeff.internalField())
+            << endl;
+    }
+
+    return tddtCouplingCoeff;
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

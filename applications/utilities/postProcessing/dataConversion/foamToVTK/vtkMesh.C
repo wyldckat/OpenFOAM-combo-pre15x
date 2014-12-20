@@ -20,26 +20,17 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
 \*---------------------------------------------------------------------------*/
 
 #include "vtkMesh.H"
-#include "vtkTopo.H"
-#include "meshSubset.H"
-#include "fvMesh.H"
 #include "Time.H"
 #include "cellSet.H"
 
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
-
-
 
 void Foam::vtkMesh::calcMapping() const
 {
@@ -82,11 +73,8 @@ Foam::vtkMesh::vtkMesh
         cellSet currentSet(*this, setName_);
 
         // Set current subset
-        setCellSubset(currentSet);
+        setLargeCellSubset(currentSet);
     }
-
-    // Construct topo for mesh or subset
-    topoPtr_ = new vtkTopo(mesh());
 }
 
 
@@ -122,24 +110,12 @@ Foam::polyMesh::readUpdateState Foam::vtkMesh::readUpdate()
             // Read cellSet using whole mesh
             cellSet currentSet(*this, setName_);
 
-            setCellSubset(currentSet);
+            setLargeCellSubset(currentSet);
         }
-
-        // Construct topo for subset
-        topoPtr_ = new vtkTopo(mesh());
     }
 
     return meshState;
 }
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
-
-
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
 
 
 // ************************************************************************* //

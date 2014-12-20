@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     ITypeDescriptorImpl
@@ -36,9 +36,9 @@ SourceFiles
 #define ITypeDescriptorImpl_H
 
 // Foam header files.
-#include "word.H"
-#include "dictionary.H"
+#include "IDLList.H"
 #include "DLList.H"
+#include "dictionary.H"
 
 // FoamX header files.
 #include "FoamX.H"
@@ -61,18 +61,19 @@ namespace FoamX
 class ITypeDescriptorImpl
 :
     public POA_FoamXServer::ITypeDescriptor,
-    public PortableServer::RefCountServantBase
+    public PortableServer::RefCountServantBase,
+    public IDLList<ITypeDescriptorImpl>::link
 {
     // Private data
 
         //- The type of this parameter.
         FoamXServer::FoamXType type_;
 
-        //- Path of this parameter relative to root dictionary.
-        Foam::string path_;
-
         //- Foam parameter name.
         Foam::word name_;
+
+        //- Path of this parameter relative to root dictionary.
+        Foam::string path_;
 
         //- Short display name.
         Foam::string displayName_;
@@ -144,6 +145,13 @@ class ITypeDescriptorImpl
             const Foam::dictionary& foamTypesDict
         );
 
+        void resolveTypeDict
+        (
+            Foam::word& type,
+            const Foam::dictionary& typeDict,
+            const Foam::dictionary& foamTypesDict
+        );
+
         void readType
         (
             Foam::word& type,
@@ -153,21 +161,25 @@ class ITypeDescriptorImpl
 
         void addEntries
         (
-            const Foam::word& type,
             const Foam::dictionary& typeDict,
             const Foam::dictionary& foamTypesDict
         );
 
-        void addSubType
+        void addDictionaryEntries
         (
-            const Foam::word& type,
             const Foam::dictionary& typeDict,
             const Foam::dictionary& foamTypesDict
         );
 
-        void addSubType
+        void addCompoundEntries
         (
-            const Foam::word& type,
+            const Foam::dictionary& typeDict,
+            const Foam::dictionary& foamTypesDict
+        );
+
+        void addElementType
+        (
+            const Foam::dictionary& typeDict,
             const Foam::dictionary& foamTypesDict
         );
 
@@ -198,6 +210,14 @@ public:
 
         ITypeDescriptorImpl
         (
+            const Foam::word& name,
+            const Foam::string& parentPath,
+            const Foam::entry& typeEntry,
+            const Foam::dictionary& foamTypesDict
+        );
+
+        ITypeDescriptorImpl
+        (
             FoamXServer::ITypeDescriptor_ptr typeDesc
         );
 
@@ -209,7 +229,16 @@ public:
 
     // Member Functions
  
-        // Properties common to all types.
+        // Foam access functions
+
+            //- Keyword used by Dictionary
+            const word& keyword() const
+            {
+                return name_;
+            }
+
+
+        // FoamServer access functions
 
             virtual FoamXServer::FoamXType type();
             virtual void type(FoamXServer::FoamXType);

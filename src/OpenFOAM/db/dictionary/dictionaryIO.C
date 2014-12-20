@@ -20,9 +20,10 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
+
     Reads the data description and data portions of a dictionary File.
 
 \*---------------------------------------------------------------------------*/
@@ -60,6 +61,7 @@ bool dictionary::read(Istream& is, const word& lastEntry)
     {
         if (entryPtr->keyword() == "FoamFile")
         {
+            delete entryPtr;
         }
         else if (entryPtr->keyword() == "include")
         {
@@ -87,8 +89,7 @@ bool dictionary::read(Istream& is, const word& lastEntry)
         }
         else if (!hashedEntries_.insert(entryPtr->keyword(), entryPtr))
         {
-            Warning
-                << "dictionary::read(Istream&, const word&) : "
+            IOWarningIn("dictionary::read(Istream&, const word&)", is)
                 << " could not add entry" << endl
                 << "    " << *entryPtr
                 << "    on line " << is.lineNumber()
@@ -136,7 +137,6 @@ bool dictionary::read(Istream& is, const word& lastEntry)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-//  Construct from Istream, reading entries until lastEntry
 dictionary::dictionary(Istream& is, const word& lastEntry)
 :
     name_(is.name())
@@ -144,6 +144,12 @@ dictionary::dictionary(Istream& is, const word& lastEntry)
     clear();
     hashedEntries_.clear();
     read(is, lastEntry);
+}
+
+
+autoPtr<dictionary> dictionary::New(Istream& is)
+{
+    return autoPtr<dictionary>(new dictionary(is));
 }
 
 

@@ -24,6 +24,7 @@ OFF                                   = $(interfaces)/OFF
 STL                                   = $(interfaces)/STL
 TRI                                   = $(interfaces)/TRI
 AC3D                                  = $(interfaces)/AC3D
+VTK                                   = $(interfaces)/VTK
 
 tools                                 = tools
 hashSignedLabel                       = $(tools)/hashSignedLabel
@@ -67,6 +68,7 @@ $(TRI)/readTRI.C
 $(DX)/writeDX.C
 $(AC3D)/readAC.C
 $(AC3D)/writeAC.C
+$(VTK)/writeVTK.C
 
 $(octreeData)/octreeDataTriSurface.C
 $(octreeData)/octreeDataTriSurfaceTreeLeaf.C

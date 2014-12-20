@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     meshSubset
@@ -33,6 +33,19 @@ Description
     Puts all exposed internal faces into either
     - a user supplied patch
     - a newly created patch "oldInternalFaces"
+
+    - setCellSubset is for small subsets. Uses Maps to minimize memory.
+    - setLargeCellSubset is for largish subsets (>10% of mesh).
+      Uses labelLists instead.
+
+    - setLargeCellSubset does coupled patch subsetting as well. If it detects
+      a face on a coupled patch 'losing' its neighbour it will move the
+      face into the oldInternalFaces patch.
+
+    - if a user supplied patch is used the mapping becomes a problem.
+    Do the new faces get the value of the internal face they came from?
+    What if e.g. the user supplied patch is a fixedValue 0? So for now
+    they get the face of existing patch face 0.
 
 SourceFiles
     meshSubset.C
@@ -81,7 +94,7 @@ public:
             :
                 directAddressing_
                 (
-                    (const labelField&)
+                    static_cast<const labelField&>
                     (
                         labelField::subField
                         (
@@ -92,7 +105,22 @@ public:
                     )
                   - ms.boundary()[ms.patchMap()[patchNo]].patch().start()
                 )
-            {}
+            {
+                // If patchID supplied so exposed internal faces or uncoupled
+                // patch faces get into existing patch what to do with
+                // mapping? Truncate to 0 for now.
+                const label sz = ms.subMesh().boundary()[patchNo].size();
+
+                forAll(directAddressing_, i)
+                {
+                    label& address = directAddressing_[i];
+
+                    if (address < 0 || address >= sz)
+                    {
+                        address = 0;
+                    }
+                }
+            }
 
 
         // Destructor
@@ -159,6 +187,11 @@ private:
         //- Mark points in Map
         static void markPoints(const labelList&, Map<label>&); 
 
+        //- Mark points (with 0) in labelList
+        static void markPoints(const labelList&, labelList&); 
+
+        //- Adapt nCellsUsingFace for coupled faces becoming 'uncoupled'.
+        void doCoupledPatches(labelList& nCellsUsingFace) const;
 
 public:
 
@@ -179,7 +212,28 @@ public:
 
             //- Set the subset. Create "oldInternalFaces" patch for exposed
             //  internal faces (patchID==-1) or use supplied patch.
+            //  Does not handle coupled patches correctly if only one side
+            //  gets deleted.
             void setCellSubset
+            (
+                const labelHashSet& globalCellMap,
+                const label patchID = -1
+            );
+
+            //- Set the subset from all cells with region == currentRegion.
+            //  Create "oldInternalFaces" patch for exposed
+            //  internal faces (patchID==-1) or use supplied patch.
+            //  Handles coupled patches by if nessecary making coupled patch
+            //  face part of patchID (so uncoupled)
+            void setLargeCellSubset
+            (
+                const labelList& region,
+                const label currentRegion,
+                const label patchID = -1
+            );
+
+            //- setLargeCellSubset but with labelHashSet.
+            void setLargeCellSubset
             (
                 const labelHashSet& globalCellMap,
                 const label patchID = -1

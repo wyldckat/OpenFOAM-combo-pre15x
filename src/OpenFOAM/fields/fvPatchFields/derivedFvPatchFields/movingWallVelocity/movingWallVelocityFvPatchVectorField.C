@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -28,6 +28,7 @@ License
 #include "addToRunTimeSelectionTable.H"
 #include "volFields.H"
 #include "surfaceFields.H"
+#include "fvcMeshPhi.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -91,9 +92,9 @@ void movingWallVelocityFvPatchVectorField::updateCoeffs()
         return;
     }
 
-    const fvPatch& patch = patchMesh();
-    const polyPatch& pp = patch.patch();
-    const fvMesh& mesh = patch.boundaryMesh().mesh();
+    const fvPatch& p = patch();
+    const polyPatch& pp = p.patch();
+    const fvMesh& mesh = p.boundaryMesh().mesh();
 
 
     const pointField& oldAllPoints = mesh.oldAllPoints();
@@ -105,17 +106,17 @@ void movingWallVelocityFvPatchVectorField::updateCoeffs()
         oldFc[i] = pp[i].centre(oldAllPoints);
     }
 
-    vectorField U = (pp.faceCentres() - oldFc)/mesh.time().deltaT().value();
+    vectorField Up = (pp.faceCentres() - oldFc)/mesh.time().deltaT().value();
+
+    const volVectorField& U = db().lookupObject<volVectorField>("U");
+    scalarField phip = patchField<surfaceScalarField, scalar>(fvc::meshPhi(U));
+
+    const vectorField& n = p.nf();
+    const scalarField& magSf = p.magSf();
+    scalarField Un = phip/(magSf + VSMALL);
 
 
-    const scalarField& phi = patchField<surfaceScalarField, scalar>(mesh.phi());
-
-    const vectorField& n = patch.nf();
-    const scalarField& magSf = patch.magSf();
-    scalarField Un = phi/(magSf + VSMALL);
-
-
-    vectorField::operator=(U + n*(Un - (n & U)));
+    vectorField::operator=(Up + n*(Un - (n & Up)));
 
     fixedValueFvPatchVectorField::updateCoeffs();
 }

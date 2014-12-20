@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     multivariateScheme
@@ -53,7 +53,7 @@ template<class Type, class Scheme>
 class multivariateScheme
 :
     public multivariateSurfaceInterpolationScheme<Type>,
-    public Scheme::Weight
+    public Scheme::LimiterType
 {
     // Private data
 
@@ -62,9 +62,6 @@ class multivariateScheme
 
 
     // Private Member Functions
-
-        //- Make the muti-variate weighting factors
-        void makeWeights();
 
         //- Disallow default bitwise copy construct
         multivariateScheme(const multivariateScheme&);
@@ -89,21 +86,7 @@ public:
                 fieldTable& fields,
             const surfaceScalarField& faceFlux,
             Istream& schemeData
-        )
-        :
-            multivariateSurfaceInterpolationScheme<Type>
-            (
-                mesh,
-                fields,
-                faceFlux,
-                schemeData
-            ),
-            Scheme::Weight(schemeData),
-            faceFlux_(faceFlux),
-            weights_(mesh.surfaceInterpolation::weights())
-        {
-            makeWeights();
-        }
+        );
 
 
     // Member Operators
@@ -168,14 +151,24 @@ public:
 
 // Add the patch constructor functions to the hash tables
 
-#define makeSchemeMultivariateSurfaceInterpolationScheme(SS, SCHEME, WEIGHT, NAME)\
-typedef multivariateScheme<scalar, SCHEME<scalar, WEIGHT> >                    \
-    multivariateScheme##WEIGHT_;                                               \
-defineTemplateTypeNameAndDebugWithName(multivariateScheme##WEIGHT_, NAME, 0);  \
+#define makeLimitedMultivariateSurfaceInterpolationScheme(SS, LIMITER)               \
+typedef multivariateScheme<scalar, LimitedScheme<scalar, LIMITER<NVDTVD>, limitFuncs::magSqr> > \
+    multivariateScheme##LIMITER_;                                              \
+defineTemplateTypeNameAndDebugWithName(multivariateScheme##LIMITER_, #SS, 0);  \
                                                                                \
 multivariateSurfaceInterpolationScheme<scalar>::addIstreamConstructorToTable   \
-<multivariateScheme<scalar, SCHEME<scalar, WEIGHT> > >                         \
-    addMultivariate##SS##TYPE##ConstructorToTable_;
+<multivariateScheme<scalar, LimitedScheme<scalar, LIMITER<NVDTVD>, limitFuncs::magSqr> > > \
+    addMultivariate##SS##ConstructorToTable_;
+
+
+#define makeLLimitedMultivariateSurfaceInterpolationScheme(SS, LLIMITER, LIMITER, NVDTVD, LIMFUNC) \
+typedef multivariateScheme<scalar, LimitedScheme<scalar, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> > \
+    multivariateScheme##LLIMITER##LIMITER##NVDTVD##LIMFUNC##_;                 \
+defineTemplateTypeNameAndDebugWithName(multivariateScheme##LLIMITER##LIMITER##NVDTVD##LIMFUNC##_, #SS, 0);  \
+                                                                               \
+multivariateSurfaceInterpolationScheme<scalar>::addIstreamConstructorToTable   \
+<multivariateScheme<scalar, LimitedScheme<scalar, LLIMITER<LIMITER<NVDTVD> >, limitFuncs::LIMFUNC> > > \
+    addMultivariate##SS##ConstructorToTable_;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     morphMesh
@@ -83,12 +83,23 @@ public:
 
     // Member Functions
 
+        //- Set the instance for mesh files
+        void setInstance(const fileName& inst)
+        {
+            polyMesh::setInstance(inst);
+        }
+
         //- Remove existing patches
-        void removeBoundary();
+        void removeBoundary()
+        {
+            polyMesh::removeBoundary();
+        }
 
         //- Add boundary patches. Constructor helper
-        void addPatches(const List<polyPatch*>&);
-
+        void addPatches(const List<polyPatch*>& patches)
+        {
+            polyMesh::addPatches(patches);
+        }
 
         //- Return raw points
         const pointField& allPoints() const
@@ -127,14 +138,26 @@ public:
         }
 
         //- Change topology of the mesh given a topological change
-        void updateTopology(const polyTopoChange& changer)
+        virtual void updateTopology(const polyTopoChange& changer)
         {
             polyMesh::updateTopology(changer);
         }
 
-        bool setMorphTimeIndex(const label newTimeIndex) const
+        virtual bool setMorphTimeIndex(const label newTimeIndex) const
         {
             return polyMesh::setMorphTimeIndex(newTimeIndex);
+        }
+
+        //- Inplace modify mesh primitives. Use addPatches to add boundary
+        //  later.
+        void reset
+        (
+            const pointField& points,
+            const faceList& faces,
+            const cellList& cells
+        )
+        {
+            polyMesh::reset(points, faces, cells);
         }
 
 };

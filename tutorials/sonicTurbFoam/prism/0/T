@@ -37,17 +37,23 @@ boundaryField
 
     outlet          
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform 300;
+        value           uniform 300;
     }
 
     bottomWall      
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform 300;
+        value           uniform 300;
     }
 
     topWall         
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform 300;
+        value           uniform 300;
     }
 
     prismWall       

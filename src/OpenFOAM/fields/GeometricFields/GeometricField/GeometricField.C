@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Generic Geometric Type field class
@@ -59,10 +59,10 @@ bool GeometricField<Type, PatchField, GeoMesh>::readIfPresent()
 {
     if (readOpt() == IOobject::MUST_READ)
     {
-        Warning
-            << "GeometricField<Type, PatchField, GeoMesh>::readIfPresent() : "
-            << endl
-            << "    read option IOobject::MUST_READ "
+        WarningIn
+        (
+            "GeometricField<Type, PatchField, GeoMesh>::readIfPresent()"
+        )   << "read option IOobject::MUST_READ "
             << "suggests that a read constuctor for field " << name()
             << " would be more appropriate." << endl;
     }
@@ -264,7 +264,7 @@ GeometricField<Type, PatchField, GeoMesh>::GeometricField
     const Mesh& mesh,
     const dimensionSet& ds,
     const Field<Type>& iField,
-    const ptrList<PatchField<Type> >& ptfl
+    const PtrList<PatchField<Type> >& ptfl
 )
 :
     regIOobject(io),
@@ -439,7 +439,11 @@ GeometricField<Type, PatchField, GeoMesh>::GeometricField
 )
 :
     regIOobject(tgf(), true),
-    Field<Type>((Field<Type>&)tgf(), tgf.isTmp()),
+    Field<Type>
+    (
+        const_cast<GeometricField<Type, PatchField, GeoMesh>&>(tgf()),
+        tgf.isTmp()
+    ),
     mesh_(tgf().mesh_),
     dimensions_(tgf().dimensions_),
     timeIndex_(tgf().timeIndex()),
@@ -541,7 +545,11 @@ GeometricField<Type, PatchField, GeoMesh>::GeometricField
 )
 :
     regIOobject(IOobject(newName, tgf().time().timeName(), tgf().db())),
-    Field<Type>((Field<Type>&)tgf(), tgf.isTmp()),
+    Field<Type>
+    (
+        const_cast<GeometricField<Type, PatchField, GeoMesh>&>(tgf()),
+        tgf.isTmp()
+    ),
     mesh_(tgf().mesh_),
     dimensions_(tgf().dimensions_),
     timeIndex_(tgf().timeIndex()),
@@ -782,7 +790,9 @@ template<class Type, template<class> class PatchField, class GeoMesh>
 GeometricField<Type, PatchField, GeoMesh>&
 GeometricField<Type, PatchField, GeoMesh>::oldTime()
 {
-    ((const GeometricField<Type, PatchField, GeoMesh>&)(*this)).oldTime();
+    static_cast<const GeometricField<Type, PatchField, GeoMesh>&>(*this)
+        .oldTime();
+
     return *field0Ptr_;
 }
 
@@ -944,7 +954,7 @@ GeometricField<Type, PatchField, GeoMesh>&
 GeometricField<Type, PatchField, GeoMesh>::null()
 {
     GeometricField<Type, PatchField, GeoMesh>* nullPtr = 
-        (GeometricField<Type, PatchField, GeoMesh>*)NULL;
+        reinterpret_cast<GeometricField<Type, PatchField, GeoMesh>*>(NULL);
     return *nullPtr;
 }
 
@@ -1119,7 +1129,7 @@ void GeometricField<Type, PatchField, GeoMesh>::operator=
     dimensions() = gf.dimensions();
 
     // This is dodgy stuff, don't try it at home.
-    internalField().transfer((Field<Type>&)gf.internalField());
+    internalField().transfer(const_cast<Field<Type>&>(gf.internalField()));
 
     boundaryField() = gf.boundaryField();
 

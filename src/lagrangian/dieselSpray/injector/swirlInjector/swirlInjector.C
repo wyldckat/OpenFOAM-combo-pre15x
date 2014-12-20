@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -108,9 +108,6 @@ Foam::swirlInjector::swirlInjector
         // correct the massFlowRateProfile to match the injected mass
         massFlowRateProfile_[i][1] *= mass_/integratedMFR;
 
-        // correct the pressureProfile to match the injection pressure
-        injectionPressureProfile_[i][1] *= injectionPressure_/integratedPressure;
-        
         velocityProfile_[i][0] = massFlowRateProfile_[i][0];
 
         TProfile_[i][0] = massFlowRateProfile_[i][0];
@@ -118,6 +115,12 @@ Foam::swirlInjector::swirlInjector
 
         CdProfile_[i][0] = massFlowRateProfile_[i][0];
 
+    }
+
+    forAll(injectionPressureProfile_, i)
+    {
+        // correct the pressureProfile to match the injection pressure
+        injectionPressureProfile_[i][1] *= injectionPressure_/integratedPressure;
     }
 
     // Normalize the direction vector

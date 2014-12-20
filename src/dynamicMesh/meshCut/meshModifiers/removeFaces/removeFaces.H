@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     removeFaces
@@ -75,10 +75,10 @@ class removeFaces
     // Private Static Functions
 
         //- Next index in list
-        static label nexti(const labelList&, const label index);
+        static label nexti(const label, const label index);
 
         //- Previous index in list
-        static label previ(const labelList&, const label index);
+        static label previ(const label, const label index);
 
         //- Return true if f0 and f1 (with shared edge e) use the points
         //  of the edge in reverse order.

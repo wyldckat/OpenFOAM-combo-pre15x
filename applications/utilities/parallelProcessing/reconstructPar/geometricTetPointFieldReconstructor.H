@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     geometricTetPointFieldReconstructor
@@ -36,7 +36,7 @@ SourceFiles
 #ifndef geometricTetPointFieldReconstructor_H
 #define geometricTetPointFieldReconstructor_H
 
-#include "ptrList.H"
+#include "PtrList.H"
 #include "Time.H"
 #include "tetPolyMesh.H"
 #include "tetPointMesh.H"
@@ -64,19 +64,19 @@ class geometricTetPointFieldReconstructor
         const tetPolyMesh& mesh_;
 
         //- List of processor meshes
-        const ptrList<tetPolyMesh>& procMeshes_;
+        const PtrList<tetPolyMesh>& procMeshes_;
 
         //- List of processor point addressing lists
-        const ptrList<labelIOList>& pointProcAddressing_;
+        const PtrList<labelIOList>& pointProcAddressing_;
 
         //- List of processor face addressing lists
-        const ptrList<labelIOList>& faceProcAddressing_;
+        const PtrList<labelIOList>& faceProcAddressing_;
 
         //- List of processor cell addressing lists
-        const ptrList<labelIOList>& cellProcAddressing_;
+        const PtrList<labelIOList>& cellProcAddressing_;
 
         //- List of processor boundary addressing lists
-        const ptrList<labelIOList>& boundaryProcAddressing_;
+        const PtrList<labelIOList>& boundaryProcAddressing_;
 
 
     // Private Member Functions
@@ -146,11 +146,11 @@ public:
         geometricTetPointFieldReconstructor
         (
             tetPolyMesh& mesh,
-            const ptrList<tetPolyMesh>& procMeshes,
-            const ptrList<labelIOList>& pointProcAddressing,
-            const ptrList<labelIOList>& faceProcAddressing,
-            const ptrList<labelIOList>& cellProcAddressing,
-            const ptrList<labelIOList>& boundaryProcAddressing
+            const PtrList<tetPolyMesh>& procMeshes,
+            const PtrList<labelIOList>& pointProcAddressing,
+            const PtrList<labelIOList>& faceProcAddressing,
+            const PtrList<labelIOList>& cellProcAddressing,
+            const PtrList<labelIOList>& boundaryProcAddressing
         );
 
 

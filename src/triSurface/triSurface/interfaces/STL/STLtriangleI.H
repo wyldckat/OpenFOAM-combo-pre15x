@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -88,15 +88,15 @@ inline short STLtriangle::region() const
 
 inline void STLtriangle::read(istream& is)
 {
-    is.read((char *)this, 4*sizeof(STLpoint));
-    is.read((char *)(&region_), 2);
+    is.read(reinterpret_cast<char*>(this), 4*sizeof(STLpoint));
+    is.read(reinterpret_cast<char*>(&region_), 2);
 }
 
 
 inline void STLtriangle::write(ostream& os)
 {
-    os.write((char *)this, 4*sizeof(STLpoint));
-    os.write((char *)(&region_), 2);
+    os.write(reinterpret_cast<char*>(this), 4*sizeof(STLpoint));
+    os.write(reinterpret_cast<char*>(&region_), 2);
 }
 
 // * * * * * * * * * * * * * * * Ostream Operator  * * * * * * * * * * * * * //

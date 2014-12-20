@@ -23,11 +23,11 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-
-(    INLE1
+(
+    INLE1
     {
         type            patch;
-        physicalType    supersonicFreeStreamInlet;
+        physicalType    supersonicFreestream;
         startFace       79570;
         nFaces          400;
     }
@@ -51,12 +51,10 @@ FoamFile
     WALL10
     {
         type            wall;
-        physicalType    wallAdiabatic;
+        physicalType    adiabaticWallFunctions;
         startFace       160170;
         nFaces          260;
     }
-
-
 )
 
 // ************************************************************************* //

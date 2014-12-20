@@ -3,7 +3,6 @@
 currDir=`pwd`
 application=`basename $currDir`
 cases="damBreak damBreakFine"
-utility=setGammaDamBreak
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/RunFunctions
@@ -27,8 +26,6 @@ setDamBreakFine ()
     mv temp.$$ $controlDict    
 }
 
-compileApplication damBreak $utility
-
 for case in $cases
 do
     if [ "$case" = "damBreakFine" ] 
@@ -39,7 +36,7 @@ do
     fi
 
     runApplication blockMesh $case
-    runApplication $utility $case
+    runApplication setFields $case
     if [ "$case" = "damBreakFine" ]
     then
         runApplication decomposePar $case

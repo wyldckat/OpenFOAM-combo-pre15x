@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Splits mesh into multiple regions and writes them to consecutive
@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
             Info<< "Region " << regionI << " mesh has " << cellsToSubset.size()
                 << " cells" << endl;
 
-            mesh.setCellSubset(cellsToSubset);
-
+            mesh.setLargeCellSubset(cellsToSubset);
+ 
             Info<< "Mesh subset in = "
                 << runTime.cpuTimeIncrement() << " s\n" << endl << endl;
 

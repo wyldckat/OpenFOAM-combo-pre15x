@@ -20,19 +20,19 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
-    refinePolyMesh
+    icoTopoFoam
 
 Description
-    Refine a polyhedral mesh
+    Transient solver for incompressible, laminar flow of Newtonian fluids
+    with mesh motion and topological mesh changes.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "vertexMarkup.H"
-#include "movingMesh.H"
+#include "mixerFvMesh.H"
 
 #include "movingWallVelocityFvPatchVectorField.H"
 
@@ -44,8 +44,7 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 
 #   include "createTime.H"
-#   include "createMovingMesh.H"
-#   include "initMovingMesh.H"
+#   include "createTopoMesh.H"
 #   include "createFields.H"
 #   include "initContinuityErrs.H"
 
@@ -59,9 +58,10 @@ int main(int argc, char *argv[])
 #       include "readTimeControls.H"
         runTime++;
 
-        Info<< "Time = " << runTime.value() << nl << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
-#       include "moveMesh.H"
+        mesh.moveAndMorph();
+
 #       include "checkTotalVolume.H"
 
         A.correctBoundaryConditions();
@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
             pEqn.unsetReference(pRef);
 
             phi -= pEqn.flux();
-            phi -= mesh.phi();
+            phi -= fvc::meshPhi(U);
         }
 
         fvVectorMatrix UEqn
@@ -161,19 +161,18 @@ int main(int argc, char *argv[])
 
             phiField = phi;
 
-            phi -= mesh.phi();
+            // Make the fluxes relative
+            phi -= fvc::meshPhi(U);
         }
 
 #       include "CourantNo.H"
 #       include "setDeltaT.H"
 
-        // To be able to evaluate streamFunction
-
         runTime.write();
 
         Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl << endl;
+            << " s\n\n" << endl;
     }
 
     Info<< "End\n" << endl;

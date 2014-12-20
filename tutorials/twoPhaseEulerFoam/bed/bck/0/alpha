@@ -1,0 +1,60 @@
+// The FOAM Project // File: p
+/*
+-------------------------------------------------------------------------------
+ =========         | volScalarField
+ \\      /         | 
+  \\    /          | Name:   p
+   \\  /           | Family: Data file
+    \\/            | 
+    F ield         | FOAM version: 1.9.6
+    O peration     | Product of Nabla Ltd.
+    A and          | 
+    M anipulation  | Email: Enquiries@Nabla.co.uk
+-------------------------------------------------------------------------------
+*/
+
+version 2.0;
+format ascii;
+
+root "/home/nordin/foam/run/bed";
+case "case1";
+instance "0.000000e+00";
+local "";
+
+class volScalarField;
+object alpha;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions          [ 0 0 0 0 0 0 0 ];
+
+internalField       uniform 0.33;
+
+referenceLevel      0;
+
+boundaryField
+{
+    bottom
+    {
+        type               fixedValue;
+        value              uniform 1.0e-6;
+    }
+
+    top
+    {
+        type               zeroGradient;
+    }
+
+    walls
+    {
+        type               zeroGradient;
+    }
+
+    frontBack
+    {
+        type               empty;
+    }
+
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

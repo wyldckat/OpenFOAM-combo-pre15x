@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     skewLinear
@@ -30,13 +30,14 @@ Description
     returns linear weighting factors but also applies an explicit correction.
 
 SourceFiles
-    skewLinearMake.C
+    skewLinear.C
 
 \*---------------------------------------------------------------------------*/
 
 #ifndef skewLinear_H
 #define skewLinear_H
 
+#include "skewCorrectionVectors.H"
 #include "linear.H"
 #include "gaussGrad.H"
 
@@ -74,7 +75,6 @@ public:
         //- Construct from mesh
         skewLinear(const fvMesh& mesh)
         :
-            surfaceInterpolationScheme<Type>(mesh),
             linear<Type>(mesh)
         {}
 
@@ -86,7 +86,6 @@ public:
             Istream&
         )
         :
-            surfaceInterpolationScheme<Type>(mesh),
             linear<Type>(mesh)
         {}
 
@@ -99,7 +98,6 @@ public:
             Istream&
         )
         :
-            surfaceInterpolationScheme<Type>(mesh),
             linear<Type>(mesh)
         {}
 
@@ -109,7 +107,7 @@ public:
         //- Return true if this scheme uses an explicit correction
         virtual bool corrected() const
         {
-            return this->mesh().skew();
+            return skewCorrectionVectors::New(this->mesh()).skew();
         }
 
         //- Return the explicit correction to the face-interpolate
@@ -120,6 +118,8 @@ public:
         ) const
         {
             const fvMesh& mesh = this->mesh();
+
+            const skewCorrectionVectors& scv = skewCorrectionVectors::New(mesh);
 
             tmp<GeometricField<Type, fvPatchField, surfaceMesh> > tsfCorr
             (
@@ -146,16 +146,14 @@ public:
                 tsfCorr().replace
                 (
                     cmpt,
-                    mesh.skewCorrectionVectors()
-                  & linear
+                    scv() & linear
                     <
                         typename outerProduct
                         <
                             vector,
                             typename pTraits<Type>::cmptType
                         >::type
-                    >
-                    (mesh).interpolate
+                    > (mesh).interpolate
                     (
                         fv::gaussGrad<typename pTraits<Type>::cmptType>
                         (mesh).grad(vf.component(cmpt))

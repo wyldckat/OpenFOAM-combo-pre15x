@@ -48,8 +48,7 @@ boundaryField
 
     atmosphere      
     {
-        type            inletOutlet;
-        inletValue      uniform (0 0 0);
+        type            pressureInletOutletVelocity;
         value           uniform (0 0 0);
     }
 

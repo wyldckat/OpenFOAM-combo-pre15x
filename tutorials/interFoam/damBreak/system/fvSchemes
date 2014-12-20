@@ -37,8 +37,8 @@ gradSchemes
 divSchemes
 {
     div(rho*phi,U)  Gauss upwind;
-    div(phi,gamma)  Gauss Gamma201 0.2;
-    div(phirb,gamma) Gauss Gamma201 1;
+    div(phi,gamma)  Gauss limitedLinear01 1;
+    div(phirb,gamma) Gauss limitedLinear01 1;
 }
 
 laplacianSchemes

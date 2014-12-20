@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     valveBank
@@ -34,7 +34,7 @@ Description
 #ifndef valveBank_H
 #define valveBank_H
 
-#include "ptrList.H"
+#include "PtrList.H"
 #include "engineValve.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -48,7 +48,7 @@ namespace Foam
 
 class valveBank
 :
-    public ptrList<engineValve>
+    public PtrList<engineValve>
 {
 private:
 
@@ -72,7 +72,7 @@ public:
             Istream& is
         )
         {
-            ptrList<entry> valveEntries(is);
+            PtrList<entry> valveEntries(is);
 
             setSize(valveEntries.size());
 

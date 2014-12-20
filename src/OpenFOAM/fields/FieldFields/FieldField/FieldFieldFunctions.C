@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Generic FieldField type.
@@ -459,10 +459,8 @@ Type max(const FieldField<Field, Type>& f)
     }
     else
     {
-        Warning
-            << "max(const FieldField<Field, Type>&) const : "
-            << "empty fieldField, returning zero"
-            << endl;
+        WarningIn("max(const FieldField<Field, Type>&) const")
+            << "empty fieldField, returning zero" << endl;
 
         return pTraits<Type>::zero;
     }
@@ -492,10 +490,8 @@ Type min(const FieldField<Field, Type>& f)
     }
     else
     {
-        Warning
-            << "min(const FieldField<Field, Type>&) const : "
-            << "empty fieldField, returning zero"
-            << endl;
+        WarningIn("min(const FieldField<Field, Type>&) const")
+            << "empty fieldField, returning zero" << endl;
 
         return pTraits<Type>::zero;
     }
@@ -561,10 +557,8 @@ Type average(const FieldField<Field, Type>& f)
 
         if (n == 0)
         {
-            Warning
-                << "average(const FieldField<Field, Type>&) const : "
-                << "empty fieldField, returning zero"
-                << endl;
+            WarningIn("average(const FieldField<Field, Type>&) const")
+                << "empty fieldField, returning zero" << endl;
 
             return pTraits<Type>::zero;
         }
@@ -575,10 +569,8 @@ Type average(const FieldField<Field, Type>& f)
     }
     else
     {
-        Warning
-            << "average(const FieldField<Field, Type>&) const : "
-            << "empty fieldField, returning zero"
-            << endl;
+        WarningIn("average(const FieldField<Field, Type>&) const")
+            << "empty fieldField, returning zero" << endl;
 
         return pTraits<Type>::zero;
     }
@@ -628,10 +620,8 @@ Type gAverage(const FieldField<Field, Type>& f)
     }
     else
     {
-        Warning
-            << "gAverage(const FieldField<Field, Type>&) const : "
-            << "empty fieldField, returning zero"
-            << endl;
+        WarningIn("gAverage(const FieldField<Field, Type>&) const")
+            << "empty fieldField, returning zero" << endl;
 
         return pTraits<Type>::zero;
     }
@@ -1049,7 +1039,7 @@ operator op                                                                   \
     (                                                                         \
         FieldField<Field, productType>::NewCalculatedType(f1)                 \
     );                                                                        \
-    opFunc(tf(), f1, (const Form&)vs);                                        \
+    opFunc(tf(), f1, static_cast<const Form&>(vs));                           \
     return tf;                                                                \
 }                                                                             \
                                                                               \
@@ -1067,7 +1057,7 @@ operator op                                                                   \
     (                                                                         \
         FieldField<Field, productType>::NewCalculatedType(tf1())              \
     );                                                                        \
-    opFunc(tf(), tf1(), (const Form&)vs);                                     \
+    opFunc(tf(), tf1(), static_cast<const Form&>(vs));                        \
     tf1.clear();                                                              \
     return tf;                                                                \
 }                                                                             \
@@ -1101,7 +1091,7 @@ operator op                                                                   \
     (                                                                         \
         FieldField<Field, productType>::NewCalculatedType(f1)                 \
     );                                                                        \
-    opFunc(tf(), (const Form&)vs, f1);                                        \
+    opFunc(tf(), static_cast<const Form&>(vs), f1);                           \
     return tf;                                                                \
 }                                                                             \
                                                                               \
@@ -1119,7 +1109,7 @@ operator op                                                                   \
     (                                                                         \
         FieldField<Field, productType>::NewCalculatedType(tf1())              \
     );                                                                        \
-    opFunc(tf(), (const Form&)vs, tf1());                                     \
+    opFunc(tf(), static_cast<const Form&>(vs), tf1());                        \
     tf1.clear();                                                              \
     return tf;                                                                \
 }

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     boundaryFoam
@@ -37,7 +37,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "incompressible/transportModel/transportModel.H"
+#include "incompressible/singlePhaseTransportModel/singlePhaseTransportModel.H"
 #include "incompressible/turbulenceModel/turbulenceModel.H"
 #include "wallFvPatch.H"
 #include "makeGraph.H"
@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
 
     for (runTime++; !runTime.end(); runTime++)
     {
-        Info<< "\nTime = " << runTime.timeName() << nl << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
         fvVectorMatrix divR = turbulence->divR(U);
         divR.source() = flowMask & divR.source();
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
             flowDirection & turbulence->R()()[0] & wallNormal;
 
         scalar yplusWall
-            = ::sqrt(mag(wallShearStress))*y[0]/laminarTransport->nu()[0];
+            = ::sqrt(mag(wallShearStress))*y[0]/laminarTransport.nu()()[0];
 
         Info<< "Uncorrected Ubar = " << (flowDirection & UbarStar.value())<< tab
             << "pressure gradient = " << (flowDirection & gradP.value()) << tab
@@ -117,7 +117,7 @@ int main(int argc, char *argv[])
 
             makeGraph(y, flowDirection & U, "Uf", gFormat);
 
-            makeGraph(y, laminarTransport->nu(), gFormat);
+            makeGraph(y, laminarTransport.nu(), gFormat);
 
             makeGraph(y, turbulence->k(), gFormat);
             makeGraph(y, turbulence->epsilon(), gFormat);
@@ -133,6 +133,10 @@ int main(int argc, char *argv[])
 
             makeGraph(y, mag(fvc::grad(U)), "gammaDot", gFormat);
         }
+
+        Info<< "ExecutionTime = "
+            << runTime.elapsedCpuTime()
+            << " s\n\n" << endl;
     }
 
     Info<< "End\n" << endl;

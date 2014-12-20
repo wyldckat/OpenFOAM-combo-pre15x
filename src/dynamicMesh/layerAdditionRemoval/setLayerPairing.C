@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Remove a layer of cells and prepare addressing data
@@ -53,24 +53,22 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
     //     as necessary.  Once the face is adjusted, record the
     //     addressing between the master and slave vertex layer.
 
-    const polyMesh& mesh = morphEngine().mesh();
-
     const labelList& mc =
-        mesh.faceZones()[faceZoneID_.index()].masterCells();
+        mesh().faceZones()[faceZoneID_.index()].masterCells();
     const labelList& mf =
-        mesh.faceZones()[faceZoneID_.index()].addressing();
+        mesh().faceZones()[faceZoneID_.index()].addressing();
     const boolList& mfFlip =
-        mesh.faceZones()[faceZoneID_.index()].flipMap();
+        mesh().faceZones()[faceZoneID_.index()].flipMap();
 
-    const faceList& faces = mesh.faces();
-    const cellList& cells = mesh.cells();
+    const faceList& faces = mesh().faces();
+    const cellList& cells = mesh().cells();
 
     // Grab the local faces from the master zone
     const faceList& mlf =
-        mesh.faceZones()[faceZoneID_.index()]().localFaces();
+        mesh().faceZones()[faceZoneID_.index()]().localFaces();
 
     const labelList& meshPoints =
-        mesh.faceZones()[faceZoneID_.index()]().meshPoints();
+        mesh().faceZones()[faceZoneID_.index()]().meshPoints();
 
     // Create a list of points to collapse for every point of
     // the master patch
@@ -89,7 +87,7 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
     facesPairingPtr_ = new labelList(mf.size(), -1);
     labelList& ftc = *facesPairingPtr_;
 //     Info << "meshPoints: " << meshPoints << nl
-//          << "localPoints: " << mesh.faceZones()[faceZoneID_.index()]().localPoints() << endl;
+//          << "localPoints: " << mesh().faceZones()[faceZoneID_.index()]().localPoints() << endl;
 
     // For all faces, create the mapping
     label nPointErrors = 0;
@@ -118,7 +116,7 @@ bool Foam::layerAdditionRemoval::setLayerPairing() const
         }
 
 // Info<< "curMasterFace: " << faces[mf[faceI]] << nl
-//     << "cell shape: " << mesh.cellShapes()[mc[faceI]] << nl
+//     << "cell shape: " << mesh().cellShapes()[mc[faceI]] << nl
 //     << "curLocalFace: " << curLocalFace << nl
 //     << "lidFace: " << lidFace
 //     << " master index: " << lidFace.masterIndex()

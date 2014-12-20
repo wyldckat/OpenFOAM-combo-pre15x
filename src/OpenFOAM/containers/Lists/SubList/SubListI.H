@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -81,7 +81,7 @@ inline SubList<T>::SubList
 template<class T>
 SubList<T>& SubList<T>::null()
 {
-    SubList<T>* nullPtr = (SubList<T>*)NULL;
+    SubList<T>* nullPtr = reinterpret_cast<SubList<T>*>(NULL);
     return *nullPtr;
 }
 
@@ -92,7 +92,7 @@ SubList<T>& SubList<T>::null()
 template<class T>
 inline SubList<T>::operator const List<T>&() const
 {
-    return *((const List<T>*)(this));
+    return *reinterpret_cast<const List<T>*>(this);
 }
 
 

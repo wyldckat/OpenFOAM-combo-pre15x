@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0.3                                 |
+|  \\    /   O peration     | Version:  1.2                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,9 +11,9 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.0.3/tutorials/sonicTurbFoam";
+    root "..";
     case "prism";
-    instance "constant";
+    instance ""constant"";
     local "polyMesh";
 
     class polyBoundaryMesh;
@@ -27,7 +27,7 @@ FoamFile
 inlet
 {
     type patch;
-    physicalType inletFixedTemp;
+    physicalType supersonicInlet;
     nFaces 48;
     startFace 13081;
 }
@@ -43,7 +43,7 @@ outlet
 bottomWall
 {
     type patch;
-    physicalType supersonicFreeStream;
+    physicalType supersonicFreestream;
     nFaces 107;
     startFace 13197;
 }
@@ -51,7 +51,7 @@ bottomWall
 topWall
 {
     type patch;
-    physicalType supersonicFreeStream;
+    physicalType supersonicFreestream;
     nFaces 107;
     startFace 13304;
 }
@@ -59,7 +59,7 @@ topWall
 prismWall
 {
     type wall;
-    physicalType wallAdiabatic;
+    physicalType adiabaticWallFunctions;
     nFaces 52;
     startFace 13411;
 }

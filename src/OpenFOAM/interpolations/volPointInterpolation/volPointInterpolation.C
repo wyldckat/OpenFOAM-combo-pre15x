@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     volPointInterpolation
@@ -101,7 +101,7 @@ void volPointInterpolation::makeWeights() const
         IOobject
         (
             "volPointSumWeights",
-            fvMesh_.instance(),
+            fvMesh_.polyMesh::instance(),
             fvMesh_
         ),
         pointMesh_,
@@ -260,7 +260,7 @@ void volPointInterpolation::makeBoundaryWeights() const
         IOobject
         (
             "volPointSumWeights",
-            vMesh().instance(),
+            vMesh().polyMesh::instance(),
             vMesh()
         ),
         pMesh(),
@@ -380,7 +380,7 @@ void volPointInterpolation::clearGeom() const
 }
 
 
-const ptrList<primitivePatchInterpolation>&
+const PtrList<primitivePatchInterpolation>&
 volPointInterpolation::patchInterpolators() const
 {
     if (!patchInterpolatorsPtr_)
@@ -388,7 +388,7 @@ volPointInterpolation::patchInterpolators() const
         const fvBoundaryMesh& bdry = fvMesh_.boundary();
 
         patchInterpolatorsPtr_ =
-            new ptrList<primitivePatchInterpolation>(bdry.size());
+            new PtrList<primitivePatchInterpolation>(bdry.size());
 
         forAll (bdry, patchI)
         {
@@ -486,7 +486,7 @@ bool volPointInterpolation::movePoints()
 
     if (patchInterpolatorsPtr_)
     {
-        ptrList<primitivePatchInterpolation>& pi = *patchInterpolatorsPtr_;
+        PtrList<primitivePatchInterpolation>& pi = *patchInterpolatorsPtr_;
 
         forAll (pi, patchI)
         {

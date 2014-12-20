@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -426,10 +424,11 @@ Foam::cellPointWeight::cellPointWeight
         }
         else
         {
-            Warning
-                << "interpolationCellPoint<Type>::interpolate(const vector&, "
-                << "const label celli) const : "
-                << "search failed; using cell value" << endl
+            WarningIn
+            (
+                "interpolationCellPoint<Type>::interpolate(const vector&, "
+                "const label celli) const"
+            )   << "search failed; using cell value" << endl
                 << "cellnumber " << cellNo_ << endl;
             
             for (label n=0; n<3; n++)
@@ -477,10 +476,11 @@ Foam::cellPointWeight::cellPointWeight
         }
         else
         {
-            Warning
-                << "interpolationCellPoint<Type>::interpolate(const vector&, "
-                << "const label celli) const : "
-                << "face search failed; using first 3 point values" << endl
+            WarningIn
+            (
+                "interpolationCellPoint<Type>::interpolate(const vector&, "
+                "const label celli) const"
+            )   << "face search failed; using first 3 point values" << endl
                 << "cellnumber " << cellNo_ << endl;
 
             // use first three points on face

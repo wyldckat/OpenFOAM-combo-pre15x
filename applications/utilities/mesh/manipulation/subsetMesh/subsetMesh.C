@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Selects a section of mesh based on a cellSet.
@@ -49,7 +49,7 @@ void subsetFields
 (
     const meshSubset& mesh,
     const wordList& fieldNames,
-    ptrList<GeometricField<Type, fvPatchField, volMesh> >& subFields
+    PtrList<GeometricField<Type, fvPatchField, volMesh> >& subFields
 )
 {
     forAll(fieldNames, i)
@@ -85,7 +85,6 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
-
 
     word setName(args.args()[3]);
 
@@ -133,24 +132,24 @@ int main(int argc, char *argv[])
 
     cellSet currentSet(mesh, setName);
 
-    mesh.setCellSubset(currentSet, patchI);
+    mesh.setLargeCellSubset(currentSet, patchI);
 
     IOobjectList objects(mesh, runTime.timeName());
 
     // Read fields and subset.
 
     wordList scalarNames(objects.names(volScalarField::typeName));
-    ptrList<volScalarField> scalarFlds(scalarNames.size());
+    PtrList<volScalarField> scalarFlds(scalarNames.size());
 
     subsetFields(mesh, scalarNames, scalarFlds);
 
     wordList vectorNames(objects.names(volVectorField::typeName));
-    ptrList<volVectorField> vectorFlds(vectorNames.size());
+    PtrList<volVectorField> vectorFlds(vectorNames.size());
 
     subsetFields(mesh, vectorNames, vectorFlds);
 
     wordList tensorNames(objects.names(volTensorField::typeName));
-    ptrList<volTensorField> tensorFlds(tensorNames.size());
+    PtrList<volTensorField> tensorFlds(tensorNames.size());
 
     subsetFields(mesh, tensorNames, tensorFlds);
 

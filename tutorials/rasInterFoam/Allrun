@@ -2,9 +2,7 @@
 
 currDir=`pwd`
 application=`basename $currDir`
-cases="damBreak"
-#cases="damBreak damBreakFine"
-utility=setGammaDamBreak
+cases="damBreak damBreakFine"
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/RunFunctions
@@ -28,8 +26,6 @@ setDamBreakFine ()
     mv temp.$$ $controlDict    
 }
 
-compileApplication ../interFoam/damBreak $utility
-
 for case in $cases
 do
     if [ "$case" = "damBreakFine" ] 
@@ -40,7 +36,7 @@ do
     fi
 
     runApplication blockMesh $case
-    runApplication $utility $case
+    runApplication setFields $case
     if [ "$case" = "damBreakFine" ]
     then
         runApplication decomposePar $case

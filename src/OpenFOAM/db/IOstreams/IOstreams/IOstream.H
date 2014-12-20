@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IOstream
@@ -48,8 +48,7 @@ SourceFiles
 #include "bool.H"
 #include "label.H"
 #include "scalar.H"
-#include "string.H"
-#include "word.H"
+#include "fileName.H"
 #include "InfoProxy.H"
 
 #include <iostream>
@@ -221,7 +220,7 @@ private:
     // Private data
 
         //- Name of the stream
-        static string name_;
+        static fileName name_;
 
         streamFormat format_;
         versionNumber version_;
@@ -302,14 +301,14 @@ public:
 
             //- Return the name of the stream
             //  Useful for Fstream to return the filename
-            virtual const string& name() const
+            virtual const fileName& name() const
             {
                 return name_;
             }
 
             //- Return non-const access to the name of the stream
             //  Useful to alter the stream name
-            virtual string& name()
+            virtual fileName& name()
             {
                 return name_;
             }
@@ -364,7 +363,9 @@ public:
             //- Return non-zero if the stream has not failed
             operator void*() const
             {
-                return fail() ? (void*)0 : (void*)(-1);
+                return fail()
+                    ? reinterpret_cast<void*>(0)
+                    : reinterpret_cast<void*>(-1);
             }
 
             //- Return true if the stream has failed
@@ -418,10 +419,18 @@ public:
                 return lineNumber_;
             }
 
-            //- Reset the default precision
-            static void defaultPrecision(unsigned int p)
+            //- Return the default precision
+            static unsigned int defaultPrecision()
             {
+                return precision_;
+            }
+
+            //- Reset the default precision (and return old precision)
+            static unsigned int defaultPrecision(unsigned int p)
+            {
+                unsigned int precision0 = precision_;
                 precision_ = p;
+                return precision0;
             }
 
             //- Set the stream format

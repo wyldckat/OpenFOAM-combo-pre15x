@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Cell zip-up tool. This function modifies the list of faces such
@@ -131,8 +131,7 @@ void polyMesh::zipUpCells()
                 }
                 else if (edgeUsage[edgeI] != 2)
                 {
-                    Warning
-                        << "void polyMesh::zipUpCells() : "
+                    WarningIn("void polyMesh::zipUpCells()")
                         << "edge " << cellEdges[edgeI] << " in cell " << cellI
                         << " used " << edgeUsage[edgeI] << " times. " << nl
                         << "Should be 1 or 2 - serious error "
@@ -511,8 +510,7 @@ void polyMesh::zipUpCells()
                     {
                         if (orderedEdge[checkI] == orderedEdge[checkJ])
                         {
-                            Warning
-                                << "void polyMesh::zipUpCells() : "
+                            WarningIn("void polyMesh::zipUpCells()")
                                 << "Duplicate point found in edge to insert. "
                                 << nl << "Point: " << orderedEdge[checkI]
                                 << " edge: " << orderedEdge << endl;
@@ -706,8 +704,7 @@ void polyMesh::zipUpCells()
                                 {
                                     if (newFace[checkI] == newFace[checkJ])
                                     {
-                                        Warning
-                                            << "void polyMesh::zipUpCells()"
+                                        WarningIn("void polyMesh::zipUpCells()")
                                             << "Duplicate point found "
                                             << "in the new face. " << nl
                                             << "Point: "
@@ -752,7 +749,7 @@ void polyMesh::zipUpCells()
             << " changed " << nChangedFacesInMesh << " faces." << endl;
 
         // Insert the new faces into the mesh
-        (faceList&)faces_ = newFaces;
+        faces_ = newFaces;
 
         // Re-do the boundary patches with the new face list
         List<polyPatch*> newPatches(boundary_.size());
@@ -810,6 +807,12 @@ void polyMesh::zipUpCells()
         clearOut();
 
     } while (nChangedFacesInMesh > 0 || nCycles > 100);
+
+    // Flags the mesh files as being changed (copied from morph())
+    faces_.writeOpt() = IOobject::AUTO_WRITE;
+    cells_.writeOpt() = IOobject::AUTO_WRITE;
+    boundary_.writeOpt() = IOobject::AUTO_WRITE;
+    faceZones_.writeOpt() = IOobject::AUTO_WRITE;
 
     if (nChangedFacesInMesh > 0)
     {

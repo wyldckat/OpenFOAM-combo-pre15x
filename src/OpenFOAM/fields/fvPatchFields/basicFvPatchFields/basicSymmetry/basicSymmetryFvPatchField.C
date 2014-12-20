@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -94,12 +94,12 @@ basicSymmetryFvPatchField<Type>::basicSymmetryFvPatchField
 template<class Type>
 tmp<Field<Type> > basicSymmetryFvPatchField<Type>::snGrad() const
 {
-    const vectorField& nHat = this->patchMesh().nf();
+    const vectorField& nHat = this->patch().nf();
     return
     (
         transform(I - 2.0*nHat*nHat, this->patchInternalField())
       - this->patchInternalField()
-    )*(this->patchMesh().deltaCoeffs()/2.0);
+    )*(this->patch().deltaCoeffs()/2.0);
 }
 
 
@@ -112,7 +112,7 @@ void basicSymmetryFvPatchField<Type>::evaluate()
         this->updateCoeffs();
     }
 
-    const vectorField& nHat = this->patchMesh().nf();
+    const vectorField& nHat = this->patch().nf();
     Field<Type>::operator=
     (
         (
@@ -129,7 +129,7 @@ void basicSymmetryFvPatchField<Type>::evaluate()
 template<class Type>
 tmp<Field<Type> > basicSymmetryFvPatchField<Type>::snGradTransformDiag() const
 {
-    const vectorField& nHat = this->patchMesh().nf();
+    const vectorField& nHat = this->patch().nf();
     vectorField diag(nHat.size());
 
     diag.replace(vector::X, mag(nHat.component(vector::X)));

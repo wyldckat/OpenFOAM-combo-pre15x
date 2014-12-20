@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -91,13 +91,11 @@ bool Foam::slidingInterface::projectPoints() const
     //    on the master and leave the slave point where it started
     //    from and the miss is recorded.
 
-    const polyMesh& mesh = morphEngine().mesh();
-
     const primitiveFacePatch& masterPatch =
-        mesh.faceZones()[masterFaceZoneID_.index()]();
+        mesh().faceZones()[masterFaceZoneID_.index()]();
 
     const primitiveFacePatch& slavePatch =
-        mesh.faceZones()[slaveFaceZoneID_.index()]();
+        mesh().faceZones()[slaveFaceZoneID_.index()]();
 
     // Get references to local points, local edges and local faces
     // for master and slave patch

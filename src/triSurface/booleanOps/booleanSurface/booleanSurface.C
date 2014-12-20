@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -726,7 +726,8 @@ Foam::booleanSurface::booleanSurface
 
                 if (eFaces.size() == 1)
                 {
-                    Warning<< "surf1 is open surface at edge " << edgeI
+                    WarningIn("booleanSurface::booleanSurface")
+                        << "surf1 is open surface at edge " << edgeI
                         << " verts:" << surf1.edges()[edgeI]
                         << " connected to faces " << eFaces << endl;
                 }
@@ -741,7 +742,8 @@ Foam::booleanSurface::booleanSurface
 
                 if (eFaces.size() == 1)
                 {
-                    Warning<< "surf2 is open surface at edge " << edgeI
+                    WarningIn("booleanSurface::booleanSurface")
+                        << "surf2 is open surface at edge " << edgeI
                         << " verts:" << surf2.edges()[edgeI]
                         << " connected to faces " << eFaces << endl;
                 }

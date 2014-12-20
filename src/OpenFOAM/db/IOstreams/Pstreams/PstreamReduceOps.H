@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     Pstream
@@ -47,7 +47,7 @@ void reduce
 (
     const List<Pstream::commsStruct>& comms,
     T& Value,
-    BinaryOp bop
+    const BinaryOp& bop
 )
 {
     Pstream::gather(comms, Value, bop);
@@ -60,7 +60,7 @@ template <class T, class BinaryOp>
 void reduce
 (
     T& Value,
-    BinaryOp bop
+    const BinaryOp& bop
 )
 {
     if (Pstream::nProcs() < Pstream::nProcsSimpleSum)
@@ -153,7 +153,7 @@ public:
 
 
 // Insist there is a specialisation for the reduction of a scalar
-void reduce(scalar& Value, sumOp<scalar> bop);
+void reduce(scalar& Value, const sumOp<scalar>& bop);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

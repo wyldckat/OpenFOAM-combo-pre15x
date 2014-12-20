@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Calculate distance to wall.
@@ -85,9 +85,8 @@ int main(int argc, char *argv[])
 
     if (y.nUnset() != 0)
     {
-        Warning
-            << args.executable()
-            << ": There are " << y.nUnset()
+        WarningIn(args.executable())
+            << "There are " << y.nUnset()
             << " remaining unset cells and/or boundary values" << endl;
     }
 

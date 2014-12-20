@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     renumberMesh
@@ -37,13 +37,69 @@ Description
 
 using namespace Foam;
 
+// Renumbering GeometricField
+// ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+template<class GeometricField>
+void RenumberFields
+(
+    const fvMeshBandCompression& mesh,
+    const fvMesh& newMesh,
+    const IOobjectList& objects
+)
+{
+    // Search list of objects for volScalarFields
+    IOobjectList fields(objects.lookupClass(GeometricField::typeName));
+
+    for
+    (
+        IOobjectList::iterator fieldIter = fields.begin();
+        fieldIter != fields.end();
+        ++fieldIter
+    )
+    {
+        Info<< "    renumbering " << fieldIter()->name()
+            << endl;
+
+        // Read field
+        GeometricField theta(*fieldIter(), mesh);
+
+        // Renumber field
+        GeometricField thetaCpy
+        (
+            IOobject
+            (
+                fieldIter()->name(),
+                mesh.time().timeName(),
+                mesh,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+            mesh.renumber(newMesh, theta)
+        );
+
+        // Write field
+        thetaCpy.write();
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 int main(int argc, char *argv[])
 {
     argList::noParallel();
+#   include "addTimeOptions.H"
+
 #   include "setRootCase.H"
 #   include "createTime.H"
+
+    // Get times list
+    instantList Times = runTime.times();
+
+    // set startTime and endTime depending on -time and -latestTime options
+#   include "checkTimeOptions.H"
+
+    runTime.setTime(Times[startTime], startTime);
 
     fvMeshBandCompression mesh
     (
@@ -96,138 +152,18 @@ int main(int argc, char *argv[])
 
     Info << "        Band after renumbering: " << band << endl;
 
-    // Get times list
-    instantList Times = runTime.times();
-
-    forAll(Times, i)
+    for (label i=startTime; i<endTime; i++)
     {
         runTime.setTime(Times[i], i);
+
+        Info<< "Time = " << runTime.timeName() << endl;
 
         // Search for list of objects for this time
         IOobjectList objects(mesh, runTime.timeName());
 
-        // Renumbering volScalarField
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        // Search list of objects for volScalarFields
-        IOobjectList scalarFields(objects.lookupClass("volScalarField"));
-
-        for
-        (
-            IOobjectList::iterator scalarFieldIter = scalarFields.begin();
-            scalarFieldIter != scalarFields.end();
-            ++scalarFieldIter
-        )
-        {
-            Info<< "    renumbering " << scalarFieldIter()->name()
-                << endl;
-
-            // Read field
-            volScalarField theta
-            (
-                *scalarFieldIter(),
-                mesh
-            );
-
-            // Renumber field
-            volScalarField thetaCpy
-            (
-                IOobject
-                (
-                    (const word&)(scalarFieldIter()->name()),
-                    runTime.timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::AUTO_WRITE
-                ),
-                mesh.renumber(newMesh, theta)
-            );
-
-            // Write field
-            thetaCpy.write();
-        }
-
-        // Renumbering volVectorField
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        // Search list of objects for volVectorFields
-        IOobjectList vectorFields(objects.lookupClass("volVectorField"));
-
-        for
-        (
-            IOobjectList::iterator vectorFieldIter = vectorFields.begin();
-            vectorFieldIter != vectorFields.end();
-            ++vectorFieldIter
-        )
-        {
-            Info<< "    renumbering " << vectorFieldIter()->name()
-                << endl;
-
-            // Read field
-            volVectorField theta
-            (
-                *vectorFieldIter(),
-                mesh
-            );
-
-            // Renumber field
-            volVectorField thetaCpy
-            (
-                IOobject
-                (
-                    (const word&)(vectorFieldIter()->name()),
-                    runTime.timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::AUTO_WRITE
-                ),
-                mesh.renumber(newMesh, theta)
-            );
-
-            // Write field
-            thetaCpy.write();
-        }
-
-        // Renumbering volTensorField
-        // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-        // Search list of objects for volTensorFields
-        IOobjectList tensorFields(objects.lookupClass("volTensorField"));
-
-        for
-        (
-            IOobjectList::iterator tensorFieldIter = tensorFields.begin();
-            tensorFieldIter != tensorFields.end();
-            ++tensorFieldIter
-        )
-        {
-            Info<< "    renumbering " << tensorFieldIter()->name()
-                << endl;
-
-            // Read field
-            volTensorField theta
-            (
-                *tensorFieldIter(),
-                mesh
-            );
-
-            // Renumber field
-            volTensorField thetaCpy
-            (
-                IOobject
-                (
-                    (const word&)(tensorFieldIter()->name()),
-                    runTime.timeName(),
-                    mesh,
-                    IOobject::NO_READ,
-                    IOobject::AUTO_WRITE
-                ),
-                mesh.renumber(newMesh, theta)
-            );
-
-            // Write field
-            thetaCpy.write();
-        }
+        RenumberFields<volScalarField>(mesh, newMesh, objects);
+        RenumberFields<volVectorField>(mesh, newMesh, objects);
+        RenumberFields<volTensorField>(mesh, newMesh, objects);
     }
 
     Info<< "\nEnd.\n" << endl;

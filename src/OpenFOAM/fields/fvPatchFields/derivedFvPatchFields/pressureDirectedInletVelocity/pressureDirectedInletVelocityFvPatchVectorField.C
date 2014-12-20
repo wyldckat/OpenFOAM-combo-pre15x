@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -106,8 +106,8 @@ void pressureDirectedInletVelocityFvPatchVectorField::updateCoeffs()
     const fvPatchField<scalar>& phip =
         patchField<surfaceScalarField, scalar>(phi);
 
-    const vectorField& n = patchMesh().nf();
-    scalarField ndmagS = (n & inletDir_)*patchMesh().magSf();
+    const vectorField& n = patch().nf();
+    scalarField ndmagS = (n & inletDir_)*patch().magSf();
 
     if (phi.dimensions() == dimVelocity*dimArea)
     {

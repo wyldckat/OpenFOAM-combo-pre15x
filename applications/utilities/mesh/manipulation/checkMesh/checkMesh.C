@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     checkMesh
@@ -30,6 +30,7 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
+#include "primitiveMesh.H"
 #include "argList.H"
 
 #include "Time.H"
@@ -47,6 +48,7 @@ Description
 #include "pointSet.H"
 #include "labelIOList.H"
 #include "physicalConstants.H"
+#include "parallelInfo.H"
 
 #include "checkCoords.H"
 #include "checkEdges.H"
@@ -57,7 +59,6 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-
 #   include "addTimeOptionsNoConstant.H"
 #   include "addCoordsOption.H"
 #   include "setRootCase.H"
@@ -93,6 +94,8 @@ int main(int argc, char *argv[])
 
             // Clear mesh before checking
             mesh.clearOut();
+            // Reconstruct parallelInfo
+            mesh.parallelData();
 
             label noFailedChecks = 0;
 
@@ -100,6 +103,8 @@ int main(int argc, char *argv[])
 #           include "checkGeom.H"
 #           include "countCellShapes.H"
 #           include "countRegions.H"
+
+            reduce(noFailedChecks, sumOp<label>());
 
             if (noFailedChecks == 0)
             {
@@ -115,6 +120,8 @@ int main(int argc, char *argv[])
             label noFailedChecks = 0;
 
 #           include "checkGeom.H"
+
+            reduce(noFailedChecks, sumOp<label>());
 
             if (noFailedChecks == 0)
             {

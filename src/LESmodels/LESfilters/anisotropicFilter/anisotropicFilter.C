@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -138,7 +138,7 @@ tmp<volScalarField> anisotropicFilter::operator()
 
     forAll(mesh().boundary(), patchI)
     {
-        if (typeid(mesh().boundary()[patchI]) == typeid(wallFvPatch))
+        if (isType<wallFvPatch>(mesh().boundary()[patchI]))
         {
             filteredField.boundaryField()[patchI] = 0.0;
         }
@@ -170,7 +170,7 @@ tmp<volVectorField> anisotropicFilter::operator()
 
     forAll(mesh().boundary(), patchI)
     {
-        if (typeid(mesh().boundary()[patchI]) == typeid(wallFvPatch))
+        if (isType<wallFvPatch>(mesh().boundary()[patchI]))
         {
             filteredField.boundaryField()[patchI] = vector::zero;
         }

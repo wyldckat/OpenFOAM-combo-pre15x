@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -61,7 +61,7 @@ inline labelledTri::labelledTri(Istream& is)
     // Read beginning of labelledTri point pair
     is.readBegin("labelledTri");
 
-    is >> (triFace&)(*this) >> region_;
+    is >> static_cast<triFace&>(*this) >> region_;
 
     // Read end of labelledTri point pair
     is.readEnd("labelledTri");
@@ -91,7 +91,7 @@ inline Istream& operator>>(Istream& is, labelledTri& t)
     // Read beginning of labelledTri point pair
     is.readBegin("labelledTri");
 
-    is  >> (triFace&)t >> t.region_;
+    is  >> static_cast<triFace&>(t) >> t.region_;
 
     // Read end of labelledTri point pair
     is.readEnd("labelledTri");
@@ -106,7 +106,7 @@ inline Istream& operator>>(Istream& is, labelledTri& t)
 inline Ostream& operator<<(Ostream& os, const labelledTri& t)
 {
     os  << token::BEGIN_LIST
-        << (const triFace&)t << token::SPACE << t.region_
+        << static_cast<const triFace&>(t) << token::SPACE << t.region_
         << token::END_LIST;
 
     return os;

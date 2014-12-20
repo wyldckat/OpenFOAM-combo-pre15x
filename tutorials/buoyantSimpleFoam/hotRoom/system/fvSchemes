@@ -35,8 +35,8 @@ gradSchemes
 divSchemes
 {
     default         none;
-    div(phi,U)      Gauss Gamma2V 1;
-    div(phi,h)      Gauss Gamma2 1;
+    div(phi,U)      Gauss upwind;
+    div(phi,h)      Gauss upwind;
     div(phi,k)      Gauss upwind;
     div(phi,epsilon) Gauss upwind;
     div(phi,R)      Gauss upwind;
@@ -48,7 +48,7 @@ laplacianSchemes
 {
     default         none;
     laplacian(muEff,U) Gauss linear corrected;
-    laplacian((rho|A(U)),pd) Gauss linear corrected;
+    laplacian((rho*1|A(U)),pd) Gauss linear corrected;
     laplacian(alphaEff,h) Gauss linear corrected;
     laplacian(DkEff,k) Gauss linear corrected;
     laplacian(DepsilonEff,epsilon) Gauss linear corrected;

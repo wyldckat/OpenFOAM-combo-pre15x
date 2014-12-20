@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     entry
@@ -42,7 +42,7 @@ SourceFiles
 #define entry_H
 
 #include "IDLList.H"
-#include "word.H"
+#include "fileName.H"
 #include "autoPtr.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -96,6 +96,12 @@ public:
         {
             return keyword_;
         }
+
+        //- Return the dictionary name
+        virtual const fileName& name() const = 0;
+
+        //- Return the dictionary name
+        virtual fileName& name() = 0;
 
         //- Return line number of first token in dictionary
         virtual label startLineNumber() const = 0;

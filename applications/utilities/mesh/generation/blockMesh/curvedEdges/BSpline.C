@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     BSpline : cubic spline going through all the knots
@@ -58,8 +58,8 @@ pointField BSpline::findKnots
 
     // set up the matrix
 
-    M.matrix()[0][0] = -0.5*(scalar)(NKnots - 1);
-    M.matrix()[0][2] =  0.5*(scalar)(NKnots - 1);
+    M.matrix()[0][0] = -0.5*scalar(NKnots - 1);
+    M.matrix()[0][2] =  0.5*scalar(NKnots - 1);
 
     for (register label i=1; i<newnKnots-1; i++)
     {
@@ -68,8 +68,8 @@ pointField BSpline::findKnots
         M.matrix()[i][i+1] = oneSixth;
     }
 
-    M.matrix()[newnKnots - 1][newnKnots - 3] = -0.5*(scalar)(NKnots - 1);
-    M.matrix()[newnKnots - 1][newnKnots - 1] =  0.5*(scalar)(NKnots - 1);
+    M.matrix()[newnKnots - 1][newnKnots - 3] = -0.5*scalar(NKnots - 1);
+    M.matrix()[newnKnots - 1][newnKnots - 1] =  0.5*scalar(NKnots - 1);
 
     // set up the vector
 

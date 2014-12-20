@@ -4,6 +4,7 @@ set -x
 
 (cd FoamX ; ./Allwmake)
 
-wmake boxTurb
+wmake setFields
 wmake mapFields
+wmake boxTurb
 wmake engineSwirl

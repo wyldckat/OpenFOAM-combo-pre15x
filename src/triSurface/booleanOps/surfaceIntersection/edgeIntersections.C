@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -70,7 +70,10 @@ void Foam::edgeIntersections::checkEdges(const triSurface& surf)
 
         if (eMag < minSize)
         {
-            Warning<< "Edge " << edgeI << " vertices " << e
+            WarningIn
+            (
+                "Foam::edgeIntersections::checkEdges(const triSurface& surf)"
+            )   << "Edge " << edgeI << " vertices " << e
                 << " coords:" << localPoints[e[0]] << ' '
                 << localPoints[e[1]] << " is very small compared to bounding"
                 << " box dimensions " << bb << endl
@@ -80,7 +83,10 @@ void Foam::edgeIntersections::checkEdges(const triSurface& surf)
 
         if (edgeFaces[edgeI].size() == 1)
         {
-            Warning<< "Edge " << edgeI << " vertices " << e
+            WarningIn
+            (
+                "Foam::edgeIntersections::checkEdges(const triSurface& surf)"
+            )   << "Edge " << edgeI << " vertices " << e
                 << " coords:" << localPoints[e[0]] << ' '
                 << localPoints[e[1]] << " has only one face connected to it:"
                 << edgeFaces[edgeI] << endl
@@ -346,10 +352,7 @@ bool Foam::edgeIntersections::rotatePerturb
             //label pointI = e[0];
 
             // Generate random vector slightly larger than tolerance.
-            vector rndVec = rndGen.vector01();
-            rndVec.x() - 0.5;
-            rndVec.y() - 0.5;
-            rndVec.z() - 0.5;
+            vector rndVec = rndGen.vector01() - vector(0.5, 0.5, 0.5);
 
             // Make sure rndVec only perp to edge
             vector n(points1[meshPoints[e[1]]] - points1[meshPoints[e[0]]]);

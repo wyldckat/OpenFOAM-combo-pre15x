@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     FixedList<T, Size>
@@ -75,6 +75,28 @@ class FixedList
 
 
 public:
+
+    //- Hashing function class
+    template<class HashT=Hash<T> >
+    class Hash
+    :
+        public Foam::Hash<FixedList<T, Size> >
+    {
+
+    public:
+
+        inline Hash();
+
+        //- Rotating Hash. From http://burtleburtle.net/bob/hash/doobs.html.
+        label operator()(const FixedList<T, Size>& fl) const;
+
+        label operator()
+        (
+            const FixedList<T, Size>& fl,
+            const label tableSize
+        ) const;
+    };
+
 
     // Constructors
 
@@ -291,41 +313,6 @@ public:
             Ostream&,
             const FixedList<T, Size>&
         );
-};
-
-
-/*---------------------------------------------------------------------------*\
-                Class Specialisation Hash<FixedList> Declaration
-\*---------------------------------------------------------------------------*/
-
-template<class T, label Size>
-class Hash<FixedList<T, Size> >
-{
-
-public:
-
-    Hash()
-    {}
-
-    //- Rotating Hash. From http://burtleburtle.net/bob/hash/doobs.html.
-    label operator()(const FixedList<T, Size>& fl) const
-    {
-        static const label farbit(8*sizeof(label)-4);
-
-        label val = Size;
-
-        for (register int i=0; i<Size; i++)
-        {
-            val = (val<<4)^(val>>farbit)^Hash<T>()(fl[i]);
-        }
-
-        return val;
-    }
-
-    label operator()(const FixedList<T, Size>& fl, const label tableSize) const
-    {
-        return mag(operator()(fl)) % tableSize;
-    }
 };
 
 

@@ -20,29 +20,30 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "DimensionSet.H"
+
+// Namespaces
+#include "FoamXNameSpaces.H"
 
 // * * * * * * * * * * * * * * * Global Operators * * * * * * * * * * * * * //
 
 void FoamX::operator==
 (
     FoamXServer::DimensionSet& fxDs,
-    const Foam::dimensionSet& ds
+    const dimensionSet& ds
 )
 {
-    fxDs.mass = ds[Foam::dimensionSet::MASS];
-    fxDs.length = ds[Foam::dimensionSet::LENGTH];
-    fxDs.time = ds[Foam::dimensionSet::TIME];
-    fxDs.temperature = ds[Foam::dimensionSet::TEMPERATURE];
-    fxDs.moles = ds[Foam::dimensionSet::MOLES];
-    fxDs.current = ds[Foam::dimensionSet::CURRENT];
-    fxDs.luminousIntensity = ds[Foam::dimensionSet::LUMINOUS_INTENSITY];
+    fxDs.mass = ds[dimensionSet::MASS];
+    fxDs.length = ds[dimensionSet::LENGTH];
+    fxDs.time = ds[dimensionSet::TIME];
+    fxDs.temperature = ds[dimensionSet::TEMPERATURE];
+    fxDs.moles = ds[dimensionSet::MOLES];
+    fxDs.current = ds[dimensionSet::CURRENT];
+    fxDs.luminousIntensity = ds[dimensionSet::LUMINOUS_INTENSITY];
 }
 
 

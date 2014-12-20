@@ -20,13 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Type
     cellShapeList
 
 Description
-    List of cellShapes and ptrList of List of cellShape.
+    List of cellShapes and PtrList of List of cellShape.
 
 \*---------------------------------------------------------------------------*/
 
@@ -35,14 +35,14 @@ Description
 
 #include "cellShape.H"
 #include "List.H"
-#include "ptrList.H"
+#include "PtrList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
     typedef List<cellShape> cellShapeList;
-    typedef ptrList<cellShapeList> cellShapeListList;
+    typedef PtrList<cellShapeList> cellShapeListList;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

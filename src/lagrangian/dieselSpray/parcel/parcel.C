@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -641,15 +641,14 @@ void parcel::updateParcelProperties
                 {
                     X()[i] = Xnew[i];
                 }
-                m() += 0.9*(mTot - m());
+                m() = mTot;
             }
             else
             {
                 m() = 0.0;
             }
         }
-        // update with slight underrelaxation for setRelaxationTimes
-        T() += 0.9*(Tnew - T());
+        T() = Tnew;
         scalar rhod = fuels.rho(pg, T(), X());
         d() = pow(6.0*m()/(Np*rhod*M_PI), 1.0/3.0);
     }

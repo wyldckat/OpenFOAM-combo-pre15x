@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     cellSet
@@ -135,8 +135,12 @@ public:
 
     // Member functions
 
+        //- Sync cellSet across coupled patches.
+        virtual void sync(const polyMesh& mesh)
+        {}
+
         //- Return max index+1.
-        virtual label maxSize(const polyMesh& mesh);
+        virtual label maxSize(const polyMesh& mesh) const;
 
         //- Update any stored data for new labels
         virtual void updateTopology(const mapPolyMesh& morphMap);

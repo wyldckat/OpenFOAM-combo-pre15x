@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     This is an optimised BICCG solver for asymmetric lduMatrices using
@@ -88,7 +88,7 @@ lduMatrix::solverPerformance BICCG::solve()
 
 #   define forField for (cell=0; cell<nCells; cell++)
 
-#   ifndef DONT_PRECONDITION
+#   ifndef DONT_IC_PRECONDITION
 
     register label face, sface;
     register label nFaces = matrix_.upper().size(), nFacesM1 = nFaces - 1;
@@ -174,7 +174,7 @@ lduMatrix::solverPerformance BICCG::solve()
     if (!solverPerf.checkConvergence(tolerance_, relTol_))
     {
         // --- Precondition diagonal as part of IC preconditioning
-#       ifndef DONT_PRECONDITION
+#       ifndef DONT_IC_PRECONDITION
         forFaces
         {
             dDPtr[uPtr[face]] -=
@@ -204,7 +204,7 @@ lduMatrix::solverPerformance BICCG::solve()
             }
 
             // --- IC preconditioning
-#           ifndef DONT_PRECONDITION
+#           ifndef DONT_IC_PRECONDITION
             forFaces
             {
                 sface = losortPtr[face];

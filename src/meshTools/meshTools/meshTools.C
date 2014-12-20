@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -83,7 +83,10 @@ Foam::vectorField Foam::meshTools::calcBoxPointNormals(const primitivePatch& pp)
         }
         else
         {
-            Warning<< "Average point normal not visible for point:"
+            WarningIn
+            (
+                "Foam::meshTools::calcBoxPointNormals(const primitivePatch& pp)"
+            )   << "Average point normal not visible for point:"
                 << pp.meshPoints()[pointI] << endl;
 
             label visOctant =
@@ -174,8 +177,11 @@ Foam::vectorField Foam::meshTools::calcBoxPointNormals(const primitivePatch& pp)
             {
                 pn[pointI] = vector::zero;
 
-                Warning
-                    << "No visible octant for point:" << pp.meshPoints()[pointI]
+                WarningIn
+                (
+                    "Foam::meshTools::calcBoxPointNormals"
+                    "(const primitivePatch& pp)"
+                )   << "No visible octant for point:" << pp.meshPoints()[pointI]
                     << " cooord:" << pp.localPoints()[pointI] << nl
                     << "Normal set to " << pn[pointI] << endl;
             }

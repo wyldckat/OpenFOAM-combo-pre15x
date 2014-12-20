@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -234,8 +234,7 @@ bool Foam::enrichedPatch::checkSupport() const
         {
             if (!pointMap().found(curFace[pointI]))
             {
-                Warning
-                    << "void enrichedPatch::checkSupport() const : "
+                WarningIn("void enrichedPatch::checkSupport()")
                     << "Point " << pointI << " of face " << faceI
                     << " global point index: " << curFace[pointI]
                     << " not supported in point map.  This is not allowed."

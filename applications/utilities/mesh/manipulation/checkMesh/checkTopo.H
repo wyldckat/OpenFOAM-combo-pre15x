@@ -1,8 +1,8 @@
     // Check if the boundary definition is unique
     mesh.boundaryMesh().checkDefinition(true);
-    Info<< endl;
+    Pout<< endl;
 
-    Info<< "Number of points:           "
+    Pout<< "Number of points:           "
         << mesh.points().size() << nl
         << "          edges:            "
         << mesh.edges().size() << nl
@@ -24,10 +24,26 @@
         << "          cell zones:       "
         << mesh.cellZones().size() << nl;
 
-    Info << "\nChecking topology and geometry ..." << endl;
+
+    if (Pstream::parRun())
+    {
+        const parallelInfo& parData = mesh.parallelData();
+
+        Info<< "Overall number of points:   " << parData.nTotalPoints() << nl
+            << "                  faces:    " << parData.nTotalFaces() << nl
+            << "                  cells:    " << parData.nTotalCells() << nl
+            << endl;
+    }
+
+
+    Pout << nl << "Checking topology and geometry ..." << endl;
 
 #include "checkBasicTopo.H"
+    Pout << nl << "Basic topo ok ..." << endl;
+
 #include "checkPatchTopo.H"
+
+    Pout << nl << "Patch topo ok ..." << endl;
 
     mesh.cells().size();
     mesh.faces().size();
@@ -44,4 +60,4 @@
     mesh.faceEdges().size();
     mesh.pointEdges().size();
 
-    Info << "Topology check done.\n" << endl;
+    Pout << "Topology check done.\n" << endl;

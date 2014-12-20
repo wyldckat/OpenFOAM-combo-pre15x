@@ -20,20 +20,9 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-
-// Foam header files.
-#include "word.H"
-#include "string.H"
-#include "IFstream.H"
-#include "wordList.H"
-#include "stringList.H"
-#include "fileNameList.H"
-#include "OStringStream.H"
 
 // FoamX header files.
 #include "FoamX.H"
@@ -98,7 +87,6 @@ FoamX::IPatchDescriptorImpl::IPatchDescriptorImpl
         (
             !patchDict.found("displayName")
          || !patchDict.found("description")
-         || !patchDict.found("patchFieldTypes")
         )
         {
             throw FoamXError
@@ -114,7 +102,6 @@ FoamX::IPatchDescriptorImpl::IPatchDescriptorImpl
         // Get the patch field properties.
         patchDict.lookup("displayName")>> displayName_;
         patchDict.lookup("description")>> description_;
-        patchFieldTypes_.read(patchDict.lookup("patchFieldTypes"));
     }
     CATCH_ALL(functionName);
 }
@@ -200,33 +187,6 @@ void FoamX::IPatchDescriptorImpl::description(const char* newDescription)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-FoamXServer::StringList* FoamX::IPatchDescriptorImpl::patchFieldTypes()
-{
-    static const char* functionName =
-        "FoamX::IPatchDescriptorImpl::patchFieldTypes()";
-
-    LogEntry log(functionName, __FILE__, __LINE__);
-
-    // Duplicate list and return.
-    return new FoamXServer::StringList(patchFieldTypes_);
-}
-
-void FoamX::IPatchDescriptorImpl::patchFieldTypes
-(
-    const FoamXServer::StringList& newList
-)
-{
-    static const char* functionName =
-        "FoamX::IPatchDescriptorImpl::patchFieldTypes"
-        "(const FoamXServer::StringList& newList)";
-
-    LogEntry log(functionName, __FILE__, __LINE__);
-
-    patchFieldTypes_ = newList;
-}
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 void FoamX::IPatchDescriptorImpl::save(DictionaryWriter& dict)
 {
     static const char* functionName =
@@ -240,7 +200,6 @@ void FoamX::IPatchDescriptorImpl::save(DictionaryWriter& dict)
 
     dict.writeEntry("displayName", displayName_);
     dict.writeEntry("description", description_);
-    dict.writeEntry("patchFieldTypes", patchFieldTypes_);
 
     dict.endSubDict();
 }

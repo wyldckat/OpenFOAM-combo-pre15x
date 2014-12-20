@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -60,23 +60,22 @@ void Foam::slidingInterface::decoupleInterface
     // Clear previous couple
     clearCouple(ref);
 
-    const polyMesh& mesh = morphEngine().mesh();
-    const faceList& faces = mesh.allFaces();
-    const cellList& cells = mesh.cells();
+    const faceList& faces = mesh().allFaces();
+    const cellList& cells = mesh().cells();
 
-    const labelList& own = mesh.allOwner();
-    const labelList& nei = mesh.allNeighbour();
+    const labelList& own = mesh().allOwner();
+    const labelList& nei = mesh().allNeighbour();
 
     // Master side
 
     const primitiveFacePatch& masterPatch =
-        mesh.faceZones()[masterFaceZoneID_.index()]();
+        mesh().faceZones()[masterFaceZoneID_.index()]();
 
     const labelList& masterPatchAddr =
-        mesh.faceZones()[masterFaceZoneID_.index()].addressing();
+        mesh().faceZones()[masterFaceZoneID_.index()].addressing();
 
     const boolList& masterPatchFlip =
-        mesh.faceZones()[masterFaceZoneID_.index()].flipMap();
+        mesh().faceZones()[masterFaceZoneID_.index()].flipMap();
 
     const labelList& masterFc = masterFaceCells();
 
@@ -113,13 +112,13 @@ void Foam::slidingInterface::decoupleInterface
     // Slave side
 
     const primitiveFacePatch& slavePatch =
-        mesh.faceZones()[slaveFaceZoneID_.index()]();
+        mesh().faceZones()[slaveFaceZoneID_.index()]();
 
     const labelList& slavePatchAddr =
-        mesh.faceZones()[slaveFaceZoneID_.index()].addressing();
+        mesh().faceZones()[slaveFaceZoneID_.index()].addressing();
 
     const boolList& slavePatchFlip =
-        mesh.faceZones()[slaveFaceZoneID_.index()].flipMap();
+        mesh().faceZones()[slaveFaceZoneID_.index()].flipMap();
 
     const labelList& slaveFc = slaveFaceCells();
 
@@ -216,15 +215,16 @@ void Foam::slidingInterface::decoupleInterface
             }
 
             // Get face zone and its flip
-            label modifiedFaceZone = mesh.faceZones().whichZone(curFaceID);
+            label modifiedFaceZone = mesh().faceZones().whichZone(curFaceID);
             bool modifiedFaceZoneFlip = false;
 
             if (modifiedFaceZone >= 0)
             {
                 modifiedFaceZoneFlip =
-                    mesh.faceZones()[modifiedFaceZone].flipMap()
+                    mesh().faceZones()[modifiedFaceZone].flipMap()
                     [
-                        mesh.faceZones()[modifiedFaceZone].whichFace(curFaceID)
+                        mesh().faceZones()[modifiedFaceZone]
+                            .whichFace(curFaceID)
                     ];
             }
 
@@ -243,7 +243,7 @@ void Foam::slidingInterface::decoupleInterface
                     own[curFaceID],         // owner
                     nei[curFaceID],         // neighbour
                     false,                  // face flip
-                    mesh.boundaryMesh().whichPatch(curFaceID), // patch for face
+                    mesh().boundaryMesh().whichPatch(curFaceID), // patch
                     false,                  // remove from zone
                     modifiedFaceZone,       // zone for face
                     modifiedFaceZoneFlip    // face flip in zone
@@ -269,7 +269,7 @@ void Foam::slidingInterface::decoupleInterface
             // if it has been removed; if not add it
             if
             (
-                mesh.faceZones().whichZone(curFaces[faceI])
+                mesh().faceZones().whichZone(curFaces[faceI])
              != slaveFaceZoneID_.index()
              && !removedFaces.found(curFaces[faceI])
 
@@ -339,15 +339,16 @@ void Foam::slidingInterface::decoupleInterface
             }
 
             // Get face zone and its flip
-            label modifiedFaceZone = mesh.faceZones().whichZone(curFaceID);
+            label modifiedFaceZone = mesh().faceZones().whichZone(curFaceID);
             bool modifiedFaceZoneFlip = false;
 
             if (modifiedFaceZone >= 0)
             {
                 modifiedFaceZoneFlip =
-                    mesh.faceZones()[modifiedFaceZone].flipMap()
+                    mesh().faceZones()[modifiedFaceZone].flipMap()
                     [
-                        mesh.faceZones()[modifiedFaceZone].whichFace(curFaceID)
+                        mesh().faceZones()[modifiedFaceZone]
+                            .whichFace(curFaceID)
                     ];
             }
 
@@ -366,7 +367,7 @@ void Foam::slidingInterface::decoupleInterface
                     own[curFaceID],         // owner
                     nei[curFaceID],         // neighbour
                     false,                  // face flip
-                    mesh.boundaryMesh().whichPatch(curFaceID), // patch for face
+                    mesh().boundaryMesh().whichPatch(curFaceID), // patch
                     false,                  // remove from zone
                     modifiedFaceZone,       // zone for face
                     modifiedFaceZoneFlip    // face flip in zone
@@ -376,10 +377,10 @@ void Foam::slidingInterface::decoupleInterface
     }
 
     // Bring all slave patch points back to life
-    const pointField& points = mesh.allPoints();
+    const pointField& points = mesh().allPoints();
 
     const labelList& slaveMeshPoints =
-        mesh.faceZones()[slaveFaceZoneID_.index()]().meshPoints();
+        mesh().faceZones()[slaveFaceZoneID_.index()]().meshPoints();
 
     forAll (slaveMeshPoints, pointI)
     {
@@ -390,7 +391,7 @@ void Foam::slidingInterface::decoupleInterface
                 slaveMeshPoints[pointI],             // point ID
                 points[slaveMeshPoints[pointI]],     // point
                 false,                               // remove from zone
-                mesh.pointZones().whichZone(slaveMeshPoints[pointI]), // zone
+                mesh().pointZones().whichZone(slaveMeshPoints[pointI]), // zone
                 true                                // in a cell
             )
         );

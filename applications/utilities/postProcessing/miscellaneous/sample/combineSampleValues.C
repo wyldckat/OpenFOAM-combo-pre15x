@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -28,9 +28,9 @@ Description
 
 
 #include "combineSampleValues.H"
-#include "unIndex.H"
 #include "Pstream.H"
 #include "ListListOps.H"
+#include "IndirectList.H"
 
 using namespace Foam;
 
@@ -40,9 +40,9 @@ using namespace Foam;
 template<class T>
 void combineSampleValues
 (
-    const ptrList<volFieldSampler<T> >& sampledFields,
+    const PtrList<volFieldSampler<T> >& sampledFields,
     const labelListList& indexSets,
-    ptrList<volFieldSampler<T> >& masterFields
+    PtrList<volFieldSampler<T> >& masterFields
 )
 {
     forAll(sampledFields, fieldI)
@@ -67,7 +67,8 @@ void combineSampleValues
                     )
                 );
 
-                masterValues[setI] = unIndex(allData, indexSets[setI]);
+                masterValues[setI] =
+                    IndirectList<T>(allData, indexSets[setI])();
             }
         }
         masterFields.hook

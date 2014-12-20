@@ -38,8 +38,8 @@ divSchemes
 {
     default         none;
     div(phi,U)      Gauss upwind;
-    div(phid,p)     Gauss Gamma2 1;
-    div(phi,e)      Gauss Gamma2 1;
+    div(phid,p)     Gauss limitedLinear 1;
+    div(phi,e)      Gauss limitedLinear 1;
 }
 
 laplacianSchemes
@@ -47,7 +47,7 @@ laplacianSchemes
     default         none;
     laplacian(mu,U) Gauss linear corrected;
     laplacian(mu,e) Gauss linear corrected;
-    laplacian((rho|A(U)),p) Gauss linear corrected;
+    laplacian((rho*1|A(U)),p) Gauss linear corrected;
 }
 
 interpolationSchemes

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Wave propagation of nearwall distance through grid. Every iteration
@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
         (
             "wDistNC",
             runTime.timeName(),
-            runTime,
+            mesh,
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
         ),
@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
             forAll(patchField, patchFaceI)
             {
                 label meshFaceI =
-                    patchField.patchMesh().patch().start() + patchFaceI;
+                    patchField.patch().patch().start() + patchFaceI;
 
                 scalar dist = faceInfo[meshFaceI].distSqr();
                 if (faceInfo[meshFaceI].valid())

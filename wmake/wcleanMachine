@@ -21,7 +21,7 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with OpenFOAM; if not, write to the Free Software Foundation,
-#     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Script
 #     wcleanMachine
@@ -48,10 +48,10 @@ then
 fi
 
 
-find `find . \( -name "Make.[A-Za-z]*" -o -name "Make" \) -type d -depth -print` \( -type d -depth -name "*$1" \) -exec rm -r {} \;
+find `find .  -depth \( -name "Make.[A-Za-z]*" -o -name "Make" \) -type d -print` -depth \( -type d -name "*$1" \) -exec rm -r {} \;
 
 
-find . -type d -depth \( -name ii_files -o -name Templates.DB \) -exec rm -rf {} \;
+find . -depth -type d \( -name ii_files -o -name Templates.DB \) -exec rm -rf {} \;
 
 
 if [ -d lib/$1 ]

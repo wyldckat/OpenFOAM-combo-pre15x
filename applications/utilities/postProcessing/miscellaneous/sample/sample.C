@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Sample field data with a choice of interpolation schemes, sampling options
@@ -70,6 +70,49 @@ Description
 using namespace Foam;
 
 
+template<class Type>
+void writeSampleFile
+(
+    const coordSet& masterSampleSet,
+    const PtrList<volFieldSampler<Type> >& masterFields,
+    const label setI,
+    const fileName& timeDir,
+    const word& writeFormat
+)
+{
+    if (masterFields.size() > 0)
+    {
+        wordList valueSetNames(masterFields.size());
+        List<const Field<Type>*> valueSets(masterFields.size());
+
+        forAll(masterFields, fieldI)
+        {
+            valueSetNames[fieldI] = masterFields[fieldI].name();
+            valueSets[fieldI] = &masterFields[fieldI][setI];
+        }
+
+        autoPtr<writer<Type> > formatter
+        (
+            writer<Type>::New(writeFormat)
+        );
+
+        fileName fName
+        (
+            timeDir/formatter().getFileName(masterSampleSet, valueSetNames)
+        );
+        
+        Info<< "Writing fields to " << fName << endl;
+        
+        formatter().write
+        (
+            masterSampleSet,
+            valueSetNames,
+            valueSets,
+            OFstream(fName)()
+        );
+    }
+}
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 // Main program:
@@ -80,6 +123,15 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 
 #   include "createTime.H"
+
+    // Get times list
+    instantList Times = runTime.times();
+
+    // set startTime and endTime depending on -time and -latestTime options
+#   include "checkTimeOptions.H"
+
+    runTime.setTime(Times[startTime], startTime);
+
 #   include "createMesh.H"
 
     //
@@ -109,19 +161,6 @@ int main(int argc, char *argv[])
     //
 
     word writeFormat(sampleDict.lookup("writeFormat"));
-
-    autoPtr<writer<scalar> > scalarFormatter
-    (
-        writer<scalar>::New(writeFormat)
-    );
-    autoPtr<writer<vector> > vectorFormatter
-    (
-        writer<vector>::New(writeFormat)
-    );
-    autoPtr<writer<tensor> > tensorFormatter
-    (
-        writer<tensor>::New(writeFormat)
-    );
 
     //
     // Construct interpolation dictionary (same interpolation for all fields)
@@ -171,12 +210,6 @@ int main(int argc, char *argv[])
 
     fileName oldPointsDir("constant");
 
-    // Get times list
-    instantList Times = runTime.times();
-
-    // set startTime and endTime depending on -time and -latestTime options
-#   include "checkTimeOptions.H"
-
     for (label i=startTime; i<endTime; i++)
     {
         runTime.setTime(Times[i], i);
@@ -207,7 +240,7 @@ int main(int argc, char *argv[])
         // Construct sampling point generators
         //
 
-        ptrList<sampleSet> sampleSets
+        PtrList<sampleSet> sampleSets
         (
             sampleDict.lookup("sampleSets"),
             sampleSet::iNew(mesh, searchEngine)
@@ -220,15 +253,15 @@ int main(int argc, char *argv[])
         }
 
         // Storage for interpolated values
-        ptrList<volFieldSampler<scalar> > sampledScalarFields
+        PtrList<volFieldSampler<scalar> > sampledScalarFields
         (
             fieldNames.size()
         );
-        ptrList<volFieldSampler<vector> > sampledVectorFields
+        PtrList<volFieldSampler<vector> > sampledVectorFields
         (
             fieldNames.size()
         );
-        ptrList<volFieldSampler<tensor> > sampledTensorFields
+        PtrList<volFieldSampler<tensor> > sampledTensorFields
         (
             fieldNames.size()
         );
@@ -549,7 +582,7 @@ int main(int argc, char *argv[])
         // ordering in indexSets.
         // Note: only master results are valid
 
-        ptrList<coordSet> masterSampleSets(sampleSets.size());
+        PtrList<coordSet> masterSampleSets(sampleSets.size());
         labelListList indexSets(sampleSets.size());
         combineSampleSets(sampleSets, masterSampleSets, indexSets);
 
@@ -557,19 +590,19 @@ int main(int argc, char *argv[])
         // Combine sampled fields from processors.
         // Note: only master results are valid
 
-        ptrList<volFieldSampler<scalar> > masterScalarFields
+        PtrList<volFieldSampler<scalar> > masterScalarFields
         (
             sampledScalarFields.size()
         );
         combineSampleValues(sampledScalarFields, indexSets, masterScalarFields);
 
-        ptrList<volFieldSampler<vector> > masterVectorFields
+        PtrList<volFieldSampler<vector> > masterVectorFields
         (
             sampledVectorFields.size()
         );
         combineSampleValues(sampledVectorFields, indexSets, masterVectorFields);
 
-        ptrList<volFieldSampler<tensor> > masterTensorFields
+        PtrList<volFieldSampler<tensor> > masterTensorFields
         (
             sampledTensorFields.size()
         );
@@ -590,107 +623,32 @@ int main(int argc, char *argv[])
 
             forAll(masterSampleSets, setI)
             {
-                // ScalarFields
+                writeSampleFile
+                (
+                    masterSampleSets[setI],
+                    masterScalarFields,
+                    setI,
+                    timeDir,
+                    writeFormat
+                );
 
-                if (masterScalarFields.size() > 0)
-                {
-                    Foam::HashTable<scalarField*> scalarValueSets;
-                    forAll(masterScalarFields, fieldI)
-                    {
-                        scalarValueSets.insert
-                        (
-                            masterScalarFields[fieldI].name(),
-                            &(masterScalarFields[fieldI][setI])
-                        );
-                    }
+                writeSampleFile
+                (
+                    masterSampleSets[setI],
+                    masterVectorFields,
+                    setI,
+                    timeDir,
+                    writeFormat
+                );
 
-                    fileName scalarFName
-                    (
-                        timeDir
-                      / scalarFormatter().getFileName
-                        (
-                            masterSampleSets[setI],
-                            scalarValueSets
-                        )
-                    );
-
-                    Info<< "Writing scalarFields to " << scalarFName << endl;
-
-                    scalarFormatter().write
-                    (
-                        masterSampleSets[setI],
-                        scalarValueSets,
-                        OFstream(scalarFName)()
-                    );
-                }
-
-                // VectorFields
-
-                if (masterVectorFields.size() > 0)
-                {
-                    Foam::HashTable<vectorField*> vectorValueSets;
-                    forAll(masterVectorFields, fieldI)
-                    {
-                        vectorValueSets.insert
-                        (
-                            masterVectorFields[fieldI].name(),
-                            &(masterVectorFields[fieldI][setI])
-                        );
-                    }
-
-                    fileName vectorFName
-                    (
-                        timeDir
-                      / vectorFormatter().getFileName
-                        (
-                            masterSampleSets[setI],
-                            vectorValueSets
-                        )
-                    );
-
-                    Info<< "Writing vectorFields to " << vectorFName << endl;
-
-                    vectorFormatter().write
-                    (
-                        masterSampleSets[setI],
-                        vectorValueSets,
-                        OFstream(vectorFName)()
-                    );
-                }
-
-                // TensorFields
-
-                if (masterTensorFields.size() > 0)
-                {
-                    Foam::HashTable<tensorField*> tensorValueSets;
-                    forAll(masterTensorFields, fieldI)
-                    {
-                        tensorValueSets.insert
-                        (
-                            masterTensorFields[fieldI].name(),
-                            &(masterTensorFields[fieldI][setI])
-                        );
-                    }
-
-                    fileName tensorFName
-                    (
-                        timeDir
-                      / tensorFormatter().getFileName
-                        (
-                            masterSampleSets[setI],
-                            tensorValueSets
-                        )
-                    );
-
-                    Info<< "Writing tensorFields to " << tensorFName << endl;
-
-                    tensorFormatter().write
-                    (
-                        masterSampleSets[setI],
-                        tensorValueSets,
-                        OFstream(tensorFName)()
-                    );
-                }
+                writeSampleFile
+                (
+                    masterSampleSets[setI],
+                    masterTensorFields,
+                    setI,
+                    timeDir,
+                    writeFormat
+                );
             }
 
             Info<< endl;

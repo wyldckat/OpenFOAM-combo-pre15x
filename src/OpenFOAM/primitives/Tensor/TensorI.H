@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Templated 3D Tensor derived from VectorSpace adding construction from
@@ -78,38 +78,38 @@ inline Tensor<Cmpt>::Tensor(Istream& is)
 template <class Cmpt>
 inline const Vector<Cmpt>&  Tensor<Cmpt>::x() const
 {
-    return (const Vector<Cmpt>&)(this->v_[XX]);
+    return reinterpret_cast<const Vector<Cmpt>&>(this->v_[XX]);
 }
 
 template <class Cmpt>
 inline const Vector<Cmpt>&  Tensor<Cmpt>::y() const
 {
-    return (const Vector<Cmpt>&)(this->v_[YX]);
+    return reinterpret_cast<const Vector<Cmpt>&>(this->v_[YX]);
 }
 
 template <class Cmpt>
 inline const Vector<Cmpt>&  Tensor<Cmpt>::z() const
 {
-    return (const Vector<Cmpt>&)(this->v_[ZX]);
+    return reinterpret_cast<const Vector<Cmpt>&>(this->v_[ZX]);
 }
 
 
 template <class Cmpt>
 inline Vector<Cmpt>&  Tensor<Cmpt>::x()
 {
-    return (Vector<Cmpt>&)(this->v_[XX]);
+    return reinterpret_cast<Vector<Cmpt>&>(this->v_[XX]);
 }
 
 template <class Cmpt>
 inline Vector<Cmpt>&  Tensor<Cmpt>::y()
 {
-    return (Vector<Cmpt>&)(this->v_[YX]);
+    return reinterpret_cast<Vector<Cmpt>&>(this->v_[YX]);
 }
 
 template <class Cmpt>
 inline Vector<Cmpt>&  Tensor<Cmpt>::z()
 {
-    return (Vector<Cmpt>&)(this->v_[ZX]);
+    return reinterpret_cast<Vector<Cmpt>&>(this->v_[ZX]);
 }
 
 

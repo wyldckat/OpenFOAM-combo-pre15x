@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass scalarTransportFoam;
+application scalarTransportFoam;
 
 startFrom       startTime;
 
@@ -38,7 +38,7 @@ writeControl    timeStep;
 
 writeInterval   50;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

@@ -29,7 +29,6 @@ Description
 #include "error.H"
 
 #include "primitiveMesh.H"
-#include "DynamicList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,7 +43,7 @@ void primitiveMesh::calcPointFaces() const
 
     if (debug)
     {
-        Info<< "primitiveMesh::calcPointFaces() : calculating pointFaces"
+        Pout<< "primitiveMesh::calcPointFaces() : calculating pointFaces"
             << endl;
     }
 
@@ -60,8 +59,9 @@ void primitiveMesh::calcPointFaces() const
     {
         const faceList& f = faces();
 
-        // Set up temporary storage
-        List<DynamicList<label, facesPerPoint_> > pf(nPoints());
+        // 1. Count number of faces per point
+
+        labelList npf(nPoints(), 0);
 
         forAll (f, faceI)
         {
@@ -80,17 +80,32 @@ void primitiveMesh::calcPointFaces() const
                         << abort(FatalError);
                 }
 
-                pf[ptI].append(faceI);
+                npf[ptI]++;
             }
         }
 
-        // Copy into a plain list
-        pfPtr_ = new labelListList(pf.size());
+
+        // 2. Size and fill pointFaces
+
+        pfPtr_ = new labelListList(npf.size());
         labelListList& pointFaceAddr = *pfPtr_;
 
-        forAll (pf, pointI)
+        forAll (pointFaceAddr, ptI)
         {
-            pointFaceAddr[pointI].transfer(pf[pointI].shrink());
+            pointFaceAddr[ptI].setSize(npf[ptI]);
+        }
+        npf = 0;
+
+        forAll (f, faceI)
+        {
+            const labelList& curPoints = f[faceI];
+
+            forAll (curPoints, pointI)
+            {
+                label ptI = curPoints[pointI];
+
+                pointFaceAddr[ptI][npf[ptI]++] = faceI;
+            }
         }
     }
 }

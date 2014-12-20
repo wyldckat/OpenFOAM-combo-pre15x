@@ -1,3 +1,0 @@
-alignPatch.C
-
-EXE = $(FOAM_APPBIN)/alignPatch

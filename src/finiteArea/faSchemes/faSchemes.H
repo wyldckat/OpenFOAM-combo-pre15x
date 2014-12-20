@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     faSchemes
@@ -53,23 +53,15 @@ class faSchemes
 :
     public IOdictionary
 {
-
-public:
-
-    enum timeSchemes
-    {
-        SS,
-        EI,
-        BD,
-        CN
-    };
-
-
 private:
 
     // Private data
 
-        timeSchemes timeScheme_;
+        dictionary ddtSchemes_;
+        ITstream defaultDdtScheme_;
+
+        dictionary d2dt2Schemes_;
+        ITstream defaultD2dt2Scheme_;
 
         dictionary interpolationSchemes_;
         ITstream defaultInterpolationScheme_;
@@ -98,6 +90,10 @@ private:
 
 public:
 
+    //- Debug switch
+    static int debug;
+
+
     // Constructors
 
         //- Construct from objectRegistry
@@ -110,7 +106,9 @@ public:
 
             const dictionary& schemesDict() const;
 
-            timeSchemes timeScheme() const;
+            ITstream& ddtScheme(const word& name) const;
+
+            ITstream& d2dt2Scheme(const word& name) const;
 
             ITstream& interpolationScheme(const word& name) const;
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -67,8 +67,6 @@ Foam::slidingInterface::typeOfMatchNames_;
 
 void Foam::slidingInterface::checkDefinition()
 {
-    const polyMesh& mesh = morphEngine().mesh();
-
     if
     (
         !masterFaceZoneID_.active()
@@ -90,8 +88,8 @@ void Foam::slidingInterface::checkDefinition()
     // Check the sizes and set up state
     if
     (
-        mesh.faceZones()[masterFaceZoneID_.index()].size() == 0
-     || mesh.faceZones()[slaveFaceZoneID_.index()].size() == 0
+        mesh().faceZones()[masterFaceZoneID_.index()].size() == 0
+     || mesh().faceZones()[slaveFaceZoneID_.index()].size() == 0
     )
     {
         FatalErrorIn("void slidingInterface::checkDefinition()")
@@ -125,7 +123,7 @@ Foam::slidingInterface::slidingInterface
 (
     const word& name,
     const label index,
-    const polyMeshMorphEngine& mme,
+    const polyMesh& mesh,
     const word& masterFaceZoneName,
     const word& slaveFaceZoneName,
     const word& cutPointZoneName,
@@ -137,36 +135,36 @@ Foam::slidingInterface::slidingInterface
     const intersection::algorithm algo
 )
 :
-    polyMeshModifier(name, index, mme, true),
+    polyMeshModifier(name, index, mesh, true),
     masterFaceZoneID_
     (
         masterFaceZoneName,
-        mme.mesh().faceZones()
+        mesh.faceZones()
     ),
     slaveFaceZoneID_
     (
         slaveFaceZoneName,
-        mme.mesh().faceZones()
+        mesh.faceZones()
     ),
     cutPointZoneID_
     (
         cutPointZoneName,
-        mme.mesh().pointZones()
+        mesh.pointZones()
     ),
     cutFaceZoneID_
     (
         cutFaceZoneName,
-        mme.mesh().faceZones()
+        mesh.faceZones()
     ),
     masterPatchID_
     (
         masterPatchName,
-        mme.mesh().boundaryMesh()
+        mesh.boundaryMesh()
     ),
     slavePatchID_
     (
         slavePatchName,
-        mme.mesh().boundaryMesh()
+        mesh.boundaryMesh()
     ),
     matchType_(tom),
     coupleDecouple_(coupleDecouple),
@@ -197,7 +195,7 @@ Foam::slidingInterface::slidingInterface
             "(\n"
             "    const word& name,\n"
             "    const label index,\n"
-            "    const polyMeshMorphEngine& mme,\n"
+            "    const polyMesh& mesh,\n"
             "    const word& masterFaceZoneName,\n"
             "    const word& slaveFaceZoneName,\n"
             "    const word& cutFaceZoneName,\n"
@@ -224,39 +222,39 @@ Foam::slidingInterface::slidingInterface
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyMeshMorphEngine& mme
+    const polyMesh& mesh
 )
 :
-    polyMeshModifier(name, index, mme, Switch(dict.lookup("active"))),
+    polyMeshModifier(name, index, mesh, Switch(dict.lookup("active"))),
     masterFaceZoneID_
     (
         dict.lookup("masterFaceZoneName"),
-        mme.mesh().faceZones()
+        mesh.faceZones()
     ),
     slaveFaceZoneID_
     (
         dict.lookup("slaveFaceZoneName"),
-        mme.mesh().faceZones()
+        mesh.faceZones()
     ),
     cutPointZoneID_
     (
         dict.lookup("cutPointZoneName"),
-        mme.mesh().pointZones()
+        mesh.pointZones()
     ),
     cutFaceZoneID_
     (
         dict.lookup("cutFaceZoneName"),
-        mme.mesh().faceZones()
+        mesh.faceZones()
     ),
     masterPatchID_
     (
         dict.lookup("masterPatchName"),
-        mme.mesh().boundaryMesh()
+        mesh.boundaryMesh()
     ),
     slavePatchID_
     (
         dict.lookup("slavePatchName"),
-        mme.mesh().boundaryMesh()
+        mesh.boundaryMesh()
     ),
     matchType_(typeOfMatchNames_.read((dict.lookup("typeOfMatch")))),
     coupleDecouple_(dict.lookup("coupleDecouple")),
@@ -366,12 +364,7 @@ bool Foam::slidingInterface::changeTopology() const
         return true;
     }
 
-    if
-    (
-        attached_
-     && !morphEngine().mesh().moving()
-     && !morphEngine().mesh().morphing()
-    )
+    if (attached_ && !mesh().moving() && !mesh().morphing())
     {
         // If the mesh is not moving or morphing and the interface is
         // already attached, the topology will not change
@@ -427,11 +420,9 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
             << "Adjusting motion points." << endl;
     }
 
-    const polyMesh& mesh = morphEngine().mesh();
-
     // Get point from the cut zone
     const labelList& cutPoints =
-        mesh.pointZones()[cutPointZoneID_.index()].addressing();
+        mesh().pointZones()[cutPointZoneID_.index()].addressing();
 
     if (cutPoints.size() > 0 && !projectedSlavePointsPtr_)
     {
@@ -446,15 +437,15 @@ void Foam::slidingInterface::modifyMotionPoints(pointField& motionPoints) const
         const Map<Pair<edge> >& cpepm = cutPointEdgePairMap();
 
         const Map<label>& slaveZonePointMap =
-            mesh.faceZones()[slaveFaceZoneID_.index()]().meshPointMap();
+            mesh().faceZones()[slaveFaceZoneID_.index()]().meshPointMap();
 
         const primitiveFacePatch& masterPatch =
-            mesh.faceZones()[masterFaceZoneID_.index()]();
+            mesh().faceZones()[masterFaceZoneID_.index()]();
         const edgeList& masterEdges = masterPatch.edges();
         const pointField& masterLocalPoints = masterPatch.localPoints();
 
         const primitiveFacePatch& slavePatch =
-            mesh.faceZones()[slaveFaceZoneID_.index()]();
+            mesh().faceZones()[slaveFaceZoneID_.index()]();
         const edgeList& slaveEdges = slavePatch.edges();
         const pointField& slaveLocalPoints = slavePatch.localPoints();
         const vectorField& slavePointNormals = slavePatch.pointNormals();
@@ -656,15 +647,13 @@ void Foam::slidingInterface::updateTopology(const mapPolyMesh& m)
     }
 
     // Mesh has changed topologically.  Update local topological data
-    const polyMesh& mesh = morphEngine().mesh();
+    masterFaceZoneID_.update(mesh().faceZones());
+    slaveFaceZoneID_.update(mesh().faceZones());
+    cutPointZoneID_.update(mesh().pointZones());
+    cutFaceZoneID_.update(mesh().faceZones());
 
-    masterFaceZoneID_.update(mesh.faceZones());
-    slaveFaceZoneID_.update(mesh.faceZones());
-    cutPointZoneID_.update(mesh.pointZones());
-    cutFaceZoneID_.update(mesh.faceZones());
-
-    masterPatchID_.update(mesh.boundaryMesh());
-    slavePatchID_.update(mesh.boundaryMesh());
+    masterPatchID_.update(mesh().boundaryMesh());
+    slavePatchID_.update(mesh().boundaryMesh());
 
     if (!attached())
     {

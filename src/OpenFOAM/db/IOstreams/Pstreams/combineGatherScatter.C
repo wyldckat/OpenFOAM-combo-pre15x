@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Variant of gather, scatter.
@@ -50,7 +50,7 @@ void Pstream::combineGather
 (
     const List<Pstream::commsStruct>& comms,
     T& Value,
-    CombineOp cop
+    const CombineOp& cop
 )
 {
     if (Pstream::parRun())
@@ -69,8 +69,7 @@ void Pstream::combineGather
 
             if (debug)
             {
-                Sout<< '[' << Pstream::myProcNo() << ']'
-                    << " received from "
+                Pout<< " received from "
                     << belowID << " data:" << value << endl;
             }
             cop(Value, value);
@@ -84,8 +83,7 @@ void Pstream::combineGather
 
             if (debug)
             {
-                Sout<< '[' << Pstream::myProcNo() << ']'
-                    << " sending to " << myComm.above()
+                Pout<< " sending to " << myComm.above()
                     << " data:" << Value << endl;
             }
             toAbove << Value;
@@ -95,7 +93,7 @@ void Pstream::combineGather
 
 
 template <class T, class CombineOp>
-void Pstream::combineGather(T& Value, CombineOp cop)
+void Pstream::combineGather(T& Value, const CombineOp& cop)
 {
     if (Pstream::nProcs() < Pstream::nProcsSimpleSum)
     {
@@ -121,12 +119,11 @@ void Pstream::combineScatter(const List<Pstream::commsStruct>& comms, T& Value)
         {
             //IPstream fromAbove(myComm.above(), sizeof(T));
             IPstream fromAbove(myComm.above());
-            Value = (const T&)T(fromAbove);
+            Value = T(fromAbove);
 
             if (debug)
             {
-                Sout<< '[' << Pstream::myProcNo() << ']'
-                    << " received from "
+                Pout<< " received from "
                     << myComm.above() << " data:" << Value << endl;
             }
         }
@@ -143,8 +140,7 @@ void Pstream::combineScatter(const List<Pstream::commsStruct>& comms, T& Value)
 
             if (debug)
             {
-                Sout<< '[' << Pstream::myProcNo() << ']'
-                    << " sent to " << belowID << " data:" << Value << endl;
+                Pout<< " sent to " << belowID << " data:" << Value << endl;
             }
         }
     }

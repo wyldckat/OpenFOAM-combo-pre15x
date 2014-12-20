@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Translates FOAM data to EnSight format
@@ -87,6 +87,14 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+
+    // get the available time-steps
+    instantList Times = runTime.times();
+
+#   include "checkTimeOptions.H"
+
+    runTime.setTime(Times[startTime], startTime);
+
 #   include "createMesh.H"
 
     const word postProcDir = "EnSight";
@@ -125,16 +133,11 @@ int main(int argc, char *argv[])
 
     OFstream& ensightCaseFile = *ensightCaseFilePtr;
 
-    // get the available time-steps
-    instantList Times = runTime.times();
-
-#   include "checkTimeOptions.H"
-
-    // Set Time
-    runTime.setTime(Times[runTime.times().size()-1], runTime.times().size()-1);
-
     // Construct the EnSight mesh
     ensightMesh eMesh(mesh, args);
+
+    // Set Time to the last time before looking for the spray objects
+    runTime.setTime(Times[Times.size()-1], Times.size()-1);
 
     IOobjectList objects(mesh, runTime.timeName());
     IOobjectList sprayObjects(mesh, runTime.timeName(), "lagrangian");
@@ -160,8 +163,10 @@ int main(int argc, char *argv[])
 
 #   include "ensightCaseHeader.H"
 
+    label nTimeSteps = 0;
     for (label n=startTime; n<endTime; n++)
     {
+        nTimeSteps++;
         runTime.setTime(Times[n], n);
         label timeIndex = n - startTime;
 

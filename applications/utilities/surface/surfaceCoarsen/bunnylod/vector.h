@@ -47,10 +47,10 @@ class Quaternion{
  public:
 	 float r,x,y,z;
 	 Quaternion(){x=y=z=0.0f;r=1.0f;};
-	 Quaternion(Vector v,float t){v=normalize(v);r=(float)cos(t/2.0);v=v*(float)sin(t/2.0);x=v.x;y=v.y;z=v.z;};
+	 Quaternion(Vector v,float t){v=normalize(v);r=float(cos(t/2.0));v=v*float(sin(t/2.0));x=v.x;y=v.y;z=v.z;};
 	 Quaternion(float _r,float _x,float _y,float _z){r=_r;x=_x;y=_y;z=_z;};
-	 float angle(){return (float)(acos(r)*2.0);}
-	 Vector axis(){Vector a(x,y,z); return a*(float)(1/sin(angle()/2.0));}
+	 float angle(){return float(acos(r)*2.0);}
+	 Vector axis(){Vector a(x,y,z); return a*float(1/sin(angle()/2.0));}
 	 Vector xdir(){return Vector(1-2*(y*y+z*z),  2*(x*y+r*z),  2*(x*z-r*y));}
 	 Vector ydir(){return Vector(  2*(x*y-r*z),1-2*(x*x+z*z),  2*(y*z+r*x));}
 	 Vector zdir(){return Vector(  2*(x*z+r*y),  2*(y*z-r*x),1-2*(x*x+y*y));}

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Type
     typeInfo
@@ -39,6 +39,12 @@ Description
 
     wraps dynamic_cast to handle the bad_cast exception and generate a
     FatalError.
+
+    The isA function:
+
+        isA<T>(r)
+
+    returns true if r is of type T or derived from type T.
 
 \*---------------------------------------------------------------------------*/
 
@@ -101,6 +107,20 @@ inline To& refCast(From& r)
 
         return dynamic_cast<To&>(r);
     }
+}
+
+
+template<class TestType, class Type>
+inline bool isType(const Type& t)
+{
+    return typeid(t) == typeid(TestType);
+}
+
+
+template<class TestType, class Type>
+inline bool isA(const Type& t)
+{
+    return dynamic_cast<const TestType*>(&t);
 }
 
 

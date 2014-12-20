@@ -22,15 +22,15 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass oodles;
+application oodles;
 
 startFrom       startTime;
 
 startTime       0;
 
-stopAt          nextWrite;
+stopAt          endTime;
 
-endTime         10;
+endTime         0.1;
 
 deltaT          1e-05;
 
@@ -38,7 +38,7 @@ writeControl    timeStep;
 
 writeInterval   100;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

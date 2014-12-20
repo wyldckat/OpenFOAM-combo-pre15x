@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     icoFoam
@@ -49,7 +49,7 @@ int main(int argc, char *argv[])
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-    Serr<< "\nStarting transfers\n" << endl;
+    Perr<< "\nStarting transfers\n" << endl;
 
     vector data(0, 1, 2);
 
@@ -58,18 +58,18 @@ int main(int argc, char *argv[])
         if (Pstream::myProcNo() != Pstream::masterNo())
         {
             {
-                Serr<< "slave sending to master "
+                Perr<< "slave sending to master "
                     << Pstream::masterNo() << endl;
                 OPstream toMaster(Pstream::masterNo());
                 toMaster << data;
             }
 
-            Serr<< "slave receiving from master " 
+            Perr<< "slave receiving from master " 
                 << Pstream::masterNo() << endl;
             IPstream fromMaster(Pstream::masterNo());
             fromMaster >> data;
 
-            Serr<< data << endl;
+            Perr<< data << endl;
         }
         else
         {
@@ -80,11 +80,11 @@ int main(int argc, char *argv[])
                 slave++
             )
             {
-                Serr << "master receiving from slave " << slave << endl;
+                Perr << "master receiving from slave " << slave << endl;
                 IPstream fromSlave(slave);
                 fromSlave >> data;
 
-                Serr<< data << endl;
+                Perr<< data << endl;
             }
 
             for
@@ -94,7 +94,7 @@ int main(int argc, char *argv[])
                 slave++
             )
             {
-                Serr << "master sending to slave " << slave << endl;
+                Perr << "master sending to slave " << slave << endl;
                 OPstream toSlave(slave);
                 toSlave << data;
             }

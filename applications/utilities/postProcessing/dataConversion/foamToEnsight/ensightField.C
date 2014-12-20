@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -335,12 +335,14 @@ void writePatchField
     }
     else
     {
+        faceSets nullFaceSets;
+
         writePatchField
         (
             Field<Type>(),
             -1,
             ensightPatchi,
-            (const faceSets&)faceSets(),
+            nullFaceSets,
             nPatchPrims.find(patchName)(),
             patchProcessors,
             ensightFile
@@ -505,6 +507,8 @@ void ensightField
             }
             else if (Pstream::master())
             {
+                faceSets nullFaceSet;
+
                 if
                 (
                     writePatchField
@@ -512,7 +516,7 @@ void ensightField
                         Field<Type>(),
                         -1,
                         ensightPatchi,
-                        (const faceSets&)faceSets(),
+                        nullFaceSet,
                         nPatchPrims.find(patchName)(),
                         patchProcessors,
                         ensightFile

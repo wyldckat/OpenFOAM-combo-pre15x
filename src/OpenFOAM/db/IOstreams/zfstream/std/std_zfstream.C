@@ -223,15 +223,13 @@ gzfilebuf::int_type gzfilebuf::underflow()
     // If the input buffer is empty then try to fill it.
     if (gptr() != 0 && gptr() < egptr())
     {
-        return (unsigned char) *gptr();
+        return *gptr();
     }
     else
     {
-        //Foam::Info<< int(gptr()) << " " << int(egptr()) << Foam::endl;
-
         return 
             fillbuf()
-         == traits_type::eof() ? traits_type::eof() : (unsigned char) *gptr();
+         == traits_type::eof() ? traits_type::eof() : *gptr();
     }
 }
 

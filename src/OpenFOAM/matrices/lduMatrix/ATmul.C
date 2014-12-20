@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Multiply a given vector (second argument) by the matrix or its transpose
@@ -46,51 +46,42 @@ void lduMatrix::Amul
     const direction cmpt
 ) const
 {
+    scalar* restrict ApsiPtr = Apsi.begin();
+
     const scalarField& psi = tpsi();
-    const scalarField& Diag = diag();
+    const scalar* restrict psiPtr = psi.begin();
 
-    for (register label cell=0; cell<psi.size(); cell++)
+    const scalar* restrict diagPtr = diag().begin();
+
+    const label* restrict uPtr = lduAddr_.upperAddr().begin();
+    const label* restrict lPtr = lduAddr_.lowerAddr().begin();
+
+    const scalar* restrict lowerPtr = lower().begin();
+    const scalar* restrict upperPtr = upper().begin();
+
+    register const label nCells = diag().size();
+    register const label nFaces = upper().size();
+
+    for (register label cell=0; cell<nCells; cell++)
     {
-        Apsi[cell] = Diag[cell]*psi[cell];
+        ApsiPtr[cell] = diagPtr[cell]*psiPtr[cell];
     }
 
-
-#   ifndef scalarATmul
-
-    const label* restrict U = lduAddr_.upperAddr().begin();
-    const label* restrict L = lduAddr_.lowerAddr().begin();
-
-    const scalar* restrict Lower = lower().begin();
-    const scalar* restrict Upper = upper().begin();
-    const scalar* restrict Psi = psi.begin();
-    scalar* restrict APsi = Apsi.begin();
-
-    register label nFaces = upper().size();
+    // Initialise the update of coupled interfaces
+    initMatrixInterfaces
+    (
+        coupleBouCoeffs,
+        interfaces,
+        psi,
+        Apsi,
+        cmpt
+    );
 
     for (register label face=0; face<nFaces; face++)
     {
-        APsi[U[face]] += Lower[face]*Psi[L[face]];
-        APsi[L[face]] += Upper[face]*Psi[U[face]];
+        ApsiPtr[uPtr[face]] += lowerPtr[face]*psiPtr[lPtr[face]];
+        ApsiPtr[lPtr[face]] += upperPtr[face]*psiPtr[uPtr[face]];
     }
-
-#   else
-
-    const scalarField& Lower = lower();
-    const scalarField& Upper = upper();
-    scalarField& Apsi = tApsi();
-
-    const unallocLabelList& u = lduAddr_.upperAddr();
-    const unallocLabelList& l = lduAddr_.lowerAddr();
-
-    register label nFaces = upper().size();
-
-    for (register label face=0; face<nFaces; face++)
-    {
-        Apsi[u[face]] += Lower[face]*psi[l[face]];
-        Apsi[l[face]] += Upper[face]*psi[u[face]];
-    }
-
-#   endif
 
     // Update couple interfaces
     updateMatrixInterfaces
@@ -115,51 +106,42 @@ void lduMatrix::Tmul
     const direction cmpt
 ) const
 {
-    const scalarField& psi = tpsi();
-    const scalarField& Diag = diag();
+    scalar* restrict TpsiPtr = Tpsi.begin();
 
-    for (register label cell=0; cell<psi.size(); cell++)
+    const scalarField& psi = tpsi();
+    const scalar* restrict psiPtr = psi.begin();
+
+    const scalar* restrict diagPtr = diag().begin();
+
+    const label* restrict uPtr = lduAddr_.upperAddr().begin();
+    const label* restrict lPtr = lduAddr_.lowerAddr().begin();
+
+    const scalar* restrict lowerPtr = lower().begin();
+    const scalar* restrict upperPtr = upper().begin();
+
+    register const label nCells = diag().size();
+    register const label nFaces = upper().size();
+
+    for (register label cell=0; cell<nCells; cell++)
     {
-        Tpsi[cell] = Diag[cell]*psi[cell];
+        TpsiPtr[cell] = diagPtr[cell]*psiPtr[cell];
     }
 
-
-#   ifndef scalarATmul
-
-    const label* restrict U = lduAddr_.upperAddr().begin();
-    const label* restrict L = lduAddr_.lowerAddr().begin();
-
-    const scalar* restrict Lower = lower().begin();
-    const scalar* restrict Upper = upper().begin();
-    const scalar* restrict Psi = psi.begin();
-    scalar* restrict TPsi = Tpsi.begin();
-
-    register label nFaces = upper().size();
+    // Initialise the update of coupled interfaces
+    initMatrixInterfaces
+    (
+        coupleIntCoeffs,
+        interfaces,
+        psi,
+        Tpsi,
+        cmpt
+    );
 
     for (register label face=0; face<nFaces; face++)
     {
-        TPsi[U[face]] += Upper[face]*Psi[L[face]];
-        TPsi[L[face]] += Lower[face]*Psi[U[face]];
+        TpsiPtr[uPtr[face]] += upperPtr[face]*psiPtr[lPtr[face]];
+        TpsiPtr[lPtr[face]] += lowerPtr[face]*psiPtr[uPtr[face]];
     }
-
-#   else
-
-    const scalarField& Lower = lower();
-    const scalarField& Upper = upper();
-    scalarField& Tpsi = tTpsi();
-
-    const unallocLabelList& u = lduAddr_.upperAddr();
-    const unallocLabelList& l = lduAddr_.lowerAddr();
-
-    register label nFaces = upper().size();
-
-    for (register label face=0; face<l_.size(); face++)
-    {
-        Tpsi[u[face]] += Upper[face]*psi[l[face]];
-        Tpsi[l[face]] += Lower[face]*psi[u[face]];
-    }
-
-#   endif
 
     // Update couple interfaces
     updateMatrixInterfaces

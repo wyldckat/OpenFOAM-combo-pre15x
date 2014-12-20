@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     faMesh
@@ -37,7 +37,6 @@ SourceFiles
 #ifndef faMesh_H
 #define faMesh_H
 
-#include "IOdictionary.H"
 #include "faBoundaryMesh.H"
 #include "faProcTopology.H"
 #include "edgeList.H"
@@ -238,10 +237,14 @@ public:
     // Declare name of the class and it's debug switch
     TypeName("faMesh");
 
+    //- Return the mesh sub-directory name (usually "faMesh")
+    static word meshSubDir;
+
 
     // Constructors
 
-        //- Construct from objectRegistry, polyMesh reference and read/write options
+        //- Construct from objectRegistry, polyMesh reference
+        //  and read/write options
         faMesh
         (
             const polyMesh& m,
@@ -254,7 +257,6 @@ public:
         faMesh
         (
             const polyMesh& m,
-            const fileName& meshLocation,
             const labelList& faceLabels,
             IOobject::readOption r=IOobject::NO_READ,
             IOobject::writeOption w=IOobject::AUTO_WRITE
@@ -267,6 +269,15 @@ public:
 
 
     // Member Functions
+
+        // Database
+
+            //- Return the local mesh directory (dbDir()/meshSubDir)
+            fileName meshDir() const;
+
+            //- Return reference to time
+            const Time& time() const;
+
 
             //- Mesh size parameters
 
@@ -326,9 +337,6 @@ public:
 
         //- Return reference to boundary mesh
         faBoundaryMesh& boundary();
-
-        //- Return reference to underlying polyMesh
-        const polyMesh& basicMesh() const;
 
         //- Return faMesh face labels
         const labelList& faceLabels() const
@@ -430,8 +438,13 @@ public:
 
         // Edit
 
-            //- Write mesh using IO settings from the database
-            bool write() const;
+            //- Write mesh
+            bool write
+            (
+                IOstream::streamFormat fmt,
+                IOstream::versionNumber ver,
+                IOstream::compressionType cmp
+            ) const;
 
 
     // Member Operators

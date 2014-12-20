@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     edge
@@ -112,29 +112,13 @@ public:
 };
 
 
-/*---------------------------------------------------------------------------*\
-                Class Specialisation Hash<edge> Declaration
-\*---------------------------------------------------------------------------*/
-
+//- Hash<edge> specialisation 
+//  Simple commutative hash.
 template<>
-class Hash<edge>
+inline label Hash<edge>::operator()(const edge& e) const
 {
-public:
-
-    Hash()
-    {}
-
-    //- Simple commutative hash.
-    label operator()(const edge& e) const
-    {
-        return e[0]*e[1] + e[0]+e[1];
-    }
-
-    label operator()(const edge& e, const label tableSize) const
-    {
-        return mag(operator()(e)) % tableSize;
-    }
-};
+    return e[0]*e[1] + e[0]+e[1];
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -15,12 +15,17 @@ processorFaPatch              = $(derivedFaPatches)/processorFaPatch
 
 faPatchFields                 = $(fields)/faPatchFields
 faPatchField                  = $(faPatchFields)/faPatchField
+
 basicFaPatchFields            = $(faPatchFields)/basicFaPatchFields
 calculated                    = $(basicFaPatchFields)/calculated
 coupled                       = $(basicFaPatchFields)/coupled
 zeroGradient                  = $(basicFaPatchFields)/zeroGradient
 fixedValue                    = $(basicFaPatchFields)/fixedValue
+fixedGradient                 = $(basicFaPatchFields)/fixedGradient
 empty                         = $(basicFaPatchFields)/empty
+
+derivedFaPatchFields          = $(faPatchFields)/derivedFaPatchFields
+fixedValueOutflow             = $(derivedFaPatchFields)/fixedValueOutflow
 
 areaMesh                      = $(meshes)/areaMesh
 edgeMesh                      = $(meshes)/edgeMesh
@@ -43,6 +48,14 @@ faScalarMatrix                = $(faMatrices)/faScalarMatrix
 fa                            = fa
 fac                           = fac
 
+faDdtSchemes                  = faDdtSchemes
+faDdtScheme                   = $(faDdtSchemes)/faDdtScheme
+steadyStateFaDdtScheme        = $(faDdtSchemes)/steadyStateFaDdtScheme
+EulerFaDdtScheme              = $(faDdtSchemes)/EulerFaDdtScheme
+backwardFaDdtScheme           = $(faDdtSchemes)/backwardFaDdtScheme
+CrankNicholsonFaDdtScheme     = $(faDdtSchemes)/CrankNicholsonFaDdtScheme
+boundedBackwardFaDdtScheme    = $(faDdtSchemes)/boundedBackwardFaDdtScheme
+
 faDivSchemes                  = faDivSchemes
 faDivScheme                   = $(faDivSchemes)/faDivScheme
 gaussFaDivScheme              = $(faDivSchemes)/gaussFaDivScheme
@@ -54,6 +67,7 @@ gaussFaGrad                   = $(faGradSchemes)/gaussFaGrad
 lnGradSchemes                 = lnGradSchemes
 lnGradScheme                  = $(lnGradSchemes)/lnGradScheme
 correctedLnGrad               = $(lnGradSchemes)/correctedLnGrad
+fourthLnGrad                  = $(lnGradSchemes)/fourthLnGrad
 
 faLaplacianSchemes            = faLaplacianSchemes
 faLaplacianScheme             = $(faLaplacianSchemes)/faLaplacianScheme
@@ -68,6 +82,13 @@ $(fa)/fa.C
 
 $(faSchemes)/faSchemes.C
 
+$(faDdtScheme)/faDdtSchemes.C
+$(steadyStateFaDdtScheme)/steadyStateFaDdtSchemes.C
+$(EulerFaDdtScheme)/EulerFaDdtSchemes.C
+$(backwardFaDdtScheme)/backwardFaDdtSchemes.C
+$(CrankNicholsonFaDdtScheme)/CrankNicholsonFaDdtSchemes.C
+$(boundedBackwardFaDdtScheme)/boundedBackwardFaDdtScheme.C
+
 $(faDivScheme)/faDivSchemes.C
 $(gaussFaDivScheme)/gaussFaDivSchemes.C
 
@@ -76,6 +97,7 @@ $(gaussFaGrad)/gaussFaGrads.C
 
 $(lnGradScheme)/lnGradSchemes.C
 $(correctedLnGrad)/correctedLnGrads.C
+$(fourthLnGrad)/fourthLnGrads.C
 
 $(faLaplacianScheme)/faLaplacianSchemes.C
 $(gaussFaLaplacianScheme)/gaussFaLaplacianSchemes.C
@@ -97,14 +119,19 @@ $(faMatrices)/faMatrices.C
 $(edgeInterpolation)/edgeInterpolation.C
 $(schemes)/edgeInterpolationScheme/edgeInterpolationSchemes.C
 $(schemes)/linear/linearEdgeInterpolationMake.C
+$(schemes)/skewLinear/skewLinearEdgeInterpolationMake.C
 $(schemes)/upwind/upwindEdgeInterpolationMake.C
-$(schemes)/Gamma2/Gamma2EdgeInterpolationMake.C
+$(schemes)/linearUpwind/linearUpwindEdgeInterpolationMake.C
+$(schemes)/Gamma/GammaEdgeInterpolationMake.C
+$(schemes)/blended/blendedEdgeInterpolationMake.C
 
 $(faPatchField)/faPatchFields.C
 $(calculated)/calculatedFaPatchFields.C
 $(coupled)/coupledFaPatchFields.C
 $(zeroGradient)/zeroGradientFaPatchFields.C
 $(fixedValue)/fixedValueFaPatchFields.C
+$(fixedValueOutflow)/fixedValueOutflowFaPatchFields.C
+$(fixedGradient)/fixedGradientFaPatchFields.C
 $(empty)/emptyFaPatchFields.C
 
 

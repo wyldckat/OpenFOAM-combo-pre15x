@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     reconstructParMesh
@@ -141,7 +141,7 @@ int main(int argc, char *argv[])
 
 
     // Read all databases.
-    ptrList<Time> databases(nProcs);
+    PtrList<Time> databases(nProcs);
 
     forAll (databases, procI)
     {
@@ -161,27 +161,34 @@ int main(int argc, char *argv[])
     }
 
     // Read processor0
-    Info<< "Reading mesh to add from 0"
+    Info<< "Reading master mesh from " << databases[0].caseName()
         << " for time = " << databases[0].value()
         << endl;
 
-    polyMesh proc0Mesh
+    autoPtr<polyMesh> proc0MeshPtr
     (
-        IOobject
+        new polyMesh
         (
-            polyMesh::meshSubDir,
-            databases[0].timeName(),
-            databases[0]
+            IOobject
+            (
+                polyMesh::defaultRegion,
+                databases[0].timeName(),
+                databases[0],
+                IOobject::MUST_READ,
+                IOobject::NO_WRITE,
+                false
+            )
         )
-    );
+    );    
 
-    Info<< "Create master mesh as copy of processor0 mesh\n" << endl;
     mergePolyMesh masterMesh
     (
         runTime,
-        proc0Mesh,
+        proc0MeshPtr(),
         IOobject::AUTO_WRITE
     );
+
+    proc0MeshPtr.reset(NULL);
 
     filterPatches(masterMesh);
 
@@ -189,7 +196,8 @@ int main(int argc, char *argv[])
     for (label procI = 1; procI < nProcs; procI++)
     {
         {
-            Info<< "Reading mesh to add from " << procI
+            Info<< "Reading mesh to add from "
+                << databases[procI].caseName()
                 << " for time = " << databases[procI].value()
                 << endl;
 
@@ -197,7 +205,7 @@ int main(int argc, char *argv[])
             (
                 IOobject
                 (
-                    polyMesh::meshSubDir,
+                    polyMesh::defaultRegion,
                     databases[procI].timeName(),
                     databases[procI]
                 )
@@ -206,17 +214,19 @@ int main(int argc, char *argv[])
             // Add elements to mesh
             Info<< "Adding to master mesh" << endl;
             masterMesh.addMesh(meshToAdd);
-
-            runTime++;
-
-            masterMesh.merge();
-            //masterMesh.resetMorph();
-            Info<< "Added mesh from processor " << procI << endl;
         }
+
+        runTime++;
+
+        masterMesh.merge();
+        //masterMesh.resetMorph();
+        Info<< "Added mesh from processor " << procI << endl;
 
         // Stitch this processor with all other processors already there
         for (label masterProcI = 0; masterProcI < procI; masterProcI++)
         {
+            Info<< endl;
+
             // Construct some names
             word masterPatchName
             (
@@ -249,7 +259,7 @@ int main(int argc, char *argv[])
             if
             (
                 (masterId == -1 && slaveId != -1)
-             && (masterId != -1 && slaveId == -1)
+             || (masterId != -1 && slaveId == -1)
             )
             {
                 FatalErrorIn(args.executable())
@@ -322,7 +332,7 @@ int main(int argc, char *argv[])
                 (
                     "couple",
                     0,
-                    masterMesh.morphEngine(),
+                    masterMesh,
                     cutZoneName,
                     masterPatchName,
                     slavePatchName
@@ -373,7 +383,7 @@ int main(int argc, char *argv[])
 
 
     // All processor to mastermesh
-    ptrList<labelIOList> pointProcAddressing(nProcs);
+    PtrList<labelIOList> pointProcAddressing(nProcs);
 
 
     forAll(databases, procI)
@@ -385,7 +395,7 @@ int main(int argc, char *argv[])
         (
             IOobject
             (
-                polyMesh::meshSubDir,
+                polyMesh::defaultRegion,
                 databases[procI].timeName(),
                 databases[procI]
             )
@@ -400,10 +410,12 @@ int main(int argc, char *argv[])
                     IOobject
                     (
                         "pointProcAddressing",
-                        procMesh.cellsInstance()/procMesh.name(),
+                        procMesh.cellsInstance(),
+                        polyMesh::meshSubDir,
                         procMesh,
                         IOobject::NO_READ,
-                        IOobject::AUTO_WRITE
+                        IOobject::AUTO_WRITE,
+                        false                       // do not register
                     )
                 )
             );
@@ -429,12 +441,51 @@ int main(int argc, char *argv[])
 
             Info<< "Writing addressing from processor " << procI
                 << " mesh points to merged mesh points to "
-                << pointProcAddressing[procI].instance()
-                 / pointProcAddressing[procI].name()
-                << endl;
+                << pointProcAddressing[procI].objectPath() << endl;
 
             pointProcAddressing[procI].write();
         }
+
+
+        // Match cells
+        labelIOList cellProcAddressing
+        (
+            IOobject
+            (
+                "cellProcAddressing",
+                procMesh.cellsInstance(),
+                polyMesh::meshSubDir,
+                procMesh,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE,
+                false                       // do not register
+            )
+        );
+
+        bool matchOk =
+            matchPoints
+            (
+                procMesh.cellCentres(),
+                masterMesh.cellCentres(),
+                scalarField(procMesh.nCells(), typDim),     // tolerance
+                false,                                      // verbose
+                cellProcAddressing
+            );
+
+        if (!matchOk)
+        {
+            FatalErrorIn(args.executable())
+                << "Cellcentres on processor " << procI
+                << " mesh do not match up "
+                << " with points on reconstructed mesh to within tolerance "
+                << typDim << exit(FatalError);
+        }
+
+        Info<< "Writing addressing from processor " << procI
+            << " mesh cells to merged mesh cells to "
+            << cellProcAddressing.objectPath() << endl;
+
+        cellProcAddressing.write();
 
 
         // Match faces
@@ -444,11 +495,14 @@ int main(int argc, char *argv[])
                 IOobject
                 (
                     "faceProcAddressing",
-                    procMesh.cellsInstance()/procMesh.name(),
+                    procMesh.cellsInstance(),
+                    polyMesh::meshSubDir,
                     procMesh,
                     IOobject::NO_READ,
-                    IOobject::AUTO_WRITE
-                )
+                    IOobject::AUTO_WRITE,
+                    false                       // do not register
+                ),
+                procMesh.nFaces()
             );
 
             bool matchOk =
@@ -470,59 +524,44 @@ int main(int argc, char *argv[])
                     << typDim << exit(FatalError);
             }
 
-            Info<< "Writing addressing from processor " << procI
-                << " mesh faces to merged mesh faces to "
-                << faceProcAddressing.instance()
-                 / faceProcAddressing.name()
-                << endl;
-
-            faceProcAddressing.write();
-        }
-
-
-
-        // Match cells
-        {
-            labelIOList cellProcAddressing
-            (
-                IOobject
-                (
-                    "cellProcAddressing",
-                    procMesh.cellsInstance()/procMesh.name(),
-                    procMesh,
-                    IOobject::NO_READ,
-                    IOobject::AUTO_WRITE
-                )
-            );
-
-            bool matchOk =
-                matchPoints
-                (
-                    procMesh.cellCentres(),
-                    masterMesh.cellCentres(),
-                    scalarField(procMesh.nCells(), typDim),     // tolerance
-                    false,                                      // verbose
-                    cellProcAddressing
-                );
-
-            if (!matchOk)
+            // Now add turning index to faceProcAddressing.
+            // See reconstrurPar for meaning of turning index.
+            forAll(faceProcAddressing, procFaceI)
             {
-                FatalErrorIn(args.executable())
-                    << "Cellcentres on processor " << procI
-                    << " mesh do not match up "
-                    << " with points on reconstructed mesh to within tolerance "
-                    << typDim << exit(FatalError);
+                label masterFaceI = faceProcAddressing[procFaceI];
+
+                if
+                (
+                   !procMesh.isInternalFace(procFaceI)
+                 && masterMesh.isInternalFace(masterFaceI)
+                )
+                {
+                    // proc face is now external but used to be internal face.
+                    // Check if we have owner or neighbour.
+
+                    label procOwn = procMesh.faceOwner()[procFaceI];
+                    label masterOwn = masterMesh.faceOwner()[masterFaceI];
+
+                    if (cellProcAddressing[procOwn] == masterOwn)
+                    {
+                        // No turning. Offset by 1.
+                        faceProcAddressing[procFaceI]++;
+                    }
+                    else
+                    {
+                        // Turned face.
+                        faceProcAddressing[procFaceI] =
+                            -1 - faceProcAddressing[procFaceI];
+                    }
+                }
             }
 
             Info<< "Writing addressing from processor " << procI
-                << " mesh cells to merged mesh cells to "
-                << cellProcAddressing.instance()
-                 / cellProcAddressing.name()
-                << endl;
+                << " mesh faces to merged mesh faces to "
+                << faceProcAddressing.objectPath() << endl;
 
-            cellProcAddressing.write();
+            faceProcAddressing.write();
         }
-
 
 
         // Match boundaries
@@ -534,10 +573,12 @@ int main(int argc, char *argv[])
                 IOobject
                 (
                     "boundaryProcAddressing",
-                    procMesh.cellsInstance()/procMesh.name(),
+                    procMesh.cellsInstance(),
+                    polyMesh::meshSubDir,
                     procMesh,
                     IOobject::NO_READ,
-                    IOobject::AUTO_WRITE
+                    IOobject::AUTO_WRITE,
+                    false                   // Do not register
                 ),
                 labelList(patches.size(), -1)
             );
@@ -551,13 +592,11 @@ int main(int argc, char *argv[])
 
             Info<< "Writing addressing from processor " << procI
                 << " mesh patches to merged mesh patches to "
-                << boundaryProcAddressing.instance()
-                 / boundaryProcAddressing.name()
-                << endl;
+                << boundaryProcAddressing.objectPath() << endl;
 
             boundaryProcAddressing.write();
         }
-        Info<< endl;
+        Info<< nl << endl;
     }
 
 
@@ -643,10 +682,12 @@ int main(int argc, char *argv[])
             IOobject
             (
                 "parallelData",
-                cellsInst/polyMesh::meshSubDir,
+                cellsInst,
+                polyMesh::meshSubDir,
                 databases[procI],
                 IOobject::NO_READ,
-                IOobject::AUTO_WRITE
+                IOobject::AUTO_WRITE,
+                false                   // Do not register
             )
         );
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -63,13 +63,12 @@ void Foam::attachDetach::attachInterface
             << "Attaching interface" << endl;
     }
 
-    const polyMesh& mesh = morphEngine().mesh();
-    const faceList& faces = mesh.faces();
-    const labelList& own = mesh.allOwner();
-    const labelList& nei = mesh.allNeighbour();
+    const faceList& faces = mesh().faces();
+    const labelList& own = mesh().allOwner();
+    const labelList& nei = mesh().allNeighbour();
 
-    const polyPatch& masterPatch = mesh.boundaryMesh()[masterPatchID_.index()];
-    const polyPatch& slavePatch = mesh.boundaryMesh()[slavePatchID_.index()];
+    const polyPatch& masterPatch = mesh().boundaryMesh()[masterPatchID_.index()];
+    const polyPatch& slavePatch = mesh().boundaryMesh()[slavePatchID_.index()];
 
     const label masterPatchStart = masterPatch.start();
     const label slavePatchStart = slavePatch.start();
@@ -97,7 +96,7 @@ void Foam::attachDetach::attachInterface
     const labelList& masterFaceCells = masterPatch.faceCells();
     const labelList& slaveFaceCells = slavePatch.faceCells();
 
-    const boolList& mfFlip = mesh.faceZones()[faceZoneID_.index()].flipMap();
+    const boolList& mfFlip = mesh().faceZones()[faceZoneID_.index()].flipMap();
 
     forAll (masterFaceCells, faceI)
     {
@@ -150,7 +149,7 @@ void Foam::attachDetach::attachInterface
         slaveMeshPoints.size()*primitiveMesh::facesPerPoint_
     );
 
-    const labelListList& pf = mesh.pointFaces();
+    const labelListList& pf = mesh().pointFaces();
     const labelHashSet& removedFaces = ref.removedFaces();
 
     // Grab all the faces off the points in the slave patch.  If the face has
@@ -195,15 +194,15 @@ void Foam::attachDetach::attachInterface
 // Info<< "face label: " << curFaceID << " old face: " << faces[curFaceID] << " new face: " << newFace << endl;
 
         // Get face zone and its flip
-        label modifiedFaceZone = mesh.faceZones().whichZone(curFaceID);
+        label modifiedFaceZone = mesh().faceZones().whichZone(curFaceID);
         bool modifiedFaceZoneFlip = false;
 
         if (modifiedFaceZone >= 0)
         {
             modifiedFaceZoneFlip =
-                mesh.faceZones()[modifiedFaceZone].flipMap()
+                mesh().faceZones()[modifiedFaceZone].flipMap()
                 [
-                    mesh.faceZones()[modifiedFaceZone].whichFace(curFaceID)
+                    mesh().faceZones()[modifiedFaceZone].whichFace(curFaceID)
                 ];
         }
             
@@ -217,7 +216,7 @@ void Foam::attachDetach::attachInterface
                 own[curFaceID],         // owner
                 nei[curFaceID],         // neighbour
                 false,                  // face flip
-                mesh.boundaryMesh().whichPatch(curFaceID),// patch for face
+                mesh().boundaryMesh().whichPatch(curFaceID),// patch for face
                 false,                  // remove from zone
                 modifiedFaceZone,       // zone for face
                 modifiedFaceZoneFlip    // face flip in zone

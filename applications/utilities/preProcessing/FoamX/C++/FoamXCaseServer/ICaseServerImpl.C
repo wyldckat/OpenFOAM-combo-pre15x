@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -35,7 +35,7 @@ License
 #include "IFstream.H"
 #include "OStringStream.H"
 #include "instantList.H"
-#include "IOptrList.H"
+#include "IOPtrList.H"
 #include "OSspecific.H"
 
 // FoamX header files.
@@ -55,9 +55,9 @@ License
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
-// Define word for IOptrList<entry>.
+// Define word for IOPtrList<entry>.
 template<>
-const Foam::word Foam::IOptrList<Foam::entry>::typeName("polyBoundaryMesh");
+const Foam::word Foam::IOPtrList<Foam::entry>::typeName("polyBoundaryMesh");
 
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -170,24 +170,24 @@ void FoamX::ICaseServerImpl::writePatchData()
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-// boundaryType is the name of the boundary type name, not the definition key.
+// patchPhysicalType is the name of the boundary type name, not the definition key.
 
 void FoamX::ICaseServerImpl::addPatch
 (
     const char* patchName,
-    const char* boundaryType
+    const char* patchPhysicalType
 )
 {
     static const char* functionName =
         "FoamX::ICaseServerImpl::addPatch"
-        "(const char* patchName, const char* boundaryType)";
+        "(const char* patchName, const char* patchPhysicalType)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
     try
     {
         log << "Patch = " << patchName
-            << ", Boundary (Physical) Type = " << boundaryType << endl;
+            << ", Boundary (Physical) Type = " << patchPhysicalType << endl;
 
         // Create a new patch descriptor object for this patch.
         PatchProperties* patchProps = new PatchProperties(patchName);
@@ -203,11 +203,11 @@ void FoamX::ICaseServerImpl::addPatch
             );
         }
 
-        IBoundaryTypeDescriptor_var boundaryDescriptor;
-        appClass_->getBoundaryType(boundaryType, boundaryDescriptor.out());
+        IPatchPhysicalTypeDescriptor_var boundaryDescriptor;
+        app_->getPatchPhysicalType(patchPhysicalType, boundaryDescriptor.out());
         patchProps->patchType(boundaryDescriptor->patchType());
 
-        patchProps->physicalType(boundaryType);
+        patchProps->physicalType(patchPhysicalType);
 
         // Append to patch descriptor list.
         addPatch(patchProps);
@@ -217,8 +217,12 @@ void FoamX::ICaseServerImpl::addPatch
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-bool FoamX::ICaseServerImpl::fieldsMatchBoundaryType(const word& patchName)
+bool FoamX::ICaseServerImpl::fieldsMatchPatchPhysicalType(const word& patchName)
 {
+    static const char* functionName =
+        "FoamX::ICaseServerImpl::fieldsMatchPatchPhysicalType"
+        "(const char* patchName)";
+
     // Get properties read from boundary file.
     PatchProperties* patchProps = patchMap_.lookup(patchName);
     
@@ -227,8 +231,8 @@ bool FoamX::ICaseServerImpl::fieldsMatchBoundaryType(const word& patchName)
 
     // Get the specified boundary type descriptor object (ultimately from the
     // application class.
-    IBoundaryTypeDescriptor_var boundaryDescriptor;
-    appClass_->getBoundaryType
+    IPatchPhysicalTypeDescriptor_var boundaryDescriptor;
+    app_->getPatchPhysicalType
     (
         patchProps->physicalType().c_str(), 
         boundaryDescriptor.out()
@@ -285,7 +289,7 @@ bool FoamX::ICaseServerImpl::fieldsMatchBoundaryType(const word& patchName)
         }
         else
         {
-            Warning
+            WarningIn(functionName)
                 << "Did not find field " << fieldName
                 << " specified in physical patch type "
                 << patchProps->physicalType()
@@ -303,29 +307,29 @@ FoamX::ICaseServerImpl::ICaseServerImpl
     const fileName& rootDir,
     const fileName& caseName,
     const word& mode,
-    const word& appClass
+    const word& app
 )
 :
     rootDir_(rootDir),
     caseName_(caseName),
-    hostContext_(Foam::hostName()),
-    userContext_(Foam::userName()),
+    hostContext_(hostName()),
+    userContext_(userName()),
     objectName_(hostContext_/userContext_/word(rootDir_)/caseName_),
     caseDictName_(rootDir_/caseName_/"system/controlDict"),
-    appClassName_(appClass),
+    appName_(app),
     orb_(orb),
     dbPtr_(NULL),
     caseBrowser_(NULL),
     foamProperties_(NULL),
-    appClass_(NULL),
+    app_(NULL),
     managed_(false),
-    procControl_(Paths::system/"FoamX.cfg", Paths::user/"FoamX.cfg"),
+    procControl_(dotFoam("apps/FoamX/FoamX.cfg")),
     pid_(-1)
 {
     static const char* functionName =
         "FoamX::ICaseServerImpl::ICaseServerImpl"
         "(Orb& orb, const fileName& rootDir, const fileName& caseName, "
-        "const word& mode, const word& appClass)";
+        "const word& mode, const word& app)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -381,7 +385,15 @@ FoamX::ICaseServerImpl::ICaseServerImpl
             // application class name.
             dictionary caseDict((IFstream(caseDictName_)()));
 
-            if (!caseDict.found("applicationClass"))
+            if (caseDict.found("application"))
+            {
+                caseDict.lookup("application")>> appName_;
+            }
+            else if (caseDict.found("applicationClass"))
+            {
+                caseDict.lookup("applicationClass")>> appName_;
+            }
+            else
             {
                 throw FoamXError
                 (
@@ -392,33 +404,32 @@ FoamX::ICaseServerImpl::ICaseServerImpl
                     __FILE__, __LINE__
                 );
             }
-            caseDict.lookup("applicationClass")>> appClassName_;
         }
-        //else if (mode == "import")
-        //{
-        //    // Control dictionary must exist.
-        //    if (!exists(caseDictName_))
-        //    {
-        //        throw FoamXError
-        //        (
-        //            E_FAIL,
-        //            "Case control dictionary '" + caseDictName_
-        //          + "' not found",
-        //            functionName,
-        //            __FILE__, __LINE__
-        //       );
-        //    }
-        //
-        //    // Open the case configuration dictionary and get the
-        //    // application class name.
-        //    dictionary caseDict((IFstream(caseDictName_)()));
-        //
-        //    // If not found, use the command line argument.
-        //    if (caseDict.found("applicationClass"))
-        //    {
-        //        caseDict.lookup("applicationClass") >> appClassName_;
-        //    }
-        //}
+        else if (mode == "import")
+        {
+            // Control dictionary must exist.
+            if (!exists(caseDictName_))
+            {
+                throw FoamXError
+                (
+                    E_FAIL,
+                    "Case control dictionary '" + caseDictName_
+                  + "' not found",
+                    functionName,
+                    __FILE__, __LINE__
+               );
+            }
+        
+            // Open the case configuration dictionary and get the
+            // application class name.
+            dictionary caseDict((IFstream(caseDictName_)()));
+        
+            // If not found, use the command line argument.
+            if (caseDict.found("application"))
+            {
+                caseDict.lookup("application") >> appName_;
+            }
+        }
         else if (mode == "create")
         {
             // Control dictionary must not exist.
@@ -484,23 +495,23 @@ FoamX::ICaseServerImpl::ICaseServerImpl
         }
 
         //----------------------------------------------------------------------
-        // Create the ApplicationClass and FoamProperties objects.
-        if (appClassName_.size() == 0)
+        // Create the Application and FoamProperties objects.
+        if (appName_.size() == 0)
         {
             throw FoamXError
             (
                 E_FAIL,
-                "Invalid application class name '" + appClassName_ + "'",
+                "Invalid application class name '" + appName_ + "'",
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
-        foamProperties_->getApplicationClass(appClassName_.c_str(), appClass_);
+        foamProperties_->getApplication(appName_.c_str(), app_);
 
         //----------------------------------------------------------------------
         // Create the FieldValues objects.
-        StringList_var fieldNames = appClass_->fields();
+        StringList_var fieldNames = app_->fields();
 
         for (unsigned int i = 0; i <fieldNames->length(); i++)
         {
@@ -508,7 +519,7 @@ FoamX::ICaseServerImpl::ICaseServerImpl
 
             // Get reference to field descriptor.
             IGeometricFieldDescriptor_var fieldDescriptorRef; // Auto-release.
-            appClass_->getField(fieldName.c_str(), fieldDescriptorRef.out());
+            app_->getField(fieldName.c_str(), fieldDescriptorRef.out());
 
             // Create default FieldValues object for this field.
             IGeometricFieldImpl* pFieldValues = new IGeometricFieldImpl
@@ -558,8 +569,7 @@ FoamX::ICaseServerImpl::ICaseServerImpl
         // that it is no longer needed.
         _remove_ref();
 
-        //if (mode == "import" || mode == "create")
-        if (mode == "create")
+        if (mode == "import" || mode == "create")
         {
             // Make valid control dict so we can instantiate a database
             saveControlDict();
@@ -574,7 +584,7 @@ FoamX::ICaseServerImpl::ICaseServerImpl
                 rootDir_.c_str(),
                 rootDir_.c_str(),
                 caseName_.c_str(),
-                appClassName_.c_str()
+                appName_.c_str()
             );
         }
         else
@@ -680,19 +690,19 @@ FoamX::IFoamProperties_ptr FoamX::ICaseServerImpl::foamProperties()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-FoamX::IApplicationClass_ptr FoamX::ICaseServerImpl::applicationClass()
+FoamX::IApplication_ptr FoamX::ICaseServerImpl::application()
 {
     static const char* functionName =
-        "FoamX::ICaseServerImpl::applicationClass()";
+        "FoamX::ICaseServerImpl::application()";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
-    // Return a reference to the ApplicationClass object.
-    IApplicationClass_ptr pAppClass = IApplicationClass::_nil();
+    // Return a reference to the Application object.
+    IApplication_ptr pAppClass = IApplication::_nil();
 
-    if ((FoamXServer::CaseServer::IApplicationClass*)appClass_ != NULL)
+    if (static_cast<FoamXServer::CaseServer::IApplication*>(app_) != NULL)
     {
-        pAppClass = IApplicationClass::_duplicate(appClass_);
+        pAppClass = IApplication::_duplicate(app_);
     }
 
     return pAppClass;
@@ -811,7 +821,7 @@ void FoamX::ICaseServerImpl::readMesh()
         }
 
         // Create a list of entries from the boundary file.
-        IOptrList<entry> patchEntries
+        IOPtrList<entry> patchEntries
         (
             IOobject
             (
@@ -862,7 +872,7 @@ void FoamX::ICaseServerImpl::readMesh()
         }
 
         // Read the field values from the field dictionaries.
-        StringList_var fieldNames = appClass_->fields(); // Auto-release.
+        StringList_var fieldNames = app_->fields(); // Auto-release.
         for (unsigned int i = 0; i < fieldNames->length(); i++)
         {
             word fieldName(fieldNames[i]);
@@ -892,10 +902,10 @@ void FoamX::ICaseServerImpl::readMesh()
         {
             ///Info<< "Trying to match fields to " << iter().physicalType()
             //    << endl;
-            //bool matches = fieldsMatchBoundaryType(iter().physicalType());
+            //bool matches = fieldsMatchPatchPhysicalType(iter().physicalType());
             //Info<< "Matches:" << matches << endl;
 
-            setPatchBoundaryType
+            setPatchPhysicalType
             (
                 iter().patchName().c_str(),
                 iter().physicalType().c_str()
@@ -948,9 +958,9 @@ void FoamX::ICaseServerImpl::importMesh
         }
         else
         {
-            Foam::stringList argsList = procControl_.remoteCpArgs
+            stringList argsList = procControl_.remoteCpArgs
             (
-                Foam::userName(),
+                userName(),
                 hostName,
                 importMeshDir,
                 destConstDir
@@ -1016,7 +1026,10 @@ FoamXServer::StringList* FoamX::ICaseServerImpl::patchNames()
     LogEntry log(functionName, __FILE__, __LINE__);
 
     // Duplicate and return the patch name list.
-    return new StringList(FoamXWordList((const wordList&)patchMap_.toc()));
+    return new StringList
+    (
+        FoamXWordList(static_cast<const wordList&>(patchMap_.toc()))
+    );
 }
 
 
@@ -1032,10 +1045,10 @@ void FoamX::ICaseServerImpl::addPatch(PatchProperties* patchProps)
     try
     {
         // Get the patch name and the boundary type.
-        // boundaryType is the name of the boundary type name, not the
+        // patchPhysicalType is the name of the boundary type name, not the
         // definition key.
         const word& patchName    = patchProps->patchName();
-        const word& boundaryType = patchProps->physicalType();
+        const word& patchPhysicalType = patchProps->physicalType();
 
         log << "Patch = " << patchName << endl;
 
@@ -1053,10 +1066,10 @@ void FoamX::ICaseServerImpl::addPatch(PatchProperties* patchProps)
 
         // Get the specified boundary type descriptor object.
         // If the boundary type name is not valid, an exception will be thrown.
-        IBoundaryTypeDescriptor_var boundaryDescriptor;
-        appClass_->findBoundaryType
+        IPatchPhysicalTypeDescriptor_var boundaryDescriptor;
+        app_->findPatchPhysicalType
         (
-            boundaryType.c_str(),
+            patchPhysicalType.c_str(),
             boundaryDescriptor.out()
         );
 
@@ -1066,7 +1079,7 @@ void FoamX::ICaseServerImpl::addPatch(PatchProperties* patchProps)
             throw FoamXError
             (
                 E_FAIL,
-                "Invalid boundary type name '" + boundaryType + "'",
+                "Invalid boundary type name '" + patchPhysicalType + "'",
                 functionName,
                 __FILE__, __LINE__
             );
@@ -1106,7 +1119,7 @@ void FoamX::ICaseServerImpl::addPatch(PatchProperties* patchProps)
                         E_FAIL,
                         "Invalid patch field type key '" 
                       + word(patchFieldTypes[i].value)
-                      + "' for boundary type '" + boundaryType + "'",
+                      + "' for boundary type '" + patchPhysicalType + "'",
                         functionName,
                         __FILE__, __LINE__
                     );
@@ -1146,7 +1159,7 @@ void FoamX::ICaseServerImpl::deletePatch(const char* patchName)
         patchMap_.remove(patchName);
 
         // Remove this patch from all field value objects.
-        StringList_var fieldNames = appClass_->fields();  // Auto-release.
+        StringList_var fieldNames = app_->fields();  // Auto-release.
         for (unsigned int i=0; i <fieldNames->length(); i++)
         {
             word fieldName(fieldNames[i]);
@@ -1183,15 +1196,15 @@ void FoamX::ICaseServerImpl::deleteAllPatches()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::ICaseServerImpl::setPatchBoundaryType
+void FoamX::ICaseServerImpl::setPatchPhysicalType
 (
     const char* patchName,
-    const char* boundaryType
+    const char* patchPhysicalType
 )
 {
     static const char* functionName =
-        "FoamX::ICaseServerImpl::setPatchBoundaryType"
-        "(const char* patchName, const char* boundaryType)";
+        "FoamX::ICaseServerImpl::setPatchPhysicalType"
+        "(const char* patchName, const char* patchPhysicalType)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1211,8 +1224,8 @@ void FoamX::ICaseServerImpl::setPatchBoundaryType
 
         // Get the specified boundary type descriptor object.
         // If the boundary type name is not valid, an exception will be thrown.
-        IBoundaryTypeDescriptor_var boundaryDescriptor;
-        appClass_->getBoundaryType(boundaryType, boundaryDescriptor.out());
+        IPatchPhysicalTypeDescriptor_var boundaryDescriptor;
+        app_->getPatchPhysicalType(patchPhysicalType, boundaryDescriptor.out());
 
         // Make sure that the boundary type name is valid.
         if (CORBA::is_nil(boundaryDescriptor))
@@ -1220,7 +1233,7 @@ void FoamX::ICaseServerImpl::setPatchBoundaryType
             throw FoamXError
             (
                 E_FAIL,
-                "Invalid boundary type name '" + word(boundaryType) + "'",
+                "Invalid boundary type name '" + word(patchPhysicalType) + "'",
                 functionName,
                 __FILE__, __LINE__
             );
@@ -1230,7 +1243,7 @@ void FoamX::ICaseServerImpl::setPatchBoundaryType
         PatchProperties* patchProps = patchMap_.lookup(patchName);
 
         patchProps->patchType(boundaryDescriptor->patchType());
-        patchProps->physicalType(boundaryType);
+        patchProps->physicalType(patchPhysicalType);
 
         // Get patch field types from boundary descriptor.
         StringPairList_var patchFieldTypes =
@@ -1267,15 +1280,15 @@ void FoamX::ICaseServerImpl::setPatchBoundaryType
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::ICaseServerImpl::getPatchBoundaryType
+void FoamX::ICaseServerImpl::getPatchPhysicalType
 (
     const char* patchName,
-    CORBA::String_out boundaryType
+    CORBA::String_out patchPhysicalType
 )
 {
     static const char* functionName =
-        "FoamX::ICaseServerImpl::getPatchBoundaryType"
-        "(const char* patchName, CORBA::String_out boundaryType)";
+        "FoamX::ICaseServerImpl::getPatchPhysicalType"
+        "(const char* patchName, CORBA::String_out patchPhysicalType)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1298,7 +1311,7 @@ void FoamX::ICaseServerImpl::getPatchBoundaryType
         // Return the boundary type for this patch.
         PatchProperties* patchProps = patchMap_.lookup(patchName);
 
-        boundaryType = CORBA::string_dup(patchProps->physicalType().c_str());
+        patchPhysicalType = CORBA::string_dup(patchProps->physicalType().c_str());
     }
     CATCH_ALL(functionName);
 }
@@ -1344,7 +1357,7 @@ void FoamX::ICaseServerImpl::getDictionary
 
             // Create and initialise a new dictionary entry object.
             ITypeDescriptor_var typeDescRef; // Auto release.
-            appClass_->getDictionary(dictionaryName, typeDescRef.out());
+            app_->getDictionary(dictionaryName, typeDescRef.out());
 
             // Create a default RootDictionary object for this dictionary.
             pDictRoot = new RootDictionary
@@ -1364,19 +1377,8 @@ void FoamX::ICaseServerImpl::getDictionary
                 );
             }
 
-            // Get dictionary full file name
-            // (using the dictionary path information in the type descriptor).
-            // Auto Release.
-            CORBA::String_var path = typeDescRef->dictionaryPath();
-            fileName dictName =
-                rootDir_/caseName_/fileName(path)/dictionaryName;
-
-            // See if the dictionary file exists.
-            if (exists(dictName))
-            {
-                // Load the values from the file.
-                pDictRoot->load((IFstream(dictName)()));
-            }
+            // Load the values from the file if it exists
+            pDictRoot->load();
 
             // Add to dictionary map.
             dictionaryMap_.insert(dictionaryName, pDictRoot);
@@ -1390,36 +1392,6 @@ void FoamX::ICaseServerImpl::getDictionary
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::ICaseServerImpl::copyDefaultDictionary
-(
-    const char* dictionaryName
-)
-{
-    static const char* functionName =
-        "FoamX::ICaseServerImpl::copyDefaultDictionary"
-        "(const char* dictionaryName)";
-
-    LogEntry log(functionName, __FILE__, __LINE__);
-
-    try
-    {
-        Foam::fileName defaultDictFileName
-        (
-            Paths::system/"utilities/defaultDictionaries"/dictionaryName
-        );
-
-        log << "defaultDictFileName = " << defaultDictFileName << endl;
-
-        if (exists(defaultDictFileName))
-        {
-            cp(defaultDictFileName, rootDir_/caseName_/dictionaryName);
-        }
-    }
-    CATCH_ALL(functionName);
-}
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
 CORBA::Long FoamX::ICaseServerImpl::fileModificationDate
 (
     const char* dictionaryName
@@ -1427,13 +1399,13 @@ CORBA::Long FoamX::ICaseServerImpl::fileModificationDate
 {
     fileName fName(rootDir_/caseName_/dictionaryName);
 
-    if (Foam::exists(fName))
+    if (exists(fName))
     {
-        return label(Foam::lastModified(fName));
+        return label(lastModified(fName));
     }
     else
     {
-        //mj. Ugly. Let's hope not many dates with time_t==0
+        // Ugly. Let's hope not many dates with time_t==0
         return 0;
     }
 }
@@ -1454,7 +1426,7 @@ void FoamX::ICaseServerImpl::readFile
 
     try
     {
-        Foam::fileName dictName = rootDir_/caseName_/fName;
+        fileName dictName = rootDir_/caseName_/fName;
 
         log << "File = " << dictName << endl;
 
@@ -1573,7 +1545,7 @@ CORBA::Long FoamX::ICaseServerImpl::runCase(const char* arguments)
         // Convert the arguments into a stringList and start
         // the calculation process.
 
-        Foam::string stringArgs(arguments);
+        string stringArgs(arguments);
 
         int nArgs = 2;
         if (stringArgs.size() != 0)
@@ -1581,7 +1553,7 @@ CORBA::Long FoamX::ICaseServerImpl::runCase(const char* arguments)
             nArgs += 1 + stringArgs.count(' ');
         }
         stringList args(nArgs + 1);
-        args[0] = Foam::word(appClass_->name());
+        args[0] = word(app_->name());
 
         int argi = 1;
         args[argi++] = rootDir_;
@@ -1591,14 +1563,14 @@ CORBA::Long FoamX::ICaseServerImpl::runCase(const char* arguments)
         int endPos;
         while ((endPos = stringArgs.find(" ", startPos)) != -1)
         {
-            Foam::string oneArg(stringArgs(startPos, (endPos - startPos)));
+            string oneArg(stringArgs(startPos, (endPos - startPos)));
             args[argi++] = oneArg;
             startPos = endPos + 1;
         }
 
         if ((stringArgs.size() != 0) && (startPos != (stringArgs.size() - 1)))
         {
-            Foam::string oneArg
+            string oneArg
             (
                 stringArgs
                 (
@@ -1643,7 +1615,7 @@ void FoamX::ICaseServerImpl::killCase()
             throw FoamXError
             (
                 E_FAIL,
-                Foam::string("Error killing job with PID ") + name(pid_),
+                string("Error killing job with PID ") + name(pid_),
                 functionName,
                 __FILE__, __LINE__
             );
@@ -1728,8 +1700,8 @@ void FoamX::ICaseServerImpl::save()
         // Save (default) controlDict
         saveControlDict();
 
-        // Delete database and reconstruct to force reading of startTime
-        // setting (database::read does not reread startTime)
+        // Delete time and reconstruct to force reading of startTime
+        // setting (Time::read does not reread startTime)
         if (dbPtr_)
         {
             delete dbPtr_;
@@ -1758,24 +1730,27 @@ void FoamX::ICaseServerImpl::save()
 
         // For dictionaries that do not exist, make sure that a default
         // dictionary is cached.
-        StringList_var dictNames = appClass_->dictionaries();
+        StringList_var dictNames = app_->dictionaries();
         for (unsigned int i = 0; i <dictNames->length(); i++)
         {
             word dictName(dictNames[i]);
 
             // Get dictionary type descriptor.
             ITypeDescriptor_var typeDescRef; // Auto release.
-            appClass_->getDictionary(dictName.c_str(), typeDescRef.out());
+            app_->getDictionary(dictName.c_str(), typeDescRef.out());
 
             // Get dictionary full file name
             // (using the path information in the type descriptor).
-            // Auto Release.
             CORBA::String_var name = typeDescRef->name();
-            // Auto Release.
-            CORBA::String_var path = typeDescRef->dictionaryPath();
-            fileName dictPath =
-                rootDir_/caseName_/fileName(path)/fileName(name);
-            if (!exists(dictPath))
+
+            fileName dictPathName = RootDictionary::path
+            (
+                rootDir_,
+                caseName_,
+                typeDescRef->dictionaryPath()
+            )/fileName(name);
+
+            if (!exists(dictPathName))
             {
                 IDictionaryEntry_var dict; // Auto Release.
                 getDictionary(name, false, dict.out());
@@ -1825,7 +1800,7 @@ void FoamX::ICaseServerImpl::save()
         }
 
         // Save field dictionaries.
-        StringList_var fieldNames = appClass_->fields();   // Auto-release.
+        StringList_var fieldNames = app_->fields();   // Auto-release.
         for (unsigned int i = 0; i <fieldNames->length(); i++)
         {
             word fieldName(fieldNames[i]);

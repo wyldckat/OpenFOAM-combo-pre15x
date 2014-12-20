@@ -20,11 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
     
 \*---------------------------------------------------------------------------*/
 
 #include "fourthGrad.H"
+#include "leastSquaresVectors.H"
 #include "gaussGrad.H"
 #include "fvMesh.H"
 #include "volMesh.H"
@@ -100,11 +101,9 @@ fourthGrad<Type>::grad
     GeometricField<GradType, fvPatchField, volMesh>& fGrad = tfGrad();
 
     // Get reference to least square vectors
-    const surfaceVectorField& ownerLs =
-        mesh.surfaceInterpolation::leastSquarePvectors();
-
-    const surfaceVectorField& neighbourLs =
-        mesh.surfaceInterpolation::leastSquareNvectors();
+    const leastSquaresVectors& lsv = leastSquaresVectors::New(mesh);
+    const surfaceVectorField& ownerLs = lsv.pVectors();
+    const surfaceVectorField& neighbourLs = lsv.nVectors();
 
     // owner/neighbour addressing
     const unallocLabelList& Owner = mesh.owner();
@@ -127,7 +126,7 @@ fourthGrad<Type>::grad
         const fvPatchVectorField& patchOwnerLs =
             ownerLs.boundaryField()[patchI];
         const labelList::subList FaceCells =
-            fGrad.boundaryField()[patchI].patchMesh().faceCells();
+            fGrad.boundaryField()[patchI].patch().faceCells();
 
         forAll(patchVsf, patchFaceI)
         {
@@ -184,7 +183,7 @@ fourthGrad<Type>::grad
         const fvPatchVectorField& patchD = d.boundaryField()[patchI];
 
         const labelList::subList FaceCells =
-            fGrad.boundaryField()[patchI].patchMesh().faceCells();
+            fGrad.boundaryField()[patchI].patch().faceCells();
 
         if (secondfGrad.boundaryField()[patchI].coupled())
         {

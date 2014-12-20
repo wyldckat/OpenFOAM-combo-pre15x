@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Utility to refine cells in multiple directions. Either supply -all
@@ -113,7 +113,7 @@ void printEdgeStats(const primitiveMesh& mesh)
         }
     }
 
-    Info<< "Mesh edge statistics:" << endl
+    Pout<< "Mesh edge statistics:" << endl
         << "    x aligned :  number:" << nX << "\tminLen:" << minX
         << "\tmaxLen:" << maxX << endl
         << "    y aligned :  number:" << nY << "\tminLen:" << minY
@@ -153,6 +153,12 @@ label axis(const vector& normal)
 label twoDNess(const polyMesh& mesh)
 {
     const pointField& ctrs = mesh.cellCentres();
+
+    if (ctrs.size() < 2)
+    {
+        return -1;
+    }
+
 
     //
     // 1. All cell centres on single plane aligned with x, y or z
@@ -287,13 +293,12 @@ label twoDNess(const polyMesh& mesh)
 
 int main(int argc, char *argv[])
 {
-    Foam::argList::noParallel();
     Foam::argList::validOptions.insert("dict", "");
 
 #   include "setRootCase.H"
 #   include "createTime.H"
 
-    Info<< "Create polyMesh for time = " << runTime.value() << nl << endl;
+    Info<< "Create polyMesh for time = " << runTime.timeName() << nl << endl;
     morphMesh mesh
     (
         IOobject
@@ -322,7 +327,7 @@ int main(int argc, char *argv[])
 
     if (readDict)
     {
-        Info<< "Refining according to refineMeshDict\n" << endl;
+        Info<< "Refining according to refineMeshDict" << nl << endl;
 
         refineDict =
             IOdictionary
@@ -341,7 +346,7 @@ int main(int argc, char *argv[])
 
         cellSet cells(mesh, setName);
 
-        Info<< "Read " << cells.size() << " cells from cellSet "
+        Pout<< "Read " << cells.size() << " cells from cellSet "
             << cells.instance()/cells.local()/cells.name()
             << endl << endl;
 
@@ -349,7 +354,7 @@ int main(int argc, char *argv[])
     }
     else
     {
-        Info<< "Refining all cells\n" << endl;
+        Info<< "Refining all cells" << nl << endl;
 
         // Select all cells
         refCells.setSize(mesh.nCells());
@@ -365,7 +370,7 @@ int main(int argc, char *argv[])
 
         if (axisIndex == -1)
         {
-            Info<< "3D case; refining all directions\n" << endl;
+            Info<< "3D case; refining all directions" << nl << endl;
 
             wordList directions(3);
             directions[0] = "tan1";
@@ -436,7 +441,7 @@ int main(int argc, char *argv[])
 
 
     // Create cellSet with added cells for easy inspection
-    cellSet newCells(runTime, "refinedCells", refCells.size());
+    cellSet newCells(mesh, "refinedCells", refCells.size());
     
     forAll(oldToNew, oldCellI)
     {
@@ -448,7 +453,7 @@ int main(int argc, char *argv[])
         }
     }
 
-    Info<< "Writing refined cells (" << newCells.size() << ") to cellSet "
+    Pout<< "Writing refined cells (" << newCells.size() << ") to cellSet "
         << newCells.instance()/newCells.local()/newCells.name()
         << endl << endl;
     
@@ -467,7 +472,7 @@ int main(int argc, char *argv[])
         (
             "cellMap",
             runTime.timeName(),
-            polyMesh::defaultRegion,
+            polyMesh::meshSubDir,
             mesh,
             IOobject::NO_READ,
             IOobject::AUTO_WRITE
@@ -509,7 +514,7 @@ int main(int argc, char *argv[])
     
     printEdgeStats(mesh);
 
-    Info << "End\n" << endl;
+    Info<< "End\n" << endl;
 
     return 0;
 }

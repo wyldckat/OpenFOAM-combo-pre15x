@@ -1,4 +1,4 @@
-if (typeid(pbMesh[patch(facei)]) == typeid(wallPolyPatch))
+if (isType<wallPolyPatch>(pbMesh[patch(facei)]))
 {
     keepParcel = sDB.wall().wallTreatment(*this, facei);
 
@@ -12,7 +12,7 @@ if (typeid(pbMesh[patch(facei)]) == typeid(wallPolyPatch))
         U() = (magUs/magV1)*v1*n() + vs*sDB.axisOfSymmetry();
     }
 }
-else if (typeid(pbMesh[patch(facei)]) == typeid(wedgePolyPatch))
+else if (isType<wedgePolyPatch>(pbMesh[patch(facei)]))
 {
     // check if parcel is trying to move out of the domain
     label patchi = patch(facei);
@@ -27,7 +27,7 @@ else if (typeid(pbMesh[patch(facei)]) == typeid(wedgePolyPatch))
         U() -= 2.0*Un2*n();
     }
 }
-else if (typeid(pbMesh[patch(facei)]) == typeid(symmetryPolyPatch))
+else if (isType<symmetryPolyPatch>(pbMesh[patch(facei)]))
 {
     // check if parcel is trying to move out of the domain
     label patchi = patch(facei);
@@ -49,7 +49,7 @@ else if (typeid(pbMesh[patch(facei)]) == typeid(symmetryPolyPatch))
         }
     }
 }
-else if (typeid(pbMesh[patch(facei)]) == typeid(polyPatch))
+else if (isType<polyPatch>(pbMesh[patch(facei)]))
 {
     // Parcel has hit an inlet or outlet or some such so throw it away
     keepParcel = false;

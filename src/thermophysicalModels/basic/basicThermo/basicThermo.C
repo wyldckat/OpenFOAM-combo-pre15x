@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -53,19 +53,19 @@ wordList basicThermo::hBoundaryTypes()
 
     forAll(tbf, patchi)
     {
-        if (dynamic_cast<const fixedValueFvPatchScalarField*>(&tbf[patchi]))
+        if (isA<fixedValueFvPatchScalarField>(tbf[patchi]))
         {
             hbt[patchi] = fixedEnthalpyFvPatchScalarField::typeName;
         }
         else if
         (
-            dynamic_cast<const zeroGradientFvPatchScalarField*>(&tbf[patchi])
-         || dynamic_cast<const fixedGradientFvPatchScalarField*>(&tbf[patchi])
+            isA<zeroGradientFvPatchScalarField>(tbf[patchi])
+         || isA<fixedGradientFvPatchScalarField>(tbf[patchi])
         )
         {
             hbt[patchi] = gradientEnthalpyFvPatchScalarField::typeName;
         }
-        else if (dynamic_cast<const mixedFvPatchScalarField*>(&tbf[patchi]))
+        else if (isA<mixedFvPatchScalarField>(tbf[patchi]))
         {
             hbt[patchi] = mixedEnthalpyFvPatchScalarField::typeName;
         }
@@ -80,12 +80,12 @@ void basicThermo::hBoundaryCorrection(volScalarField& h_)
 
     forAll(hbf, patchi)
     {
-        if (dynamic_cast<gradientEnthalpyFvPatchScalarField*>(&hbf[patchi]))
+        if (isA<gradientEnthalpyFvPatchScalarField>(hbf[patchi]))
         {
             refCast<gradientEnthalpyFvPatchScalarField>(hbf[patchi]).gradient()
                 = hbf[patchi].fvPatchField::snGrad();
         }
-        else if (dynamic_cast<mixedEnthalpyFvPatchScalarField*>(&hbf[patchi]))
+        else if (isA<mixedEnthalpyFvPatchScalarField>(hbf[patchi]))
         {
             refCast<mixedEnthalpyFvPatchScalarField>(hbf[patchi]).refGrad()
                 = hbf[patchi].fvPatchField::snGrad();

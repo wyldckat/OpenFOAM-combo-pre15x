@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.CaseManagement;
@@ -29,7 +29,7 @@ import java.util.*;
 import javax.swing.*;
 
 import FoamX.App;
-import FoamXServer.ApplicationClassDescriptor;
+import FoamXServer.ApplicationDescriptor;
 
 public class CreateCaseDialog
     extends javax.swing.JDialog
@@ -39,29 +39,29 @@ public class CreateCaseDialog
     protected boolean wasCancelled_;
     protected String caseClass_;
     protected String caseRoot_;
-    protected ApplicationClassDescriptor[] applicationClasses_;
+    protected ApplicationDescriptor[] applicationes_;
 
     //--------------------------------------------------------------------------
     /** CreateCaseDialog constructor. */
     public CreateCaseDialog
     (
         java.awt.Frame parent,
-        ApplicationClassDescriptor[] applicationClasses,
+        ApplicationDescriptor[] applicationes,
         String[] caseRoots
     )
     {
         super(parent, true);      // Modal.
 
         wasCancelled_       = false;
-        applicationClasses_ = applicationClasses;
+        applicationes_ = applicationes;
 
         // Initialise the default GUI.
         initComponents();
 
         // Initialise the application class combo box.
-        for (int i = 0; i <applicationClasses_.length; i++)
+        for (int i = 0; i <applicationes_.length; i++)
         {
-            appClassCombo_.addItem(applicationClasses_[i].name);
+            appCombo_.addItem(applicationes_[i].name);
         }
 
         // Initialise the case roots combo box.
@@ -80,18 +80,18 @@ public class CreateCaseDialog
 //    protected void buildAppsMenu
 //    (
 //        JComboBox appsMenu,
-//        ApplicationClassDescriptor[] applicationClasses
+//        ApplicationDescriptor[] applicationes
 //    )
 //    {
 //        // map from category to menu
 //        Hashtable appsMenuMap = new Hashtable(5);
 //
-//        for (int i = 0; i <applicationClasses_.length; i++)
+//        for (int i = 0; i <applicationes_.length; i++)
 //        {
 //            JComboBox menu = appsMenu;
 //
-//            String appName = applicationClasses_[i].name;
-//            String appCat = applicationClasses_[i].category;
+//            String appName = applicationes_[i].name;
+//            String appCat = applicationes_[i].category;
 //            if ((appCat != null) && (appCat.length() > 0))
 //            {
 //                // Has category. Build hierarchical submenus by splitting
@@ -148,10 +148,10 @@ public class CreateCaseDialog
     {
         return caseClass_;
     }
-    public void   setCaseClass(String appClass)
+    public void   setCaseClass(String app)
     {
         // Update the application class combo box.
-        appClassCombo_.setSelectedItem(appClass);
+        appCombo_.setSelectedItem(app);
     }
 
     //--------------------------------------------------------------------------
@@ -186,7 +186,7 @@ public class CreateCaseDialog
     private void initComponents() {//GEN-BEGIN:initComponents
         mainPanel_ = new javax.swing.JPanel();
         label1_ = new javax.swing.JLabel();
-        appClassCombo_ = new javax.swing.JComboBox();
+        appCombo_ = new javax.swing.JComboBox();
         label2_ = new javax.swing.JLabel();
         rootCombo_ = new javax.swing.JComboBox();
         label3_ = new javax.swing.JLabel();
@@ -221,8 +221,8 @@ public class CreateCaseDialog
         gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
         mainPanel_.add(label1_, gridBagConstraints2);
         
-        appClassCombo_.setFont(new java.awt.Font("Dialog", 0, 10));
-        appClassCombo_.addItemListener(new java.awt.event.ItemListener() {
+        appCombo_.setFont(new java.awt.Font("Dialog", 0, 10));
+        appCombo_.addItemListener(new java.awt.event.ItemListener() {
             public void itemStateChanged(java.awt.event.ItemEvent evt) {
                 OnAppClassComboChanged(evt);
             }
@@ -235,7 +235,7 @@ public class CreateCaseDialog
         gridBagConstraints2.insets = new java.awt.Insets(10, 5, 5, 10);
         gridBagConstraints2.anchor = java.awt.GridBagConstraints.WEST;
         gridBagConstraints2.weightx = 1.0;
-        mainPanel_.add(appClassCombo_, gridBagConstraints2);
+        mainPanel_.add(appCombo_, gridBagConstraints2);
         
         label2_.setText("Case Root");
         label2_.setForeground(java.awt.Color.black);
@@ -398,7 +398,7 @@ public class CreateCaseDialog
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel mainPanel_;
     private javax.swing.JLabel label1_;
-    private javax.swing.JComboBox appClassCombo_;
+    private javax.swing.JComboBox appCombo_;
     private javax.swing.JLabel label2_;
     private javax.swing.JComboBox rootCombo_;
     private javax.swing.JLabel label3_;

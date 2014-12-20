@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.CaseManagement;
@@ -57,7 +57,7 @@ import FoamXServer.IDictionaryEntry;
 import FoamXServer.IDictionaryEntryHolder;
 import FoamXServer.FoamXError;
 import FoamXServer.FoamXIOError;
-import FoamXServer.UtilityDescriptor;
+import FoamXServer.ApplicationDescriptor;
 
 public class CasePanel
     extends javax.swing.JPanel
@@ -451,7 +451,7 @@ public class CasePanel
         {
             // Get the list of modules to load from the application class
             // object.
-            String[] moduleNames = caseServer_.applicationClass().modules();
+            String[] moduleNames = caseServer_.application().modules();
 
             // Load and initialise all modules.
             for (short i = 0; i <moduleNames.length; i++)
@@ -677,7 +677,7 @@ public class CasePanel
             contextMenu.add(utilsMenu);
 
             // Get utility descriptors.
-            UtilityDescriptor[] utilities =
+            ApplicationDescriptor[] utilities =
                 caseServer_.foamProperties().utilities();
 
             for (int i = 0; i < utilities.length; i++)
@@ -1290,7 +1290,7 @@ public class CasePanel
                             caseBrowser_,
                             caseServer_.caseRoot(),
                             caseServer_.caseName(),
-                            caseServer_.applicationClass().name(),
+                            caseServer_.application().name(),
                             true,               // Is application
                             "controlDict",
                             null

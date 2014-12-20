@@ -1,52 +1,55 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0.3                                 |
+|  \\    /   O peration     | Version:  1.2                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 
+// FoamX Mesh Description File
+
 FoamFile
 {
-    version 2.0;
-    format ascii;
+    version         2.0;
+    format          ascii;
 
-    root "/home/dm2/henry/foam/henry2.3/run/tutorials/turbFoam";
-    case "cavity";
-    instance "constant";
-    local "polyMesh";
+    root            "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorialsTest/turbFoam";
+    case            "cavity";
+    instance        "constant/polyMesh";
+    local           "";
 
-    class polyBoundaryMesh;
-    object boundary;
+    class           polyBoundaryMesh;
+    object          boundary;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-3
+
 (
-movingWall
-{
-    type wall;
-    physicalType wall;
-    nFaces 20;
-    startFace 760;
-}
+    movingWall
+    {
+        type            wall;
+        physicalType    wallFunctions;
+        startFace       760;
+        nFaces          20;
+    }
 
-fixedWalls
-{
-    type wall;
-    physicalType wall;
-    nFaces 60;
-    startFace 780;
-}
+    fixedWalls
+    {
+        type            wall;
+        physicalType    wallFunctions;
+        startFace       780;
+        nFaces          60;
+    }
 
-frontAndBack
-{
-    type empty;
-    physicalType empty;
-    nFaces 800;
-    startFace 840;
-}
+    frontAndBack
+    {
+        type            empty;
+        physicalType    empty;
+        startFace       840;
+        nFaces          800;
+    }
+
 )
 
 // ************************************************************************* //

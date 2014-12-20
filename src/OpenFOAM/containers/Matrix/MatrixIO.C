@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -124,7 +124,7 @@ Istream& operator>>(Istream& is, Matrix<T>& M)
         }
         else
         {
-            is.read((char*)v, M.n_*M.m_*sizeof(T));
+            is.read(reinterpret_cast<char*>(v), M.n_*M.m_*sizeof(T));
 
             is.fatalCheck
             (
@@ -236,7 +236,7 @@ Ostream& operator<<(Ostream& os, const Matrix<T>& M)
     else
     {
         os << nl << M.n_ << token::SPACE << M.m_ << nl;
-        os.write((const char*)M.v_[0], M.n_*M.m_*sizeof(T));
+        os.write(reinterpret_cast<const char*>(M.v_[0]), M.n_*M.m_*sizeof(T));
     }
 
     // Check state of IOstream

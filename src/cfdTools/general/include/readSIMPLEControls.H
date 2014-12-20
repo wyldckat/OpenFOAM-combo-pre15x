@@ -1,0 +1,19 @@
+    const dictionary& simple = mesh.solutionDict().subDict("SIMPLE");
+
+    int nNonOrthCorr = 0;
+    if (simple.found("nNonOrthogonalCorrectors"))
+    {
+        nNonOrthCorr = readInt(simple.lookup("nNonOrthogonalCorrectors"));
+    }
+
+    bool momentumPredictor = true;
+    if (simple.found("momentumPredictor"))
+    {
+        momentumPredictor = Switch(simple.lookup("momentumPredictor"));
+    }
+
+    bool fluxGradp = false;
+    if (simple.found("fluxGradp"))
+    {
+        fluxGradp = Switch(simple.lookup("fluxGradp"));
+    }

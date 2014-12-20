@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -372,19 +372,32 @@ inline scalar triangle<Point, PointRef>::circumRadius() const
     scalar d2 = - (c_ - b_) & (b_ - a_);
     scalar d3 = (c_ - a_) & (c_ - b_);
 
-    return
-        0.5
-      * Foam::sqrt
-        (
-            (d1 + d2)*(d2 + d3)*(d3 + d1)/(d2*d3 + d3*d1 + d1*d2)
-        );
+    scalar denom = d2*d3 + d3*d1 + d1*d2;
+
+    if (Foam::mag(denom) < VSMALL)
+    {
+        return GREAT;
+    }
+    else
+    {
+        scalar a = (d1 + d2)*(d2 + d3)*(d3 + d1) / denom;
+
+        return 0.5*Foam::sqrt(min(GREAT, max(0, a)));
+    }
 }
 
 
 template<class Point, class PointRef>
 inline scalar triangle<Point, PointRef>::quality() const
 {
-    return mag()/(physicalConstant::pi*Foam::sqr(circumRadius())*0.413497);
+    return
+        mag()
+      / (
+            physicalConstant::pi
+          * Foam::sqr(circumRadius())
+          * 0.413497
+          + VSMALL
+        );
 }
 
 

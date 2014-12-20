@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -251,8 +251,13 @@ void Foam::surfaceIntersection::storeIntersection
 
             if (mag(prevHit - thisHit) < SMALL)
             {
-                Warning
-                    << "Encountered degenerate edge between face "
+                WarningIn
+                (
+                    "Foam::surfaceIntersection::storeIntersection"
+                    "(const bool isFirstSurf, const labelList& facesA,"
+                    "const label faceB, DynamicList<edge>& allCutEdges,"
+                    "DynamicList<point>& allCutPoints)"
+                )   << "Encountered degenerate edge between face "
                     << twoFaces[0] << " on first surface"
                     << " and face " << twoFaces[1] << " on second surface"
                     << endl

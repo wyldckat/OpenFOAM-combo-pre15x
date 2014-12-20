@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Write in tetgen .smesh format.
@@ -47,7 +47,7 @@ void triSurface::writeSMESH(const bool writeSorted, Ostream& os) const
     // Write vertex coords
     forAll(ps, pointi)
     {
-        os  << pointi + 1 << ' '
+        os  << pointi << ' '
             << ps[pointi].x() << ' '
             << ps[pointi].y() << ' '
             << ps[pointi].z() << endl;
@@ -77,10 +77,10 @@ void triSurface::writeSMESH(const bool writeSorted, Ostream& os) const
                 const label faceI = faceMap[faceIndex++];
 
                 os  << "3 " // triangles
-                    << operator[](faceI)[0] + 1 << ' '
-                    << operator[](faceI)[1] + 1 << ' '
-                    << operator[](faceI)[2] + 1 << ' '
-                    << patchI + 1                   // region number
+                    << operator[](faceI)[0] << ' '
+                    << operator[](faceI)[1] << ' '
+                    << operator[](faceI)[2] << ' '
+                    << operator[](faceI).region()   // region number
                     << endl;
             }
         }
@@ -95,10 +95,10 @@ void triSurface::writeSMESH(const bool writeSorted, Ostream& os) const
         forAll(*this, faceI)
         {
             os  << "3 "
-                << operator[](faceI)[0] + 1 << ' '
-                << operator[](faceI)[1] + 1 << ' '
-                << operator[](faceI)[2] + 1 << ' '
-                << operator[](faceI).region() + 1   // region number
+                << operator[](faceI)[0] << ' '
+                << operator[](faceI)[1] << ' '
+                << operator[](faceI)[2] << ' '
+                << operator[](faceI).region()       // region number
                 << endl;
         }
 

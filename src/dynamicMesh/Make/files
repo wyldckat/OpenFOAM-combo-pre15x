@@ -35,26 +35,28 @@ undoableMeshCutter                   = $(meshModifiers)/undoableMeshCutter
 refinementIterator                   = $(meshModifiers)/refinementIterator
 multiDirRefinement                   = $(meshModifiers)/multiDirRefinement
 hexRef8                              = $(meshModifiers)/hexRef8
+boundaryCutter                       = $(meshModifiers)/boundaryCutter
 
 directionInfo                        = $(directions)/directionInfo
 
 attachPolyMesh                       = attachPolyMesh
 repatchPolyMesh                      = repatchPolyMesh
 
-motionSolver                         = motionSolver
-cellQuality                          = $(motionSolver)/cellQuality
-
-motionDiffs                          = $(motionSolver)/motionDiffs
+motionSolvers                        = motionSolvers
+motionSolver                         = $(motionSolvers)/motionSolver
+laplace                              = $(motionSolver)/laplace
+pseudoSolid                          = $(motionSolver)/pseudoSolid
+cellQuality                          = $(motionSolvers)/cellQuality
+motionDiffs                          = $(motionSolvers)/motionDiffs
 motionDiff                           = $(motionDiffs)/motionDiff
 constant                             = $(motionDiffs)/constant
+deformationEnergy                    = $(motionDiffs)/deformationEnergy
+distortionEnergy                     = $(motionDiffs)/distortionEnergy
 linear                               = $(motionDiffs)/linear
 quadratic                            = $(motionDiffs)/quadratic
 exponential                          = $(motionDiffs)/exponential
 patchEnhanced                        = $(motionDiffs)/patchEnhanced
 file                                 = $(motionDiffs)/file
-nonOrthogonality                     = $(motionDiffs)/nonOrthogonality
-skewness                             = $(motionDiffs)/skewness
-mixedQuality                         = $(motionDiffs)/mixedQuality
 
 tools                                = tools
 twoDPointCorrector                   = $(tools)/twoDPointCorrector
@@ -82,6 +84,10 @@ $(enrichedPatch)/enrichedPatchCutFaces.C
 $(enrichedPatch)/enrichedPatchMasterPoints.C
 
 $(directPolyTopoChange)/directPolyTopoChange.C
+$(directPolyTopoChange)/directPolyTopoChangeCouples.C
+
+$(directPolyTopoChange)/directEdgeCollapser.C
+$(directPolyTopoChange)/directFaceCollapser.C
 
 $(slidingInterface)/slidingInterface.C
 $(slidingInterface)/slidingInterfaceProjectPoints.C
@@ -100,6 +106,7 @@ $(setUpdater)/setUpdater.C
 $(morphMesh)/morphMesh.C
 $(removeFaces)/removeFaces.C
 $(removeCells)/removeCells.C
+$(boundaryCutter)/boundaryCutter.C
 $(cellCuts)/cellCuts.C
 
 $(meshCutter)/meshCutter.C
@@ -121,24 +128,28 @@ $(refineCell)/refineCell.C
 $(wallLayerCells)/wallLayerCells.C
 $(wallNormalInfo)/wallNormalInfo.C
 
+$(attachPolyMesh)/attachPolyMesh.C
+
 $(repatchPolyMesh)/repatchPolyMesh.C
 
 $(twoDPointCorrector)/twoDPointCorrector.C
 
 $(motionSolver)/motionSolver.C
+$(laplace)/laplaceMotionSolver.C
+$(pseudoSolid)/pseudoSolidMotionSolver.C
+
 $(cellQuality)/cellQuality.C
 
 $(motionDiff)/motionDiff.C
 
 $(constant)/constDiff.C
+$(deformationEnergy)/deformationEnergyDiff.C
+$(distortionEnergy)/distortionEnergyDiff.C
 $(linear)/linearDiff.C
 $(quadratic)/quadraticDiff.C
 $(exponential)/exponentialDiff.C
 $(patchEnhanced)/patchEnhancedDiff.C
 $(file)/fileDiff.C
-$(nonOrthogonality)/nonOrthogonalityDiff.C
-$(skewness)/skewnessDiff.C
-$(mixedQuality)/mixedQualityDiff.C
 
 $(motionSmoother)/motionSmoother.C
 

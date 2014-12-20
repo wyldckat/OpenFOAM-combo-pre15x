@@ -20,10 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
-
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -45,7 +42,38 @@ addToRunTimeSelectionTable(LESdelta, cubeRootVolDelta, dictionary);
 
 void cubeRootVolDelta::calcDelta()
 {
-    delta_.internalField() = deltaCoeff_*pow(mesh().V(), 1.0/3.0);
+    const Vector<label>& directions = mesh().directions();
+    label nD = (directions.nComponents + cmptSum(directions))/2;
+
+    if (nD == 3)
+    {
+        delta_.internalField() = deltaCoeff_*pow(mesh().V(), 1.0/3.0);
+    }
+    else if (nD == 2)
+    {
+        WarningIn("cubeRootVolDelta::calcDelta()")
+            << "Case is 2D, LES is not strictly applicable\n"
+            << endl;
+
+        scalar thickness = 0.0;
+        for (direction dir=0; dir<directions.nComponents; dir++)
+        {
+            if (directions[dir] == -1)
+            {
+                boundBox bb(mesh().points(), false);
+
+                thickness = (bb.max() - bb.min())[dir];
+            }
+        }
+
+        delta_.internalField() = deltaCoeff_*sqrt(mesh().V()/thickness);
+    }
+    else
+    {
+        FatalErrorIn("cubeRootVolDelta::calcDelta()")
+            << "Case is not 3D or 2D, LES is not applicable"
+            << exit(FatalError);
+    }
 }
 
 

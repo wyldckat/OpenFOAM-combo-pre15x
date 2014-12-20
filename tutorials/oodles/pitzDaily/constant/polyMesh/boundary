@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.2                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,10 +11,10 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "";
-    case "";
-    instance "";
-    local "";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorials/oodles";
+    case "pitzDaily";
+    instance ""constant"";
+    local "polyMesh";
 
     class polyBoundaryMesh;
     object boundary;
@@ -35,7 +35,7 @@ inlet
 outlet
 {
     type patch;
-    physicalType fluxOutlet;
+    physicalType inletOutlet;
     nFaces 57;
     startFace 24200;
 }

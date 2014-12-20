@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     polyPatch
@@ -116,10 +116,14 @@ protected:
         {}
 
         //- Correct patches after moving points
-        virtual void movePoints(const pointField& p)
-        {
-            primitivePatch::movePoints(p);
-        }
+        virtual void movePoints(const pointField& p);
+
+        //- Initialise the update of the patch topology
+        virtual void initUpdateTopology()
+        {}
+
+        //- Update of the patch topology
+        virtual void updateTopology();
 
 
 public:
@@ -345,7 +349,7 @@ public:
             //- Initialize ordering (on new mesh)
             //  Gets -changes (in old mesh ordering)
             //  -map from old to new mesh
-            virtual void sendOrder
+            virtual void initOrder
             (
                 const polyTopoChange&,
                 const mapPolyMesh&

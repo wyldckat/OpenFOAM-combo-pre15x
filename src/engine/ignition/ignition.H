@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     ignition
@@ -58,7 +58,7 @@ class ignition
 
         Switch ignite_;
 
-        ptrList<ignitionSite> ignSites_;
+        PtrList<ignitionSite> ignSites_;
 
 
     // Private Member Functions
@@ -83,8 +83,11 @@ public:
 
     // Member Functions
 
-        //- Return the set of ignition sites updated for moving meshes
-        const ptrList<ignitionSite>& sites();
+        //- Return the set of ignition sites
+        const PtrList<ignitionSite>& sites()
+        {
+            return ignSites_;
+        }
 
 
         // Check

@@ -11,6 +11,7 @@ surfaces/interpolatedPlane/interpolatedPlane.C
 surfaceWriters/surfaceWriter/surfaceWriters.C
 surfaceWriters/foamFile/foamFileWriters.C
 surfaceWriters/dx/dxWriters.C
+surfaceWriters/raw/rawWriters.C
 surfaceWriters/vtk/vtkWriters.C
 
 EXE = $(FOAM_APPBIN)/sampleSurface

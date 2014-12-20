@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -28,7 +28,7 @@ License
 #include "ListLoopM.H"
 
 #include "FixedList.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "SLList.H"
 #include "IndirectList.H"
 
@@ -219,9 +219,9 @@ List<T>::List(const FixedList<T, Size>& fl)
 }
 
 
-// Construct as copy of ptrList<T>
+// Construct as copy of PtrList<T>
 template<class T>
-List<T>::List(const ptrList<T>& sptrl)
+List<T>::List(const PtrList<T>& sptrl)
 :
     UList<T>(NULL, sptrl.size())
 {
@@ -324,7 +324,7 @@ void List<T>::transfer(List<T>& a)
 template<class T>
 List<T>& List<T>::null()
 {
-    List<T>* nullPtr = (List<T>*)NULL;
+    List<T>* nullPtr = reinterpret_cast<List<T>*>(NULL);
     return *nullPtr;
 }
 
@@ -443,7 +443,7 @@ void List<T>::operator=(const List<T>& a)
             << abort(FatalError);
     }
 
-    operator=((const UList<T>&)a);
+    operator=(static_cast<const UList<T>&>(a));
 }
 
 

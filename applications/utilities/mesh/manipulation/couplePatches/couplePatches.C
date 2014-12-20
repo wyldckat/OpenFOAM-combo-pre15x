@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Utility to reorder cyclic and processor patches.
@@ -115,6 +115,9 @@ int main(int argc, char *argv[])
 
             // Move mesh (since morphing does not do this)
             mesh.movePoints(mesh.morphMap().preMotionPoints());
+
+            // Set the precision of the points data to 10
+            IOstream::defaultPrecision(10);
 
             // Write resulting mesh
             Info << "Writing morphed mesh to time " << runTime.value() << endl;

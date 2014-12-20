@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.WindowManagement;
@@ -373,7 +373,7 @@ public class WindowManager
         ArrangeWindowsCascadeAction()
         {
             putValue(Action.NAME, "ArrangeCascade");
-            putValue(Action.SMALL_ICON, App.getResources().getIcon("NewBoundaryTypeImage"));
+            putValue(Action.SMALL_ICON, App.getResources().getIcon("NewPatchPhysicalTypeImage"));
             putValue(Action.SHORT_DESCRIPTION, "Arrange windows cascade");
             putValue(Action.LONG_DESCRIPTION, "Arrange windows cascade");
         }
@@ -392,7 +392,7 @@ public class WindowManager
         ArrangeWindowsHorizontalAction()
         {
             putValue(Action.NAME, "ArrangeHorizontal");
-            putValue(Action.SMALL_ICON, App.getResources().getIcon("NewBoundaryTypeImage"));
+            putValue(Action.SMALL_ICON, App.getResources().getIcon("NewPatchPhysicalTypeImage"));
             putValue(Action.SHORT_DESCRIPTION, "Arrange windows horizontally");
             putValue(Action.LONG_DESCRIPTION, "Arrange windows horizontally");
         }
@@ -411,7 +411,7 @@ public class WindowManager
         ArrangeWindowsVerticalAction()
         {
             putValue(Action.NAME, "ArrangeVertical");
-            putValue(Action.SMALL_ICON, App.getResources().getIcon("NewBoundaryTypeImage"));
+            putValue(Action.SMALL_ICON, App.getResources().getIcon("NewPatchPhysicalTypeImage"));
             putValue(Action.SHORT_DESCRIPTION, "Arrange windows vertically");
             putValue(Action.LONG_DESCRIPTION, "Arrange windows vertically");
         }

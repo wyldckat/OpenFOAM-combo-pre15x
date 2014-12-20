@@ -20,14 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     streamFunction
 
 Description
     Calculates and writes the stream function of velocity field U at each time 
-   
 
 \*---------------------------------------------------------------------------*/
 
@@ -48,15 +47,18 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 
 #   include "createTime.H"
-#   include "createMeshNoClear.H"
-
-    pointMesh pMesh(mesh);
 
     // Get times list
     instantList Times = runTime.times();
 
     // set startTime and endTime depending on -time and -latestTime options
 #   include "checkTimeOptions.H"
+
+    runTime.setTime(Times[startTime], startTime);
+
+#   include "createMeshNoClear.H"
+
+    pointMesh pMesh(mesh);
 
     for (label i=startTime; i<endTime; i++)
     {
@@ -137,7 +139,7 @@ int main(int argc, char *argv[])
                 {
                     const primitivePatch& bouFaces = patches[patchI];
 
-                    if (typeid(patches[patchI]) != typeid(emptyPolyPatch))
+                    if (!isType<emptyPolyPatch>(patches[patchI]))
                     {
                         forAll (bouFaces, faceI)
                         {
@@ -277,12 +279,12 @@ int main(int argc, char *argv[])
 
                                      if
                                      (
-                                         typeid(patches[patchNo])
-                                      != typeid(emptyPolyPatch)
-                                      && typeid(patches[patchNo])
-                                      != typeid(symmetryPolyPatch)
-                                      && typeid(patches[patchNo])
-                                      != typeid(wedgePolyPatch)
+                                        !isType<emptyPolyPatch>
+                                         (patches[patchNo])
+                                     && !isType<symmetryPolyPatch>
+                                         (patches[patchNo])
+                                     && !isType<wedgePolyPatch>
+                                         (patches[patchNo])
                                      )
                                      {
                                          label faceNo =
@@ -459,7 +461,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            Warning
+            WarningIn(args.executable())
                 << "Flux field does not exist."
                 << " Stream function not calculated" << endl;
         }

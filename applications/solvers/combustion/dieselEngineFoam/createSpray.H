@@ -3,7 +3,7 @@ Info << "Constructing Spray" << endl;
 pointMesh pMesh(mesh);
 volPointInterpolation vpi(mesh, pMesh);
 
-ptrList<specieProperties> gasProperties(Y.size());
+PtrList<specieProperties> gasProperties(Y.size());
 forAll(gasProperties, i)
 {
     gasProperties.hook

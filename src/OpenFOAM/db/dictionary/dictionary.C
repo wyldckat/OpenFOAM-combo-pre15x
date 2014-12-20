@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,14 +48,14 @@ void dictionary::add(entry* ePtr)
 {
     if (!hashedEntries_.found(ePtr->keyword()))
     {
+        ePtr->name() = name_ + "::" + ePtr->keyword();
         append(ePtr);
         hashedEntries_.insert(ePtr->keyword(), ePtr);
     }
     else
     {
-        Warning
-            << "dictionary::add(entry* ePtr) : "
-               "attempt to add an entry already in dictionary " << name()
+        IOWarningIn("dictionary::add(entry* ePtr)", (*this))
+            << "attempt to add an entry already in dictionary " << name()
             << endl;
 
         delete ePtr;
@@ -67,12 +65,10 @@ void dictionary::add(entry* ePtr)
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-// Construct null
 dictionary::dictionary()
 {}
 
 
-// Construct as copy
 dictionary::dictionary(const dictionary& dict)
 :
     IDLList<entry>(dict),
@@ -90,10 +86,18 @@ dictionary::dictionary(const dictionary& dict)
 }
 
 
+autoPtr<dictionary> dictionary::clone() const
+{
+    return autoPtr<dictionary>(new dictionary(*this));
+}
+
+
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 dictionary::~dictionary()
-{}
+{
+    //cerr<< "~dictionary() " << name() << " " << long(this) << std::endl;
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
@@ -158,6 +162,13 @@ const entry& dictionary::lookupEntry(const word& keyword) const
 ITstream& dictionary::lookup(const word& keyword) const
 {
     return lookupEntry(keyword).stream();
+}
+
+
+// Check if entry is a sub-dictionary
+bool dictionary::isDict(const word& keyword) const
+{
+    return lookupEntry(keyword).isDict();
 }
 
 
@@ -297,6 +308,36 @@ void dictionary::operator=(const dictionary& dict)
     {
         hashedEntries_.insert((*iter).keyword(), &(*iter));
     }
+}
+
+
+void dictionary::operator+=(const dictionary& dict)
+{
+    // Check for assignment to self
+    if (this == &dict)
+    {
+        FatalErrorIn("dictionary::operator+=(const dictionary&)")
+            << "attempted addition assignment to self for dictionary " << name()
+            << abort(FatalError);
+    }
+
+    for
+    (
+        IDLList<entry>::const_iterator iter = dict.begin();
+        iter != dict.end();
+        ++iter
+    )
+    {
+        add((*iter).clone()());
+    }
+}
+
+
+dictionary operator+(const dictionary& dict1, const dictionary& dict2)
+{
+    dictionary sum(dict1);
+    sum += dict2;
+    return sum;
 }
 
 

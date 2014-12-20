@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -28,6 +28,8 @@ License
 #include "Time.H"
 #include "volFields.H"
 #include "surfaceFields.H"
+#include "slicedVolFields.H"
+#include "slicedSurfaceFields.H"
 #include "SubField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -55,7 +57,7 @@ void fvMesh::makeSf() const
             << abort(FatalError);
     }
 
-    SfPtr_ = new surfaceVectorField
+    SfPtr_ = new slicedSurfaceVectorField
     (
         IOobject
         (
@@ -65,22 +67,9 @@ void fvMesh::makeSf() const
             *this
         ),
         *this,
-        dimArea
+        dimArea,
+        faceAreas()
     );
-
-    surfaceVectorField& s = *SfPtr_;
-
-    const vectorField& allFaceAreas = faceAreas();
-
-    s.internalField() =
-        vectorField::subField(allFaceAreas, nInternalFaces());
-
-    const fvPatchList& patches = boundary();
-
-    forAll (patches, patchI)
-    {
-        s.boundaryField()[patchI] = patches[patchI].patchSlice(allFaceAreas);
-    }
 }
 
 
@@ -117,10 +106,7 @@ void fvMesh::makeMagSf() const
             IOobject::NO_WRITE,
             false
         ),
-        mag(Sf())
-#       ifdef BAD_MESH_STABILISATION
-      + dimensionedScalar("vs", dimArea, VSMALL)
-#       endif
+        mag(Sf()) + dimensionedScalar("vs", dimArea, VSMALL)
     );
 }
 
@@ -143,7 +129,7 @@ void fvMesh::makeC() const
             << abort(FatalError);
     }
 
-    CPtr_ = new volVectorField
+    CPtr_ = new slicedVolVectorField
     (
         IOobject
         (
@@ -156,23 +142,10 @@ void fvMesh::makeC() const
             false
         ),
         *this,
-        dimLength
+        dimLength,
+        cellCentres(),
+        faceCentres()
     );
-
-    volVectorField& c = *CPtr_;
-
-    const vectorField& allCellCentres = cellCentres();
-    const vectorField& fcs = primitiveMesh::faceCentres();
-
-    c.internalField() =
-        vectorField::subField(allCellCentres, nCells());
-
-    const fvPatchList& patches = boundary();
-
-    forAll (patches, patchI)
-    {
-        c.boundaryField()[patchI] = patches[patchI].patchSlice(fcs);
-    }
 }
 
 
@@ -194,7 +167,7 @@ void fvMesh::makeCf() const
             << abort(FatalError);
     }
 
-    CfPtr_ = new surfaceVectorField
+    CfPtr_ = new slicedSurfaceVectorField
     (
         IOobject
         (
@@ -207,22 +180,9 @@ void fvMesh::makeCf() const
             false
         ),
         *this,
-        dimLength
+        dimLength,
+        faceCentres()
     );
-
-    surfaceVectorField& fc = *CfPtr_;
-
-    const vectorField& fcs = primitiveMesh::faceCentres();
-
-    fc.internalField() =
-        vectorField::subField(fcs, nInternalFaces());
-
-    const fvPatchList& patches = boundary();
-
-    forAll (patches, patchI)
-    {
-        fc.boundaryField()[patchI] = patches[patchI].patchSlice(fcs);
-    }
 }
 
 
@@ -231,7 +191,8 @@ void fvMesh::makePhi() const
     if (debug)
     {
         Info<< "void fvMesh::makePhi() : "
-            << "creating zero flux field"
+            << "reading old time flux field if present and creating "
+            << "zero current time flux field"
             << endl;
     }
 
@@ -244,21 +205,54 @@ void fvMesh::makePhi() const
             << abort(FatalError);
     }
 
-    phiPtr_ = new surfaceScalarField
+    // Reading old time mesh motion flux if it exists and 
+    // creating zero current time mesh motion flux
+
+    scalar t0 = this->time().value() - this->time().deltaT().value();
+
+    IOobject meshPhiHeader
     (
-        IOobject
-        (
-            "meshPhi",
-            pointsInstance(),
-            meshSubDir,
-            *this,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE,
-            false
-        ),
+        "meshPhi",
+        this->time().timeName(t0),
         *this,
-        dimensionedScalar("0", dimVolume/dimTime, 0.0)
+        IOobject::NO_READ
     );
+
+    if (meshPhiHeader.headerOk())
+    {
+        phiPtr_ = new surfaceScalarField
+        (
+            IOobject
+            (
+                "meshPhi",
+                this->time().timeName(t0),
+                *this,
+                IOobject::MUST_READ,
+                IOobject::AUTO_WRITE
+            ),
+            *this
+        );
+
+        phiPtr_->oldTime();
+
+        (*phiPtr_) = dimensionedScalar("0", dimVolume/dimTime, 0.0);
+    }
+    else
+    {
+        phiPtr_ = new surfaceScalarField
+        (
+            IOobject
+            (
+                "meshPhi",
+                this->time().timeName(),
+                *this,
+                IOobject::NO_READ,
+                IOobject::AUTO_WRITE
+            ),
+            *this,
+            dimensionedScalar("0", dimVolume/dimTime, 0.0)
+        );
+    }
 }
 
 
@@ -369,6 +363,13 @@ const surfaceScalarField& fvMesh::phi() const
     if (!phiPtr_)
     {
         makePhi();
+    }
+
+    // Set zero current time 
+    // mesh motion fluxes if the time has been incremented
+    if (phiPtr_->timeIndex() != time().timeIndex())
+    {
+        (*phiPtr_) = dimensionedScalar("0", dimVolume/dimTime, 0.0);
     }
 
     return *phiPtr_;

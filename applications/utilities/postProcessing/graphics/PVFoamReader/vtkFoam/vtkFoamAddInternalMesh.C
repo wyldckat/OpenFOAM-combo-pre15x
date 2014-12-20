@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -146,15 +146,30 @@ void Foam::vtkFoam::addInternalMesh
 
         if (cellModel == tet)
         {
-            vtkMesh->InsertNextCell(VTK_TETRA, 4, (int*)cellShape.begin());
+            vtkMesh->InsertNextCell
+            (
+                VTK_TETRA,
+                4,
+                const_cast<int*>(cellShape.begin())
+            );
         }
         else if (cellModel == pyr)
         {
-            vtkMesh->InsertNextCell(VTK_PYRAMID, 5, (int*)cellShape.begin());
+            vtkMesh->InsertNextCell
+            (
+                VTK_PYRAMID,
+                5,
+                const_cast<int*>(cellShape.begin())
+            );
         }
         else if (cellModel == prism)
         {
-            vtkMesh->InsertNextCell(VTK_WEDGE, 6, (int*)cellShape.begin());
+            vtkMesh->InsertNextCell
+            (
+                VTK_WEDGE,
+                6,
+                const_cast<int*>(cellShape.begin())
+            );
         }
         else if (cellModel == tetWedge)
         {
@@ -188,7 +203,12 @@ void Foam::vtkFoam::addInternalMesh
         }
         else if (cellModel == hex)
         {
-            vtkMesh->InsertNextCell(VTK_HEXAHEDRON, 8, (int*)cellShape.begin());
+            vtkMesh->InsertNextCell
+            (
+                VTK_HEXAHEDRON,
+                8,
+                const_cast<int*>(cellShape.begin())
+            );
         }
         else
         {

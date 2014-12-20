@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Simple extension of ReactionThermo to handle Reaction kinetics in addition
@@ -86,60 +86,80 @@ Reaction<ReactionThermo>::Reaction
 }
 
 
+// Construct as copy given new speciesTable
+template<class ReactionThermo>
+Reaction<ReactionThermo>::Reaction
+(
+    const Reaction<ReactionThermo>& r,
+    const speciesTable& species
+)
+:
+    ReactionThermo(r),
+    species_(species),
+    lhs_(r.lhs_),
+    rhs_(r.rhs_)
+{}
+
+
+template<class ReactionThermo>
+Reaction<ReactionThermo>::specieCoeffs::specieCoeffs
+(
+    const speciesTable& species,
+    Istream& is
+)
+{
+    token t(is);
+
+    if (t.isNumber())
+    {
+        stoichCoeff = t.number();
+        is >> t;
+    }
+    else
+    {
+        stoichCoeff = 1.0;
+    }
+
+    exponent = stoichCoeff;
+
+    if (t.isWord())
+    {
+        word specieName = t.wordToken();
+
+        size_t i = specieName.find('^');
+
+        if (i != word::npos)
+        {
+            string exponentStr = specieName
+            (
+                i + 1,
+                specieName.size() - i - 1
+            );
+            exponent = atof(exponentStr.c_str());
+            specieName = specieName(0, i);
+        }
+
+        index = species[specieName];
+    }
+    else
+    {
+        FatalIOErrorIn("Reaction<ReactionThermo>::lrhs(Istream& is)", is)
+            << "Expected a word but found " << t.info()
+            << exit(FatalIOError);
+    }
+}
+
+
 template<class ReactionThermo>
 void Reaction<ReactionThermo>::setLRhs(Istream& is)
 {
     DynamicList<specieCoeffs> dlrhs;
 
-    token t;
-
     while (is)
     {
-        is >> t;
+        dlrhs.append(specieCoeffs(species_, is));
 
-        specieCoeffs sc;
-
-        if (t.isNumber())
-        {
-            sc.stoichCoeff = t.number();
-            is >> t;
-        }
-        else
-        {
-            sc.stoichCoeff = 1.0;
-        }
-
-        sc.exponent = sc.stoichCoeff;
-
-        if (t.isWord())
-        {
-            word specieName = t.wordToken();
-
-            size_t i = specieName.find('^');
-
-            if (i != word::npos)
-            {
-                string exponentStr = specieName
-                (
-                    i + 1,
-                    specieName.size() - i - 1
-                );
-                sc.exponent = atof(exponentStr.c_str());
-                specieName = specieName(0, i);
-            }
-
-            sc.index = species_[specieName];
-        }
-        else
-        {
-            FatalIOErrorIn("Reaction<ReactionThermo>::lrhs(Istream& is)", is)
-                << "Expected a word but found " << t.info()
-                << exit(FatalIOError);
-        }
-
-        dlrhs.append(sc);
-
-        is >> t;
+        token t(is);
 
         if (t.isPunctuation())
         {

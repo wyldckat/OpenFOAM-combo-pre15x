@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -51,21 +49,81 @@ fvSchemes::fvSchemes(const objectRegistry& obr)
             IOobject::NO_WRITE
         )
     ),
-    ddtSchemes_(ITstream("ddtSchemes", tokenList())()),
-    defaultDdtScheme_("default", tokenList()),
-    d2dt2Schemes_(ITstream("d2dt2Schemes", tokenList())()),
-    defaultD2dt2Scheme_("default", tokenList()),
-    interpolationSchemes_(ITstream("interpolationSchemes", tokenList())()),
-    defaultInterpolationScheme_("default", tokenList()),
-    divSchemes_(ITstream("divSchemes", tokenList())()),
-    defaultDivScheme_("default", tokenList()),
-    gradSchemes_(ITstream("gradSchemes", tokenList())()),
-    defaultGradScheme_("default", tokenList()),
-    snGradSchemes_(ITstream("snGradSchemes", tokenList())()),
-    defaultSnGradScheme_("default", tokenList()),
-    laplacianSchemes_(ITstream("laplacianSchemes", tokenList())()),
-    defaultLaplacianScheme_("default", tokenList()),
-    fluxRequired_(ITstream("fluxRequired", tokenList())()),
+    ddtSchemes_
+    (
+        ITstream(objectPath() + "::ddtSchemes",
+        tokenList())()
+    ),
+    defaultDdtScheme_
+    (
+        ddtSchemes_.name() + "::default",
+        tokenList()
+    ),
+    d2dt2Schemes_
+    (
+        ITstream(objectPath() + "::d2dt2Schemes",
+        tokenList())()
+    ),
+    defaultD2dt2Scheme_
+    (
+        d2dt2Schemes_.name() + "::default",
+        tokenList()
+    ),
+    interpolationSchemes_
+    (
+        ITstream(objectPath() + "::interpolationSchemes",
+        tokenList())()
+    ),
+    defaultInterpolationScheme_
+    (
+        interpolationSchemes_.name() + "::default",
+        tokenList()
+    ),
+    divSchemes_
+    (
+        ITstream(objectPath() + "::divSchemes",
+        tokenList())()
+    ),
+    defaultDivScheme_
+    (
+        divSchemes_.name() + "::default",
+        tokenList()
+    ),
+    gradSchemes_
+    (
+        ITstream(objectPath() + "::gradSchemes",
+        tokenList())()
+    ),
+    defaultGradScheme_
+    (
+        gradSchemes_.name() + "::default",
+        tokenList()
+    ),
+    snGradSchemes_
+    (
+        ITstream(objectPath() + "::snGradSchemes",
+        tokenList())()
+    ),
+    defaultSnGradScheme_
+    (
+        snGradSchemes_.name() + "::default",
+        tokenList()
+    ),
+    laplacianSchemes_
+    (
+        ITstream(objectPath() + "::laplacianSchemes",
+        tokenList())()
+    ),
+    defaultLaplacianScheme_
+    (
+        laplacianSchemes_.name() + "::default",
+        tokenList()
+    ),
+    fluxRequired_
+    (
+        ITstream(objectPath() + "::fluxRequired",
+        tokenList())()
+    ),
     defaultFluxRequired_(false)
 {
     read();
@@ -80,7 +138,6 @@ bool fvSchemes::read()
     {
         const dictionary& dict = schemesDict();
 
-
         if (dict.found("ddtSchemes"))
         {
             ddtSchemes_ = dict.subDict("ddtSchemes");
@@ -88,7 +145,7 @@ bool fvSchemes::read()
         else if (dict.found("timeScheme"))
         {
             // For backward compatibility.
-            // The timeScheme will be deprecated with warning or removed in 2.4.
+            // The timeScheme will be deprecated with warning or removed
 
             word timeSchemeName(dict.lookup("timeScheme"));
 
@@ -104,6 +161,14 @@ bool fvSchemes::read()
             {
                 timeSchemeName = "steadyState";
             }
+            else
+            {
+                FatalIOErrorIn("fvSchemes::read()", dict.lookup("timeScheme"))
+                    << "\n    Only EulerImplicit, BackwardDifferencing and "
+                       "SteadyState\n    are supported by the old timeScheme "
+                       "specification.\n    Please use ddtSchemes instead."
+                    << exit(FatalIOError);
+            }
 
             if (ddtSchemes_.found("default"))
             {
@@ -111,6 +176,9 @@ bool fvSchemes::read()
             }
 
             ddtSchemes_.add("default", timeSchemeName);
+
+            ddtSchemes_.lookup("default")[0].lineNumber() =
+                dict.lookup("timeScheme").lineNumber();
         }
         else
         {
@@ -134,7 +202,7 @@ bool fvSchemes::read()
         else if (dict.found("timeScheme"))
         {
             // For backward compatibility.
-            // The timeScheme will be deprecated with warning or removed in 2.4.
+            // The timeScheme will be deprecated with warning or removed
 
             word timeSchemeName(dict.lookup("timeScheme"));
 
@@ -153,6 +221,9 @@ bool fvSchemes::read()
             }
 
             d2dt2Schemes_.add("default", timeSchemeName);
+
+            d2dt2Schemes_.lookup("default")[0].lineNumber() =
+                dict.lookup("timeScheme").lineNumber();
         }
         else
         {
@@ -297,8 +368,8 @@ ITstream& fvSchemes::ddtScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultDdtScheme_)).rewind();
-        return (ITstream&)defaultDdtScheme_;
+        const_cast<ITstream&>(defaultDdtScheme_).rewind();
+        return const_cast<ITstream&>(defaultDdtScheme_);
     }
 }
 
@@ -320,8 +391,8 @@ ITstream& fvSchemes::d2dt2Scheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultD2dt2Scheme_)).rewind();
-        return (ITstream&)defaultD2dt2Scheme_;
+        const_cast<ITstream&>(defaultD2dt2Scheme_).rewind();
+        return const_cast<ITstream&>(defaultD2dt2Scheme_);
     }
 }
 
@@ -343,8 +414,8 @@ ITstream& fvSchemes::interpolationScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultInterpolationScheme_)).rewind();
-        return (ITstream&)defaultInterpolationScheme_;
+        const_cast<ITstream&>(defaultInterpolationScheme_).rewind();
+        return const_cast<ITstream&>(defaultInterpolationScheme_);
     }
 }
 
@@ -362,8 +433,8 @@ ITstream& fvSchemes::divScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultDivScheme_)).rewind();
-        return (ITstream&)defaultDivScheme_;
+        const_cast<ITstream&>(defaultDivScheme_).rewind();
+        return const_cast<ITstream&>(defaultDivScheme_);
     }
 }
 
@@ -381,8 +452,8 @@ ITstream& fvSchemes::gradScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultGradScheme_)).rewind();
-        return (ITstream&)defaultGradScheme_;
+        const_cast<ITstream&>(defaultGradScheme_).rewind();
+        return const_cast<ITstream&>(defaultGradScheme_);
     }
 }
 
@@ -400,8 +471,8 @@ ITstream& fvSchemes::snGradScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultSnGradScheme_)).rewind();
-        return (ITstream&)defaultSnGradScheme_;
+        const_cast<ITstream&>(defaultSnGradScheme_).rewind();
+        return const_cast<ITstream&>(defaultSnGradScheme_);
     }
 }
 
@@ -419,8 +490,8 @@ ITstream& fvSchemes::laplacianScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultLaplacianScheme_)).rewind();
-        return (ITstream&)defaultLaplacianScheme_;
+        const_cast<ITstream&>(defaultLaplacianScheme_).rewind();
+        return const_cast<ITstream&>(defaultLaplacianScheme_);
     }
 }
 

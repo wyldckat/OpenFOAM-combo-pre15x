@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     A bounding box defined in terms of the points at it's extremities.
@@ -39,15 +39,14 @@ namespace Foam
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct as the bounding box of the given pointField
-boundBox::boundBox(const pointField& points)
+boundBox::boundBox(const pointField& points, const bool doReduce)
 :
     min_(vector::zero),
     max_(vector::zero)
 {
     if (points.size() == 0)
     {
-        Warning
-            << "boundBox::boundBox(const pointField& points) : "
+        WarningIn("boundBox::boundBox(const pointField& points)")
             << "cannot find bounding box for zero sized pointField"
             << "returning zero" << endl;
 
@@ -63,9 +62,12 @@ boundBox::boundBox(const pointField& points)
         max_ = ::Foam::max(max_, points[i]);
     }
 
-    // Reduce parallel information
-    reduce(min_, minOp<point>());
-    reduce(max_, maxOp<point>());
+    if (doReduce)
+    {
+        // Reduce parallel information
+        reduce(min_, minOp<point>());
+        reduce(max_, maxOp<point>());
+    }
 }
 
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     expDirectionMixedFvPatchField
@@ -155,10 +155,10 @@ void expDirectionMixedFvPatchField<Type>::rmap
 template<class Type>
 tmp<Field<Type> > expDirectionMixedFvPatchField<Type>::snGrad() const
 {
-    const vectorField& nHat = patchMesh().faceNormals();
+    const vectorField& nHat = patch().faceNormals();
 
     Field<Type> gradValue =
-        patchInternalField() + refGrad_/patchMesh().deltaCoeffs();
+        patchInternalField() + refGrad_/patch().deltaCoeffs();
 
     Field<Type> mixedValue =
         nHat*(nHat & refValue_)
@@ -166,7 +166,7 @@ tmp<Field<Type> > expDirectionMixedFvPatchField<Type>::snGrad() const
 
     return
         valueFraction_*
-            (mixedValue - patchInternalField())*patchMesh().deltaCoeffs()
+            (mixedValue - patchInternalField())*patch().deltaCoeffs()
       + (1.0 - valueFraction_)*refGrad_;
 }
 
@@ -180,10 +180,10 @@ void expDirectionMixedFvPatchField<Type>::evaluate()
         updateCoeffs();
     }
 
-    const vectorField& nHat = patchMesh().faceNormals();
+    const vectorField& nHat = patch().faceNormals();
 
     Field<Type> gradValue =
-        patchInternalField() + refGrad_/patchMesh().deltaCoeffs();
+        patchInternalField() + refGrad_/patch().deltaCoeffs();
 
     Field<Type> mixedValue =
         nHat*(nHat & refValue_)
@@ -217,10 +217,10 @@ tmp<Field<Type> > expDirectionMixedFvPatchField<Type>::valueBoundaryCoeffs
     const tmp<scalarField>&
 ) const
 {
-    const vectorField& nHat = patchMesh().faceNormals();
+    const vectorField& nHat = patch().faceNormals();
 
     Field<Type> gradValue =
-        patchInternalField() + refGrad_/patchMesh().deltaCoeffs();
+        patchInternalField() + refGrad_/patch().deltaCoeffs();
 
     Field<Type> mixedValue =
         nHat*(nHat & refValue_)
@@ -228,7 +228,7 @@ tmp<Field<Type> > expDirectionMixedFvPatchField<Type>::valueBoundaryCoeffs
 
     return
         valueFraction_*mixedValue
-      + (1.0 - valueFraction_)*refGrad_/patchMesh().deltaCoeffs();
+      + (1.0 - valueFraction_)*refGrad_/patch().deltaCoeffs();
 }
 
 //- Return the matrix diagonal coefficients corresponding to the
@@ -236,7 +236,7 @@ tmp<Field<Type> > expDirectionMixedFvPatchField<Type>::valueBoundaryCoeffs
 template<class Type>
 tmp<Field<Type> > expDirectionMixedFvPatchField<Type>::gradientInternalCoeffs() const
 {
-    return -Type(pTraits<Type>::one)*valueFraction_*patchMesh().deltaCoeffs();
+    return -Type(pTraits<Type>::one)*valueFraction_*patch().deltaCoeffs();
 }
 
 //- Return the matrix source coefficients corresponding to the
@@ -244,17 +244,17 @@ tmp<Field<Type> > expDirectionMixedFvPatchField<Type>::gradientInternalCoeffs() 
 template<class Type>
 tmp<Field<Type> > expDirectionMixedFvPatchField<Type>::gradientBoundaryCoeffs() const
 {
-    const vectorField& nHat = patchMesh().faceNormals();
+    const vectorField& nHat = patch().faceNormals();
 
     Field<Type> gradValue =
-        patchInternalField() + refGrad_/patchMesh().deltaCoeffs();
+        patchInternalField() + refGrad_/patch().deltaCoeffs();
 
     Field<Type> mixedValue =
         nHat*(nHat & refValue_)
       + gradValue - nHat*(nHat & gradValue);
 
     return
-        valueFraction_*patchMesh().deltaCoeffs()*mixedValue
+        valueFraction_*patch().deltaCoeffs()*mixedValue
       + (1.0 - valueFraction_)*refGrad_;
 }
 

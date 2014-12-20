@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -121,7 +121,7 @@ Istream& operator>>(Istream& is, List<T>& L)
         {
             if (s)
             {
-                is.read((char*)L.begin(), s*sizeof(T));
+                is.read(reinterpret_cast<char*>(L.begin()), s*sizeof(T));
 
                 is.fatalCheck
                 (

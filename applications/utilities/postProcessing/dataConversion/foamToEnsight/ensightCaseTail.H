@@ -2,7 +2,7 @@ if (Pstream::master())
 {
     ensightCaseFile << nl << "TIME" << nl
         << "time set:                      " << 1 << nl
-        << "number of steps:               " << Times.size() - startTime << nl
+        << "number of steps:               " << nTimeSteps << nl
         << "filename start number:         " << 0 << nl
         << "filename increment:            " << 1 << nl;
 

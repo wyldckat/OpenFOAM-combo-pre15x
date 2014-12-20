@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -44,6 +44,9 @@ namespace Foam
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 defineTypeNameAndDebug(faMesh, 0);
+
+word faMesh::meshSubDir = "faMesh";
+
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
@@ -182,15 +185,15 @@ faMesh::faMesh
     IOobject::writeOption w
 )
 :
-    edgeInterpolation(*this),
+    edgeInterpolation(*this, m),
     mesh_(m),
     faceLabels_
     (
         IOobject
         (
             "faceLabels",
-            m.time().findInstance(m.meshDir(), "faceLabels"),
-            m.meshSubDir,
+            m.time().findInstance(meshDir(), "faceLabels"),
+            meshSubDir,
             m,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
@@ -201,8 +204,8 @@ faMesh::faMesh
         IOobject
         (
             "boundary",
-            m.time().findInstance(m.meshDir(), "boundary"),
-            m.meshSubDir,
+            m.time().findInstance(meshDir(), "boundary"),
+            meshSubDir,
             m,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
@@ -247,7 +250,7 @@ faMesh::faMesh
             (
                 "S0",
                 m.time().timeName(),
-                m.meshSubDir,
+                meshSubDir,
                 m.db(),
                 IOobject::MUST_READ,
                 IOobject::AUTO_WRITE
@@ -261,21 +264,20 @@ faMesh::faMesh
 faMesh::faMesh
 (
     const polyMesh& m,
-    const fileName& meshLocation,
     const labelList& faceLabels,
     IOobject::readOption r,
     IOobject::writeOption w
 )
 :
-    edgeInterpolation(*this),
+    edgeInterpolation(*this, m),
     mesh_(m),
     faceLabels_
     (
         IOobject
         (
             "faceLabels",
-            meshLocation,
-            m.meshSubDir,
+            m.instance(),
+            meshSubDir,
             m,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
@@ -287,8 +289,8 @@ faMesh::faMesh
         IOobject
         (
             "boundary",
-            meshLocation,
-            m.meshSubDir,
+            m.instance(),
+            meshSubDir,
             m,
             IOobject::MUST_READ,
             IOobject::NO_WRITE
@@ -331,6 +333,18 @@ faMesh::~faMesh()
 }
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+fileName faMesh::meshDir() const
+{
+    return mesh_.dbDir()/meshSubDir;
+}
+
+
+const Time& faMesh::time() const
+{
+    return mesh_.time();
+}
+
 
 const indirectPrimitivePatch& faMesh::patch() const
 {
@@ -421,7 +435,7 @@ void faMesh::addFaPatches(const List<faPatch*>& p)
 
 const objectRegistry& faMesh::db() const
 {
-    return basicMesh().db();
+    return mesh_.db();
 }
 
 
@@ -434,12 +448,6 @@ const faBoundaryMesh& faMesh::boundary() const
 faBoundaryMesh& faMesh::boundary()
 {
     return boundary_;
-}
-
-
-const polyMesh& faMesh::basicMesh() const
-{
-    return mesh_;
 }
 
 
@@ -680,11 +688,15 @@ tmp<scalarField> faMesh::movePoints(const vectorField& newPoints)
 }
 
 
-bool faMesh::write() const
+bool faMesh::write
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
 {
-    faceLabels_.write();
-
-    boundary_.write();
+    faceLabels_.write(fmt, ver, cmp);
+    boundary_.write(fmt, ver, cmp);
 
     return false;
 }

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Class used to create tmp types : tmp<field>.
@@ -159,7 +159,7 @@ inline void tmp<T>::clear()
 template<class T>
 inline void tmp<T>::clear() const
 {
-    ((tmp<T>&)(*this)).clear();
+    const_cast<tmp<T>&>(*this).clear();
 }
 
 
@@ -186,7 +186,7 @@ inline T& tmp<T>::operator()()
         // and if the ref is actually const then you cannot return it here.
         // Another possibility would be to store a const ref and a flag to say
         // wether the tmp was constructed with a const or a non-const argument.
-        return (T&)ref_;
+        return const_cast<T&>(ref_);
     }
 }
 
@@ -236,7 +236,7 @@ inline T* tmp<T>::operator->()
     }
     else
     {
-        return &((T&)ref_);
+        return &const_cast<T&>(ref_);
     }
 }
 
@@ -245,7 +245,7 @@ inline T* tmp<T>::operator->()
 template<class T>
 inline const T* tmp<T>::operator->() const
 {
-    return ((tmp<T>&)(*this)).operator->();
+    return const_cast<tmp<T>&>(*this).operator->();
 }
 
 

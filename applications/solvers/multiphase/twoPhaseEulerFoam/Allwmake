@@ -1,0 +1,4 @@
+wmake libso phaseModel
+wmake libso interfacialModels
+wmake libso kineticTheoryModel
+wmake

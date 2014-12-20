@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -117,7 +117,7 @@ setBoundaryCondition
     const Field<Type>& values = *this;
 
     // get addressing
-    const labelList& meshPoints = this->patchMesh().meshPoints();
+    const labelList& meshPoints = this->patch().meshPoints();
 
     forAll (meshPoints, pointI)
     {
@@ -154,7 +154,7 @@ void FixedValuePointPatchField<PatchField, PointPatch, Type>::operator==
     const ValueStoredPointPatchField<PatchField, PointPatch, Type>& ptf
 )
 {
-    (Field<Type>&)(*this) = (Field<Type>&)ptf;
+    Field<Type>::operator=(ptf);
 
     // insert the result into the internal field
     initEvaluate();
@@ -167,7 +167,7 @@ void FixedValuePointPatchField<PatchField, PointPatch, Type>::operator==
     const Field<Type>& tf
 )
 {
-    (Field<Type>&)(*this) = tf;
+    Field<Type>::operator=(tf);
 
     // insert the result into the internal field
     initEvaluate();
@@ -180,7 +180,7 @@ void FixedValuePointPatchField<PatchField, PointPatch, Type>::operator==
     const Type& t
 )
 {
-    (Field<Type>&)(*this) = t;
+    Field<Type>::operator=(t);
 
     // insert the result into the internal field
     initEvaluate();

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     
@@ -175,7 +175,7 @@ inline T* autoPtr<T>::operator->()
 template<class T>
 inline const T* autoPtr<T>::operator->() const
 {
-    return ((autoPtr<T>&)(*this)).operator->();
+    return const_cast<autoPtr<T>&>(*this).operator->();
 }
 
 
@@ -184,7 +184,10 @@ inline void autoPtr<T>::operator=(const autoPtr<T>& ap)
 {
     if (this != &ap)
     {
-        ((autoPtr<T>&)(*this)).reset(((autoPtr<T>&)ap).ptr());
+        const_cast<autoPtr<T>&>(*this).reset
+        (
+            const_cast<autoPtr<T>&>(ap).ptr()
+        );
     }
 }
 

@@ -21,7 +21,7 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with OpenFOAM; if not, write to the Free Software Foundation,
-#     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Script
 #     wmakeAll
@@ -54,9 +54,9 @@ cd tutorials ; ./Allclean ; cd ..
 #find . -name '*~' -exec rm {} \;
 find . -name '*.dep' -exec rm {} \;
 
-find `find . \( -name "Make[.A-Za-z]*" -o -name "Make" \) -type d -depth -print` \( -type d -depth ! -name "*Make[.A-Za-z]*" ! -name "*Make" \) -exec rm -r {} \;
+find `find .  -depth \( -name "Make[.A-Za-z]*" -o -name "Make" \) -type d -print` -depth \( -type d ! -name "*Make[.A-Za-z]*" ! -name "*Make" \) -exec rm -r {} \;
 
-find . -type d -depth \( -name lnInclude -o -name ii_files -o -name Templates.DB \) -exec rm -rf {} \;
+find . -depth -type d \( -name lnInclude -o -name ii_files -o -name Templates.DB \) -exec rm -rf {} \;
 
 find . \( -name exe -o -name log -o -name so_locations \) -exec rm {} \;
 

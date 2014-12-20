@@ -14,12 +14,9 @@
 
 #   include "createPhi.H"
 
-    autoPtr<transportModel> laminarTransport
-    (
-        transportModel::New(U, phi)
-    );
+    singlePhaseTransportModel laminarTransport(U, phi);
 
     autoPtr<turbulenceModel> turbulence
     (
-        turbulenceModel::New(U, phi, laminarTransport())
+        turbulenceModel::New(U, phi, laminarTransport)
     );

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -288,7 +288,7 @@ inline Istream& operator>>(Istream& is, line<point, pointRef>& l)
 template<class Point, class PointRef>
 inline Ostream& operator<<(Ostream& os, const line<Point, PointRef>& l)
 {
-    os << nl << token::BEGIN_LIST << l.a_ << " " << l.b_ << token::END_LIST;
+    os << token::BEGIN_LIST << l.a_ << token::SPACE << l.b_ << token::END_LIST;
     return os;
 }
 

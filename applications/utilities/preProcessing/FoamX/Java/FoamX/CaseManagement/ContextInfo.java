@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.CaseManagement;
@@ -53,7 +53,7 @@ public class ContextInfo
     protected CaseDescriptor caseDescriptor_ = null;
     protected String         caseRoot_       = "";
     protected String         caseName_       = "";
-    protected String         appClass_       = "";
+    protected String         app_       = "";
     protected String         statusText_     = "";
     protected boolean        caseLocked_     = false;
     protected boolean        caseManaged_    = false;
@@ -124,7 +124,7 @@ public class ContextInfo
         type_           = CASENAME;
         caseRoot_       = caseDescriptor_.rootDir;
         caseName_       = caseDescriptor_.caseName;
-        appClass_       = caseDescriptor_.appClass;
+        app_       = caseDescriptor_.app;
         caseLocked_     = caseDescriptor_.locked;
         caseManaged_    = caseDescriptor_.managed;
         caseError_      = caseDescriptor_.error;
@@ -200,7 +200,7 @@ public class ContextInfo
     }
     public String getAppClass()
     {
-        return appClass_;
+        return app_;
     }
 
     public String getStatusText()

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     tetPolyBoundaryMapperCellDecomp
@@ -35,7 +35,7 @@ SourceFiles
 #ifndef tetPolyBoundaryMapperCellDecomp_H
 #define tetPolyBoundaryMapperCellDecomp_H
 
-#include "ptrList.H"
+#include "PtrList.H"
 #include "tetPolyPatchMapperCellDecomp.H"
 #include "pointMapper.H"
 
@@ -52,7 +52,7 @@ namespace Foam
 
 class tetPolyBoundaryMapperCellDecomp
 :
-    public ptrList<tetPolyPatchMapperCellDecomp>
+    public PtrList<tetPolyPatchMapperCellDecomp>
 {
     // Private Member Functions
 
@@ -73,7 +73,7 @@ public:
             const tetPolyMeshCellDecomp& mesh
         )
         :
-            ptrList<tetPolyPatchMapperCellDecomp>(mesh.boundary().size())
+            PtrList<tetPolyPatchMapperCellDecomp>(mesh.boundary().size())
         {
             const tetPolyBoundaryMeshCellDecomp& patches = mesh.boundary();
 

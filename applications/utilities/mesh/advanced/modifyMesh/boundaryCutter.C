@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -33,7 +33,7 @@ Description
 #include "polyAddFace.H"
 #include "polyAddPoint.H"
 #include "polyModifyFace.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "mapPolyMesh.H"
 #include "meshTools.H"
 
@@ -202,7 +202,8 @@ bool Foam::boundaryCutter::splitFace
     {
         // single or multiple cuts on a single edge or single modified point
         // Dont cut and let caller handle this.
-        Warning << "Face " << faceI << " has only one edge cut " << endl;
+        WarningIn("boundaryCutter::splitFace")
+            << "Face " << faceI << " has only one edge cut " << endl;
         return false;
     }
     else

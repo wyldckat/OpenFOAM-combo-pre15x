@@ -20,13 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     backwardDdtScheme
 
 Description
-    Second-order backward-differencing implicit ddt using the current and
+    Second-order backward-differencing ddt using the current and
     two previous time-step values.
 
 SourceFiles
@@ -109,27 +109,12 @@ public:
 
         tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
         (
-            const dimensioned<Type>
-        );
-
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt0
-        (
-            const dimensioned<Type>
+            const dimensioned<Type>&
         );
 
         tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
         (
             const GeometricField<Type, fvPatchField, volMesh>&
-        );
-
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt0
-        (
-            const GeometricField<Type, fvPatchField, volMesh>&
-        );
-
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvcDdt0
-        (
-            const GeometricField<Type, fvPatchField, surfaceMesh>&
         );
 
         tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
@@ -138,19 +123,7 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         );
 
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt0
-        (
-            const dimensionedScalar&,
-            const GeometricField<Type, fvPatchField, volMesh>&
-        );
-
         tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
-        (
-            const volScalarField&,
-            const GeometricField<Type, fvPatchField, volMesh>&
-        );
-
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt0
         (
             const volScalarField&,
             const GeometricField<Type, fvPatchField, volMesh>&
@@ -171,8 +144,50 @@ public:
         (
             const volScalarField&,
             GeometricField<Type, fvPatchField, volMesh>&
+        );
+
+        typedef typename ddtScheme<Type>::fluxFieldType fluxFieldType;
+
+        tmp<fluxFieldType> fvcDdtPhiCorr
+        (
+            const volScalarField& rA,
+            const GeometricField<Type, fvPatchField, volMesh>& U,
+            const fluxFieldType& phi
+        );
+
+        tmp<fluxFieldType> fvcDdtPhiCorr
+        (
+            const volScalarField& rA,
+            const volScalarField& rho,
+            const GeometricField<Type, fvPatchField, volMesh>& U,
+            const fluxFieldType& phi
+        );
+
+
+        tmp<surfaceScalarField> meshPhi
+        (
+            const GeometricField<Type, fvPatchField, volMesh>&
         );
 };
+
+
+template<>
+tmp<surfaceScalarField> backwardDdtScheme<scalar>::fvcDdtPhiCorr
+(
+    const volScalarField& rA,
+    const volScalarField& U,
+    const surfaceScalarField& phi
+);
+
+
+template<>
+tmp<surfaceScalarField> backwardDdtScheme<scalar>::fvcDdtPhiCorr
+(
+    const volScalarField& rA,
+    const volScalarField& rho,
+    const volScalarField& U,
+    const surfaceScalarField& phi
+);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

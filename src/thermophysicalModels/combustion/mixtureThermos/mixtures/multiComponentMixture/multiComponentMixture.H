@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     multiComponentMixture
@@ -55,7 +55,7 @@ class multiComponentMixture
     // Private data
 
         //- Species data
-        ptrList<ThermoType> speciesData_;
+        PtrList<ThermoType> speciesData_;
 
         //- Temporary storage for the cell/face mixture thermo data
         mutable ThermoType mixture_;
@@ -106,7 +106,7 @@ public:
         ) const;
 
         //- Return the raw specie thermodynamic data
-        const ptrList<ThermoType>& speciesData() const
+        const PtrList<ThermoType>& speciesData() const
         {
             return speciesData_;
         }

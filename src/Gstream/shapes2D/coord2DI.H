@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     coord2D
@@ -98,7 +98,7 @@ inline coord2D operator-(const coord2D& p1, const coord2D& p2)
 
 inline coord2D operator/(const coord2D& p, const label& div)
 {
-    return coord2D((label)(p.x()/div), (label)(p.y()/div));
+    return coord2D(label(p.x()/div), label(p.y()/div));
 }
 
 

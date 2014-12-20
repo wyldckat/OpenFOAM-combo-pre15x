@@ -1,3 +1,0 @@
-EXE_INC = \
-    -I. \
-    -I$(LAM_ARCH_PATH)/include

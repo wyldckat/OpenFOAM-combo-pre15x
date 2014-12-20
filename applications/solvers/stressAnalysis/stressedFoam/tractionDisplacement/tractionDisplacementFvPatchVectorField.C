@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -119,8 +119,8 @@ void tractionDisplacementFvPatchVectorField::autoMap
     }
     else
     {
-        traction_.autoMap((const FieldMapper&)m);
-        pressure_.autoMap((const FieldMapper&)m);
+        traction_.autoMap(m);
+        pressure_.autoMap(m);
     }
 }
 
@@ -183,7 +183,7 @@ void tractionDisplacementFvPatchVectorField::updateCoeffs()
 
 
 
-    vectorField n = patchMesh().nf();
+    vectorField n = patch().nf();
 
     const fvPatchField<tensor>& gradU = lookupPatchField<volTensorField, tensor>
     (

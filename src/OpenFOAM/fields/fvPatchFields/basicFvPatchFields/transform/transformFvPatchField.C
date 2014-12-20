@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -110,7 +110,7 @@ tmp<Field<Type> > transformFvPatchField<Type>::valueBoundaryCoeffs
         *this
       - scale
         (
-            valueInternalCoeffs(this->patchMesh().weights()),
+            valueInternalCoeffs(this->patch().weights()),
             this->patchInternalField()
         );
 }
@@ -121,7 +121,7 @@ tmp<Field<Type> > transformFvPatchField<Type>::valueBoundaryCoeffs
 template<class Type>
 tmp<Field<Type> > transformFvPatchField<Type>::gradientInternalCoeffs() const
 {
-    return -this->patchMesh().deltaCoeffs()*snGradTransformDiag();
+    return -this->patch().deltaCoeffs()*snGradTransformDiag();
 }
 
 

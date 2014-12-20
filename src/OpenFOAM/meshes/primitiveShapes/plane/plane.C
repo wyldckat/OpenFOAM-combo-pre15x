@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Geometric class that creates a 2D plane and can return the cutting point 
@@ -58,7 +58,7 @@ void plane::calcPntAndVec(const scalarList& C)
             }
             else
             {
-                FatalErrorIn("void plane::calcPntAndVec(const scalarList& C)")
+                FatalErrorIn("void plane::calcPntAndVec(const scalarList&)")
                     << "At least one plane coefficient must have a value"
                     << abort(FatalError);
             }
@@ -70,7 +70,7 @@ void plane::calcPntAndVec(const scalarList& C)
 
     if (magUnitVector < VSMALL)
     {
-        FatalErrorIn("void plane::calcPntAndVec(const scalarList& C)")
+        FatalErrorIn("void plane::calcPntAndVec(const scalarList&)")
             << "Plane normal defined with zero length"
             << abort(FatalError);
     }
@@ -101,9 +101,9 @@ void plane::calcPntAndVec
         (
             "void plane::calcPntAndVec\n"
             "(\n"
-            "    const point point1,\n"
-            "    const point point2,\n"
-            "    const point point3\n"
+            "    const point&,\n"
+            "    const point&,\n"
+            "    const point&\n"
             ")\n"
         ) << "Bad points." << abort(FatalError);
     }
@@ -117,11 +117,11 @@ void plane::calcPntAndVec
         (
             "void plane::calcPntAndVec\n"
             "(\n"
-            "    const point point1,\n"
-            "    const point point2,\n"
-            "    const point point3\n"
+            "    const point&,\n"
+            "    const point&,\n"
+            "    const point&\n"
             ")\n"
-        )   <<  "Plane normal defined with zero length"
+        )   << "Plane normal defined with zero length"
             << abort(FatalError);
     }
 
@@ -160,10 +160,7 @@ plane::plane(const point& basePoint, const vector& normalVector)
     }
     else
     {
-        FatalErrorIn
-        (
-            "plane::plane(const point& basePoint, const vector& normalVector)"
-        )   
+        FatalErrorIn("plane::plane(const point&, const vector&)")
         << "plane normal has got zero length"
         << abort(FatalError);
     }
@@ -188,12 +185,9 @@ plane::plane(const dictionary& planeToInletDict)
     unitVector_(0, 0, 0),
     basePoint_(0, 0, 0)
 {
-    word planeTypeDesignator
-    (
-        planeToInletDict.lookup("planeType")
-    );
+    word planeTypeDesignator(planeToInletDict.lookup("planeType"));
 
-    if(planeTypeDesignator == word("planeEquation"))
+    if (planeTypeDesignator == word("planeEquation"))
     {
         scalarList C(4);
 
@@ -210,55 +204,60 @@ plane::plane(const dictionary& planeToInletDict)
         calcPntAndVec(C);
 
     }
+    else if (planeTypeDesignator == word("embeddedPoints"))
+    {
+        dictionary embeddedPoints
+        (
+            planeToInletDict.subDict("embeddedPointsDict")
+        );
+
+        point point1(embeddedPoints.lookup("point1"));
+        point point2(embeddedPoints.lookup("point2"));
+        point point3(embeddedPoints.lookup("point3"));
+
+        calcPntAndVec(point1, point2, point3);
+    }
+    else if(planeTypeDesignator == word("pointAndNormal"))
+    {
+        dictionary pointAndVector
+        (
+            planeToInletDict.subDict("pointAndNormalDict")
+        );
+
+        basePoint_ = pointAndVector.lookup("basePoint");
+        unitVector_ = pointAndVector.lookup("normalVector");
+        unitVector_ /= mag(unitVector_);
+    }
     else
     {
-        if(planeTypeDesignator == word("embeddedPoints"))
-        {
-            dictionary embeddedPoints
-            (
-                planeToInletDict.subDict("embeddedPointsDict")
-            );
+        FatalIOErrorIn
+        (
+            "plane::plane(const dictionary&)",
+            planeToInletDict
+        )   
+        << "Invalid plane type: " << planeTypeDesignator
+        << abort(FatalError);
+    }
+}
 
-            point point1
-            (
-                embeddedPoints.lookup("point1")
-            );
-            point point2
-            (
-                embeddedPoints.lookup("point2")
-            );
-            point point3
-            (
-                embeddedPoints.lookup("point3")
-            );
 
-            calcPntAndVec(point1, point2, point3);
-        }
-        else
-        {
-            if(planeTypeDesignator == word("pointAndNormal"))
-            {
+// Construct from Istream. Assumes point and normal vector.
+plane::plane(Istream& is)
+:
+    unitVector_(is),
+    basePoint_(is)
+{
+    scalar magUnitVector(mag(unitVector_));
 
-                dictionary pointAndVector
-                (
-                    planeToInletDict.subDict("pointAndNormalDict")
-                );
-
-                basePoint_ = pointAndVector.lookup("basePoint");
-                unitVector_ = pointAndVector.lookup("normalVector");
-                unitVector_ /= mag(unitVector_);
-            }
-            else
-            {
-                FatalIOErrorIn
-                (
-                    "plane::plane(IOdictionary& planeToInletDict)",
-                    planeToInletDict
-                )   
-                << "Invalid plane type: " << planeTypeDesignator
-                << abort(FatalError);
-            }
-        }
+    if (magUnitVector > VSMALL)
+    {
+        unitVector_ /= magUnitVector;
+    }
+    else
+    {
+        FatalErrorIn("plane::plane(Istream& is)")
+            << "plane normal has got zero length"
+            << abort(FatalError);
     }
 }
 
@@ -284,23 +283,32 @@ scalarList plane::planeCoeffs() const
 {
     scalarList C(4);
 
-    if(unitVector_.component(vector::X))
+    scalar magX = mag(unitVector_.x());
+    scalar magY = mag(unitVector_.y());
+    scalar magZ = mag(unitVector_.z());
+
+    if (magX > magY)
     {
-        C[0] = 1;
-        C[1] = unitVector_.component(vector::Y)
-                /unitVector_.component(vector::X);
-        C[2] = unitVector_.component(vector::Z)
-                /unitVector_.component(vector::X);
+        if (magX > magZ)
+        {
+            C[0] = 1;
+            C[1] = unitVector_.y()/unitVector_.x();
+            C[2] = unitVector_.z()/unitVector_.x();
+        }
+        else
+        {
+            C[0] = 0;
+            C[1] = 0;
+            C[2] = 1;
+        }
     }
     else
     {
-        if(unitVector_.component(vector::Y))
+        if (magY > magZ)
         {
             C[0] = 0;
             C[1] = 1;
-            C[2] = unitVector_.component(vector::Z)
-                   /unitVector_.component(vector::Y);
-            
+            C[2] = unitVector_.z()/unitVector_.y();
         }
         else
         {
@@ -310,9 +318,9 @@ scalarList plane::planeCoeffs() const
         }
     }
 
-    C[3] = - C[0] * basePoint_.component(point::X)
-           - C[1] * basePoint_.component(point::Y)
-           - C[2] * basePoint_.component(point::Z);
+    C[3] = - C[0] * basePoint_.x()
+           - C[1] * basePoint_.y()
+           - C[2] * basePoint_.z();
 
     return C;
 }
@@ -341,6 +349,74 @@ scalar plane::normalIntersect(const point& pnt0, const vector& dir) const
 }
 
 
+// Cutting line of two planes
+plane::ray plane::planeIntersect(const plane& plane2) const
+{
+    // Mathworld plane-plane intersection. Assume there is a point on the
+    // intersection line with z=0 and solve the two plane equations
+    // for that (now 2x2 equation in x and y)
+    // Better: use either z=0 or x=0 or y=0.
+
+    const vector& n1 = normal();
+    const vector& n2 = plane2.normal();
+
+    const point& p1 = refPoint();
+    const point& p2 = plane2.refPoint();
+
+    scalar n1p1 = n1&p1;
+    scalar n2p2 = n2&p2;
+
+    vector dir = n1 ^ n2;
+
+    // Determine zeroed out direction (can be x,y or z) by looking at which
+    // has the largest component in dir.
+    scalar magX = mag(dir.x());
+    scalar magY = mag(dir.y());
+    scalar magZ = mag(dir.z());
+
+    direction iZero, i1, i2;
+
+    if (magX > magY)
+    {
+        if (magX > magZ)
+        {
+            iZero = 0;
+            i1 = 1;
+            i2 = 2;
+        }
+        else
+        {
+            iZero = 2;
+            i1 = 0;
+            i2 = 1;
+        }
+    }
+    else
+    {
+        if (magY > magZ)
+        {
+            iZero = 1;
+            i1 = 2;
+            i2 = 0;
+        }
+        else
+        {
+            iZero = 2;
+            i1 = 0;
+            i2 = 1;
+        }
+    }
+
+    vector pt;
+
+    pt[iZero] = 0;
+    pt[i1] = (n2[i2]*n1p1 - n1[i2]*n2p2) / (n1[i1]*n2[i2] - n2[i1]*n1[i2]);
+    pt[i2] = (n2[i1]*n1p1 - n1[i1]*n2p2) / (n1[i2]*n2[i1] - n1[i1]*n2[i2]);
+
+    return ray(pt, dir);
+}
+
+
 // Cutting point of three planes
 point plane::planePlaneIntersect(const plane& plane2, const plane& plane3) const
 {
@@ -348,25 +424,23 @@ point plane::planePlaneIntersect(const plane& plane2, const plane& plane3) const
     pcs[0]= planeCoeffs();
     pcs[1]= plane2.planeCoeffs();
     pcs[2]= plane3.planeCoeffs();
-    
+
     tensor a
     (
         pcs[0][0],pcs[0][1],pcs[0][2],
         pcs[1][0],pcs[1][1],pcs[1][2],
         pcs[2][0],pcs[2][1],pcs[2][2]
     );
-    
+
     vector b(pcs[0][3],pcs[1][3],pcs[2][3]);
-    
+
     return (inv(a) & (-b));
-    
 }
 
 
 Ostream& operator<<(Ostream& os, const plane& a)
 {
-    os  << "Plane definition:  normal = " << a.unitVector_
-        << " base point = " << a.basePoint_ << endl;
+    os  << a.unitVector_ << token::SPACE << a.basePoint_;
 
     return os;
 }

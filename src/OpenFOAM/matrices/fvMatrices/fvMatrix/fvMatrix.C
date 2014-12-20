@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Finite Volume matrix
@@ -409,6 +409,11 @@ void fvMatrix<Type>::relax(const scalar alpha)
     }
 
     {
+        FieldField<Field, scalar> intCoeffsCmptAvg
+        (
+            cmptAv(internalCoeffs_)
+        );
+
         FieldField<Field, scalar> bouCoeffsCmptAvgMag
         (
             cmptAv(cmptMag(boundaryCoeffs_))
@@ -422,7 +427,13 @@ void fvMatrix<Type>::relax(const scalar alpha)
         }
 
         scalarField oldDiag(diag());
-        lduMatrix::relax(bouCoeffsCmptAvgMag, interfaces, alpha);
+        lduMatrix::relax
+        (
+            intCoeffsCmptAvg,
+            bouCoeffsCmptAvgMag,
+            interfaces,
+            alpha
+        );
         source() += (diag() - oldDiag)*psi_.internalField();
     }
 
@@ -869,60 +880,6 @@ void fvMatrix<Type>::operator*=
 }
 
 
-template<class Type>
-tmp<Field<Type> > fvMatrix<Type>::operator&
-(
-    const Field<Type>& psi
-) const
-{
-    tmp<Field<Type> > tApsi(new Field<Type>(source_));
-    Field<Type>& Apsi = tApsi();
-
-    addBoundarySource(Apsi);
-
-    // Loop over field components
-    for (direction cmpt=0; cmpt<Type::nComponents; cmpt++)
-    {
-        scalarField psiCmpt = psi.component(cmpt);
-
-        scalarField boundaryDiagCmpt(psi.size(), 0.0);
-        addBoundaryDiag(boundaryDiagCmpt, cmpt);
-
-        scalarField ApsiCmpt(psi.size());
-
-        // There is no boundaries on psi, so no interface coupling
-        // 
-        lduMatrix::Amul
-        (
-            ApsiCmpt,
-            psiCmpt,
-            FieldField<Field, scalar>(0),
-            lduCoupledInterfacePtrsList(0),
-            cmpt
-        );
-
-        Apsi.replace
-        (
-            cmpt, ApsiCmpt + boundaryDiagCmpt*psiCmpt - Apsi.component(cmpt)
-        );
-    }
-
-    return tApsi;
-}
-
-
-template<class Type>
-tmp<Field<Type> > fvMatrix<Type>::operator&
-(
-    const tmp<Field<Type> >& tpsi
-) const
-{
-    tmp<Field<Type> > tHpsi = operator&(tpsi());
-    tpsi.clear();
-    return tHpsi;
-}
-
-
 // * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
 
 template<class Type>
@@ -1026,7 +983,7 @@ lduMatrix::solverPerformance solve
 )
 {
     lduMatrix::solverPerformance solverPerf = 
-        ((fvMatrix<Type>&)tfvm()).solve(solverControls);
+        const_cast<fvMatrix<Type>&>(tfvm()).solve(solverControls);
 
     tfvm.clear();
     return solverPerf;
@@ -1043,7 +1000,7 @@ template<class Type>
 lduMatrix::solverPerformance solve(const tmp<fvMatrix<Type> >& tfvm)
 {
     lduMatrix::solverPerformance solverPerf =
-        ((fvMatrix<Type>&)tfvm()).solve();
+        const_cast<fvMatrix<Type>&>(tfvm()).solve();
 
     tfvm.clear();
     return solverPerf;
@@ -1737,12 +1694,97 @@ tmp<fvMatrix<Type> > operator*
 }
 
 
+template<class Type>
+tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+(
+    const fvMatrix<Type>& M,
+    const GeometricField<Type,fvPatchField,volMesh>& psi
+)
+{
+    tmp<GeometricField<Type, fvPatchField, volMesh> > tMphi
+    (
+        new GeometricField<Type, fvPatchField, volMesh>
+        (
+            IOobject
+            (
+                "M&"+psi.name(),
+                psi.instance(),
+                psi.mesh(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            psi.mesh(),
+            M.dimensions()/dimVol,
+            zeroGradientFvPatchScalarField::typeName
+        )
+    );
+    GeometricField<Type, fvPatchField, volMesh>& Mphi = tMphi();
+
+    // Loop over field components
+    for (direction cmpt=0; cmpt<Type::nComponents; cmpt++)
+    {
+        scalarField psiCmpt = psi.internalField().component(cmpt);
+        scalarField boundaryDiagCmpt(M.diag());
+        M.addBoundaryDiag(boundaryDiagCmpt, cmpt);
+        Mphi.internalField().replace(cmpt, -boundaryDiagCmpt*psiCmpt);
+    }
+
+    Mphi.internalField() += M.lduMatrix::H(psi.internalField()) + M.source();
+    M.addBoundarySource(Mphi.internalField());
+
+    Mphi.internalField() /= -psi.mesh().V();
+    Mphi.correctBoundaryConditions();
+
+    return tMphi;
+}
+
+
+template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
+(
+    const fvMatrix<Type>& M,
+    const tmp<GeometricField<Type,fvPatchField,volMesh> >& tpsi
+)
+{
+    tmp<GeometricField<Type, fvPatchField, volMesh> > tMpsi = M & tpsi();
+    tpsi.clear();
+    return tMpsi;
+}
+
+
+template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
+(
+    const tmp<fvMatrix<Type> >& tM,
+    const GeometricField<Type,fvPatchField,volMesh>& psi
+)
+{
+    tmp<GeometricField<Type, fvPatchField, volMesh> > tMpsi = tM() & psi;
+    tM.clear();
+    return tMpsi;
+}
+
+
+template<class Type>
+tmp<GeometricField<Type, fvPatchField, volMesh> > operator&
+(
+    const tmp<fvMatrix<Type> >& tM,
+    const tmp<GeometricField<Type,fvPatchField,volMesh> >& tpsi
+)
+{
+    tmp<GeometricField<Type, fvPatchField, volMesh> > tMpsi = tM() & tpsi();
+    tM.clear();
+    tpsi.clear();
+    return tMpsi;
+}
+
+
 // * * * * * * * * * * * * * * * IOstream Operators  * * * * * * * * * * * * //
 
 template<class Type>
 Ostream& operator<<(Ostream& os, const fvMatrix<Type>& fvm)
 {
-    os  << (const lduMatrix&)(fvm) << nl
+    os  << static_cast<const lduMatrix&>(fvm) << nl
         << fvm.dimensions_ << nl
         << fvm.source_ << nl
         << fvm.internalCoeffs_ << nl

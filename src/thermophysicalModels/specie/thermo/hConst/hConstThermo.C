@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Constant properties thermodynamics package
@@ -54,7 +54,8 @@ hConstThermo<equationOfState>::hConstThermo(Istream& is)
 template<class equationOfState>
 Ostream& operator<<(Ostream& os, const hConstThermo<equationOfState>& ct)
 {
-    os << (const equationOfState&)ct << tab << ct.CP << tab << ct.Hf;
+    os  << static_cast<const equationOfState&>(ct) << tab
+        << ct.CP << tab << ct.Hf;
 
     os.check("Ostream& operator<<(Ostream& os, const hConstThermo& ct)");
     return os;

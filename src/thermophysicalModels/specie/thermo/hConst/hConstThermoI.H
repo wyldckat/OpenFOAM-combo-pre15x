@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Constant properties thermodynamics package
@@ -161,8 +161,8 @@ inline hConstThermo<equationOfState> operator+
 {
     equationOfState eofs
     (
-        (const equationOfState&)ct1
-      + (const equationOfState&)ct2
+        static_cast<const equationOfState&>(ct1)
+        + static_cast<const equationOfState&>(ct2)
     );
 
     return hConstThermo<equationOfState>
@@ -183,8 +183,8 @@ inline hConstThermo<equationOfState> operator-
 {
     equationOfState eofs
     (
-        (const equationOfState&)ct1
-      - (const equationOfState&)ct2
+        static_cast<const equationOfState&>(ct1)
+      - static_cast<const equationOfState&>(ct2)
     );
 
     return hConstThermo<equationOfState>
@@ -205,7 +205,7 @@ inline hConstThermo<equationOfState> operator*
 {
     return hConstThermo<equationOfState>
     (
-        s*((const equationOfState&)ct),
+        s*static_cast<const equationOfState&>(ct),
         ct.CP,
         ct.Hf
     );

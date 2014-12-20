@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     octreeDataFace
@@ -49,7 +49,7 @@ namespace Foam
 {
 
 // Class forward declarations
-class polyMesh;
+class primitiveMesh;
 template<class Type> class octree;
 class polyPatch;
 
@@ -65,23 +65,17 @@ class octreeDataFace
         static scalar tol;
 
 
-    // Static function
-
-        static inline label nexti(label max, label i)
-        {
-            return (i + 1) % max;
-        }            
-
     // Private data
 
         //- the mesh
-        const polyMesh& mesh_;
+        const primitiveMesh& mesh_;
 
         //- labels (in mesh indexing) of faces
         labelList meshFaces_;
 
         //- bbs for all above faces
         treeBoundBoxList allBb_;
+
 
     // Private Member Functions
 
@@ -98,7 +92,7 @@ public:
         //- Construct from selected mesh faces.
         octreeDataFace
         (
-            const polyMesh&,
+            const primitiveMesh&,
             const labelList& meshFaces,
             const treeBoundBoxList&
         );
@@ -107,21 +101,21 @@ public:
         //  generated internally.
         octreeDataFace
         (
-            const polyMesh&,
+            const primitiveMesh&,
             const labelList& meshFaces
         );
 
         //- Construct from selected mesh faces.
         octreeDataFace
         (
-            const polyMesh&,
+            const primitiveMesh&,
             const List<const labelList*>&,
             const List<const treeBoundBoxList*>&
         );
 
         //- Construct from selected mesh faces. Tight fitting bounding boxes
         //  generated internally.
-        octreeDataFace(const polyMesh&, const List<const labelList*>&);
+        octreeDataFace(const primitiveMesh&, const List<const labelList*>&);
 
         //- Construct from alll faces in patch. Tight fitting bounding boxes
         //  generated internally.
@@ -129,7 +123,7 @@ public:
 
         //- Construct from all boundary faces. Tight fitting bounding boxes
         //  generated internally.
-        octreeDataFace(const polyMesh&);
+        octreeDataFace(const primitiveMesh&);
 
         //- Construct as copy
         octreeDataFace(const octreeDataFace&);
@@ -144,7 +138,7 @@ public:
 
         // Access
 
-            const polyMesh& mesh() const
+            const primitiveMesh& mesh() const
             {
                 return mesh_;
             }
@@ -182,11 +176,7 @@ public:
             ) const;
 
             //- Does shape at index contain sample
-            bool contains
-            (
-                const label index,
-                const point& sample
-            ) const;
+            bool contains(const label index, const point& sample) const;
 
             //- Segment (from start to end) intersection with shape
             //  at index. If intersects returns true and sets intersectionPoint

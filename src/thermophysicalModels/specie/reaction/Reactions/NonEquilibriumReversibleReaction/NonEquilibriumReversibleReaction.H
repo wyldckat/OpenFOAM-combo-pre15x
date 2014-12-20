@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     NonEquilibriumReversibleReaction
@@ -59,6 +59,16 @@ class NonEquilibriumReversibleReaction
         ReactionRate rk_;
 
 
+    // Private Member Functions
+
+        //- Disallow default bitwise assignment
+        void operator=
+        (
+            const NonEquilibriumReversibleReaction
+                <ReactionThermo, ReactionRate>&
+        );
+
+
 public:
 
     //- Runtime type information
@@ -73,6 +83,14 @@ public:
             const Reaction<ReactionThermo>& reaction,
             const ReactionRate& forwardReactionRate,
             const ReactionRate& reverseReactionRate
+        );
+
+        //- Construct as copy given new speciesTable
+        NonEquilibriumReversibleReaction
+        (
+            const NonEquilibriumReversibleReaction
+                <ReactionThermo, ReactionRate>&,
+            const speciesTable& species
         );
 
         //- Construct from Istream
@@ -92,6 +110,21 @@ public:
                     <ReactionThermo, ReactionRate>(*this)
             );
         }
+
+        //- Construct and return a clone with new speciesTable
+        virtual autoPtr<Reaction<ReactionThermo> > clone
+        (
+            const speciesTable& species
+        ) const
+        {
+            return autoPtr<Reaction<ReactionThermo> >
+            (
+                new NonEquilibriumReversibleReaction
+                    <ReactionThermo, ReactionRate>
+                    (*this, species)
+            );
+        }
+
 
     // Destructor
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -44,9 +44,12 @@ unsigned int IOstream::precision_(6);
 // Global IO streams
 
 ISstream Sin(cin, "Sin");
-prefixOSstream Sout(cout, "Sout");
-prefixOSstream Serr(cerr, "Serr");
+OSstream Sout(cout, "Sout");
+OSstream Serr(cerr, "Serr");
 OFstream Snull("/dev/null");
+
+prefixOSstream Pout(cout, "Pout");
+prefixOSstream Perr(cerr, "Perr");
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

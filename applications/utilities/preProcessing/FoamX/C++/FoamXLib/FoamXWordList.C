@@ -20,14 +20,9 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-
-// Foam header files.
-#include "word.H"
 
 // FoamX header files.
 #include "FoamX.H"
@@ -46,7 +41,7 @@ FoamX::FoamXWordList::FoamXWordList(const Foam::wordList& list)
     // Copy list elements.
     forAll(list, i)
     {
-        (*this)[i] = (const char*)list[i].c_str();
+        (*this)[i] = list[i].c_str();
     }
 }
 
@@ -87,7 +82,7 @@ FoamX::FoamXWordList& FoamX::FoamXWordList::operator=
 
 void FoamX::FoamXWordList::read(Foam::Istream& is)
 {
-    operator=((const Foam::wordList&)Foam::wordList(is));
+    operator=(static_cast<const Foam::wordList&>(Foam::wordList(is)));
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

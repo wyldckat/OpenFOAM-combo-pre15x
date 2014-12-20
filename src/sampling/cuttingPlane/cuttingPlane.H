@@ -20,12 +20,14 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     cuttingPlane
 
 Description
+    Constructs plane through mesh. No attempt at resolving degenerate
+    cases.
 
 SourceFiles
     cuttingPlane.C
@@ -35,16 +37,16 @@ SourceFiles
 #ifndef cuttingPlane_H
 #define cuttingPlane_H
 
-#include <libgen.h>
 #include "plane.H"
-#include "polyMesh.H"
-#include "labelList.H"
-#include "vectorField.H"
+#include "pointField.H"
+#include "faceList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
+
+class primitiveMesh;
 
 /*---------------------------------------------------------------------------*\
                            Class cuttingPlane Declaration
@@ -56,80 +58,50 @@ class cuttingPlane
 {
     // Private data
 
-        //- Reference to the mesh
-        const polyMesh& mesh_;
-
-        //- Point intersections
-        vectorField cuttingPoints_;
-
-        //- Cut faces
-        faceList cutFaces_;
-
         //- List of cells cut by the plane
         labelList cutCells_;
 
-        //- Cell cutting points
-        labelListList cutCellCuttingPoints_;
+        //- Intersection points
+        pointField cutPoints_;
+
+        //- Cut faces in terms of intersection points
+        faceList cutFaces_;
+
 
 
     // Private Member Functions
 
-        //- Disallow default bitwise copy construct
-        cuttingPlane(const cuttingPlane&);
+        //- Determine cut cells.
+        void calcCutCells
+        (
+            const primitiveMesh&,
+            const scalarField& dotProducts
+        );
 
-        //- Disallow default bitwise assignment
-        void operator=(const cuttingPlane&);
+        //- Determine intersection points (cutPoints_).
+        labelList intersectEdges
+        (
+            const primitiveMesh&,
+            const scalarField& dotProducts
+        );
 
+        //- Walk around circumference of cell starting from startEdgeI crossing
+        //  only cut edges. Record cutPoint labels in faceVerts.
+        static bool walkCell
+        (
+            const primitiveMesh&,
+            const labelList& edgePoint,
+            const label cellI,
+            const label startEdgeI,
+            DynamicList<label>& faceVerts
+        );
 
-        // Helper member functions
-
-            //- Compare scalar sizes
-            //- Find cut cells
-            void cutCells
-            (
-                const scalarField& dotProducts, 
-                const cellList& CellFaces,
-                const faceList& Faces
-            );
-
-            //- Find cut edges and points for each cut cell
-            //  0 = edges, 1 = points
-            labelListList cuttingPoints
-            (
-                const scalarField& dotProducts,
-                const labelListList& CellEdges,
-                const pointField& Points
-            );
-
-            //- Assign cutting points to cut cells and delete zero faces
-            void cutCellCuttingPoints
-            (
-                const labelListList intersections,
-                const labelListList& CellEdges,
-                const cellList& CellFaces,
-                const faceList& Faces
-            );
-
-            //- Order cutting point labels for each face
-            void orderFacePoints();
-
-            //- Display point list
-            void showPoints();
-
-
-            //- Container class for sorting
-            struct sl
-            {
-                scalar s_;
-                label  l_;
-
-                friend bool operator<(const sl& one, const sl& two)
-                {
-                    return one.s_ < two.s_;
-                }
-            };
-
-            typedef List<sl> slList; 
+        //- Determine cuts for all cut cells.
+        void walkCellCuts
+        (
+            const primitiveMesh& mesh,
+            const labelList& edgePoint
+        );
 
 
 public:
@@ -137,12 +109,12 @@ public:
     // Constructors
 
         //- Construct from components: Mesh reference and plane
-        cuttingPlane(const polyMesh& mesh, const plane&);
+        cuttingPlane(const primitiveMesh&, const plane&);
 
 
     // Member Functions
 
-        //- Return vectorField of cutting points
+        //- Return pointField of cutting points
         const pointField& points() const;
 
         //- Return faceList of points in cells
@@ -160,6 +132,12 @@ public:
 
         template<class Type>
         tmp<Field<Type> > sample(const tmp<Field<Type> >&) const;
+
+
+    // Member Operators
+
+        void operator=(const cuttingPlane&);
+
 };
 
 

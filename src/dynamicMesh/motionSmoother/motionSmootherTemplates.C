@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -28,6 +28,8 @@ Description
 
 #include "motionSmoother.H"
 #include "meshTools.H"
+#include "processorPointPatchFields.H"
+#include "globalProcessorPointPatchFields.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -147,9 +149,159 @@ void Foam::motionSmoother::smooth
                     );
         }
     }
-    newFld.correctBoundaryConditions();    
+    newFld.correctBoundaryConditions();
 }
 
+
+//- Sychronizes patch points on pointField
+template<class Type, class CombineOp>
+void Foam::motionSmoother::syncField
+(
+    GeometricField<Type, pointPatchField, pointMesh>& fld,
+    const Type& zero,
+    const CombineOp& cop
+)
+{
+    const polyMesh& mesh = fld.mesh()();
+
+
+    typedef ProcessorPointPatchField
+        <pointPatchField, pointPatch, processorPointPatch, Type>
+        ProcessorField;
+
+    if (Pstream::parRun() && mesh.parallelData().parallel())
+    {
+        forAll(fld.boundaryField(), patchI)
+        {
+            if
+            (
+                isA<ProcessorField>
+                (
+                    fld.boundaryField()[patchI]
+                )
+            )
+            {
+                const ProcessorField& pFld =
+                    refCast<const ProcessorField>
+                    (
+                        fld.boundaryField()[patchI]
+                    );
+
+                const processorPointPatch& procPatch =
+                    refCast<const processorPointPatch>
+                    (
+                        pFld.patch()
+                    );
+
+                OPstream toNeighbProc
+                (
+                    procPatch.neighbProcNo(),
+                    pFld.size()*sizeof(Type)
+                );
+
+                toNeighbProc << pFld.patchInternalField();
+            }
+        }
+
+        forAll(fld.boundaryField(), patchI)
+        {
+            if
+            (
+                isA<ProcessorField>
+                (
+                    fld.boundaryField()[patchI]
+                )
+            )
+            {
+                ProcessorField& pFld =
+                    refCast<ProcessorField>
+                    (
+                        fld.boundaryField()[patchI]
+                    );
+
+                const processorPointPatch& procPatch =
+                    refCast<const processorPointPatch>
+                    (
+                        pFld.patch()
+                    );
+
+                IPstream fromNeighbProc
+                (
+                    procPatch.neighbProcNo(),
+                    pFld.size()*sizeof(Type)
+                );
+
+                Field<Type> nbrFld(fromNeighbProc);
+
+                // Combing neighbouring values with my values.
+                Field<Type> myFld(pFld.patchInternalField());
+
+                cop(myFld, nbrFld);
+
+                // Get the addressing
+                const labelList& mp = procPatch.meshPoints();
+
+                forAll(pFld, i)
+                {
+                    fld[mp[i]] = myFld[i];
+                }
+            }
+        }
+    }
+
+
+    typedef GlobalProcessorPointPatchField
+        <pointPatchField, pointPatch, globalProcessorPointPatch, Type>
+        GlobalProcessorField;
+
+    // Shared points.
+    if (Pstream::parRun() && mesh.parallelData().parallel())
+    {
+        forAll(fld.boundaryField(), patchI)
+        {
+            if
+            (
+                isA<GlobalProcessorField>
+                (
+                    fld.boundaryField()[patchI]
+                )
+            )
+            {
+                const GlobalProcessorField& pFld =
+                    refCast<const GlobalProcessorField>
+                    (
+                        fld.boundaryField()[patchI]
+                    );
+
+                const globalProcessorPointPatch& procPatch =
+                    refCast<const globalProcessorPointPatch>
+                    (
+                        pFld.patch()
+                    );
+
+
+
+                Field<Type> gpf(procPatch.globalPointSize(), zero);
+
+                // Get the addressing
+                const labelList& mp = procPatch.meshPoints();
+                const labelList& addr = procPatch.sharedPointAddr();
+
+                forAll (addr, i)
+                {
+                    gpf[addr[i]] = fld[mp[i]];
+                }
+
+                combineReduce(gpf, cop);
+
+                forAll (addr, i)
+                {
+                    fld[mp[i]] = gpf[addr[i]];
+                }
+            }
+        }
+    }    
+}
 
 
 // ************************************************************************* //

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     parallelInfo
@@ -47,6 +47,23 @@ Description
 
     All the hard work of these shared points is done by the globalPoints class.
 
+    Shared edges: similar to shared points gives on all processors the edges
+    that are shared between more than two patches (i.e. the edges on which
+    data cannot be synchronized by a straightforward edge data swap). Note
+    that shared edges will use shared points but not all edges between shared
+    points need to be shared edges (e.g. there might be an edge connecting
+    two disconnected regions of shared points).
+
+    Currently an edge is considered shared
+    if it uses two shared points and is used more than once. This is not
+    correct on processor patches but it only slightly overestimates the number
+    of shared edges. Doing full analysis of how many patches use the edge
+    would be too complicated.
+
+    Shared edge calculation is demand driven so always make sure to have
+    your first call to one of the access functions synchronous amongst all
+    processors!
+
 
 SourceFiles
     parallelInfo.C
@@ -60,6 +77,7 @@ SourceFiles
 #include "polyMesh.H"
 #include "Switch.H"
 #include "processorTopology.H"
+#include "labelPair.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -97,6 +115,8 @@ class parallelInfo
             }
         };
 
+
+        typedef List<labelPair> labelPairList;
 
 
     // Private data
@@ -158,14 +178,35 @@ class parallelInfo
             mutable labelList* sharedPointGlobalLabelsPtr_;
 
 
+        // Globally shared edge addressing. Derived from shared points.
+        // All demand driven since don't want to construct edges always.
+
+            //- Total number of global edges
+            mutable label nGlobalEdges_;
+
+            //- Indices of local edges that are globally shared
+            mutable labelList* sharedEdgeLabelsPtr_;
+
+            //- Indices of globally shared edge in the master list
+            //  This list contains all the shared edges in the mesh
+            mutable labelList* sharedEdgeAddrPtr_;
+
+
     // Private Member Functions
 
+        //- Set up processor patch addressing
         void initProcAddr();
 
-        void calcSharedPoints() const;
-        
-        void calcGeomSharedPoints() const;
-        
+        //- Helper function for shared edge addressing
+        static void countSharedEdges
+        (
+            const HashTable<labelList, edge, Hash<edge> >& procSharedEdges,
+            HashTable<label, edge, Hash<edge> >&,
+            label&
+        );
+
+        //- Calculate shared edge addressing
+        void calcSharedEdges() const;
 
 
 
@@ -294,7 +335,7 @@ public:
             }
 
 
-        // Globally shared point addressing (only valid when running parallel)
+        // Globally shared point addressing
 
             //- Return number of globally shared points
             label nGlobalPoints() const
@@ -337,6 +378,29 @@ public:
             //  (does geometric merging; uses matchTol_*bb as merging tolerance)
             //  Use sharedPoints() instead.
             pointField geometricSharedPoints() const;
+
+
+
+        // Globally shared edge addressing
+
+            //- Return number of globally shared edges. Demand-driven
+            //  calculation so call needs to be synchronous among processors!
+            label nGlobalEdges() const;
+
+            //- Return indices of local edges that are globally shared.
+            //  Demand-driven
+            //  calculation so call needs to be synchronous among processors!
+            const labelList& sharedEdgeLabels() const;
+
+            //- Return addressing into the complete globally shared edge
+            //  list. The set of shared
+            //  edges on the current processor is a subset of all shared
+            //  edges. Shared edge addressing gives the index in the
+            //  list of all globally shared edges for each of the locally
+            //  shared edges.
+            //  Demand-driven
+            //  calculation so call needs to be synchronous among processors!
+            const labelList& sharedEdgeAddr() const;
 
 
         // Edit

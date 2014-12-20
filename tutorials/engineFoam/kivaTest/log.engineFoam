@@ -1,0 +1,120 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.2                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+Exec   : engineFoam . kivaTest 
+Date   : Aug 17 2005
+Time   : 17:54:14
+Host   : dm
+PID    : 12773
+Root   : /home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorials/engineFoam
+Case   : kivaTest
+Nprocs : 1
+Create engine time
+
+Create mesh, no clear-out for time = -180
+
+Reading combustion properties
+
+Found ignition cells:
+1(26804)
+
+Ignition on
+Reading thermophysical properties
+
+Selecting thermodynamics package hhuMixtureThermo<inhomogeneousMixture<sutherlandTransport<specieThermo<janafThermo<perfectGas>>>>>
+min(b) = 1
+
+Reading field U
+
+Reading/calculating face flux field phi
+
+Creating turbulence model
+
+Selecting turbulence model kEpsilon
+Creating field DpDt
+
+Creating field Xi
+
+Creating the unstrained laminar flame speed
+
+Selecting laminar flame speed correlation Gulders
+Reading strained laminar flame speed field Su
+
+Calculating turbulent flame speed field St
+
+deckHeight: 0.085639
+piston position: 0
+Total cylinder mass: 0.000615955
+
+Starting time loop
+
+Mean and max Courant Numbers = 0 0
+Crank angle = -179.75 CA-deg
+deltaZ = 2.86047e-07
+clearance: 0.0856387
+Piston speed = 0.0102977 m/s
+volume continuity errors : sum local = 1.10646e-15, global = 4.50918e-18
+BICCG:  Solving for Ux, Initial residual = 1, Final residual = 5.49949e-06, No Iterations 3
+BICCG:  Solving for Uy, Initial residual = 1, Final residual = 3.17159e-06, No Iterations 3
+BICCG:  Solving for Uz, Initial residual = 1, Final residual = 1.99054e-06, No Iterations 3
+BICCG:  Solving for ft, Initial residual = 0.294206, Final residual = 6.85443e-07, No Iterations 3
+BICCG:  Solving for h, Initial residual = 1, Final residual = 3.6569e-06, No Iterations 4
+ICCG:  Solving for p, Initial residual = 1, Final residual = 6.91019e-07, No Iterations 38
+ICCG:  Solving for p, Initial residual = 0.0322656, Final residual = 6.97557e-07, No Iterations 26
+time step continuity errors : sum local = 1.7701e-11, global = -1.49232e-12, cumulative = -1.49232e-12
+BICCG:  Solving for ft, Initial residual = 0.34194, Final residual = 1.11033e-06, No Iterations 4
+BICCG:  Solving for h, Initial residual = 0.0822173, Final residual = 3.62918e-06, No Iterations 3
+ICCG:  Solving for p, Initial residual = 0.090841, Final residual = 9.56739e-07, No Iterations 30
+ICCG:  Solving for p, Initial residual = 0.0181881, Final residual = 6.64267e-07, No Iterations 22
+time step continuity errors : sum local = 1.8075e-11, global = 2.30897e-12, cumulative = 8.16643e-13
+BICCG:  Solving for epsilon, Initial residual = 1, Final residual = 1.34932e-08, No Iterations 1
+BICCG:  Solving for k, Initial residual = 1, Final residual = 6.44215e-07, No Iterations 4
+Mean pressure:100001
+Mean temperature:373.002
+Mean u':1.62867
+ExecutionTime = 4.17 s
+
+
+Mean and max Courant Numbers = 6.86925e-06 0.000664232
+Crank angle = -179.5 CA-deg
+deltaZ = 8.58142e-07
+clearance: 0.0856379
+Piston speed = 0.0308931 m/s
+volume continuity errors : sum local = 1.10182e-15, global = -3.93092e-18
+BICCG:  Solving for Ux, Initial residual = 0.335339, Final residual = 4.36356e-06, No Iterations 2
+BICCG:  Solving for Uy, Initial residual = 0.337828, Final residual = 3.66815e-06, No Iterations 2
+BICCG:  Solving for Uz, Initial residual = 0.33251, Final residual = 2.90102e-06, No Iterations 2
+BICCG:  Solving for ft, Initial residual = 0.290662, Final residual = 9.54317e-06, No Iterations 2
+BICCG:  Solving for h, Initial residual = 0.181433, Final residual = 9.36526e-07, No Iterations 2
+ICCG:  Solving for p, Initial residual = 0.431705, Final residual = 7.02981e-07, No Iterations 39
+ICCG:  Solving for p, Initial residual = 0.0260156, Final residual = 7.93568e-07, No Iterations 27
+time step continuity errors : sum local = 4.1634e-11, global = -2.91181e-12, cumulative = -2.09517e-12
+BICCG:  Solving for ft, Initial residual = 0.338923, Final residual = 4.96079e-06, No Iterations 2
+BICCG:  Solving for h, Initial residual = 0.056141, Final residual = 3.92758e-07, No Iterations 2
+ICCG:  Solving for p, Initial residual = 0.0594717, Final residual = 7.65705e-07, No Iterations 33
+ICCG:  Solving for p, Initial residual = 0.0143725, Final residual = 8.90894e-07, No Iterations 25
+time step continuity errors : sum local = 5.17866e-11, global = -7.12737e-13, cumulative = -2.8079e-12
+BICCG:  Solving for epsilon, Initial residual = 0.0414913, Final residual = 1.05157e-10, No Iterations 1
+BICCG:  Solving for k, Initial residual = 0.43659, Final residual = 5.86451e-06, No Iterations 2
+Mean pressure:100003
+Mean temperature:373.005
+Mean u':1.6244
+ExecutionTime = 7.14 s
+
+
+Mean and max Courant Numbers = 1.53194e-05 0.00177193
+Crank angle = -179.25 CA-deg
+deltaZ = 1.43024e-06
+clearance: 0.0856364
+Piston speed = 0.0514886 m/s
+volume continuity errors : sum local = 1.11034e-15, global = 1.60021e-18
+BICCG:  Solving for Ux, Initial residual = 0.215205, Final residual = 1.90246e-06, No Iterations 2
+BICCG:  Solving for Uy, Initial residual = 0.229286, Final residual = 1.92931e-06, No Iterations 2
+BICCG:  Solving for Uz, Initial residual = 0.252719, Final residual = 1.77592e-06, No Iterations 2
+BICCG:  Solving for ft, Initial residual = 0.258772, Final residual = 7.13876e-06, No Iterations 2
+BICCG:  Solving for h, Initial residual = 0.118824, Final residual = 6.68878e-07, No Iterations 2

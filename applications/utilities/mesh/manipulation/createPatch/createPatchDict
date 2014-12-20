@@ -22,21 +22,36 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-// Destination name
-name    cyclic0;
+patches
+(
+    {
+        // Name of new patch
+        name leftRight0;
 
-// Type of patch
-type    cyclic;
+        // Type of new patch
+        type cyclic;
 
-// Construct from
-// -set : use all faces in the named 'set'
-// -patches: from the list of patches. Faces are kept in that order. 
-constructFrom patches;
+        // How to construct: either 'patches' or 'set'
+        constructFrom patches;
 
-// Patches to use as source of faces (only valid if constructFrom == 'patches')
-patches ( half0 half1);
+        // If constructFrom = patches : names of patches
+        patches (half0 half1);
 
-// Name of set to use (only valid if constructFrom == 'set')
-set f0;
+        // If constructFrom = set : name of faceSet
+        set f0;
+    }
+
+    {
+        name bottom;
+        type patch;
+
+        constructFrom set;
+
+        patches (half0 half1);
+
+        set bottomFaces;
+    }
+
+);
 
 // ************************************************************************* //

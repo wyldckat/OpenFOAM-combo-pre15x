@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     edgeIntersections
@@ -81,7 +81,7 @@ class edgeIntersections
         //- Intersect selected surface edges (edgeLabels) with surface2.
         //  Updates *this with pointHits and classification_ with status
         //  of hitPoint compared to edge end points.
-        void Foam::edgeIntersections::intersectEdges
+        void intersectEdges
         (
             const triSurface& surf1,
             const pointField& points1,          // surf1 meshPoints

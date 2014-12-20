@@ -74,7 +74,7 @@ void GLstream::makeRasterFont()
     first = fontInfo->min_char_or_byte2;
     last = fontInfo->max_char_or_byte2;
 
-    base = glGenLists((GLuint) last+1);
+    base = glGenLists(GLuint(last+1));
 
     if (base == 0)
     {
@@ -91,7 +91,7 @@ void GLstream::printString(char *s)
 {
     glPushAttrib (GL_LIST_BIT);
     glListBase(base);
-    glCallLists(strlen(s), GL_UNSIGNED_BYTE, (GLubyte *)s);
+    glCallLists(strlen(s), GL_UNSIGNED_BYTE, reinterpret_cast<GLubyte*>(s));
     glPopAttrib ();
 }
 
@@ -118,7 +118,7 @@ GLstream::GLstream
        !XGLopenWindow
         (
             &mydisplay,
-            (char*)winName().c_str(),
+            const_cast<char*>(winName().c_str()),
             0, 0,
             width_.x(), width_.y()
         )
@@ -202,13 +202,13 @@ int GLstream::waitForEvent(GEvent& event)
             notDone=0;
             leave = 1;
 
-            scale_ = point2D(((double) flag.xconfigure.width)*scale_.x()
-                            /((double) (width_.x())),
-                            ((double) flag.xconfigure.height)*scale_.y()
-                            /((double) (width_.y())));
+            scale_ = point2D
+            (
+                double(flag.xconfigure.width)*scale_.x()/double(width_.x()),
+                double(flag.xconfigure.height)*scale_.y()/double(width_.y())
+            );
 
-            width_ = coord2D(flag.xconfigure.width,
-                            flag.xconfigure.height);
+            width_ = coord2D(flag.xconfigure.width, flag.xconfigure.height);
 
             glViewport(0,0,width_.x(),width_.y());
 
@@ -231,8 +231,8 @@ int GLstream::waitForEvent(GEvent& event)
 void GLstream::draw(const line2D& l)
 {
     glBegin(GL_LINES);
-    glVertex2d((double)x(l.start()), (double)y(l.start()));
-    glVertex2d((double)x(l.end()), (double)y(l.end()));
+    glVertex2d(double(x(l.start())), double(y(l.start())));
+    glVertex2d(double(x(l.end())), double(y(l.end())));
 
     glEnd();
     glFlush();
@@ -241,8 +241,11 @@ void GLstream::draw(const line2D& l)
 
 void GLstream::draw(const rectangle2D& r)
 {
-    glRectd((double)x(r.first()),(double)y(r.first()),
-            (double)x(r.second()),(double)y(r.second()));
+    glRectd
+    (
+        double(x(r.first())), double(y(r.first())),
+        double(x(r.second())), double(y(r.second()))
+    );
 
     glFlush();
 }
@@ -256,7 +259,7 @@ void GLstream::draw(const polygon2D& p)
 
     forAll(vertex, i)
     {
-        glVertex2d((double)x(vertex[i]), (double)y(vertex[i]));
+        glVertex2d(double(x(vertex[i])), double(y(vertex[i])));
     }
 
     glEnd();
@@ -304,7 +307,7 @@ void GLstream::draw(const string2D& s2D)
         (
             s2D.text().size(),
             GL_UNSIGNED_BYTE,
-            (GLubyte *)s2D.text().c_str()
+            reinterpret_cast<const GLubyte*>(s2D.text().c_str())
         );
         glPopAttrib();
 
@@ -340,7 +343,7 @@ void GLstream::setLineStyle(const lineStyle& ls)
     else
     {
         // dashed line
-        int factor((int)((ls.patternLength()+8.0)/16.0));
+        int factor(int((ls.patternLength()+8.0)/16.0));
         if (factor<1) factor = 1;
 
         glLineStipple(factor,convertLinestyleToGL(ls.pattern()));

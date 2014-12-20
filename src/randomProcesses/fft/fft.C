@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Fast fourier transform subroutine derived from the Numerical
@@ -76,7 +76,7 @@ void fft::transform
     label ibit, k1, k2, n, nprev, nrem, idim;
     scalar tempi, tempr;
     scalar theta, wi, wpi, wpr, wr, wtemp;
-    scalar* data = (scalar*)field.begin()-1;
+    scalar* data = reinterpret_cast<scalar*>(field.begin()) - 1;
 
 
     // if inverse transform : renumber before transform
@@ -150,8 +150,8 @@ void fft::transform
                     {
                         k1 = i2;
                         k2 = k1 + ifp1;
-                        tempr = (scalar)wr*data[k2] - (scalar)wi*data[k2 + 1];
-                        tempi = (scalar)wr*data[k2 + 1] + (scalar)wi*data[k2];
+                        tempr = scalar(wr*data[k2]) - scalar(wi*data[k2 + 1]);
+                        tempi = scalar(wr*data[k2 + 1]) + scalar(wi*data[k2]);
                         data[k2] = data[k1] - tempr;
                         data[k2 + 1] = data[k1 + 1] - tempi;
                         data[k1] += tempr;

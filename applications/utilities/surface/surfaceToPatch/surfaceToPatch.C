@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Reads surface and applies surface regioning to a mesh. Uses boundaryMesh
@@ -50,7 +50,7 @@ void patchFaceSet
     // Add surface patches to end of normal patches. Make unique by prefixing
     // surf_.
 
-    const ptrList<boundaryPatch>& bPatches = bMesh.patches();
+    const PtrList<boundaryPatch>& bPatches = bMesh.patches();
     const polyBoundaryMesh& patches = mesh.boundaryMesh();
 
     List<polyPatch*> newPatchPtrList(patches.size() + bPatches.size());
@@ -129,12 +129,15 @@ void patchFaceSet
 
     if (nUnchanged > 0)
     {
-        Warning
-            << "There are " << nUnchanged << " faces in faceSet "
+        WarningIn
+        (
+            "void patchFaceSet"
+            "(repatchPolyMesh& mesh, const boundaryMesh& bMesh,"
+            "const word& setName, const labelList& nearest)"
+        )   << "There are " << nUnchanged << " faces in faceSet "
             << faceLabels.name() << " that did not get repatched since they"
             << " are too far away from the surface" << endl;
     }
-
 
     mesh.repatch();
 }

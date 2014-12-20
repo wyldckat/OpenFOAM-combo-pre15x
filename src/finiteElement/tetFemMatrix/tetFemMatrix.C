@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Tetrahedral Finite Element matrix member functions and operators
@@ -184,10 +184,11 @@ void tetFemMatrix<Type>::addConstraint
     }
     else
     {
-        Warning
-            << "void tetFemMatrix<Type>::addConstraint(const label vertex, "
-            << "const Type& value) : " << nl
-            << "Adding onstraint on an already constrained point."
+        WarningIn
+        (
+            "void tetFemMatrix<Type>::addConstraint(const label vertex, "
+            "const Type& value)"
+        )   << "Adding onstraint on an already constrained point."
             << "  Point: " << vertex
             << endl;
 
@@ -498,7 +499,7 @@ template<class Type>
 lduMatrix::solverPerformance solve(const tmp<tetFemMatrix<Type> >& ttetFem)
 {
     lduMatrix::solverPerformance solverPerf =
-        ((tetFemMatrix<Type>&)ttetFem()).solve();
+        const_cast<tetFemMatrix<Type>&>(ttetFem()).solve();
 
     ttetFem.clear();
     return solverPerf;
@@ -1135,7 +1136,7 @@ tmp<tetFemMatrix<Type> > operator*
 template<class Type>
 Ostream& operator<<(Ostream& os, const tetFemMatrix<Type>& tetFem)
 {
-    os  << (const lduMatrix&)(tetFem) << nl
+    os  << static_cast<const lduMatrix&>(tetFem) << nl
         << tetFem.dimensions_ << nl
         << tetFem.source_ << endl;
 

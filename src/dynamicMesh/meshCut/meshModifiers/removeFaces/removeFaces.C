@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -29,7 +29,7 @@ Description
 #include "removeFaces.H"
 #include "polyMesh.H"
 #include "polyTopoChange.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "meshTools.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
@@ -43,15 +43,15 @@ defineTypeNameAndDebug(removeFaces, 0);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-Foam::label Foam::removeFaces::nexti(const labelList& elems, const label index)
+Foam::label Foam::removeFaces::nexti(const label size, const label index)
 {
-    return (index + 1) % elems.size();
+    return (index + 1) % size;
 }
 
 
-Foam::label Foam::removeFaces::previ(const labelList& elems, const label index)
+Foam::label Foam::removeFaces::previ(const label size, const label index)
 {
-    return (index == 0) ? elems.size() - 1: index - 1;
+    return (index == 0) ? size - 1: index - 1;
 }
 
 
@@ -64,11 +64,9 @@ bool Foam::removeFaces::sameFaceOrdering
     const label f1Start     // index of edge start on f1
 )
 {
-    label next1 = nexti(f1, f1Start);
-
-    if (f0[nexti(f0, f0Start)] == e.end())
+    if (f0.nextLabel(f0Start) == e.end())
     {
-        if (f1[next1] != e.end())
+        if (f1.nextLabel(f1Start) != e.end())
         {
             return true;
         }
@@ -79,7 +77,7 @@ bool Foam::removeFaces::sameFaceOrdering
     }
     else
     {
-        if (f1[next1] == e.end())
+        if (f1.nextLabel(f1Start) == e.end())
         {
             return true;
         }
@@ -332,7 +330,7 @@ Foam::face Foam::removeFaces::filterFace
 
     if (debug && (newFp != f.size()))
     {
-        Info<< "Filtered face " << faceI << " old verts:" << f
+        Pout<< "Filtered face " << faceI << " old verts:" << f
             << " new verts:" << newFace << endl;
     }
 
@@ -361,7 +359,7 @@ Foam::face Foam::removeFaces::mergeFace
     label newFp = 0;
 
     label face0Start = findIndex(f0, e.start());
-    label next0 = nexti(f0, face0Start);
+    label next0 = nexti(f0.size(), face0Start);
 
     bool edgeOrderOK;
 
@@ -380,7 +378,7 @@ Foam::face Foam::removeFaces::mergeFace
             {
                 newFace[newFp++] = vertI;
             }
-            fp = nexti(f0, fp);
+            fp = nexti(f0.size(), fp);
         }
         while (fp != next0);
     }
@@ -399,14 +397,14 @@ Foam::face Foam::removeFaces::mergeFace
             {
                 newFace[newFp++] = vertI;
             }
-            fp = nexti(f0, fp);
+            fp = nexti(f0.size(), fp);
         }
         while (fp != face0Start);
     }
 
     // Step to face1. Determine whether same topological direction.
     label face1Start = findIndex(f1, e.start());
-    label next1 = nexti(f1, face1Start);
+    label next1 = nexti(f1.size(), face1Start);
 
 
     // No need to swap face1 order if face1
@@ -434,7 +432,7 @@ Foam::face Foam::removeFaces::mergeFace
                 newFace[newFp++] = vertI;
             }
 
-            fp = nexti(f1, fp);
+            fp = nexti(f1.size(), fp);
         }
         while (fp != face1Start);
     }
@@ -457,7 +455,7 @@ Foam::face Foam::removeFaces::mergeFace
             {
                 newFace[newFp++] = vertI;
             }
-            fp = previ(f1, fp);
+            fp = previ(f1.size(), fp);
         }
         while (fp != face1Start);
     }
@@ -487,7 +485,7 @@ void Foam::removeFaces::modFace
     {
         if (debug)
         {
-            Info<< "ModifyFace (unreversed) :"
+            Pout<< "ModifyFace (unreversed) :"
                 << "  faceI:" << masterFaceID
                 << "  f:" << f
                 << "  own:" << own
@@ -520,7 +518,7 @@ void Foam::removeFaces::modFace
     {
         if (debug)
         {
-            Info<< "ModifyFace (!reversed) :"
+            Pout<< "ModifyFace (!reversed) :"
                 << "  faceI:" << masterFaceID
                 << "  f:" << f.reverseFace()
                 << "  own:" << nei
@@ -680,8 +678,8 @@ Foam::removeFaces::removeFaces(const polyMesh& mesh, const scalar minCos)
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-// Removing face connects cells. This works out a consistent set of cell
-// regions. 
+// Removing face connects cells. This function works out a consistent set of
+// cell regions. 
 // - returns faces to remove. Can be extended with additional faces
 //   (if owner would become neighbour)
 // - sets cellRegion to -1 or to region number
@@ -722,48 +720,84 @@ Foam::label Foam::removeFaces::compatibleRemoves
         label own = faceOwner[faceI];
         label nei = faceNeighbour[faceI];
 
-        if (cellRegion[own] == -1)
+        if (own >= nei)
         {
-            if (cellRegion[nei] == -1)
+            FatalErrorIn("removeFaces::compatibleRemoves")
+                << "Problem2" << abort(FatalError);
+        }
+
+        label region0 = cellRegion[own];
+        label region1 = cellRegion[nei];
+
+        if (region0 == -1)
+        {
+            if (region1 == -1)
             {
                 // Create new region
                 cellRegion[own] = nRegions;
                 cellRegion[nei] = nRegions;
 
-                // Make owner the master of the region
+                // Make owner (lowest numbered!) the master of the region
                 regionMaster[nRegions] = own;
                 nRegions++;
             }
             else
             {
                 // Add owner to neighbour region
-                cellRegion[own] = cellRegion[nei];
+                cellRegion[own] = region1;
+                // See if owner becomes the master of the region
+                regionMaster[region1] = min(own, regionMaster[region1]);
             }
         }
         else
         {
-            if (cellRegion[nei] == -1)
+            if (region1 == -1)
             {
                 // Add neighbour to owner region
-                cellRegion[nei] = cellRegion[own];
+                cellRegion[nei] = region0;
+                // nei is higher numbered than own so guaranteed not lower
+                // than master of region0.
             }
-            else if (cellRegion[own] != cellRegion[nei])
+            else if (region0 != region1)
             {
-                // Both valid regions. Merge. Set both to owner region.
+                // Both have regions. Keep lowest numbered region and master.
+                label freedRegion = -1;
+                label keptRegion = -1;
 
-                // Free neighbour region.
-                regionMaster[cellRegion[nei]] = -1;
+                if (region0 < region1)
+                {
+                    changeCellRegion
+                    (
+                        nei,
+                        region1,    // old region
+                        region0,    // new region
+                        cellRegion
+                    );
 
-                // Set all neighbour region cells to owner
-                changeCellRegion
-                (
-                    nei,
-                    cellRegion[nei],
-                    cellRegion[own],
-                    cellRegion
-                );
+                    keptRegion = region0;
+                    freedRegion = region1;
+                }
+                else if (region1 < region0)
+                {
+                    changeCellRegion
+                    (
+                        own,
+                        region0,    // old region
+                        region1,    // new region
+                        cellRegion
+                    );
+
+                    keptRegion = region1;
+                    freedRegion = region0;
+                }
+
+                label master0 = regionMaster[region0];
+                label master1 = regionMaster[region1];
+
+                regionMaster[freedRegion] = -1;
+                regionMaster[keptRegion] = min(master0, master1);
             }
-        }        
+        }
     }
 
     regionMaster.setSize(nRegions);
@@ -809,11 +843,13 @@ Foam::label Foam::removeFaces::compatibleRemoves
                     << " has only " << nCells[region] << " cells in it"
                     << abort(FatalError);
             }
-            else if (nCells[region] != 2)
+            else if (nCells[region] != 2 && nCells[region] != 0)
             {
-                Warning<< "removeFaces::compatibleRemoves :"
+                WarningIn("removeFaces::compatibleRemoves")
                     << " region " << region << " has "
-                    << nCells[region] << " cells in it" << endl;
+                    << nCells[region] << " cells in it" << endl
+                    << "Removing will fail if faces share a common point!"
+                    << endl;
             }
         }
     }
@@ -966,7 +1002,7 @@ void Foam::removeFaces::setRefinement
 
     if (debug)
     {
-        Info<< "edgesToRemove:" << edgesToRemove << endl;
+        Pout<< "edgesToRemove:" << edgesToRemove << endl;
     }
 
 
@@ -1010,7 +1046,7 @@ void Foam::removeFaces::setRefinement
 
     if (debug)
     {
-        Info<< "pointsToRemove:" << pointsToRemove << endl;
+        Pout<< "pointsToRemove:" << pointsToRemove << endl;
     }
 
     // Get all faces affected in any way by removal of points/edges/faces/cells
@@ -1049,7 +1085,7 @@ void Foam::removeFaces::setRefinement
         {
             if (debug)
             {
-                Info<< "Actually removing split face " << faceI
+                Pout<< "Actually removing split face " << faceI
                     << " verts:" << mesh_.faces()[faceI] << endl;
             }
 
@@ -1070,7 +1106,7 @@ void Foam::removeFaces::setRefinement
 
         if (debug)
         {
-            Info<< "Actually removing point " << pointI << " coord:"
+            Pout<< "Actually removing point " << pointI << " coord:"
                 << mesh_.points()[pointI] << endl;
         }
 
@@ -1087,7 +1123,7 @@ void Foam::removeFaces::setRefinement
         {
             if (debug)
             {
-                Info<< "Actually removing cell " << cellI
+                Pout<< "Actually removing cell " << cellI
                     << " master:" << cellRegionMaster[region]
                     << endl;
             }
@@ -1122,7 +1158,7 @@ void Foam::removeFaces::setRefinement
         {
             if (debug)
             {
-                Info<< "Actually removing merged face " << face1I
+                Pout<< "Actually removing merged face " << face1I
                     << " verts:" << mesh_.faces()[face1I]
                     << endl;
             }
@@ -1176,7 +1212,7 @@ void Foam::removeFaces::setRefinement
 
             if (debug)
             {
-                Info<< "Modifying mergedface " << face0I << " for new verts:"
+                Pout<< "Modifying mergedface " << face0I << " for new verts:"
                     << mergedFace
                     << " possibly new owner " << own << " or new nei " << nei
                     << endl;
@@ -1213,7 +1249,7 @@ void Foam::removeFaces::setRefinement
 
         if (debug)
         {
-            Info<< "Remaining affected face:" << faceI << endl;
+            Pout<< "Remaining affected face:" << faceI << endl;
         }
 
         face f = filterFace(pointsToRemove, faceI);
@@ -1243,7 +1279,7 @@ void Foam::removeFaces::setRefinement
 
         if (debug)
         {
-            Info<< "Modifying " << faceI << " for new verts:" << f
+            Pout<< "Modifying " << faceI << " for new verts:" << f
                 << " or for new owner " << own << " or for new nei " << nei
                 << endl;
         }

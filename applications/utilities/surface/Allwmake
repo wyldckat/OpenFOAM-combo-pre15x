@@ -17,3 +17,4 @@ wmake surfaceToPatch
 wmake surfaceSplitNonManifolds
 wmake surfaceScale
 wmake surfaceSplitByPatch
+wmake surfaceClean

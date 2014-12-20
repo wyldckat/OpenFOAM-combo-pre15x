@@ -7,6 +7,8 @@
 
         forAll(Times, timeIndex)
         {
+            if (Times[timeIndex].name() == "constant") continue;
+
             scalar diff = fabs(Times[timeIndex].value() - time);
             if (diff < nearestDiff)
             {

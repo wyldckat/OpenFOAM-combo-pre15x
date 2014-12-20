@@ -20,14 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "ProcessorTopology.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "commSchedule.H"
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
@@ -35,7 +33,7 @@ Description
 template<class Patch, class ProcPatch>
 Foam::labelList Foam::ProcessorTopology<Patch, ProcPatch>::procNeighbours
 (
-    const ptrList<Patch>& patches
+    const PtrList<Patch>& patches
 )
 {
     // Determine number of processor neighbours and max neighbour id.
@@ -48,7 +46,7 @@ Foam::labelList Foam::ProcessorTopology<Patch, ProcPatch>::procNeighbours
     {
         const Patch& patch = patches[patchi];
 
-        if (typeid(patch) == typeid(ProcPatch))
+        if (isType<ProcPatch>(patch))
         {
             const ProcPatch& procPatch = 
                 refCast<const ProcPatch>(patch);
@@ -70,7 +68,7 @@ Foam::labelList Foam::ProcessorTopology<Patch, ProcPatch>::procNeighbours
     {
         const Patch& patch = patches[patchi];
 
-        if (typeid(patch) == typeid(ProcPatch))
+        if (isType<ProcPatch>(patch))
         {
             const ProcPatch& procPatch = 
                 refCast<const ProcPatch>(patch);
@@ -208,7 +206,7 @@ void Foam::ProcessorTopology<Patch, ProcPatch>::calcAddressing()
 template<class Patch, class ProcPatch>
 Foam::ProcessorTopology<Patch, ProcPatch>::ProcessorTopology
 (
-    const ptrList<Patch>& patches
+    const PtrList<Patch>& patches
 )
 :
     labelListList(Pstream::nProcs()),
@@ -236,7 +234,7 @@ Foam::ProcessorTopology<Patch, ProcPatch>::ProcessorTopology
 
         forAll(patches, patchi)
         {
-            if (typeid(patches[patchi]) != typeid(ProcPatch))
+            if (!isType<ProcPatch>(patches[patchi]))
             {
                 patchSchedule_[patchEvali].patch = patchi;
                 patchSchedule_[patchEvali].init = true;

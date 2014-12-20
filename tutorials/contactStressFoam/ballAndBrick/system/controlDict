@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass contactStressFoam;
+application contactStressFoam;
 
 startFrom       startTime;
 
@@ -38,7 +38,7 @@ writeControl    timeStep;
 
 writeInterval   500;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -79,7 +79,8 @@ Foam::commonRailInjector::commonRailInjector
     {
         massFlowRateProfile_[i][0] = t.userTimeToTime(massFlowRateProfile_[i][0]);
     }
-    forAll(massFlowRateProfile_, i)
+
+    forAll(injectionPressureProfile_, i)
     {
         injectionPressureProfile_[i][0] = t.userTimeToTime(injectionPressureProfile_[i][0]);
     }
@@ -90,6 +91,10 @@ Foam::commonRailInjector::commonRailInjector
                 << " start-time entries for injectionPressureProfile and massFlowRateProfile do no match"
                 << abort(FatalError);
     }
+    Info << "injectionPressureProfile_.size() = " << injectionPressureProfile_.size()
+        << ", massFlowRateProfile_.size() = " << massFlowRateProfile_.size()
+        << endl;
+
     if (mag(injectionPressureProfile_[injectionPressureProfile_.size()-1][0]-massFlowRateProfile_[massFlowRateProfile_.size()-1][0]) > SMALL)
     {
         FatalError << "commonRailInjector::commonRailInjector(const time& t, const dictionary dict) " << endl
@@ -104,7 +109,6 @@ Foam::commonRailInjector::commonRailInjector
     {
         // correct the massFlowRateProfile to match the injected mass
         massFlowRateProfile_[i][1] *= mass_/integratedMFR;
-        injectionPressureProfile_[i][1] *= injectionPressure_/integratedP;
 
         TProfile_[i][0] = massFlowRateProfile_[i][0];
         TProfile_[i][1] = T_;
@@ -113,6 +117,10 @@ Foam::commonRailInjector::commonRailInjector
 
     }
 
+    forAll(injectionPressureProfile_, i)
+    {
+        injectionPressureProfile_[i][1] *= injectionPressure_/integratedP;
+    }
     // Normalize the direction vector
     direction_ /= mag(direction_);
     
@@ -135,6 +143,7 @@ Foam::commonRailInjector::commonRailInjector
             X_[i] /= Xsum;
         }
     }
+    Info << "end constructor. in commonRail" << endl;
 
 }
 

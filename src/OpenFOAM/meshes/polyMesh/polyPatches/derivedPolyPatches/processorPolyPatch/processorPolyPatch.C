@@ -20,13 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "processorPolyPatch.H"
+#include "polyBoundaryMesh.H"
 #include "addToRunTimeSelectionTable.H"
 #include "dictionary.H"
 #include "SubField.H"
@@ -60,7 +59,12 @@ processorPolyPatch::processorPolyPatch
 :
     coupledPolyPatch(name, size, start, index, bm),
     myProcNo_(myProcNo),
-    neighbProcNo_(neighbProcNo)
+    neighbProcNo_(neighbProcNo),
+    neighbFaceCentres_(),
+    neighbFaceAreas_(),
+    neighbFaceCellCentres_(),
+    neighbPointsPtr_(NULL),
+    neighbEdgesPtr_(NULL)
 {}
 
 
@@ -74,7 +78,12 @@ processorPolyPatch::processorPolyPatch
 :
     coupledPolyPatch(is, index, bm),
     myProcNo_(readLabel(is)),
-    neighbProcNo_(readLabel(is))
+    neighbProcNo_(readLabel(is)),
+    neighbFaceCentres_(),
+    neighbFaceAreas_(),
+    neighbFaceCellCentres_(),
+    neighbPointsPtr_(NULL),
+    neighbEdgesPtr_(NULL)
 {}
 
 
@@ -89,7 +98,12 @@ processorPolyPatch::processorPolyPatch
 :
     coupledPolyPatch(name, dict, index, bm),
     myProcNo_(readLabel(dict.lookup("myProcNo"))),
-    neighbProcNo_(readLabel(dict.lookup("neighbProcNo")))
+    neighbProcNo_(readLabel(dict.lookup("neighbProcNo"))),
+    neighbFaceCentres_(),
+    neighbFaceAreas_(),
+    neighbFaceCellCentres_(),
+    neighbPointsPtr_(NULL),
+    neighbEdgesPtr_(NULL)
 {}
 
 
@@ -102,7 +116,12 @@ processorPolyPatch::processorPolyPatch
 :
     coupledPolyPatch(pp, bm),
     myProcNo_(pp.myProcNo_),
-    neighbProcNo_(pp.neighbProcNo_)
+    neighbProcNo_(pp.neighbProcNo_),
+    neighbFaceCentres_(),
+    neighbFaceAreas_(),
+    neighbFaceCellCentres_(),
+    neighbPointsPtr_(NULL),
+    neighbEdgesPtr_(NULL)
 {}
 
 
@@ -118,24 +137,35 @@ processorPolyPatch::processorPolyPatch
 :
     coupledPolyPatch(pp, bm, index, newSize, newStart),
     myProcNo_(pp.myProcNo_),
-    neighbProcNo_(pp.neighbProcNo_)
+    neighbProcNo_(pp.neighbProcNo_),
+    neighbFaceCentres_(),
+    neighbFaceAreas_(),
+    neighbFaceCellCentres_(),
+    neighbPointsPtr_(NULL),
+    neighbEdgesPtr_(NULL)
 {}
 
 
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 processorPolyPatch::~processorPolyPatch()
-{}
+{
+    deleteDemandDrivenData(neighbPointsPtr_);
+    deleteDemandDrivenData(neighbEdgesPtr_);
+}
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
-
 
 void processorPolyPatch::initGeometry()
 {
     if (Pstream::parRun())
     {
-        OPstream toNeighbProc(neighbProcNo(), 3*size()*sizeof(vector));
+        OPstream toNeighbProc
+        (
+            neighbProcNo(),
+          + 3*(sizeof(label) + size()*sizeof(vector))
+        );
 
         toNeighbProc
             << faceCentres()
@@ -150,7 +180,11 @@ void processorPolyPatch::calcGeometry()
     if (Pstream::parRun())
     {
         {
-            IPstream fromNeighbProc(neighbProcNo(), 3*size()*sizeof(vector));
+            IPstream fromNeighbProc
+            (
+                neighbProcNo(),
+                3*(sizeof(label) + size()*sizeof(vector))
+            );
             fromNeighbProc
                 >> neighbFaceCentres_
                 >> neighbFaceAreas_
@@ -168,7 +202,7 @@ void processorPolyPatch::calcGeometry()
             {
                 FatalErrorIn
                 (
-                    "processorFvPatch::makeWeights(scalarField& w) const"
+                    "processorPolyPatch::calcGeometry()"
                 )   << "face " << facei << " area does not match neighbour by "
                     << 100*mag(magSf[facei] - nmagSf)/avSf
                     << "% -- possible face ordering problem"
@@ -197,6 +231,156 @@ void processorPolyPatch::initMovePoints(const pointField& p)
 void processorPolyPatch::movePoints(const pointField&)
 {
     calcGeometry();
+}
+
+
+void processorPolyPatch::initUpdateTopology()
+{
+    // For completeness
+    polyPatch::initUpdateTopology();
+
+    deleteDemandDrivenData(neighbPointsPtr_);
+    deleteDemandDrivenData(neighbEdgesPtr_);
+
+    if (Pstream::parRun() && boundaryMesh().extendedAddressing())
+    {
+        // Express all points as patch face and index in face.
+        labelList patchFace(nPoints());
+        labelList indexInFace(nPoints());
+
+        for (label patchPointI = 0; patchPointI < nPoints(); patchPointI++)
+        {
+            label faceI = pointFaces()[patchPointI][0];
+
+            patchFace[patchPointI] = faceI;
+
+            const face& f = localFaces()[faceI];
+
+            indexInFace[patchPointI] = findIndex(f, patchPointI);
+        }
+
+        OPstream toNeighbProc
+        (
+            neighbProcNo(),
+            3*sizeof(label)
+          + 2*nPoints()*sizeof(label)
+          + nEdges()*sizeof(edge)
+        );
+
+        toNeighbProc
+            << patchFace
+            << indexInFace
+            << edges();
+    }
+}
+
+
+void processorPolyPatch::updateTopology()
+{
+    // For completeness
+    polyPatch::updateTopology();
+
+    if (Pstream::parRun() && boundaryMesh().extendedAddressing())
+    {
+        labelList nbrPatchFace(nPoints());
+        labelList nbrIndexInFace(nPoints());
+        edgeList nbrEdges(nEdges());
+
+        {
+            // Note cannot predict exact size since edgeList not (yet) sent as
+            // binary entity but as List of edges.
+            IPstream fromNeighbProc(neighbProcNo());
+
+            fromNeighbProc
+                >> nbrPatchFace
+                >> nbrIndexInFace
+                >> nbrEdges;
+        }
+
+        // Convert neighbour edges and indices into face back into my edges and
+        // points.
+        neighbPointsPtr_ = new labelList(nPoints());
+        labelList& neighbPoints = *neighbPointsPtr_;
+
+        // Inverse of neighbPoints so from neighbour point to current point.
+        labelList nbrToThis(nPoints(), -1);
+
+        forAll(nbrPatchFace, nbrPointI)
+        {
+            // Find face and index in face on this side.
+            const face& f = localFaces()[nbrPatchFace[nbrPointI]];
+            label index = (f.size() - nbrIndexInFace[nbrPointI]) % f.size();
+            label patchPointI = f[index];
+
+            neighbPoints[patchPointI] = nbrPointI;
+            nbrToThis[nbrPointI] = patchPointI;
+        }
+
+        // Convert edges.
+        neighbEdgesPtr_ = new labelList(nEdges());
+        labelList& neighbEdges = *neighbEdgesPtr_;
+
+        forAll(nbrEdges, nbrEdgeI)
+        {
+            const edge& nbrEdge = nbrEdges[nbrEdgeI];
+
+            // Get edge in local point numbering
+            edge e(nbrToThis[nbrEdge[0]], nbrToThis[nbrEdge[1]]);
+
+            // Find the edge.
+            const labelList& pEdges = pointEdges()[e[0]];
+
+            label edgeI = -1;
+
+            forAll(pEdges, i)
+            {
+                if (edges()[pEdges[i]] == e)
+                {
+                    edgeI = pEdges[i];
+                    break;
+                }
+            }
+
+            if (edgeI == -1)
+            {
+                FatalErrorIn("processorPolyPatch::calcGeometry()")
+                    << "Cannot find patch edge with vertices " << e
+                    << '.' << nl << "Can only find edges "
+                    << IndirectList<edge>(edges(), pEdges)
+                    << " connected to first vertex" << abort(FatalError);
+            }
+
+            neighbEdges[edgeI] = nbrEdgeI;
+        }
+    }
+}
+
+
+const labelList& processorPolyPatch::neighbPoints() const
+{
+    if (!neighbPointsPtr_)
+    {
+        FatalErrorIn("processorPolyPatch::neighbPoints() const")
+            << "No extended addressing calculated. Please call"
+            << " polyBoundaryMesh::setExtendedAddressing(true)"
+            << " on all processors before calling this function"
+            << abort(FatalError);
+    }
+    return *neighbPointsPtr_;
+}
+
+
+const labelList& processorPolyPatch::neighbEdges() const
+{
+    if (!neighbEdgesPtr_)
+    {
+        FatalErrorIn("processorPolyPatch::neighbEdges() const")
+            << "No extended addressing calculated. Please call"
+            << " polyBoundaryMesh::setExtendedAddressing(true)"
+            << " on all processors before calling this function"
+            << abort(FatalError);
+    }
+    return *neighbEdgesPtr_;
 }
 
 

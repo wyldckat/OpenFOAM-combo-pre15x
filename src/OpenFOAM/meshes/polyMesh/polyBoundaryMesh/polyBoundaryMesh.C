@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -67,7 +65,9 @@ polyBoundaryMesh::polyBoundaryMesh
 :
     polyPatchList(),
     regIOobject(io),
-    mesh_(mesh)
+    mesh_(mesh),
+    extendedAddressing_(false),
+    neighbourEdgesPtr_(NULL)
 {
     if (readOpt() == IOobject::MUST_READ)
     {
@@ -76,7 +76,7 @@ polyBoundaryMesh::polyBoundaryMesh
         // Read polyPatchList
         Istream& is = readStream(typeName);
 
-        ptrList<entry> patchEntries(is);
+        PtrList<entry> patchEntries(is);
         patches.setSize(patchEntries.size());
 
         forAll(patches, patchI)
@@ -115,9 +115,41 @@ polyBoundaryMesh::polyBoundaryMesh
 :
     polyPatchList(size),
     regIOobject(io),
-    mesh_(pm)
+    mesh_(pm),
+    extendedAddressing_(false),
+    neighbourEdgesPtr_(NULL)
 {}
 
+
+// * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
+
+Foam::polyBoundaryMesh::~polyBoundaryMesh()
+{
+    deleteDemandDrivenData(neighbourEdgesPtr_);
+}
+
+
+void Foam::polyBoundaryMesh::clearGeom()
+{
+    forAll (*this, patchi)
+    {
+        operator[](patchi).clearGeom();
+    }
+}
+
+
+void Foam::polyBoundaryMesh::clearAddressing()
+{
+    deleteDemandDrivenData(neighbourEdgesPtr_);
+    
+    forAll (*this, patchi)
+    {
+        operator[](patchi).clearAddressing();
+    }
+}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 // Calculate the geometry for the patches (transformation tensors etc.)
 void polyBoundaryMesh::calcGeometry()
@@ -131,6 +163,139 @@ void polyBoundaryMesh::calcGeometry()
     {
         operator[](patchi).calcGeometry();
     }
+}
+
+
+const List<labelPairList>& polyBoundaryMesh::neighbourEdges() const
+{
+    if (Pstream::parRun())
+    {
+        WarningIn("polyBoundaryMesh::neighbourEdges() const")
+            << "Neighbour edge addressing not correct across parallel"
+            << " boundaries." << endl;
+    }
+
+    Pout<< "Size:" << size() << endl;
+    if (!neighbourEdgesPtr_)
+    {
+        neighbourEdgesPtr_ = new List<labelPairList>(size());
+        List<labelPairList>& neighbourEdges = *neighbourEdgesPtr_;
+
+        // Initialize.
+        label nEdgePairs = 0;
+        forAll(*this, patchi)
+        {
+            const polyPatch& pp = operator[](patchi);
+
+            neighbourEdges[patchi].setSize(pp.nEdges() - pp.nInternalEdges());
+
+            forAll(neighbourEdges[patchi], i)
+            {
+                labelPair& edgeInfo = neighbourEdges[patchi][i];
+
+                edgeInfo[0] = -1;
+                edgeInfo[1] = -1;
+            }
+
+            nEdgePairs += pp.nEdges() - pp.nInternalEdges();
+        }
+
+        // From mesh edge (expressed as a point pair so as not to construct
+        // point addressing) to patch + relative edge index.
+        HashTable<labelPair, edge, Hash<edge> > pointsToEdge(nEdgePairs);
+
+        forAll(*this, patchi)
+        {
+            const polyPatch& pp = operator[](patchi);
+
+            const edgeList& edges = pp.edges();
+
+            for
+            (
+                label edgei = pp.nInternalEdges();
+                edgei < edges.size();
+                edgei++
+            )
+            {
+                // Edge in patch local points
+                const edge& e = edges[edgei];
+
+                // Edge in mesh points.
+                edge meshEdge(pp.meshPoints()[e[0]], pp.meshPoints()[e[1]]);
+
+                HashTable<labelPair, edge, Hash<edge> >::iterator fnd =
+                    pointsToEdge.find(meshEdge);
+
+                if (fnd == pointsToEdge.end())
+                {
+                    // First occurrence of mesh edge. Store patch and my
+                    // local index.
+                    pointsToEdge.insert
+                    (
+                        meshEdge,
+                        labelPair
+                        (
+                            patchi,
+                            edgei - pp.nInternalEdges()
+                        )
+                    );
+                }
+                else
+                {
+                    // Second occurrence. Store.
+                    const labelPair& edgeInfo = fnd();
+
+                    neighbourEdges[patchi][edgei - pp.nInternalEdges()] =
+                        edgeInfo;
+
+                    neighbourEdges[edgeInfo[0]][edgeInfo[1]]
+                         = labelPair(patchi, edgei - pp.nInternalEdges());
+
+                    // Found all two occurrences of this edge so remove from
+                    // hash to save space. Note that this will give lots of
+                    // problems if the polyBoundaryMesh is multiply connected.
+                    pointsToEdge.erase(meshEdge);
+                }
+            }
+        }
+
+        if (pointsToEdge.size() > 0)
+        {
+            FatalErrorIn("polyBoundaryMesh::neighbourEdges() const")
+                << "Not all boundary edges of patches match up." << nl
+                << "Is the outside of your mesh multiply connected?"
+                << abort(FatalError);
+        }
+
+        forAll(*this, patchi)
+        {
+            const polyPatch& pp = operator[](patchi);
+
+            const labelPairList& nbrEdges = neighbourEdges[patchi];
+
+            forAll(nbrEdges, i)
+            {
+                const labelPair& edgeInfo = nbrEdges[i];
+
+                if (edgeInfo[0] == -1 || edgeInfo[1] == -1)
+                {
+                    label edgeI = pp.nInternalEdges() + i;
+                    const edge& e = pp.edges()[edgeI];
+
+                    FatalErrorIn("polyBoundaryMesh::neighbourEdges() const")
+                        << "Not all boundary edges of patches match up." << nl
+                        << "Edge " << edgeI << " on patch " << pp.name()
+                        << " end points " << pp.localPoints()[e[0]] << ' '
+                        << pp.localPoints()[e[1]] << " is not matched to an"
+                        << " edge on any other patch." << nl
+                        << "Is the outside of your mesh multiply connected?"
+                        << abort(FatalError);
+                }
+            }
+        }
+    }
+
+    return *neighbourEdgesPtr_;
 }
 
 
@@ -197,7 +362,7 @@ label polyBoundaryMesh::findPatchID(const word& patchName) const
     // Patch not found
     if (debug)
     {
-        Info<< "label polyBoundaryMesh::findPatchID(const word& "
+        Pout<< "label polyBoundaryMesh::findPatchID(const word& "
             << "patchName) const"
             << "Patch named " << patchName << " not found.  "
             << "List of available patch names: " << names() << endl;
@@ -271,7 +436,7 @@ bool polyBoundaryMesh::checkDefinition(const bool report) const
         {
             boundaryError = true;
 
-            Info<< "bool polyBoundaryMesh::checkDefinition("
+            Pout<< "bool polyBoundaryMesh::checkDefinition("
                 << "const bool report) const : "
                 << "Problem with boundary patch " << patchI
                 << " named " << bm[patchI].name()
@@ -286,17 +451,18 @@ bool polyBoundaryMesh::checkDefinition(const bool report) const
 
     if (boundaryError)
     {
-        SeriousError
-            << "bool polyBoundaryMesh::checkDefinition("
-            << "const bool report) const : "
-            << "This mesh is not valid: boundary definition is in error."
+        SeriousErrorIn
+        (
+            "bool polyBoundaryMesh::checkDefinition("
+            "const bool report) const"
+        )   << "This mesh is not valid: boundary definition is in error."
             << endl;
     }
     else
     {
         if (debug || report)
         {
-            Info << "Boundary definition OK." << endl;
+            Pout << "Boundary definition OK." << endl;
         }
     }
 
@@ -320,7 +486,7 @@ bool polyBoundaryMesh::checkFaceOrder(const bool report) const
     }
 
     // Map from mesh to itself.
-    // Note: a few arguments are not set since they are not used in sendOrder.
+    // Note: a few arguments are not set since they are not used in initOrder.
     // Just lazy ;-)
     mapPolyMesh identiMap
     (
@@ -354,7 +520,7 @@ bool polyBoundaryMesh::checkFaceOrder(const bool report) const
 
     forAll(patches, patchI)
     {
-        patches[patchI].sendOrder(noChange, identiMap);
+        patches[patchI].initOrder(noChange, identiMap);
     }
     
     forAll(patches, patchI)
@@ -366,7 +532,7 @@ bool polyBoundaryMesh::checkFaceOrder(const bool report) const
         {
             boundaryError = true;
 
-            Sout<< "bool polyBoundaryMesh::checkFaceOrder("
+            Pout<< "bool polyBoundaryMesh::checkFaceOrder("
                 << "const bool report) const : "
                 << "Problem with coupled boundary patch " << patchI
                 << " named " << patches[patchI].name()
@@ -381,17 +547,18 @@ bool polyBoundaryMesh::checkFaceOrder(const bool report) const
 
     if (boundaryError)
     {
-        SeriousError
-            << "bool polyBoundaryMesh::checkFaceOrder("
-            << "const bool report) const : "
-            << "This mesh is not valid: coupled face ordering not consistent."
+        SeriousErrorIn
+        (
+            "bool polyBoundaryMesh::checkFaceOrder("
+            "const bool report) const"
+        )   << "This mesh is not valid: coupled face ordering not consistent."
             << endl;
     }
     else
     {
         if (debug || report)
         {
-            Info << "Patch face ordering OK." << endl;
+            Pout<< "Patch face ordering OK." << endl;
         }
     }
 
@@ -416,11 +583,40 @@ void polyBoundaryMesh::movePoints(const pointField& p)
 }
 
 
-// writeData member function required by regIOobject
+// Correct polyBoundaryMesh after topology update
+void polyBoundaryMesh::updateTopology()
+{
+    deleteDemandDrivenData(neighbourEdgesPtr_);
+
+    polyPatchList& patches = *this;
+
+    forAll(patches, patchi)
+    {
+        patches[patchi].initUpdateTopology();
+    }
+
+    forAll(patches, patchi)
+    {
+        patches[patchi].updateTopology();
+    }
+}
+
+
 bool polyBoundaryMesh::writeData(Ostream& os) const
 {
     os << *this;
     return os.good();
+}
+
+
+bool polyBoundaryMesh::write
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
+{
+    return regIOobject::write(fmt, ver, IOstream::UNCOMPRESSED);
 }
 
 

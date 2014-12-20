@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.2                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,9 +11,9 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "/home/storm/chris/OpenFOAM/chris-1.0/run/tutorials/rhoSonicFoam";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorials/rhoSonicFoam";
     case "forwardStep";
-    instance "constant";
+    instance ""constant"";
     local "polyMesh";
 
     class polyBoundaryMesh;
@@ -27,7 +27,7 @@ FoamFile
 inlet
 {
     type patch;
-    physicalType inletFixedTemp;
+    physicalType supersonicInlet;
     nFaces 50;
     startFace 10325;
 }
@@ -35,7 +35,7 @@ inlet
 outlet
 {
     type patch;
-    physicalType outletAdiabatic;
+    physicalType extrapolatedOutlet;
     nFaces 40;
     startFace 10375;
 }
@@ -59,7 +59,7 @@ top
 obstacle
 {
     type patch;
-    physicalType wallAdiabatic;
+    physicalType adiabaticWall;
     nFaces 110;
     startFace 10565;
 }

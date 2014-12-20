@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     polyBoundaryMesh
@@ -37,15 +37,19 @@ SourceFiles
 
 #include "polyPatchList.H"
 #include "regIOobject.H"
+#include "labelPair.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
+typedef List<labelPair> labelPairList;
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 class polyMesh;
+class mapPolyMesh;
 
 /*---------------------------------------------------------------------------*\
                       Class polyBoundaryMesh Declaration
@@ -60,6 +64,13 @@ class polyBoundaryMesh
 
         //- Reference to mesh
         const polyMesh& mesh_;
+
+        //- Whether extended (mostly parallel) addressing needs to be
+        //  calculated and maintained.
+        bool extendedAddressing_;
+
+        //- Edges of neighbouring patches
+        mutable List<labelPairList>* neighbourEdgesPtr_;
 
 
     // Private Member Functions
@@ -99,7 +110,15 @@ public:
         );
 
 
-    // Destructor - default
+    // Destructor
+
+        ~polyBoundaryMesh();
+
+        //- Clear geometry at this level and at patches
+        void clearGeom();
+
+        //- Clear addressing at this level and at patches
+        void clearAddressing();
 
 
     // Member functions
@@ -112,6 +131,14 @@ public:
         {
             return mesh_;
         }
+
+        //- Per patch the edges on the neighbouring patch. Is for every external
+        //  edge the neighbouring patch and neighbouring (external) patch edge
+        //  label. Note that edge indices are offset by nInternalEdges to keep
+        //  it as much as possible consistent with coupled patch addressing
+        //  (where coupling is by local patch face index).
+        //  Only valid for singly connected polyBoundaryMesh and not parallel
+        const List<labelPairList>& neighbourEdges() const;
 
         //- Return a list of patch names
         wordList names() const;
@@ -137,8 +164,30 @@ public:
         //- Correct polyBoundaryMesh after moving points
         void movePoints(const pointField&);
 
+        //- Correct polyBoundaryMesh after topology update
+        void updateTopology();
+
         //- writeData member function required by regIOobject
         bool writeData(Ostream&) const;
+
+        //- Write using given format, version and form uncompression
+        bool write
+        (
+            IOstream::streamFormat fmt,
+            IOstream::versionNumber ver,
+            IOstream::compressionType cmp
+        ) const;
+
+        //- Calculate extended addressing yes or no.
+        void setExtendedAddressing(const bool extended)
+        {
+            extendedAddressing_ = extended;
+        }
+
+        bool extendedAddressing() const
+        {
+            return extendedAddressing_;
+        }
 
 
     // Ostream operator

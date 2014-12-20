@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Constructors & destructor for IOobject.
@@ -46,7 +46,7 @@ defineTypeNameAndDebug(IOobject, 0);
 IOobject::IOobject
 (
     const word& name,
-    const word& intance,
+    const fileName& instance,
     const objectRegistry& registry,
     readOption ro,
     writeOption wo,
@@ -56,7 +56,7 @@ IOobject::IOobject
     name_(name),
     headerClassName_(typeName),
     note_(),
-    instance_(intance),
+    instance_(instance),
     local_(),
     db_(registry),
     rOpt_(ro),
@@ -77,7 +77,7 @@ IOobject::IOobject
 IOobject::IOobject
 (
     const word& name,
-    const word& intance,
+    const fileName& instance,
     const fileName& local,
     const objectRegistry& registry,
     readOption ro,
@@ -88,7 +88,7 @@ IOobject::IOobject
     name_(name),
     headerClassName_(typeName),
     note_(),
-    instance_(intance),
+    instance_(instance),
     local_(local),
     db_(registry),
     rOpt_(ro),
@@ -179,10 +179,8 @@ Istream* IOobject::objectStream()
      && file(rootPath()/caseName()/".."/instance()/db_.dbDir()/local()/name())
     )
     {
-        return objectStream
-        (
-            rootPath()/caseName()/".."/instance()/db_.dbDir()/local()/name()
-        );
+        instance_ = ".."/instance();
+        return objectStream(objectPath());
     }
     else if (!dir(path()))
     {
@@ -233,8 +231,7 @@ bool IOobject::headerOk()
         {
             if (objectRegistry::debug)
             {
-                Warning
-                    << "IOobject::headerOk() : "
+                IOWarningIn("IOobject::headerOk()", (*isPtr))
                     << "failed to read header of file " << objectPath()
                     << endl;
             }

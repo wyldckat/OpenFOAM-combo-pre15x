@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -112,8 +112,8 @@ void fixedGradientFvPatchField<Type>::autoMap
     }
     else
     {
-        Field<Type>::autoMap((const FieldMapper&)m);
-        gradient_.autoMap((const FieldMapper&)m);
+        Field<Type>::autoMap(m);
+        gradient_.autoMap(m);
     }
 }
 
@@ -146,7 +146,7 @@ void fixedGradientFvPatchField<Type>::evaluate()
 
     Field<Type>::operator=
     (
-        this->patchInternalField() + gradient_/this->patchMesh().deltaCoeffs()
+        this->patchInternalField() + gradient_/this->patch().deltaCoeffs()
     );
 
     fvPatchField<Type>::evaluate();
@@ -172,7 +172,7 @@ tmp<Field<Type> > fixedGradientFvPatchField<Type>::valueBoundaryCoeffs
     const tmp<scalarField>&
 ) const
 {
-    return gradient()/this->patchMesh().deltaCoeffs();
+    return gradient()/this->patch().deltaCoeffs();
 }
 
 //- Return the matrix diagonal coefficients corresponding to the

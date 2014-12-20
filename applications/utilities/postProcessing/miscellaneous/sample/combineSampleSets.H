@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     combineSampleSets
@@ -37,7 +37,7 @@ SourceFiles
 #define combineSampleSets_H
 
 #include "labelList.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "coordSet.H"
 #include "sampleSet.H"
 
@@ -47,8 +47,8 @@ SourceFiles
 // index list. Valid result only on master processor.
 void combineSampleSets
 (
-    const Foam::ptrList<Foam::sampleSet>& sampleSets,
-    Foam::ptrList<Foam::coordSet>& masterSampleSets,
+    const Foam::PtrList<Foam::sampleSet>& sampleSets,
+    Foam::PtrList<Foam::coordSet>& masterSampleSets,
     Foam::labelListList& indexSets
 );
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -48,9 +48,8 @@ bool objectRegistry::checkIn(regIOobject& io) const
      && io.name() != "region0"
     )
     {
-        Warning
-            << "objectRegistry::checkIn(regIOobject&): \n"
-            << "    Registering object '" << io.name() << '\''
+        WarningIn("objectRegistry::checkIn(regIOobject&)")
+            << "Registering object '" << io.name() << '\''
             << " with objectRegistry 'time'" << nl
             << "    This is only appropriate for registering the regions"
                " of a multi-region computation\n"
@@ -67,14 +66,14 @@ bool objectRegistry::checkIn(regIOobject& io) const
             << endl;
     }
 
-    return ((regIOobjectTable&)(*this)).insert(io.name(), &io);
+    return const_cast<objectRegistry&>(*this).insert(io.name(), &io);
 }
 
 
 // Remove an regIOobject from list
 bool objectRegistry::checkOut(regIOobject& io) const
 {
-    iterator iter = ((regIOobjectTable&)(*this)).find(io.name());
+    iterator iter = const_cast<objectRegistry&>(*this).find(io.name());
 
     if (iter != end())
     {
@@ -89,8 +88,7 @@ bool objectRegistry::checkOut(regIOobject& io) const
         {
             if (objectRegistry::debug)
             {
-                Warning
-                    << "objectRegistry::checkOut(regIOobject&) : "
+                WarningIn("objectRegistry::checkOut(regIOobject&)")
                     << "attempt to checkOut copy of " << io.name()
                     << endl;
             }
@@ -104,7 +102,7 @@ bool objectRegistry::checkOut(regIOobject& io) const
                 delete iter();
             }
 
-            return ((regIOobjectTable&)(*this)).erase(iter);
+            return const_cast<objectRegistry&>(*this).erase(iter);
         }
     }
     else
@@ -218,45 +216,6 @@ wordList objectRegistry::names(const word& ClassName) const
 const objectRegistry& objectRegistry::subRegistry(const word& name) const
 {
     return lookupObject<objectRegistry>(name);
-}
-
-
-bool objectRegistry::update()
-{
-    if (!updated())
-    {
-        bool ok = false;
-
-        for (iterator iter = begin(); iter != end(); ++iter)
-        {
-            if (objectRegistry::debug)
-            {
-                Info<< "objectRegistry::update() : "
-                    << "Considering updating object "
-                    << iter()->name()
-                    << endl;
-            }
-
-            ok = iter()->update() && ok;
-        }
-
-        regIOobject::update();
-
-        return ok;
-    }
-
-    return true;
-}
-
-
-void objectRegistry::resetUpdate()
-{
-    for (iterator iter = begin(); iter != end(); ++iter)
-    {
-        iter()->resetUpdate();
-    }
-
-    regIOobject::resetUpdate();
 }
 
 

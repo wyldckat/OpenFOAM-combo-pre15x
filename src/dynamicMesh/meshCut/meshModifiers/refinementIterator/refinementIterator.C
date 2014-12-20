@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -82,7 +82,7 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
 {
     Map<label> addedCells(2*refCells.size());
 
-    Time& runTime = (Time&)mesh_.time();
+    Time& runTime = const_cast<Time&>(mesh_.time());
 
     label nRefCells = refCells.size();
 
@@ -105,7 +105,7 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
 
         if (debug)
         {
-            Info<< "refinementIterator : refining "
+            Pout<< "refinementIterator : refining "
                 << currentRefCells.size() << " cells." << endl;
         }
 
@@ -119,14 +119,14 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
         {
             if (debug)
             {
-                Info<< "refinementIterator : exiting iteration since no valid"
+                Pout<< "refinementIterator : exiting iteration since no valid"
                     << " loops found for " << currentRefCells.size() 
                     << " cells" << endl;
 
 
                 fileName cutsFile("failedCuts_" + runTime.timeName() + ".obj");
 
-                Info<< "Writing cuts for time " <<  runTime.timeName()
+                Pout<< "Writing cuts for time " <<  runTime.timeName()
                     << " to " << cutsFile << endl;
 
                 OFstream cutsStream(cutsFile);
@@ -154,7 +154,7 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
         {
             fileName cutsFile("cuts_" + runTime.timeName() + ".obj");
 
-            Info<< "Writing cuts for time " <<  runTime.timeName()
+            Pout<< "Writing cuts for time " <<  runTime.timeName()
                 << " to " << cutsFile << endl;
 
             OFstream cutsStream(cutsFile);
@@ -196,7 +196,7 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
         {
             if (debug)
             {
-                Info<< "Writing refined morphMesh to time "
+                Pout<< "Writing refined morphMesh to time "
                     << runTime.timeName() << endl;
             }
 
@@ -277,7 +277,7 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
 
         if (debug)
         {
-            Info << endl;
+            Pout<< endl;
         }
 
         // Stop only if all finished or all can't refine any further.
@@ -289,7 +289,8 @@ Foam::Map<Foam::label> Foam::refinementIterator::setRefinement
 
     if (nRefCells == oldRefCells)
     {
-        Warning<< "refinementIterator : stopped refining."
+        WarningIn("refinementIterator")
+            << "stopped refining."
             << "Did not manage to refine a single cell" << endl
             << "Wanted :" << oldRefCells << endl;
     }

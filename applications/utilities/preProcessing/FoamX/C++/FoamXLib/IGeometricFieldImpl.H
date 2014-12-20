@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IGeometricFieldDescriptorImpl
@@ -76,9 +76,6 @@ class IGeometricFieldImpl
         //- Reference to internal field value object.
         IDictionaryEntryImpl* internalFieldValue_;
 
-        //- Reference to reference level value object
-        //IDictionaryEntryImpl* referenceLevelValue_;
-
         //- Map of patch name to patch field types.
         Foam::HashTable<Foam::word> patchFieldNames_;
 
@@ -111,13 +108,6 @@ public:
             (
                 FoamXServer::IDictionaryEntry_out internalFieldValue
             );
-
-            /*
-            virtual void getReferenceLevelValue
-            (
-                FoamXServer::IDictionaryEntry_out referenceLevelValue
-            );
-            */
 
             virtual void getPatchFieldParameters
             (

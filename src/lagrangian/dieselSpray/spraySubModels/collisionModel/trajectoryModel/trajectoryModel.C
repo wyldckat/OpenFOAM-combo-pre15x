@@ -20,15 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Collision model by P.J. O'Rourke.
     Implemented as described in the KIVA manual
 
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "trajectoryModel.H"
 #include "addToRunTimeSelectionTable.H"
@@ -79,6 +77,10 @@ trajectoryCollisionModel::~trajectoryCollisionModel()
 
 void trajectoryCollisionModel::collideParcels(const scalar dt) const
 {
+    if (spray_.size() < 2)
+    {
+        return;
+    }
 
     spray::iterator secondParcel = spray_.begin();
     ++secondParcel;
@@ -90,7 +92,6 @@ void trajectoryCollisionModel::collideParcels(const scalar dt) const
 
         while (p2 != p1)
         {
-
 #           include "trajectoryCM.H"
 
             // remove coalesced droplets
@@ -107,6 +108,7 @@ void trajectoryCollisionModel::collideParcels(const scalar dt) const
             }
 
         } // end - inner loop
+
         // remove coalesced droplets
         if (p1().m() < VSMALL)
         {

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     amgSymSolver
@@ -57,7 +57,7 @@ SourceFiles
 #define amgSymSolver_H
 
 #include "lduMatrix.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "labelField.H"
 #include "lduAddressingStore.H"
 #include "primitiveFields.H"
@@ -109,20 +109,20 @@ class amgSymSolver
         // finer level and create the n-th level of the hierarchy. It has the
         // same size as meshLevels; the zeroth level tells you how to grab the
         // finest matrix and create the zeroth level of the hierarchy
-        ptrList<labelField> restrictAddressing_;
+        PtrList<labelField> restrictAddressing_;
 
         //- Hierarchy of matrix addressing
-        ptrList<lduAddressingStore> addrLevels_;
+        PtrList<lduAddressingStore> addrLevels_;
 
         //- Hierarchy of matrix levels
-        ptrList<lduMatrix> matrixLevels_;
+        PtrList<lduMatrix> matrixLevels_;
 
         //- Hierarchy of coupled interfaces.
         //  Warning! Needs to be cleared by hand.  
-        ptrList<lduCoupledInterfacePtrsList> interfaceLevels_;
+        PtrList<lduCoupledInterfacePtrsList> interfaceLevels_;
 
         //- Hierarchy of coupled interface coefficients
-        ptrList<FieldField<Field, scalar> > interfaceCoeffs_;
+        PtrList<FieldField<Field, scalar> > interfaceCoeffs_;
 
         //- Timing
         mutable cpuTime cpu_;

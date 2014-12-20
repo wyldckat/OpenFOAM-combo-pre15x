@@ -154,7 +154,7 @@ Foam::meshTriangulation::meshTriangulation
 
             if (faceTris.size() == 0)
             {
-                Warning << "meshTriangulation::meshTriangulation :"
+                WarningIn("meshTriangulation::meshTriangulation")
                     << "Could not find triangulation for face " << faceI
                     << " vertices " << faces[faceI] << " coords "
                     << IndirectList<point>(points, faces[faceI]) << endl;
@@ -196,7 +196,7 @@ Foam::meshTriangulation::meshTriangulation
 
             if (faceTris.size() == 0)
             {
-                Warning << "meshTriangulation::meshTriangulation :"
+                WarningIn("meshTriangulation::meshTriangulation")
                     << "Could not find triangulation for face " << faceI
                     << " vertices " << faces[faceI] << " coords "
                     << IndirectList<point>(points, faces[faceI]) << endl;

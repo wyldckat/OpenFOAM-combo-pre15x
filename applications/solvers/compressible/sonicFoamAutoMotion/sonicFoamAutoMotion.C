@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     sonicFoamAutoMotion
@@ -51,16 +51,16 @@ int main(int argc, char *argv[])
 
     Info<< "\nStarting time loop\n" << endl;
 
-    motionSolver ms(mesh);
+    autoPtr<Foam::motionSolver> motionPtr = motionSolver::New(mesh);
 
     for (runTime++; !runTime.end(); runTime++)
     {
-        Info<< "\n Time = " << runTime.timeName() << nl << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
 #       include "readPISOControls.H"
 #       include "CourantNo.H"
 
-        mesh.movePoints(ms.newPoints());
+        mesh.movePoints(motionPtr->newPoints());
 
 #       include "rhoEqn.H"
 
@@ -79,7 +79,7 @@ int main(int argc, char *argv[])
           + fvm::div(phi, e)
           - fvm::laplacian(mu, e)
           ==
-          - p*fvc::div(phi/fvc::interpolate(rho) + mesh.phi())
+          - p*fvc::div(phi/fvc::interpolate(rho) + fvc::meshPhi(rho, U))
           + mu*magSqr(symm(fvc::grad(U)))
         );
 
@@ -95,7 +95,7 @@ int main(int argc, char *argv[])
             surfaceScalarField phid =
                 fvc::interpolate(psi)*
                 (
-                    (fvc::interpolate(U) & mesh.Sf()) - mesh.phi()
+                    (fvc::interpolate(U) & mesh.Sf()) - fvc::meshPhi(rho, U)
                 );
 
             for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
@@ -116,18 +116,18 @@ int main(int argc, char *argv[])
 
             U -= fvc::grad(p)/UEqn.A();
             U.correctBoundaryConditions();
-
-            rho = psi*p;
         }
+
+        rho = psi*p;
 
         runTime.write();
 
-        Info<< "\n    ExecutionTime = "
+        Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl;
+            << " s\n\n" << endl;
     }
 
-    Info<< "\nEnd" << endl;
+    Info<< "End\n" << endl;
 
     return(0);
 }

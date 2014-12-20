@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     lduMatrix
@@ -45,7 +45,7 @@ SourceFiles
     preconDiag.C
     solve.C
     tests.C
-    updateMatrixInterfaces.C
+    updateCoupledInterfaces.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -482,6 +482,7 @@ public:
             //  alpha<1 :    ,,      dominant
             void relax
             (
+                const FieldField<Field, scalar>& intCoeffsCmptAvg,
                 const FieldField<Field, scalar>& magCoupleBouCoeffs,
                 const lduCoupledInterfacePtrsList& interfaces,
                 const scalar alpha=1.0
@@ -508,6 +509,18 @@ public:
                 const direction cmpt
             ) const;
 
+
+            //- Initialise the update of coupled interfaces
+            //  for matrix operations
+            void initMatrixInterfaces
+            (
+                const FieldField<Field, scalar>& coupleCoeffs,
+                const lduCoupledInterfacePtrsList& interfaces,
+                const scalarField& psiif,
+                scalarField& result,
+                const direction cmpt
+            ) const;
+    
             //- Update coupled interfaces for matrix operations
             void updateMatrixInterfaces
             (

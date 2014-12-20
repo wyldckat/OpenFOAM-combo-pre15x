@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Class of static functions to calculate explicit finite element derivatives.
@@ -51,7 +51,7 @@ tmp
 > 
 tetFec::grad
 (
-    GeometricField<Type, tetPolyPatchField, tetPointMesh>& psi
+    const GeometricField<Type, tetPolyPatchField, tetPointMesh>& psi
 )
 {
     typedef typename outerProduct<vector, Type>::type GradType;
@@ -130,6 +130,122 @@ tetFec::grad
     return tFemGrad;
 }
 
+
+template<class Type>
+tmp
+<
+    GeometricField
+    <
+        typename outerProduct<vector, Type>::type,
+        tetPolyPatchField,
+        elementMesh
+    >
+> 
+tetFec::elementGrad
+(
+    const GeometricField<Type, tetPolyPatchField, tetPointMesh>& psi
+)
+{
+    typedef typename outerProduct<vector, Type>::type GradType;
+
+    const tetPolyMesh& tetMesh = psi.mesh();
+
+    const polyMesh& mesh = tetMesh();
+
+
+    tmp<GeometricField<GradType, tetPolyPatchField, elementMesh> > tElemGrad
+    (
+        new GeometricField<GradType, tetPolyPatchField, elementMesh>
+        (
+            IOobject
+            (
+                "grad("+psi.name()+')',
+                psi.instance(),
+                psi.db(),
+                IOobject::NO_READ,
+                IOobject::NO_WRITE
+            ),
+            tetMesh,
+            dimensioned<GradType>
+            (
+                "zero",
+                psi.dimensions()/dimLength,
+                pTraits<GradType>::zero
+            )
+        )
+    );
+
+    GeometricField<GradType, tetPolyPatchField, elementMesh>& elemGrad = 
+        tElemGrad();
+
+    pointField points = tetMesh.points();
+
+    scalarField weights (tetMesh.nCells(), 0.0);
+
+    const vectorField& C = mesh.cellCentres();
+
+
+    for (label cellI = 0; cellI < tetMesh.nCells(); cellI++)
+    {
+	tetCellList tets = tetMesh.tets(cellI);
+
+	forAll (tets, tetI)
+	{
+	    tetPointRef curTetrahedron = tets[tetI].tet(points);
+
+	    cellShape curShape = tets[tetI].tetCellShape();
+
+	    GradType tetGrad = 
+	      - (1.0/3.0)*
+		(
+		    curTetrahedron.Sa()*psi.internalField()[curShape[0]]
+		  + curTetrahedron.Sb()*psi.internalField()[curShape[1]]
+		  + curTetrahedron.Sc()*psi.internalField()[curShape[2]]
+		  + curTetrahedron.Sd()*psi.internalField()[curShape[3]]
+		 )/curTetrahedron.mag();
+
+	    scalar weight = mag(C[cellI] - curShape.centre(points));
+
+	    elemGrad.internalField()[cellI] += weight*tetGrad;
+	    weights[cellI] += weight;
+	}
+    }
+
+    elemGrad.internalField() /= weights;
+
+    return tElemGrad;
+}
+
+
+
+template<class Type>
+tmp<GeometricField<Type, tetPolyPatchField, elementMesh> > tetFec::ddt
+(
+    const GeometricField<Type, tetPolyPatchField, elementMesh>& ef
+)
+{
+    const polyMesh& mesh = ef.mesh()();
+
+    dimensionedScalar rDeltaT = 1.0/mesh.time().deltaT();
+
+    IOobject ddtIOobject
+    (
+        "ddt("+ef.name()+')',
+        mesh.time().timeName(),
+        mesh,
+        IOobject::NO_READ,
+        IOobject::NO_WRITE
+    );
+
+    return tmp<GeometricField<Type, tetPolyPatchField, elementMesh> >
+    (
+	new GeometricField<Type, tetPolyPatchField, elementMesh>
+	(
+	    ddtIOobject,
+	    rDeltaT*(ef - ef.oldTime())
+	)
+    );
+}
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

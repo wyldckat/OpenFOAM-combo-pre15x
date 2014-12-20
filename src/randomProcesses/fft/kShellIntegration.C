@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Integrate a multi-dimensional complexVectorField in k-shells
@@ -60,7 +60,7 @@ graph kShellIntegration
 
     // now scale this to get the energy in a box of side l0
 
-    scalar l0(K.sizeOfBox()[0]*((scalar)K.nn()[0]/((scalar)K.nn()[0]-1.0)));
+    scalar l0(K.sizeOfBox()[0]*(scalar(K.nn()[0])/(scalar(K.nn()[0])-1.0)));
     scalar factor = pow((l0/(2.0*physicalConstant::pi)),3.0);
 
     y *= factor;
@@ -68,7 +68,7 @@ graph kShellIntegration
     // and divide by the number of points in the box, to give the
     // energy density.
 
-    y /= (scalar) K.size();
+    y /= scalar(K.size());
 
     return kShellMeanEk;
 }

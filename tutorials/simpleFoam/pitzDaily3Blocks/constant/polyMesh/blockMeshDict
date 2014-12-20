@@ -73,10 +73,14 @@ patches
         (4 13 15 6)
         (6 15 17 8)
     )
-    wall lowerWall 
+    wall lowerWall
     (
         (7 16 14 5)
         (5 14 11 2)
+    )
+
+    wall lowerWallInterface
+    (
         (2 11 13 4)
     )
     wall lowerWallInlet
@@ -91,7 +95,7 @@ patches
 
 mergePatchPairs
 (
-    ( lowerWall interface )	
+    ( lowerWallInterface interface )	
 );
 
 // ************************************************************************* //

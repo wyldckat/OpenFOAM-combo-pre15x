@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     SortableList
@@ -93,6 +93,9 @@ public:
         //- Construct given size. Sort later on.
         SortableList(const label size);
 
+        //- Construct as copy.
+        SortableList(const SortableList<Type>&);
+
 
     // Member Functions
 
@@ -107,6 +110,12 @@ public:
 
         //- Sort the list (if changed after construction time)
         void sort();
+
+
+    // Member Operators
+
+        void operator=(const SortableList<Type>&);
+
 };
 
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -507,44 +507,108 @@ void faMesh::calcEdgeAreaNormals() const
     const vectorField& pointNormals = pointAreaNormals();
 
 
-    // Primitive patch edge normals
-    const labelListList& patchPointEdges = patch().pointEdges();
+//     // Primitive patch edge normals
+//     const labelListList& patchPointEdges = patch().pointEdges();
 
-    vectorField patchEdgeNormals(nEdges(), vector::zero);
+//     vectorField patchEdgeNormals(nEdges(), vector::zero);
 
-    forAll(pointNormals, pointI)
-    {
-        const labelList& curPointEdges = patchPointEdges[pointI];
+//     forAll(pointNormals, pointI)
+//     {
+//         const labelList& curPointEdges = patchPointEdges[pointI];
 
-        forAll(curPointEdges, edgeI)
-        {
-            label curEdge = curPointEdges[edgeI];
+//         forAll(curPointEdges, edgeI)
+//         {
+//             label curEdge = curPointEdges[edgeI];
 
-            patchEdgeNormals[curEdge] += 0.5*pointNormals[pointI];
-        }
-    }
+//             patchEdgeNormals[curEdge] += 0.5*pointNormals[pointI];
+//         }
+//     }
 
-    patchEdgeNormals /= mag(patchEdgeNormals);
+//     patchEdgeNormals /= mag(patchEdgeNormals);
 
 
-    // Edge area normals
-    label nIntEdges = patch().nInternalEdges();
+//     // Edge area normals
+//     label nIntEdges = patch().nInternalEdges();
 
-    for (label edgeI = 0; edgeI < nIntEdges; edgeI++)
-    {
-        edgeAreaNormals.internalField()[edgeI] =
-            patchEdgeNormals[edgeI];
-    }
+//     for (label edgeI = 0; edgeI < nIntEdges; edgeI++)
+//     {
+//         edgeAreaNormals.internalField()[edgeI] =
+//             patchEdgeNormals[edgeI];
+//     }
     
+//     forAll (boundary(), patchI)
+//     {
+//         const labelList& edgeLabels = boundary()[patchI];
+
+//         forAll (edgeAreaNormals.boundaryField()[patchI], edgeI)
+//         {
+//             edgeAreaNormals.boundaryField()[patchI][edgeI] =
+//                 patchEdgeNormals[edgeLabels[edgeI]];
+//         }
+//     }
+
+
+    forAll (edgeAreaNormals.internalField(), edgeI)
+    {
+        vector e = edges()[edgeI].vec(points());
+        
+        e /= mag(e);
+
+        
+
+//         scalar wStart = 
+//             1.0 - sqr(mag(e^pointNormals[edges()[edgeI].end()]));
+
+//         scalar wEnd = 
+//             1.0 - sqr(mag(e^pointNormals[edges()[edgeI].start()]));
+
+//         wStart = 1.0;
+//         wEnd = 1.0;
+
+//         edgeAreaNormals.internalField()[edgeI] =
+//             wStart*pointNormals[edges()[edgeI].start()]
+//           + wEnd*pointNormals[edges()[edgeI].end()];
+
+//         vector eC = 0.5*(points()[edges()[edgeI].start()] + points()[edges()[edgeI].end()]);
+
+//         vector eCp = 0.5*
+//             (
+//                 points()[edges()[edgeI].start()] + pointNormals[edges()[edgeI].start()]
+//                 points()[edges()[edgeI].end()] + 
+//             );
+
+        edgeAreaNormals.internalField()[edgeI] =
+            pointNormals[edges()[edgeI].start()] + pointNormals[edges()[edgeI].end()];
+
+        edgeAreaNormals.internalField()[edgeI] -= e*(e&edgeAreaNormals.internalField()[edgeI]);
+    }
+
+    
+    edgeAreaNormals.internalField() /=
+        mag(edgeAreaNormals.internalField());
+    
+    
+
     forAll (boundary(), patchI)
     {
-        const labelList& edgeLabels = boundary()[patchI];
+        const edgeList::subList patchEdges =
+            boundary()[patchI].patchSlice(edges());
 
-        forAll (edgeAreaNormals.boundaryField()[patchI], edgeI)
+        forAll (patchEdges, edgeI)
         {
             edgeAreaNormals.boundaryField()[patchI][edgeI] =
-                patchEdgeNormals[edgeLabels[edgeI]];
+                pointNormals[patchEdges[edgeI].start()]
+              + pointNormals[patchEdges[edgeI].end()];
+
+            vector e = patchEdges[edgeI].vec(points());
+            e /= mag(e);
+
+            edgeAreaNormals.boundaryField()[patchI][edgeI] -= 
+                e*(e&edgeAreaNormals.boundaryField()[patchI][edgeI]);
         }
+        
+        edgeAreaNormals.boundaryField()[patchI] /=
+            mag(edgeAreaNormals.boundaryField()[patchI]);
     }
 }
 
@@ -585,9 +649,14 @@ void faMesh::calcFaceCurvatures() const
     areaScalarField& faceCurvatures = *faceCurvaturesPtr_;
 
 
-    faceCurvatures =
-        fac::edgeIntegrate(Le()*edgeLengthCorrection())
-        &faceAreaNormals();
+//     faceCurvatures =
+//         fac::edgeIntegrate(Le()*edgeLengthCorrection())
+//         &faceAreaNormals();
+
+    areaVectorField kN =
+        fac::edgeIntegrate(Le()*edgeLengthCorrection());
+
+    faceCurvatures = sign(kN&faceAreaNormals())*mag(kN);
 }
 
 

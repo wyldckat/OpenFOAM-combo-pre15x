@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     Time
@@ -42,6 +42,7 @@ SourceFiles
 #include "TimePaths.H"
 #include "objectRegistry.H"
 #include "IOdictionary.H"
+#include "FIFOStack.H"
 #include "clock.H"
 #include "cpuTime.H"
 #include "TimeState.H"
@@ -117,7 +118,9 @@ protected:
         writeControls writeControl_;
 
         scalar writeInterval_;
-        label cycleWrite_;
+
+        label purgeWrite_;
+        mutable FIFOStack<word> previousOutputTimes_;
 
         //- Time directory name format
         static fmtflags format_;
@@ -264,8 +267,16 @@ public:
             //- Search the case for the time closest to the given time
             instant findClosestTime(const scalar) const;
 
-            //- Write all the objects
-            virtual bool write() const;
+            //- Write using given format, version and compression
+            virtual bool write
+            (
+                IOstream::streamFormat fmt,
+                IOstream::versionNumber ver,
+                IOstream::compressionType cmp
+            ) const;
+
+            //- Write using pre-selected format, version and compression
+            bool write() const;
 
 
         // Access

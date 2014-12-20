@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     
@@ -80,15 +80,18 @@ gaussGrad<Type>::grad
     {
         if (!vsf.boundaryField()[patchI].coupled())
         {
-            vectorField n =
+            vectorField m =
                 this->mesh().Le().boundaryField()[patchI]
                 /this->mesh().magLe().boundaryField()[patchI];
 
-            tGrad().boundaryField()[patchI] += n *
-            (
-                vsf.boundaryField()[patchI].snGrad()
-              - (n & tGrad().boundaryField()[patchI])
-            );
+            tGrad().boundaryField()[patchI] = 
+                m*vsf.boundaryField()[patchI].snGrad();
+
+//             tGrad().boundaryField()[patchI] += m *
+//             (
+//                 vsf.boundaryField()[patchI].snGrad()
+//               - (n & tGrad().boundaryField()[patchI])
+//             );
         }
     }
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     boundaryMesh
@@ -40,7 +40,7 @@ SourceFiles
 #include "bMesh.H"
 #include "boundaryPatch.H"
 #include "PrimitivePatch.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "polyPatchList.H"
 #include "className.H"
 
@@ -78,7 +78,7 @@ class boundaryMesh
         bMesh* meshPtr_;
 
         //- Patches. Reconstructed every time faces are repatched.
-        ptrList<boundaryPatch> patches_;
+        PtrList<boundaryPatch> patches_;
 
         //- For every face in mesh() gives corresponding polyMesh face
         // (not sensible if mesh read from triSurface)
@@ -214,7 +214,7 @@ public:
                 return *meshPtr_;
             }
 
-            const ptrList<boundaryPatch>& patches() const
+            const PtrList<boundaryPatch>& patches() const
             {
                 return patches_;
             }

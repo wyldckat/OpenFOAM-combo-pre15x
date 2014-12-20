@@ -31,13 +31,16 @@ boundaryField
 {
     INLE1           
     {
-        type            fixedValue;
+        type            inletOutlet;
+        inletValue      uniform 25000;
         value           uniform 25000;
     }
 
     OUTL2           
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform 25000;
+        value           uniform 25000;
     }
 
     SYMP3           

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -39,6 +39,7 @@ namespace Foam
 ignitionSite::ignitionSite(Istream& is, const Time& db, const fvMesh& mesh)
 :
     db_(db),
+    mesh_(mesh),
     ignitionSiteDict_(is),
     location_(ignitionSiteDict_.lookup("location")),
     diameter_(readScalar(ignitionSiteDict_.lookup("diameter"))),
@@ -56,12 +57,13 @@ ignitionSite::ignitionSite(Istream& is, const Time& db, const fvMesh& mesh)
             readScalar(ignitionSiteDict_.lookup("duration"))
         )
     ),
-    strength_(readScalar(ignitionSiteDict_.lookup("strength")))
+    strength_(readScalar(ignitionSiteDict_.lookup("strength"))),
+    timeIndex_(db_.timeIndex())
 {
     // Check state of Istream
     is.check("ignitionSite::ignitionSite(Istream&)");
 
-    findIgnitionCells(mesh);
+    findIgnitionCells(mesh_);
 }
 
 
@@ -73,6 +75,7 @@ ignitionSite::ignitionSite
 )
 :
     db_(edb),
+    mesh_(mesh),
     ignitionSiteDict_(is),
     location_(ignitionSiteDict_.lookup("location")),
     diameter_(readScalar(ignitionSiteDict_.lookup("diameter"))),
@@ -90,12 +93,13 @@ ignitionSite::ignitionSite
             edb.degToTime(readScalar(ignitionSiteDict_.lookup("duration")))
         )
     ),
-    strength_(readScalar(ignitionSiteDict_.lookup("strength")))
+    strength_(readScalar(ignitionSiteDict_.lookup("strength"))),
+    timeIndex_(db_.timeIndex())
 {
     // Check state of Istream
     is.check("ignitionSite::ignitionSite(Istream&)");
 
-    findIgnitionCells(mesh);
+    findIgnitionCells(mesh_);
 }
 
 

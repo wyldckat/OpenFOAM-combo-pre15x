@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -58,7 +56,7 @@ emptyFvPatchField<Type>::emptyFvPatchField
 :
     fvPatchField<Type>(p, iF, Field<Type>(0))
 {
-    if (typeid(this->patchMesh()) != typeid(emptyFvPatch))
+    if (!isType<emptyFvPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -70,9 +68,9 @@ emptyFvPatchField<Type>::emptyFvPatchField
             "    const fvPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }
@@ -88,7 +86,7 @@ emptyFvPatchField<Type>::emptyFvPatchField
 :
     fvPatchField<Type>(p, iF, Field<Type>(0))
 {
-    if (typeid(p) != typeid(emptyFvPatch))
+    if (!isType<emptyFvPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -99,7 +97,7 @@ emptyFvPatchField<Type>::emptyFvPatchField
             "    const dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index() << " not empty type. "
+        )   << "patch " << this->patch().index() << " not empty type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -113,8 +111,28 @@ emptyFvPatchField<Type>::emptyFvPatchField
     const Field<Type>& iF
 )
 :
-    fvPatchField<Type>(ptf.patchMesh(), iF, Field<Type>(0))
+    fvPatchField<Type>(ptf.patch(), iF, Field<Type>(0))
 {}
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+template<class Type>
+void emptyFvPatchField<Type>::updateCoeffs()
+{
+    if
+    (
+        this->patch().patch().size()
+      % this->patch().boundaryMesh().mesh().nCells()
+    )
+    {
+        FatalErrorIn("emptyFvPatchField<Type>::updateCoeffs()")
+            << "This mesh contains patches of type empty but is not 1D or 2D\n"
+               "    by virtue of the fact that the number of faces of this\n"
+               "    empty patch is not divisible by the number of cells."
+            << abort(FatalError);
+    }
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

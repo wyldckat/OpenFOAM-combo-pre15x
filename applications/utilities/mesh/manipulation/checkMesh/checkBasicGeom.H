@@ -9,7 +9,7 @@
 
             if (cells.size() > 0)
             {
-                Info<< "Writing " << cells.size() << " non closed cells to set "
+                Pout<< "Writing " << cells.size() << " non closed cells to set "
                     << cells.name() << endl << endl;
                 cells.write();
             }
@@ -24,7 +24,7 @@
 
             if (faces.size() > 0)
             {
-                Info<< "Writing " << faces.size() << " zero area faces to set "
+                Pout<< "Writing " << faces.size() << " zero area faces to set "
                     << faces.name() << endl << endl;
                 faces.write();
             }
@@ -39,7 +39,7 @@
 
             if (cells.size() > 0)
             {
-                Info<< "Writing " << cells.size() << " zero volume cells to"
+                Pout<< "Writing " << cells.size() << " zero volume cells to"
                     << " set " << cells.name() << endl << endl;
                 cells.write();
             }
@@ -55,7 +55,7 @@
 
         if (faces.size() > 0)
         {
-            Info<< "Writing " << faces.size() << " non-orthogonal faces to"
+            Pout<< "Writing " << faces.size() << " non-orthogonal faces to"
                 << " set " << faces.name() << endl << endl;
             faces.write();
         }
@@ -70,7 +70,7 @@
 
             if (faces.size() > 0)
             {
-                Info<< "Writing " << faces.size() << " faces with incorrect"
+                Pout<< "Writing " << faces.size() << " faces with incorrect"
                     << " orientation to set " << faces.name() << endl << endl;
                 faces.write();
             }
@@ -85,7 +85,7 @@
 
             if (faces.size() > 0)
             {
-                Info<< "Writing " << faces.size() << " skew faces to set "
+                Pout<< "Writing " << faces.size() << " skew faces to set "
                     << faces.name() << endl << endl;
                 faces.write();
             }
@@ -101,7 +101,7 @@
 
             if (points.size() > 0)
             {
-                Info<< "Writing " << points.size() << " near points to set "
+                Pout<< "Writing " << points.size() << " near points to set "
                     << points.name() << endl << endl;
                 points.write();
             }
@@ -116,7 +116,7 @@
 
             if (points.size() > 0)
             {
-                Info<< "Writing " << points.size()
+                Pout<< "Writing " << points.size()
                     << " points on short edges to set "
                     << points.name() << endl << endl;
                 points.write();
@@ -126,23 +126,29 @@
 
     {
         faceSet faces(mesh, "concaveFaces", mesh.nFaces()/100 + 1);
-        if
-        (
-            mesh.checkFaceAngles
-            (
-                true,
-                10,
-                &faces
-            )
-        )
+        if (mesh.checkFaceAngles(true, 10, &faces))
         {
             //noFailedChecks++;
 
             if (faces.size() > 0)
             {
-                Info<< "Writing " << faces.size()
+                Pout<< "Writing " << faces.size()
                     << " faces with concave angles to set "
                     << faces.name() << endl << endl;
+                faces.write();
+            }
+        }
+    }
+    {
+        faceSet faces(mesh, "warpedFaces", mesh.nFaces()/100 + 1);
+        if (mesh.checkFaceFlatness(true, 0.8, &faces))
+        {
+            //noFailedChecks++;
+
+            if (faces.size() > 0)
+            {
+                Pout<< "Writing " << faces.size()
+                    << " warped faces to set " << faces.name() << endl << endl;
                 faces.write();
             }
         }

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Perfect gas equation of state.
@@ -49,7 +49,7 @@ perfectGas::perfectGas(Istream& is)
 
 Ostream& operator<<(Ostream& os, const perfectGas& pg)
 {
-    os  << (const specie&)pg;
+    os  << static_cast<const specie&>(pg);
 
     os.check("Ostream& operator<<(Ostream& os, const perfectGas& st)");
     return os;

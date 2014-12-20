@@ -55,6 +55,16 @@ boundaryField
         type            zeroGradient;
     }
 
+    lowerWallInterface  
+    {
+        type            zeroGradient;
+    }
+
+    interface    
+    {
+        type            zeroGradient;
+    }
+
     defaultFaces    
     {
         type            empty;

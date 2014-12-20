@@ -19,12 +19,12 @@ PatchProperties.C
 RootDictionary.C
 
 IPropertiesImpl.C
-IApplicationClassImpl.C
+IApplicationImpl.C
 ITypeDescriptorImpl.C
 IDictionaryEntryImpl.C
 IGeometryDescriptorImpl.C
 IPatchDescriptorImpl.C
-IBoundaryTypeDescriptorImpl.C
+IPatchPhysicalTypeDescriptorImpl.C
 IGeometricFieldDescriptorImpl.C
 IGeometricFieldImpl.C
 

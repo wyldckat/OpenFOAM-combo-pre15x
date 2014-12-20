@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Creates a primitivePatch from a plane and a mesh
@@ -30,7 +30,7 @@ Description
 #include "cuttingPlane.H"
 #include "primitiveMesh.H"
 #include "linePointRef.H"
-#include "physicalConstants.H"
+#include "meshTools.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -40,42 +40,44 @@ namespace Foam
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 // Find cut cells
-void cuttingPlane::cutCells
+void cuttingPlane::calcCutCells
 (
-    const scalarField& dotProducts, 
-    const cellList& CellFaces,
-    const faceList& Faces
+    const primitiveMesh& mesh,
+    const scalarField& dotProducts
 )
 {
-    cutCells_.setSize(CellFaces.size());
+    const labelListList& cellEdges = mesh.cellEdges();
+    const edgeList& edges = mesh.edges();
+
+    cutCells_.setSize(cellEdges.size());
     label cutcellI(0);
 
-    // Find the cut cells
-    forAll(CellFaces, cellI)
+    // Find the cut cells by detecting any cell that uses points with
+    // opposing dotProducts.
+    forAll(cellEdges, cellI)
     {
-        labelList cellPoints = CellFaces[cellI].labels(Faces);
-        bool plusPlane = false;
-        bool minusPlane = false;
+        const labelList& cEdges = cellEdges[cellI];
 
-        forAll(cellPoints, pointi)
+        label nCutEdges = 0;
+
+        forAll(cEdges, i)
         {
-            // Cuts included faces of negative dotProducts cells
-            if(dotProducts[cellPoints[pointi]] >= 0)
-            {
-                plusPlane = true;
-            }
-            else
-            {
-                minusPlane = true;
-            }
+            const edge& e = edges[cEdges[i]];
 
-            //If cell is cut
-            if(plusPlane && minusPlane)
+            if
+            (
+                (dotProducts[e[0]] < 0 && dotProducts[e[1]] > 0)
+             || (dotProducts[e[1]] < 0 && dotProducts[e[0]] > 0)
+            )
             {
-                cutCells_[cutcellI] = cellI;
-                cutcellI++;
+                nCutEdges++;
 
-                break;
+                if (nCutEdges > 2)
+                {
+                    cutCells_[cutcellI++] = cellI;
+
+                    break;
+                }
             }
         }
     }
@@ -84,402 +86,236 @@ void cuttingPlane::cutCells
     cutCells_.setSize(cutcellI);
 }
 
-labelListList cuttingPlane::cuttingPoints
+
+// Determine for each edge the intersection point. Calculates
+// - cutPoints_ : coordinates of all intersection points
+// - edgePoint  : per edge -1 or the index into cutPoints_
+labelList cuttingPlane::intersectEdges
 (
-    const scalarField& dotProducts,
-    const labelListList& CellEdges,
-    const pointField& Points
+    const primitiveMesh& mesh,
+    const scalarField& dotProducts
 )
 {
-    // Edge field references
-    const edgeList& Edges = mesh_.edges();
+    // Use the dotProducts to find out the cut edges.
+    const edgeList& edges = mesh.edges();
+    const pointField& points = mesh.points();
 
-    // Checklist to make sure points and edges are recorded only once 
-    // if they are cut
-    labelListList intersections(2);
+    // Per edge -1 or the label of the intersection point
+    labelList edgePoint(edges.size(), -1);
 
+    DynamicList<point> dynCuttingPoints(4*cutCells_.size());
+
+    forAll(edges, edgeI)
     {
-        labelList edgeIntersections(Edges.size(), -1);
-        intersections[0] = edgeIntersections;
-        labelList pointIntersections(Points.size(), -1);
-        intersections[1] = pointIntersections;
-    }
+        const edge& e = edges[edgeI];
 
-    // Set private data list sizes
-    cuttingPoints_.setSize(12*cutCells_.size());
-    cutCellCuttingPoints_.setSize(cutCells_.size());
-
-    // Extra loop labels
-    label cuttingPointI = 0;
-    label cellCuttingPointI = 0;
-
-    // Make a pointList and set size for cutCellCuttingPoint labelListList 
-    // of cutting points
-    forAll(cutCells_, cellI)
-    {
-        // Determine number of cutting points and record those points
-        cellCuttingPointI = 0;
-        forAll(CellEdges[cutCells_[cellI]], edgeI)
+        if
+        (
+            (dotProducts[e[0]] < 0 && dotProducts[e[1]] > 0)
+         || (dotProducts[e[1]] < 0 && dotProducts[e[0]] > 0)
+        )
         {
-            if(intersections[0][CellEdges[cutCells_[cellI]][edgeI]] == -1)
-            {
-                labelList EdgePoints(2);
-                EdgePoints[0] =
-                    Edges[CellEdges[cutCells_[cellI]][edgeI]].start();
+            // Edge is cut.
+            const point& p0 = points[e[0]];
+            const point& p1 = points[e[1]];
 
-                EdgePoints[1] =
-                    Edges[CellEdges[cutCells_[cellI]][edgeI]].end();
-    
+            scalar alpha = lineIntersect(linePointRef(p0, p1));
 
-                if
-                (
-                    (
-                        dotProducts[EdgePoints[0]] > 0
-                     && dotProducts[EdgePoints[1]] < 0
-                    )
-                 || (
-                        dotProducts[EdgePoints[0]] < 0
-                     && dotProducts[EdgePoints[1]] > 0
-                    )
-                 || (
-                        dotProducts[EdgePoints[0]] == 0
-                     && dotProducts[EdgePoints[1]] != 0
-                    )
-                 || (
-                     dotProducts[EdgePoints[0]] != 0
-                  && dotProducts[EdgePoints[1]] == 0
-                    )
-                )
-                {
-                   
-                    scalar alpha =
-                        lineIntersect
-                        (
-                            linePointRef
-                            (
-                                Points[EdgePoints[0]],
-                                Points[EdgePoints[1]]
-                            )
-                        );
-
-                    // Check for cutting point proximity to vertex
-                    if(mag(Points[EdgePoints[0]] - Points[EdgePoints[1]]) == 0)
-                    {
-                        FatalErrorIn
-                        (
-                            "labelListList cuttingPlane::cuttingPoints\n"
-                            "(\n"
-                                "const scalarField& dotProducts,\n"
-                                "const labelListList& CellEdges,\n"
-                                "const pointIOField& Points\n"
-                            ")\n"
-                        )   << "Zero edge length."
-                            << abort(FatalError);
-                    }
-
-                    scalar CutToPnt0 = mag(alpha);
-                    scalar CutToPnt1 = mag(1 - alpha);
-
-                    scalar cuttingPointTolerance = SMALL;
-    
-                    if
-                    (
-                        CutToPnt0 < cuttingPointTolerance
-                     || CutToPnt1 < cuttingPointTolerance
-                    )
-                    {
-                        if(CutToPnt0 < cuttingPointTolerance)
-                        {
-                            if(intersections[1][EdgePoints[0]] == -1)
-                            {
-                                intersections[1][EdgePoints[0]] = cuttingPointI;
-                                cuttingPoints_[cuttingPointI] =
-                                    Points[EdgePoints[0]];
-
-                                cellCuttingPointI++;
-                                cuttingPointI++;
-                            }
-                            else
-                            {
-                                cellCuttingPointI++;
-                            }
-                        }
-                        else
-                        {
-                            if(intersections[1][EdgePoints[1]] == -1)
-                            {
-                                intersections[1][EdgePoints[1]] = cuttingPointI;
-                                cuttingPoints_[cuttingPointI] =
-                                    Points[EdgePoints[1]];
-
-                                cellCuttingPointI++;
-                                cuttingPointI++;
-                            }
-                            else
-                            {
-                                cellCuttingPointI++;
-                            }
-                        }
-                    }
-                    else
-                    {
-                        cuttingPoints_[cuttingPointI] = 
-                            Points[EdgePoints[0]]
-                          + alpha*
-                            (
-                                Points[EdgePoints[1]]
-                              - Points[EdgePoints[0]]
-                            );
-
-                        intersections[0][CellEdges[cutCells_[cellI]][edgeI]] =
-                            cuttingPointI;
-
-                        cellCuttingPointI++;
-                        cuttingPointI++;
-                    }
-                }
-            }
-            else
-            {
-                cellCuttingPointI++;
-            }
+            dynCuttingPoints.append((1-alpha)*p0 + alpha*p1);
+            edgePoint[edgeI] = dynCuttingPoints.size() - 1;
         }
-
-        // Set the labelListList size for current cell
-        cutCellCuttingPoints_[cellI].setSize(cellCuttingPointI);
     }
 
-    // Refine pointList size
-    cuttingPoints_.setSize(cuttingPointI);
-    
-    return intersections;
+    dynCuttingPoints.shrink();
+    cutPoints_.transfer(dynCuttingPoints);
+    dynCuttingPoints.clear();
+
+    return edgePoint;
 }
 
-void cuttingPlane::cutCellCuttingPoints
+
+// Coming from startEdgeI cross the edge to the other face
+// across to the next cut edge.
+bool cuttingPlane::walkCell
 (
-    const labelListList intersections,
-    const labelListList& CellEdges,
-    const cellList& CellFaces,
-    const faceList& Faces
+    const primitiveMesh& mesh,
+    const labelList& edgePoint,
+    const label cellI,
+    const label startEdgeI,
+    DynamicList<label>& faceVerts
 )
 {
-    // Labels for deleting zero area faces
-    label toCell = 0;
-    label cellSkip = 0;
-    label cellCuttingPointI = 0;
+    label faceI = -1;
+    label edgeI = startEdgeI;
 
-    // Make list of labels for cutting points for each cell 
-    // and delete cells with fewer than 3 cutting points. !!!
-    forAll(cutCells_, cellI)
+    label nIter = 0;
+
+    do
     {
-        toCell = cellI - cellSkip;
+        faceVerts.append(edgePoint[edgeI]);
 
-        // Resize toCell for writing list
-        if(cellSkip)
+        // Cross edge to other face
+        faceI = meshTools::otherFace(mesh, cellI, faceI, edgeI);
+
+        // Find next cut edge on face.
+        const labelList& fEdges = mesh.faceEdges()[faceI];
+
+        label nextEdgeI = -1;
+
+        //Note: here is where we should check for whether there are more
+        // than 2 intersections with the face (warped/non-convex face).
+        // If so should e.g. decompose the cells on both faces and redo
+        // the calculation.
+
+        forAll(fEdges, i)
         {
-            cutCellCuttingPoints_[toCell].setSize
-                (cutCellCuttingPoints_[cellI].size());
-        }
+            label edge2I = fEdges[i];
 
-        cellCuttingPointI = 0;
-
-        // Add cutEdges to cutCellCuttingPoints
-        forAll(CellEdges[cutCells_[cellI]], edgeI)
-        {
-            if(intersections[0][CellEdges[cutCells_[cellI]][edgeI]] != -1)
+            if (edge2I != edgeI && edgePoint[edge2I] != -1)
             {
-                cutCellCuttingPoints_[toCell][cellCuttingPointI] =
-                    intersections[0][CellEdges[cutCells_[cellI]][edgeI]];
-                
-                cellCuttingPointI++;
+                nextEdgeI = edge2I;
+                break;
             }
         }
 
-        // Add cutPoints to cutCellCuttingPoints
-        const labelList cellLabels =
-            CellFaces[cutCells_[cellI]].labels(Faces);
-
-        forAll(cellLabels, pointI)
+        if (nextEdgeI == -1)
         {
-            if
-            (
-                intersections[1][cellLabels[pointI]] != -1
-            )
-            {
-                cutCellCuttingPoints_[toCell][cellCuttingPointI] =
-                    intersections[1][cellLabels[pointI]];
-                
-                cellCuttingPointI++;
-            }
+            // Did not find another cut edge on faceI. Do what?
+            WarningIn("cuttingPlane::walkCell")
+                << "Did not find closed walk along surface of cell " << cellI
+                << " starting from edge " << startEdgeI
+                << " in " << nIter << " iterations." << nl
+                << "Collected cutPoints so far:" << faceVerts
+                << endl;
+
+            return false;
         }
 
-        cutCells_[toCell] = cutCells_[cellI];
+        edgeI = nextEdgeI;
 
-        // Resize cell intersection size
-        if(cellCuttingPointI < cutCellCuttingPoints_[toCell].size())
+        nIter++;
+
+        if (nIter > 1000)
         {
-            cutCellCuttingPoints_[toCell].setSize(cellCuttingPointI);
+            WarningIn("cuttingPlane::walkCell")
+                << "Did not find closed walk along surface of cell " << cellI
+                << " starting from edge " << startEdgeI
+                << " in " << nIter << " iterations." << nl
+                << "Collected cutPoints so far:" << faceVerts
+                << endl;
+            return false;
         }
 
-        
-        // Change read-write offset
-        if(cutCellCuttingPoints_[toCell].size() < 3)
-        {
-            cellSkip++;
-        }
+    } while (edgeI != startEdgeI);
+
+
+    if (faceVerts.size() >= 3)
+    {
+        return true;
     }
+    else
+    {
+        WarningIn("cuttingPlane::walkCell")
+            << "Did not find closed walk along surface of cell " << cellI
+            << " starting from edge " << startEdgeI << nl
+            << "Collected cutPoints so far:" << faceVerts
+            << endl;
 
-    // Resize transfer vars
-    cutCells_.setSize(cutCells_.size() - cellSkip);
-    cutCellCuttingPoints_.setSize(cutCells_.size());
+        return false;
+    }
 }
 
-void cuttingPlane::orderFacePoints()
+
+// For every cut cell determine a walk through all? its cuts.
+void cuttingPlane::walkCellCuts
+(
+    const primitiveMesh& mesh,
+    const labelList& edgePoint
+)
 {
     cutFaces_.setSize(cutCells_.size());
+    label cutFaceI = 0;
 
-    forAll(cutCells_, cellI)
+    forAll(cutCells_, i)
     {
+        label cellI = cutCells_[i];
 
-        const labelList& cellPoints(cutCellCuttingPoints_[cellI]);
+        // Find the starting edge to walk from.
+        const labelList& cEdges = mesh.cellEdges()[cellI];
 
-        // Calculate face centroid
-        vector faceCentre(0, 0, 0);
+        label startEdgeI = -1;
 
-        forAll(cellPoints, pointI)
+        forAll(cEdges, cEdgeI)
         {
-            faceCentre += cuttingPoints_[cellPoints[pointI]];
-        }
+            label edgeI = cEdges[cEdgeI];
 
-        faceCentre /= cellPoints.size();
-
-        // Calculate right hand angle between point-to-centroid lines
-        // and baseLine 
-        vector baseLine(cuttingPoints_[cellPoints[0]] - faceCentre);
-        slList includedAngle(cellPoints.size());
-        includedAngle[0].s_ = 0;
-
-        forAll(cellPoints, pointI)
-        {   
-            includedAngle[pointI].l_ = cellPoints[pointI];
-
-            if(pointI > 0)
+            if (edgePoint[edgeI] != -1)
             {
-                vector lineCto
-                (
-                    cuttingPoints_[cellPoints[pointI]] - faceCentre
-                );
-            
-                vector crossProduct = (baseLine ^ lineCto);
-                scalar dotProduct = (baseLine & lineCto);
-                scalar magProduct = mag(baseLine)*mag(lineCto);
-
-                scalar angle = acos(dotProduct/(magProduct + SMALL));
-
-                if(mag(crossProduct) < VSMALL)
-                {
-                    includedAngle[pointI].s_ = physicalConstant::pi;
-                }
-                else
-                {
-                    scalar alignment =
-                        mag(crossProduct/mag(crossProduct) - normal());
-                
-                    if (alignment < 1)
-                    {
-                        includedAngle[pointI].s_ = angle;
-                    }  
-                    else
-                    {
-                        includedAngle[pointI].s_ =
-                            2*physicalConstant::pi - angle;  
-                    }
-                }
+                startEdgeI = edgeI;
+                break;
             }
-        }      
-
-        sort(includedAngle);
-
-        forAll(cellPoints, pointI)
-        {
-            cutCellCuttingPoints_[cellI][pointI] = includedAngle[pointI].l_; 
         }
 
-        cutFaces_[cellI] = face(cutCellCuttingPoints_[cellI]);
-    }
-}
-
-
-void cuttingPlane::showPoints()
-{
-
-    Info << "Cutting points:" << endl;
-    forAll(cutCells_, cellI)
-    {
-        Info << "Cut cell #" << cellI << " (" << cutCells_[cellI]
-             << ") has " << cutCellCuttingPoints_[cellI].size()
-             << " cutting points."
-             << endl;
-
-        forAll(cutCellCuttingPoints_[cellI], pointI)
+        // Check for the unexpected ...
+        if (startEdgeI == -1)
         {
-            Info << " #"<< pointI << ": " 
-                 << cuttingPoints_[cutCellCuttingPoints_[cellI][pointI]]
-                 << " (" 
-                 << cutCellCuttingPoints_[cellI][pointI]
-                 << ")" << endl;
+            FatalErrorIn("cuttingPlane::walkCellCuts") << "Cannot find cut edge"
+                << " for cut cell " << cellI << abort(FatalError);
+        }
+
+        // Walk from starting edge around the circumference of the cell.
+        DynamicList<label> faceVerts(2*mesh.faces()[cellI].size());
+        bool okCut = walkCell
+        (
+            mesh,
+            edgePoint,
+            cellI,
+            startEdgeI,
+            faceVerts
+        );
+
+        if (okCut)
+        {
+            faceVerts.shrink();
+
+            face cutFace(faceVerts);
+
+            // Orient face.
+            if ((cutFace.normal(cutPoints_) && normal()) < 0)
+            {
+                cutFace = cutFace.reverseFace();
+            }
+
+            cutFaces_[cutFaceI++] = cutFace;
         }
     }
 
+    cutFaces_.setSize(cutFaceI);
 }
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
-
 // Construct from components
-cuttingPlane::cuttingPlane(const polyMesh& mesh, const plane& newPlane)
+cuttingPlane::cuttingPlane(const primitiveMesh& mesh, const plane& newPlane)
 :
-    plane(newPlane),
-    mesh_(mesh)
+    plane(newPlane)
 {
-    const faceList& Faces = mesh_.faces();
-    const cellList& CellFaces = mesh_.cells();
-    const pointField& Points = mesh_.points();
-    const labelListList& CellEdges = mesh_.cellEdges();
+    scalarField dotProducts = (mesh.points() - refPoint()) & normal();
 
-    scalarField dotProducts = (Points - refPoint()) & normal();
+    //// Perturb points cuts so edges are cut properly.
+    //const tmp<scalarField> tdotProducts = stabilise(rawDotProducts, SMALL);
+    //const scalarField& dotProducts = tdotProducts();
 
-    cutCells
-    (
-        dotProducts,
-        CellFaces,
-        Faces
-    );
+    // Determine cells that are (probably) cut.
+    calcCutCells(mesh, dotProducts);
 
-    labelListList intersections
-    (    
-        cuttingPoints
-        (
-            dotProducts,
-            CellEdges,
-            Points
-        )
-    );
+    // Determine cutPoints and return list of edge cuts. (per edge -1 or
+    // the label of the intersection point (in cutPoints_)
+    labelList edgePoint(intersectEdges(mesh, dotProducts));
 
-    cutCellCuttingPoints
-    (
-        intersections, 
-        CellEdges, 
-        CellFaces,
-        Faces
-    );
-
-    orderFacePoints();
-
-    //showPoints();
-    
-    cutCellCuttingPoints_.setSize(0);
+    // Do topological walk around cell to find closed loop. 
+    walkCellCuts(mesh, edgePoint);
 }
 
 
@@ -488,7 +324,7 @@ cuttingPlane::cuttingPlane(const polyMesh& mesh, const plane& newPlane)
 // Return vectorField of cutting points
 const pointField& cuttingPlane::points() const
 {
-    return cuttingPoints_;
+    return cutPoints_;
 }
 
 
@@ -517,6 +353,25 @@ bool cuttingPlane::cut()
         return false;
     }
 }
+
+
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+void cuttingPlane::operator=(const cuttingPlane& rhs)
+{
+    // Check for assignment to self
+    if (this == &rhs)
+    {
+        FatalErrorIn("cuttingPlane::operator=(const cuttingPlane&)")
+            << "Attempted assignment to self"
+            << abort(FatalError);
+    }
+
+    cutCells_ = rhs.cells();
+    cutPoints_ = rhs.points();
+    cutFaces_ = rhs.faces();
+}
+
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

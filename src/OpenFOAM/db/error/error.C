@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     error
@@ -153,7 +153,7 @@ string error::message() const
 }
 
 
-void error::exit(const int errno)
+void error::exit(const int errNo)
 {
     if (!throwExceptions_ && JobInfo::constructed)
     {
@@ -172,7 +172,7 @@ void error::exit(const int errno)
     {
         Serr<< endl << *this << endl
             << "\nFOAM parallel run exiting\n" << endl;
-        Pstream::exit(errno);
+        Pstream::exit(errNo);
     }
     else
     {
@@ -235,9 +235,9 @@ Ostream& operator<<(Ostream& os, const error& fErr)
     if (error::level >= 2 && fErr.sourceFileLineNumber())
     {
         os  << endl << endl
-            << "Function: " << fErr.functionName().c_str() << endl
-            << "in file: " << fErr.sourceFileName().c_str()
-            << " at line: " << fErr.sourceFileLineNumber() << '.';
+            << "    From function " << fErr.functionName().c_str() << endl
+            << "    in file " << fErr.sourceFileName().c_str()
+            << " at line " << fErr.sourceFileLineNumber() << '.';
     }
 
     return os;

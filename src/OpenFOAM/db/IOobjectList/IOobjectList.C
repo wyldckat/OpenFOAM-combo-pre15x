@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -66,7 +66,7 @@ IOobjectList::IOobjectList
 
     // Create list file names in directory
     fileNameList ObjectNames = 
-        readDir(db.path(newInstance, local), fileName::FILE);
+        readDir(db.path(newInstance, db.dbDir()/local), fileName::FILE);
 
     forAll(ObjectNames, i)
     {
@@ -144,7 +144,7 @@ IOobject* IOobjectList::lookup(const word& name) const
                 << endl;
         }
 
-        return (IOobject*)(*iter);
+        return const_cast<IOobject*>(*iter);
     }
     else
     {

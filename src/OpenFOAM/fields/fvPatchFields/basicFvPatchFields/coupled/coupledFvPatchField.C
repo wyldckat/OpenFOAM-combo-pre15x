@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -102,7 +102,7 @@ tmp<Field<Type> > coupledFvPatchField<Type>::snGrad() const
 {
     return
         (this->patchNeighbourField() - this->patchInternalField())
-       *this->patchMesh().deltaCoeffs();
+       *this->patch().deltaCoeffs();
 }
 
 
@@ -128,8 +128,8 @@ void coupledFvPatchField<Type>::evaluate()
 
     Field<Type>::operator=
     (
-        this->patchMesh().weights()*this->patchInternalField()
-      + (1.0 - this->patchMesh().weights())*this->patchNeighbourField()
+        this->patch().weights()*this->patchInternalField()
+      + (1.0 - this->patch().weights())*this->patchNeighbourField()
     );
 }
 
@@ -161,7 +161,7 @@ tmp<Field<Type> > coupledFvPatchField<Type>::valueBoundaryCoeffs
 template<class Type>
 tmp<Field<Type> > coupledFvPatchField<Type>::gradientInternalCoeffs() const
 {
-    return -Type(pTraits<Type>::one)*this->patchMesh().deltaCoeffs();
+    return -Type(pTraits<Type>::one)*this->patch().deltaCoeffs();
 }
 
 //- Return the matrix source coefficients corresponding to the

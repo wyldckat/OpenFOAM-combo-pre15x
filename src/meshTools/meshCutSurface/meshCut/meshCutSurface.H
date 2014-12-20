@@ -20,13 +20,14 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     meshCutSurface
 
 Description
-    Description of surface resulting from cuts through mesh.
+    Description of surface resulting from cuts through mesh. Region on
+    labelledTris is the cell the triangle is resulting from.
 
 SourceFiles
     meshCutSurface.C
@@ -39,8 +40,7 @@ SourceFiles
 #include "labelList.H"
 #include "HashTable.H"
 #include "pointField.H"
-#include "triFaceList.H"
-#include "triFaceSurf.H"
+#include "triSurface.H"
 #include "boolList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -59,18 +59,9 @@ class cellDecompCuts;
 \*---------------------------------------------------------------------------*/
 
 class meshCutSurface
+:
+    public triSurface
 {
-    // Private data
-
-        //- points on generated surface
-        pointField points_;
-
-        //- triangles of generated surface
-        triFaceList tris_;
-
-        //- original cell labels
-        labelList cellLabels_;
-
 
     // Static data members
 
@@ -121,21 +112,7 @@ class meshCutSurface
 
         //- Remove duplicate faces (resulting from 3 meshVerts cut - is seen
         //  from both sides)
-        bool removeDuplicates(const triFaceSurf& surf);
-
-        //- Flip triangles to have consistent orientation
-        void propagateOrientation
-        (
-            const triFaceSurf& surf,
-            const label regionI,
-            const label prevVert0,
-            const label prevVert1,
-            const label faceI,
-            boolList& visited
-        );
-
-        //- Remove duplicate faces and correct orientation
-        void cleanSurface();
+        static triSurface removeDuplicates(const triSurface& surf);
 
 public:
         //- Generic tet cutting routine.
@@ -147,6 +124,7 @@ public:
             const labelList& tetVertCuts,
             const labelList& tetEdgeCuts,
             const label cellI,
+            List<labelledTri>& tris,
             label& triI
         );
 
@@ -157,6 +135,7 @@ public:
             const labelList& tetEdgeCuts,
             const label nEdgeCuts,
             const label cellI,
+            List<labelledTri>& tris,
             label& triI
         );
 
@@ -170,6 +149,7 @@ public:
             const labelList& tetEdgeCuts,
             const label nEdgeCuts,
             const label cellI,
+            List<labelledTri>& tris,
             label& triI
         );
 
@@ -206,25 +186,6 @@ public:
         //- Construct from cuts on cellDecomp tet decomposition
         //  (introduces cellcentres but not facecentres)
         meshCutSurface(const cellDecompCuts& cuts);
-
-
-    // Member Functions
-
-        const pointField& points() const
-        {
-            return points_;
-        }
-
-        const triFaceList& tris() const
-        {
-            return tris_;
-        }
-
-        const labelList& cellLabels() const
-        {
-            return cellLabels_;
-        }
-
 };
 
 

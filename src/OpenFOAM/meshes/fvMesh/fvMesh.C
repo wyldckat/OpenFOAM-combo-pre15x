@@ -20,16 +20,19 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvMesh.H"
 #include "volFields.H"
 #include "surfaceFields.H"
+#include "slicedVolFields.H"
+#include "slicedSurfaceFields.H"
 #include "SubField.H"
 #include "demandDrivenData.H"
 #include "lduAddressingFvMesh.H"
+#include "emptyPolyPatch.H"
 #include "mapPolyMesh.H"
 #include "MapFvFields.H"
 #include "fvMeshMapper.H"
@@ -53,7 +56,6 @@ void fvMesh::clearGeomNotVol()
     deleteDemandDrivenData(magSfPtr_);
     deleteDemandDrivenData(CPtr_);
     deleteDemandDrivenData(CfPtr_);
-    deleteDemandDrivenData(phiPtr_);
 }
 
 void fvMesh::clearGeom()
@@ -61,6 +63,9 @@ void fvMesh::clearGeom()
     clearGeomNotVol();
     deleteDemandDrivenData(V0Ptr_);
     deleteDemandDrivenData(V00Ptr_);
+
+    // Mesh motion flux cannot be deleted here because the old-time flux
+    // needs to be saved.
 }
 
 void fvMesh::clearAddressing()
@@ -74,6 +79,58 @@ void fvMesh::clearOut()
     surfaceInterpolation::clearOut();
 
     clearAddressing();
+
+    // Clear mesh motion flux
+    deleteDemandDrivenData(phiPtr_);
+}
+
+
+Vector<label> fvMesh::makeDirections()
+{
+    Vector<label> dir;
+
+    for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
+    {
+        dir[cmpt] = 1;
+    }
+
+    label nEmptyPatches = 0;
+
+    vector dirVec = vector::zero;
+
+    forAll(boundaryMesh(), patchi)
+    {
+        if
+        (
+            isA<emptyPolyPatch>(boundaryMesh()[patchi])
+         && boundaryMesh()[patchi].size()
+        )
+        {
+            nEmptyPatches++;
+            dirVec += sum(cmptMag(boundaryMesh()[patchi].faceAreas()));
+        }
+    }
+
+    if (nEmptyPatches)
+    {
+        reduce(dirVec, sumOp<vector>());
+
+        dirVec /= mag(dirVec);
+
+        for (direction cmpt=0; cmpt<vector::nComponents; cmpt++)
+        {
+            if (dirVec[cmpt] > SMALL)
+            {
+                dir[cmpt] = -1;
+            }
+            else
+            {
+                dir[cmpt] = 1;
+            }
+        }
+    }
+
+    return dir;
 }
 
 
@@ -84,6 +141,7 @@ fvMesh::fvMesh(const IOobject& io)
     polyMesh(io),
     surfaceInterpolation(*this),
     boundary_(*this, boundaryMesh()),
+    directions_(makeDirections()),
     lduPtr_(NULL),
     curTimeIndex_(time().timeIndex()),
     V0Ptr_(NULL),
@@ -129,6 +187,7 @@ fvMesh::fvMesh
     polyMesh(io, points, faces, cells),
     surfaceInterpolation(*this),
     boundary_(*this),
+    directions_(makeDirections()),
     lduPtr_(NULL),
     curTimeIndex_(time().timeIndex()),
     V0Ptr_(NULL),
@@ -142,50 +201,6 @@ fvMesh::fvMesh
     if (debug)
     {
         Info<< "Constructing fvMesh from components"
-            << endl;
-    }
-}
-
-
-// Construct from cell shapes
-fvMesh::fvMesh
-(
-    const IOobject& io,
-    const pointField& points,
-    const cellShapeList& shapes,
-    const faceListList& boundaryFaces,
-    const wordList& boundaryPatchNames,
-    const wordList& boundaryPatchTypes,
-    const word& defaultBoundaryPatchType,
-    const wordList& boundaryPatchPhysicalTypes
-)
-:
-    polyMesh
-    (
-        io,
-        points,
-        shapes,
-        boundaryFaces,
-        boundaryPatchNames,
-        boundaryPatchTypes,
-        defaultBoundaryPatchType,
-        boundaryPatchPhysicalTypes
-    ),
-    surfaceInterpolation(*this),
-    boundary_(*this, boundaryMesh()),
-    lduPtr_(NULL),
-    curTimeIndex_(time().timeIndex()),
-    V0Ptr_(NULL),
-    V00Ptr_(NULL),
-    SfPtr_(NULL),
-    magSfPtr_(NULL),
-    CPtr_(NULL),
-    CfPtr_(NULL),
-    phiPtr_(NULL)
-{
-    if (debug)
-    {
-        Info<< "Constructing fvMesh from shapeMesh"
             << endl;
     }
 }
@@ -334,8 +349,8 @@ void fvMesh::constructAndClear() const
         // It will be created on demand
         deleteDemandDrivenData(lduPtr_);
 
-        //((fvMesh&)(*this)).clearPrimitives();
-        //((fvMesh&)(*this)).polyMesh::clearGeom();
+        //const_cast<fvMesh&>(*this).clearPrimitives();
+        //const_cast<fvMesh&>(*this).polyMesh::clearGeom();
 
         done = true;
     }
@@ -458,12 +473,22 @@ tmp<scalarField> fvMesh::movePoints(const pointField& p)
     // delete out of date geometrical information
     clearGeomNotVol();
 
-    // move the polyMesh and grab motion fluxes
 
-    // Construct zero flux field
-    makePhi();
+    if (!phiPtr_)
+    {
+        makePhi();
+    }
 
     surfaceScalarField& phi = *phiPtr_;
+
+    // Grab old time mesh motion fluxes if the time has been incremented
+    if (phi.timeIndex() != time().timeIndex())
+    {
+        phi.oldTime();
+    }
+
+
+    // move the polyMesh and grab mesh motion fluxes
 
     scalar rDeltaT = 1.0/time().deltaT().value();
 

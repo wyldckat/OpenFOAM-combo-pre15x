@@ -5,7 +5,7 @@
         {
             noFailedChecks++;
 
-            Info<< "Writing " << points.size() << " unused points to set "
+            Pout<< "Writing " << points.size() << " unused points to set "
                 << points.name() << endl << endl;
             points.write();
         }
@@ -17,7 +17,7 @@
         {
             noFailedChecks++;
 
-            Info<< "Writing " << faces.size() << " unordered faces to set "
+            Pout<< "Writing " << faces.size() << " unordered faces to set "
                 << faces.name() << endl << endl;
             faces.write();
         }
@@ -29,7 +29,7 @@
         {
             noFailedChecks++;
 
-            Info<< "Writing " << cells.size() << " cells with over used edges"
+            Pout<< "Writing " << cells.size() << " cells with over used edges"
                 << " to set " << cells.name() << endl << endl;
             cells.write();
         }
@@ -41,7 +41,7 @@
         {
             noFailedChecks++;
 
-            Info<< "Writing " << faces.size() << " faces with out-of-range"
+            Pout<< "Writing " << faces.size() << " faces with out-of-range"
                 << " vertices to set " << faces.name() << endl << endl;
             faces.write();
         }
@@ -53,7 +53,7 @@
         {
             noFailedChecks++;
 
-            Info<< "Writing " << faces.size() << " faces with incorrect"
+            Pout<< "Writing " << faces.size() << " faces with incorrect"
                 << " edges to set " << faces.name() << endl << endl;
             faces.write();
         }
@@ -65,7 +65,7 @@
         {
             noFailedChecks++;
 
-            Info<< "Writing " << cells.size() << " cells connected to too"
+            Pout<< "Writing " << cells.size() << " cells connected to too"
                 << " few other cells to set "
                 << cells.name() << endl << endl;
             cells.write();

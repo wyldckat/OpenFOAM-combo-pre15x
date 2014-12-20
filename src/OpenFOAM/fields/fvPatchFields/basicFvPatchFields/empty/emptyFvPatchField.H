@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     emptyFvPatchField
@@ -132,6 +132,12 @@ public:
 
 
         // Evaluation functions
+
+            //- Update the coefficients associated with the patch field
+            //  This only checks to see the case is actually 1D or 2D
+            //  for which this boundary condition is valid
+            void updateCoeffs();
+
 
             //- Return the matrix diagonal coefficients corresponding to the
             //  evaluation of the value of this patchField with given weights

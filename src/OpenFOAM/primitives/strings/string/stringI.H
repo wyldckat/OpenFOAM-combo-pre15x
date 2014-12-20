@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -75,6 +75,33 @@ inline string string::operator()(const size_type i, const size_type n) const
 inline string string::operator()(const size_type n) const
 {
     return substr(0, n);
+}
+
+
+inline string::hash::hash()
+{}
+
+
+inline string::size_type string::hash::operator()(const string& key) const
+{
+    register size_type hashVal = 0;
+
+    for (string::const_iterator iter=key.begin(); iter!=key.end(); ++iter)
+    {
+        hashVal = hashVal<<1 ^ *iter;
+    }
+
+    return hashVal;
+}
+
+
+inline string::size_type string::hash::operator()
+(
+    const string& key,
+    const size_type tableSize
+) const
+{
+    return ::abs(operator()(key)) % tableSize;
 }
 
 

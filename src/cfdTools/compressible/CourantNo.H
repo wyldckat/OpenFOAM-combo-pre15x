@@ -20,24 +20,31 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Global
     CourantNo
 
 Description
-    Calculates and outputs the maximum Courant Number.
+    Calculates and outputs the mean and maximum Courant Numbers.
 
 \*---------------------------------------------------------------------------*/
 
-    scalar CoNum = max
-    (
-        mesh.surfaceInterpolation::deltaCoeffs()
-        *mag(phi)
-        /(fvc::interpolate(rho)*mesh.magSf())
-    ).value()*runTime.deltaT().value();
+scalar CoNum = 0.0;
+scalar meanCoNum = 0.0;
 
-    Info<< "\nMax Courant Number = " << CoNum
-        << endl;
+{
+    surfaceScalarField SfUfbyDelta = 
+        mesh.surfaceInterpolation::deltaCoeffs()*mag(phi)/fvc::interpolate(rho);
+
+    CoNum = max(SfUfbyDelta/mesh.magSf())
+        .value()*runTime.deltaT().value();
+
+    meanCoNum = (sum(SfUfbyDelta)/sum(mesh.magSf()))
+        .value()*runTime.deltaT().value();
+
+    Info<< "Mean and max Courant Numbers = "
+        << meanCoNum << " " << CoNum << endl;
+}
 
 // ************************************************************************* //

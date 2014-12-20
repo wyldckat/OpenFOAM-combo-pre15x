@@ -20,11 +20,10 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
+
 // Standard header files.
 #include <unistd.h>
 #include <sys/types.h>
@@ -38,7 +37,6 @@ Description
 #include "IFstream.H"
 #include "OSspecific.H"
 #include "timer.H"
-#include "long.H"
 
 // Project header files.
 #include "FoamX.H"
@@ -48,16 +46,16 @@ Description
 
 // * * * * * * * * * * * * * Private Member Functions * * * * * * * * * * * * //
 
-void FoamX::ProcessControl::readEntries(const Foam::dictionary& procDict)
+void FoamX::ProcessControl::readEntries(const dictionary& procDict)
 {
     if (procDict.found("remoteShell"))
     {
-        remoteShell_ = Foam::string(procDict.lookup("remoteShell"));
+        remoteShell_ = string(procDict.lookup("remoteShell"));
     }
 
     if (procDict.found("remoteCp"))
     {
-        remoteShell_ = Foam::string(procDict.lookup("remoteCp"));
+        remoteShell_ = string(procDict.lookup("remoteCp"));
     }
 
     if (procDict.found("timeOut"))
@@ -72,8 +70,7 @@ void FoamX::ProcessControl::readEntries(const Foam::dictionary& procDict)
 // Construct from components
 FoamX::ProcessControl::ProcessControl
 (
-    const Foam::fileName& fxSystemConfigFileName,
-    const Foam::fileName& fxUserConfigFileName
+    const fileName& fxSystemConfigFileName
 )
 :
     remoteShell_("rsh"),
@@ -82,9 +79,9 @@ FoamX::ProcessControl::ProcessControl
 {
     static const char* functionName = 
         "FoamX::ProcessControl::ProcessControl"
-        "(const Foam::fileName& fxSystemConfigFileName)";
+        "(const fileName& fxSystemConfigFileName)";
 
-    if (!Foam::exists(fxSystemConfigFileName))
+    if (!exists(fxSystemConfigFileName))
     {
         throw FoamXError
         (
@@ -96,18 +93,8 @@ FoamX::ProcessControl::ProcessControl
         );
     }
 
-    Foam::dictionary configDict((Foam::IFstream(fxSystemConfigFileName)()));
+    dictionary configDict((IFstream(fxSystemConfigFileName)()));
     readEntries(configDict.subDict("processControl"));
-
-    if (Foam::exists(fxUserConfigFileName))
-    {
-        Foam::dictionary configDict((Foam::IFstream(fxUserConfigFileName)()));
-
-        if (configDict.found("processControl"))
-        {
-            readEntries(configDict.subDict("processControl"));
-        }
-    }
 }
 
 
@@ -115,10 +102,10 @@ FoamX::ProcessControl::ProcessControl
 
 Foam::stringList FoamX::ProcessControl::remoteShellArgs
 (
-    const Foam::string& userName,
-    const Foam::string& hostName,
-    const Foam::stringList& arguments,
-    const Foam::string& logName,
+    const string& userName,
+    const string& hostName,
+    const stringList& arguments,
+    const string& logName,
     const bool backGround
 ) const
 {
@@ -150,7 +137,7 @@ Foam::stringList FoamX::ProcessControl::remoteShellArgs
     //  - haveLogName   (true if output needs to go into log)
 
 
-    Foam::stringList args(argsLen);
+    stringList args(argsLen);
 
     // Remote invocation
     unsigned int argi = 0;
@@ -195,15 +182,15 @@ Foam::stringList FoamX::ProcessControl::remoteShellArgs
 
 Foam::stringList FoamX::ProcessControl::remoteCpArgs
 (
-    const Foam::string& userName,
-    const Foam::string& hostName,
-    const Foam::fileName& src,
-    const Foam::fileName& dest
+    const string& userName,
+    const string& hostName,
+    const fileName& src,
+    const fileName& dest
 ) const
 {
     if (hostName == Foam::hostName())
     {
-        Foam::stringList args(4);
+        stringList args(4);
         args[0] = "cp";
         args[1] = "-r";
         args[2] = src;
@@ -213,7 +200,7 @@ Foam::stringList FoamX::ProcessControl::remoteCpArgs
     }
     else
     {
-        Foam::stringList args(4);
+        stringList args(4);
         args[0] = remoteCp_;
         args[1] = "-r";
         args[2] = userName + '@' + hostName + ':' + src;
@@ -228,10 +215,10 @@ Foam::stringList FoamX::ProcessControl::remoteCpArgs
 // Return the command line as a string
 Foam::string FoamX::ProcessControl::commandString
 (
-    const Foam::stringList& argList
+    const stringList& argList
 )
 {
-    Foam::string cms = argList[0];
+    string cms = argList[0];
 
     for (label i=1; i<argList.size(); i++)
     {
@@ -251,8 +238,8 @@ pid_t FoamX::ProcessControl::waitpid(pid_t pid)
 
 pid_t FoamX::ProcessControl::fork
 (
-    const Foam::stringList& argList,
-    const Foam::fileName& logFile
+    const stringList& argList,
+    const fileName& logFile
 )
 {
     pid_t pid = -1;
@@ -263,7 +250,7 @@ pid_t FoamX::ProcessControl::fork
 
     forAll(argList, i)
     {
-        argv[i] = (char*)argList[i].c_str();
+        argv[i] = const_cast<char*>(argList[i].c_str());
     }
     argv[argList.size()] = NULL;
 
@@ -320,15 +307,15 @@ pid_t FoamX::ProcessControl::fork
 
 int FoamX::ProcessControl::system
 (
-    const Foam::stringList& argList,
+    const stringList& argList,
     const int timeOut
 )
 {
     static const char* functionName = 
         "FoamX::ProcessControl::system"
-        "(const Foam::stringList&, const int)";
+        "(const stringList&, const int)";
 
-    Foam::string cmd(commandString(argList));
+    string cmd(commandString(argList));
 
     Info<< "Doing (with timeout " << timeOut << ") : " << cmd << endl;
 
@@ -342,7 +329,7 @@ int FoamX::ProcessControl::system
         {
             "/bin/sh",
             "-c",
-            (char *)cmd.c_str(),
+            const_cast<char*>(cmd.c_str()),
             NULL
         };
 
@@ -430,7 +417,7 @@ int FoamX::ProcessControl::kill(pid_t pid, int sig)
 
 int FoamX::ProcessControl::kill(const word& host, pid_t pid, int sig) const
 {
-    if (host == Foam::hostName())
+    if (host == hostName())
     {
         return FoamX::ProcessControl::kill(pid, sig);
     }
@@ -438,14 +425,14 @@ int FoamX::ProcessControl::kill(const word& host, pid_t pid, int sig) const
     {
         stringList args(3);
         args[0] = "kill";
-        args[1] = "-" + Foam::name(sig);
-        args[2] = Foam::name(pid);
+        args[1] = "-" + name(sig);
+        args[2] = name(pid);
 
         stringList remoteArgs
         (
             remoteShellArgs
             (
-                Foam::userName(),
+                userName(),
                 host,
                 args,
                 "",

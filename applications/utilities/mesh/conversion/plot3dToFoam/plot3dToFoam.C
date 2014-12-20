@@ -20,12 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Plot3d mesh (ascii format) converter.
 
-    Work in progress! Handles ascii multiblock format.
+    Work in progress! Handles ascii multiblock (and optionally singleBlock)
+    format.
     By default expects blanking. Use -noBlank if none.
     Niklas Nordin has experienced a problem with lefthandedness of the blocks.
     The code should detect this automatically - see hexBlock::readPoints but
@@ -57,6 +58,7 @@ int main(int argc, char *argv[])
     argList::validArgs.append("PLOT3D geom file");
     argList::validOptions.insert("scale", "scale factor");
     argList::validOptions.insert("noBlank", "");
+    argList::validOptions.insert("singleBlock", "");
 
     argList args(argc, argv);
 
@@ -72,6 +74,7 @@ int main(int argc, char *argv[])
     }
 
     bool readBlank = !args.options().found("noBlank");
+    bool singleBlock = args.options().found("singleBlock");
 
 
 #   include "createTime.H"
@@ -83,11 +86,18 @@ int main(int argc, char *argv[])
     // them with no intervention
     label nblock;
 
-    plot3dFile >> nblock;
+    if (singleBlock)
+    {
+        nblock = 1;
+    }
+    else
+    {
+        plot3dFile >> nblock;
+    }
 
-    Info << "Reading blocks" << endl;
+    Info << "Reading " << nblock << " blocks" << endl;
 
-    ptrList<hexBlock> blocks(nblock);
+    PtrList<hexBlock> blocks(nblock);
 
     {
         label nx, ny, nz;

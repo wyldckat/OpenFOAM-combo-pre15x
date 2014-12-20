@@ -20,12 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Implements patch face ordering on cyclic halves.
 
-    sendOrder: does nothing
+    initOrder: does nothing
     order:
         - finds unmodified pairs of faces which were opposite each other
         on the old patch. These are the seed faces to start walking from.
@@ -108,8 +108,8 @@ bool cyclicPolyPatch::getUnmodifiedFacePairs
 
     if (oldPatchI == -1)
     {
-        SeriousError
-            << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+        SeriousErrorIn("cyclicPolyPatch::getUnmodifiedFacePairs")
+            << " patch:" << name() << " : "
             << "Cannot find unmodified face on patch " << name() << endl
             << "Please use geometric ordering or adapt your topology changes"
             << endl
@@ -172,8 +172,8 @@ bool cyclicPolyPatch::getUnmodifiedFacePairs
 
     if (unmodFaces.size() == 0)
     {
-        SeriousError
-            << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+        SeriousErrorIn("cyclicPolyPatch::getUnmodifiedFacePairs")
+            << " patch:" << name() << " : "
             << "Cannot find two corresponding faces (one on each side of"
             << " cyclic half) that are not affected"
             << " by the morph." << endl
@@ -223,8 +223,8 @@ bool cyclicPolyPatch::geometricOrder
 {
     if (ppZones.nZones() != 2)
     {
-        SeriousError
-            << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+        SeriousErrorIn("cyclicPolyPatch::geometricOrder")
+            << " patch:" << name() << " : "
             << "Patch gets decomposed in "
             << ppZones.nZones() << " zones" << endl
             << "This means that the patch is either not two separate regions"
@@ -272,8 +272,8 @@ bool cyclicPolyPatch::geometricOrder
 
     if (n0Faces != n1Faces)
     {
-        SeriousError
-            << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+        SeriousErrorIn("cyclicPolyPatch::geometricOrder")
+            << " patch:" << name() << " : "
             << "Patch " << name() << " gets decomposed in two zones of"
             << "inequal size: " << n0Faces << " and " << n1Faces << endl
             << "This means that the patch is either not two separate regions"
@@ -383,8 +383,8 @@ bool cyclicPolyPatch::geometricOrder
 
     if (!matchedAll)
     {
-        SeriousError
-            << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+        SeriousErrorIn("cyclicPolyPatch::geometricOrder")
+            << " patch:" << name() << " : "
             << "Cannot match vectors to faces on both sides of patch" << endl
             << "half0Ctrs[0]:" << half0Ctrs[0] << endl
             << "half1Ctrs[0]:" << half1Ctrs[0] << endl
@@ -437,8 +437,8 @@ bool cyclicPolyPatch::geometricOrder
 
         if (rotation[newFaceI] == -1)
         {
-            SeriousError
-                << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+            SeriousErrorIn("cyclicPolyPatch::geometricOrder")
+                << " patch:" << name() << " : "
                 << "Cannot find point on face " << half1[half1FaceI]
                 << " with vertices:"
                 << IndirectList<point>(half1.points(), half1[half1FaceI])
@@ -474,8 +474,8 @@ bool cyclicPolyPatch::topologicalOrder
 {
     if (ppZones.nZones() % 2 == 1)
     {
-        SeriousError
-            << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+        SeriousErrorIn("cyclicPolyPatch::topologicalOrder")
+            << " patch:" << name() << " : "
             << "Patch gets decomposed in an odd number"
             << " of zones:" << ppZones.nZones() << endl
             << "This means that a geometric test on angle of neigbouring"
@@ -535,8 +535,8 @@ bool cyclicPolyPatch::topologicalOrder
 
         if (nVisited == size())
         {
-            SeriousError
-                << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+            SeriousErrorIn("cyclicPolyPatch::topologicalOrder")
+                << " patch:" << name() << " : "
                 << "Starting from patch face " << startFaceA
                 << " mesh face:" << startFaceA + start() << " ended up visiting"
                 << " the whole patch." << endl
@@ -616,8 +616,8 @@ bool cyclicPolyPatch::topologicalOrder
 
         if (visitOrderA.size() != visitOrderB.size())
         {
-            SeriousError
-                << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+            SeriousErrorIn("cyclicPolyPatch::topologicalOrder")
+                << " patch:" << name() << " : "
                 << "Walk on both cyclic halves did not produce same walk"
                 << " From startFaceA : " << startFaceA
                 << " visited " << visitOrderA.size() << " faces" << endl
@@ -669,8 +669,8 @@ bool cyclicPolyPatch::topologicalOrder
     {
         if (!visited[patchFaceI])
         {
-            SeriousError
-                << "cyclicPolyPatch::order : " << " patch:" << name() << " : "
+            SeriousErrorIn("cyclicPolyPatch::topologicalOrder")
+                << " patch:" << name() << " : "
                 << "Did not visit mesh face "
                 << start() + patchFaceI
                 << " on cyclic patch " << name()
@@ -718,7 +718,7 @@ scalar cyclicPolyPatch::setFeatureCos(const scalar t)
 
 
 //- Initialize ordering (on new mesh)
-void cyclicPolyPatch::sendOrder
+void cyclicPolyPatch::initOrder
 (
     const polyTopoChange&,
     const mapPolyMesh&
@@ -804,7 +804,7 @@ bool cyclicPolyPatch::order
             << " where the cos of the angle between two connected faces"
             << " was less than " << featureCos() << endl;
 
-        ptrList<OFstream> streams(ppZones.nZones());
+        PtrList<OFstream> streams(ppZones.nZones());
 
         forAll(streams, zoneI)
         {
@@ -845,9 +845,6 @@ bool cyclicPolyPatch::order
     {
         changed = topologicalOrder(ref, map, ppZones, faceMap, rotation);
     }
-
-    // Clear out anything related to local topology.
-    deleteDemandDrivenData(coupledPointsPtr_);
 
     return changed;
 }

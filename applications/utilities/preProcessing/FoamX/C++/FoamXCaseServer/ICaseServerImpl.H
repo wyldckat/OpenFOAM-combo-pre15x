@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     ICaseServerImpl
@@ -88,7 +88,7 @@ class ICaseServerImpl
         Foam::fileName caseDictName_;
 
         //- Name of the application class for this case.
-        Foam::word appClassName_;
+        Foam::word appName_;
 
         //- Reference to the ORB
         Orb& orb_;
@@ -102,8 +102,8 @@ class ICaseServerImpl
         //- Reference to the FoamProperties object.
         FoamXServer::CaseServer::IFoamProperties_var foamProperties_;
 
-        //- Reference to the ApplicationClass object for this case.
-        FoamXServer::CaseServer::IApplicationClass_var appClass_;
+        //- Reference to the Application object for this case.
+        FoamXServer::CaseServer::IApplication_var app_;
 
         //- Managed flag.
         bool managed_;
@@ -126,7 +126,6 @@ class ICaseServerImpl
 
     // Private member functions.
 
-
         //- Access database
         Foam::Time& time();
 
@@ -135,7 +134,8 @@ class ICaseServerImpl
 
         void writePatchData();
         void addPatch(PatchProperties* patchProps);
-        bool fieldsMatchBoundaryType(const Foam::word& boundaryType);
+        bool fieldsMatchPatchPhysicalType(const Foam::word& patchPhysicalType);
+
 
 public:
 
@@ -147,7 +147,7 @@ public:
             const Foam::fileName& rootDir,
             const Foam::fileName& caseName,
             const Foam::word& mode,
-            const Foam::word& appClass
+            const Foam::word& app
         );
 
 
@@ -167,8 +167,8 @@ public:
 
 
         //- Application class for this case (read only).
-        virtual FoamXServer::CaseServer::IApplicationClass_ptr
-            applicationClass();
+        virtual FoamXServer::CaseServer::IApplication_ptr
+            application();
 
         //- Foam system properties (read only).
         virtual FoamXServer::CaseServer::IFoamProperties_ptr foamProperties();
@@ -205,7 +205,7 @@ public:
             virtual void addPatch
             (
                 const char* patchName,
-                const char* boundaryType
+                const char* patchPhysicalType
             );
 
             virtual void deletePatch(const char* patchName);
@@ -215,16 +215,16 @@ public:
 
         // Patch boundary conditions.
 
-            virtual void setPatchBoundaryType
+            virtual void setPatchPhysicalType
             (
                 const char* patchName,
-                const char* boundaryType
+                const char* patchPhysicalType
             );
 
-            virtual void getPatchBoundaryType
+            virtual void getPatchPhysicalType
             (
                 const char* patchName,
-                CORBA::String_out boundaryType
+                CORBA::String_out patchPhysicalType
             );
 
 
@@ -235,11 +235,6 @@ public:
                 const char* dictionaryName,
                 CORBA::Boolean,
                 FoamXServer::IDictionaryEntry_out dictRoot
-            );
-
-            virtual void copyDefaultDictionary
-            (
-                const char* dictionaryName
             );
 
             virtual CORBA::Long fileModificationDate(const char* dictName);

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -28,7 +28,7 @@ Description
 
 #include "matchPoints.H"
 #include "SortableList.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -59,7 +59,7 @@ bool Foam::matchPoints
 
         scalar tol = tols[face0I];
 
-        label startI = findLower(pts1Mag, dist0 - tol);
+        label startI = findLower(pts1Mag, 0.99999*dist0 - tol);
 
         if (startI == -1)
         {
@@ -74,7 +74,7 @@ bool Foam::matchPoints
             label j = startI;
             (
                 (j < pts1Mag.size())
-             && (pts1Mag[j] < dist0 + tol)
+             && (pts1Mag[j] < 1.00001*dist0 + tol)
             );
             j++
         )

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -90,7 +90,7 @@ void reitzDiwakar::breakupParcel
         static const scalar Cs     = 10.0;
     */
 
-    const ptrList<volScalarField>& Y = spray_.composition().Y();
+    const PtrList<volScalarField>& Y = spray_.composition().Y();
 
     label Ns = Y.size();
     label cellI = p.cell();

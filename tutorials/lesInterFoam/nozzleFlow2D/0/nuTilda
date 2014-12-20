@@ -42,7 +42,8 @@ boundaryField
 
     wall            
     {
-        type            zeroGradient;
+        type            fixedValue;
+        value           uniform 0;
     }
 
     atmosphere      

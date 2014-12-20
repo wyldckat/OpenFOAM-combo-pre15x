@@ -3,10 +3,8 @@
 set -x
 
 wmake foamDataToFluent
-wmake foamToFieldview
 wmake foamToFieldview9
 wmake foamToEnsight
-wmake foamToDX
 wmake foamToVTK
 wmake smapToFoam
 wmake foamToGMV

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     ObjRefDictionary
@@ -51,7 +51,7 @@ namespace FoamX
 template<class ObjImplClass>
 class ObjRefDictionary
 :
-    public Dictionary<ObjImplClass>
+    public Foam::Dictionary<ObjImplClass>
 {
 
 public:
@@ -59,16 +59,20 @@ public:
     // Member Functions
  
         //- Erase an entry specified by given iterator.
-        bool erase(Dictionary<ObjImplClass>::iterator& iter)
+        bool erase(const word& keyword)
         {
-            // Release Corba implementation object.
-            if (iter != end())
+            if (this->found(keyword))
             {
-                iter()->_remove_ref();
-            }
+                // Release Corba implementation object.
+                this->lookup(keyword)->_remove_ref();
 
-            // Invoke base class erase method.
-            return Dictionary<ObjImplClass>::erase(iter);
+                // Invoke base class erase method.
+                return Foam::Dictionary<ObjImplClass>::erase(keyword);
+            }
+            else
+            {
+                return false;
+            }
         }
 
         //- Clear all entries from table.
@@ -77,8 +81,9 @@ public:
             // Release all Corba implementation objects.
             for
             (
-                Dictionary<ObjImplClass>::iterator iter = begin();
-                iter != end();
+                typename Foam::Dictionary<ObjImplClass>::iterator iter =
+                    this->begin();
+                iter != this->end();
                 ++iter
             )
             {
@@ -86,7 +91,7 @@ public:
             }
 
             // Invoke base class clear method.
-            Dictionary<ObjImplClass>::clear();
+            Foam::Dictionary<ObjImplClass>::clear();
         }
 };
 

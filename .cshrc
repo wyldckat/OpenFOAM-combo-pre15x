@@ -21,7 +21,7 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with OpenFOAM; if not, write to the Free Software Foundation,
-#     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Script
 #     cshrc
@@ -92,20 +92,27 @@ set machineTest=`uname -s`
 set WM_COMPILER_BIN=
 set WM_COMPILER_LIB=
 
-if ($WM_COMPILER == "Gcc34" || $machineTest == "Linux" ) then
+if ($WM_COMPILER == "Gcc" || $machineTest == "Linux" && $?WM_COMPILER) then
     setenv WM_COMPILER_DIR $WM_PROJECT_INST_DIR/$WM_ARCH/gcc-3.4.3$WM_COMPILER_ARCH
-    set WM_COMPILER_BIN="$WM_COMPILER_DIR/bin $WM_COMPILER_DIR/../gdb-6.2.1/bin"
+    set WM_COMPILER_BIN="$WM_COMPILER_DIR/bin $WM_COMPILER_DIR/../gdb-6.3/bin"
     set WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 endif
 
-
-if ($?LD_LIBRARY_PATH) then
-    setenv LD_LIBRARY_PATH ${WM_COMPILER_LIB}:${LD_LIBRARY_PATH}
-else
-    setenv LD_LIBRARY_PATH ${WM_COMPILER_LIB}
+if ($WM_COMPILER == "Gcc4" ) then
+    setenv WM_COMPILER_DIR $WM_PROJECT_INST_DIR/$WM_ARCH/gcc-4.0.1$WM_COMPILER_ARCH
+    set WM_COMPILER_BIN="$WM_COMPILER_DIR/bin $WM_COMPILER_DIR/../gdb-6.3/bin"
+    set WM_COMPILER_LIB=$WM_COMPILER_DIR/lib${WM_COMPILER_LIB_ARCH}:$WM_COMPILER_DIR/lib:
 endif
 
-set path=($WM_COMPILER_BIN $path)
+if ($?WM_COMPILER_BIN) then
+    if ($?LD_LIBRARY_PATH) then
+        setenv LD_LIBRARY_PATH ${WM_COMPILER_LIB}:${LD_LIBRARY_PATH}
+    else
+        setenv LD_LIBRARY_PATH ${WM_COMPILER_LIB}
+    endif
+
+    set path=($WM_COMPILER_BIN $path)
+endif
 
 
 # Java
@@ -177,12 +184,9 @@ set path=($MICO_ARCH_PATH/bin $path)
 # FoamX
 # ~~~~~
 setenv FOAMX_PATH $FOAM_UTILITIES/preProcessing/FoamX
-setenv FOAMX_SYSTEM_CONFIG $FOAMX_PATH/config
-
-if ( -d $HOME/$FOAM_DOT_DIR/apps/FoamX ) then
-    setenv FOAMX_USER_CONFIG $HOME/$FOAM_DOT_DIR/apps/FoamX
-else
-    setenv FOAMX_USER_CONFIG $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/FoamX
+setenv FOAMX_CONFIG $HOME/$FOAM_DOT_DIR/apps/FoamX
+if ( ! -d $FOAMX_CONFIG ) then
+    setenv FOAMX_CONFIG $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/FoamX
 endif
 
 
@@ -224,7 +228,6 @@ setenv MPI_BUFFER_SIZE 20000000
 
 # Source setup files for optional packages 
 # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-SOURCE $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/dxFoam/cshrc
 SOURCE $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/ensightFoam/cshrc
 SOURCE $WM_PROJECT_DIR/$FOAM_DOT_DIR/apps/paraview/cshrc
 

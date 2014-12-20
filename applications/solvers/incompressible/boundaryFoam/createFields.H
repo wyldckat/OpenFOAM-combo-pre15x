@@ -29,14 +29,11 @@
     );
 
 
-    autoPtr<transportModel> laminarTransport
-    (
-        transportModel::New(U, phi)
-    );
+    singlePhaseTransportModel laminarTransport(U, phi);
 
     autoPtr<turbulenceModel> turbulence
     (
-        turbulenceModel::New(U, phi, laminarTransport())
+        turbulenceModel::New(U, phi, laminarTransport)
     );
 
 
@@ -72,7 +69,7 @@
     {
         const fvPatch& currPatch = patches[patchi];
 
-        if (typeid(currPatch) == typeid(wallFvPatch))
+        if (isType<wallFvPatch>(currPatch))
         {
             forAll(currPatch, facei)
             {

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     PSstream
@@ -30,8 +30,6 @@ Description
     by declaring it to be an object.
 
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "PSstream.H"
 #include "GEvent.H"
@@ -89,8 +87,8 @@ PSstream::PSstream
         << "%%EndComments\n"
         << "%%BoundingBox: "
         << "0.0 0.0 "
-        << (scalar)width().x() << ' '
-        << (scalar)width().y() << nl;
+        << scalar(width().x()) << ' '
+        << scalar(width().y()) << nl;
 
      // write rotate plot by 90 degrees
      postFile << "%90 rotate\n";

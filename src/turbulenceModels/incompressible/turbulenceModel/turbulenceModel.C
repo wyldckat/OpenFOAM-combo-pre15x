@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -117,9 +117,10 @@ tmp<scalarField> turbulenceModel::yPlus(const label patchNo) const
     }
     else
     {
-        Warning
-            << "tmp<scalarField> turbulenceModel::yPlus(const label patchNo) "
-            << "const : " << endl
+        WarningIn
+        (
+            "tmp<scalarField> turbulenceModel::yPlus(const label patchNo)"
+        )   << "const : " << endl
             << "Patch " << patchNo << " is not a wall.  Returning blank field"
             << endl;
 

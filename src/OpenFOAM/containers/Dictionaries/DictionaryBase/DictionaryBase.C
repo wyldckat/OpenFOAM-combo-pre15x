@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -33,19 +31,10 @@ Description
 namespace Foam
 {
 
-// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-// Null constructor
 template<class IDLListType, class T>
-DictionaryBase<IDLListType, T>::DictionaryBase()
-{}
-
-
-// Copy constructor
-template<class IDLListType, class T>
-DictionaryBase<IDLListType, T>::DictionaryBase(const DictionaryBase& dict)
-:
-    IDLListType(dict)
+void DictionaryBase<IDLListType, T>::addEntries()
 {
     for
     (
@@ -54,8 +43,44 @@ DictionaryBase<IDLListType, T>::DictionaryBase(const DictionaryBase& dict)
         ++iter
     )
     {
-        this->hashedEntries_.insert((*iter).keyword(), &(*iter));
+        this->hashedTs_.insert((*iter).keyword(), &(*iter));
     }
+}
+
+
+// * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
+
+template<class IDLListType, class T>
+DictionaryBase<IDLListType, T>::DictionaryBase()
+{}
+
+
+template<class IDLListType, class T>
+DictionaryBase<IDLListType, T>::DictionaryBase(const DictionaryBase& dict)
+:
+    IDLListType(dict)
+{
+    addEntries();
+}
+
+
+template<class IDLListType, class T>
+template<class INew>
+DictionaryBase<IDLListType, T>::DictionaryBase(Istream& is, const INew& inewt)
+:
+    IDLListType(is, inewt)
+{
+    addEntries();
+}
+
+
+// Istream constructor
+template<class IDLListType, class T>
+DictionaryBase<IDLListType, T>::DictionaryBase(Istream& is)
+:
+    IDLListType(is)
+{
+    addEntries();
 }
 
 
@@ -114,7 +139,20 @@ T* DictionaryBase<IDLListType, T>::lookup(const word& keyword)
 template<class IDLListType, class T>
 wordList DictionaryBase<IDLListType, T>::toc() const
 {
-    return hashedTs_.toc();
+    wordList keywords(this->size());
+
+    label i = 0;
+    for
+    (
+        typename IDLListType::const_iterator iter = this->begin();
+        iter != this->end();
+        ++iter
+    )
+    {
+        keywords[i++] = iter().keyword();
+    }
+
+    return keywords;
 }
 
 
@@ -181,7 +219,7 @@ void DictionaryBase<IDLListType, T>::operator=
 
     IDLListType::operator=(dict);
 
-    this->hashedEntries_.clear();
+    this->hashedTs_.clear();
 
     for
     (
@@ -190,7 +228,7 @@ void DictionaryBase<IDLListType, T>::operator=
         ++iter
     )
     {
-        this->hashedEntries_.insert((*iter).keyword(), &(*iter));
+        this->hashedTs_.insert((*iter).keyword(), &(*iter));
     }
 }
 

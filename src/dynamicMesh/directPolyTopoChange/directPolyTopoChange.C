@@ -20,20 +20,19 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
 \*---------------------------------------------------------------------------*/
 
 #include "directPolyTopoChange.H"
-#include "polyMesh.H"
 #include "Time.H"
-#include "morphMesh.H"
+#include "polyMesh.H"
 #include "SortableList.H"
 #include "PackedList.H"
-#include "polyTopoChange.H"
-#include "mapPolyMesh.H"
+#include "processorPolyPatch.H"
+#include "dictionaryEntry.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -123,7 +122,7 @@ bool Foam::directPolyTopoChange::pointRemoved(const point& pt)
 
 // Determine order for faces:
 // - upper-triangular order for internal faces
-// - external faces after internal faces
+// - external faces after internal faces and in patch order.
 Foam::labelList Foam::directPolyTopoChange::getFaceOrder(const label nPatches)
  const
 {
@@ -215,6 +214,69 @@ Foam::labelList Foam::directPolyTopoChange::getFaceOrder(const label nPatches)
 }
 
 
+// Compact and reorder faces according to map. Optionally check if compacting
+// cells creates illegal cells.
+void Foam::directPolyTopoChange::reorderCompactFaces
+(
+    const label newSize,
+    const labelList& oldToNew,
+    const bool checkCells
+)
+{
+    reorder(oldToNew, faces_);
+    faces_.setSize(newSize);
+    faces_.shrink();
+
+    reorder(oldToNew, regions_);
+    regions_.setSize(newSize);
+    regions_.shrink();
+
+    reorder(oldToNew, faceOwner_);
+    faceOwner_.setSize(newSize);
+    faceOwner_.shrink();
+
+    reorder(oldToNew, faceNeighbour_);
+    faceNeighbour_.setSize(newSize);
+    faceNeighbour_.shrink();
+
+    if (checkCells)
+    {
+        forAll(cells_, cellI)
+        {
+            cell& c = cells_[cellI];
+
+            labelList oldC(c);
+
+            renumberCompact(oldToNew, c);
+
+            if (c.size() != 0 && c.size() < 4)
+            {
+                FatalErrorIn("directPolyTopoChange::compact()")
+                    << "Created illegal cell " << c
+                    << " from cell " << oldC
+                    << " at position:" << cellI
+                    << " when filtering removed faces"
+                    << abort(FatalError);
+            }
+        }
+    }
+    else
+    {
+        // No checking so no need to keep old cell.
+        forAll(cells_, cellI)
+        {
+            renumberCompact(oldToNew, cells_[cellI]);
+        }
+    }
+
+    // Update overall faceMap.
+    renumber(oldToNew, faceMap_);
+}
+
+
+// Compact all and orders faces:
+// - internalfaces upper-triangular
+// - externalfaces after internal ones.
 void Foam::directPolyTopoChange::compact()
 {
     points_.shrink();
@@ -230,7 +292,7 @@ void Foam::directPolyTopoChange::compact()
 
     if (debug)
     {
-        Info<< "Before compacting:" << nl
+        Pout<< "Before compacting:" << nl
             << "    points:" << points_.size() << nl
             << "    faces :" << faces_.size() << nl
             << "    cells :" << cells_.size() << nl
@@ -305,7 +367,7 @@ void Foam::directPolyTopoChange::compact()
 
     if (debug)
     {
-        Info<< "After removing unused faces and points:" << nl
+        Pout<< "After removing unused faces and points:" << nl
             << "    points:" << points_.size() << nl
             << "    faces :" << faces_.size() << nl
             << "    cells :" << cells_.size() << nl
@@ -374,43 +436,8 @@ void Foam::directPolyTopoChange::compact()
 
         if (newFaceI != faces_.size())
         {
-            reorder(localFaceMap, faces_);
-            faces_.setSize(newFaceI);
-            faces_.shrink();
-
-            reorder(localFaceMap, regions_);
-            regions_.setSize(newFaceI);
-            regions_.shrink();
-
-            reorder(localFaceMap, faceOwner_);
-            faceOwner_.setSize(newFaceI);
-            faceOwner_.shrink();
-
-            reorder(localFaceMap, faceNeighbour_);
-            faceNeighbour_.setSize(newFaceI);
-            faceNeighbour_.shrink();
-
-            forAll(cells_, cellI)
-            {
-                cell& c = cells_[cellI];
-
-                labelList oldC(c);
-
-                renumberCompact(localFaceMap, c);
-
-                if (c.size() != 0 && c.size() < 4)
-                {
-                    FatalErrorIn("directPolyTopoChange::compact()")
-                        << "Created illegal cell " << c
-                        << " from cell " << oldC
-                        << " at position:" << cellI
-                        << " when filtering removed faces"
-                        << abort(FatalError);
-                }
-            }
-
-            // Update overall faceMap.
-            renumber(localFaceMap, faceMap_);
+            // Reorder faces. Check for illegal cells.
+            reorderCompactFaces(newFaceI, localFaceMap, true);
         }
     }
 
@@ -454,23 +481,13 @@ void Foam::directPolyTopoChange::compact()
         // Do upper triangular order.
         labelList localFaceMap(getFaceOrder(nPatches));
 
-        reorder(localFaceMap, faces_);
-        reorder(localFaceMap, regions_);
-        reorder(localFaceMap, faceOwner_);
-        reorder(localFaceMap, faceNeighbour_);
-
-        forAll(cells_, cellI)
-        {
-            renumberCompact(localFaceMap, cells_[cellI]);
-        }
-
-        // Update overall face map.
-        renumber(localFaceMap, faceMap_);
+        // Reorder faces. Do not check for illegal cells.
+        reorderCompactFaces(localFaceMap.size(), localFaceMap, false);
     }
 
     if (debug)
     {
-        Info<< "After removing removed points,faces,cell:" << nl
+        Pout<< "After removing removed points,faces,cell:" << nl
             << "    points:" << points_.size() << nl
             << "    faces :" << faces_.size() << nl
             << "    cells :" << cells_.size() << nl
@@ -481,8 +498,10 @@ void Foam::directPolyTopoChange::compact()
 
 void Foam::directPolyTopoChange::calcPatchSizes
 (
+    label nOldPatches,
     label& nInternalFaces,
-    labelList& patchSizes
+    labelList& patchSizes,
+    labelList& patchStarts
 ) const
 {
     label maxRegion = -1;
@@ -490,7 +509,7 @@ void Foam::directPolyTopoChange::calcPatchSizes
     {
         maxRegion = max(maxRegion, regions_[faceI]);
     }
-    label nPatches = maxRegion + 1;
+    label nPatches = max(nOldPatches, maxRegion + 1);
 
     nInternalFaces = 0;
 
@@ -508,6 +527,127 @@ void Foam::directPolyTopoChange::calcPatchSizes
             nInternalFaces++;
         } 
     }
+
+    label faceI = nInternalFaces;
+
+    patchStarts.setSize(nPatches);
+    patchStarts = 0;
+
+    forAll(patchStarts, patchI)
+    {
+        patchStarts[patchI] = faceI;
+        faceI += patchSizes[patchI];
+    }
+
+    if (debug)
+    {
+        Pout<< "nInternalFaces:" << nInternalFaces << nl
+            << "patchSizes:" << patchSizes << nl
+            << "patchStarts:" << patchStarts << endl;
+    }
+}
+
+
+// Create List of polyPatches from dictionaries and new sizes.
+Foam::List<Foam::polyPatch*> Foam::directPolyTopoChange::createPatches
+(
+    const wordList& oldPatchNames,
+    const PtrList<dictionary>& oldPatchDicts,
+    const label nInternalFaces,
+    const labelList& patchSizes,
+    const polyBoundaryMesh& boundaryMesh
+)
+{
+    List<polyPatch*> newPatches(max(oldPatchNames.size(), patchSizes.size()));
+
+    label endOfLastPatch = nInternalFaces;
+
+    // Copy all old patches (even if size 0)
+    forAll(oldPatchNames, patchI)
+    {
+        // See if any faces in patch
+        label sz = 0;
+
+        if (patchI < patchSizes.size())
+        {
+            sz = patchSizes[patchI];
+        }
+
+        if (debug)
+        {
+            Pout<< "adding patch " << patchI << " size:" << sz
+                << " start:" << endOfLastPatch << endl;
+        }
+
+        // Copy of dictionary
+        dictionary patchDict(oldPatchDicts[patchI]);
+
+        // Change size and startFace.
+        patchDict.remove("nFaces");
+        patchDict.add("nFaces", sz);
+
+        patchDict.remove("startFace");
+        patchDict.add("startFace", endOfLastPatch);
+
+        word patchType(patchDict.lookup("type"));
+
+        if (patchType == processorPolyPatch::typeName)
+        {
+            newPatches[patchI] =
+                new processorPolyPatch
+                (
+                    oldPatchNames[patchI],
+                    patchDict,
+                    patchI,
+                    boundaryMesh
+                );
+        }
+        else
+        {
+            newPatches[patchI] =
+            (
+                polyPatch::New
+                (
+                    oldPatchNames[patchI],
+                    patchDict,
+                    patchI,
+                    boundaryMesh
+                ).ptr()
+            );
+        }
+        endOfLastPatch += sz;
+    }
+
+    // Add any extra patches
+    for
+    (
+        label patchI = oldPatchNames.size();
+        patchI < patchSizes.size();
+        patchI++
+    )
+    {
+        if (debug)
+        {
+            Pout<< "adding extra patch " << patchI
+                << " size:" << patchSizes[patchI]
+                << " start:" << endOfLastPatch << endl;
+        }
+
+        newPatches[patchI] =
+        (
+            polyPatch::New
+            (
+                polyPatch::typeName,
+                "patch" + name(patchI),
+                patchSizes[patchI],
+                endOfLastPatch,
+                patchI,
+                boundaryMesh
+            ).ptr()
+        );
+        endOfLastPatch += patchSizes[patchI];
+    }
+    return newPatches;
 }
 
 
@@ -605,16 +745,55 @@ Foam::directPolyTopoChange::directPolyTopoChange
     forAll(cells, cellI)
     {
         cells_.append(cells[cellI]);
+        cellMap_.append(cellI);
     }
 }
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void Foam::directPolyTopoChange::addMesh(const polyMesh& mesh)
+void Foam::directPolyTopoChange::clear()
+{
+    points_.clear();
+    points_.setSize(0);
+
+    faces_.clear();
+    faces_.setSize(0);
+
+    regions_.clear();
+    regions_.setSize(0);
+
+    faceOwner_.clear();
+    faceOwner_.setSize(0);
+
+    faceNeighbour_.clear();
+    faceNeighbour_.setSize(0);
+
+    cells_.clear();
+    cells_.setSize(0);
+
+    pointMap_.clear();
+    pointMap_.setSize(0);
+
+    faceMap_.clear();
+    faceMap_.setSize(0);
+
+    cellMap_.clear();
+    cellMap_.setSize(0);    
+}
+
+
+void Foam::directPolyTopoChange::addMesh
+(
+    const polyMesh& mesh,
+    const label patchOffset
+)
 {
     // points
     const pointField& points = mesh.points();
+
+    points_.setSize(points_.size() + points.size());
+    pointMap_.setSize(points_.size());
 
     forAll(points, pointI)
     {
@@ -624,6 +803,9 @@ void Foam::directPolyTopoChange::addMesh(const polyMesh& mesh)
 
     // cells
     const cellList& cells = mesh.cells();
+
+    cells_.setSize(cells_.size() + cells.size());
+    cellMap_.setSize(cells_.size());
 
     forAll(cells, cellI)
     {
@@ -635,6 +817,12 @@ void Foam::directPolyTopoChange::addMesh(const polyMesh& mesh)
     const faceList& faces = mesh.faces();
     const labelList& faceOwner = mesh.faceOwner();
     const labelList& faceNeighbour = mesh.faceNeighbour();
+
+    faces_.setSize(faces_.size() + faces.size());
+    faceMap_.setSize(faces_.size());
+    regions_.setSize(faces_.size());
+    faceOwner_.setSize(faces_.size());
+    faceNeighbour_.setSize(faces_.size());
 
     for (label faceI = 0; faceI < mesh.nInternalFaces(); faceI++)
     {
@@ -654,7 +842,7 @@ void Foam::directPolyTopoChange::addMesh(const polyMesh& mesh)
                 pp[patchFaceI],
                 faceOwner[pp.start() + patchFaceI],
                 -1,
-                patchI
+                patchI + patchOffset
             );
         }
     }
@@ -696,6 +884,15 @@ void Foam::directPolyTopoChange::modifyPoint
             << abort(FatalError);
     }
     points_[pointI] = pt;
+}
+
+
+void Foam::directPolyTopoChange::movePoints(const pointField& newPoints)
+{
+    forAll(newPoints, pointI)
+    {
+        modifyPoint(pointI, newPoints[pointI]);
+    }
 }
 
 
@@ -987,14 +1184,14 @@ void Foam::directPolyTopoChange::removeCell(const label cellI)
 }
 
 
-Foam::autoPtr<Foam::morphMesh> Foam::directPolyTopoChange::mesh
+Foam::autoPtr<Foam::polyMesh> Foam::directPolyTopoChange::mesh
 (
     const IOobject& io
 )
 {
     if (debug)
     {
-        Info<< "directPolyTopoChange::mesh without patches" << endl;
+        Pout<< "directPolyTopoChange::mesh without patches" << endl;
     }
 
     compact();
@@ -1005,9 +1202,9 @@ Foam::autoPtr<Foam::morphMesh> Foam::directPolyTopoChange::mesh
     points_.clear();
 
     // Construct mesh
-    autoPtr<morphMesh> meshPtr
+    autoPtr<polyMesh> meshPtr
     (
-        new morphMesh
+        new polyMesh
         (
             io,
             newPoints,
@@ -1032,213 +1229,173 @@ Foam::autoPtr<Foam::morphMesh> Foam::directPolyTopoChange::mesh
 
     if (debug)
     {
-        Info<< "directPolyTopoChange::mesh : created morphMesh" << endl;
+        Pout<< "directPolyTopoChange::mesh : created polyMesh" << endl;
     }
 
     return meshPtr;
 }
 
 
-// Sort faces on coupled patches to be consistent.
-// From polyMeshMorph.C and couplePatches utility
-void Foam::directPolyTopoChange::reorderCoupledPatches(morphMesh& mesh)
+// Helper function to preserve patch info for use in mesh construction below.
+Foam::PtrList<Foam::dictionary> Foam::directPolyTopoChange::getPatchDicts
+(
+    const polyBoundaryMesh& patches
+)
 {
-    if (debug)
-    {
-        Info<< "directPolyTopoChange::reorderCoupledPatches" << endl;
-    }
-
-    const polyBoundaryMesh& patches = mesh.boundaryMesh();
-
-    bool hasCoupled = false;
+    PtrList<dictionary> patchDicts(patches.size());
     forAll(patches, patchI)
     {
-        const polyPatch& pp = patches[patchI];
+        OStringStream patchStr;
 
-        if (pp.coupled())
-        {
-            hasCoupled = true;
+        patches[patchI].writeDict(patchStr);
 
-            break;
-        }
+        dictionaryEntry dict(IStringStream(patchStr.str())());
+
+        patchDicts.hook(new dictionary(dict));
     }
-
-    reduce(hasCoupled, orOp<bool>());
-
-    if (hasCoupled)
-    {
-        if (debug)
-        {
-            Info<< "Mesh has coupled patches ..." << nl << endl;
-
-            Info<< "Testing for correct face ordering ..." << endl;
-        }
-
-        bool wrongOrder = mesh.boundaryMesh().checkFaceOrder(debug);
-
-        if (wrongOrder)
-        {
-            // Dummy topo changes container
-            polyTopoChange meshMod(mesh);
-
-            // Do all changes
-            if (debug)
-            {
-                Info<< "Doing dummy mesh morph to correct face ordering ..."
-                    << endl;
-            }
-
-            mesh.setMorphTimeIndex(mesh.time().timeIndex());
-
-            mesh.updateTopology(meshMod);
-
-            // Move mesh (since morphing does not do this)
-            mesh.movePoints(mesh.morphMap().preMotionPoints());
-
-            // Update maps.
-            renumber(mesh.morphMap().reverseCellMap(), cellMap_);
-            renumber(mesh.morphMap().reverseFaceMap(), faceMap_);
-            renumber(mesh.morphMap().reversePointMap(), pointMap_);
-        }
-        else
-        {
-            if (debug)
-            {
-                Info<< "Coupled patch face ordering ok. Nothing changed ..."
-                    << nl << endl;
-            }
-        }
-    }
+    return patchDicts;
 }
 
 
-Foam::autoPtr<Foam::morphMesh> Foam::directPolyTopoChange::mesh
+Foam::autoPtr<Foam::polyMesh> Foam::directPolyTopoChange::mesh
 (
     const wordList& oldPatchNames,
-    const wordList& oldPatchTypes,
+    const PtrList<dictionary>& oldPatchDicts,
     const IOobject& io
 )
 {
     if (debug)
     {
-        Info<< "directPolyTopoChange::mesh with patches" << endl;
+        Pout<< "directPolyTopoChange::mesh with patches" << endl;
     }
 
-    if (oldPatchNames.size() != oldPatchTypes.size())
-    {
-        FatalErrorIn
-        (
-            "directPolyTopoChange::mesh(const wordList&, const wordList&"
-            ", const IOobject& io)"
-        )   << "Sizes of oldPatchNames and oldPatchTypes not equal" << endl
-            << "oldPatchNames:" << oldPatchNames
-            << "  oldPatchTypes:" << oldPatchTypes << abort(FatalError);
-    }
-
-    // Get mesh without patches. (note: clears out cells_, points_, faces_)
-    autoPtr<morphMesh> meshPtr = mesh(io);
+    // Remove any holes from points/faces/cells and sort faces.
+    compact();
 
     // Get patch sizes
-    labelList patchSizes;
     label nInternalFaces = -1;
-    calcPatchSizes(nInternalFaces, patchSizes);
+    labelList patchSizes;
+    labelList patchStarts;
+    calcPatchSizes
+    (
+        oldPatchNames.size(),
+        nInternalFaces,
+        patchSizes,
+        patchStarts
+    );
 
-    // Can clear out regions_ now.
+
+    // Reorder any coupled faces
+    reorderCoupledFaces(oldPatchDicts, patchStarts, patchSizes);
+
+    // Get mesh without patches. (note: clears out cells_, points_, faces_)
+    autoPtr<polyMesh> meshPtr = mesh(io);
+
+    // Can clear out regions_ now. Could have been done before after
+    // calcPatchSizes
     regions_.labelList::clear();
     regions_.clear();
 
-    if (debug)
-    {
-        Info<< "nInternalFaces:" << nInternalFaces << endl;
-        Info<< "patchSizes:" << patchSizes << endl;
-    }
-
-    List<polyPatch*> newPatches(max(oldPatchNames.size(), patchSizes.size()));
-
-    label endOfLastPatch = nInternalFaces;
-
-    // Copy all old patches (even if size 0)
-    forAll(oldPatchNames, patchI)
-    {
-        // See if any faces in patch
-        label sz = 0;
-
-        if (patchI < patchSizes.size())
-        {
-            sz = patchSizes[patchI];
-        }
-
-        if (debug)
-        {
-            Info<< "adding patch " << patchI << " size:" << sz
-                << " start:" << endOfLastPatch << endl;
-        }
-
-        newPatches[patchI] =
-        (
-            polyPatch::New
-            (
-                oldPatchTypes[patchI],
-                oldPatchNames[patchI],
-                sz,
-                endOfLastPatch,
-                patchI,
-                meshPtr().boundaryMesh()
-            ).ptr()
-        );
-        endOfLastPatch += sz;
-    }
-
-    // Add any extra patches
-    for
+    // Create patches
+    List<polyPatch*> newPatches
     (
-        label patchI = oldPatchNames.size();
-        patchI < patchSizes.size();
-        patchI++
-    )
-    {
-        if (debug)
-        {
-            Info<< "adding extra patch " << patchI
-                << " size:" << patchSizes[patchI]
-                << " start:" << endOfLastPatch << endl;
-        }
-
-        newPatches[patchI] =
+        createPatches
         (
-            polyPatch::New
-            (
-                polyPatch::typeName,
-                "patch" + name(patchI),
-                patchSizes[patchI],
-                endOfLastPatch,
-                patchI,
-                meshPtr().boundaryMesh()
-            ).ptr()
-        );
-        endOfLastPatch += patchSizes[patchI];
-    }
+            oldPatchNames,
+            oldPatchDicts,
+            nInternalFaces,
+            patchSizes,
+            meshPtr().boundaryMesh()
+        )
+    );
 
     meshPtr().addPatches(newPatches);
 
-    reorderCoupledPatches(meshPtr());
-
     if (debug)
     {
-        Info<< "directPolyTopoChange::mesh : done whole mesh" << endl;
+        Pout<< "directPolyTopoChange::mesh : done whole mesh" << endl;
     }
-
 
     return meshPtr;    
 }
 
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
+void Foam::directPolyTopoChange::makeMesh
+(
+    const wordList& oldPatchNames,
+    const PtrList<dictionary>& oldPatchDicts,
+    polyMesh& mesh
+)
+{
+    if (debug)
+    {
+        Pout<< "directPolyTopoChange::makeMesh with patches" << endl;
+    }
 
-// * * * * * * * * * * * * * * * Friend Functions  * * * * * * * * * * * * * //
+    // Remove any holes from points/faces/cells and sort faces.
+    compact();
 
+    // Get patch sizes
+    label nInternalFaces = -1;
+    labelList patchSizes;
+    labelList patchStarts;
+    calcPatchSizes
+    (
+        oldPatchNames.size(),
+        nInternalFaces,
+        patchSizes,
+        patchStarts
+    );
 
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
+    // Reorder any coupled faces
+    reorderCoupledFaces(oldPatchDicts, patchStarts, patchSizes);
+
+    // Get mesh without patches. (note: clears out cells_, points_, faces_)
+
+    // Transfer points to pointField
+    pointField newPoints;
+    newPoints.transfer(points_);
+    points_.clear();
+
+    // Construct mesh
+    mesh.removeBoundary();
+    mesh.reset(newPoints, faces_, cells_);
+
+    // Clear all we don't use anymore
+    faces_.faceList::clear();
+    faces_.clear();
+
+    faceOwner_.labelList::clear();
+    faceOwner_.clear();
+    faceNeighbour_.labelList::clear();
+    faceNeighbour_.clear();
+
+    cells_.cellList::clear();
+    cells_.clear();
+
+    regions_.labelList::clear();
+    regions_.clear();
+
+    // Create patches
+    List<polyPatch*> newPatches
+    (
+        createPatches
+        (
+            oldPatchNames,
+            oldPatchDicts,
+            nInternalFaces,
+            patchSizes,
+            mesh.boundaryMesh()
+        )
+    );
+
+    mesh.addPatches(newPatches);
+
+    if (debug)
+    {
+        Pout<< "directPolyTopoChange::makeMesh : done whole mesh" << endl;
+    }
+}
 
 
 // ************************************************************************* //

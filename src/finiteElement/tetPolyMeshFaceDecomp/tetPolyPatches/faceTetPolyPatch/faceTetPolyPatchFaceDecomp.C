@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -449,12 +449,11 @@ const pointField& faceTetPolyPatchFaceDecomp::localPoints() const
         // Check if the mesh has moved since the last access
         const pointField& polyPatchLocalPoints = patch().localPoints();
 
-        vectorField tetPatchPointSlice =
-            (const vectorField&)vectorField::subField 
-            (
-                *localPointsPtr_,
-                polyPatchLocalPoints.size()
-            );
+        vectorField::subField tetPatchPointSlice
+        (
+            *localPointsPtr_,
+            polyPatchLocalPoints.size()
+        );
 
         if
         (
@@ -483,12 +482,11 @@ const vectorField& faceTetPolyPatchFaceDecomp::pointNormals() const
         // Check if the mesh has moved since the last access
         const vectorField& polyPatchPointNormals = patch().pointNormals();
 
-        vectorField tetPatchNormalSlice =
-            (const vectorField&)vectorField::subField
-            (
-                *pointNormalsPtr_,
-                polyPatchPointNormals.size()
-            );
+        vectorField::subField tetPatchNormalSlice
+        (
+            *pointNormalsPtr_,
+            polyPatchPointNormals.size()
+        );
 
         if
         (

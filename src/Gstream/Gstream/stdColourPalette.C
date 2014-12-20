@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     stdColourPalette
@@ -42,14 +42,14 @@ namespace Foam
 
 colourPalette BlackWhite
 (
-    (Istream&)(const Istream&)IStringStream
-    ("2(White (1 1 1)  Black (0 0 0)))")
+    IStringStream
+    ("2(White (1 1 1)  Black (0 0 0)))")()
 );
 
 colourPalette primary
 (
-    (Istream&)(const Istream&)IStringStream
-    ("5(White (1 1 1) Red (1 0 0) Green (0 1 0) Blue (0 0 1) Black (0 0 0))")
+    IStringStream
+    ("5(White (1 1 1) Red (1 0 0) Green (0 1 0) Blue (0 0 1) Black (0 0 0))")()
 );
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

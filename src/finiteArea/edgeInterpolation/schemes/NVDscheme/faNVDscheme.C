@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Class to create the weighting-factors based on the NVD
@@ -89,22 +89,38 @@ tmp<edgeScalarField> faNVDscheme<Type,NVDweight>::weights
 
     areaVectorField gradc(fac::grad(vf));
 
-    edgeVectorField d =
-        mesh.Le()
-       /(mesh.magLe()*mesh.edgeInterpolation::deltaCoeffs());
+//     edgeVectorField d =
+//         mesh.Le()
+//        /(mesh.magLe()*mesh.edgeInterpolation::deltaCoeffs());
 
-    if (!mesh.orthogonal())
-    {
-        d -=
-            mesh.edgeInterpolation::correctionVectors()
-           /mesh.edgeInterpolation::deltaCoeffs();
-    }
+//     if (!mesh.orthogonal())
+//     {
+//         d -=
+//             mesh.edgeInterpolation::correctionVectors()
+//            /mesh.edgeInterpolation::deltaCoeffs();
+//     }
 
     const unallocLabelList& owner = mesh.owner();
     const unallocLabelList& neighbour = mesh.neighbour();
+    const vectorField& n = mesh.faceAreaNormals().internalField();
 
     forAll(weights, edge)
     {
+        vector d = vector::zero;
+
+        if(edgeFlux_[edge] > 0)
+        {
+            d = mesh.centres()[neighbour[edge]] - mesh.centres()[owner[edge]];
+            d -= n[owner[edge]]*(n[owner[edge]]&d);
+            d /= mag(d)/mesh.edgeInterpolation::lPN().internalField()[edge];
+        }
+        else
+        {
+            d = mesh.centres()[neighbour[edge]] - mesh.centres()[owner[edge]];
+            d -= n[neighbour[edge]]*(n[neighbour[edge]]&d);
+            d /= mag(d)/mesh.edgeInterpolation::lPN().internalField()[edge];
+        }
+
         weights[edge] =
             this->weight
             (
@@ -114,7 +130,7 @@ tmp<edgeScalarField> faNVDscheme<Type,NVDweight>::weights
                 vf[neighbour[edge]],
                 gradc[owner[edge]],
                 gradc[neighbour[edge]],
-                d[edge]
+                d
             );
     }
 
@@ -126,8 +142,35 @@ tmp<edgeScalarField> faNVDscheme<Type,NVDweight>::weights
     {
         if (bWeights[patchI].coupled())
         {
-            ((coupledFaPatchField<Type>&)gradc.boundaryField()[patchI])
+            dynamic_cast<const coupledFaPatchField<Type>&>
+                (gradc.boundaryField()[patchI])
                 .initPatchNeighbourField();
+        }
+        else
+        {
+            scalarField& pWeights = bWeights[patchI];
+            unallocLabelList edgeFaces = mesh.boundary()[patchI].edgeFaces();
+
+            vectorField d = 
+                mesh.boundary()[patchI].edgeCentres()
+              - mesh.boundary()[patchI].edgeFaceCentres();
+
+            forAll(pWeights, edgeI)
+            {
+                pWeights[edgeI] = 0.0;
+//                 pWeights[edgeI] = 0.65;
+//                 pWeights[edgeI] =
+//                     this->weight
+//                     (
+//                         pWeights[edgeI],
+//                         edgeFlux_.boundaryField()[patchI][edgeI],
+//                         vf[edgeFaces[edgeI]],
+//                         vf.boundaryField()[patchI][edgeI],
+//                         gradc[edgeFaces[edgeI]],
+//                         gradc[edgeFaces[edgeI]],
+//                         d[edgeI]
+//                     );
+            }
         }
     }
 
@@ -135,32 +178,32 @@ tmp<edgeScalarField> faNVDscheme<Type,NVDweight>::weights
     {
         if (bWeights[patchI].coupled())
         {
-            scalarField& pWeights = bWeights[patchI];
-            const scalarField& pEdgeFlux = edgeFlux_.boundaryField()[patchI];
-            scalarField pvfP =
-                vf.boundaryField()[patchI].patchInternalField();
-            scalarField pvfN =
-                vf.boundaryField()[patchI].patchNeighbourField();
-            vectorField pGradcP =
-                gradc.boundaryField()[patchI].patchInternalField();
-            vectorField pGradcN =
-                gradc.boundaryField()[patchI].patchNeighbourField();
-            const vectorField& pD = d.boundaryField()[patchI];
+//             scalarField& pWeights = bWeights[patchI];
+//             const scalarField& pEdgeFlux = edgeFlux_.boundaryField()[patchI];
+//             scalarField pvfP =
+//                 vf.boundaryField()[patchI].patchInternalField();
+//             scalarField pvfN =
+//                 vf.boundaryField()[patchI].patchNeighbourField();
+//             vectorField pGradcP =
+//                 gradc.boundaryField()[patchI].patchInternalField();
+//             vectorField pGradcN =
+//                 gradc.boundaryField()[patchI].patchNeighbourField();
+//             const vectorField& pD = d.boundaryField()[patchI];
 
-            forAll(pWeights, edge)
-            {
-                pWeights[edge] =
-                    this->weight
-                    (
-                        pWeights[edge],
-                        pEdgeFlux[edge],
-                        pvfP[edge],
-                        pvfN[edge],
-                        pGradcP[edge],
-                        pGradcN[edge],
-                        pD[edge]
-                    );
-            }
+//             forAll(pWeights, edge)
+//             {
+//                 pWeights[edge] =
+//                     this->weight
+//                     (
+//                         pWeights[edge],
+//                         pEdgeFlux[edge],
+//                         pvfP[edge],
+//                         pvfN[edge],
+//                         pGradcP[edge],
+//                         pGradcN[edge],
+//                         pD[edge]
+//                     );
+//             }
         }
     }
 

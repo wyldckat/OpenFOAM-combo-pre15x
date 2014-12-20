@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     PointEdgeWave
@@ -65,7 +65,7 @@ SourceFiles
 #include "pointFields.H"
 #include "tensor.H"
 #include "primitivePatch.H"
-#include "ptrList.H"
+#include "PtrList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -129,7 +129,7 @@ class PointEdgeWave
         bool nCyclicPatches_;
 
         //- For every cyclic patch two primitivePatches
-        ptrList<primitivePatch> cycHalves_;
+        PtrList<primitivePatch> cycHalves_;
 
         //- Contains processor patches
         bool hasProcPatches_;
@@ -218,7 +218,8 @@ class PointEdgeWave
         // Parallel, cyclic
 
             //- Has patches of certain type?
-            label countPatchType(const word& nameOfType) const;
+            template <class PatchType>
+            label countPatchType() const;
 
             //- Get info on patch points
             void getChangedPatchPoints

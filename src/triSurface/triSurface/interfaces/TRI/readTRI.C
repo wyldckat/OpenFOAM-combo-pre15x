@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     TRI (triangle) file reader. Comes out of e.g. AC3D.
@@ -83,12 +83,13 @@ bool triSurface::readTRI(const fileName& TRIfileName)
         STLpoints.append(STLpoint(lineStream));
 
         // Region/colour in .tri file starts with 0x. Skip.
-        char zero, x;
-        lineStream >> zero >> x;
+
+        char zero;
+        lineStream >> zero;
 
         word rawSolidName(lineStream);
 
-        word solidName("patch" + rawSolidName);
+        word solidName("patch" + rawSolidName(1, rawSolidName.size()-1));
 
         label region  = -1;
 
@@ -101,7 +102,7 @@ bool triSurface::readTRI(const fileName& TRIfileName)
         }
         else
         {
-            Info<< "Mapping triangle colour " << rawSolidName
+            Info<< "Mapping triangle colour 0" << rawSolidName
                 << " to region " << maxRegion << " name " << solidName
                 << endl;
 

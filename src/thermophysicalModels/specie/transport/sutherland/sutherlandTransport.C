@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Transport package using Sutherland's formula.  Templated ito a given
@@ -54,7 +54,7 @@ sutherlandTransport<thermo>::sutherlandTransport(Istream& is)
 template<class thermo>
 Ostream& operator<<(Ostream& os, const sutherlandTransport<thermo>& st)
 {
-    os << (const thermo&)st << tab << st.As << tab << st.Ts;
+    os << static_cast<const thermo&>(st) << tab << st.As << tab << st.Ts;
 
     os.check
     (

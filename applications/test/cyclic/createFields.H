@@ -5,7 +5,7 @@
         (
             "p",
             runTime.timeName(),
-            runTime,
+            mesh,
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),
@@ -19,7 +19,7 @@
         (
             "U",
             runTime.timeName(),
-            runTime,
+            mesh,
             IOobject::MUST_READ,
             IOobject::AUTO_WRITE
         ),

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IStringStream
@@ -98,7 +98,7 @@ public:
 
         ~IStringStream()
         {
-            delete &((std::istringstream&)stream());
+            delete &dynamic_cast<std::istringstream&>(stream());
         }
 
 
@@ -108,7 +108,7 @@ public:
 
             string str() const
             {
-                return ((std::istringstream&)stream()).str();
+                return dynamic_cast<const std::istringstream&>(stream()).str();
             }
 
 
@@ -125,7 +125,7 @@ public:
         //  e.g. thing thisThing(IFstream("thingFileName")());
         Istream& operator()() const
         {
-            return (Istream&)(*this);
+            return const_cast<IStringStream&>(*this);
         }
 };
 

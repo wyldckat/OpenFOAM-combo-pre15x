@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     className
@@ -39,11 +39,23 @@ SourceFiles
 
 namespace Paths
 {
-    //- FoamX user configuration path.
-    extern Foam::fileName user;
+    //- FoamX configuration files path.
+    extern Foam::fileName config;
 
-    //- FoamX system configuration path.
-    extern Foam::fileName system;
+    //- FoamX tmp directory path.
+    extern Foam::fileName tmp;
+
+    //- FoamX release solvers path.
+    extern Foam::fileName solvers;
+
+    //- FoamX users solvers path.
+    extern Foam::fileName userSolvers;
+
+    //- FoamX release utilities path.
+    extern Foam::fileName utilities;
+
+    //- FoamX users utilities path.
+    extern Foam::fileName userUtilities;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Editors.DictionaryEntryEditor.EntryCache;
@@ -46,7 +46,7 @@ import FoamX.Editors.CompoundEditor;
 import FoamX.Editors.SelectionEditor;
 import FoamX.Editors.DimensionSetEditor;
 import FoamX.Editors.ListEditor;
-import FoamX.Editors.VectorSpaceEditor;
+import FoamX.Editors.FixedListEditor;
 import FoamX.Util.FoamXAny;
 import FoamX.Util.FoamXTypeEx;
 import FoamX.Editors.TypeEditor.TypeDescriptorCache;

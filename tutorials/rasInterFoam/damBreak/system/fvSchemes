@@ -34,10 +34,9 @@ gradSchemes
 
 divSchemes
 {
-    div(phi,U)      Gauss localBlended Phi 1 upwind;
-    div(rho*phi,U)  Gauss localBlended Phi 1 upwind;
-    div(phi,gamma)  Gauss Gamma201 0.2;
-    div(phirb,gamma) Gauss Gamma201 0.2;
+    div(rho*phi,U)  Gauss linear;
+    div(phi,gamma)  Gauss limitedLinear01 1;
+    div(phirb,gamma) Gauss limitedLinear01 1;
     div(phi,k)      Gauss upwind;
     div(phi,epsilon) Gauss upwind;
     div(phi,R)      Gauss upwind;

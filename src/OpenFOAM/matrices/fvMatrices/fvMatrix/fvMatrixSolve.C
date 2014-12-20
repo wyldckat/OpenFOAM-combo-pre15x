@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Finite-Volume matrix basic solvers.
@@ -74,6 +74,15 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
     Field<Type> source = source_;
     addBoundarySource(source);
 
+    typename powProduct<Vector<label>, Type::rank>::type validComponents
+    (
+        pow
+        (
+            psi_.mesh().directions(),
+            pTraits<typename powProduct<Vector<label>, Type::rank>::type>::zero
+        )
+    );
+
     for
     (
         solvingComponent=0;
@@ -81,6 +90,8 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
         solvingComponent++
     )
     {
+        if (validComponents[solvingComponent] == -1) continue;
+
         // copy field and source
 
         scalarField psiCmpt = psi_.internalField().component(solvingComponent);
@@ -104,6 +115,15 @@ lduMatrix::solverPerformance fvMatrix<Type>::solve(Istream& solverControls)
         {
             interfaces[patchI] = &psi_.boundaryField()[patchI];
         }
+
+        initMatrixInterfaces
+        (
+            bouCoeffsCmpt,
+            interfaces,
+            psiCmpt,
+            sourceCmpt,
+            solvingComponent
+        );
 
         updateMatrixInterfaces
         (

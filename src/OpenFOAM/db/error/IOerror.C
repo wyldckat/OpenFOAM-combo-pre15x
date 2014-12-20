@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IOerror
@@ -228,9 +228,9 @@ Ostream& operator<<(Ostream& os, const IOerror& ioErr)
     if (IOerror::level >= 2 && ioErr.sourceFileLineNumber())
     {
         os  << endl << endl
-            << "Function: " << ioErr.functionName().c_str() << endl
-            << "in file: " << ioErr.sourceFileName().c_str()
-            << " at line: " << ioErr.sourceFileLineNumber() << '.';
+            << "    From function " << ioErr.functionName().c_str() << endl
+            << "    in file " << ioErr.sourceFileName().c_str()
+            << " at line " << ioErr.sourceFileLineNumber() << '.';
     }
 
     return os;

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Modules.CaseEditor;
@@ -29,22 +29,22 @@ public class PatchStatusEvent
     extends java.util.EventObject
 {
     protected String patchName_;
-    protected String boundaryTypeName_;
+    protected String patchPhysicalTypeName_;
 
     /** PatchStatusEvent constructor. */
-    public PatchStatusEvent(Object source, String patchName, String boundaryTypeName)
+    public PatchStatusEvent(Object source, String patchName, String patchPhysicalTypeName)
     {
         super(source);
         patchName_        = patchName;
-        boundaryTypeName_ = boundaryTypeName;
+        patchPhysicalTypeName_ = patchPhysicalTypeName;
     }
 
     public String getPatchName()
     {
         return patchName_;
     }
-    public String getBoundaryTypeName()
+    public String getPatchPhysicalTypeName()
     {
-        return boundaryTypeName_;
+        return patchPhysicalTypeName_;
     }
 }

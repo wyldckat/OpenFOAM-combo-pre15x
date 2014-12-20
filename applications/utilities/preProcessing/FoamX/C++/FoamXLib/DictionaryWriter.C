@@ -20,21 +20,14 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
+
 // Foam header files.
-#include "word.H"
-#include "string.H"
-#include "IFstream.H"
-#include "wordList.H"
-#include "stringList.H"
-#include "fileNameList.H"
+#include "fileName.H"
 #include "OFstream.H"
-#include "dimensionSet.H"
-#include "Time.H"
+#include "OSspecific.H"
 #include "banner.H"
 
 // FoamX header files.
@@ -171,7 +164,7 @@ FoamX::DictionaryWriter::~DictionaryWriter()
 
 void FoamX::DictionaryWriter::writeHeader
 (
-    const Foam::string& title,
+    const string& title,
     const word& className
 )
 {
@@ -186,7 +179,7 @@ void FoamX::DictionaryWriter::writeHeader
     writeEntry("root", caseRoot_);
     writeEntry("case", caseName_);
     writeEntry("instance", instance_);
-    writeEntry("local", Foam::string(""));
+    writeEntry("local", string(""));
     writeEndl();
     writeEntry("class", className);
     writeEntry("object", fileName_.name());
@@ -198,7 +191,7 @@ void FoamX::DictionaryWriter::writeHeader
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::DictionaryWriter::writeSectionHeader(const Foam::string& name)
+void FoamX::DictionaryWriter::writeSectionHeader(const string& name)
 {
     file() << endl << "// " << name.c_str() << endl << "// ";
     writeChars('~', name.size());
@@ -251,7 +244,7 @@ void FoamX::DictionaryWriter::writeEntry
 void FoamX::DictionaryWriter::writeEntry
 (
     const word& name,
-    const Foam::string& value
+    const string& value
 )
 {
     writeKeyword(name);
@@ -281,8 +274,8 @@ void FoamX::DictionaryWriter::writeEntry(const word& name, const label& value)
 
 void FoamX::DictionaryWriter::writeEntry
 (
-    const Foam::word& name,
-    const Foam::scalar& value
+    const word& name,
+    const scalar& value
 )
 {
     writeKeyword(name);
@@ -294,7 +287,7 @@ void FoamX::DictionaryWriter::writeEntry
 
 void FoamX::DictionaryWriter::writeEntry
 (
-    const Foam::word& name,
+    const word& name,
     const bool& value
 )
 {
@@ -307,7 +300,7 @@ void FoamX::DictionaryWriter::writeEntry
 
 void FoamX::DictionaryWriter::writeEntry
 (
-    const Foam::word& name,
+    const word& name,
     const FoamX::FoamXAny& value
 )
 {
@@ -339,21 +332,21 @@ void FoamX::DictionaryWriter::writeEntry
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::DictionaryWriter::startVectorSpace()
+void FoamX::DictionaryWriter::startFixedList()
 {
     file() << token::BEGIN_LIST;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::DictionaryWriter::endVectorSpace()
+void FoamX::DictionaryWriter::endFixedList()
 {
     file() << token::END_LIST;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::DictionaryWriter::startList(const Foam::label& numElements)
+void FoamX::DictionaryWriter::startList(const label& numElements)
 {
     file() << nl;
 
@@ -386,7 +379,7 @@ void FoamX::DictionaryWriter::writeEntry
 
     for (unsigned int i = 0; i <list.length(); i++)
     {
-        file() << Foam::indent << Foam::string(list[i]) << nl;
+        file() << Foam::indent << string(list[i]) << nl;
     }
 
     endList();
@@ -407,7 +400,7 @@ void FoamX::DictionaryWriter::writeEntry
 
     for (unsigned int i = 0; i <list.length(); i++)
     {
-        file() << Foam::indent << Foam::string(list[i]) << nl;
+        file() << Foam::indent << string(list[i]) << nl;
     }
 
     endList();
@@ -439,7 +432,7 @@ void FoamX::DictionaryWriter::writeEntry
 
 void FoamX::DictionaryWriter::writeEntry
 (
-    const Foam::word& name,
+    const word& name,
     const FoamX::FoamXAnyList& list
 )
 {
@@ -488,21 +481,21 @@ void FoamX::DictionaryWriter::endSubDict()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::DictionaryWriter::writeString(const Foam::string& text)
+void FoamX::DictionaryWriter::writeString(const string& text)
 {
     file() << text.c_str();
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::DictionaryWriter::writeLine(const Foam::string& text)
+void FoamX::DictionaryWriter::writeLine(const string& text)
 {
     file() << Foam::indent << text.c_str() << endl;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::DictionaryWriter::writeComment(const Foam::string& text)
+void FoamX::DictionaryWriter::writeComment(const string& text)
 {
     file() << Foam::indent << "// " << text.c_str() << endl;
 }

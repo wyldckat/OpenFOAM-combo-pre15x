@@ -9,8 +9,5 @@ tutorialPath=`dirname $0`/..
 
 for case in $cases
 do
-    if [ "$case" = "nacaAirfoil" ] ; then
-        cp ${case}/prostar/${case}.vrt.org ${case}/prostar/${case}.vrt
-    fi    
     cleanCase $case
 done

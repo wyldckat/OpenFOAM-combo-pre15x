@@ -14,6 +14,6 @@
             FatalErrorIn(args.executable())
                 << "Cannot open file "
                 << runTime.path()/runTime.timeName()/"gradP.raw"
-                << abort(FatalError);
+                << exit(FatalError);
         };
     };

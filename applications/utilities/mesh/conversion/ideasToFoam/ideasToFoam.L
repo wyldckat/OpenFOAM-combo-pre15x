@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     ideasToFoam
@@ -61,8 +61,8 @@ SLPtrList<labelList> slCellLabels;
 SLList<label> slCellMap;
 label maxCelli = 0;
 
-ptrList<SLList<label> > slPatchCells;
-ptrList<SLList<label> > slPatchCellFaces;
+PtrList<SLList<label> > slPatchCells;
+PtrList<SLList<label> > slPatchCellFaces;
 
 
 // Dummy yywrap to keep yylex happy at compile time.

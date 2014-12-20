@@ -1,10 +1,7 @@
-laminarFlameSpeed        = laminarFlameSpeed
-constLaminarFlameSpeed   = constLaminarFlameSpeed
-guldersLaminarFlameSpeed = guldersLaminarFlameSpeed
-
-$(laminarFlameSpeed)/laminarFlameSpeed.C
-$(laminarFlameSpeed)/newLaminarFlameSpeed.C
-$(constLaminarFlameSpeed)/constLaminarFlameSpeed.C
-$(guldersLaminarFlameSpeed)/guldersLaminarFlameSpeed.C
+laminarFlameSpeed/laminarFlameSpeed.C
+laminarFlameSpeed/newLaminarFlameSpeed.C
+constLaminarFlameSpeed/constLaminarFlameSpeed.C
+guldersLaminarFlameSpeed/guldersLaminarFlameSpeed.C
+guldersEGR/guldersEGR.C
 
 LIB = $(FOAM_LIBBIN)/liblaminarFlameSpeedModels

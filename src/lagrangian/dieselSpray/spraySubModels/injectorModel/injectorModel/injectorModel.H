@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     injectorModel
@@ -37,7 +37,7 @@ Description
 
 #include "liquid.H"
 #include "injector.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "IOdictionary.H"
 #include "volFieldsFwd.H"
 #include "autoPtr.H"
@@ -62,7 +62,7 @@ protected:
         const dictionary& dict_;
         spray& sm_;
 
-        const ptrList<injector>& injectors_;    
+        const PtrList<injector>& injectors_;    
         Random& rndGen_;
 
 public:

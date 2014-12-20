@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Class applies a two-dimensional correction to mesh motion point field.
@@ -154,10 +154,11 @@ void twoDPointCorrector::calcAddressing() const
     {
         if (meshPoints.size() % 2 != 0)
         {
-            Warning
-                << "twoDPointCorrector::twoDPointCorrector("
-                << "const polyMesh& mesh, const vector& n) : "
-                << "the number of vertices in the geometry "
+            WarningIn
+            (
+                "twoDPointCorrector::twoDPointCorrector("
+                "const polyMesh& mesh, const vector& n)"
+            )   << "the number of vertices in the geometry "
                 << "is odd - this should not be the case for a 2-D case. "
                 << "Please check the geometry."
                 << endl;
@@ -165,10 +166,11 @@ void twoDPointCorrector::calcAddressing() const
 
         if (2*nNormalEdges != meshPoints.size())
         {
-            Warning
-                << "twoDPointCorrector::twoDPointCorrector("
-                << "const polyMesh& mesh, const vector& n) :\n"
-                << "The number of points in the mesh is "
+            WarningIn
+            (
+                "twoDPointCorrector::twoDPointCorrector("
+                "const polyMesh& mesh, const vector& n)"
+            )   << "The number of points in the mesh is "
                 << "not equal to twice the number of edges normal to the plane "
                 << "- this may be OK only for wedge geometries.\n"
                 << "Please check the geometry or adjust "

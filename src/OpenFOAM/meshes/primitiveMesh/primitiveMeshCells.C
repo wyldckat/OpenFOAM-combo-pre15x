@@ -22,14 +22,9 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "primitiveMesh.H"
-#include "DynamicList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,7 +39,7 @@ void primitiveMesh::calcCells() const
 
     if (debug)
     {
-        Info<< "primitiveMesh::calcCells() : calculating cells"
+        Pout<< "primitiveMesh::calcCells() : calculating cells"
             << endl;
     }
 
@@ -58,29 +53,48 @@ void primitiveMesh::calcCells() const
     }
     else
     {
-        List<DynamicList<label, facesPerCell_> > cf(nCells());
+        // 1. Count number of faces per cell
+
+        labelList ncf(nCells(), 0);
 
         const labelList& own = faceOwner();
         const labelList& nei = faceNeighbour();
 
         forAll (own, faceI)
         {
-            cf[own[faceI]].append(faceI);
+            ncf[own[faceI]]++;
         }
 
         forAll (nei, faceI)
         {
-            cf[nei[faceI]].append(faceI);
+            ncf[nei[faceI]]++;
         }
 
         // Create the storage
-        cfPtr_ = new cellList(cf.size());
+        cfPtr_ = new cellList(ncf.size());
         cellList& cellFaceAddr = *cfPtr_;
 
-        // Pack the addressing
-        forAll (cf, cellI)
+
+        // 2. Size and fill cellFaceAddr
+
+        forAll (cellFaceAddr, cellI)
         {
-            cellFaceAddr[cellI].transfer(cf[cellI].shrink());
+            cellFaceAddr[cellI].setSize(ncf[cellI]);
+        }
+        ncf = 0;
+
+        forAll (own, faceI)
+        {
+            label cellI = own[faceI];
+
+            cellFaceAddr[cellI][ncf[cellI]++] = faceI;
+        }
+
+        forAll (nei, faceI)
+        {
+            label cellI = nei[faceI];
+
+            cellFaceAddr[cellI][ncf[cellI]++] = faceI;
         }
     }
 }

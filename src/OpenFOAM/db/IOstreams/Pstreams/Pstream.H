@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     Pstream
@@ -159,6 +159,9 @@ private:
 
 
     // Private member functions
+
+        //- Set data for parallel running
+        static void setParRun();
 
         //- Calculate linear communication schedule
         static void calcLinearComm(const label nProcs);
@@ -327,12 +330,12 @@ public:
             (
                 const List<commsStruct>& comms,
                 T& Value,
-                BinaryOp bop
+                const BinaryOp& bop
             );
 
             //- Like above but switches between linear/tree communication
             template <class T, class BinaryOp>
-            static void gather(T& Value, BinaryOp bop);
+            static void gather(T& Value, const BinaryOp& bop);
 
             //- Scatter data. Distribute without modification. Reverse of gather
             template <class T>
@@ -351,12 +354,12 @@ public:
             (
                 const List<commsStruct>& comms,
                 T& Value,
-                CombineOp cop
+                const CombineOp& cop
             );
 
             //- Like above but switches between linear/tree communication
             template <class T, class CombineOp>
-            static void combineGather(T& Value, CombineOp cop);
+            static void combineGather(T& Value, const CombineOp& cop);
 
             //- Scatter data. Reverse of combineGather
             template <class T>

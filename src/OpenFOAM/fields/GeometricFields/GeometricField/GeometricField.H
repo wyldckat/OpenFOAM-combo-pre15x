@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     GeometricField<Type, PatchField, GeoMesh>
@@ -125,12 +125,12 @@ public:
             );
 
             //- Construct from a BoundaryMesh, field reference
-            //  and a ptrList<PatchField<Type> >
+            //  and a PtrList<PatchField<Type> >
             GeometricBoundaryField
             (
                 const BoundaryMesh&,
                 const Field<Type>&,
-                const FieldField<PatchField, Type>&
+                const PtrList<PatchField<Type> >&
             );
 
             //- Construct as copy but setting Field correctly
@@ -295,7 +295,7 @@ public:
             const Mesh&,
             const dimensionSet&,
             const Field<Type>&,
-            const ptrList<PatchField<Type> >&
+            const PtrList<PatchField<Type> >&
         );
 
         //- Construct and read

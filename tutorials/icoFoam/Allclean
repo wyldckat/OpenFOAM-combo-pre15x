@@ -21,4 +21,3 @@ for case in $loseCases
 do
     removeCase $case
 done
-

@@ -20,15 +20,15 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "faceSet.H"
 #include "mapPolyMesh.H"
 #include "polyMesh.H"
+#include "processorPolyPatch.H"
+#include "cyclicPolyPatch.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -99,7 +99,113 @@ faceSet::~faceSet()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-Foam::label Foam::faceSet::maxSize(const polyMesh& mesh)
+void Foam::faceSet::sync(const polyMesh& mesh)
+{
+    const polyBoundaryMesh& patches = mesh.boundaryMesh();
+
+    label nAdded = 0;
+
+    if (Pstream::parRun())
+    {
+        // Send faces in set that are on a processorPatch. Send as patch face
+        // indices.
+        forAll(patches, patchI)
+        {
+            const polyPatch& pp = patches[patchI];
+
+            if (isType<processorPolyPatch>(pp))
+            {
+                const processorPolyPatch& procPatch =
+                    refCast<const processorPolyPatch>(pp);
+
+                // Convert faceSet locally to labelList.
+                DynamicList<label> setFaces(pp.size());
+
+                forAll(pp, i)
+                {
+                    if (found(pp.start() + i))
+                    {
+                        setFaces.append(i);
+                    }
+                }
+                setFaces.shrink();
+
+                OPstream toNeighbour(procPatch.neighbProcNo());
+
+                toNeighbour << setFaces;
+            }
+        }
+
+        // Receive 
+        forAll(patches, patchI)
+        {
+            const polyPatch& pp = patches[patchI];
+
+            if (isType<processorPolyPatch>(pp))
+            {
+                const processorPolyPatch& procPatch =
+                    refCast<const processorPolyPatch>(pp);
+
+                IPstream fromNeighbour(procPatch.neighbProcNo());
+
+                labelList setFaces(fromNeighbour);
+
+                forAll(setFaces, i)
+                {
+                    if (insert(pp.start() + setFaces[i]))
+                    {
+                        nAdded++;
+                    }
+                }
+            }
+        }
+    }
+
+    // Couple cyclic patches
+    forAll (patches, patchI)
+    {
+        const polyPatch& pp = patches[patchI];
+
+        if (typeid(pp) == typeid(cyclicPolyPatch))
+        {
+            const cyclicPolyPatch& cycPatch =
+                refCast<const cyclicPolyPatch>(pp);
+
+            forAll (cycPatch, i)
+            {
+                label thisFaceI = cycPatch.start() + i;
+                label otherFaceI = cycPatch.transformGlobalFace(thisFaceI);
+
+                if (found(thisFaceI))
+                {
+                    if (insert(otherFaceI))
+                    {
+                        nAdded++;
+                    }
+                }
+                else if (found(otherFaceI))
+                {
+                    if (insert(thisFaceI))
+                    {
+                        nAdded++;
+                    }
+                }
+            }
+        }
+    }
+
+
+    reduce(nAdded, sumOp<label>());
+
+    if (nAdded > 0)
+    {
+        Info<< "Added an additional " << nAdded << " faces on coupled patches. "
+            << "(processorPolyPatch, cyclicPolyPatch)" << endl;
+    }
+}
+
+
+Foam::label Foam::faceSet::maxSize(const polyMesh& mesh) const
 {
     return mesh.nFaces();
 }

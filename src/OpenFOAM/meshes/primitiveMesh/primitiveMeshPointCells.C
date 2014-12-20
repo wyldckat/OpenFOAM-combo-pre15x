@@ -29,7 +29,6 @@ Description
 #include "error.H"
 
 #include "primitiveMesh.H"
-#include "DynamicList.H"
 #include "cell.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -45,7 +44,7 @@ void primitiveMesh::calcPointCells() const
 
     if (debug)
     {
-        Info<< "primitiveMesh::calcPointCells() : "
+        Pout<< "primitiveMesh::calcPointCells() : "
             << "calculating pointCells"
             << endl;
     }
@@ -62,8 +61,9 @@ void primitiveMesh::calcPointCells() const
     {
         const cellList& cf = cells();
 
-        // Set up temporary storage
-        List<DynamicList<label, cellsPerPoint_> > pc(nPoints());
+        // Count number of cells per point
+
+        labelList npc(nPoints(), 0);
 
         forAll (cf, cellI)
         {
@@ -71,17 +71,35 @@ void primitiveMesh::calcPointCells() const
 
             forAll (curPoints, pointI)
             {
-                pc[curPoints[pointI]].append(cellI);
+                label ptI = curPoints[pointI];
+
+                npc[ptI]++;
             }
         }
 
-        // Copy into a plain list
-        pcPtr_ = new labelListList(pc.size());
+
+        // Size and fill cells per point
+
+        pcPtr_ = new labelListList(npc.size());
         labelListList& pointCellAddr = *pcPtr_;
 
-        forAll (pc, pointI)
+        forAll (pointCellAddr, pointI)
         {
-            pointCellAddr[pointI].transfer(pc[pointI].shrink());
+            pointCellAddr[pointI].setSize(npc[pointI]);
+        }
+        npc = 0;
+
+
+        forAll (cf, cellI)
+        {
+            const labelList curPoints = cf[cellI].labels(faces());
+
+            forAll (curPoints, pointI)
+            {
+                label ptI = curPoints[pointI];
+
+                pointCellAddr[ptI][npc[ptI]++] = cellI;
+            }
         }
     }
 }

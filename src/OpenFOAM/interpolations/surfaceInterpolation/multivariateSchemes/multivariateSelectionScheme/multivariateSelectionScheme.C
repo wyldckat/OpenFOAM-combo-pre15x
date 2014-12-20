@@ -20,13 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "multivariateSelectionScheme.H"
+#include "limitedSurfaceInterpolationScheme.H"
 #include "volFields.H"
 #include "surfaceFields.H"
 #include "upwind.H"
@@ -39,47 +38,66 @@ namespace Foam
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type>
-void multivariateSelectionScheme<Type>::makeWeights()
+multivariateSelectionScheme<Type>::multivariateSelectionScheme
+(
+    const fvMesh& mesh,
+    const typename multivariateSurfaceInterpolationScheme<Type>::
+        fieldTable& fields,
+    const surfaceScalarField& faceFlux,
+    Istream& schemeData
+)
+:
+    multivariateSurfaceInterpolationScheme<Type>
+    (
+        mesh,
+        fields,
+        faceFlux,
+        schemeData
+    ),
+    schemes_(schemeData),
+    faceFlux_(faceFlux),
+    weights_
+    (
+        IOobject
+        (
+            "multivariateWeights",
+            mesh.time().timeName(),
+            mesh
+        ),
+        mesh,
+        dimless
+    )
 {
-    const fvMesh& mesh = faceFlux_.mesh();
-
-    const surfaceScalarField& linearWeights = mesh.surfaceInterpolation::weights();
-
     typename multivariateSurfaceInterpolationScheme<Type>::
         fieldTable::const_iterator iter = this->fields().begin();
 
-    weights_ = upwind<Type>(mesh, faceFlux_).weights(*iter());
-    weights_.boundaryField() += SMALL;
-
     surfaceScalarField limiter =
     (
-        weights_
-      - surfaceInterpolationScheme<Type>::New
+        limitedSurfaceInterpolationScheme<Type>::New
         (
             mesh,
             faceFlux_,
             schemes_.lookup(iter()->name())
-        )().weights(*iter())
-    )/(weights_ - linearWeights);
+        )().limiter(*iter())
+    );
 
     for (++iter; iter != this->fields().end(); ++iter)
     {
         limiter = min
         (
             limiter,
+            limitedSurfaceInterpolationScheme<Type>::New
             (
-                weights_
-              - surfaceInterpolationScheme<Type>::New
-                (
-                    mesh,
-                    faceFlux_,
-                    schemes_.lookup(iter()->name())
-                )().weights(*iter())
-            )/(weights_ - linearWeights)
+                mesh,
+                faceFlux_,
+                schemes_.lookup(iter()->name())
+            )().limiter(*iter())
         );
     }
 
-    weights_ = limiter*linearWeights + (1.0 - limiter)*weights_;
+    weights_ =
+        limiter*mesh.surfaceInterpolation::weights()
+      + (1.0 - limiter)*upwind<Type>(mesh, faceFlux_).weights();
 }
 
 

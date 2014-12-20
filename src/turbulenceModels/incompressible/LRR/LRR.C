@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -224,13 +224,13 @@ void LRR::correct()
 
     forAll(patches, patchi)
     {
-        const fvPatch& currPatch = patches[patchi];
+        const fvPatch& curPatch = patches[patchi];
 
-        if (typeid(currPatch) == typeid(wallFvPatch))
+        if (typeid(curPatch) == typeid(wallFvPatch))
         {
-            forAll(currPatch, facei)
+            forAll(curPatch, facei)
             {
-                label faceCelli = currPatch.faceCells()[facei];
+                label faceCelli = curPatch.faceCells()[facei];
                 P[faceCelli]
                     *= min(G[faceCelli]/(0.5*tr(P[faceCelli]) + SMALL), 1.0);
             }
@@ -283,9 +283,9 @@ void LRR::correct()
 
     forAll(patches, patchi)
     {
-        const fvPatch& currPatch = patches[patchi];
+        const fvPatch& curPatch = patches[patchi];
 
-        if (typeid(currPatch) == typeid(wallFvPatch))
+        if (typeid(curPatch) == typeid(wallFvPatch))
         {
             tensorField& Rw = R_.boundaryField()[patchi];
 
@@ -299,7 +299,7 @@ void LRR::correct()
             const scalarField& magFaceAreas
                 = mesh_.magSf().boundaryField()[patchi];
 
-            forAll(currPatch, facei)
+            forAll(curPatch, facei)
             {
                 // Calculate near-wall velocity gradient
                 tensor gradUw

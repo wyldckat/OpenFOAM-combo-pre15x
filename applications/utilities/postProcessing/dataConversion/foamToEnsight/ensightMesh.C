@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -119,26 +119,11 @@ Foam::ensightMesh::ensightMesh(const fvMesh& fMesh, const argList& args)
 
     if (args.options().found("patches"))
     {
-        wordList patchNameList;
+        wordList patchNameList(IStringStream(args.options()["patches"])());
 
-        if (args.options()["patches"] == "all")
+        if (!patchNameList.size())
         {
             patchNameList = allPatchNames.toc();
-        }
-        else
-        {
-            patchNameList = fileName(args.options()["patches"]).components(',');
-
-            forAll (patchNameList, i)
-            {
-                if (!allPatchNames.found(patchNameList[i]))
-                {
-                    FatalErrorIn(args.executable())
-                        << "Invalid patch name " << patchNameList[i] << nl
-                        << "valid patch names are" << nl << allPatchNames.toc()
-                        << exit(FatalError);
-                }
-            }
         }
 
         forAll (patchNameList, i)

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Modules.CaseEditor;
@@ -70,7 +70,7 @@ public class PatchEditorWindow
             );
 
             // Initialise the boundary type edit box.
-            boundaryTypeEdit_.setText
+            patchPhysicalTypeEdit_.setText
             (
                 patchModel_.getBoundaryDefinition().getDisplayName()
             );
@@ -105,12 +105,12 @@ public class PatchEditorWindow
 
     //--------------------------------------------------------------------------
 
-    protected void fireBoundaryTypeChanged()
+    protected void firePatchPhysicalTypeChanged()
     {
-        String boundaryTypeName = patchModel_.getBoundaryDefinition().getName();
+        String patchPhysicalTypeName = patchModel_.getBoundaryDefinition().getName();
 
         // Create event object.
-        PatchStatusEvent evt = new PatchStatusEvent(this, patchName_, boundaryTypeName);
+        PatchStatusEvent evt = new PatchStatusEvent(this, patchName_, patchPhysicalTypeName);
 
         // Process the listeners last to first, notifying those that are interested in this event.
         Object[] listeners = listenerList_.getListenerList();
@@ -118,7 +118,7 @@ public class PatchEditorWindow
         {
             if (listeners[i] == PatchStatusListener.class)
             {
-                ((PatchStatusListener)listeners[i + 1]).boundaryTypeChanged(evt);
+                ((PatchStatusListener)listeners[i + 1]).patchPhysicalTypeChanged(evt);
             }
         }
     }
@@ -132,9 +132,9 @@ public class PatchEditorWindow
     private void initComponents()//GEN-BEGIN:initComponents
     {
         comboPanel_ = new javax.swing.JPanel();
-        boundaryTypeLabel_ = new javax.swing.JLabel();
-        boundaryTypeEdit_ = new javax.swing.JTextField();
-        selectBoundaryTypeButton_ = new javax.swing.JButton();
+        patchPhysicalTypeLabel_ = new javax.swing.JLabel();
+        patchPhysicalTypeEdit_ = new javax.swing.JTextField();
+        selectPatchPhysicalTypeButton_ = new javax.swing.JButton();
         scrollPane_ = new javax.swing.JScrollPane();
         table_ = new javax.swing.JTable();
         
@@ -147,16 +147,16 @@ public class PatchEditorWindow
         java.awt.GridBagConstraints gridBagConstraints2;
         
         comboPanel_.setFont(new java.awt.Font("Dialog", 0, 10));
-        boundaryTypeLabel_.setText("Boundary Type");
-        boundaryTypeLabel_.setForeground(java.awt.Color.black);
-        boundaryTypeLabel_.setFont(new java.awt.Font("Dialog", 0, 10));
+        patchPhysicalTypeLabel_.setText("Boundary Type");
+        patchPhysicalTypeLabel_.setForeground(java.awt.Color.black);
+        patchPhysicalTypeLabel_.setFont(new java.awt.Font("Dialog", 0, 10));
         gridBagConstraints2 = new java.awt.GridBagConstraints();
         gridBagConstraints2.gridx = 0;
         gridBagConstraints2.gridy = 0;
-        comboPanel_.add(boundaryTypeLabel_, gridBagConstraints2);
+        comboPanel_.add(patchPhysicalTypeLabel_, gridBagConstraints2);
         
-        boundaryTypeEdit_.setEditable(false);
-        boundaryTypeEdit_.setFont(new java.awt.Font("SansSerif", 0, 10));
+        patchPhysicalTypeEdit_.setEditable(false);
+        patchPhysicalTypeEdit_.setFont(new java.awt.Font("SansSerif", 0, 10));
         gridBagConstraints2 = new java.awt.GridBagConstraints();
         gridBagConstraints2.gridx = 1;
         gridBagConstraints2.gridy = 0;
@@ -164,22 +164,22 @@ public class PatchEditorWindow
         gridBagConstraints2.ipady = 5;
         gridBagConstraints2.insets = new java.awt.Insets(0, 5, 0, 5);
         gridBagConstraints2.weightx = 1.0;
-        comboPanel_.add(boundaryTypeEdit_, gridBagConstraints2);
+        comboPanel_.add(patchPhysicalTypeEdit_, gridBagConstraints2);
         
-        selectBoundaryTypeButton_.setFont(new java.awt.Font("Dialog", 0, 10));
-        selectBoundaryTypeButton_.setText("...");
-        selectBoundaryTypeButton_.addActionListener(new java.awt.event.ActionListener()
+        selectPatchPhysicalTypeButton_.setFont(new java.awt.Font("Dialog", 0, 10));
+        selectPatchPhysicalTypeButton_.setText("...");
+        selectPatchPhysicalTypeButton_.addActionListener(new java.awt.event.ActionListener()
         {
             public void actionPerformed(java.awt.event.ActionEvent evt)
             {
-                OnSelectBoundaryType(evt);
+                OnSelectPatchPhysicalType(evt);
             }
         });
         
         gridBagConstraints2 = new java.awt.GridBagConstraints();
         gridBagConstraints2.gridx = 2;
         gridBagConstraints2.gridy = 0;
-        comboPanel_.add(selectBoundaryTypeButton_, gridBagConstraints2);
+        comboPanel_.add(selectPatchPhysicalTypeButton_, gridBagConstraints2);
         
         gridBagConstraints1 = new java.awt.GridBagConstraints();
         gridBagConstraints1.gridx = 0;
@@ -206,29 +206,29 @@ public class PatchEditorWindow
 
     //--------------------------------------------------------------------------
 
-  private void OnSelectBoundaryType (java.awt.event.ActionEvent evt)
-    {//GEN-FIRST:event_OnSelectBoundaryType
+  private void OnSelectPatchPhysicalType (java.awt.event.ActionEvent evt)
+    {//GEN-FIRST:event_OnSelectPatchPhysicalType
 
         // Initialise and show the boundary type selector dialog.
-        BoundaryTypeSelectorDlg dlg = new BoundaryTypeSelectorDlg(null, patchModel_);
+        PatchPhysicalTypeSelectorDlg dlg = new PatchPhysicalTypeSelectorDlg(null, patchModel_);
         dlg.show();
 
         // If the dialog wasn't cancelled, update the boundary type name.
         if (!dlg.wasCancelled())
         {
-            boundaryTypeEdit_.setText(patchModel_.getBoundaryDefinition().getDisplayName());
+            patchPhysicalTypeEdit_.setText(patchModel_.getBoundaryDefinition().getDisplayName());
             table_.updateUI();
-            fireBoundaryTypeChanged();
+            firePatchPhysicalTypeChanged();
         }
-  }//GEN-LAST:event_OnSelectBoundaryType
+  }//GEN-LAST:event_OnSelectPatchPhysicalType
 
     //--------------------------------------------------------------------------
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
   private javax.swing.JPanel comboPanel_;
-  private javax.swing.JLabel boundaryTypeLabel_;
-  private javax.swing.JTextField boundaryTypeEdit_;
-  private javax.swing.JButton selectBoundaryTypeButton_;
+  private javax.swing.JLabel patchPhysicalTypeLabel_;
+  private javax.swing.JTextField patchPhysicalTypeEdit_;
+  private javax.swing.JButton selectPatchPhysicalTypeButton_;
   private javax.swing.JScrollPane scrollPane_;
   private javax.swing.JTable table_;
   // End of variables declaration//GEN-END:variables

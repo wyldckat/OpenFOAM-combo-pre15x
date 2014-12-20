@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -59,7 +57,7 @@ cyclicFvPatchField<Type>::cyclicFvPatchField
     coupledFvPatchField<Type>(ptf, p, iF, mapper),
     cyclicPatch_(refCast<const cyclicFvPatch>(p))
 {
-    if (typeid(this->patchMesh()) != typeid(cyclicFvPatch))
+    if (!isType<cyclicFvPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -71,9 +69,9 @@ cyclicFvPatchField<Type>::cyclicFvPatchField
             "    const fvPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }
@@ -90,7 +88,7 @@ cyclicFvPatchField<Type>::cyclicFvPatchField
     coupledFvPatchField<Type>(p, iF, dict),
     cyclicPatch_(refCast<const cyclicFvPatch>(p))
 {
-    if (typeid(p) != typeid(cyclicFvPatch))
+    if (!isType<cyclicFvPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -101,7 +99,7 @@ cyclicFvPatchField<Type>::cyclicFvPatchField
             "    const dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index() << " not cyclic type. "
+        )   << "patch " << this->patch().index() << " not cyclic type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -121,7 +119,7 @@ cyclicFvPatchField<Type>::cyclicFvPatchField
 )
 :
     coupledFvPatchField<Type>(ptf, iF),
-    cyclicPatch_(refCast<const cyclicFvPatch>(ptf.patchMesh()))
+    cyclicPatch_(refCast<const cyclicFvPatch>(ptf.patch()))
 {}
 
 
@@ -174,7 +172,7 @@ tmp<labelField> cyclicFvPatchField<Type>::nbrColour
     const labelField& cField
 ) const
 {
-    const labelList::subList FaceCells = this->patchMesh().faceCells();
+    const labelList::subList FaceCells = this->patch().faceCells();
 
     tmp<labelField> tpnf(new labelField(this->size()));
     labelField& pnf = tpnf();

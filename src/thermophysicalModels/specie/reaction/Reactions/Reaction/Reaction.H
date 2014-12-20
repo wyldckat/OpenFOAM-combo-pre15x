@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     Reaction
@@ -80,6 +80,11 @@ public:
             scalar stoichCoeff;
             scalar exponent;
 
+            specieCoeffs()
+            {}
+
+            specieCoeffs(const speciesTable& species, Istream& is);
+
             bool operator==(const specieCoeffs& sc) const
             {
                 return index == sc.index;
@@ -119,6 +124,9 @@ private:
         void setLRhs(Istream&);
         void setThermo(const HashPtrTable<ReactionThermo>& thermoDatabase);
 
+        //- Disallow default bitwise assignment
+        void operator=(const Reaction<ReactionThermo>&);
+
 
 public:
 
@@ -144,8 +152,7 @@ public:
 
     // Public classes
 
-        //- Class used for the read-construction of
-        //  ptrLists of reaction
+        //- Class used for the read-construction of PtrLists of reaction
         class iNew
         {
             const speciesTable& species_;
@@ -184,6 +191,9 @@ public:
             const HashPtrTable<ReactionThermo>& thermoDatabase
         );
 
+        //- Construct as copy given new speciesTable
+        Reaction(const Reaction<ReactionThermo>&, const speciesTable& species);
+
         //- Construct from Istream
         Reaction
         (
@@ -198,6 +208,18 @@ public:
             return autoPtr<Reaction<ReactionThermo> >
             (
                 new Reaction<ReactionThermo>(*this)
+            );
+        }
+
+        //- Construct and return a clone with new speciesTable
+        virtual autoPtr<Reaction<ReactionThermo> > clone
+        (
+            const speciesTable& species
+        ) const
+        {
+            return autoPtr<Reaction<ReactionThermo> >
+            (
+                new Reaction<ReactionThermo>(*this, species)
             );
         }
 

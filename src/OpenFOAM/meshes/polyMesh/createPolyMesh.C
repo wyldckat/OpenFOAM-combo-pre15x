@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Create polyMesh from cell and patch shapes
@@ -164,7 +164,7 @@ polyMesh::polyMesh
     }
 
     // Remove all of the old mesh files if they exist
-    removeFiles(db().path());
+    removeFiles(instance());
 
     // Calculate the faces of all cells
     // Initialise maximum possible numer of mesh faces to 0
@@ -175,12 +175,12 @@ polyMesh::polyMesh
 
     forAll(cellsFaceShapes, cellI)
     {
-        cellsFaceShapes[cellI] = (const faceList&)cellsAsShapes[cellI].faces();
+        cellsFaceShapes[cellI] = cellsAsShapes[cellI].faces();
 
         cells_[cellI].setSize(cellsFaceShapes[cellI].size());
 
         // Initialise cells to -1 to flag undefined faces
-        (labelList&)cells_[cellI] = -1;
+        static_cast<labelList&>(cells_[cellI]) = -1;
 
         // Count maximum possible numer of mesh faces
         maxFaces += cellsFaceShapes[cellI].size();
@@ -464,8 +464,7 @@ polyMesh::polyMesh
 
     if (nFaces > defaultPatchStart)
     {
-        Warning
-            << "polyMesh::polyMesh(... construct from shapes...) : " << endl
+        WarningIn("polyMesh::polyMesh(... construct from shapes...)")
             << "Found " << nFaces - defaultPatchStart
             << " undefined faces in mesh; adding to default patch." << endl;
 
@@ -490,6 +489,12 @@ polyMesh::polyMesh
 
     // Set the primitive mesh
     calcFaceCells();
+
+    // Calculate topology for the patches (processor-processor comms etc.)
+    boundary_.updateTopology();
+
+    // Calculate the geometry for the patches (transformation tensors etc.)
+    boundary_.calcGeometry();
 
     if (debug)
     {

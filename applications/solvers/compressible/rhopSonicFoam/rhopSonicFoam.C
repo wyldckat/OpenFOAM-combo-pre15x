@@ -26,11 +26,14 @@ Application
     rhopSonicFoam
 
 Description
-    Pressure-based compressible flow solver using density-weighted variables.
+    Pressure-density-based compressible flow solver.
 
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
+#include "weighted.H"
+#include "gaussConvectionScheme.H"
+#include "multivariateGaussConvectionScheme.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,32 +45,27 @@ int main(int argc, char *argv[])
 #   include "createMesh.H"
 #   include "readThermodynamicProperties.H"
 #   include "createFields.H"
-#   include "readPISOControls.H"
-#   include "initContinuityErrs.H"
 
+    rhoU.correctBoundaryConditions();
+
+    multivariateSurfaceInterpolationScheme<scalar>::fieldTable fields;
+
+    volScalarField magRhoU = mag(rhoU);
+    volScalarField H("H", (rhoE + p)/rho);
+
+    fields.add(rho);
+    fields.add(magRhoU);
+    fields.add(H);
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nStarting time loop\n" << endl;
 
-    cpuTime executionTime;
-
     for (runTime++; !runTime.end(); runTime++)
     {
-        Info<< "\n Time = " << runTime.value() << nl << endl;
+        Info<< "Time = " << runTime.value() << nl << endl;
 
-        surfaceScalarField phiv
-        (
-            IOobject
-            (
-                "phiv",
-                runTime.timeName(),
-                mesh,
-                IOobject::NO_READ,
-                IOobject::NO_WRITE
-            ),
-            phi/fvc::interpolate(rho)
-        );
+#       include "readPISOControls.H"
 
         scalar CoNum = max
         (
@@ -75,66 +73,106 @@ int main(int argc, char *argv[])
            *mag(phiv)/mesh.magSf()
         ).value()*runTime.deltaT().value();
 
-        Info<< "\nMax Courant Number = " << CoNum << endl;
+        Info<< "Max Courant Number = " << CoNum << endl;
 
-#       include "rhoEqn.H"
+        magRhoU = mag(rhoU);
+        H = (rhoE + p)/rho;
 
-        fvVectorMatrix UEqn
+        fv::multivariateGaussConvectionScheme<scalar> mvConvection
         (
-            fvm::ddt(rhoU)
-          + fvm::div(phiv, rhoU)
+            mesh,
+            fields,
+            phiv,
+            mesh.divScheme("div(phiv,rhoUH)")
         );
 
-        solve(UEqn == -fvc::grad(p));
-
-        solve
-        (
-            fvm::ddt(rhoE)
-          + fvm::div(phiv, rhoE)
-         == 
-          - fvc::div(phiv, p)
-        );
-
-        T = (rhoE - 0.5*rho*magSqr(rhoU/rho))/Cv/rho;
-        psi = 1.0/(R*T);
-
-        // --- PISO loop
-
-        for (int corr=0; corr<nCorr; corr++)
+        for (int outerCorr=0; outerCorr<nOuterCorr; outerCorr++)
         {
-            rhoU = UEqn.H()/UEqn.A();
+            solve
+            (
+                fvm::ddt(rho)
+              + mvConvection.fvmDiv(phiv, rho)
+            );
 
-            surfaceScalarField phid =
-                (fvc::interpolate(rhoU)/fvc::interpolate(p) & mesh.Sf());
+            surfaceScalarField rhoUWeights =
+                mvConvection.interpolationScheme()()(magRhoU)()
+               .weights(magRhoU);
 
-            for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
+            weighted<vector> rhoUScheme(rhoUWeights);
+
+            fvVectorMatrix rhoUEqn
+            (
+                fvm::ddt(rhoU)
+              + fv::gaussConvectionScheme<vector>(mesh, phiv, rhoUScheme)
+                   .fvmDiv(phiv, rhoU)
+            );
+
+            solve(rhoUEqn == -fvc::grad(p));
+
+            solve
+            (
+                fvm::ddt(rhoE)
+              + mvConvection.fvmDiv(phiv, rhoE)
+             ==
+              - mvConvection.fvcDiv(phiv, p)
+            );
+
+            T == (rhoE - 0.5*rho*magSqr(rhoU/rho))/Cv/rho;
+            psi = 1.0/(R*T);
+
+            p = rho/psi;
+
+            for (int corr=0; corr<nCorr; corr++)
             {
+                volScalarField rrhoUA = 1.0/rhoUEqn.A();
+                surfaceScalarField rrhoUAf = fvc::interpolate(rrhoUA);
+
+                volVectorField HbyA = rrhoUA*rhoUEqn.H();
+
+                phi = (fvc::interpolate(HbyA) & mesh.Sf())
+                    + fvc::ddtPhiCorr(rrhoUA, rho, rhoU, phi);
+
+                p.boundaryField().updateCoeffs();
+
+                surfaceScalarField phiGradp =
+                    rrhoUAf*mesh.magSf()*fvc::snGrad(p);
+
+                phi -= phiGradp;
+
+                phi.boundaryField() =
+                    rhoU.boundaryField() & mesh.Sf().boundaryField();
+
+                phiv = phi/fvc::interpolate(rho);
+
                 fvScalarMatrix pEqn
                 (
                     fvm::ddt(psi, p)
-                  + fvm::div(phid, p, "div(phid,p)")
-                  - fvm::laplacian(1.0/UEqn.A(), p)
+                  + mvConvection.fvcDiv(phiv, rho)
+                  + fvc::div(phiGradp)
+                  - fvm::laplacian(rrhoUAf, p)
                 );
 
                 pEqn.solve();
 
-                phi = pEqn.flux();
+                phi += phiGradp + pEqn.flux();
+                phiv = phi/fvc::interpolate(rho);
+                rho = psi*p;
+
+                rhoU = HbyA - rrhoUA*fvc::grad(p);
+                rhoU.correctBoundaryConditions();
             }
-
-#           include "continuityErrs.H"
-
-            rhoU -= fvc::grad(p)/UEqn.A();
-            rhoU.correctBoundaryConditions();
         }
+
+        U == rhoU/rho;
 
         runTime.write();
 
-        Info<< "\n    ExecutionTime = "
-            << executionTime.elapsedCpuTime()
-            << " s\n" << endl;
+        Info<< "ExecutionTime = "
+            << runTime.elapsedCpuTime()
+            << " s\n\n" << endl;
     }
 
-    Info<< "\n end \n";
+    Info<< "End\n" << endl;
 
     return(0);
 }

@@ -27,7 +27,7 @@ FoamFile
 piston
 {
     type wall;
-    physicalType movingWallFixedTemp;
+    physicalType fixedTemperatureMovingWallFunctions;
     nFaces 1326;
     startFace 79522;
 }
@@ -35,7 +35,7 @@ piston
 liner
 {
     type wall;
-    physicalType wallFixedTemp;
+    physicalType fixedTemperatureWallFunctions;
     nFaces 2710;
     startFace 80848;
 }
@@ -43,7 +43,7 @@ liner
 cylinderHead
 {
     type wall;
-    physicalType wallFixedTemp;
+    physicalType fixedTemperatureWallFunctions;
     nFaces 2184;
     startFace 83558;
 }

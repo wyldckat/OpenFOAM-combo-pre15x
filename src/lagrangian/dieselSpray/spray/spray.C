@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -53,7 +51,7 @@ namespace Foam
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 //defineTemplateTypeNameAndDebug(Cloud<parcel>, 0);
-defineTemplateTypeNameAndDebug(IOptrList<injector>, 0);
+defineTemplateTypeNameAndDebug(IOPtrList<injector>, 0);
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -66,7 +64,7 @@ spray::spray
     const volScalarField& p,
     const volScalarField& T,
     const combustionMixture& composition,
-    const ptrList<specieProperties>& gasProperties,
+    const PtrList<specieProperties>& gasProperties,
     const dictionary&,
     const dictionary& environmentalProperties
 )
@@ -274,7 +272,7 @@ spray::spray
                 "spray::spray(const pointMesh& pMesh, const volVectorField& U, "
                 "const volScalarField& rho, const volScalarField& p, "
                 "const volScalarField& T, const combustionMixture& composition,"
-                "const ptrList<specieProperties>& gaseousFuelProperties, "
+                "const PtrList<specieProperties>& gaseousFuelProperties, "
                 "const dictionary& thermophysicalProperties, "
                 "const dictionary& environmentalProperties)"
             )   << "spray::(...) only one wedgePolyPatch found. "

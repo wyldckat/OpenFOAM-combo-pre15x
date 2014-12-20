@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Generic field type.
@@ -341,10 +341,8 @@ Type max(const UList<Type>& f)
     }
     else
     {
-        Warning
-            << "max(const UList<Type>&) : "
-            << "empty field, returning zero"
-                << endl;
+        WarningIn("max(const UList<Type>&)")
+            << "empty field, returning zero" << endl;
 
         return pTraits<Type>::zero;
     }
@@ -364,10 +362,8 @@ Type min(const UList<Type>& f)
     }
     else
     {
-        Warning
-            << "min(const UList<Type>&) : "
-            << "empty field, returning zero"
-            << endl;
+        WarningIn("min(const UList<Type>&)")
+            << "empty field, returning zero" << endl;
 
         return pTraits<Type>::zero;
     }
@@ -458,10 +454,8 @@ Type average(const UList<Type>& f)
     }
     else
     {
-        Warning
-            << "average(const UList<Type>&) : "
-            << "empty field, returning zero"
-            << endl;
+        WarningIn("average(const UList<Type>&)")
+            << "empty field, returning zero" << endl;
 
         return pTraits<Type>::zero;
     }
@@ -512,10 +506,8 @@ Type gAverage(const UList<Type>& f)
     }
     else
     {
-        Warning
-            << "gAverage(const UList<Type>&) : "
-            << "empty field, returning zero."
-            << endl;
+        WarningIn("gAverage(const UList<Type>&)")
+            << "empty field, returning zero." << endl;
 
         return pTraits<Type>::zero;
     }
@@ -857,7 +849,7 @@ void opFunc                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Type, Form>::type productType;                   \
-    TFOR_ALL_F_OP_F_OP_S(productType, f, =,Type, f1, op, Form,(const Form&)vs)\
+    TFOR_ALL_F_OP_F_OP_S(productType, f, =,Type, f1, op, Form,static_cast<const Form&>(vs)) \
 }                                                                             \
                                                                               \
 template<class Type, class Form, class Cmpt, int nCmpt>                       \
@@ -866,7 +858,7 @@ operator op(const UList<Type>& f1, const VectorSpace<Form,Cmpt,nCmpt>& vs)    \
 {                                                                             \
     typedef typename product<Type, Form>::type productType;                   \
     tmp<Field<productType> > tf(new Field<productType>(f1.size()));           \
-    opFunc(tf(), f1, (const Form&)vs);                                        \
+    opFunc(tf(), f1, static_cast<const Form&>(vs));                           \
     return tf;                                                                \
 }                                                                             \
                                                                               \
@@ -876,7 +868,7 @@ operator op(const tmp<Field<Type> >&tf1,const VectorSpace<Form,Cmpt,nCmpt>&vs)\
 {                                                                             \
     typedef typename product<Type, Form>::type productType;                   \
     tmp<Field<productType> > tf(new Field<productType>(tf1().size()));        \
-    opFunc(tf(), tf1(), (const Form&)vs);                                     \
+    opFunc(tf(), tf1(), static_cast<const Form&>(vs));                        \
     tf1.clear();                                                              \
     return tf;                                                                \
 }                                                                             \
@@ -890,7 +882,7 @@ void opFunc                                                                   \
 )                                                                             \
 {                                                                             \
     typedef typename product<Form, Type>::type productType;                   \
-    TFOR_ALL_F_OP_S_OP_F(productType, f, =,Form,(const Form&)vs, op, Type, f1)\
+    TFOR_ALL_F_OP_S_OP_F(productType, f, =,Form,static_cast<const Form&>(vs), op, Type, f1) \
 }                                                                             \
                                                                               \
 template<class Form, class Cmpt, int nCmpt, class Type>                       \
@@ -899,7 +891,7 @@ operator op(const VectorSpace<Form,Cmpt,nCmpt>& vs, const UList<Type>& f1)    \
 {                                                                             \
     typedef typename product<Form, Type>::type productType;                   \
     tmp<Field<productType> > tf(new Field<productType>(f1.size()));           \
-    opFunc(tf(), (const Form&)vs, f1);                                        \
+    opFunc(tf(), static_cast<const Form&>(vs), f1);                           \
     return tf;                                                                \
 }                                                                             \
                                                                               \
@@ -909,7 +901,7 @@ operator op(const VectorSpace<Form,Cmpt,nCmpt>&vs,const tmp<Field<Type> >&tf1)\
 {                                                                             \
     typedef typename product<Form, Type>::type productType;                   \
     tmp<Field<productType> > tf(new Field<productType>(tf1().size()));        \
-    opFunc(tf(), (const Form&)vs, tf1());                                     \
+    opFunc(tf(), static_cast<const Form&>(vs), tf1());                        \
     tf1.clear();                                                              \
     return tf;                                                                \
 }

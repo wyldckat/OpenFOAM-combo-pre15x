@@ -1,23 +1,23 @@
 pd.boundaryField() ==
     p.boundaryField() - rho.boundaryField()*gh.boundaryField() - pRef.value();
 
-volScalarField AU = UEqn().A();
-U = UEqn().H()/AU;
+volScalarField rUA = 1.0/UEqn().A();
+U = rUA*UEqn().H();
 UEqn.clear();
-phi = (fvc::interpolate(rho*U) & mesh.Sf())
-    - fvc::interpolate(rho*gh/AU)*fvc::snGrad(rho)*mesh.magSf();
+phi = (fvc::interpolate(rho*U) & mesh.Sf());
 bool closedVolume = adjustPhi(phi, U, p);
+phi -= fvc::interpolate(rho*gh*rUA)*fvc::snGrad(rho)*mesh.magSf();
 
 for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
 {
     fvScalarMatrix pdEqn
     (
-        fvm::laplacian(rho/AU, pd) == fvc::div(phi)
+        fvm::laplacian(rho*rUA, pd) == fvc::div(phi)
     );
 
-    fvScalarMatrix::reference pRef = pdEqn.setReference(pRefCell, pRefValue);
+    fvScalarMatrix::reference pdRef = pdEqn.setReference(pdRefCell, pdRefValue);
     pdEqn.solve();
-    pdEqn.unsetReference(pRef);
+    pdEqn.unsetReference(pdRef);
 
     if (nonOrth == nNonOrthCorr)
     {
@@ -32,7 +32,7 @@ pd.relax();
 
 p = pd + rho*gh + pRef;
 
-U -= (fvc::grad(pd) + fvc::grad(rho)*gh)/AU;
+U -= rUA*(fvc::grad(pd) + fvc::grad(rho)*gh);
 U.correctBoundaryConditions();
 
 // For closed-volume cases adjust the pressure and density levels

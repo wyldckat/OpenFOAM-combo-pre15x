@@ -37,7 +37,8 @@ boundaryField
 
     outlet          
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform 0.135;
     }
 
     upperWall       

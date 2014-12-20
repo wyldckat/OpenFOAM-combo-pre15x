@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -38,35 +38,54 @@ namespace Foam
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Type, class Scheme>
-void multivariateScheme<Type, Scheme>::makeWeights()
+multivariateScheme<Type, Scheme>::multivariateScheme
+(
+    const fvMesh& mesh,
+    const typename multivariateSurfaceInterpolationScheme<Type>::
+        fieldTable& fields,
+    const surfaceScalarField& faceFlux,
+    Istream& schemeData
+)
+:
+    multivariateSurfaceInterpolationScheme<Type>
+    (
+        mesh,
+        fields,
+        faceFlux,
+        schemeData
+    ),
+    Scheme::LimiterType(schemeData),
+    faceFlux_(faceFlux),
+    weights_
+    (
+        IOobject
+        (
+            "multivariateWeights",
+            mesh.time().timeName(),
+            mesh
+        ),
+        mesh,
+        dimless
+    )
 {
-    const fvMesh& mesh = faceFlux_.mesh();
-
-    const surfaceScalarField& linearWeights = mesh.surfaceInterpolation::weights();
-
     typename multivariateSurfaceInterpolationScheme<Type>::
         fieldTable::const_iterator iter = this->fields().begin();
 
-    weights_ = upwind<Type>(mesh, faceFlux_).weights(*iter());
-    weights_.boundaryField() += SMALL;
-
-    surfaceScalarField limiter =
-    (
-        weights_ - Scheme(mesh, faceFlux_, *this).weights(*iter())
-    )/(weights_ - linearWeights);
+    surfaceScalarField limiter = 
+        Scheme(mesh, faceFlux_, *this).limiter(*iter());
 
     for (++iter; iter != this->fields().end(); ++iter)
     {
         limiter = min
         (
             limiter,
-            (
-                weights_ - Scheme(mesh, faceFlux_, *this).weights(*iter())
-            )/(weights_ - linearWeights)
+            Scheme(mesh, faceFlux_, *this).limiter(*iter())
         );
     }
 
-    weights_ = limiter*linearWeights + (1.0 - limiter)*weights_;
+    weights_ = 
+        limiter*mesh.surfaceInterpolation::weights()
+      + (1.0 - limiter)*upwind<Type>(mesh, faceFlux_).weights();
 }
 
 

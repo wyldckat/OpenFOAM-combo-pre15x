@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Attach/detach boundary mesh modifier.  This modifier takes a set of
@@ -70,8 +70,6 @@ void Foam::attachDetach::checkDefinition()
             << abort(FatalError);
     }
 
-    const polyMesh& mesh = morphEngine().mesh();
-
     if (debug)
     {
         Info<< "Attach/detach object " << name() << " :" << nl
@@ -83,8 +81,8 @@ void Foam::attachDetach::checkDefinition()
     // Check the sizes and set up state
     if
     (
-        mesh.boundaryMesh()[masterPatchID_.index()].size() == 0
-     && mesh.boundaryMesh()[slavePatchID_.index()].size() == 0
+        mesh().boundaryMesh()[masterPatchID_.index()].size() == 0
+     && mesh().boundaryMesh()[slavePatchID_.index()].size() == 0
     )
     {
         // Boundary is attached
@@ -96,7 +94,7 @@ void Foam::attachDetach::checkDefinition()
         state_ = ATTACHED;
 
         // Check if there are faces in the master zone
-        if (mesh.faceZones()[faceZoneID_.index()].size() == 0)
+        if (mesh().faceZones()[faceZoneID_.index()].size() == 0)
         {
             FatalErrorIn
             (
@@ -110,13 +108,13 @@ void Foam::attachDetach::checkDefinition()
         if (debug)
         {
             const labelList& addr =
-                mesh.faceZones()[faceZoneID_.index()].addressing();
+                mesh().faceZones()[faceZoneID_.index()].addressing();
 
             DynamicList<label> bouFacesInZone(addr.size());
 
             forAll (addr, faceI)
             {
-                if (!mesh.isInternalFace(addr[faceI]))
+                if (!mesh().isInternalFace(addr[faceI]))
                 {
                     bouFacesInZone.append(addr[faceI]);
                 }
@@ -151,12 +149,12 @@ void Foam::attachDetach::checkDefinition()
         if
         (
             (
-                mesh.boundaryMesh()[masterPatchID_.index()].size()
-             != mesh.boundaryMesh()[slavePatchID_.index()].size()
+                mesh().boundaryMesh()[masterPatchID_.index()].size()
+             != mesh().boundaryMesh()[slavePatchID_.index()].size()
             )
          || (
-                mesh.boundaryMesh()[masterPatchID_.index()].size()
-             != mesh.faceZones()[faceZoneID_.index()].size()
+                mesh().boundaryMesh()[masterPatchID_.index()].size()
+             != mesh().faceZones()[faceZoneID_.index()].size()
             )
         )
         {
@@ -167,11 +165,11 @@ void Foam::attachDetach::checkDefinition()
                 << " master and slave patch should have the same size"
                 << " for object " << name() << ". " << nl
                 << "Zone size: "
-                << mesh.faceZones()[faceZoneID_.index()].size()
+                << mesh().faceZones()[faceZoneID_.index()].size()
                 << " Master patch size: "
-                << mesh.boundaryMesh()[masterPatchID_.index()].size()
+                << mesh().boundaryMesh()[masterPatchID_.index()].size()
                 << " Slave patch size: "
-                << mesh.boundaryMesh()[slavePatchID_.index()].size()
+                << mesh().boundaryMesh()[slavePatchID_.index()].size()
                 << abort(FatalError);
         }
 
@@ -179,14 +177,14 @@ void Foam::attachDetach::checkDefinition()
         if (debug)
         {
             const labelList& addr =
-                mesh.faceZones()[faceZoneID_.index()].addressing();
+                mesh().faceZones()[faceZoneID_.index()].addressing();
 
             DynamicList<label> zoneProblemFaces(addr.size());
 
             forAll (addr, faceI)
             {
                 label facePatch =
-                    mesh.boundaryMesh().whichPatch(addr[faceI]);
+                    mesh().boundaryMesh().whichPatch(addr[faceI]);
 
                 if
                 (
@@ -250,7 +248,7 @@ Foam::attachDetach::attachDetach
 (
     const word& name,
     const label index,
-    const polyMeshMorphEngine& mme,
+    const polyMesh& mesh,
     const word& faceZoneName,
     const word& masterPatchName,
     const word& slavePatchName,
@@ -258,10 +256,10 @@ Foam::attachDetach::attachDetach
     const bool manualTrigger
 )
 :
-    polyMeshModifier(name, index, mme, true),
-    faceZoneID_(faceZoneName, mme.mesh().faceZones()),
-    masterPatchID_(masterPatchName, mme.mesh().boundaryMesh()),
-    slavePatchID_(slavePatchName, mme.mesh().boundaryMesh()),
+    polyMeshModifier(name, index, mesh, true),
+    faceZoneID_(faceZoneName, mesh.faceZones()),
+    masterPatchID_(masterPatchName, mesh.boundaryMesh()),
+    slavePatchID_(slavePatchName, mesh.boundaryMesh()),
     triggerTimes_(triggerTimes),
     manualTrigger_(manualTrigger),
     triggerIndex_(0),
@@ -279,25 +277,13 @@ Foam::attachDetach::attachDetach
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyMeshMorphEngine& mme
+    const polyMesh& mesh
 )
 :
-    polyMeshModifier(name, index, mme, Switch(dict.lookup("active"))),
-    faceZoneID_
-    (
-        dict.lookup("faceZoneName"),
-        mme.mesh().faceZones()
-    ),
-    masterPatchID_
-    (
-        dict.lookup("masterPatchName"),
-        mme.mesh().boundaryMesh()
-    ),
-    slavePatchID_
-    (
-        dict.lookup("slavePatchName"),
-        mme.mesh().boundaryMesh()
-    ),
+    polyMeshModifier(name, index, mesh, Switch(dict.lookup("active"))),
+    faceZoneID_(dict.lookup("faceZoneName"), mesh.faceZones()),
+    masterPatchID_(dict.lookup("masterPatchName"), mesh.boundaryMesh()),
+    slavePatchID_(dict.lookup("slavePatchName"), mesh.boundaryMesh()),
     triggerTimes_(dict.lookup("triggerTimes")),
     manualTrigger_(dict.lookup("manualTrigger")),
     triggerIndex_(0),
@@ -395,14 +381,14 @@ bool Foam::attachDetach::changeTopology() const
         Info<< "bool attachDetach::changeTopology() const "
             << " for object " << name() << " : "
             << "Triggering attach/detach topology change." << nl
-            << "Current time: " << morphEngine().mesh().time().value()
+            << "Current time: " << mesh().time().value()
             << " current trigger time: " << triggerTimes_[triggerIndex_]
             << " trigger index: " << triggerIndex_ << endl;
     }
 
     // Check if the time is greater than the currentTime.  If so, increment
     // the current lookup and request topology change
-    if (morphEngine().mesh().time().value() >= triggerTimes_[triggerIndex_])
+    if (mesh().time().value() >= triggerTimes_[triggerIndex_])
     {
         trigger_ = true;
 
@@ -458,11 +444,9 @@ void Foam::attachDetach::setRefinement(polyTopoChange& ref) const
 void Foam::attachDetach::updateTopology(const mapPolyMesh&)
 {
     // Mesh has changed topologically.  Update local topological data
-    const polyMesh& mesh = morphEngine().mesh();
-
-    faceZoneID_.update(mesh.faceZones());
-    masterPatchID_.update(mesh.boundaryMesh());
-    slavePatchID_.update(mesh.boundaryMesh());
+    faceZoneID_.update(mesh().faceZones());
+    masterPatchID_.update(mesh().boundaryMesh());
+    slavePatchID_.update(mesh().boundaryMesh());
 
     clearAddressing();
 }

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     transportModel
@@ -28,45 +28,20 @@ Class
 \*---------------------------------------------------------------------------*/
 
 #include "transportModel.H"
+#include "viscosityModel.H"
 #include "volFields.H"
-#include "fvc.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 namespace Foam
 {
 
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-defineTypeNameAndDebug(transportModel, 0);
-defineRunTimeSelectionTable(transportModel, dictionary);
-
-
-//- Lookup and return the phase transport properties dictionary
-const dictionary& transportModel::lookupPhaseTransportProperties
-(
-    const dictionary& transportProperties,
-    const word& phaseName
-)
-{
-    if (phaseName.size())
-    {
-        return transportProperties.subDict(phaseName);
-    }
-    else
-    {
-        return transportProperties;
-    }
-}
-
-
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 transportModel::transportModel
 (
     const volVectorField& U,
-    const surfaceScalarField& phi,
-    const word& phaseName
+    const surfaceScalarField& phi
 )
 :
     IOdictionary
@@ -79,39 +54,21 @@ transportModel::transportModel
             IOobject::MUST_READ,
             IOobject::NO_WRITE
         )
-    ),
-
-    U_(U),
-    phi_(phi),
-    phaseName_(phaseName),
-    phaseTransportProperties_
-    (
-        lookupPhaseTransportProperties(*this, phaseName)
     )
+{}
+
+
+// * * * * * * * * * * * * * * * * Destructors * * * * * * * * * * * * * * * //
+
+transportModel::~transportModel()
 {}
 
 
 // * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * * //
 
-tmp<volScalarField> transportModel::strainRate() const
-{
-    return mag(fvc::grad(U_));
-}
-
-
 bool transportModel::read()
 {
-    if (regIOobject::read())
-    {
-        phaseTransportProperties_ =
-            lookupPhaseTransportProperties(*this, phaseName_);
-
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return regIOobject::read();
 }
 
 

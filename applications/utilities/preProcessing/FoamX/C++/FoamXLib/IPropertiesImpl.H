@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IPropertiesImpl
@@ -52,7 +52,7 @@ namespace FoamX
 {
 
 // Class forward declarations.
-class IApplicationClassImpl;
+class IApplicationImpl;
 class ITypeDescriptorImpl;
 class IGeometryDescriptorImpl;
 class IPatchDescriptorImpl;
@@ -84,29 +84,16 @@ class IPropertiesImpl
         //- Available foam types dictionary.
         Foam::dictionary foamTypesDict_;
 
-        //- Available foam type names.
-        FoamXWordList foamTypes_;
-
-        //- Available geometry types.
-        FoamXWordList geometryTypes_;
-
-        //- Available patch types.
-        FoamXWordList patchTypes_;
-
-        //- Available patch field types.
-        FoamXWordList patchFieldTypes_;
-
         //- Defined application class descriptors.
-        Foam::HashPtrTable<FoamXServer::ApplicationClassDescriptor>
-            appClassDescriptorMap_;
+        Foam::HashPtrTable<FoamXServer::ApplicationDescriptor>
+            appDescriptorMap_;
 
         //- Foam utility descriptor map.
-        Foam::HashPtrTable<FoamXServer::UtilityDescriptor>
+        Foam::HashPtrTable<FoamXServer::ApplicationDescriptor>
             utilityDescriptorMap_;
 
-
         //- Map of (created on demand) Application Class objects.
-        ObjRefHashTable<IApplicationClassImpl*> appClassMap_;
+        ObjRefHashTable<IApplicationImpl*> appMap_;
 
         //- Map of Foam Type Descriptor objects.
         ObjRefHashTable<ITypeDescriptorImpl*> foamTypeMap_;
@@ -123,38 +110,32 @@ class IPropertiesImpl
 
     // Private member functions
 
-        FoamXServer::ApplicationClassDescriptor* readAppClassDescriptor
+        FoamXServer::ApplicationDescriptor* readApplicationDescriptor
         (
             const Foam::word& name,
             const Foam::fileName& category,
+            const Foam::fileName& path,
             const bool systemClass
         );
 
-        void readAppClassDescriptors
+        void readApplicationDescriptors
         (
+            Foam::HashPtrTable<FoamXServer::ApplicationDescriptor>&
+                appDescriptorsMap,
             const Foam::fileName& dir,
             const Foam::fileName& category,
             const bool systemClass
         );
 
-        FoamXServer::UtilityDescriptor* readUtilityDescriptor
-        (
-            const Foam::word& name,
-            const Foam::fileName& category,
-            const bool systemClass
-        );
-
-        void readUtilityDescriptors
-        (
-            const Foam::fileName& dir,
-            const Foam::fileName& category,
-            const bool systemClass
-        );
+        void addPatchFields(const Foam::dictionary& patchFieldDict);
 
         IPropertiesImpl(const IPropertiesImpl&);
 
 
 public:
+
+    friend class IApplicationImpl;
+
 
     // Constructors
 
@@ -258,36 +239,44 @@ public:
             );
 
 
+        // Foam controlDict
+
+            virtual void getFoamControlDict
+            (
+                FoamXServer::IDictionaryEntry_out controlDict
+            );
+
         // Application classes.
 
-            virtual FoamXServer::ApplicationClassDescriptorList* 
-                applicationClasses();
+            virtual FoamXServer::ApplicationDescriptorList* 
+                applicationes();
 
-            virtual void getApplicationClass
+            virtual void getApplication
             (
-                const char* appClassKey,
-                FoamXServer::CaseServer::IApplicationClass_out appClass
+                const char* appKey,
+                FoamXServer::CaseServer::IApplication_out app
             );
 
-            virtual void addApplicationClass
+            virtual void addApplication
             (
-                const char* appClassKey,
-                FoamXServer::CaseServer::IApplicationClass_out appClass
+                const char* appKey,
+                FoamXServer::CaseServer::IApplication_out app
             );
 
-            virtual void deleteApplicationClass(const char* appClassKey);
+            virtual void deleteApplication(const char* appKey);
 
-            virtual void cloneApplicationClass
+            virtual void cloneApplication
             (
-                const char* appClassKeySrc,
-                const char* appClassKeyDest,
-                FoamXServer::CaseServer::IApplicationClass_out appClass
+                const char* appKeySrc,
+                const char* appKeyDest,
+                const char* appDestPath,
+                FoamXServer::CaseServer::IApplication_out app
             );
 
 
         // Foam utilities.
 
-            virtual FoamXServer::UtilityDescriptorList* utilities();
+            virtual FoamXServer::ApplicationDescriptorList* utilities();
 
             virtual void getUtilityControlDict
             (

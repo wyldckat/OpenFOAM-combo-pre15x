@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -202,11 +202,11 @@ tetCellList tetPolyMeshFaceDecomp::tets(const label cellID) const
         // Take care of owner/neighbour face reversal
         if (cellID == owner[curFace])
         {
-            faceEdges = (const edgeList&)f[curFace].reverseFace().edges();
+            faceEdges = f[curFace].reverseFace().edges();
         }
         else
         {
-            faceEdges = (const edgeList&)f[curFace].edges();
+            faceEdges = f[curFace].edges();
         }
 
         forAll (faceEdges, edgeI)
@@ -258,12 +258,11 @@ void tetPolyMeshFaceDecomp::gradNiDotGradNj
 
         if (cellID == owner[curFaceID])
         {
-            faceEdges =
-                (const edgeList&)meshFaces[curFaceID].reverseFace().edges();
+            faceEdges = meshFaces[curFaceID].reverseFace().edges();
         }
         else
         {
-            faceEdges = (const edgeList&)meshFaces[curFaceID].edges();     
+            faceEdges = meshFaces[curFaceID].edges();     
         }
 
         forAll (faceEdges, i)
@@ -352,12 +351,11 @@ void tetPolyMeshFaceDecomp::gradNiGradNj
 
         if (cellID == owner[curFaceID])
         {
-            faceEdges =
-                (const edgeList&)meshFaces[curFaceID].reverseFace().edges();
+            faceEdges = meshFaces[curFaceID].reverseFace().edges();
         }
         else
         {
-            faceEdges = (const edgeList&)meshFaces[curFaceID].edges();
+            faceEdges = meshFaces[curFaceID].edges();
         }
 
         forAll (faceEdges, i)
@@ -456,12 +454,11 @@ void tetPolyMeshFaceDecomp::volIntegral
         // Take care of owner/neighbour face reversal
         if (cellID == owner[curFaceID])
         {
-            faceEdges =
-                (const edgeList&)meshFaces[curFaceID].reverseFace().edges();
+            faceEdges = meshFaces[curFaceID].reverseFace().edges();
         }
         else
         {
-            faceEdges = (const edgeList&)meshFaces[curFaceID].edges();
+            faceEdges = meshFaces[curFaceID].edges();
         }
 
         forAll (faceEdges, edgeI)

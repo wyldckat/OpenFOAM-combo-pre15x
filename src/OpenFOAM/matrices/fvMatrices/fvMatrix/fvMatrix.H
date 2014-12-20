@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     fvMatrix<Type>
@@ -55,6 +55,34 @@ namespace Foam
 
 template<class Type>
 class fvMatrix;
+
+template<class Type>
+tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+(
+    const fvMatrix<Type>&,
+    const GeometricField<Type,fvPatchField,volMesh>&
+);
+
+template<class Type>
+tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+(
+    const fvMatrix<Type>&,
+    const tmp<GeometricField<Type,fvPatchField,volMesh> >&
+);
+
+template<class Type>
+tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+(
+    const tmp<fvMatrix<Type> >&,
+    const GeometricField<Type,fvPatchField,volMesh>&
+);
+
+template<class Type>
+tmp<GeometricField<Type,fvPatchField,volMesh> > operator&
+(
+    const tmp<fvMatrix<Type> >&,
+    const tmp<GeometricField<Type,fvPatchField,volMesh> >&
+);
 
 template<class Type>
 Ostream& operator<<(Ostream&, const fvMatrix<Type>&);
@@ -320,8 +348,32 @@ public:
 
         void operator*=(const dimensioned<scalar>&);
 
-        tmp<Field<Type> > operator&(const Field<Type>&) const;
-        tmp<Field<Type> > operator&(const tmp<Field<Type> >&) const;
+
+    // Friend operators
+
+        friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
+        (
+            const fvMatrix<Type>&,
+            const GeometricField<Type,fvPatchField,volMesh>&
+        );
+
+        friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
+        (
+            const fvMatrix<Type>&,
+            const tmp<GeometricField<Type,fvPatchField,volMesh> >&
+        );
+
+        friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
+        (
+            const tmp<fvMatrix<Type> >&,
+            const GeometricField<Type,fvPatchField,volMesh>&
+        );
+
+        friend tmp<GeometricField<Type,fvPatchField,volMesh> > operator& <Type>
+        (
+            const tmp<fvMatrix<Type> >&,
+            const tmp<GeometricField<Type,fvPatchField,volMesh> >&
+        );
 
 
     // Ostream operator

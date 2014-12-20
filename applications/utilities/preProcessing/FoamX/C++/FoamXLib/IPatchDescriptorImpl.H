@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IPatchDescriptorImpl
@@ -62,7 +62,6 @@ class IPatchDescriptorImpl
         Foam::word name_;
         Foam::string displayName_;
         Foam::string description_;
-        FoamXWordList patchFieldTypes_;
 
 
 public:
@@ -93,8 +92,6 @@ public:
             virtual void displayName(const char*);
             virtual char* description();
             virtual void description(const char*);
-            virtual FoamXServer::StringList* patchFieldTypes();
-            virtual void patchFieldTypes(const FoamXServer::StringList&);
 
 
         //- Persist to file.

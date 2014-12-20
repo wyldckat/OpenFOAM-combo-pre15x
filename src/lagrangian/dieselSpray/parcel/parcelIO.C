@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -84,14 +84,18 @@ parcel::parcel
         {
             is.read
             (
-                (char*)&d_,
+                reinterpret_cast<char*>(&d_),
                 sizeof(d_) + sizeof(T_) + sizeof(m_) + sizeof(y_)
               + sizeof(yDot_) + sizeof(ct_) + sizeof(ms_) + sizeof(tTurb_) 
               + sizeof(liquidCore_) + sizeof(injector_) 
               + sizeof(U_) + sizeof(Uturb_) + sizeof(n_)
             );
 
-            is.read((char*)X_.begin(), X_.size()*sizeof(scalar));
+            is.read
+            (
+                reinterpret_cast<char*>(X_.begin()),
+                X_.size()*sizeof(scalar)
+            );
         }
     }
 
@@ -100,6 +104,7 @@ parcel::parcel
 }
 
 
+template<>
 void Cloud<parcel>::readFields()
 {
 
@@ -175,6 +180,7 @@ void Cloud<parcel>::readFields()
 }
 
 
+template<>
 void Cloud<parcel>::writeFields() const
 {
     label np = size();
@@ -274,7 +280,7 @@ Ostream& operator<<(Ostream& os, const parcel& p)
 
     if (os.format() == IOstream::ASCII)
     {
-        os  << (const particle<parcel>&)p
+        os  << static_cast<const particle<parcel>&>(p)
             << token::SPACE << p.d_
             << token::SPACE << p.T_
             << token::SPACE << p.m_
@@ -292,17 +298,21 @@ Ostream& operator<<(Ostream& os, const parcel& p)
     }
     else
     {
-        os  << (const particle<parcel>&)p;
+        os  << static_cast<const particle<parcel>&>(p);
         os.write
         (
-            (const char*)&p.d_,
+            reinterpret_cast<const char*>(&p.d_),
             sizeof(p.d_) + sizeof(p.T_) + sizeof(p.m_) + sizeof(p.y_)
           + sizeof(p.yDot_) + sizeof(p.ct_) + sizeof(p.ms_) + sizeof(p.tTurb_) 
           + sizeof(p.liquidCore_) + sizeof(p.injector_)
           + sizeof(p.U_) + sizeof(p.Uturb_) + sizeof(p.n_)
         );
 
-        os.write((const char*)p.X_.begin(), p.X_.size()*sizeof(scalar));
+        os.write
+        (
+            reinterpret_cast<const char*>(p.X_.begin()),
+            p.X_.size()*sizeof(scalar)
+        );
     }
 
     // Check state of Ostream

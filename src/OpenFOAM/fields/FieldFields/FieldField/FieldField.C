@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Generic fieldField type.
@@ -118,14 +118,14 @@ void checkFields
 template<template<class> class Field, class Type>
 FieldField<Field, Type>::FieldField()
 :
-    ptrList<Field<Type> >()
+    PtrList<Field<Type> >()
 {}
 
 
 template<template<class> class Field, class Type>
 FieldField<Field, Type>::FieldField(const label size)
 :
-    ptrList<Field<Type> >(size)
+    PtrList<Field<Type> >(size)
 {}
 
 
@@ -136,7 +136,7 @@ FieldField<Field, Type>::FieldField
     const FieldField<Field, Type>& ff
 )
 :
-    ptrList<Field<Type> >(ff.size())
+    PtrList<Field<Type> >(ff.size())
 {
     forAll(*this, i)
     {
@@ -149,14 +149,14 @@ template<template<class> class Field, class Type>
 FieldField<Field, Type>::FieldField(const FieldField<Field, Type>& f)
 :
     refCount(),
-    ptrList<Field<Type> >(f)
+    PtrList<Field<Type> >(f)
 {}
 
 
 template<template<class> class Field, class Type>
-FieldField<Field, Type>::FieldField(const ptrList<Field<Type> >& tl)
+FieldField<Field, Type>::FieldField(const PtrList<Field<Type> >& tl)
 :
-    ptrList<Field<Type> >(tl)
+    PtrList<Field<Type> >(tl)
 {}
 
 
@@ -165,9 +165,13 @@ FieldField<Field, Type>::FieldField(const ptrList<Field<Type> >& tl)
 template<template<class> class Field, class Type>
 FieldField<Field, Type>::FieldField(const tmp<FieldField<Field, Type> >& tf)
 :
-    ptrList<Field<Type> >((FieldField&)tf(), tf.isTmp())
+    PtrList<Field<Type> >
+    (
+        const_cast<FieldField<Field, Type>&>(tf()),
+        tf.isTmp()
+    )
 {
-    ((FieldField&)tf()).resetRefCount();
+    const_cast<FieldField<Field, Type>&>(tf()).resetRefCount();
 }
 #endif
 
@@ -175,7 +179,7 @@ FieldField<Field, Type>::FieldField(const tmp<FieldField<Field, Type> >& tf)
 template<template<class> class Field, class Type>
 FieldField<Field, Type>::FieldField(Istream& is)
 :
-    ptrList<Field<Type> >(is)
+    PtrList<Field<Type> >(is)
 {}
 
 
@@ -298,7 +302,7 @@ void FieldField<Field, Type>::operator=(const tmp<FieldField>& tf)
 
     // This is dodgy stuff, don't try this at home.
     FieldField* fieldPtr = tf.ptr();
-    ptrList<Field<Type> >::transfer(*fieldPtr);
+    PtrList<Field<Type> >::transfer(*fieldPtr);
     delete fieldPtr;
 }
 
@@ -356,7 +360,7 @@ COMPUTED_ASSIGNMENT(scalar, /=)
 template<template<class> class Field, class Type>
 Ostream& operator<<(Ostream& os, const FieldField<Field, Type>& f)
 {
-    os << (const ptrList<Field<Type> >&)f;
+    os << static_cast<const PtrList<Field<Type> >&>(f);
     return os;
 }
 

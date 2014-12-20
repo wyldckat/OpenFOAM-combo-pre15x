@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     lesInterFoam
@@ -35,13 +35,11 @@ Description
 
 #include "subCycle.H"
 #include "interfaceProperties.H"
-#include "incompressible/transportModel/transportModel.H"
+#include "twoPhaseMixture.H"
 #include "incompressible/LESmodel/LESmodel.H"
 
 #include "IFstream.H"
 #include "OFstream.H"
-#include "cuttingPlane.H"
-#include "patchToPatchInterpolation.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -56,8 +54,7 @@ int main(int argc, char *argv[])
 #   include "initContinuityErrs.H"
 
 #   include "createFields.H"
-#   include "createAverages.H"
-#   include "createMapPatch.H"
+//#   include "createAverages.H"
 
 #   include "readTimeControls.H"
 #   include "setInitialDeltaT.H"
@@ -73,11 +70,9 @@ int main(int argc, char *argv[])
 #       include "readTimeControls.H"
 #       include "CourantNo.H"
 #       include "setDeltaT.H"
-#       include "mapInlet.H"
 
         runTime++;
-
-        Info<< "Time = " << runTime.value() << nl << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
 #       include "gammaEqnSubCycle.H"
 
@@ -92,17 +87,17 @@ int main(int argc, char *argv[])
         }
 
 #       include "continuityErrs.H"
-#       include "calculateAverages.H"
+//#       include "calculateAverages.H"
 
         runTime.write();
-#       include "writeNaveragingSteps.H"
+//#       include "writeNaveragingSteps.H"
 
         Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl << endl;
+            << " s\n\n" << endl;
     }
 
-    Info<< "\n end \n";
+    Info<< "End\n" << endl;
 
     return(0);
 }

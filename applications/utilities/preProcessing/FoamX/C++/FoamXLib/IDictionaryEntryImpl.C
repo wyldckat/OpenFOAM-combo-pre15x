@@ -20,21 +20,14 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-// Foam header files.
-#include "OSspecific.H"
-#include "word.H"
-#include "string.H"
+
+// Foam header files
 #include "vector.H"
 #include "tensor.H"
-#include "dictionary.H"
-#include "wordList.H"
-#include "stringList.H"
-#include "dimensionSet.H"
+#include "typeInfo.H"
 
 // Project header files.
 #include "IDictionaryEntryImpl.H"
@@ -128,7 +121,7 @@ FoamX::IDictionaryEntryImpl::~IDictionaryEntryImpl()
         // Release all sub-element objects.
         for
         (
-            Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+            DLList<IDictionaryEntryImpl*>::iterator iter =
                 subElements_.begin();
             iter != subElements_.end();
             ++iter
@@ -249,7 +242,7 @@ void FoamX::IDictionaryEntryImpl::expandPrimitiveList()
 
     try
     {
-        if (!dynamic_cast<const List<Type>*>(&(listTokenPtr_->compoundToken())))
+        if (!isA<List<Type> >(listTokenPtr_->compoundToken()))
         {
             throw FoamXError
             (
@@ -260,7 +253,7 @@ void FoamX::IDictionaryEntryImpl::expandPrimitiveList()
             );
         }
 
-        const List<Type>& sl = dynamic_cast<const List<Type>& >
+        const List<Type>& sl = dynamicCast<const List<Type> >
         (
             listTokenPtr_->compoundToken()
         );
@@ -295,17 +288,17 @@ void FoamX::IDictionaryEntryImpl::expandPrimitiveList()
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 template<class Form>
-void FoamX::IDictionaryEntryImpl::expandVectorSpaceList()
+void FoamX::IDictionaryEntryImpl::expandFixedListList()
 {
     static const char* functionName =
         "FoamX::IDictionaryEntryImpl::"
-        "expandVectorSpaceList<Form, Cmpt, nCmpt>()";
+        "expandFixedListList<Form, Cmpt, nCmpt>()";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
     try
     {
-        if (!dynamic_cast<const List<Form>*>(&(listTokenPtr_->compoundToken())))
+        if (!isA<List<Form> >(listTokenPtr_->compoundToken()))
         {
             throw FoamXError
             (
@@ -316,7 +309,7 @@ void FoamX::IDictionaryEntryImpl::expandVectorSpaceList()
             );
         }
 
-        const List<Form>& vl = dynamic_cast<const List<Form>& >
+        const List<Form>& vl = dynamicCast<const List<Form> >
         (
             listTokenPtr_->compoundToken()
         );
@@ -345,7 +338,7 @@ void FoamX::IDictionaryEntryImpl::expandVectorSpaceList()
                 throw FoamXError
                 (
                     E_UNEXPECTED,
-                    "Number of sub-elements in Type_VectorSpace = "
+                    "Number of sub-elements in Type_FixedList = "
                   + name(pSubEntry->subElements_.size()) + " is not equal to "
                   + "the number of elements in the given Form = "
                   + name(Form::nComponents),
@@ -358,7 +351,7 @@ void FoamX::IDictionaryEntryImpl::expandVectorSpaceList()
             direction j=0;
             for
             (
-                Foam::DLList<IDictionaryEntryImpl*>::iterator
+                DLList<IDictionaryEntryImpl*>::iterator
                     iter = pSubEntry->subElements_.begin();
                 iter != pSubEntry->subElements_.end();
                 ++iter
@@ -421,43 +414,31 @@ void FoamX::IDictionaryEntryImpl::expandList()
 
         if
         (
-            dynamic_cast<const List<label>*>
-            (
-                &(listTokenPtr_->compoundToken())
-            )
+            isA<List<label> >(listTokenPtr_->compoundToken())
         )
         {
             expandPrimitiveList<label, CORBA::Long>();
         }
         else if
         (
-            dynamic_cast<const List<scalar>*>
-            (
-                &(listTokenPtr_->compoundToken())
-            )
+            isA<List<scalar> >(listTokenPtr_->compoundToken())
         )
         {
             expandPrimitiveList<scalar, CORBA::Double>();
         }
         else if
         (
-            dynamic_cast<const List<Foam::vector>*>
-            (
-                &(listTokenPtr_->compoundToken())
-            )
+            isA<List<vector> >(listTokenPtr_->compoundToken())
         )
         {
-            expandVectorSpaceList<Foam::vector>();
+            expandFixedListList<vector>();
         }
         else if
         (
-            dynamic_cast<const List<Foam::tensor>*>
-            (
-                &(listTokenPtr_->compoundToken())
-            )
+            isA<List<tensor> >(listTokenPtr_->compoundToken())
         )
         {
-            expandVectorSpaceList<Foam::tensor>();
+            expandFixedListList<tensor>();
         }
 
         delete listTokenPtr_;
@@ -486,7 +467,7 @@ FoamX::DictionaryEntryList* FoamX::IDictionaryEntryImpl::subElements()
         int nVisibleElements = 0;
         for
         (
-            Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+            DLList<IDictionaryEntryImpl*>::iterator iter =
                 subElements_.begin();
             iter != subElements_.end();
             ++iter
@@ -505,7 +486,7 @@ FoamX::DictionaryEntryList* FoamX::IDictionaryEntryImpl::subElements()
         int i = 0;
         for
         (
-            Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+            DLList<IDictionaryEntryImpl*>::iterator iter =
                 subElements_.begin();
             iter != subElements_.end();
             ++iter
@@ -573,7 +554,7 @@ CORBA::Boolean FoamX::IDictionaryEntryImpl::packedList()
 //        int i = 0;
 //        for
 //        (
-//            Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+//            DLList<IDictionaryEntryImpl*>::iterator iter =
 //                subElements_.begin();
 //            iter != subElements_.end();
 //            ++iter
@@ -717,7 +698,7 @@ void FoamX::IDictionaryEntryImpl::removeElement
             // Remove from List.
             for
             (
-                Foam::DLList<IDictionaryEntryImpl*>::iterator iter = 
+                DLList<IDictionaryEntryImpl*>::iterator iter = 
                     subElements_.begin();
                 iter != subElements_.end();
                 ++iter
@@ -732,7 +713,7 @@ void FoamX::IDictionaryEntryImpl::removeElement
                     iter()->_remove_ref();
                     subElements_.remove
                     (
-                        &(iter.Foam::DLListBase::iterator::operator*())
+                        &(iter.DLListBase::iterator::operator*())
                     );    // Hmmmmm.
                     break;
                 }
@@ -769,14 +750,15 @@ void FoamX::IDictionaryEntryImpl::clearSubElements()
     {
         if
         (
-            (ITypeDescriptor*)typeDescriptor_ == ITypeDescriptor::_nil()
-        ||  typeDescriptor_->editable()
+            static_cast<ITypeDescriptor*>(typeDescriptor_)
+         == ITypeDescriptor::_nil()
+         || typeDescriptor_->editable()
         )
         {
             // Release all sub-element objects.
             for
             (
-                Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+                DLList<IDictionaryEntryImpl*>::iterator iter =
                     subElements_.begin();
                 iter != subElements_.end();
                 ++iter
@@ -840,7 +822,7 @@ void FoamX::IDictionaryEntryImpl::validate()
             // Check all sub-entries.
             for
             (
-                Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+                DLList<IDictionaryEntryImpl*>::iterator iter =
                     subElements_.begin();
                 iter != subElements_.end();
                 ++iter
@@ -869,7 +851,7 @@ CORBA::Boolean FoamX::IDictionaryEntryImpl::modified()
         // Check all sub-entries.
         for
         (
-            Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+            DLList<IDictionaryEntryImpl*>::iterator iter =
                 subElements_.begin();
             iter != subElements_.end();
             ++iter
@@ -895,12 +877,12 @@ void FoamX::IDictionaryEntryImpl::save()
 
 void FoamX::IDictionaryEntryImpl::load
 (
-    const Foam::entry& ent
+    const entry& ent
 )
 {
     static const char* functionName =
         "FoamX::IDictionaryEntryImpl::load"
-        "(const Foam::entry&, bool allowNonOptional)";
+        "(const entry&, bool allowNonOptional)";
 
     if (ent.isStream())
     {
@@ -926,13 +908,13 @@ void FoamX::IDictionaryEntryImpl::load
 
 void FoamX::IDictionaryEntryImpl::load
 (
-    const Foam::dictionary& dict,
+    const dictionary& dict,
     bool allowNonOptional
 )
 {
     static const char* functionName =
         "FoamX::IDictionaryEntryImpl::load"
-        "(const Foam::dictionary&, bool allowNonOptional)";
+        "(const dictionary&, bool allowNonOptional)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -955,7 +937,7 @@ void FoamX::IDictionaryEntryImpl::load
         // Loop over all elements.
         for
         (
-            Foam::DLList<IDictionaryEntryImpl*>::iterator iter
+            DLList<IDictionaryEntryImpl*>::iterator iter
                 = subElements_.begin();
             iter != subElements_.end();
             ++iter
@@ -993,10 +975,10 @@ void FoamX::IDictionaryEntryImpl::load
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::IDictionaryEntryImpl::load(Foam::Istream& is)
+void FoamX::IDictionaryEntryImpl::load(Istream& is)
 {
     static const char* functionName =
-        "FoamX::IDictionaryEntryImpl::load(Foam::Istream&)";
+        "FoamX::IDictionaryEntryImpl::load(Istream&)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1021,9 +1003,9 @@ void FoamX::IDictionaryEntryImpl::load(Foam::Istream& is)
         {
             switch(typeDescriptor_->type())
             {
-                case Type_VectorSpace:
+                case Type_FixedList:
                 {
-                    log << "Reading VectorSpace" << endl;
+                    log << "Reading FixedList" << endl;
 
                     // Read beginning of list contents.
                     is.readBeginList("List");
@@ -1031,7 +1013,7 @@ void FoamX::IDictionaryEntryImpl::load(Foam::Istream& is)
                     // Loop over all vector elements.
                     for
                     (
-                        Foam::DLList<IDictionaryEntryImpl*>::iterator
+                        DLList<IDictionaryEntryImpl*>::iterator
                             iter = subElements_.begin();
                         iter != subElements_.end();
                         ++iter
@@ -1061,7 +1043,7 @@ void FoamX::IDictionaryEntryImpl::load(Foam::Istream& is)
 
                     is.fatalCheck
                     (
-                        "IDictionaryEntryImpl::load(Foam::Istream&, bool)"
+                        "IDictionaryEntryImpl::load(Istream&, bool)"
                         " : reading first token"
                     );
 
@@ -1161,7 +1143,7 @@ void FoamX::IDictionaryEntryImpl::load(Foam::Istream& is)
                             FatalIOErrorIn
                             (
                                 "IDictionaryEntryImpl::load"
-                                "(Foam::Istream&, bool)",
+                                "(Istream&, bool)",
                                 is
                             )   << "incorrect first token, '(', found " 
                                 << firstToken.info()
@@ -1212,7 +1194,7 @@ void FoamX::IDictionaryEntryImpl::load(Foam::Istream& is)
                     {
                         FatalIOErrorIn
                         (
-                            "IDictionaryEntryImpl::load(Foam::Istream&, bool)",
+                            "IDictionaryEntryImpl::load(Istream&, bool)",
                             is
                         )   << "incorrect first token, "
                               "expected <int> or '(', found "
@@ -1242,7 +1224,7 @@ void FoamX::IDictionaryEntryImpl::load(Foam::Istream& is)
                     // Loop over all types to find selection.
                     for
                     (
-                        Foam::DLList<IDictionaryEntryImpl*>::iterator iter
+                        DLList<IDictionaryEntryImpl*>::iterator iter
                             = subElements_.begin();
                         iter != subElements_.end();
                         ++iter, ++i
@@ -1269,7 +1251,7 @@ void FoamX::IDictionaryEntryImpl::load(Foam::Istream& is)
                     // Loop over all vector elements.
                     for
                     (
-                        Foam::DLList<IDictionaryEntryImpl*>::iterator iter
+                        DLList<IDictionaryEntryImpl*>::iterator iter
                             = subElements_.begin();
                         iter != subElements_.end();
                         ++iter
@@ -1318,10 +1300,10 @@ void FoamX::IDictionaryEntryImpl::save
     try
     {
         word entryName = typeDescriptor_->name();
-        Foam::string comment = typeDescriptor_->comment();
-        Foam::string description = typeDescriptor_->description();
+        string comment = typeDescriptor_->comment();
+        string description = typeDescriptor_->description();
 
-        if (dictEntry && Foam::debug::infoSwitch("FoamXwriteComments"))
+        if (dictEntry && debug::infoSwitch("FoamXwriteComments"))
         {
             if (comment.size() > 0)
             {
@@ -1338,21 +1320,21 @@ void FoamX::IDictionaryEntryImpl::save
 
         switch(typeDescriptor_->type())
         {
-            case Type_VectorSpace:
+            case Type_FixedList:
             {
-                log << "Saving VectorSpace" << endl;
+                log << "Saving FixedList" << endl;
             
                 // Write entry name if required.
                 if (dictEntry) dictWriter.writeKeyword(entryName);
             
                 // Start list. Do not write the count.
-                dictWriter.startVectorSpace();
+                dictWriter.startFixedList();
             
                 // Write values.
                 label i = 0;
                 for
                 (
-                    Foam::DLList<IDictionaryEntryImpl*>::iterator iter
+                    DLList<IDictionaryEntryImpl*>::iterator iter
                         = subElements_.begin();
                     iter != subElements_.end();
                     ++iter
@@ -1366,7 +1348,7 @@ void FoamX::IDictionaryEntryImpl::save
                     iter()->save(dictWriter, false);
                 }
             
-                dictWriter.endVectorSpace();
+                dictWriter.endFixedList();
             
                 if (dictEntry)
                 {
@@ -1394,7 +1376,7 @@ void FoamX::IDictionaryEntryImpl::save
                     // Write values.
                     for
                     (
-                        Foam::DLList<IDictionaryEntryImpl*>::iterator iter = 
+                        DLList<IDictionaryEntryImpl*>::iterator iter = 
                             subElements_.begin();
                         iter != subElements_.end();
                         ++iter
@@ -1433,7 +1415,7 @@ void FoamX::IDictionaryEntryImpl::save
                 // Write sub-entries.
                 for
                 (
-                    Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+                    DLList<IDictionaryEntryImpl*>::iterator iter =
                         subElements_.begin();
                     iter != subElements_.end();
                     ++iter
@@ -1462,7 +1444,7 @@ void FoamX::IDictionaryEntryImpl::save
                     throw FoamXError
                     (
                         E_FAIL,
-                        Foam::string("No types given for selection '")
+                        string("No types given for selection '")
                       + typeDescriptor_->path() + "' for dictionary\n"
                       + dictWriter.pathName(),
                         functionName,
@@ -1478,7 +1460,7 @@ void FoamX::IDictionaryEntryImpl::save
                 // Write current selection.
                 for
                 (
-                    Foam::DLList<IDictionaryEntryImpl*>::iterator iter = 
+                    DLList<IDictionaryEntryImpl*>::iterator iter = 
                         subElements_.begin();
                     iter != subElements_.end();
                     ++iter, ++i
@@ -1530,7 +1512,7 @@ void FoamX::IDictionaryEntryImpl::save
                 // Write values.
                 for
                 (
-                    Foam::DLList<IDictionaryEntryImpl*>::iterator iter = 
+                    DLList<IDictionaryEntryImpl*>::iterator iter = 
                         subElements_.begin();
                     iter != subElements_.end();
                     ++iter
@@ -1570,7 +1552,7 @@ void FoamX::IDictionaryEntryImpl::save
                     throw FoamXError
                     (
                         E_FAIL,
-                        Foam::string("Non-optional dictionary entry '")
+                        string("Non-optional dictionary entry '")
                       + typeDescriptor_->path()
                       + "' : Value not specified for dictionary\n"
                       + dictWriter.pathName(),
@@ -1669,7 +1651,7 @@ void FoamX::IDictionaryEntryImpl::bindFieldType(ITypeDescriptor_ptr typeDesc)
             // Recurse over all sub-entries.
             for
             (
-                Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+                DLList<IDictionaryEntryImpl*>::iterator iter =
                     subElements_.begin();
                 iter != subElements_.end();
                 ++iter
@@ -1720,9 +1702,9 @@ void FoamX::IDictionaryEntryImpl::bindType
 
             switch(typeDescriptor_->type())
             {
-                case Type_VectorSpace:
+                case Type_FixedList:
                 {
-                    log << "Default constructing VectorSpace"
+                    log << "Default constructing FixedList"
                         << endl;
                 
                     // Get size of vector.
@@ -1737,9 +1719,9 @@ void FoamX::IDictionaryEntryImpl::bindType
                             E_FAIL,
                             "Invalid number of SubTypes for vector, "
                             " expected 1, found "
-                          + Foam::word
+                          + word
                             (
-                                Foam::name(Foam::label(pSubTypes->length()))
+                                name(label(pSubTypes->length()))
                             ),
                             functionName,
                             __FILE__, __LINE__
@@ -1939,7 +1921,7 @@ void FoamX::IDictionaryEntryImpl::operator=
 
             for
             (
-                Foam::DLList<IDictionaryEntryImpl*>::const_iterator
+                DLList<IDictionaryEntryImpl*>::const_iterator
                     dictEntryIter = dictEntry.subElements_.begin();
                 dictEntryIter != dictEntry.subElements_.end();
                 ++dictEntryIter
@@ -1984,18 +1966,18 @@ void FoamX::IDictionaryEntryImpl::operator=
                 (
                     E_INVALID_ARG,
                     "Number of sub-elements in argument "
-                  + word(Foam::name(dictEntry.subElements_.size()))
+                  + word(name(dictEntry.subElements_.size()))
                   + " does not match the number in this of "
-                  + word(Foam::name(subElements_.size())),
+                  + word(name(subElements_.size())),
                   functionName,
                   __FILE__, __LINE__
                 );
             }
 
-            Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+            DLList<IDictionaryEntryImpl*>::iterator iter =
                 subElements_.begin();
 
-            Foam::DLList<IDictionaryEntryImpl*>::const_iterator dictEntryIter =
+            DLList<IDictionaryEntryImpl*>::const_iterator dictEntryIter =
                 dictEntry.subElements_.begin();
 
             for
@@ -2087,9 +2069,9 @@ void FoamX::IDictionaryEntryImpl::operator=(IDictionaryEntry_ptr dictEntryPtr)
                 (
                     E_INVALID_ARG,
                     "Number of sub-elements in argument "
-                  + word(Foam::name(label(subElmtsPtr->length())))
+                  + word(name(label(subElmtsPtr->length())))
                   + " does not match the number in this of "
-                  + word(Foam::name(subElements_.size())),
+                  + word(name(subElements_.size())),
                     functionName,
                     __FILE__, __LINE__
                 );
@@ -2098,7 +2080,7 @@ void FoamX::IDictionaryEntryImpl::operator=(IDictionaryEntry_ptr dictEntryPtr)
             label i = 0;
             for
             (
-                Foam::DLList<IDictionaryEntryImpl*>::iterator iter =
+                DLList<IDictionaryEntryImpl*>::iterator iter =
                     subElements_.begin();
                 iter != subElements_.end();
                 ++iter
@@ -2115,5 +2097,6 @@ void FoamX::IDictionaryEntryImpl::operator=(IDictionaryEntry_ptr dictEntryPtr)
     }
     CATCH_ALL(functionName);
 }
+
 
 // ************************************************************************* //

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -28,19 +28,12 @@ Description
 
 #include "triSurface.H"
 #include "demandDrivenData.H"
-#include "IOstreams.H"
 #include "IFstream.H"
 #include "OFstream.H"
-#include "Map.H"
 #include "Time.H"
-#include "sortLabelledTri.H"
-#include "faceIOList.H"
-#include "labelIOList.H"
-#include "pointIOField.H"
-#include "surfacePatchIOList.H"
 #include "boundBox.H"
-#include "polyMesh.H"
 #include "triSurfaceTools.H"
+#include "SortableList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -229,10 +222,10 @@ void triSurface::checkTriangles(bool verbose)
 
             if (verbose)
             {
-                Warning
-                    << "triSurface::checkTriangles"
-                    << "(bool verbose)\n"
-                    << "triangle " << faceI
+                WarningIn
+                (
+                    "triSurface::checkTriangles(bool verbose)"
+                )   << "triangle " << faceI
                     << " does not have three unique vertices:\n";
                 printTriangle(Warning, "    ", f, points());
             }
@@ -266,10 +259,10 @@ void triSurface::checkTriangles(bool verbose)
 
                     if (verbose)
                     {
-                        Warning
-                            << "triSurface::checkTriangles"
-                            << "(bool verbose)\n"
-                            << "triangles share the same vertices:\n"
+                        WarningIn
+                        (
+                            "triSurface::checkTriangles(bool verbose)"
+                        )   << "triangles share the same vertices:\n"
                             << "    face 1 :" << faceI << endl;
                         printTriangle(Warning, "    ", f, points()); 
 
@@ -301,10 +294,10 @@ void triSurface::checkTriangles(bool verbose)
 
         if (verbose)
         {
-            Warning
-                << "triSurface::checkTriangles"
-                << "(bool verbose)\n"
-                << "Removing " << size() - newFaceI
+            WarningIn
+            (
+                "triSurface::checkTriangles(bool verbose)"
+            )   << "Removing " << size() - newFaceI
                 << " illegal faces." << endl;
         }
         (*this).setSize(newFaceI);
@@ -333,9 +326,10 @@ void triSurface::checkEdges(bool verbose)
         }
         else if (myFaces.size() > 2)
         {
-            Warning
-                << "triSurface::checkEdges(bool verbose)\n"
-                << "Edge " << edgeI << " with vertices " << edges()[edgeI]
+            WarningIn
+            (
+                "triSurface::checkEdges(bool verbose)"
+            )   << "Edge " << edgeI << " with vertices " << edges()[edgeI]
                 << " has more than 2 faces connected to it : " << myFaces
                 << endl;
         }
@@ -367,9 +361,10 @@ boolList triSurface::checkOrientation(bool verbose)
         {
             if (edgeLabels[i] < 0 || edgeLabels[i] >= nEdges())
             {
-                Warning
-                    << "triSurface::checkOrientation(bool) : \n"
-                    << "edge number " << edgeLabels[i] << " on face " << facei
+                WarningIn
+                (
+                    "triSurface::checkOrientation(bool)"
+                )   << "edge number " << edgeLabels[i] << " on face " << facei
                     << " out of range"
                     << "\nThis usually means that the input surface has "
                     << "edges with more than 2 triangles connected.\n"
@@ -460,7 +455,7 @@ boolList triSurface::checkOrientation(bool verbose)
                 borderEdge[edgei] = true;
                 if (verbose)
                 {
-                    Warning
+                    WarningIn("triSurface::checkOrientation(bool)")
                         << "Triangle orientation incorrect." << endl
                         << "edge neighbours:" << neighbours << endl
                         << "triangle " << neighbours[0] << " has edges "
@@ -491,7 +486,7 @@ boolList triSurface::checkOrientation(bool verbose)
             if (verbose)
             {
                 const edge& e = es[edgei];
-                Warning
+                WarningIn("triSurface::checkOrientation(bool)")
                     << "Wrong number of edge neighbours." << endl
                     << "Edge:" << e
                     << "with points:" << localPoints()[e.start()]
@@ -509,7 +504,8 @@ boolList triSurface::checkOrientation(bool verbose)
 // Read triangles, points from Istream
 bool triSurface::read(Istream& is)
 {
-    is >> patches_ >> (pointField&)points() >> (List<labelledTri>&)(*this);
+    is  >> patches_ >> const_cast<pointField&>(points())
+        >> static_cast<List<labelledTri>&>(*this);
 
     return true;
 }
@@ -599,6 +595,10 @@ void triSurface::write
     {
         writeOFF(sort, OFstream(name)());
     }
+    else if (ext == "vtk")
+    {
+        writeVTK(sort, OFstream(name)());
+    }
     else if (ext == "tri")
     {
         writeTRI(sort, OFstream(name)());
@@ -622,7 +622,7 @@ void triSurface::write
             "triSurface::write(const fileName&, const word&, const bool)"
         )   << "unknown file extension " << ext
             << ". Supported extensions are '.ftr', '.stl', '.stlb', "
-            << "'.gts', '.obj'"
+            << "'.gts', '.obj', '.vtk'"
             << ", '.off', '.dx', '.smesh', '.ac' and '.tri'"
             << exit(FatalError);
     }
@@ -634,11 +634,19 @@ void triSurface::write
 surfacePatchList triSurface::calcPatches(labelList& faceMap) const
 {
     // Sort according to region numbers of labelledTri
-    sortLabelledTri sortedTris(*this);
+    SortableList<label> sortedRegion(size());
 
-    sortedTris.indices(faceMap);
+    forAll(sortedRegion, faceI)
+    {
+        sortedRegion[faceI] = operator[](faceI).region();
+    }
+    sortedRegion.sort();
 
-    // Get last region
+    faceMap = sortedRegion.indices();
+
+    // Compact regions
+
+    // Get first and last region
     label minRegion = 0;
     label maxRegion = 0;
 
@@ -648,6 +656,7 @@ surfacePatchList triSurface::calcPatches(labelList& faceMap) const
         maxRegion = operator[](faceMap[faceMap.size() - 1]).region();
     }
 
+    // Shift all regions down by minRegion
     surfacePatchList newPatches(maxRegion - minRegion + 1);
 
 
@@ -663,31 +672,33 @@ surfacePatchList triSurface::calcPatches(labelList& faceMap) const
     // Fill rest of patch info
 
     label startFaceI = 0;
-    forAll(newPatches, patchI)
+    forAll(newPatches, newPatchI)
     {
-        surfacePatch& newPatch = newPatches[patchI];
+        surfacePatch& newPatch = newPatches[newPatchI];
+
+        label oldPatchI = newPatchI + minRegion;
 
         // start of patch
         newPatch.start() = startFaceI;
 
 
         // Take over any information from existing patches
-        if ((patchI < patches_.size()) && (patches_[patchI].name() != ""))
+        if ((oldPatchI < patches_.size()) && (patches_[oldPatchI].name() != ""))
         {
-            newPatch.name() = patches_[patchI].name();
+            newPatch.name() = patches_[oldPatchI].name();
         }
         else
         {
-            newPatch.name() = word("patch") + name(patchI);
+            newPatch.name() = word("patch") + name(newPatchI);
         }
 
         if
         (
-            (patchI < patches_.size())
-         && (patches_[patchI].geometricType() != "")
+            (oldPatchI < patches_.size())
+         && (patches_[oldPatchI].geometricType() != "")
         )
         {
-            newPatch.geometricType() = patches_[patchI].geometricType();
+            newPatch.geometricType() = patches_[oldPatchI].geometricType();
         }
         else
         {
@@ -997,7 +1008,7 @@ void triSurface::movePoints(const pointField& newPoints)
     PrimitivePatch<labelledTri, List, pointField>::movePoints(newPoints);
 
     // Copy new points
-    (pointField&)points() = newPoints;
+    const_cast<pointField&>(points()) = newPoints;
 }
 
 
@@ -1243,7 +1254,8 @@ void triSurface::write(Ostream& os) const
     os  << patches() << endl;
 
     //Note: Write with global point numbering
-    os  << points() << nl << (const List<labelledTri>&)(*this) << endl;
+    os  << points() << nl
+        << static_cast<const List<labelledTri>&>(*this) << endl;
 
     // Check state of Ostream
     os.check("triSurface::write(Ostream&)");
@@ -1277,7 +1289,7 @@ void triSurface::operator=(const triSurface& ts)
 {
     List<labelledTri>::operator=(ts);
     clearOut();
-    (pointField&)points() = ts.points();
+    const_cast<pointField&>(points()) = ts.points();
     patches_ = ts.patches();
 }
 

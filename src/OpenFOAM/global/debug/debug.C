@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Class for handling debugging switches.
@@ -42,54 +42,46 @@ namespace Foam
 namespace debug
 {
 
-dictionary* debugSwitchesPtr_ = NULL;
-dictionary* infoSwitchesPtr_ = NULL;
-dictionary* optimisationSwitchesPtr_ = NULL;
+dictionary* controlDictPtr_(NULL);
+dictionary* debugSwitchesPtr_(NULL);
+dictionary* infoSwitchesPtr_(NULL);
+dictionary* optimisationSwitchesPtr_(NULL);
 
-dictionary* readSwitchSet
-(
-    const fileName& dictFileName,
-    const char* switchSet
-)
+// Class to esure controlDictPtr_ is deleted at the end of the run
+class deleteControlDictPtr
 {
-    IFstream dictFile(dictFileName);
+public:
 
-    if (!dictFile.good())
+    deleteControlDictPtr()
+    {}
+
+    ~deleteControlDictPtr()
     {
-        cerr<< "readSwitchSet(const fileName& dictFileName, "
-               "const char* switchSet) : "
-            << "cannot open essential file " << dictFileName.c_str()
-            << std::endl << std::endl;
-        ::exit(1);
+        if (controlDictPtr_)
+        {
+            delete controlDictPtr_;
+        }
     }
+};
 
-    dictionary controlDict(dictFile);
-
-    if (!controlDict.found(switchSet))
-    {
-        cerr<< "readSwitchSet(const fileName& dictFileName, "
-               "const char* switchSet) : "
-            << "cannot find " <<  switchSet
-            << " entry in file " << dictFileName.c_str()
-            << std::endl << std::endl;
-        ::exit(1);
-    }
-
-    return new dictionary(controlDict.subDict(switchSet));
-}
+deleteControlDictPtr deleteControlDictPtr_;
 
 
-typedef dictionary* dictionaryPtr;
-
-dictionary& switchSet
-(
-    const char* switchSetName,
-    dictionaryPtr& switchSetPtr
-)
+dictionary& switchSet(const char* switchSetName, dictionary* switchSetPtr)
 {
     if (!switchSetPtr)
     {
-        switchSetPtr = readSwitchSet(dotFoam("controlDict"), switchSetName);
+        if (!controlDict().found(switchSetName))
+        {
+            cerr<< "debug::switchSet(const char*, dictionary*): " << std::endl
+                << "    Cannot find " <<  switchSetName
+            << " in dictionary " << controlDictPtr_->name().c_str()
+            << std::endl << std::endl;
+            ::exit(1);
+        }
+
+        switchSetPtr = 
+            const_cast<dictionary*>(&(controlDict().subDict(switchSetName)));
     }
 
     return *switchSetPtr;
@@ -118,6 +110,29 @@ int debugSwitch
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dictionary& debug::controlDict()
+{
+    if (!controlDictPtr_)
+    {
+        fileName controlDictFileName(dotFoam("controlDict"));
+
+        IFstream dictFile(controlDictFileName);
+
+        if (!dictFile.good())
+        {
+            cerr<< "debug::controlDict(): "
+                << "Cannot open essential file " << controlDictFileName.c_str()
+                << std::endl << std::endl;
+            ::exit(1);
+        }
+
+        controlDictPtr_ = new dictionary(dictFile);
+    }
+
+    return *controlDictPtr_;
+}
+
 
 dictionary& debug::debugSwitches()
 {

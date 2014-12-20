@@ -25,19 +25,21 @@ FoamFile
 
 dimensions      [0 2 -2 0 0 0 0];
 
-internalField   uniform 0.1;
+internalField   uniform 1e-8;
 
 boundaryField
 {
     inlet           
     {
         type            fixedValue;
-        value           uniform 0.1;
+        value           uniform 1e-8;
     }
 
     outlet          
     {
-        type            zeroGradient;
+        type            inletOutlet;
+        inletValue      uniform 1e-8;
+        value           uniform 1e-8;
     }
 
     walls           

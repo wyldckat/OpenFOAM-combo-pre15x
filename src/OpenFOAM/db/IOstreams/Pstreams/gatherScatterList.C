@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Gather data from all processors onto single processor according to some
@@ -69,8 +69,7 @@ void Pstream::gatherList
 
             if (debug)
             {
-                Sout<< '[' << Pstream::myProcNo() << ']'
-                    << " received through "
+                Pout<< " received through "
                     << belowID << " data from:" << belowID
                     << " data:" << Values[belowID] << endl;
             }
@@ -86,8 +85,7 @@ void Pstream::gatherList
 
                 if (debug)
                 {
-                    Sout<< '[' << Pstream::myProcNo() << ']'
-                        << " received through "
+                    Pout<< " received through "
                         << belowID << " data from:" << leafID
                         << " data:" << Values[leafID] << endl;
                 }
@@ -104,8 +102,7 @@ void Pstream::gatherList
 
             if (debug)
             {
-                Sout<< '[' << Pstream::myProcNo() << ']'
-                    << " sending to " << myComm.above()
+                Pout<< " sending to " << myComm.above()
                     << " data from me:" << Pstream::myProcNo()
                     << " data:" << Values[Pstream::myProcNo()] << endl;
             }
@@ -117,8 +114,7 @@ void Pstream::gatherList
 
                 if (debug)
                 {
-                    Sout<< '[' << Pstream::myProcNo() << ']'
-                        << " sending to "
+                    Pout<< " sending to "
                         << myComm.above() << " data from:" << leafID
                         << " data:" << Values[leafID] << endl;
                 }
@@ -169,8 +165,7 @@ void Pstream::scatterList
 
                 if (debug)
                 {
-                    Sout<< '[' << Pstream::myProcNo() << ']'
-                        << " received through "
+                    Pout<< " received through "
                         << myComm.above() << " data for:" << leafID
                         << " data:" << Values[leafID] << endl;
                 }
@@ -196,8 +191,7 @@ void Pstream::scatterList
 
                 if (debug)
                 {
-                    Sout<< '[' << Pstream::myProcNo() << ']'
-                        << " sent through "
+                    Pout<< " sent through "
                         << belowID << " data for:" << leafID
                         << " data:" << Values[leafID] << endl;
                 }

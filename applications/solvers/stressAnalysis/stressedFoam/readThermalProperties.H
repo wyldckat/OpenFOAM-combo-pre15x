@@ -40,7 +40,7 @@
         Info<< "Calculating thermal coefficients\n" << endl;
 
         threeKalpha = threeK*alpha;
-        DT = k/C;
+        DT.value() = (k/C).value();
 
         Info<< "threeKalpha = " << threeKalpha.value() << " Pa/rho\n";
     }

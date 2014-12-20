@@ -20,15 +20,11 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Application
-    
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
-#include "ptrList.H"
+#include "PtrList.H"
 #include "scalar.H"
 
 using namespace Foam;
@@ -38,7 +34,7 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
-    ptrList<scalar> list(10);
+    PtrList<scalar> list(10);
 
     forAll(list, i)
     {
@@ -47,7 +43,7 @@ int main(int argc, char *argv[])
 
     for
     (
-        ptrList<scalar>::iterator iter = list.begin();
+        PtrList<scalar>::iterator iter = list.begin();
         iter != list.end();
         ++iter
     )

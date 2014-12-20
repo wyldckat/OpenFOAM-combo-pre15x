@@ -52,45 +52,28 @@
 
 #   include "createPhi.H"
 
+
     Info<< "Reading transportProperties\n" << endl;
-
-    IOdictionary transportProperties
-    (
-        IOobject
-        (
-            "transportProperties",
-            runTime.constant(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        )
-    );
-
-    dimensionedScalar rho1
-    (
-        dictionary(transportProperties.subDict("phase1")).lookup("rho")
-    );
-
-    dimensionedScalar rho2
-    (
-        dictionary(transportProperties.subDict("phase2")).lookup("rho")
-    );
+    twoPhaseMixture twoPhaseProperties(U, phi);
+    
+    const dimensionedScalar& rho1 = twoPhaseProperties.rho1();
+    const dimensionedScalar& rho2 = twoPhaseProperties.rho2();
 
 
     // Need to store rho for ddt(rho, U)
-    volScalarField rho("rho", gamma*rho1 + (1.0 - gamma)*rho2);
+    volScalarField rho
+    (
+        IOobject
+        (
+            "rho",
+            runTime.timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT
+        ),
+        gamma*rho1 + (1.0 - gamma)*rho2,
+        gamma.boundaryField().types()
+    );
     rho.oldTime();
-
-
-    autoPtr<transportModel> phase1
-    (
-        transportModel::New(U, phi, "phase1")
-    );
-
-    autoPtr<transportModel> phase2
-    (
-        transportModel::New(U, phi, "phase2")
-    );
 
 
     // Mass flux
@@ -110,10 +93,14 @@
     );
 
 
+    label pdRefCell = 0;
+    scalar pdRefValue = 0.0;
+    setRefCell(pd, mesh.solutionDict().subDict("PISO"), pdRefCell, pdRefValue);
+
+
     Info<< "Calculating field g.h\n" << endl;
-    surfaceScalarField ghf = 
-        fvc::interpolate(volScalarField("gh", g & mesh.C()));
+    surfaceScalarField ghf("gh", g & mesh.Cf());
 
 
     // Construct interface from gamma distribution
-    interfaceProperties interface(gamma, U, transportProperties);
+    interfaceProperties interface(gamma, U, twoPhaseProperties);

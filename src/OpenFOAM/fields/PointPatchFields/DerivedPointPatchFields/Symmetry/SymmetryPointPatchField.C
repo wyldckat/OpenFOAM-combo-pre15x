@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -90,7 +88,7 @@ SymmetryPointPatchField
 :
     BasicSymmetryPointPatchField<PatchField, PointPatch, Type>(p, iF)
 {
-    if (typeid(p) != typeid(SymmetryPointPatch))
+    if (!isType<SymmetryPointPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -103,7 +101,7 @@ SymmetryPointPatchField
             "    const dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index() << " not symmetry type. "
+        )   << "patch " << this->patch().index() << " not symmetry type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -129,7 +127,7 @@ SymmetryPointPatchField
 :
     BasicSymmetryPointPatchField<PatchField, PointPatch, Type>(p, iF)
 {
-    if (typeid(this->patchMesh()) != typeid(SymmetryPointPatch))
+    if (!isType<SymmetryPointPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -144,9 +142,9 @@ SymmetryPointPatchField
             "    const PointPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }

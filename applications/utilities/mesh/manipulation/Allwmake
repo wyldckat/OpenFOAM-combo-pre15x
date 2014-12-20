@@ -2,7 +2,8 @@
 
 set -x
 
-wmake scalePoints
+wmake transformPoints
+wmake rotateMesh
 wmake checkMesh
 wmake attachMesh
 wmake zipUpMesh
@@ -16,6 +17,7 @@ wmake renumberMesh
 wmake tetDecomposition
 wmake moveMesh
 wmake moveEngineMesh
+wmake moveTopoMesh
 wmake splitMeshRegions
 wmake insideCells
 wmake couplePatches
@@ -27,8 +29,5 @@ wmake createPatch
 wmake cellSet
 wmake faceSet
 wmake pointSet
-wmake fieldToCellSet
-wmake alignPatch
-#wmake setSet
 
 (cd patchTool; ./Allwmake)

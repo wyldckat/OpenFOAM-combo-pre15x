@@ -40,10 +40,11 @@ divSchemes
     div(phi,U)      Gauss linear;
     div(phi,h)      Gauss linear;
     div(phiU,p)     Gauss linear;
-    div(phi,k)      Gauss linear;
-    div(phi,B)      Gauss linear;
+    div(phi,k)      Gauss limitedLinear 1;
+    div(phi,B)      Gauss limitedLinear 1;
+    div(phi,muTilda) Gauss limitedLinear 1;
+
     div(B)          Gauss linear;
-    div(phi,muTilda) Gauss linear;
     div((muEff*dev2(grad(U).T()))) Gauss linear;
 }
 
@@ -51,11 +52,11 @@ laplacianSchemes
 {
     default         none;
     laplacian(muEff,U) Gauss linear corrected;
-    laplacian((rho|A(U)),p) Gauss linear corrected;
+    laplacian((rho*1|A(U)),p) Gauss linear corrected;
     laplacian(alphaEff,h) Gauss linear corrected;
-    laplacian(DkEff,k) Gauss linear limited 0.5;
-    laplacian(DBEff,B) Gauss linear limited 0.5;
-    laplacian(DmuTildaEff,muTilda) Gauss linear limited 0.5;
+    laplacian(DkEff,k) Gauss linear corrected;
+    laplacian(DBEff,B) Gauss linear corrected;
+    laplacian(DmuTildaEff,muTilda) Gauss linear corrected;
 }
 
 interpolationSchemes

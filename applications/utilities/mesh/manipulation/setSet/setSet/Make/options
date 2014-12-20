@@ -1,0 +1,22 @@
+/* setenv NOREADLINE environment variable if you don't want readline */
+
+#if defined(NOREADLINE)
+#else
+    READLINELINC =\
+        -DREADLINE=1 \
+        -I$(RL_ARCH_PATH)/include
+
+    READLINELINK =\
+        $(RL_ARCH_PATH)/lib/libreadline.a \
+        -ltermcap
+
+#endif
+
+
+EXE_INC = \
+    $(READLINELINC) \
+    -I$(LIB_SRC)/meshTools/lnInclude
+
+EXE_LIBS = \
+    -lmeshTools \
+    $(READLINELINK)

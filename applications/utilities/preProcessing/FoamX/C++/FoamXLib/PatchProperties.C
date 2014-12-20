@@ -20,15 +20,11 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 // Foam header files.
-#include "word.H"
-#include "string.H"
-#include "IFstream.H"
-#include "fvPatch.H"
 #include "emptyPolyPatch.H"
 
 // FoamX header files.
@@ -42,7 +38,7 @@ License
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-FoamX::PatchProperties::PatchProperties(const Foam::word& patchName)
+FoamX::PatchProperties::PatchProperties(const word& patchName)
 :
     patchName_(patchName),
     patchType_(emptyPolyPatch::typeName),
@@ -77,7 +73,7 @@ const Foam::word& FoamX::PatchProperties::patchName() const
     return patchName_;
 }
 
-void FoamX::PatchProperties::patchName(const Foam::word& newName)
+void FoamX::PatchProperties::patchName(const word& newName)
 {
     static const char* functionName =
         "FoamX::PatchProperties::patchName(const char* newName)";
@@ -101,7 +97,7 @@ const Foam::word& FoamX::PatchProperties::patchType() const
     return patchType_;
 }
 
-void FoamX::PatchProperties::patchType(const Foam::word& newPatchType)
+void FoamX::PatchProperties::patchType(const word& newPatchType)
 {
     static const char* functionName =
         "FoamX::PatchProperties::type(const char* newPatchType)";
@@ -125,7 +121,7 @@ const Foam::word& FoamX::PatchProperties::physicalType() const
     return physicalType_;
 }
 
-void FoamX::PatchProperties::physicalType(const Foam::word& newName)
+void FoamX::PatchProperties::physicalType(const word& newName)
 {
     static const char* functionName =
         "FoamX::PatchProperties::physicalType(const char* newName)";
@@ -209,10 +205,10 @@ void FoamX::PatchProperties::modified(bool mod)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::PatchProperties::load(const Foam::dictionary& patchDict)
+void FoamX::PatchProperties::load(const dictionary& patchDict)
 {
     static const char* functionName =
-        "FoamX::PatchProperties::load(const Foam::dictionary& patchDict)";
+        "FoamX::PatchProperties::load(const dictionary& patchDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 

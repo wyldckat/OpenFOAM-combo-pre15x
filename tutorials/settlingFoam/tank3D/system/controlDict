@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass settlingFoam;
+application settlingFoam;
 
 startFrom       startTime;
 
@@ -38,13 +38,13 @@ writeControl    runTime;
 
 writeInterval   50;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 
 writePrecision  6;
 
-writeCompression uncompressed;
+writeCompression compressed;
 
 timeFormat      general;
 

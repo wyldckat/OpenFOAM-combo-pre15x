@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     processorPolyPatch
@@ -71,6 +71,15 @@ class processorPolyPatch
 
         //- Processor-neighbbour patch neighbour cell centres
         vectorField neighbFaceCellCentres_;
+
+        //- Corresponding neighbouring local point label for every local point
+        //  (so localPoints()[i] == neighb.localPoints()[neighbPoints_[i]])
+        mutable labelList* neighbPointsPtr_;
+
+        //- Corresponding neighbouring local edge label for every local edge
+        //  (so edges()[i] == neighb.edges()[neighbEdges_[i]])
+        mutable labelList* neighbEdgesPtr_;
+
 
 
     // Private static data
@@ -136,6 +145,11 @@ protected:
         //- Correct patches after moving points
         void movePoints(const pointField&);
 
+        //- Initialise the update of the patch topology
+        virtual void initUpdateTopology();
+
+        //- Update of the patch topology
+        virtual void updateTopology();
 
 public:
 
@@ -279,14 +293,29 @@ public:
             return neighbFaceCellCentres_;
         }
 
+        //- Return neighbour point labels. This is for my local point the
+        //  corresponding local point on the other side. Call
+        //  polyBoundaryMesh::setExtendedAddressing(true) on all processors
+        //  before using this.
+        const labelList& neighbPoints() const;
+
+        //- Return neighbour edge labels. This is for my local edge the
+        //  corresponding local edge on the other side. Call
+        //  polyBoundaryMesh::setExtendedAddressing(true) on all processors
+        //  before using this.
+        const labelList& neighbEdges() const;
+
 
         // Morph
 
             //- Initialize ordering (on new mesh)
             //  Gets -changes (in old mesh ordering)
             //  -map from old to new mesh
-            virtual void sendOrder(const polyTopoChange&, const mapPolyMesh&)
-             const;
+            virtual void initOrder
+            (
+                const polyTopoChange&,
+                const mapPolyMesh&
+            ) const;
 
             //- Morph:Return new ordering. Ordering is -faceMap: for every face
             //  index of the new face -rotation:for every new face the clockwise

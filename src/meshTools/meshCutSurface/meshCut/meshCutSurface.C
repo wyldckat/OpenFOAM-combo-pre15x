@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -70,8 +70,8 @@ Description
 #include "cellAddressing.H"
 #include "Map.H"
 #include "boolList.H"
-#include "triFaceSurf.H"
 #include "cellModeller.H"
+#include "orientedSurface.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -90,6 +90,8 @@ Foam::label Foam::meshCutSurface::FC_CC   = 3;
 Foam::label Foam::meshCutSurface::FC_FP1  = 4;
 Foam::label Foam::meshCutSurface::FP1_CC  = 5;
 
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 template<class T, class Hash>
 Foam::label Foam::meshCutSurface::find
@@ -176,17 +178,14 @@ Foam::label Foam::meshCutSurface::findCutEdge
     return -1;
 }
 
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-bool Foam::meshCutSurface::removeDuplicates(const triFaceSurf& surf)
+Foam::triSurface Foam::meshCutSurface::removeDuplicates(const triSurface& surf)
 {
-    bool allIncluded = true;
+    boolList includeTri(surf.size(), true);
 
-    boolList includeTri(tris_.size(), true);
-
-    forAll(tris_, triI)
+    forAll(surf, triI)
     {
-        const triFace& t = tris_[triI];
+        const labelledTri& t = surf[triI];
 
         const labelList& nbs = surf.faceFaces()[triI];
 
@@ -198,7 +197,7 @@ bool Foam::meshCutSurface::removeDuplicates(const triFaceSurf& surf)
                 continue;
             }
 
-            const triFace& nb = tris_[nbs[nbI]];
+            const labelledTri& nb = surf[nbs[nbI]];
 
             if
             (
@@ -208,163 +207,13 @@ bool Foam::meshCutSurface::removeDuplicates(const triFaceSurf& surf)
             )
             {
                 includeTri[nbs[nbI]] = false;
-                allIncluded = false;
             }
         }
     }
 
-    if (allIncluded)
-    {
-        // No duplicates found
-        return false;
-    }
-    else
-    {
-        // Pack tris_
-        label newTriI = 0;
+    labelList pointMap, faceMap;
 
-        forAll(tris_, triI)
-        {
-            if (includeTri[triI])
-            {
-                if (newTriI != triI)
-                {
-                    tris_[newTriI] = tris_[triI];
-                    cellLabels_[newTriI] = cellLabels_[triI];
-                }
-                newTriI++;
-            }
-        }
-
-        tris_.setSize(newTriI);
-        cellLabels_.setSize(newTriI);
-
-        return true;
-    }
-}
-
-
-void Foam::meshCutSurface::propagateOrientation
-(
-    const triFaceSurf& surf,
-    const label regionI,
-    const label prevVert0,
-    const label prevVert1,
-    const label faceI,
-    boolList& visited
-)
-{
-    if (!visited[faceI])
-    {   
-        visited[faceI] = true;
-
-        triFace& tri = tris_[faceI];
-
-        // Get copy of face labels
-        label a = tri[0];
-        label b = tri[1];
-        label c = tri[2];
-
-        if 
-        (
-            ((a == prevVert0) && (c == prevVert1))
-         || ((b == prevVert0) && (a == prevVert1))
-         || ((c == prevVert0) && (b == prevVert1))
-        )
-        {
-            // Ok
-        }
-        else
-        {
-            // Flip face
-            tri[0] = b;
-            tri[1] = a;
-        }
-
-        // Go and visit my neighbours.
-
-        const labelList& myEdges = surf.faceEdges()[faceI];
-
-        forAll(tri, fp)
-        {
-            label fp1 = (fp + 1) % tri.size();
-
-            // Find surface edge label belonging to two consecutive vertices
-            edge e
-            (
-                surf.meshPointMap()[tri[fp]],
-                surf.meshPointMap()[tri[fp1]]
-            );
-
-            label neighbourEdgeI = findEdge(surf.edges(), myEdges, e);
-
-
-            // Visit neighbouring face (face on the other side of
-            // neighbourEdgeI)
-
-            const labelList& faceLabels = surf.edgeFaces()[neighbourEdgeI];
-
-            forAll(faceLabels, faceLabelI)
-            {
-                label neighbourFaceI = faceLabels[faceLabelI];
-
-                if (neighbourFaceI != faceI)
-                {
-                    propagateOrientation
-                    (
-                        surf,
-                        regionI,
-                        tri[fp],
-                        tri[fp1],
-                        neighbourFaceI,
-                        visited
-                    );
-                }
-            }
-        }
-    }
-}
-
-
-void Foam::meshCutSurface::cleanSurface()
-{
-    // Construct temporary addressing in our tris_ and points_
-    triFaceSurf surf(SubList<triFace>(tris_, tris_.size()), points_);
-
-    // Remove duplicate faces and recalculate surf is nessecary.
-    if (removeDuplicates(surf))
-    {
-        surf = triFaceSurf(SubList<triFace>(tris_, tris_.size()), points_);
-    }
-
-    // Make orientation consistent
-
-    // Storage for marking visited faces
-    boolList visited(tris_.size(), false);
-
-    label regionI = 0;
-    forAll(visited, triI)
-    {
-        if (!visited[triI])
-        {
-            // Unvisited triangle. Set its neighbours edge orientation to
-            // be consistent with this one.
-
-            const triFace& tri = tris_[triI];
-
-            propagateOrientation
-            (
-                surf,
-                regionI,
-                tri[0],
-                tri[1],
-                triI,
-                visited
-            );
-
-            regionI++;
-        }
-    }
+    return surf.subsetMesh(includeTri, pointMap, faceMap);
 }
 
 
@@ -373,8 +222,9 @@ void Foam::meshCutSurface::cutTet
     const cellAddressing& model,
     const labelList& tetVertCuts,
     const labelList& tetEdgeCuts,
-
     const label cellI,
+
+    List<labelledTri>& tris,
     label& triI
 )
 {
@@ -407,6 +257,8 @@ void Foam::meshCutSurface::cutTet
             tetEdgeCuts,
             nEdgeCuts,
             cellI,
+
+            tris,
             triI
         );
     }
@@ -419,6 +271,8 @@ void Foam::meshCutSurface::cutTet
             tetEdgeCuts,
             nEdgeCuts,
             cellI,
+
+            tris,
             triI
         );
     }
@@ -431,6 +285,8 @@ void Foam::meshCutSurface::cutTetThroughEdges
     const labelList& tetEdgeCuts,
     const label nEdgeCuts,
     const label cellI,
+
+    List<labelledTri>& tris,
     label& triI
 )
 {
@@ -442,7 +298,7 @@ void Foam::meshCutSurface::cutTetThroughEdges
     {
         label triVertI = 0;
 
-        triFace tri;
+        labelledTri& tri = tris[triI++];
 
         forAll(tetEdgeCuts, tetEdgeI)
         {
@@ -453,8 +309,7 @@ void Foam::meshCutSurface::cutTetThroughEdges
         }
 
         //Info<< "Triangle formed by vertices:" << tri << endl;
-        tris_[triI] = tri;
-        cellLabels_[triI++] = cellI;
+        tri.region() = cellI;
     }
     else if (nEdgeCuts == 4)
     {
@@ -496,31 +351,32 @@ void Foam::meshCutSurface::cutTetThroughEdges
             }
         }
 
-        triFace tri1
-        (
-            tetEdgeCuts[edge0],
-            tetEdgeCuts[edge1],
-            tetEdgeCuts[edge2]
-        );
         //Info<< "Triangle 1 formed by vertices:" << tri1 << endl;
-        tris_[triI] = tri1;
-        cellLabels_[triI++] = cellI;
+        tris[triI++] =
+            labelledTri
+            (
+                tetEdgeCuts[edge0],
+                tetEdgeCuts[edge1],
+                tetEdgeCuts[edge2],
+                cellI
+            );
 
-        triFace tri2
-        (
-            tetEdgeCuts[edge1],
-            tetEdgeCuts[edge2],
-            tetEdgeCuts[edge3]
-        );
         //Info<< "Triangle 2 formed by vertices:" << tri2 << endl;
-        tris_[triI] = tri2;
-        cellLabels_[triI++] = cellI;
+        tris[triI++] = 
+            labelledTri
+            (
+                tetEdgeCuts[edge1],
+                tetEdgeCuts[edge2],
+                tetEdgeCuts[edge3],
+                cellI
+            );
+
     }
     else
     {
-//        FatalErrorIn("meshCutSurface::cutTet")
-//            << "Cannot handle tets with " << nEdgeCuts << " edges cut"
-//            << exit(FatalError);
+        //FatalErrorIn("meshCutSurface::cutTet")
+        //    << "Cannot handle tets with " << nEdgeCuts << " edges cut"
+        //    << exit(FatalError);
     }
 }
 
@@ -533,6 +389,8 @@ void Foam::meshCutSurface::cutTetThroughVerts
     const labelList& tetEdgeCuts,
     const label nEdgeCuts,
     const label cellI,
+
+    List<labelledTri>& tris,
     label& triI
 )
 {
@@ -552,7 +410,7 @@ void Foam::meshCutSurface::cutTetThroughVerts
             // Find cut-edges not connected to cut-vertex.
 
             // Triangle to fill.
-            triFace tri;
+            labelledTri tri;
             label triVertI = 0;
 
             // Get label of vertex cut
@@ -604,9 +462,8 @@ void Foam::meshCutSurface::cutTetThroughVerts
             if (triVertI == 3)
             {
                 // Collected all triVerts.
-                //Info<< "Triangle formed by vertices:" << tri << endl;
-                tris_[triI] = tri;
-                cellLabels_[triI++] = cellI;
+                tri.region() = cellI;
+                tris[triI++] = tri;
             }
             else
             {
@@ -622,7 +479,7 @@ void Foam::meshCutSurface::cutTetThroughVerts
             // edge connecting the two cut vertices.
 
             // Triangle to fill.
-            triFace tri;
+            labelledTri tri;
             label triVertI = 0;
 
             // Get label of edge cut
@@ -662,8 +519,8 @@ void Foam::meshCutSurface::cutTetThroughVerts
             {
                 // Collected all triVerts.
                 //Info<< "Triangle formed by vertices:" << tri << endl;
-                tris_[triI] = tri;
-                cellLabels_[triI++] = cellI;
+                tri.region() = cellI;
+                tris[triI++] = tri;
             }
             else
             {
@@ -682,7 +539,7 @@ void Foam::meshCutSurface::cutTetThroughVerts
             // Cut coincides with face. Form triangle out of cut vertices.
 
             // Triangle to fill.
-            triFace tri;
+            labelledTri tri;
             label triVertI = 0;
 
             forAll(tetVertCuts, tetVertI)
@@ -692,8 +549,8 @@ void Foam::meshCutSurface::cutTetThroughVerts
                     tri[triVertI++] = tetVertCuts[tetVertI];
                 }
             }
-            tris_[triI] = tri;
-            cellLabels_[triI++] = cellI;
+            tri.region() = cellI;
+            tris[triI++] = tri;
         }
         else    // nEdgeCuts != 0
         {
@@ -705,9 +562,6 @@ void Foam::meshCutSurface::cutTetThroughVerts
         // Illegal.
     }
 }
-
-
-// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
@@ -724,14 +578,12 @@ void Foam::meshCutSurface::cutTetThroughVerts
 //  - cuts.faceEdges(): face-face edges cut
 Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
 :
-    points_(cuts.size()),
-    tris_(2*cuts.size()),
-    cellLabels_(2*cuts.size())
+    triSurface()
 {
-
     const primitiveMesh& mesh = cuts.mesh();
 
     // Collect points and create reverse map from edge to new vertex.
+    pointField points(cuts.size());
     label pointI = 0;
 
     //
@@ -743,7 +595,7 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
 
     forAll(cuts.meshVerts(), cutVertI)
     {
-        points_[pointI++] = mesh.points()[cuts.meshVerts()[cutVertI]];
+        points[pointI++] = mesh.points()[cuts.meshVerts()[cutVertI]];
 
         meshVertToVert.insert(cuts.meshVerts()[cutVertI], pointI - 1);
     }
@@ -755,7 +607,7 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
     {
         label faceI = cuts.meshFaceCentres()[cutFaceCentreI];
 
-        points_[pointI++] = mesh.faceCentres()[faceI];
+        points[pointI++] = mesh.faceCentres()[faceI];
 
         faceCentreToVert.insert(faceI, pointI - 1);
     }
@@ -767,7 +619,7 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
     {
         label cellI = cuts.meshCellCentres()[cutCellCentreI];
 
-        points_[pointI++] = mesh.cellCentres()[cellI];
+        points[pointI++] = mesh.cellCentres()[cellI];
 
         cellCentreToVert.insert(cellI, pointI - 1);
     }
@@ -788,7 +640,7 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
 
         scalar weight = cuts.meshEdgeWeights()[meshCutSurfaceEdgeI];
 
-        points_[pointI++] =
+        points[pointI++] =
             (1-weight)*mesh.points()[e.start()]
           + weight*mesh.points()[e.end()];
 
@@ -803,7 +655,7 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
     {
         const pyramidEdge& e = cuts.pyrEdges()[edgeI];
 
-        points_[pointI++] = e.coord(mesh, cuts.pyrEdgeWeights()[edgeI]);
+        points[pointI++] = e.coord(mesh, cuts.pyrEdgeWeights()[edgeI]);
 
         pyrEdgeToVert.insert(e, pointI - 1);
     }
@@ -816,7 +668,7 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
     {
         const centreEdge& e = cuts.centreEdges()[edgeI];
 
-        points_[pointI++] = e.coord(mesh, cuts.centreEdgeWeights()[edgeI]);
+        points[pointI++] = e.coord(mesh, cuts.centreEdgeWeights()[edgeI]);
 
         centreEdgeToVert.insert(e, pointI - 1);
     }
@@ -829,17 +681,17 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
     {
         const faceEdge& e = cuts.faceEdges()[edgeI];
 
-        points_[pointI++] = e.coord(mesh, cuts.faceEdgeWeights()[edgeI]);
+        points[pointI++] = e.coord(mesh, cuts.faceEdgeWeights()[edgeI]);
 
         faceEdgeToVert.insert(e, pointI - 1);
     }
 
-    if (pointI != points_.size())
+    if (pointI != points.size())
     {
         FatalErrorIn
         (
             "meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)"
-        )   << "pointI:" << pointI << "  points_.size():" << points_.size()
+        )   << "pointI:" << pointI << "  points.size():" << points.size()
             << abort(FatalError);
     }
 
@@ -855,6 +707,7 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
     // Tet vertices cut. -1 if edge not cut, vertex label otherwise.
     labelList tetVertCuts(4);
 
+    List<labelledTri> tris(2*cuts.size());
     label triI = 0;
 
     forAll(cuts.cells(), cutCellI)
@@ -933,17 +786,27 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
                     tetVertCuts,
                     tetEdgeCuts,
                     cellI,
+
+                    tris,
                     triI
                 );
             }
         }
     }
 
-    tris_.setSize(triI);
-    cellLabels_.setSize(triI);
+    tris.setSize(triI);
 
-    // Cleanup surface
-    cleanSurface();
+    triSurface::operator=
+    (
+        orientedSurface
+        (
+            removeDuplicates
+            (
+                triSurface(tris, points)
+            ),
+            point(0,0,0)
+        )
+    );
 }
 
 
@@ -957,13 +820,12 @@ Foam::meshCutSurface::meshCutSurface(const faceDecompCuts& cuts)
 //  - cuts.diagEdges(): diagonal edges cut
 Foam::meshCutSurface::meshCutSurface(const cellDecompCuts& cuts)
 :
-    points_(cuts.size()),
-    tris_(2*cuts.size()),
-    cellLabels_(2*cuts.size())
+    triSurface()
 {
     const primitiveMesh& mesh = cuts.mesh();
 
     // Collect points and create reverse map from edge to new vertex.
+    pointField points(cuts.size());
     label pointI = 0;
 
     //
@@ -975,7 +837,7 @@ Foam::meshCutSurface::meshCutSurface(const cellDecompCuts& cuts)
 
     forAll(cuts.meshVerts(), cutVertI)
     {
-        points_[pointI++] = mesh.points()[cuts.meshVerts()[cutVertI]];
+        points[pointI++] = mesh.points()[cuts.meshVerts()[cutVertI]];
 
         meshVertToVert.insert(cuts.meshVerts()[cutVertI], pointI - 1);
     }
@@ -987,7 +849,7 @@ Foam::meshCutSurface::meshCutSurface(const cellDecompCuts& cuts)
     {
         label cellI = cuts.meshCellCentres()[cutCellCentreI];
 
-        points_[pointI++] = mesh.cellCentres()[cellI];
+        points[pointI++] = mesh.cellCentres()[cellI];
 
         cellCentreToVert.insert(cellI, pointI - 1);
     }
@@ -1008,7 +870,7 @@ Foam::meshCutSurface::meshCutSurface(const cellDecompCuts& cuts)
 
         scalar weight = cuts.meshEdgeWeights()[meshCutSurfaceEdgeI];
 
-        points_[pointI++] =
+        points[pointI++] =
             (1-weight)*mesh.points()[e.start()]
           + weight*mesh.points()[e.end()];
 
@@ -1023,7 +885,7 @@ Foam::meshCutSurface::meshCutSurface(const cellDecompCuts& cuts)
     {
         const pyramidEdge& e = cuts.pyrEdges()[edgeI];
 
-        points_[pointI++] = e.coord(mesh, cuts.pyrEdgeWeights()[edgeI]);
+        points[pointI++] = e.coord(mesh, cuts.pyrEdgeWeights()[edgeI]);
 
         pyrEdgeToVert.insert(e, pointI - 1);
     }
@@ -1036,7 +898,7 @@ Foam::meshCutSurface::meshCutSurface(const cellDecompCuts& cuts)
     {
         const diagonalEdge& e = cuts.diagEdges()[edgeI];
 
-        points_[pointI++] = e.coord(mesh, cuts.diagEdgeWeights()[edgeI]);
+        points[pointI++] = e.coord(mesh, cuts.diagEdgeWeights()[edgeI]);
 
         diagEdgeToVert.insert(e, pointI - 1);
     }
@@ -1054,6 +916,7 @@ Foam::meshCutSurface::meshCutSurface(const cellDecompCuts& cuts)
     // Tet vertices cut. -1 if edge not cut, vertex label otherwise.
     labelList tetVertCuts(4);
 
+    List<labelledTri> tris(2*cuts.size());
     label triI = 0;
 
     forAll(cuts.cells(), cutCellI)
@@ -1162,18 +1025,31 @@ Foam::meshCutSurface::meshCutSurface(const cellDecompCuts& cuts)
                     tetVertCuts,
                     tetEdgeCuts,
                     cellI,
+
+                    tris,
                     triI
                 );
             }
         }
     }
 
-    tris_.setSize(triI);
-    cellLabels_.setSize(triI);
+    tris.setSize(triI);
 
-    // Cleanup surface
-    cleanSurface();
+    triSurface::operator=
+    (
+        orientedSurface
+        (
+            removeDuplicates
+            (
+                triSurface(tris, points)
+            ),
+            point(0,0,0)
+        )
+    );
 }
+
+
+// * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 
 // ************************************************************************* //

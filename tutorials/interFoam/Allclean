@@ -4,7 +4,6 @@ currDir=`pwd`
 application=`basename $currDir`
 keepCases="damBreak"
 loseCases="damBreakFine"
-utility=setGammaDamBreak
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/CleanFunctions
@@ -15,7 +14,6 @@ do
     if [ "$case" = "damBreak" ] 
     then 
         cp $case/0/gamma.org $case/0/gamma
-        wclean $case/$utility
     fi
 done
 

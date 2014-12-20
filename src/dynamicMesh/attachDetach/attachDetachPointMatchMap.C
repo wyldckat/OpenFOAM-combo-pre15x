@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -63,17 +63,18 @@ void Foam::attachDetach::calcPointMatchMap() const
             << abort(FatalError);
     }
 
-    const polyMesh& mesh = morphEngine().mesh();
-    const faceList& faces = mesh.faces();
+    const faceList& faces = mesh().faces();
 
-    const polyPatch& masterPatch = mesh.boundaryMesh()[masterPatchID_.index()];
-    const polyPatch& slavePatch = mesh.boundaryMesh()[slavePatchID_.index()];
+    const polyPatch& masterPatch =
+        mesh().boundaryMesh()[masterPatchID_.index()];
+    const polyPatch& slavePatch =
+        mesh().boundaryMesh()[slavePatchID_.index()];
 
     // Create the reverse patch out of the slave patch
     primitiveFacePatch reverseSlavePatch
     (
         faceList(slavePatch.size()),
-        mesh.points()
+        mesh().points()
     );
 
     const label slavePatchStart = slavePatch.start();

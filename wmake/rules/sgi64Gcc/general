@@ -1,6 +1,6 @@
 ABI        = 64
 
-CPP        = /usr/lib/acpp -undef $(WM_CPP_OPTIONS)
+CPP        = /usr/lib/acpp -undef -D$(WM_ARCH)
 RANLIB     = echo
 LD         = ld -$(ABI)
 

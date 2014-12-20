@@ -1,0 +1,34 @@
+// The FOAM Project // File: environmentalProperties
+/*
+-------------------------------------------------------------------------------
+ =========         | dictionary
+ \\      /         |
+  \\    /          | Name:   environmentalProperties
+   \\  /           | Family: Data file
+    \\/            |
+    F ield         | FOAM version: 1.9.6
+    O peration     | Product of Nabla Ltd.
+    A and          |
+    M anipulation  | Email: Enquiries@Nabla.co.uk
+-------------------------------------------------------------------------------
+*/
+
+version  0.5;
+format   ascii;
+
+root     "/home/larsg/foam/run/bubble";
+case     "2D5x50_1";
+instance "system";
+local    "";
+
+note     "environmentalProperties for Foam";
+
+class    dictionary;
+object   environmentalProperties;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+g               g      [0 1 -2 0 0]  (0 0 -9.81);
+
+
+// ************************************************************************* //

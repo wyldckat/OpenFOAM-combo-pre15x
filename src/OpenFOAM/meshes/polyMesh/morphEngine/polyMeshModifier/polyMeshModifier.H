@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     polyMeshModifier
@@ -52,7 +52,7 @@ namespace Foam
 {
 
 // Class forward declarations
-class polyMeshMorphEngine;
+class polyMesh;
 class polyTopoChange;
 class mapPolyMesh;
 
@@ -70,8 +70,8 @@ class polyMeshModifier
         //- Index of zone
         label index_;
 
-        //- Reference to morph engine
-        const polyMeshMorphEngine& morphEngine_;
+        //- Reference to mesh
+        const polyMesh& mesh_;
 
         //- Activation switch
         mutable Switch active_;
@@ -105,9 +105,9 @@ public:
                 const word& name,
                 const dictionary& dict,
                 const label index,
-                const polyMeshMorphEngine& mme
+                const polyMesh& mesh
             ),
-            (name, dict, index, mme)
+            (name, dict, index, mesh)
         );
 
 
@@ -118,7 +118,7 @@ public:
         (
             const word& name,
             const label index,
-            const polyMeshMorphEngine& mme,
+            const polyMesh& mesh,
             const bool act
         );
 
@@ -131,7 +131,7 @@ public:
             const word& name,
             const dictionary& dict,
             const label index,
-            const polyMeshMorphEngine& mme
+            const polyMesh& mesh
         );
 
 
@@ -154,8 +154,8 @@ public:
             return index_;
         }
 
-        //- Return reference to morph engine
-        const polyMeshMorphEngine& morphEngine() const;
+        //- Return reference to underlying polyMesh
+        const polyMesh& mesh() const;
 
         //- Check for topology change
         virtual bool changeTopology() const = 0;

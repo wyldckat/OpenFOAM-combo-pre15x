@@ -20,32 +20,24 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
-    A dynamic list is a 1-D vector of objects of type T which resizes
-    itself as necessary to accept the new objects.  Internal storage
-    is a compact array and the list can be shrunk to compact storage.
-    The increment of list size is controlled by two template parameters,
-    which allows the list storage to either increate by the given increment
-    or a given multiplier.
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 //- Construct null
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::DynamicList()
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::DynamicList()
 :
-    List<T>(SizeIncrement),
+    List<T>(SizeInc),
     nextFree_(0)
 {}
 
 
 //- Construct given size
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::DynamicList
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::DynamicList
 (
     const label s
 )
@@ -57,15 +49,16 @@ inline Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::DynamicList
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline Foam::label Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::size()
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline Foam::label Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::size()
 const
 {
     return nextFree_;
 }
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline void Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::setSize
+
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::setSize
 (
     const label s
 )
@@ -80,24 +73,25 @@ inline void Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::setSize
     }
 }
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline void Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::clear()
+
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::clear()
 {
     nextFree_ = 0;
 }
 
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline Foam::DynamicList<T, SizeIncrement, SizeMultiplier>&
-Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::shrink()
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>&
+Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::shrink()
 {
     List<T>::setSize(nextFree_);
     return *this;
 }
 
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline void Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::append
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::append
 (
     const T& e
 )
@@ -108,8 +102,8 @@ inline void Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::append
 
 // * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline T& Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::operator()
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline T& Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::operator()
 (
     const Foam::label i
 )
@@ -123,7 +117,7 @@ inline T& Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::operator()
             max
             (
                 nextFree_,
-                label(SizeMultiplier*List<T>::size() + SizeIncrement)
+                label(SizeMult*List<T>::size()/SizeDiv + SizeInc)
             )
         );
     }
@@ -132,8 +126,8 @@ inline T& Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::operator()
 }
 
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
-inline void Foam::DynamicList<T, SizeIncrement, SizeMultiplier>::operator=
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
+inline void Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>::operator=
 (
     const T& t
 )

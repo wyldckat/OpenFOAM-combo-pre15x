@@ -1,9 +1,0 @@
-default
-{
-
-solvers
-{
-    U               ICCG 1e-06 0.1;
-}
-
-};

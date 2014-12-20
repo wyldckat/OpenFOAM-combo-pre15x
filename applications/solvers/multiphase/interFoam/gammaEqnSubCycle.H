@@ -22,4 +22,4 @@ else
 
 interface.correct();
 
-rho = gamma*rho1 + (1.0 - gamma)*rho2;
+rho == gamma*rho1 + (1.0 - gamma)*rho2;

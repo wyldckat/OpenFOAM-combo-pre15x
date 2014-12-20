@@ -37,12 +37,12 @@ gradSchemes
 divSchemes
 {
     default         none;
-    div(phi,U)      Gauss Gamma2V 1;
-    div(phi,k)      Gauss Gamma2 1;
-    div(phi,epsilon) Gauss Gamma2 1;
-    div(phi,R)      Gauss Gamma2 1;
+    div(phi,U)      Gauss limitedLinearV 1;
+    div(phi,k)      Gauss limitedLinear 1;
+    div(phi,epsilon) Gauss limitedLinear 1;
+    div(phi,R)      Gauss limitedLinear 1;
     div(R)          Gauss linear;
-    div(phi,nuTilda) Gauss Gamma2 1;
+    div(phi,nuTilda) Gauss limitedLinear 1;
     div((nuEff*dev(grad(U).T()))) Gauss linear;
 }
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     volPointInterpolation
@@ -79,7 +79,7 @@ void volPointInterpolation::interpolate
     // on the patch with the interpolated point values from the faces
     const fvBoundaryMesh& bm = vMesh().boundary();
 
-    const ptrList<primitivePatchInterpolation>& pi = patchInterpolators();
+    const PtrList<primitivePatchInterpolation>& pi = patchInterpolators();
     forAll (bm, patchI)
     {
         // If the patch is empty, skip it

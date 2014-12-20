@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     ignitionSite
@@ -61,6 +61,7 @@ class ignitionSite
     // Private data
 
         const Time& db_;
+        const fvMesh& mesh_;
 
         dictionary ignitionSiteDict_;
 
@@ -73,6 +74,10 @@ class ignitionSite
         labelList cells_;
         scalarList cellVolumes_;
 
+        //- Current time index.
+        //  Used during the update for moving meshes
+        mutable label timeIndex_;
+
 
     // Private Member Functions
 
@@ -81,13 +86,10 @@ class ignitionSite
 
 public:
 
-    friend class ignition;
-
-
     // Public classes
 
         //- Class used for the read-construction of
-        //  ptrLists of ignitionSite
+        //  PtrLists of ignitionSite
         class iNew
         {
             const Time& db_;
@@ -152,10 +154,8 @@ public:
                 return strength_;
             }
 
-            const labelList& cells() const
-            {
-                return cells_;
-            }
+            //- Return the ignition cells updated if the mesh moved
+            const labelList& cells() const;
 
             const scalarList& cellVolumes() const
             {

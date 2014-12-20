@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     gambitToFoam
@@ -63,7 +63,7 @@ label nVectorComponents = 0;
 pointField points(0);
 labelList pointMap(0);
 
-ptrList<labelList> cellLabels(0);
+PtrList<labelList> cellLabels(0);
 labelList cellMap(0);
 labelList cellTypes(0);
 labelList cellStreamIDs(0);
@@ -253,7 +253,7 @@ mtype                 {space}"MTYPE:"{space}
     }
 
 
-<controlInfo>{spaceNl}"NUMNP"{space}"NELEM"{space}"NGRPS"{space}"NBSETS"{space}"NDFCD"{space}"NDFVL"{space}\n {
+<controlInfo>{spaceNl}"NUMNP"{space}"NELEM"{space}"NGRPS"{space}"NBSETS"{space}("NDFCD"|"NDCFD"){space}"NDFVL"{space}\n {
         BEGIN(globalMeshData);
     }
 

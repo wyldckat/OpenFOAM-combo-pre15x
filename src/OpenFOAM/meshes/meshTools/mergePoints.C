@@ -20,13 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "mergePoints.H"
 #include "SortableList.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -108,7 +108,7 @@ bool Foam::mergePoints
 
             if (verbose)
             {
-                Info<< "Foam::mergePoints : Merging points "
+                Pout<< "Foam::mergePoints : Merging points "
                     << pointI << " and " << equalPointI
                     << " with coordinates:" << points[pointI]
                     << " and " << points[equalPointI]

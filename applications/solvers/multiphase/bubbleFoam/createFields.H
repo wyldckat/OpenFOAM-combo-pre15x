@@ -22,8 +22,8 @@
             IOobject::NO_READ,
             IOobject::NO_WRITE
         ),
-        1.0 - alpha,
-        alpha.boundaryField().types()
+        1.0 - alpha
+        //,alpha.boundaryField().types()
     );
 
     Info<< "Reading field p\n" << endl;
@@ -308,3 +308,8 @@
 
     Info<< "Calculating field g.h\n" << endl;
     volScalarField gh("gh", g & mesh.C());
+
+
+    label pRefCell = 0;
+    scalar pRefValue = 0.0;
+    setRefCell(p, mesh.solutionDict().subDict("PISO"), pRefCell, pRefValue);

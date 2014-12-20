@@ -1,0 +1,273 @@
+OpenFOAM Release notes for version 1.2
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+OpenFOAM-1.2 is a significant upgrade to version 1.1 in many ways which are
+outlined below.  Although this release passes all our standard tests and the
+tutorials have been checked many of the new features have not been fully
+tested and difficulties may arise.  We will endeavour to fix bugs as soon as
+they are reported and release a bug-fix version 1.2.1 as soon as we feel we
+have resolved the major issues.
+
+
+Significant Changes
+~~~~~~~~~~~~~~~~~~~
+OpenFOAM has been upgraded to compile with gcc-4.0.? and other recent standard
+conforming C++ compilers requiring a large number of small changes throughout
+the whole of the code.  In particular all c-style casts have been converted into
+C++ standard equivalents partly because there appeared to be bugs in the
+handling of c-style casts in gcc-4.0.0 but also the new C++ casts are safer and
+more transparent and consistent.  Some type and function names have be changed
+for consistency, e.g. the template class ptrList has been renamed PtrList as the
+convention in OpenFoam is that template classes start with a capital letter.
+None of these changes alter the operation of OpenFOAM but code developers will
+need to make the necessary changes to their own code to make them consistent
+with the equivalent code in OpenFoam-1.2.  The most significant and notable
+changes between version 1.1 and 1.2 are outlined below.
+
+
+OpenFOAM library
+~~~~~~~~~~~~~~~~
+Complete rewrite of the NVD/TVD limited discretisation schemes for better code
+reuse and greater flexibility and simplicity when developing new schemes.  Some
+of the older schemes have been deleted (minMod, Gamma2) and replaced with better
+alternatives.  To see a complete list of all the schemes available for ech of
+the field types take a look at the files in
+.OpenFOAM-1.2/apps/FoamX/dictionaries/fvSchemes/div/interpolation.  One notable
+new scheme is limitedLinear which is a TVD-limited form of central-differencing
+and is proving to be more reliable and slightly more accurate than Gamma and has
+been selected to replace Gamma in the tutorials.  Also after extensive testing
+it has been shown that vanLeer is slightly more accurate than either
+limitedLinear or Gamma producing more symmetric results for wave propagation,
+interface capturing etc. and should be considered for these purposes but bearing
+in mind that due to some downwinding contribution it suffers from a slightly
+stricter Courant number limit.  ``V'' (vector-field) versions of a wider range
+of schemes have also been included with limitedLinearV proving more convergent
+than either GammaV or Gamma2V provided with version 1.1.
+
+Improvements have been made to the data transfer scheduling in the CG-solvers to
+improve parallel efficiency particularly on low-bandwidth networks.
+
+Mesh construction has been improved in both efficiency and storage overhead by
+rewriting some of the addressing algorithms and the addition of
+SlicedGeometicFields to hold sliced version of the cell face areas and centres
+for use by fvMesh.
+
+A check has been added to detect running 3D cases with ``empty'' type
+patches (which are only applicable to 2D planar geometries) to prevent this
+common setup error.  In addition to this check a component filter has
+been added to ensure that only the valid 2D components of vector and tensors are
+solved.
+
+New Applications
+~~~~~~~~~~~~~~~~
+rhoSimpleFoam:
+    Steady-state solver for low-Ma compressible (variable density) flows with
+    heat transfer.
+
+rhopSonicFoam:
+    A completely new rhopSonicFoam which replaces the one in version 1.1.
+    Solves for inviscid compressible flow using a density prediction pressure
+    correction method with multivariate limiter on the rho, rhoU, rhoE
+    variables.  Solving for pressure as well as density makes this solver
+    applicable to a very wide range of Mach numbers and by including viscous
+    terms can also be used for a wide range of Reynolds numbers in particular
+    for shock-boundary layer interaction.
+
+twoPhaseEulerFoam:
+    A very general Euler-Euler two-phase code including both particle and
+    bubble/droplet interaction terms and models.  Is compatible with bubbleFoam
+    when the bubble models are selected.  Two tutorial test cases are included,
+    one of a bubble column and the other for a fluidised bed.
+
+twoLiquidMixingFoam:
+    Variant of interFoam which allows the two fluids to mix rather than
+    preserving an interface.  Ficks-law diffusion is used to model the
+    fluid-fluid diffusion.
+
+
+Updated Applications
+~~~~~~~~~~~~~~~~~~~~
+
+all interface capturing codes:
+    Sub-cycling has been updated to allow the use of the Crank-Nicholson and
+    backward differencing second-order time-schemes.
+
+interFoam:
+    Many improvements including the addition of the gammaCompression
+    differencing scheme which can optionally be chosen for the interface
+    compression term and better handling of inlets.
+
+lesInterFoam and rasInterFoam:
+    As for interFoam and additionally these application have been rewritten to
+    use a momentum rather than velocity formulation which is more accurate and
+    more stable.
+
+
+preProcessing/FoamX
+~~~~~~~~~~~~~~~~~~~
+
+runFoamX has been renamed FoamX.
+
+Complete reorganisation of the configuration files to make it easier both to
+maintain the configuration of existing applications and utilities and for users
+to configure FoamX for their own codes. Firstly the configuration files for each
+application and utility have been relocated to a FoamX subdirectory of
+application, e.g. in the icoFoam source directory:
+
+    createFields.H  FoamX/  icoFoam.C  icoFoam.dep  Make/
+
+and in the FoamX subdirectory:
+
+    defaults  fvSchemes  fvSchemes.cfg  fvSolution.cfg  icoFoam.cfg
+
+These directories are automatically scanned by FoamX on startup and a tree of
+configured applications and utilities constructed. Users' applications will
+be automatically added to FoamX if they are under one of the scanned directories
+and have a FoamX/ directory with (at least) a ``application''.cfg file in
+it. 
+In addition to the standard application and utilities directories FoamX also
+scans the users own ones in the user-1.2 directory. FoamX also reads a basic set
+of configuration files which have been relocated to .OpenFOAM-1.2/apps/FoamX for
+consistency.  Many of the application and utility configuration files also
+require standard files which are included from here by the use of the dictionary
+include statement.
+
+Apart from this file reorganisation many other improvements have been made to
+the FoamX configuration syntax, particularly in the handling of boundary
+conditions which is now a lot more convenient and flexible and in the setting of
+defaults.  There isn't any documentation on the FoamX configuration syntax but
+there are lots of examples both applications and utilities.  If you are writing
+your own applications and would like to configure FoamX for them please study
+the configuration for similar applications provided with the release, the syntax
+is quite straight forward and consistent.  Most utilities and many applications
+are provided with FoamX configurations but not all:
+
+Pre-configured applications:
+
+compressible/rhoSonicFoam
+compressible/sonicTurbFoam
+compressible/rhoTurbFoam
+compressible/sonicFoam
+compressible/sonicLiquidFoam
+heatTransfer/buoyantFoam
+heatTransfer/buoyantSimpleFoam
+electromagnetics/mhdFoam
+electromagnetics/electrostaticFoam
+basic/laplacianFoam
+basic/potentialFoam
+basic/scalarTransportFoam
+multiphase/lesInterFoam
+multiphase/twoPhaseEulerFoam
+multiphase/rasInterFoam
+multiphase/settlingFoam
+multiphase/interFoam
+multiphase/bubbleFoam
+combustion/XiFoam
+combustion/Xoodles
+combustion/engineFoam
+incompressible/turbFoam
+incompressible/icoFoam
+incompressible/icoFoamAutoMotion
+incompressible/simpleFoam
+DNSandLES/coodles
+DNSandLES/dnsFoam
+DNSandLES/oodles
+DNSandLES/channelOodles
+stressAnalysis/stressedFoam
+
+Applications without configuration:
+
+compressible/rhoSimpleFoam
+compressible/sonicFoamAutoMotion
+compressible/rhopSonicFoam
+multiphase/twoLiquidMixingFoam
+multiphase/twoPhaseEulerFoam/interfacialModels
+multiphase/twoPhaseEulerFoam/kineticTheoryModel
+multiphase/twoPhaseEulerFoam/phaseModel
+financial/financialFoam
+combustion/dieselEngineFoam
+combustion/coldEngineFoam
+combustion/dieselFoam
+combustion/reactingFoam
+incompressible/nonNewtonianIcoFoam
+incompressible/boundaryFoam
+incompressible/icoTopoFoam
+stressAnalysis/contactStressFoam
+stressAnalysis/stressFemFoam
+
+If you find the application you use most is not provided with FoamX support try
+writing the configuration yourself and if you are successful please post it on
+the forum for others to use and for us to include in future releases.
+
+There are many other smaller improvements e.g. the addition of a documented
+editor panel for the OpenFOAM operational controls in
+.OpenFOAM-1.2/controlDict.
+
+
+preProcessing
+~~~~~~~~~~~~~
+setFields:
+    New utility to initialise fields from cell/region selections using the
+    same region descriptions as refineMesh.  setFields avoids the need to write
+    case-specific initialisation utilities e.g. setGammaDamBreak for the
+    interFoam damBreak case and is now used in many of the tutorials that
+    require this kind of initialisation.
+
+
+mesh/conversion
+~~~~~~~~~~~~~~~
+Improvements to
+    ccm24ToFoam
+    gmshToFoam
+    fluentMeshToFoam
+
+
+mesh/generation
+~~~~~~~~~~~~~~~
+extrudeMesh:
+    can now extrude from a patch read from file
+
+
+mesh/manipulation
+~~~~~~~~~~~~~~~~~
+moveTopoMesh:
+    Does topo changes only without solving fields
+
+rotateMesh:
+    rotates a mesh and its vector/tensor fields
+
+transformPoints:
+    scales/moves/rotates points (but not fields)
+
+
+postProcessing/dataConversion
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+foamToVTK:
+    extra options to output only boundary values amongst others.
+
+foamToDX:
+    removed, OpenDX is no longer supported.  If you are an OpenDX user please
+    upgrade to ParaView or another supported post-processing system.
+
+
+postProcessing/graphics
+~~~~~~~~~~~~~~~~~~~~~~~
+dxFoam:
+    removed, see foamToDX above.
+
+
+postProcessing/miscellaneous
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+sampleSurface:
+    runs in parallel
+
+
+paraFoam
+~~~~~~~~
+paraFoam and the reader-module are now setup to use paraview-2.2.0 which is
+included in the release.
+
+
+Many other changes
+~~~~~~~~~~~~~~~~~~
+We have made many other small changes to the libraries and applications either
+to fix bugs, improve consistency or add functionality.

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -47,11 +47,9 @@ void Foam::slidingInterface::calcAttachedAddressing() const
         // Clear existing addressing
         clearAttachedAddressing();
 
-        const polyMesh& mesh = morphEngine().mesh();
-
-        const labelList& own = mesh.allOwner();
-        const labelList& nei = mesh.allNeighbour();
-        const faceZoneMesh& faceZones = mesh.faceZones();
+        const labelList& own = mesh().allOwner();
+        const labelList& nei = mesh().allNeighbour();
+        const faceZoneMesh& faceZones = mesh().faceZones();
 
         // Master side
 
@@ -145,7 +143,7 @@ void Foam::slidingInterface::calcAttachedAddressing() const
         }
 
         // Calculate stick-out faces
-        const labelListList& pointFaces = mesh.pointFaces();
+        const labelListList& pointFaces = mesh().pointFaces();
 
         // Master side
         labelHashSet masterStickOutFaceMap

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -46,8 +46,12 @@ bool Foam::blockMesh::blockLabelsOK
         {
             ok = false;
 
-            Warning
-                << "block " << blockLabel
+            WarningIn
+            (
+                "bool Foam::blockMesh::blockLabelsOK"
+                "(const label blockLabel, const pointField& points, "
+                "const cellShape& blockShape)"
+            )   << "block " << blockLabel
                 << " point label " << blockShape[i]
                 << " less than zero" << endl;
         }
@@ -55,8 +59,12 @@ bool Foam::blockMesh::blockLabelsOK
         {
             ok = false;
 
-            Warning
-                << "block " << blockLabel
+            WarningIn
+            (
+                "bool Foam::blockMesh::blockLabelsOK"
+                "(const label blockLabel, const pointField& points, "
+                "const cellShape& blockShape)"
+            )   << "block " << blockLabel
                 << " point label " << blockShape[i]
                 << " larger than " << points.size() - 1
                 << " the largest defined point label" << endl;
@@ -86,8 +94,12 @@ bool Foam::blockMesh::patchLabelsOK
             {
                 ok = false;
 
-                Warning
-                    << "patch " << patchLabel
+                WarningIn
+                (
+                    "bool Foam::blockMesh::patchLabelsOK"
+                    "(const label patchLabel, const pointField& points, "
+                    "const faceList& patchFaces)"
+                )   << "patch " << patchLabel
                     << " face " << facei
                     << " point label " << labels[i]
                     << " less than zero" << endl;
@@ -96,8 +108,12 @@ bool Foam::blockMesh::patchLabelsOK
             {
                 ok = false;
 
-                Warning
-                    << "patch " << patchLabel
+                WarningIn
+                (
+                    "bool Foam::blockMesh::patchLabelsOK"
+                    "(const label patchLabel, const pointField& points, "
+                    "const faceList& patchFaces)"
+                )   << "patch " << patchLabel
                     << " face " << facei
                     << " point label " << labels[i]
                     << " larger than " << points.size() - 1
@@ -340,7 +356,7 @@ Foam::polyMesh* Foam::blockMesh::createTopology(IOdictionary& meshDescription)
 
     Info<< nl << "Creating block mesh topology" << endl;
 
-    ptrList<cellShape> tmpBlockCells(blocks.size());
+    PtrList<cellShape> tmpBlockCells(blocks.size());
     forAll(blocks, blockLabel)
     {
         tmpBlockCells.hook
@@ -350,8 +366,10 @@ Foam::polyMesh* Foam::blockMesh::createTopology(IOdictionary& meshDescription)
 
         if (tmpBlockCells[blockLabel].mag(tmpBlockPoints) < 0.0)
         {
-            Warning
-                << "negative volume block : " << blockLabel
+            WarningIn
+            (
+                "blockMesh::createTopology(IOdictionary& meshDescription)"
+            )   << "negative volume block : " << blockLabel
                 << ", probably defined inside-out" << endl;
         }
     }

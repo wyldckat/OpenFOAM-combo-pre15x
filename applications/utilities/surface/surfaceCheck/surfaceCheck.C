@@ -20,12 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
 \*---------------------------------------------------------------------------*/
 
+#include "triangle.H"
 #include "triSurface.H"
 #include "triSurfaceTools.H"
 #include "triSurfaceSearch.H"
@@ -68,10 +69,11 @@ labelList countBins
 
             if ((index < 0) || (index >= nBins))
             {
-                Warning
-                    << "countBins(const scalar, const scalar, const label"
-                    << ", const scalarField&) : "
-                    << "value " << vals[i] << " at index " << i
+                WarningIn
+                (
+                    "countBins(const scalar, const scalar, const label"
+                    ", const scalarField&)"
+                )   << "value " << vals[i] << " at index " << i
                     << " outside range " << min << " .. " << max << endl;
 
                 if (index < 0)
@@ -99,16 +101,16 @@ int main(int argc, char *argv[])
     argList::noParallel();
 
     argList::validArgs.clear();
-    argList::validOptions.insert("noCleanup", "");
+    //argList::validOptions.insert("noCleanup", "");
     argList::validArgs.append("surface file");
     argList args(argc, argv);
 
     fileName surfFileName(args.args()[1]);
-    Info<< "Reading surface from " << surfFileName << " ..." << endl;
+    Info<< "Reading surface from " << surfFileName << " ..." << nl << endl;
 
-    //
-    // Read and clean
-    //
+
+    // Read
+    // ~~~~
 
     triSurface surf(surfFileName);
 
@@ -116,61 +118,111 @@ int main(int argc, char *argv[])
     surf.writeStats(Info);
     Info<< endl;
 
-    if (args.options().found("noCleanup"))
-    {
-        Info << "Not cleaning up surface" << endl;
-    }
-    else
-    {
-        Info<< "Cleaning surface ..." << endl;
-        surf.cleanup(true);
-        Info<< endl;
-
-        Info<< "Statistics:" << endl;
-        surf.writeStats(Info);
-        Info<< endl;
-    }
-
+    //if (args.options().found("noCleanup"))
+    //{
+    //    Info << "Not cleaning up surface" << endl;
+    //}
+    //else
+    //{
+    //    Info<< "Cleaning surface ..." << endl;
+    //    surf.cleanup(true);
+    //    Info<< endl;
     //
+    //    Info<< "Statistics:" << endl;
+    //    surf.writeStats(Info);
+    //    Info<< endl;
+    //}
+
     // Triangle quality
-    //
+    // ~~~~~~~~~~~~~~~~
 
-    scalarField triQ(surf.size());
-    forAll(surf, faceI)
     {
-        const labelledTri& f = surf[faceI];
+        scalarField triQ(surf.size());
+        forAll(surf, faceI)
+        {
+            const labelledTri& f = surf[faceI];
 
-        triQ[faceI] = triPointRef
-        (
-            surf.points()[f[0]],
-            surf.points()[f[1]],
-            surf.points()[f[2]]
-        ).quality();
-    }
-    labelList binCount = countBins(0, 1, 20, triQ);
+            triQ[faceI] = triPointRef
+            (
+                surf.points()[f[0]],
+                surf.points()[f[1]],
+                surf.points()[f[2]]
+            ).quality();
+        }
+        labelList binCount = countBins(0, 1, 20, triQ);
 
-    Info<< "Triangle quality (equilateral=1, collapsed=0):"
-        << endl;
-
-
-    OSstream& os = Info;
-    os.width(4);
-
-    scalar dist = (1.0 - 0.0)/20.0;
-    scalar min = 0;
-    forAll(binCount, binI)
-    {
-        Info<< "    " << min << " .. " << min+dist << "  : "
-            << 1.0/surf.size() * binCount[binI]
+        Info<< "Triangle quality (equilateral=1, collapsed=0):"
             << endl;
-        min += dist; 
+
+
+        OSstream& os = Info;
+        os.width(4);
+
+        scalar dist = (1.0 - 0.0)/20.0;
+        scalar min = 0;
+        forAll(binCount, binI)
+        {
+            Info<< "    " << min << " .. " << min+dist << "  : "
+                << 1.0/surf.size() * binCount[binI]
+                << endl;
+            min += dist; 
+        }
+        Info<< endl;
+
+        label minIndex = findMin(triQ);
+        label maxIndex = findMax(triQ);
+
+        Info<< "    min " << triQ[minIndex] << " for triangle " << minIndex
+            << nl
+            << "    max " << triQ[maxIndex] << " for triangle " << maxIndex
+            << nl
+            << endl;
+
+
+        if (triQ[minIndex] < SMALL)
+        {
+            WarningIn(args.executable()) << "Minimum triangle quality is "
+                << triQ[minIndex] << ". This might give problems in"
+                << " self-intersection testing later on." << endl;
+        }
     }
-    Info<< endl;
 
 
-    //
+    // Edges
+    // ~~~~~
+    {
+        const edgeList& edges = surf.edges();
+        const pointField& localPoints = surf.localPoints();
+
+        scalarField edgeMag(edges.size());
+
+        forAll(edges, edgeI)
+        {
+            edgeMag[edgeI] = edges[edgeI].mag(localPoints);
+        }
+
+        label minEdgeI = findMin(edgeMag);
+        label maxEdgeI = findMax(edgeMag);
+
+        const edge& minE = edges[minEdgeI];
+        const edge& maxE = edges[maxEdgeI];
+
+
+        Info<< "Edges:" << nl
+            << "    min " << edgeMag[minEdgeI] << " for edge " << minEdgeI
+            << " points " << localPoints[minE[0]] << localPoints[minE[1]]
+            << nl
+            << "    max " << edgeMag[maxEdgeI] << " for edge " << maxEdgeI
+            << " points " << localPoints[maxE[0]] << localPoints[maxE[1]]
+            << nl
+            << endl;
+    }
+
+
+
     // Check manifold
-    //
+    // ~~~~~~~~~~~~~~
+
     DynamicList<label> problemFaces(surf.size()/100 + 1);
 
     const labelListList& eFaces = surf.edgeFaces();
@@ -231,9 +283,8 @@ int main(int argc, char *argv[])
 
 
 
-    //
     // Check singly connected domain
-    //
+    // ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     labelList faceZone;
     label numZones = surf.markZones(boolList(surf.nEdges(), false), faceZone);
@@ -290,9 +341,32 @@ int main(int argc, char *argv[])
 
 
 
+    // Check orientation
+    // ~~~~~~~~~~~~~~~~~
+
+    boolList borderEdge(surf.checkOrientation(false));
+
     //
+    // Colour all faces into zones using borderEdge
+    //
+    labelList normalZone;
+    label numNormalZones = surf.markZones(borderEdge, normalZone);
+
+    Info<< endl
+        << "Number of zones (connected area with consistent normal) : "
+        << numNormalZones << endl;
+
+    if (numNormalZones > 1)
+    {
+        Info<< "More than one normal orientation." << endl;
+    }
+    Info<< endl;
+
+
     // Check self-intersection
-    //
+    // ~~~~~~~~~~~~~~~~~~~~~~~
+
+    Info<< "Checking self-intersection." << endl;
 
     triSurfaceSearch querySurf(surf);
     surfaceIntersection inter(querySurf);
@@ -323,25 +397,6 @@ int main(int argc, char *argv[])
     }
     Info<< endl;
 
-
-    // Check orientation
-    boolList borderEdge(surf.checkOrientation(false));
-
-    //
-    // Colour all faces into zones using borderEdge
-    //
-    labelList normalZone;
-    label numNormalZones = surf.markZones(borderEdge, normalZone);
-
-    Info<< endl
-        << "Number of zones (connected area with consistent normal) : "
-        << numNormalZones << endl;
-
-    if (numNormalZones > 1)
-    {
-        Info<< "More than one normal orientation." << endl;
-    }
-    Info<< endl;
      
 
     Info << "End\n" << endl;

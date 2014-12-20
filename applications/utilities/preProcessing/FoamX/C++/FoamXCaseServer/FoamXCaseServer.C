@@ -20,11 +20,10 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
+
 // Foam header files.
 #include "dictionary.H"
 #include "argList.H"
@@ -41,7 +40,6 @@ Description
 #include "FoamXNameSpaces.H"
 
 using namespace FoamX;
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -61,8 +59,8 @@ int main(int argc, char **argv)
         Orb orb(argc, argv);
 
         argList::validOptions.insert("open", "");
-        argList::validOptions.insert("create", "appClass");
-        //argList::validOptions.insert("import", "appClass");
+        argList::validOptions.insert("create", "app");
+        argList::validOptions.insert("import", "app");
         //argList::validOptions.insert("test", "");
         argList args(argc, argv);
 
@@ -76,7 +74,7 @@ int main(int argc, char **argv)
         LogEntry log(functionName, __FILE__, __LINE__);
 
         word mode;
-        word appClass;
+        word app;
         if (args.options().found("open"))
         {
             mode = "open";
@@ -84,13 +82,13 @@ int main(int argc, char **argv)
         else if (args.options().found("create"))
         {
             mode = "create";
-            appClass = args.options()["create"];
+            app = args.options()["create"];
         }
-        //else if (args.options().found("import"))
-        //{
-        //    mode = "import";
-        //    appClass = args.options()["import"];
-        //}
+        else if (args.options().found("import"))
+        {
+            mode = "import";
+            app = args.options()["import"];
+        }
         else
         {
             FatalErrorIn(functionName)
@@ -108,7 +106,7 @@ int main(int argc, char **argv)
             args.rootPath(),
             args.caseName(),
             mode,
-            appClass
+            app
         );
 
         if (caseServerPtr == NULL)
@@ -121,7 +119,7 @@ int main(int argc, char **argv)
         log << "Created ICaseServerImpl object." << endl;
 
         // Get the object IOR and write to lock file.
-        Foam::string ior = orb.ior(caseServerPtr->_this());
+        string ior = orb.ior(caseServerPtr->_this());
 
         log << "IOR : " << ior << "." << endl;
 

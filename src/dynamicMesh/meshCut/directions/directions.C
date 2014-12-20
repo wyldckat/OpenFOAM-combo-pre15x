@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -224,7 +224,8 @@ Foam::vectorField Foam::directions::propagateDirection
         if (index == -3)
         {
             // Never visited
-            Warning<< "Cell " << cellI << " never visited to determine "
+            WarningIn("propagateDirection")
+                << "Cell " << cellI << " never visited to determine "
                 << "local coordinate system" << endl
                 << "Using direction " << defaultDir << " instead" << endl;
 
@@ -367,8 +368,11 @@ Foam::directions::directions
         {
             tan1 = correct2DPtr->planeNormal() ^ n0;
 
-            Warning
-                << "Discarding user specified tan1 since 2D case." << endl
+            WarningIn
+            (
+                "directions::directions(const polyMesh&, const dictionary&,"
+                "const twoDPointCorrector*"
+            )   << "Discarding user specified tan1 since 2D case." << endl
                 << "Recalculated tan1 from face normal and planeNormal as "
                 << tan1 << endl << endl;
         }

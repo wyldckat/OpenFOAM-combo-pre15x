@@ -45,13 +45,13 @@
     //- Initialise the near-wall P field to zero
     forAll(patches, patchi)
     {
-        const fvPatch& currPatch = patches[patchi];
+        const fvPatch& curPatch = patches[patchi];
 
-        if (typeid(currPatch) == typeid(wallFvPatch))
+        if (isType<wallFvPatch>(curPatch))
         {
-            forAll(currPatch, facei)
+            forAll(curPatch, facei)
             {
-                label faceCelli = currPatch.faceCells()[facei];
+                label faceCelli = curPatch.faceCells()[facei];
 
                 G[faceCelli] = 0.0;
             }
@@ -64,7 +64,7 @@
     {
         const fvPatch& curPatch = patches[patchi];
 
-        if (typeid(curPatch) == typeid(wallFvPatch))
+        if (isType<wallFvPatch>(curPatch))
         {
             const scalarField& rhow = rho.boundaryField()[patchi];
 

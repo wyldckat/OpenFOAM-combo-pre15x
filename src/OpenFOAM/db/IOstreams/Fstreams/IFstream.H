@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IFstream
@@ -116,13 +116,13 @@ public:
         // Access
 
             //- Return the name of the stream
-            const string& name() const
+            const fileName& name() const
             {
                 return pathname_;
             }
 
             //- Return non-const access to the name of the stream
-            string& name()
+            fileName& name()
             {
                 return pathname_;
             }
@@ -132,6 +132,14 @@ public:
 
             //- Print description of IOstream to Ostream
             virtual void print(Ostream&) const;
+
+
+    // Member operators
+
+        //- Return a non-const reference to const IFstream
+        //  Needed for read-constructors where the stream argument is temporary:
+        //  e.g. thing thisThing(IFstream("thingFileName")());
+        IFstream& operator()() const;
 };
 
 

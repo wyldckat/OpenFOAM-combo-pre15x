@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass sonicFoam;
+application sonicFoam;
 
 startFrom       startTime;
 
@@ -38,7 +38,7 @@ writeControl    runTime;
 
 writeInterval   0.001;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

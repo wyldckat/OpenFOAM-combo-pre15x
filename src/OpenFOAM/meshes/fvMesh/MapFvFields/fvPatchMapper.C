@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     fvPatch mapper.
@@ -66,11 +66,13 @@ void Foam::fvPatchMapper::calcAddressing() const
     if (direct())
     {
         // Direct mapping - slice to size
-        directAddrPtr_ =
-            new labelList
+        directAddrPtr_ = new labelList
+        (
+            patch_.patchSlice
             (
-                patch_.patchSlice((labelList&)faceMap_.directAddressing())
-            );
+                static_cast<const labelList&>(faceMap_.directAddressing())
+            )
+        );
         labelList& addr = *directAddrPtr_;
 
         // Adjust mapping to manage hits into other patches and into

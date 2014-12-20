@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     polyMesh
@@ -221,39 +221,6 @@ private:
             );
 
 
-protected:
-
-        // Special mesh operations
-
-            //- Update mesh topology using explicitly provided mesh changes.
-            //  This is incompatible with morphEngine/meshModifiers mechanism
-            //  and this function will FatalError if there is a morphEngine.
-            //  This function is only to be used if you cannot do your changes
-            //  through meshModifiers.
-            void updateTopology(const polyTopoChange& ref);
-
-            //- Reset morph time index
-            bool setMorphTimeIndex(const label newTimeIndex) const;
-
-            //- Remove boundary patches
-            void removeBoundary();
-
-            //- Remove point zones
-            void removePointZones();
-
-            //- Remove face zones
-            void removeFaceZones();
-
-            //- Remove cell zones
-            void removeCellZones();
-
-            //- Remove mesh modifiers
-            void removeMeshModifiers();
-
-            //- Set the instance for mesh files
-            void setInstance(const fileName&);
-
-
 public:
 
     //- Runtime type information
@@ -317,12 +284,12 @@ public:
             //- Return the current instance directory for points
             //  Used in the consruction of gemometric mesh data dependent
             //  on points
-            const word& pointsInstance() const;
+            const fileName& pointsInstance() const;
 
             //- Return the current instance directory for cells
             //  Used in the consruction of tolpological mesh data dependent
             //  on cells
-            const word& cellsInstance() const;
+            const fileName& cellsInstance() const;
 
 
         // Access
@@ -447,6 +414,46 @@ public:
                 // arbitryary errors if the mesh is originally broken.
                 // Use with care.  
                 void zipUpCells();
+
+
+        // Special mesh operations
+
+            //- Update mesh topology using explicitly provided mesh changes.
+            //  This is incompatible with morphEngine/meshModifiers mechanism
+            //  and this function will FatalError if there is a morphEngine.
+            //  This function is only to be used if you cannot do your changes
+            //  through meshModifiers.
+            virtual void updateTopology(const polyTopoChange& ref);
+
+            //- Reset morph time index
+            bool setMorphTimeIndex(const label newTimeIndex) const;
+
+            //- Remove boundary patches
+            void removeBoundary();
+
+            //- Remove point zones
+            void removePointZones();
+
+            //- Remove face zones
+            void removeFaceZones();
+
+            //- Remove cell zones
+            void removeCellZones();
+
+            //- Remove mesh modifiers
+            void removeMeshModifiers();
+
+            //- Set the instance for mesh files
+            void setInstance(const fileName&);
+
+            //- In-place modifation of primitive data. Use addPatches to
+            //  add boundary afterwards.
+            void reset
+            (
+                const pointField& points,
+                const faceList& faces,
+                const cellList& cells
+            );
 
 
         //  Storage management

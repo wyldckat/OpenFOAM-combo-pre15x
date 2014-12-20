@@ -24,5 +24,5 @@
         transportProperties.lookup("Ubar")
     );
 
-    vector flowDirection = (Ubar/mag(Ubar)).value();
-    tensor flowMask = sqr(flowDirection);
+    dimensionedScalar magUbar = mag(Ubar);
+    vector flowDirection = (Ubar/magUbar).value();

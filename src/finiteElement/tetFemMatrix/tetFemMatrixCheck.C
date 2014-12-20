@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Tetrahedral Finite Element matrix check for diagonal dominance.
@@ -50,9 +50,9 @@ void tetFemMatrix<Type>::check()
     // Calculate local matrix off-diag sum
     scalarField dummySource(diag().size(), 0.0);
 
-    const scalarField oldLower = ((const lduMatrix&)(*this)).lower();
-    const scalarField oldUpper = ((const lduMatrix&)(*this)).upper();
-    const scalarField oldDiag = ((const lduMatrix&)(*this)).diag();
+    const scalarField oldLower = lduMatrix::lower();
+    const scalarField oldUpper = lduMatrix::upper();
+    const scalarField oldDiag = lduMatrix::diag();
 
     // Get matrix addressing
     const unallocLabelList& L = lduAddr().lowerAddr();
@@ -108,8 +108,8 @@ void tetFemMatrix<Type>::check()
         scalarField matrixSumOffDiag(diag().size(), 0.0);
         scalarField dummyInternal(diag().size(), 1.0);
 
-        const scalarField& lower = ((const lduMatrix&)(*this)).lower();
-        const scalarField& upper = ((const lduMatrix&)(*this)).upper();
+        const scalarField& lower = lduMatrix::lower();
+        const scalarField& upper = lduMatrix::upper();
 
         forAll (L, face)
         {

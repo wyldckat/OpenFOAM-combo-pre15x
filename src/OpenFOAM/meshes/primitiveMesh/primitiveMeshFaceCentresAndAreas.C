@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Calulate the face centres and areas.
@@ -44,7 +44,7 @@ void primitiveMesh::calcFaceCentresAndAreas() const
 {
     if (debug)
     {
-        Info<< "primitiveMesh::calcFaceCentresAndAreas() : "
+        Pout<< "primitiveMesh::calcFaceCentresAndAreas() : "
             << "Calculating face centres and face areas"
             << endl;
     }
@@ -68,7 +68,7 @@ void primitiveMesh::calcFaceCentresAndAreas() const
 
     if (debug)
     {
-        Info<< "primitiveMesh::calcFaceCentresAndAreas() : "
+        Pout<< "primitiveMesh::calcFaceCentresAndAreas() : "
             << "Finished calculating face centres and face areas"
             << endl;
     }

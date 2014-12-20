@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.2                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,10 +11,10 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "";
-    case "";
-    instance "";
-    local "";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorials/icoTopoFoam";
+    case "mixer2D";
+    instance ""constant"";
+    local "polyMesh";
 
     class polyBoundaryMesh;
     object boundary;
@@ -27,7 +27,6 @@ FoamFile
 impellerWall
 {
     type wall;
-    physicalType movingWall;
     nFaces 68;
     startFace 1040;
 }
@@ -35,7 +34,6 @@ impellerWall
 baffleWall
 {
     type wall;
-    physicalType wall;
     nFaces 84;
     startFace 1108;
 }
@@ -43,7 +41,6 @@ baffleWall
 insideSlider
 {
     type patch;
-    physicalType movingWall;
     nFaces 36;
     startFace 1192;
 }
@@ -51,7 +48,6 @@ insideSlider
 outsideSlider
 {
     type patch;
-    physicalType movingWall;
     nFaces 36;
     startFace 1228;
 }

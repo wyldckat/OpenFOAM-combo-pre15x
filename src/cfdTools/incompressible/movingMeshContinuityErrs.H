@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Global
     movingMeshContinuityErrs
@@ -32,10 +32,13 @@ Description
 
 {
     scalar sumLocalContErr = runTime.deltaT().value()*
-        mag(fvc::div(phi + mesh.phi()))().weightedAverage(mesh.V()).value();
+        mag(fvc::div(phi + fvc::meshPhi(U)))()
+       .weightedAverage(mesh.V()).value();
 
     scalar globalContErr = runTime.deltaT().value()*
-        fvc::div(phi + mesh.phi())().weightedAverage(mesh.V()).value();
+        fvc::div(phi + fvc::meshPhi(U))()
+       .weightedAverage(mesh.V()).value();
+
     cumulativeContErr += globalContErr;
 
     Info<< "time step continuity errors : sum local = " << sumLocalContErr

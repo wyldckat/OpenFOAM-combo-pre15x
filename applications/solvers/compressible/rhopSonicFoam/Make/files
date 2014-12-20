@@ -1,3 +1,5 @@
+BCs/adiabaticRhoE/adiabaticRhoEFvPatchScalarField.C
+BCs/fixedTempRhoE/fixedTempRhoEFvPatchScalarField.C
 rhopSonicFoam.C
 
 EXE = $(FOAM_APPBIN)/rhopSonicFoam

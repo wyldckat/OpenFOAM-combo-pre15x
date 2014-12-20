@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     Xstream
@@ -80,7 +80,7 @@ void Xstream::openSesame(const colour& forecol, const colour& backcol)
 
     XTextProperty wn;
     char* winNames[2];
-    winNames[0] = (char*)(winName().c_str());
+    winNames[0] = const_cast<char*>(winName().c_str());
     winNames[1] = NULL;
 
     XStringListToTextProperty(winNames, 1, &wn);
@@ -307,8 +307,8 @@ void Xstream::draw(const polygon2D& p)
 
     forAll(xvertex, i)
     {
-        xvertex[i].x = (short) x(vertex[i]);
-        xvertex[i].y = (short) y(vertex[i]);
+        xvertex[i].x = short(x(vertex[i]));
+        xvertex[i].y = short(y(vertex[i]));
     }
 
     XFillPolygon
@@ -387,7 +387,7 @@ void Xstream::setLineStyle(const lineStyle& ls)
         (
             mydisplay,
             mygc,
-            (unsigned int) thick,
+            (unsigned int)(thick),
             LineSolid,
             CapButt,
             JoinMiter
@@ -401,7 +401,7 @@ void Xstream::setLineStyle(const lineStyle& ls)
 
         for (label j=0; j<n; j++)
         {
-            dash_list[j] = (int)(pat[j]*ls.patternLength());
+            dash_list[j] = int(pat[j]*ls.patternLength());
         }
 
         XSetDashes
@@ -417,7 +417,7 @@ void Xstream::setLineStyle(const lineStyle& ls)
         (
             mydisplay,
             mygc,
-            (unsigned int) thick,
+            (unsigned int)(thick),
             LineOnOffDash,
             CapButt,
             JoinMiter

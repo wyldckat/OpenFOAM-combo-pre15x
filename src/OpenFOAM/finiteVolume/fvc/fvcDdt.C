@@ -20,10 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
-    
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -61,22 +58,6 @@ ddt
 
 template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
-ddt0
-(
-    const dimensioned<Type> dt,
-    const fvMesh& mesh
-)
-{
-    return fv::ddtScheme<Type>::New
-    (
-        mesh,
-        mesh.ddtScheme("ddt0(" + dt.name() + ')')
-    )().fvcDdt0(dt);
-}
-
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, volMesh> >
 ddt
 (
     const GeometricField<Type, fvPatchField, volMesh>& vf
@@ -92,36 +73,6 @@ ddt
 
 template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
-ddt0
-(
-    const GeometricField<Type, fvPatchField, volMesh>& vf
-)
-{
-    return fv::ddtScheme<Type>::New
-    (
-        vf.mesh(),
-        vf.mesh().ddtScheme("ddt0(" + vf.name() + ')')
-    )().fvcDdt0(vf);
-}
-
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
-ddt0
-(
-    const GeometricField<Type, fvPatchField, surfaceMesh>& vf
-)
-{
-    return fv::ddtScheme<Type>::New
-    (
-        vf.mesh(),
-        vf.mesh().ddtScheme("ddt0(" + vf.name() + ')')
-    )().fvcDdt0(vf);
-}
-
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, volMesh> >
 ddt
 (
     const dimensionedScalar& rho,
@@ -133,22 +84,6 @@ ddt
         vf.mesh(),
         vf.mesh().ddtScheme("ddt(" + rho.name() + ',' + vf.name() + ')')
     )().fvcDdt(rho, vf);
-}
-
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, volMesh> >
-ddt0
-(
-    const dimensionedScalar& rho,
-    const GeometricField<Type, fvPatchField, volMesh>& vf
-)
-{
-    return fv::ddtScheme<Type>::New
-    (
-        vf.mesh(),
-        vf.mesh().ddtScheme("ddt0(" + rho.name() + ',' + vf.name() + ')')
-    )().fvcDdt0(rho, vf);
 }
 
 
@@ -169,18 +104,47 @@ ddt
 
 
 template<class Type>
-tmp<GeometricField<Type, fvPatchField, volMesh> >
-ddt0
+tmp<GeometricField<typename flux<Type>::type, fvPatchField, surfaceMesh> >
+ddtPhiCorr
 (
-    const volScalarField& rho,
-    const GeometricField<Type, fvPatchField, volMesh>& vf
+    const volScalarField& rA,
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const GeometricField
+    <
+        typename flux<Type>::type,
+        fvPatchField,
+        surfaceMesh
+    >& phi
 )
 {
     return fv::ddtScheme<Type>::New
     (
-        vf.mesh(),
-        vf.mesh().ddtScheme("ddt0(" + rho.name() + ',' + vf.name() + ')')
-    )().fvcDdt0(rho, vf);
+        U.mesh(),
+        U.mesh().ddtScheme("ddt(" + U.name() + ')')
+    )().fvcDdtPhiCorr(rA, U, phi);
+}
+
+
+template<class Type>
+tmp<GeometricField<typename flux<Type>::type, fvPatchField, surfaceMesh> >
+ddtPhiCorr
+(
+    const volScalarField& rA,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const GeometricField
+    <
+        typename flux<Type>::type,
+        fvPatchField,
+        surfaceMesh
+    >& phi
+)
+{
+    return fv::ddtScheme<Type>::New
+    (
+        U.mesh(),
+        U.mesh().ddtScheme("ddt(" + rho.name() + ',' + U.name() + ')')
+    )().fvcDdtPhiCorr(rA, rho, U, phi);
 }
 
 

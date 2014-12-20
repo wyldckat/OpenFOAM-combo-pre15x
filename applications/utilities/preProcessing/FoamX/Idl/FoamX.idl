@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     FoamX
@@ -64,7 +64,7 @@ module FoamXServer
         Type_Directory,     // Generic directory
         Type_Time,          // Time (as string)
         Type_DimensionSet,
-        Type_VectorSpace,
+        Type_FixedList,
         Type_List,
         Type_Dictionary,
         Type_Selection,
@@ -143,29 +143,15 @@ module FoamXServer
     };
     typedef sequence<HostDescriptor> HostDescriptorList;
 
-    // Application class descriptor structure.
-    struct ApplicationClassDescriptor
+    // Application descriptor structure.
+    struct ApplicationDescriptor
     {
         string  name;
         string  category;
+        string  path;
         boolean systemClass;         // System defined application class.
     };
-    typedef sequence<ApplicationClassDescriptor> ApplicationClassDescriptorList;
-
-    // Utility descriptor structure.
-    struct UtilityDescriptor
-    {
-        string name;
-        string description;
-        string category;
-        boolean systemClass;         // System defined application class.
-        boolean changesMesh;         // Changes mesh
-        boolean changesFields;       // Changes any field (which application
-                                     // uses; not any additional fields)
-        string clientBean;           // Client side Java bean for this utility.
-        ITypeDescriptor controlDict; // Optional control dictionary
-    };
-    typedef sequence<UtilityDescriptor> UtilityDescriptorList;
+    typedef sequence<ApplicationDescriptor> ApplicationDescriptorList;
 
     // Case descriptor structure.
     struct CaseDescriptor
@@ -173,7 +159,7 @@ module FoamXServer
         string rootDir;     // rootDir (after expansion)
         string rawRootDir;  // rootDir (before expansion)
         string caseName;
-        string appClass;
+        string app;
         long nProcs;        // 1 or number of subdomains in parallel
         boolean managed;    // True if this is a FoamX managed case.
         boolean locked;     // True if this case is locked by another user.
@@ -447,11 +433,11 @@ module FoamXServer
         // Forward declare all interfaces in this module.
         interface ICaseServer;
         interface IFoamProperties;
-        interface IApplicationClass;
+        interface IApplication;
         interface IGeometricFieldDescriptor;
         interface IPatchDescriptor;
         interface IGeometryDescriptor;
-        interface IBoundaryTypeDescriptor;
+        interface IPatchPhysicalTypeDescriptor;
         interface IGeometricField;
 
 
@@ -467,7 +453,7 @@ module FoamXServer
             readonly attribute string caseName;
 
             // Application class for this case (read only).
-            readonly attribute IApplicationClass applicationClass;
+            readonly attribute IApplication application;
 
             // Foam system properties (read only).
             readonly attribute IFoamProperties foamProperties;
@@ -506,7 +492,7 @@ module FoamXServer
             // Patches.
             readonly attribute StringList patchNames;
 
-            void addPatch(in string patchName, in string boundaryType)
+            void addPatch(in string patchName, in string patchPhysicalType)
                 raises(FoamXError, FoamXIOError);
 
             void deletePatch(in string patchName)
@@ -514,17 +500,17 @@ module FoamXServer
 
             void deleteAllPatches() raises(FoamXError, FoamXIOError);
 
-            // Patch boundary conditions.
-            void setPatchBoundaryType
+            // Patch physical type
+            void setPatchPhysicalType
             (
                 in string patchName,
-                in string boundaryType
+                in string patchPhysicalType
             ) raises(FoamXError, FoamXIOError);
 
-            void getPatchBoundaryType
+            void getPatchPhysicalType
             (
                 in string patchName,
-                out string boundaryType
+                out string patchPhysicalType
             ) raises(FoamXError, FoamXIOError);
 
             // Dictionaries.
@@ -534,10 +520,6 @@ module FoamXServer
                 in boolean forceRead,           // Do not use cache
                 out IDictionaryEntry dictRoot
             ) raises(FoamXError, FoamXIOError);
-
-            // Copy default dictionary into dictionaryName
-            void copyDefaultDictionary(in string dictionaryName)
-                raises(FoamXError, FoamXIOError);
 
             void readFile
             (
@@ -651,37 +633,46 @@ module FoamXServer
                 ) raises(FoamXError, FoamXIOError);
 
 
+            // FOAM controlDict
+
+                void getFoamControlDict
+                (
+                    out IDictionaryEntry controlDict
+                ) raises(FoamXError, FoamXIOError);
+
+
             // Application classes.
 
-                readonly attribute ApplicationClassDescriptorList
-                    applicationClasses;
+                readonly attribute ApplicationDescriptorList
+                    applicationes;
 
-                void getApplicationClass
+                void getApplication
                 (
-                    in string appClassName,
-                    out IApplicationClass appClass
+                    in string appName,
+                    out IApplication app
                 ) raises(FoamXError, FoamXIOError);
 
-                void addApplicationClass
+                void addApplication
                 (
-                    in string appClassName,
-                    out IApplicationClass appClass
+                    in string appName,
+                    out IApplication app
                 ) raises(FoamXError, FoamXIOError);
 
-                void deleteApplicationClass(in string appClassName) 
+                void deleteApplication(in string appName) 
                     raises(FoamXError, FoamXIOError);
 
-                void cloneApplicationClass
+                void cloneApplication
                 (
-                    in string appClassNameSrc,
-                    in string appClassNameDest,
-                    out IApplicationClass appClass
+                    in string appNameSrc,
+                    in string appNameDest,
+                    in string appDestPath,
+                    out IApplication app
                 ) raises(FoamXError, FoamXIOError);
 
 
             // Foam utilities.
 
-                readonly attribute UtilityDescriptorList utilities;
+                readonly attribute ApplicationDescriptorList utilities;
 
                 void getUtilityControlDict
                 (
@@ -706,7 +697,7 @@ module FoamXServer
 
         // ---------------------------------------------------------------------
 
-        interface IApplicationClass
+        interface IApplication
         {
             //- Short name for this application class.
             attribute string name;
@@ -748,29 +739,29 @@ module FoamXServer
             void deleteField(in string fieldName)
                 raises(FoamXError, FoamXIOError);
 
-            // Boundary types.
-            readonly attribute StringList boundaryTypes;
+            // Patch physical types.
+            readonly attribute StringList patchPhysicalTypes;
 
-            // List of defined boundary types.
-            void getBoundaryType
+            // List of defined patch physical types.
+            void getPatchPhysicalType
             (
-                in string boundaryTypeName,
-                out IBoundaryTypeDescriptor boundaryDescriptor
+                in string patchPhysicalTypeName,
+                out IPatchPhysicalTypeDescriptor patchPhysicalTypeDescriptor
             ) raises(FoamXError, FoamXIOError);
 
-            void findBoundaryType
+            void findPatchPhysicalType
             (
-                in string boundaryTypeName,
-                out IBoundaryTypeDescriptor boundaryDescriptor
+                in string patchPhysicalTypeName,
+                out IPatchPhysicalTypeDescriptor patchPhysicalTypeDescriptor
             ) raises(FoamXError, FoamXIOError);
 
-            void addBoundaryType
+            void addPatchPhysicalType
             (
-                in string boundaryTypeName,
-                out IBoundaryTypeDescriptor boundaryDescriptor
+                in string patchPhysicalTypeName,
+                out IPatchPhysicalTypeDescriptor patchPhysicalTypeDescriptor
             ) raises(FoamXError, FoamXIOError);
 
-            void deleteBoundaryType(in string boundaryTypeName)
+            void deletePatchPhysicalType(in string patchPhysicalTypeName)
                 raises(FoamXError, FoamXIOError);
 
             // Dictionaries.
@@ -813,9 +804,6 @@ module FoamXServer
 
             //- Description (eg, "Solid Wall").
             attribute string description;
-
-            //- Valid patch field types for this patch type.
-            attribute StringList patchFieldTypes;
         };
 
         // ---------------------------------------------------------------------
@@ -858,15 +846,15 @@ module FoamXServer
 
         // ---------------------------------------------------------------------
 
-        interface IBoundaryTypeDescriptor
+        interface IPatchPhysicalTypeDescriptor
         {
-            //- Boundary type name (eg, "slip").
+            //- Patch physical type name (eg, "inlet").
             attribute string name;
 
             attribute string displayName;
             attribute string description;
             attribute string patchType;
-            attribute string superType;
+            attribute string parentType;
             attribute StringPairList patchFieldTypes;
         };
 
@@ -880,11 +868,6 @@ module FoamXServer
             (
                 out IDictionaryEntry internalFieldValue
             ) raises(FoamXError, FoamXIOError);
-
-            //void getReferenceLevelValue
-            //(
-            //    out IDictionaryEntry referenceLevelValue
-            //) raises(FoamXError, FoamXIOError);
 
             void getPatchFieldParameters
             (
@@ -1136,14 +1119,14 @@ module FoamXServer
             (
                 in string rootDir,
                 in string caseName,
-                in string appClass
+                in string app
             ) raises(FoamXError, FoamXIOError);
 
             void importCase
             (
                 in string rootDir,
                 in string caseName,
-                in string appClass
+                in string app
             ) raises(FoamXError, FoamXIOError);
 
             void deleteCase(in CaseDescriptor caseDesc)
@@ -1196,7 +1179,7 @@ module FoamXServer
                 in string rootDir,
                 in string rawRootDir,
                 in string caseName,
-                in string appClass
+                in string app
             ) raises(FoamXError);
 
             void caseOpen

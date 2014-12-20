@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0.3                                 |
+|  \\    /   O peration     | Version:  1.2                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,9 +11,9 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "/home/dm2/henry/OpenFOAM/henry-1.0.3/run/tutorials/rhoTurbFoam";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorials/rhoTurbFoam";
     case "cavity";
-    instance "constant";
+    instance ""constant"";
     local "polyMesh";
 
     class polyBoundaryMesh;
@@ -27,7 +27,7 @@ FoamFile
 movingWall
 {
     type wall;
-    physicalType wallAdiabatic;
+    physicalType adiabaticWallFunctions;
     nFaces 20;
     startFace 760;
 }
@@ -35,7 +35,7 @@ movingWall
 fixedWalls
 {
     type wall;
-    physicalType wallAdiabatic;
+    physicalType adiabaticWallFunctions;
     nFaces 60;
     startFace 780;
 }

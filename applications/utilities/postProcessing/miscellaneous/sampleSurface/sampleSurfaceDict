@@ -28,7 +28,8 @@ FoamFile
 //      foamFile    : separate points, faces and values file
 //      dx          : DX scalar or vector format
 //      vtk         : VTK ascii format
-surfaceFormat dx;
+//      raw         : x y z value format for use with e.g. gnuplot 'splot'.
+surfaceFormat vtk;
 
 
 // interpolationScheme : choice of

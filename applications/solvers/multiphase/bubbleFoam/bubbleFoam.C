@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     bubbleFoam
@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
 
     for (runTime++; !runTime.end(); runTime++)
     {
-        Info<< "Time = " << runTime.timeName() << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
 #       include "readBubbleFoamControls.H"
 #       include "CourantNo.H"
@@ -69,6 +69,11 @@ int main(int argc, char *argv[])
         for (int corr=0; corr<nCorr; corr++)
         {
 #           include "pEqn.H"
+
+            if (correctAlpha)
+            {
+#               include "alphaEqn.H"
+            }
         }
 
 #       include "DDtU.H"
@@ -79,7 +84,7 @@ int main(int argc, char *argv[])
 
         Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl << endl;
+            << " s\n\n" << endl;
     }
 
     Info<< "End\n" << endl;

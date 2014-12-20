@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     ITstream
@@ -57,7 +57,7 @@ class ITstream
     // Private data
 
         //- Name of ITstream
-        string name_;
+        fileName name_;
 
         //- Index of token currently being read
         label tokenIndex_;
@@ -104,13 +104,13 @@ public:
         // Inquirery
 
             //- Return the name of the stream
-            const string& name() const
+            const fileName& name() const
             {
                 return name_;
             }
 
             //- Return non-const access to the name of the stream
-            string& name()
+            fileName& name()
             {
                 return name_;
             }

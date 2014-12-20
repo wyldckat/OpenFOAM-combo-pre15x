@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -90,7 +90,6 @@ SpalartAllmaras::SpalartAllmaras
     Cw2_(LESmodelProperties().lookup("Cw2")),
     Cw3_(LESmodelProperties().lookup("Cw3")),
 
-
     nuTilda_
     (
         IOobject
@@ -103,7 +102,7 @@ SpalartAllmaras::SpalartAllmaras
         ),
         mesh_
     ),
-    dTilda_(min(CDES_*delta(), (const volScalarField&)wallDist(mesh_))),
+    dTilda_(min(CDES_*delta(), wallDist(mesh_).y())),
     nuSgs_
     (
         IOobject
@@ -129,7 +128,7 @@ void SpalartAllmaras::correct(const tmp<volTensorField>& gradU)
 
     if (mesh_.moving())
     {
-        dTilda_ = min(CDES_*delta(), (const volScalarField&)wallDist(mesh_));
+        dTilda_ = min(CDES_*delta(), wallDist(mesh_).y());
     }
 
     volScalarField Stilda =
@@ -156,7 +155,6 @@ void SpalartAllmaras::correct(const tmp<volTensorField>& gradU)
     nuTilda_.correctBoundaryConditions();
     nuSgs_.internalField() = fv1()*nuTilda_.internalField();
     nuSgs_.correctBoundaryConditions();
-
 }
 
 

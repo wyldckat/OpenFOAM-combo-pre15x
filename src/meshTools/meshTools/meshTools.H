@@ -20,9 +20,9 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
-Class
+Namespace
     meshTools
 
 Description
@@ -42,7 +42,6 @@ SourceFiles
 #include "pointField.H"
 #include "faceList.H"
 #include "cellList.H"
-#include "labelHashSet.H"
 #include "primitivePatch.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -54,12 +53,13 @@ class primitiveMesh;
 
 
 /*---------------------------------------------------------------------------*\
-                           Class meshTools Declaration
+                        Namespace meshTools Declaration
 \*---------------------------------------------------------------------------*/
 
-class meshTools
+namespace meshTools
 {
-    //- Bit identifiers for octants (p=plus, m=min e.g. plusXminYminZ)
+    // Bit identifiers for octants (p=plus, m=min e.g. plusXminYminZ)
+
     static const label mXmYmZ = 0;
     static const label pXmYmZ = 1;
     static const label mXpYmZ = 2;
@@ -81,203 +81,198 @@ class meshTools
     static const label pXpYpZMask = 1 << pXpYpZ;
 
 
-public:
+    //- Check if n is in same direction as normals of all faceLabels
+    bool visNormal
+    (
+        const vector& n,
+        const vectorField& faceNormals,
+        const labelList& faceLabels
+    );
 
-    // Static Functions
+    //- Calculate point normals on a 'box' mesh (all edges aligned with
+    //  coordinate axes)
+    vectorField calcBoxPointNormals(const primitivePatch& pp);
 
-        //- Check if n is in same direction as normals of all faceLabels
-        static bool visNormal
-        (
-            const vector& n,
-            const vectorField& faceNormals,
-            const labelList& faceLabels
-        );
+    //- Normalized edge vector
+    vector normEdgeVec(const primitiveMesh&, const label edgeI);
 
-        //- Calculate point normals on a 'box' mesh (all edges aligned with
-        //  coordinate axes)
-        static vectorField calcBoxPointNormals(const primitivePatch& pp);
-
-       //- Normalized edge vector
-        static vector normEdgeVec(const primitiveMesh&, const label edgeI);
-
-        //- Write obj representation of point
-        static void writeOBJ
-        (
-            Ostream& os,
-            const point& pt
-        );
+    //- Write obj representation of point
+    void writeOBJ
+    (
+        Ostream& os,
+        const point& pt
+    );
 
 
-        //- Write obj representation of faces subset
-        static void writeOBJ
-        (
-            Ostream& os,
-            const faceList&,
-            const pointField&,
-            const labelList& faceLabels
-        );
+    //- Write obj representation of faces subset
+    void writeOBJ
+    (
+        Ostream& os,
+        const faceList&,
+        const pointField&,
+        const labelList& faceLabels
+    );
 
-        //- Write obj representation of faces
-        static void writeOBJ
-        (
-            Ostream& os,
-            const faceList&,
-            const pointField&
-        );
+    //- Write obj representation of faces
+    void writeOBJ
+    (
+        Ostream& os,
+        const faceList&,
+        const pointField&
+    );
 
-        //- Write obj representation of cell subset
-        static void writeOBJ
-        (
-            Ostream& os,
-            const cellList&,
-            const faceList&,
-            const pointField&,
-            const labelList& cellLabels
-        );
+    //- Write obj representation of cell subset
+    void writeOBJ
+    (
+        Ostream& os,
+        const cellList&,
+        const faceList&,
+        const pointField&,
+        const labelList& cellLabels
+    );
 
-        //- Is edge used by cell
-        static bool edgeOnCell
-        (
-            const primitiveMesh&,
-            const label cellI,
-            const label edgeI
-        );
+    //- Is edge used by cell
+    bool edgeOnCell
+    (
+        const primitiveMesh&,
+        const label cellI,
+        const label edgeI
+    );
 
-        //- Is edge used by face
-        static bool edgeOnFace
-        (
-            const primitiveMesh&,
-            const label faceI,
-            const label edgeI
-        );
+    //- Is edge used by face
+    bool edgeOnFace
+    (
+        const primitiveMesh&,
+        const label faceI,
+        const label edgeI
+    );
+    
+    //- Is face used by cell
+    bool faceOnCell
+    (
+        const primitiveMesh&,
+        const label cellI,
+        const label faceI
+    );
 
-        //- Is face used by cell
-        static bool faceOnCell
-        (
-            const primitiveMesh&,
-            const label cellI,
-            const label faceI
-        );
+    //- Return edge among candidates that uses the two vertices.
+    label findEdge
+    (
+        const edgeList& edges,
+        const labelList& candidates,
+        const label v0,
+        const label v1
+    );
 
-        //- Return edge among candidates that uses the two vertices.
-        static label findEdge
-        (
-            const edgeList& edges,
-            const labelList& candidates,
-            const label v0,
-            const label v1
-        );
+    //- Return edge between two vertices. Returns -1 if no edge.
+    label findEdge
+    (
+        const primitiveMesh&,
+        const label v0,
+        const label v1
+    );
 
-        //- Return edge between two vertices. Returns -1 if no edge.
-        static label findEdge
-        (
-            const primitiveMesh&,
-            const label v0,
-            const label v1
-        );
+    //- Return edge shared by two faces. Throws error if no edge found.
+    label getSharedEdge
+    (
+        const primitiveMesh&,
+        const label f0,
+        const label f1
+    );
+    
+    //- Return face shared by two cells. Throws error if none found.
+    label getSharedFace
+    (
+        const primitiveMesh&,
+        const label cell0,
+        const label cell1
+    );
 
-        //- Return edge shared by two faces. Throws error if no edge found.
-        static label getSharedEdge
-        (
-            const primitiveMesh&,
-            const label f0,
-            const label f1
-        );
+    //- Get faces on cell using edgeI. Throws error if no two found.
+    void getEdgeFaces
+    (
+        const primitiveMesh&,
+        const label cellI,
+        const label edgeI,
+        label& face0,
+        label& face1
+    );
 
-        //- Return face shared by two cells. Throws error if none found.
-        static label getSharedFace
-        (
-            const primitiveMesh&,
-            const label cell0,
-            const label cell1
-        );
+    //- Return label of other edge (out of candidates edgeLabels)
+    //  connected to vertex but not edgeI. Throws error if none found.
+    label otherEdge
+    (
+        const primitiveMesh&,
+        const labelList& edgeLabels,
+        const label edgeI,
+        const label vertI
+    );
+    
+    //- Return face on cell using edgeI but not faceI. Throws error 
+    //  if none found.
+    label otherFace
+    (
+        const primitiveMesh&,
+        const label cellI,
+        const label faceI,
+        const label edgeI
+    );
 
-        //- Get faces on cell using edgeI. Throws error if no two found.
-        static void getEdgeFaces
-        (
-            const primitiveMesh&,
-            const label cellI,
-            const label edgeI,
-            label& face0,
-            label& face1
-        );
+    //- Return cell on other side of face. Throws error 
+    //  if face not internal.
+    label otherCell
+    (
+        const primitiveMesh&,
+        const label cellI,
+        const label faceI
+    );
+    
+    //- Returns label of edge nEdges away from startEdge (in the direction
+    // of startVertI)
+    label walkFace
+    (
+        const primitiveMesh&,
+        const label faceI,
+        const label startEdgeI,
+        const label startVertI,
+        const label nEdges
+    );
 
-        //- Return label of other edge (out of candidates edgeLabels)
-        //  connected to vertex but not edgeI. Throws error if none found.
-        static label otherEdge
-        (
-            const primitiveMesh&,
-            const labelList& edgeLabels,
-            const label edgeI,
-            const label vertI
-        );
+    
+    //
+    // Hex only functionality.
+    //
 
-        //- Return face on cell using edgeI but not faceI. Throws error 
-        //  if none found.
-        static label otherFace
-        (
-            const primitiveMesh&,
-            const label cellI,
-            const label faceI,
-            const label edgeI
-        );
+    //- Given edge on hex find other 'parallel', non-connected edges.
+    void getParallelEdges
+    (
+        const primitiveMesh&,
+        const label cellI,
+        const label e0,
+        label&,
+        label&,
+        label&
+    );
 
-        //- Return cell on other side of face. Throws error 
-        //  if face not internal.
-        static label otherCell
-        (
-            const primitiveMesh&,
-            const label cellI,
-            const label faceI
-        );
+    //- Given edge on hex find all 'parallel' (i.e. non-connected)
+    //  edges and average direction of them
+    vector edgeToCutDir
+    (
+        const primitiveMesh&,
+        const label cellI,
+        const label edgeI
+    );
 
-        //- Returns label of edge nEdges away from startEdge (in the direction
-        // of startVertI)
-        static label walkFace
-        (
-            const primitiveMesh&,
-            const label faceI,
-            const label startEdgeI,
-            const label startVertI,
-            const label nEdges
-        );
-
-
-        //
-        // Hex only functionality.
-        //
-
-        //- Given edge on hex find other 'parallel', non-connected edges.
-        static void getParallelEdges
-        (
-            const primitiveMesh&,
-            const label cellI,
-            const label e0,
-            label&,
-            label&,
-            label&
-        );
-
-        //- Given edge on hex find all 'parallel' (i.e. non-connected)
-        //  edges and average direction of them
-        static vector edgeToCutDir
-        (
-            const primitiveMesh&,
-            const label cellI,
-            const label edgeI
-        );
-
-        //- Reverse of edgeToCutDir: given direction find edge bundle and
-        //  return one of them.
-        static label cutDirToEdge
-        (
-            const primitiveMesh&,
-            const label cellI,
-            const vector& cutDir
-        );
-
-
-};
+    //- Reverse of edgeToCutDir: given direction find edge bundle and
+    //  return one of them.
+    label cutDirToEdge
+    (
+        const primitiveMesh&,
+        const label cellI,
+        const vector& cutDir
+    );
+    
+} // End namespace meshTools
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

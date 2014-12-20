@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -121,10 +121,10 @@ void mixedFvPatchField<Type>::autoMap
     }
     else
     {
-        Field<Type>::autoMap((const FieldMapper&)m);
-        refValue_.autoMap((const FieldMapper&)m);
-        refGrad_.autoMap((const FieldMapper&)m);
-        valueFraction_.autoMap((const FieldMapper&)m);
+        Field<Type>::autoMap(m);
+        refValue_.autoMap(m);
+        refGrad_.autoMap(m);
+        valueFraction_.autoMap(m);
     }
 }
 
@@ -164,7 +164,7 @@ void mixedFvPatchField<Type>::evaluate()
         (1.0 - valueFraction_)*
         (
             this->patchInternalField()
-          + refGrad_/this->patchMesh().deltaCoeffs()
+          + refGrad_/this->patch().deltaCoeffs()
         )
     );
 
@@ -179,7 +179,7 @@ tmp<Field<Type> > mixedFvPatchField<Type>::snGrad() const
     return
         valueFraction_
        *(refValue_ - this->patchInternalField())
-       *this->patchMesh().deltaCoeffs()
+       *this->patch().deltaCoeffs()
       + (1.0 - valueFraction_)*refGrad_;
 }
 
@@ -206,7 +206,7 @@ tmp<Field<Type> > mixedFvPatchField<Type>::valueBoundaryCoeffs
 {
     return
          valueFraction_*refValue_
-       + (1.0 - valueFraction_)*refGrad_/this->patchMesh().deltaCoeffs();
+       + (1.0 - valueFraction_)*refGrad_/this->patch().deltaCoeffs();
 }
 
 //- Return the matrix diagonal coefficients corresponding to the
@@ -214,7 +214,7 @@ tmp<Field<Type> > mixedFvPatchField<Type>::valueBoundaryCoeffs
 template<class Type>
 tmp<Field<Type> > mixedFvPatchField<Type>::gradientInternalCoeffs() const
 {
-    return -Type(pTraits<Type>::one)*valueFraction_*this->patchMesh().deltaCoeffs();
+    return -Type(pTraits<Type>::one)*valueFraction_*this->patch().deltaCoeffs();
 }
 
 //- Return the matrix source coefficients corresponding to the
@@ -223,7 +223,7 @@ template<class Type>
 tmp<Field<Type> > mixedFvPatchField<Type>::gradientBoundaryCoeffs() const
 {
     return
-        valueFraction_*this->patchMesh().deltaCoeffs()*refValue_
+        valueFraction_*this->patch().deltaCoeffs()*refValue_
       + (1.0 - valueFraction_)*refGrad_;
 }
 

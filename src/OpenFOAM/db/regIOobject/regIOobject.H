@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     regIOobject
@@ -69,9 +69,6 @@ private:
 
         //- Time of last modification
         mutable time_t lastModified_;
-
-        //- Has the objects file been updated
-        bool updated_;
 
         //- Istream for reading
         Istream* isPtr_;
@@ -134,21 +131,6 @@ public:
             void transferToRegistry()
             {
                 registries_ = true;
-            }
-
-
-        // Update
-
-            //- Reset the updated flag
-            virtual void resetUpdate();
-
-            //- Update object if it hasn't already been updated
-            virtual bool update();
-
-            //- Has the objects file been updated
-            bool updated() const
-            {
-                return updated_;
             }
 
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     spray
@@ -36,7 +36,7 @@ Description
 
 #include "parcel.H"
 #include "injector.H"
-#include "IOptrList.H"
+#include "IOPtrList.H"
 #include "volPointInterpolation.H"
 #include "interpolation.H"
 #include "liquid.H"
@@ -97,7 +97,7 @@ class spray
 
         // The injectors
 
-            IOptrList<injector> injectors_;
+            IOPtrList<injector> injectors_;
 
 
         // References to the spray sub-models
@@ -122,7 +122,7 @@ class spray
 
         // Composition properties
 
-            const ptrList<specieProperties>& gasProperties_;
+            const PtrList<specieProperties>& gasProperties_;
             const combustionMixture& composition_;
 
             List<label> liquidToGasIndex_;
@@ -157,7 +157,7 @@ class spray
             scalarField shs_;
 
             //- Mass
-            ptrList<scalarField> srhos_;
+            PtrList<scalarField> srhos_;
 
             //- The total mass of the injected liquid
             scalar totalInjectedLiquidMass_;
@@ -197,7 +197,7 @@ public:
             const volScalarField& p,
             const volScalarField& T,
             const combustionMixture& composition,
-            const ptrList<specieProperties>& gasProperties,
+            const PtrList<specieProperties>& gasProperties,
             const dictionary& thermophysicalProperties,
             const dictionary& environmentalProperties
         );
@@ -239,8 +239,8 @@ public:
             inline const volScalarField& p() const;
             inline const volScalarField& T() const;
 
-            inline ptrList<injector>& injectors();
-            inline const ptrList<injector>& injectors() const;
+            inline PtrList<injector>& injectors();
+            inline const PtrList<injector>& injectors() const;
 
             inline const atomizationModel& atomization() const;
             inline const breakupModel& breakup() const;
@@ -261,7 +261,7 @@ public:
             inline const vector& g() const;
 
             inline const liquidMixture& fuels() const;
-            inline const ptrList<specieProperties>& gasProperties() const;
+            inline const PtrList<specieProperties>& gasProperties() const;
             inline const combustionMixture& composition() const;
 
             inline const List<label>& liquidToGasIndex() const;
@@ -285,8 +285,8 @@ public:
             inline scalarField& shs();
             inline const scalarField& shs() const;
 
-            inline ptrList<scalarField>& srhos();
-            inline const ptrList<scalarField>& srhos() const;
+            inline PtrList<scalarField>& srhos();
+            inline const PtrList<scalarField>& srhos() const;
 
             inline const scalar& ambientPressure() const;
             

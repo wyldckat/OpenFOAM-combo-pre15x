@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     CrankNicholsonDdtScheme
@@ -58,6 +58,12 @@ class CrankNicholsonDdtScheme
 :
     public fv::ddtScheme<Type>
 {
+    // Private Data
+
+        //- Off-centering coefficient, 1 -> CN, less than one blends with EI
+        scalar ocCoeff_;
+
+
     // Private Member Functions
 
         //- Disallow default bitwise copy construct
@@ -66,30 +72,20 @@ class CrankNicholsonDdtScheme
         //- Disallow default bitwise assignment
         void operator=(const CrankNicholsonDdtScheme&);
 
-        template<class GeoMesh>
-        GeometricField<Type, fvPatchField, GeoMesh>& ddt0_
-        (
-            const word& name,
-            const dimensionSet& dims
-        );
+        template<class GeoField>
+        GeoField& ddt0_(const word& name, const dimensionSet& dims);
 
-        template<class GeoMesh>
-        bool evaluate
-        (
-            const GeometricField<Type, fvPatchField, GeoMesh>& ddt0
-        ) const;
+        template<class GeoField>
+        bool evaluate(const GeoField& ddt0) const;
 
-        template<class GeoMesh>
-        dimensionedScalar rDeltaT_
-        (
-            const GeometricField<Type, fvPatchField, GeoMesh>& ddt0
-        ) const;
+        template<class GeoField>
+        dimensionedScalar rDtCoef_(const GeoField& ddt0) const;
 
-        template<class GeoMesh>
-        dimensionedScalar rDeltaT0_
-        (
-            const GeometricField<Type, fvPatchField, GeoMesh>& ddt0
-        ) const;
+        template<class GeoField>
+        dimensionedScalar rDtCoef0_(const GeoField& ddt0) const;
+
+        template<class GeoField>
+        tmp<GeoField> offCentre_(const GeoField& ddt0) const;
 
 
 public:
@@ -103,14 +99,27 @@ public:
         //- Construct from mesh
         CrankNicholsonDdtScheme(const fvMesh& mesh)
         :
-            ddtScheme<Type>(mesh)
+            ddtScheme<Type>(mesh),
+            ocCoeff_(1.0)
         {}
 
         //- Construct from mesh and Istream
         CrankNicholsonDdtScheme(const fvMesh& mesh, Istream& is)
         :
-            ddtScheme<Type>(mesh, is)
-        {}
+            ddtScheme<Type>(mesh, is),
+            ocCoeff_(readScalar(is))
+        {
+            if (ocCoeff_ < 0 || ocCoeff_ > 1)
+            {
+                FatalIOErrorIn
+                (
+                    "CrankNicholsonDdtScheme(const fvMesh& mesh, Istream& is)",
+                    is
+                )   << "coefficient = " << ocCoeff_
+                    << " should be >= 0 and <= 1"
+                    << exit(FatalIOError);
+            }
+        }
 
 
     // Member Functions
@@ -123,27 +132,12 @@ public:
 
         tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
         (
-            const dimensioned<Type>
-        );
-
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt0
-        (
-            const dimensioned<Type>
+            const dimensioned<Type>&
         );
 
         tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
         (
             const GeometricField<Type, fvPatchField, volMesh>&
-        );
-
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt0
-        (
-            const GeometricField<Type, fvPatchField, volMesh>&
-        );
-
-        tmp<GeometricField<Type, fvPatchField, surfaceMesh> > fvcDdt0
-        (
-            const GeometricField<Type, fvPatchField, surfaceMesh>&
         );
 
         tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
@@ -152,19 +146,7 @@ public:
             const GeometricField<Type, fvPatchField, volMesh>&
         );
 
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt0
-        (
-            const dimensionedScalar&,
-            const GeometricField<Type, fvPatchField, volMesh>&
-        );
-
         tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt
-        (
-            const volScalarField&,
-            const GeometricField<Type, fvPatchField, volMesh>&
-        );
-
-        tmp<GeometricField<Type, fvPatchField, volMesh> > fvcDdt0
         (
             const volScalarField&,
             const GeometricField<Type, fvPatchField, volMesh>&
@@ -185,8 +167,50 @@ public:
         (
             const volScalarField&,
             GeometricField<Type, fvPatchField, volMesh>&
+        );
+
+        typedef typename ddtScheme<Type>::fluxFieldType fluxFieldType;
+
+        tmp<fluxFieldType> fvcDdtPhiCorr
+        (
+            const volScalarField& rA,
+            const GeometricField<Type, fvPatchField, volMesh>& U,
+            const fluxFieldType& phi
+        );
+
+        tmp<fluxFieldType> fvcDdtPhiCorr
+        (
+            const volScalarField& rA,
+            const volScalarField& rho,
+            const GeometricField<Type, fvPatchField, volMesh>& U,
+            const fluxFieldType& phi
+        );
+
+
+        tmp<surfaceScalarField> meshPhi
+        (
+            const GeometricField<Type, fvPatchField, volMesh>&
         );
 };
+
+
+template<>
+tmp<surfaceScalarField> CrankNicholsonDdtScheme<scalar>::fvcDdtPhiCorr
+(
+    const volScalarField& rA,
+    const volScalarField& U,
+    const surfaceScalarField& phi
+);
+
+
+template<>
+tmp<surfaceScalarField> CrankNicholsonDdtScheme<scalar>::fvcDdtPhiCorr
+(
+    const volScalarField& rA,
+    const volScalarField& rho,
+    const volScalarField& U,
+    const surfaceScalarField& phi
+);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

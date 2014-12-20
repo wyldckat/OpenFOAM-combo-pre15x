@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     dieselFoam
@@ -78,8 +78,7 @@ int main(int argc, char *argv[])
 
         runTime++;
 
-        Info<< "\nCrank angle = " << runTime.theta() << " CA-deg"
-            << endl;
+        Info<< "Crank angle = " << runTime.theta() << " CA-deg" << endl;
 
 #       include "movePiston.H"
 
@@ -123,14 +122,16 @@ int main(int argc, char *argv[])
 #       include "logSummary.H"
 #       include "spraySummary.H"
 
+        rho = thermo->rho();
+
         runTime.write();
 
-        Info<< "\nExecutionTime = "
+        Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl;
+            << " s\n\n" << endl;
     }
 
-    Info << "\n end\n";
+    Info<< "End\n" << endl;
 
     return(0);
 }

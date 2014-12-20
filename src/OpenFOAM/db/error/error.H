@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     error
@@ -34,7 +34,7 @@ Description
      handling has beed switched on (off by default).
 
 Usage
-    error << "message1" << "message2" << FoamDataType << exit(status);
+    error << "message1" << "message2" << FoamDataType << exit(errNo);
     error << "message1" << "message2" << FoamDataType << abort();
 
 SourceFiles
@@ -139,7 +139,7 @@ public:
         operator dictionary() const;
 
         //- Exit : can be called for any error to exit program
-        void exit(const int status = 1);
+        void exit(const int errNo = 1);
 
         //- Abort : used to stop code for fatal errors
         void abort();
@@ -231,7 +231,7 @@ public:
 
 
         //- Exit : can be called for any error to exit program
-        void exit(const int status = 1);
+        void exit(const int errNo = 1);
 
         //- Abort : used to stop code for fatal errors
         void abort();

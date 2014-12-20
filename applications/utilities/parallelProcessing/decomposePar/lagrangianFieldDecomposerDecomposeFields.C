@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -38,7 +38,7 @@ template<class Type>
 void lagrangianFieldDecomposer::readFields
 (
     const IOobjectList& lagrangianObjects,
-    ptrList<IOField<Type> >& lagrangianFields
+    PtrList<IOField<Type> >& lagrangianFields
 )
 {
     // Search list of objects for lagrangian fields
@@ -93,7 +93,7 @@ tmp<IOField<Type> > lagrangianFieldDecomposer::decomposeField
 template<class GeoField>
 void lagrangianFieldDecomposer::decomposeFields
 (
-    const ptrList<GeoField>& fields
+    const PtrList<GeoField>& fields
 ) const
 {
     forAll (fields, fieldI)

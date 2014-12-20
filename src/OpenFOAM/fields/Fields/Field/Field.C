@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Generic field type.
@@ -176,9 +176,9 @@ Field<Type>::Field(const UList<Type>& tl)
 template<class Type>
 Field<Type>::Field(const tmp<Field<Type> >& tf)
 :
-    List<Type>((Field&)tf(), tf.isTmp())
+    List<Type>(const_cast<Field&>(tf()), tf.isTmp())
 {
-    ((Field&)tf()).resetRefCount();
+    const_cast<Field&>(tf()).resetRefCount();
 }
 #endif
 
@@ -214,13 +214,14 @@ Field<Type>::Field
             }
             else if (firstToken.wordToken() == "nonuniform")
             {
-                is >> (List<Type>&)(*this);
+                is >> static_cast<List<Type>&>(*this);
                 if (this->size() != s)
                 {
                     FatalIOErrorIn
                     (
-                        "Field<Type>::Field(const label s, Istream& is)",
-                        is
+                        "Field<Type>::Field"
+                        "(const word& keyword, const dictionary& dict, const label s)",
+                        dict
                     )   << "size " << this->size()
                         << " is not equal to the given value of " << s
                         << exit(FatalIOError);
@@ -230,8 +231,9 @@ Field<Type>::Field
             {
                 FatalIOErrorIn
                 (
-                    "Field<Type>::Field(const label s, Istream& is)",
-                    is
+                    "Field<Type>::Field"
+                    "(const word& keyword, const dictionary& dict, const label s)",
+                    dict
                 )   << "expected keyword 'uniform' or 'nonuniform', found "
                     << firstToken.wordToken()
                     << exit(FatalIOError);
@@ -241,9 +243,13 @@ Field<Type>::Field
         {
             if (is.version() == 2.0)
             {
-                Warning
-                    << "Field<Type>::Field(const label s, Istream& is) : \n"
-                       "expected keyword 'uniform' or 'nonuniform', "
+                IOWarningIn
+                (
+                    "Field<Type>::Field"
+                    "(const word& keyword, const dictionary& dict, "
+                    "const label s)",
+                    dict
+                )   << "expected keyword 'uniform' or 'nonuniform', "
                        "assuming deprecated Field format from "
                        "FoamX version 2.0." << endl;
 
@@ -256,8 +262,9 @@ Field<Type>::Field
             {
                 FatalIOErrorIn
                 (
-                    "Field<Type>::Field(const label s, Istream& is)",
-                    is
+                    "Field<Type>::Field"
+                    "(const word& keyword, const dictionary& dict, const label s)",
+                    dict
                 )   << "extected keyword 'uniform' or 'nonuniform', found "
                     << firstToken.info()
                     << exit(FatalIOError);
@@ -292,7 +299,7 @@ tmp<Field<Type> > Field<Type>::NewCalculatedType
 template<class Type>
 Field<Type>& Field<Type>::null()
 {
-    Field<Type>* nullPtr = (Field<Type>*)NULL;
+    Field<Type>* nullPtr = reinterpret_cast<Field<Type>*>(NULL);
     return *nullPtr;
 }
 
@@ -551,7 +558,9 @@ void Field<Type>::writeEntry(const word& keyword, Ostream& os) const
     }
     else
     {
-        List<Type>::writeEntry("nonuniform", os);
+        os << "nonuniform ";
+        List<Type>::writeEntry(os);
+        os << token::END_STATEMENT;
     }
 
     os << endl;
@@ -646,7 +655,7 @@ COMPUTED_ASSIGNMENT(scalar, /=)
 template<class Type>
 Ostream& operator<<(Ostream& os, const Field<Type>& f)
 {
-    os << (const List<Type>&)f;
+    os << static_cast<const List<Type>&>(f);
     return os;
 }
 

@@ -40,7 +40,7 @@ XiCoef          XiCoef [0 0 0 0 0 0 0] 0.62;
 
 XiShapeCoef     XiShapeCoef [0 0 0 0 0 0 0] 1;
 
-uPrimeCoef      uPrimeCoef [0 0 0 0 0 0 0] 2;
+uPrimeCoef      uPrimeCoef [0 0 0 0 0 0 0] 1;
 
 GuldersCoeffs
 {

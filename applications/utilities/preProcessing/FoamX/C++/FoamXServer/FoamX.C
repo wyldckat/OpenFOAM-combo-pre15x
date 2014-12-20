@@ -4628,39 +4628,41 @@ CORBA::TypeCodeConst _tc_HostDescriptorList;
 
 namespace FoamXServer
 {
-CORBA::TypeCodeConst _tc_ApplicationClassDescriptor;
+CORBA::TypeCodeConst _tc_ApplicationDescriptor;
 }
 
 #ifdef HAVE_EXPLICIT_STRUCT_OPS
-FoamXServer::ApplicationClassDescriptor::ApplicationClassDescriptor()
+FoamXServer::ApplicationDescriptor::ApplicationDescriptor()
 {
 }
 
-FoamXServer::ApplicationClassDescriptor::ApplicationClassDescriptor( const ApplicationClassDescriptor& _s )
+FoamXServer::ApplicationDescriptor::ApplicationDescriptor( const ApplicationDescriptor& _s )
 {
-  name = ((ApplicationClassDescriptor&)_s).name;
-  category = ((ApplicationClassDescriptor&)_s).category;
-  systemClass = ((ApplicationClassDescriptor&)_s).systemClass;
+  name = ((ApplicationDescriptor&)_s).name;
+  category = ((ApplicationDescriptor&)_s).category;
+  path = ((ApplicationDescriptor&)_s).path;
+  systemClass = ((ApplicationDescriptor&)_s).systemClass;
 }
 
-FoamXServer::ApplicationClassDescriptor::~ApplicationClassDescriptor()
+FoamXServer::ApplicationDescriptor::~ApplicationDescriptor()
 {
 }
 
-FoamXServer::ApplicationClassDescriptor&
-FoamXServer::ApplicationClassDescriptor::operator=( const ApplicationClassDescriptor& _s )
+FoamXServer::ApplicationDescriptor&
+FoamXServer::ApplicationDescriptor::operator=( const ApplicationDescriptor& _s )
 {
-  name = ((ApplicationClassDescriptor&)_s).name;
-  category = ((ApplicationClassDescriptor&)_s).category;
-  systemClass = ((ApplicationClassDescriptor&)_s).systemClass;
+  name = ((ApplicationDescriptor&)_s).name;
+  category = ((ApplicationDescriptor&)_s).category;
+  path = ((ApplicationDescriptor&)_s).path;
+  systemClass = ((ApplicationDescriptor&)_s).systemClass;
   return *this;
 }
 #endif
 
-class _Marshaller_FoamXServer_ApplicationClassDescriptor : public ::CORBA::StaticTypeInfo {
-    typedef FoamXServer::ApplicationClassDescriptor _MICO_T;
+class _Marshaller_FoamXServer_ApplicationDescriptor : public ::CORBA::StaticTypeInfo {
+    typedef FoamXServer::ApplicationDescriptor _MICO_T;
   public:
-    ~_Marshaller_FoamXServer_ApplicationClassDescriptor();
+    ~_Marshaller_FoamXServer_ApplicationDescriptor();
     StaticValueType create () const;
     void assign (StaticValueType dst, const StaticValueType src) const;
     void free (StaticValueType) const;
@@ -4670,214 +4672,79 @@ class _Marshaller_FoamXServer_ApplicationClassDescriptor : public ::CORBA::Stati
 };
 
 
-_Marshaller_FoamXServer_ApplicationClassDescriptor::~_Marshaller_FoamXServer_ApplicationClassDescriptor()
+_Marshaller_FoamXServer_ApplicationDescriptor::~_Marshaller_FoamXServer_ApplicationDescriptor()
 {
 }
 
-::CORBA::StaticValueType _Marshaller_FoamXServer_ApplicationClassDescriptor::create() const
+::CORBA::StaticValueType _Marshaller_FoamXServer_ApplicationDescriptor::create() const
 {
   return (StaticValueType) new _MICO_T;
 }
 
-void _Marshaller_FoamXServer_ApplicationClassDescriptor::assign( StaticValueType d, const StaticValueType s ) const
+void _Marshaller_FoamXServer_ApplicationDescriptor::assign( StaticValueType d, const StaticValueType s ) const
 {
   *(_MICO_T*) d = *(_MICO_T*) s;
 }
 
-void _Marshaller_FoamXServer_ApplicationClassDescriptor::free( StaticValueType v ) const
+void _Marshaller_FoamXServer_ApplicationDescriptor::free( StaticValueType v ) const
 {
   delete (_MICO_T*) v;
 }
 
-::CORBA::Boolean _Marshaller_FoamXServer_ApplicationClassDescriptor::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
+::CORBA::Boolean _Marshaller_FoamXServer_ApplicationDescriptor::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
 {
   return
     dc.struct_begin() &&
     CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->name._for_demarshal() ) &&
     CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->category._for_demarshal() ) &&
+    CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->path._for_demarshal() ) &&
     CORBA::_stc_boolean->demarshal( dc, &((_MICO_T*)v)->systemClass ) &&
     dc.struct_end();
 }
 
-void _Marshaller_FoamXServer_ApplicationClassDescriptor::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
+void _Marshaller_FoamXServer_ApplicationDescriptor::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
 {
   ec.struct_begin();
   CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->name.inout() );
   CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->category.inout() );
+  CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->path.inout() );
   CORBA::_stc_boolean->marshal( ec, &((_MICO_T*)v)->systemClass );
   ec.struct_end();
 }
 
-::CORBA::TypeCode_ptr _Marshaller_FoamXServer_ApplicationClassDescriptor::typecode()
+::CORBA::TypeCode_ptr _Marshaller_FoamXServer_ApplicationDescriptor::typecode()
 {
-  return FoamXServer::_tc_ApplicationClassDescriptor;
+  return FoamXServer::_tc_ApplicationDescriptor;
 }
 
-::CORBA::StaticTypeInfo *_marshaller_FoamXServer_ApplicationClassDescriptor;
+::CORBA::StaticTypeInfo *_marshaller_FoamXServer_ApplicationDescriptor;
 
-void operator<<=( CORBA::Any &_a, const FoamXServer::ApplicationClassDescriptor &_s )
+void operator<<=( CORBA::Any &_a, const FoamXServer::ApplicationDescriptor &_s )
 {
-  CORBA::StaticAny _sa (_marshaller_FoamXServer_ApplicationClassDescriptor, &_s);
+  CORBA::StaticAny _sa (_marshaller_FoamXServer_ApplicationDescriptor, &_s);
   _a.from_static_any (_sa);
 }
 
-void operator<<=( CORBA::Any &_a, FoamXServer::ApplicationClassDescriptor *_s )
+void operator<<=( CORBA::Any &_a, FoamXServer::ApplicationDescriptor *_s )
 {
   _a <<= *_s;
   delete _s;
 }
 
-CORBA::Boolean operator>>=( const CORBA::Any &_a, FoamXServer::ApplicationClassDescriptor &_s )
+CORBA::Boolean operator>>=( const CORBA::Any &_a, FoamXServer::ApplicationDescriptor &_s )
 {
-  CORBA::StaticAny _sa (_marshaller_FoamXServer_ApplicationClassDescriptor, &_s);
+  CORBA::StaticAny _sa (_marshaller_FoamXServer_ApplicationDescriptor, &_s);
   return _a.to_static_any (_sa);
 }
 
-CORBA::Boolean operator>>=( const CORBA::Any &_a, const FoamXServer::ApplicationClassDescriptor *&_s )
+CORBA::Boolean operator>>=( const CORBA::Any &_a, const FoamXServer::ApplicationDescriptor *&_s )
 {
-  return _a.to_static_any (_marshaller_FoamXServer_ApplicationClassDescriptor, (void *&)_s);
+  return _a.to_static_any (_marshaller_FoamXServer_ApplicationDescriptor, (void *&)_s);
 }
 
 namespace FoamXServer
 {
-CORBA::TypeCodeConst _tc_ApplicationClassDescriptorList;
-}
-
-namespace FoamXServer
-{
-CORBA::TypeCodeConst _tc_UtilityDescriptor;
-}
-
-#ifdef HAVE_EXPLICIT_STRUCT_OPS
-FoamXServer::UtilityDescriptor::UtilityDescriptor()
-{
-}
-
-FoamXServer::UtilityDescriptor::UtilityDescriptor( const UtilityDescriptor& _s )
-{
-  name = ((UtilityDescriptor&)_s).name;
-  description = ((UtilityDescriptor&)_s).description;
-  category = ((UtilityDescriptor&)_s).category;
-  systemClass = ((UtilityDescriptor&)_s).systemClass;
-  changesMesh = ((UtilityDescriptor&)_s).changesMesh;
-  changesFields = ((UtilityDescriptor&)_s).changesFields;
-  clientBean = ((UtilityDescriptor&)_s).clientBean;
-  controlDict = ((UtilityDescriptor&)_s).controlDict;
-}
-
-FoamXServer::UtilityDescriptor::~UtilityDescriptor()
-{
-}
-
-FoamXServer::UtilityDescriptor&
-FoamXServer::UtilityDescriptor::operator=( const UtilityDescriptor& _s )
-{
-  name = ((UtilityDescriptor&)_s).name;
-  description = ((UtilityDescriptor&)_s).description;
-  category = ((UtilityDescriptor&)_s).category;
-  systemClass = ((UtilityDescriptor&)_s).systemClass;
-  changesMesh = ((UtilityDescriptor&)_s).changesMesh;
-  changesFields = ((UtilityDescriptor&)_s).changesFields;
-  clientBean = ((UtilityDescriptor&)_s).clientBean;
-  controlDict = ((UtilityDescriptor&)_s).controlDict;
-  return *this;
-}
-#endif
-
-class _Marshaller_FoamXServer_UtilityDescriptor : public ::CORBA::StaticTypeInfo {
-    typedef FoamXServer::UtilityDescriptor _MICO_T;
-  public:
-    ~_Marshaller_FoamXServer_UtilityDescriptor();
-    StaticValueType create () const;
-    void assign (StaticValueType dst, const StaticValueType src) const;
-    void free (StaticValueType) const;
-    ::CORBA::Boolean demarshal (::CORBA::DataDecoder&, StaticValueType) const;
-    void marshal (::CORBA::DataEncoder &, StaticValueType) const;
-    ::CORBA::TypeCode_ptr typecode ();
-};
-
-
-_Marshaller_FoamXServer_UtilityDescriptor::~_Marshaller_FoamXServer_UtilityDescriptor()
-{
-}
-
-::CORBA::StaticValueType _Marshaller_FoamXServer_UtilityDescriptor::create() const
-{
-  return (StaticValueType) new _MICO_T;
-}
-
-void _Marshaller_FoamXServer_UtilityDescriptor::assign( StaticValueType d, const StaticValueType s ) const
-{
-  *(_MICO_T*) d = *(_MICO_T*) s;
-}
-
-void _Marshaller_FoamXServer_UtilityDescriptor::free( StaticValueType v ) const
-{
-  delete (_MICO_T*) v;
-}
-
-::CORBA::Boolean _Marshaller_FoamXServer_UtilityDescriptor::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
-{
-  return
-    dc.struct_begin() &&
-    CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->name._for_demarshal() ) &&
-    CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->description._for_demarshal() ) &&
-    CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->category._for_demarshal() ) &&
-    CORBA::_stc_boolean->demarshal( dc, &((_MICO_T*)v)->systemClass ) &&
-    CORBA::_stc_boolean->demarshal( dc, &((_MICO_T*)v)->changesMesh ) &&
-    CORBA::_stc_boolean->demarshal( dc, &((_MICO_T*)v)->changesFields ) &&
-    CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->clientBean._for_demarshal() ) &&
-    _marshaller_FoamXServer_ITypeDescriptor->demarshal( dc, &((_MICO_T*)v)->controlDict._for_demarshal() ) &&
-    dc.struct_end();
-}
-
-void _Marshaller_FoamXServer_UtilityDescriptor::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
-{
-  ec.struct_begin();
-  CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->name.inout() );
-  CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->description.inout() );
-  CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->category.inout() );
-  CORBA::_stc_boolean->marshal( ec, &((_MICO_T*)v)->systemClass );
-  CORBA::_stc_boolean->marshal( ec, &((_MICO_T*)v)->changesMesh );
-  CORBA::_stc_boolean->marshal( ec, &((_MICO_T*)v)->changesFields );
-  CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->clientBean.inout() );
-  _marshaller_FoamXServer_ITypeDescriptor->marshal( ec, &((_MICO_T*)v)->controlDict.inout() );
-  ec.struct_end();
-}
-
-::CORBA::TypeCode_ptr _Marshaller_FoamXServer_UtilityDescriptor::typecode()
-{
-  return FoamXServer::_tc_UtilityDescriptor;
-}
-
-::CORBA::StaticTypeInfo *_marshaller_FoamXServer_UtilityDescriptor;
-
-void operator<<=( CORBA::Any &_a, const FoamXServer::UtilityDescriptor &_s )
-{
-  CORBA::StaticAny _sa (_marshaller_FoamXServer_UtilityDescriptor, &_s);
-  _a.from_static_any (_sa);
-}
-
-void operator<<=( CORBA::Any &_a, FoamXServer::UtilityDescriptor *_s )
-{
-  _a <<= *_s;
-  delete _s;
-}
-
-CORBA::Boolean operator>>=( const CORBA::Any &_a, FoamXServer::UtilityDescriptor &_s )
-{
-  CORBA::StaticAny _sa (_marshaller_FoamXServer_UtilityDescriptor, &_s);
-  return _a.to_static_any (_sa);
-}
-
-CORBA::Boolean operator>>=( const CORBA::Any &_a, const FoamXServer::UtilityDescriptor *&_s )
-{
-  return _a.to_static_any (_marshaller_FoamXServer_UtilityDescriptor, (void *&)_s);
-}
-
-namespace FoamXServer
-{
-CORBA::TypeCodeConst _tc_UtilityDescriptorList;
+CORBA::TypeCodeConst _tc_ApplicationDescriptorList;
 }
 
 namespace FoamXServer
@@ -4895,7 +4762,7 @@ FoamXServer::CaseDescriptor::CaseDescriptor( const CaseDescriptor& _s )
   rootDir = ((CaseDescriptor&)_s).rootDir;
   rawRootDir = ((CaseDescriptor&)_s).rawRootDir;
   caseName = ((CaseDescriptor&)_s).caseName;
-  appClass = ((CaseDescriptor&)_s).appClass;
+  app = ((CaseDescriptor&)_s).app;
   nProcs = ((CaseDescriptor&)_s).nProcs;
   managed = ((CaseDescriptor&)_s).managed;
   locked = ((CaseDescriptor&)_s).locked;
@@ -4912,7 +4779,7 @@ FoamXServer::CaseDescriptor::operator=( const CaseDescriptor& _s )
   rootDir = ((CaseDescriptor&)_s).rootDir;
   rawRootDir = ((CaseDescriptor&)_s).rawRootDir;
   caseName = ((CaseDescriptor&)_s).caseName;
-  appClass = ((CaseDescriptor&)_s).appClass;
+  app = ((CaseDescriptor&)_s).app;
   nProcs = ((CaseDescriptor&)_s).nProcs;
   managed = ((CaseDescriptor&)_s).managed;
   locked = ((CaseDescriptor&)_s).locked;
@@ -4960,7 +4827,7 @@ void _Marshaller_FoamXServer_CaseDescriptor::free( StaticValueType v ) const
     CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->rootDir._for_demarshal() ) &&
     CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->rawRootDir._for_demarshal() ) &&
     CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->caseName._for_demarshal() ) &&
-    CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->appClass._for_demarshal() ) &&
+    CORBA::_stc_string->demarshal( dc, &((_MICO_T*)v)->app._for_demarshal() ) &&
     CORBA::_stc_long->demarshal( dc, &((_MICO_T*)v)->nProcs ) &&
     CORBA::_stc_boolean->demarshal( dc, &((_MICO_T*)v)->managed ) &&
     CORBA::_stc_boolean->demarshal( dc, &((_MICO_T*)v)->locked ) &&
@@ -4974,7 +4841,7 @@ void _Marshaller_FoamXServer_CaseDescriptor::marshal( ::CORBA::DataEncoder &ec, 
   CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->rootDir.inout() );
   CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->rawRootDir.inout() );
   CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->caseName.inout() );
-  CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->appClass.inout() );
+  CORBA::_stc_string->marshal( ec, &((_MICO_T*)v)->app.inout() );
   CORBA::_stc_long->marshal( ec, &((_MICO_T*)v)->nProcs );
   CORBA::_stc_boolean->marshal( ec, &((_MICO_T*)v)->managed );
   CORBA::_stc_boolean->marshal( ec, &((_MICO_T*)v)->locked );
@@ -6018,12 +5885,12 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::caseName()
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::CaseServer::IApplicationClass_ptr FoamXServer::CaseServer::ICaseServer_stub::applicationClass()
+FoamXServer::CaseServer::IApplication_ptr FoamXServer::CaseServer::ICaseServer_stub::application()
 {
-  FoamXServer::CaseServer::IApplicationClass_ptr _res = FoamXServer::CaseServer::IApplicationClass::_nil();
-  CORBA::StaticAny __res( _marshaller_FoamXServer_CaseServer_IApplicationClass, &_res );
+  FoamXServer::CaseServer::IApplication_ptr _res = FoamXServer::CaseServer::IApplication::_nil();
+  CORBA::StaticAny __res( _marshaller_FoamXServer_CaseServer_IApplication, &_res );
 
-  CORBA::StaticRequest __req( this, "_get_applicationClass" );
+  CORBA::StaticRequest __req( this, "_get_application" );
   __req.set_result( &__res );
 
   __req.invoke();
@@ -6036,19 +5903,19 @@ FoamXServer::CaseServer::IApplicationClass_ptr FoamXServer::CaseServer::ICaseSer
 
 #ifndef MICO_CONF_NO_POA
 
-FoamXServer::CaseServer::IApplicationClass_ptr
-FoamXServer::CaseServer::ICaseServer_stub_clp::applicationClass()
+FoamXServer::CaseServer::IApplication_ptr
+FoamXServer::CaseServer::ICaseServer_stub_clp::application()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
     POA_FoamXServer::CaseServer::ICaseServer * _myserv = POA_FoamXServer::CaseServer::ICaseServer::_narrow (_serv);
     if (_myserv) {
-      FoamXServer::CaseServer::IApplicationClass_ptr __res;
+      FoamXServer::CaseServer::IApplication_ptr __res;
 
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        __res = _myserv->applicationClass();
+        __res = _myserv->application();
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -6065,7 +5932,7 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::applicationClass()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::ICaseServer_stub::applicationClass();
+  return FoamXServer::CaseServer::ICaseServer_stub::application();
 }
 
 #endif // MICO_CONF_NO_POA
@@ -6532,13 +6399,13 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::getFieldValues( const char* _par_
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::ICaseServer_stub::addPatch( const char* _par_patchName, const char* _par_boundaryType )
+void FoamXServer::CaseServer::ICaseServer_stub::addPatch( const char* _par_patchName, const char* _par_patchPhysicalType )
 {
   CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName );
-  CORBA::StaticAny _sa_boundaryType( CORBA::_stc_string, &_par_boundaryType );
+  CORBA::StaticAny _sa_patchPhysicalType( CORBA::_stc_string, &_par_patchPhysicalType );
   CORBA::StaticRequest __req( this, "addPatch" );
   __req.add_in_arg( &_sa_patchName );
-  __req.add_in_arg( &_sa_boundaryType );
+  __req.add_in_arg( &_sa_patchPhysicalType );
 
   __req.invoke();
 
@@ -6552,7 +6419,7 @@ void FoamXServer::CaseServer::ICaseServer_stub::addPatch( const char* _par_patch
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::ICaseServer_stub_clp::addPatch( const char* _par_patchName, const char* _par_boundaryType )
+FoamXServer::CaseServer::ICaseServer_stub_clp::addPatch( const char* _par_patchName, const char* _par_patchPhysicalType )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -6561,7 +6428,7 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::addPatch( const char* _par_patchN
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->addPatch(_par_patchName, _par_boundaryType);
+        _myserv->addPatch(_par_patchName, _par_patchPhysicalType);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -6578,7 +6445,7 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::addPatch( const char* _par_patchN
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::ICaseServer_stub::addPatch(_par_patchName, _par_boundaryType);
+  FoamXServer::CaseServer::ICaseServer_stub::addPatch(_par_patchName, _par_patchPhysicalType);
 }
 
 #endif // MICO_CONF_NO_POA
@@ -6679,13 +6546,13 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::deleteAllPatches()
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::ICaseServer_stub::setPatchBoundaryType( const char* _par_patchName, const char* _par_boundaryType )
+void FoamXServer::CaseServer::ICaseServer_stub::setPatchPhysicalType( const char* _par_patchName, const char* _par_patchPhysicalType )
 {
   CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName );
-  CORBA::StaticAny _sa_boundaryType( CORBA::_stc_string, &_par_boundaryType );
-  CORBA::StaticRequest __req( this, "setPatchBoundaryType" );
+  CORBA::StaticAny _sa_patchPhysicalType( CORBA::_stc_string, &_par_patchPhysicalType );
+  CORBA::StaticRequest __req( this, "setPatchPhysicalType" );
   __req.add_in_arg( &_sa_patchName );
-  __req.add_in_arg( &_sa_boundaryType );
+  __req.add_in_arg( &_sa_patchPhysicalType );
 
   __req.invoke();
 
@@ -6699,7 +6566,7 @@ void FoamXServer::CaseServer::ICaseServer_stub::setPatchBoundaryType( const char
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::ICaseServer_stub_clp::setPatchBoundaryType( const char* _par_patchName, const char* _par_boundaryType )
+FoamXServer::CaseServer::ICaseServer_stub_clp::setPatchPhysicalType( const char* _par_patchName, const char* _par_patchPhysicalType )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -6708,7 +6575,7 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::setPatchBoundaryType( const char*
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->setPatchBoundaryType(_par_patchName, _par_boundaryType);
+        _myserv->setPatchPhysicalType(_par_patchName, _par_patchPhysicalType);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -6725,18 +6592,18 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::setPatchBoundaryType( const char*
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::ICaseServer_stub::setPatchBoundaryType(_par_patchName, _par_boundaryType);
+  FoamXServer::CaseServer::ICaseServer_stub::setPatchPhysicalType(_par_patchName, _par_patchPhysicalType);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::ICaseServer_stub::getPatchBoundaryType( const char* _par_patchName, CORBA::String_out _par_boundaryType )
+void FoamXServer::CaseServer::ICaseServer_stub::getPatchPhysicalType( const char* _par_patchName, CORBA::String_out _par_patchPhysicalType )
 {
   CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName );
-  CORBA::StaticAny _sa_boundaryType( CORBA::_stc_string, &_par_boundaryType.ptr() );
-  CORBA::StaticRequest __req( this, "getPatchBoundaryType" );
+  CORBA::StaticAny _sa_patchPhysicalType( CORBA::_stc_string, &_par_patchPhysicalType.ptr() );
+  CORBA::StaticRequest __req( this, "getPatchPhysicalType" );
   __req.add_in_arg( &_sa_patchName );
-  __req.add_out_arg( &_sa_boundaryType );
+  __req.add_out_arg( &_sa_patchPhysicalType );
 
   __req.invoke();
 
@@ -6750,7 +6617,7 @@ void FoamXServer::CaseServer::ICaseServer_stub::getPatchBoundaryType( const char
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::ICaseServer_stub_clp::getPatchBoundaryType( const char* _par_patchName, CORBA::String_out _par_boundaryType )
+FoamXServer::CaseServer::ICaseServer_stub_clp::getPatchPhysicalType( const char* _par_patchName, CORBA::String_out _par_patchPhysicalType )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -6759,7 +6626,7 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::getPatchBoundaryType( const char*
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->getPatchBoundaryType(_par_patchName, _par_boundaryType);
+        _myserv->getPatchPhysicalType(_par_patchName, _par_patchPhysicalType);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -6776,7 +6643,7 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::getPatchBoundaryType( const char*
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::ICaseServer_stub::getPatchBoundaryType(_par_patchName, _par_boundaryType);
+  FoamXServer::CaseServer::ICaseServer_stub::getPatchPhysicalType(_par_patchName, _par_patchPhysicalType);
 }
 
 #endif // MICO_CONF_NO_POA
@@ -6830,55 +6697,6 @@ FoamXServer::CaseServer::ICaseServer_stub_clp::getDictionary( const char* _par_d
   }
 
   FoamXServer::CaseServer::ICaseServer_stub::getDictionary(_par_dictionaryName, _par_forceRead, _par_dictRoot);
-}
-
-#endif // MICO_CONF_NO_POA
-
-void FoamXServer::CaseServer::ICaseServer_stub::copyDefaultDictionary( const char* _par_dictionaryName )
-{
-  CORBA::StaticAny _sa_dictionaryName( CORBA::_stc_string, &_par_dictionaryName );
-  CORBA::StaticRequest __req( this, "copyDefaultDictionary" );
-  __req.add_in_arg( &_sa_dictionaryName );
-
-  __req.invoke();
-
-  mico_sii_throw( &__req, 
-    _marshaller_FoamXServer_FoamXError, "IDL:FoamXServer/FoamXError:1.0",
-    _marshaller_FoamXServer_FoamXIOError, "IDL:FoamXServer/FoamXIOError:1.0",
-    0);
-}
-
-
-#ifndef MICO_CONF_NO_POA
-
-void
-FoamXServer::CaseServer::ICaseServer_stub_clp::copyDefaultDictionary( const char* _par_dictionaryName )
-{
-  PortableServer::Servant _serv = _preinvoke ();
-  if (_serv) {
-    POA_FoamXServer::CaseServer::ICaseServer * _myserv = POA_FoamXServer::CaseServer::ICaseServer::_narrow (_serv);
-    if (_myserv) {
-      #ifdef HAVE_EXCEPTIONS
-      try {
-      #endif
-        _myserv->copyDefaultDictionary(_par_dictionaryName);
-      #ifdef HAVE_EXCEPTIONS
-      }
-      catch (...) {
-        _myserv->_remove_ref();
-        _postinvoke();
-        throw;
-      }
-      #endif
-
-      _myserv->_remove_ref();
-      _postinvoke ();
-      return;
-    }
-    _postinvoke ();
-  }
-
-  FoamXServer::CaseServer::ICaseServer_stub::copyDefaultDictionary(_par_dictionaryName);
 }
 
 #endif // MICO_CONF_NO_POA
@@ -7862,36 +7680,36 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::patchFieldTypes()
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::ApplicationClassDescriptorList* FoamXServer::CaseServer::IFoamProperties_stub::applicationClasses()
+FoamXServer::ApplicationDescriptorList* FoamXServer::CaseServer::IFoamProperties_stub::applicationes()
 {
-  CORBA::StaticAny __res( _marshaller__seq_FoamXServer_ApplicationClassDescriptor );
+  CORBA::StaticAny __res( _marshaller__seq_FoamXServer_ApplicationDescriptor );
 
-  CORBA::StaticRequest __req( this, "_get_applicationClasses" );
+  CORBA::StaticRequest __req( this, "_get_applicationes" );
   __req.set_result( &__res );
 
   __req.invoke();
 
   mico_sii_throw( &__req, 
     0);
-  return (FoamXServer::ApplicationClassDescriptorList*) __res._retn();
+  return (FoamXServer::ApplicationDescriptorList*) __res._retn();
 }
 
 
 #ifndef MICO_CONF_NO_POA
 
-FoamXServer::ApplicationClassDescriptorList*
-FoamXServer::CaseServer::IFoamProperties_stub_clp::applicationClasses()
+FoamXServer::ApplicationDescriptorList*
+FoamXServer::CaseServer::IFoamProperties_stub_clp::applicationes()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
     POA_FoamXServer::CaseServer::IFoamProperties * _myserv = POA_FoamXServer::CaseServer::IFoamProperties::_narrow (_serv);
     if (_myserv) {
-      FoamXServer::ApplicationClassDescriptorList* __res;
+      FoamXServer::ApplicationDescriptorList* __res;
 
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        __res = _myserv->applicationClasses();
+        __res = _myserv->applicationes();
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -7908,14 +7726,14 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::applicationClasses()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IFoamProperties_stub::applicationClasses();
+  return FoamXServer::CaseServer::IFoamProperties_stub::applicationes();
 }
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::UtilityDescriptorList* FoamXServer::CaseServer::IFoamProperties_stub::utilities()
+FoamXServer::ApplicationDescriptorList* FoamXServer::CaseServer::IFoamProperties_stub::utilities()
 {
-  CORBA::StaticAny __res( _marshaller__seq_FoamXServer_UtilityDescriptor );
+  CORBA::StaticAny __res( _marshaller__seq_FoamXServer_ApplicationDescriptor );
 
   CORBA::StaticRequest __req( this, "_get_utilities" );
   __req.set_result( &__res );
@@ -7924,20 +7742,20 @@ FoamXServer::UtilityDescriptorList* FoamXServer::CaseServer::IFoamProperties_stu
 
   mico_sii_throw( &__req, 
     0);
-  return (FoamXServer::UtilityDescriptorList*) __res._retn();
+  return (FoamXServer::ApplicationDescriptorList*) __res._retn();
 }
 
 
 #ifndef MICO_CONF_NO_POA
 
-FoamXServer::UtilityDescriptorList*
+FoamXServer::ApplicationDescriptorList*
 FoamXServer::CaseServer::IFoamProperties_stub_clp::utilities()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
     POA_FoamXServer::CaseServer::IFoamProperties * _myserv = POA_FoamXServer::CaseServer::IFoamProperties::_narrow (_serv);
     if (_myserv) {
-      FoamXServer::UtilityDescriptorList* __res;
+      FoamXServer::ApplicationDescriptorList* __res;
 
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -8368,13 +8186,11 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::findPatchFieldType( const cha
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IFoamProperties_stub::getApplicationClass( const char* _par_appClassName, FoamXServer::CaseServer::IApplicationClass_out _par_appClass )
+void FoamXServer::CaseServer::IFoamProperties_stub::getFoamControlDict( FoamXServer::IDictionaryEntry_out _par_controlDict )
 {
-  CORBA::StaticAny _sa_appClassName( CORBA::_stc_string, &_par_appClassName );
-  CORBA::StaticAny _sa_appClass( _marshaller_FoamXServer_CaseServer_IApplicationClass, &_par_appClass.ptr() );
-  CORBA::StaticRequest __req( this, "getApplicationClass" );
-  __req.add_in_arg( &_sa_appClassName );
-  __req.add_out_arg( &_sa_appClass );
+  CORBA::StaticAny _sa_controlDict( _marshaller_FoamXServer_IDictionaryEntry, &_par_controlDict.ptr() );
+  CORBA::StaticRequest __req( this, "getFoamControlDict" );
+  __req.add_out_arg( &_sa_controlDict );
 
   __req.invoke();
 
@@ -8388,7 +8204,7 @@ void FoamXServer::CaseServer::IFoamProperties_stub::getApplicationClass( const c
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IFoamProperties_stub_clp::getApplicationClass( const char* _par_appClassName, FoamXServer::CaseServer::IApplicationClass_out _par_appClass )
+FoamXServer::CaseServer::IFoamProperties_stub_clp::getFoamControlDict( FoamXServer::IDictionaryEntry_out _par_controlDict )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -8397,7 +8213,7 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::getApplicationClass( const ch
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->getApplicationClass(_par_appClassName, _par_appClass);
+        _myserv->getFoamControlDict(_par_controlDict);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -8414,18 +8230,18 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::getApplicationClass( const ch
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IFoamProperties_stub::getApplicationClass(_par_appClassName, _par_appClass);
+  FoamXServer::CaseServer::IFoamProperties_stub::getFoamControlDict(_par_controlDict);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IFoamProperties_stub::addApplicationClass( const char* _par_appClassName, FoamXServer::CaseServer::IApplicationClass_out _par_appClass )
+void FoamXServer::CaseServer::IFoamProperties_stub::getApplication( const char* _par_appName, FoamXServer::CaseServer::IApplication_out _par_app )
 {
-  CORBA::StaticAny _sa_appClassName( CORBA::_stc_string, &_par_appClassName );
-  CORBA::StaticAny _sa_appClass( _marshaller_FoamXServer_CaseServer_IApplicationClass, &_par_appClass.ptr() );
-  CORBA::StaticRequest __req( this, "addApplicationClass" );
-  __req.add_in_arg( &_sa_appClassName );
-  __req.add_out_arg( &_sa_appClass );
+  CORBA::StaticAny _sa_appName( CORBA::_stc_string, &_par_appName );
+  CORBA::StaticAny _sa_app( _marshaller_FoamXServer_CaseServer_IApplication, &_par_app.ptr() );
+  CORBA::StaticRequest __req( this, "getApplication" );
+  __req.add_in_arg( &_sa_appName );
+  __req.add_out_arg( &_sa_app );
 
   __req.invoke();
 
@@ -8439,7 +8255,7 @@ void FoamXServer::CaseServer::IFoamProperties_stub::addApplicationClass( const c
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IFoamProperties_stub_clp::addApplicationClass( const char* _par_appClassName, FoamXServer::CaseServer::IApplicationClass_out _par_appClass )
+FoamXServer::CaseServer::IFoamProperties_stub_clp::getApplication( const char* _par_appName, FoamXServer::CaseServer::IApplication_out _par_app )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -8448,7 +8264,7 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::addApplicationClass( const ch
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->addApplicationClass(_par_appClassName, _par_appClass);
+        _myserv->getApplication(_par_appName, _par_app);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -8465,16 +8281,18 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::addApplicationClass( const ch
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IFoamProperties_stub::addApplicationClass(_par_appClassName, _par_appClass);
+  FoamXServer::CaseServer::IFoamProperties_stub::getApplication(_par_appName, _par_app);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IFoamProperties_stub::deleteApplicationClass( const char* _par_appClassName )
+void FoamXServer::CaseServer::IFoamProperties_stub::addApplication( const char* _par_appName, FoamXServer::CaseServer::IApplication_out _par_app )
 {
-  CORBA::StaticAny _sa_appClassName( CORBA::_stc_string, &_par_appClassName );
-  CORBA::StaticRequest __req( this, "deleteApplicationClass" );
-  __req.add_in_arg( &_sa_appClassName );
+  CORBA::StaticAny _sa_appName( CORBA::_stc_string, &_par_appName );
+  CORBA::StaticAny _sa_app( _marshaller_FoamXServer_CaseServer_IApplication, &_par_app.ptr() );
+  CORBA::StaticRequest __req( this, "addApplication" );
+  __req.add_in_arg( &_sa_appName );
+  __req.add_out_arg( &_sa_app );
 
   __req.invoke();
 
@@ -8488,7 +8306,7 @@ void FoamXServer::CaseServer::IFoamProperties_stub::deleteApplicationClass( cons
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IFoamProperties_stub_clp::deleteApplicationClass( const char* _par_appClassName )
+FoamXServer::CaseServer::IFoamProperties_stub_clp::addApplication( const char* _par_appName, FoamXServer::CaseServer::IApplication_out _par_app )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -8497,7 +8315,7 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::deleteApplicationClass( const
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->deleteApplicationClass(_par_appClassName);
+        _myserv->addApplication(_par_appName, _par_app);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -8514,20 +8332,16 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::deleteApplicationClass( const
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IFoamProperties_stub::deleteApplicationClass(_par_appClassName);
+  FoamXServer::CaseServer::IFoamProperties_stub::addApplication(_par_appName, _par_app);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IFoamProperties_stub::cloneApplicationClass( const char* _par_appClassNameSrc, const char* _par_appClassNameDest, FoamXServer::CaseServer::IApplicationClass_out _par_appClass )
+void FoamXServer::CaseServer::IFoamProperties_stub::deleteApplication( const char* _par_appName )
 {
-  CORBA::StaticAny _sa_appClassNameSrc( CORBA::_stc_string, &_par_appClassNameSrc );
-  CORBA::StaticAny _sa_appClassNameDest( CORBA::_stc_string, &_par_appClassNameDest );
-  CORBA::StaticAny _sa_appClass( _marshaller_FoamXServer_CaseServer_IApplicationClass, &_par_appClass.ptr() );
-  CORBA::StaticRequest __req( this, "cloneApplicationClass" );
-  __req.add_in_arg( &_sa_appClassNameSrc );
-  __req.add_in_arg( &_sa_appClassNameDest );
-  __req.add_out_arg( &_sa_appClass );
+  CORBA::StaticAny _sa_appName( CORBA::_stc_string, &_par_appName );
+  CORBA::StaticRequest __req( this, "deleteApplication" );
+  __req.add_in_arg( &_sa_appName );
 
   __req.invoke();
 
@@ -8541,7 +8355,7 @@ void FoamXServer::CaseServer::IFoamProperties_stub::cloneApplicationClass( const
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IFoamProperties_stub_clp::cloneApplicationClass( const char* _par_appClassNameSrc, const char* _par_appClassNameDest, FoamXServer::CaseServer::IApplicationClass_out _par_appClass )
+FoamXServer::CaseServer::IFoamProperties_stub_clp::deleteApplication( const char* _par_appName )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -8550,7 +8364,7 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::cloneApplicationClass( const 
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->cloneApplicationClass(_par_appClassNameSrc, _par_appClassNameDest, _par_appClass);
+        _myserv->deleteApplication(_par_appName);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -8567,7 +8381,62 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::cloneApplicationClass( const 
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IFoamProperties_stub::cloneApplicationClass(_par_appClassNameSrc, _par_appClassNameDest, _par_appClass);
+  FoamXServer::CaseServer::IFoamProperties_stub::deleteApplication(_par_appName);
+}
+
+#endif // MICO_CONF_NO_POA
+
+void FoamXServer::CaseServer::IFoamProperties_stub::cloneApplication( const char* _par_appNameSrc, const char* _par_appNameDest, const char* _par_appDestPath, FoamXServer::CaseServer::IApplication_out _par_app )
+{
+  CORBA::StaticAny _sa_appNameSrc( CORBA::_stc_string, &_par_appNameSrc );
+  CORBA::StaticAny _sa_appNameDest( CORBA::_stc_string, &_par_appNameDest );
+  CORBA::StaticAny _sa_appDestPath( CORBA::_stc_string, &_par_appDestPath );
+  CORBA::StaticAny _sa_app( _marshaller_FoamXServer_CaseServer_IApplication, &_par_app.ptr() );
+  CORBA::StaticRequest __req( this, "cloneApplication" );
+  __req.add_in_arg( &_sa_appNameSrc );
+  __req.add_in_arg( &_sa_appNameDest );
+  __req.add_in_arg( &_sa_appDestPath );
+  __req.add_out_arg( &_sa_app );
+
+  __req.invoke();
+
+  mico_sii_throw( &__req, 
+    _marshaller_FoamXServer_FoamXError, "IDL:FoamXServer/FoamXError:1.0",
+    _marshaller_FoamXServer_FoamXIOError, "IDL:FoamXServer/FoamXIOError:1.0",
+    0);
+}
+
+
+#ifndef MICO_CONF_NO_POA
+
+void
+FoamXServer::CaseServer::IFoamProperties_stub_clp::cloneApplication( const char* _par_appNameSrc, const char* _par_appNameDest, const char* _par_appDestPath, FoamXServer::CaseServer::IApplication_out _par_app )
+{
+  PortableServer::Servant _serv = _preinvoke ();
+  if (_serv) {
+    POA_FoamXServer::CaseServer::IFoamProperties * _myserv = POA_FoamXServer::CaseServer::IFoamProperties::_narrow (_serv);
+    if (_myserv) {
+      #ifdef HAVE_EXCEPTIONS
+      try {
+      #endif
+        _myserv->cloneApplication(_par_appNameSrc, _par_appNameDest, _par_appDestPath, _par_app);
+      #ifdef HAVE_EXCEPTIONS
+      }
+      catch (...) {
+        _myserv->_remove_ref();
+        _postinvoke();
+        throw;
+      }
+      #endif
+
+      _myserv->_remove_ref();
+      _postinvoke ();
+      return;
+    }
+    _postinvoke ();
+  }
+
+  FoamXServer::CaseServer::IFoamProperties_stub::cloneApplication(_par_appNameSrc, _par_appNameDest, _par_appDestPath, _par_app);
 }
 
 #endif // MICO_CONF_NO_POA
@@ -8773,31 +8642,31 @@ FoamXServer::CaseServer::IFoamProperties_stub_clp::saveUserProperties()
 
 
 /*
- * Base interface for class IApplicationClass
+ * Base interface for class IApplication
  */
 
-FoamXServer::CaseServer::IApplicationClass::~IApplicationClass()
+FoamXServer::CaseServer::IApplication::~IApplication()
 {
 }
 
 void *
-FoamXServer::CaseServer::IApplicationClass::_narrow_helper( const char *_repoid )
+FoamXServer::CaseServer::IApplication::_narrow_helper( const char *_repoid )
 {
-  if( strcmp( _repoid, "IDL:FoamXServer/CaseServer/IApplicationClass:1.0" ) == 0 )
+  if( strcmp( _repoid, "IDL:FoamXServer/CaseServer/IApplication:1.0" ) == 0 )
     return (void *)this;
   return NULL;
 }
 
-FoamXServer::CaseServer::IApplicationClass_ptr
-FoamXServer::CaseServer::IApplicationClass::_narrow( CORBA::Object_ptr _obj )
+FoamXServer::CaseServer::IApplication_ptr
+FoamXServer::CaseServer::IApplication::_narrow( CORBA::Object_ptr _obj )
 {
-  FoamXServer::CaseServer::IApplicationClass_ptr _o;
+  FoamXServer::CaseServer::IApplication_ptr _o;
   if( !CORBA::is_nil( _obj ) ) {
     void *_p;
-    if( (_p = _obj->_narrow_helper( "IDL:FoamXServer/CaseServer/IApplicationClass:1.0" )))
-      return _duplicate( (FoamXServer::CaseServer::IApplicationClass_ptr) _p );
-    if (!strcmp (_obj->_repoid(), "IDL:FoamXServer/CaseServer/IApplicationClass:1.0") || _obj->_is_a_remote ("IDL:FoamXServer/CaseServer/IApplicationClass:1.0")) {
-      _o = new FoamXServer::CaseServer::IApplicationClass_stub;
+    if( (_p = _obj->_narrow_helper( "IDL:FoamXServer/CaseServer/IApplication:1.0" )))
+      return _duplicate( (FoamXServer::CaseServer::IApplication_ptr) _p );
+    if (!strcmp (_obj->_repoid(), "IDL:FoamXServer/CaseServer/IApplication:1.0") || _obj->_is_a_remote ("IDL:FoamXServer/CaseServer/IApplication:1.0")) {
+      _o = new FoamXServer::CaseServer::IApplication_stub;
       _o->CORBA::Object::operator=( *_obj );
       return _o;
     }
@@ -8805,8 +8674,8 @@ FoamXServer::CaseServer::IApplicationClass::_narrow( CORBA::Object_ptr _obj )
   return _nil();
 }
 
-FoamXServer::CaseServer::IApplicationClass_ptr
-FoamXServer::CaseServer::IApplicationClass::_narrow( CORBA::AbstractBase_ptr _obj )
+FoamXServer::CaseServer::IApplication_ptr
+FoamXServer::CaseServer::IApplication::_narrow( CORBA::AbstractBase_ptr _obj )
 {
   return _narrow (_obj->_to_object());
 }
@@ -8815,13 +8684,13 @@ namespace FoamXServer
 {
 namespace CaseServer
 {
-CORBA::TypeCodeConst _tc_IApplicationClass;
+CORBA::TypeCodeConst _tc_IApplication;
 }
 }
-class _Marshaller_FoamXServer_CaseServer_IApplicationClass : public ::CORBA::StaticTypeInfo {
-    typedef FoamXServer::CaseServer::IApplicationClass_ptr _MICO_T;
+class _Marshaller_FoamXServer_CaseServer_IApplication : public ::CORBA::StaticTypeInfo {
+    typedef FoamXServer::CaseServer::IApplication_ptr _MICO_T;
   public:
-    ~_Marshaller_FoamXServer_CaseServer_IApplicationClass();
+    ~_Marshaller_FoamXServer_CaseServer_IApplication();
     StaticValueType create () const;
     void assign (StaticValueType dst, const StaticValueType src) const;
     void free (StaticValueType) const;
@@ -8832,75 +8701,75 @@ class _Marshaller_FoamXServer_CaseServer_IApplicationClass : public ::CORBA::Sta
 };
 
 
-_Marshaller_FoamXServer_CaseServer_IApplicationClass::~_Marshaller_FoamXServer_CaseServer_IApplicationClass()
+_Marshaller_FoamXServer_CaseServer_IApplication::~_Marshaller_FoamXServer_CaseServer_IApplication()
 {
 }
 
-::CORBA::StaticValueType _Marshaller_FoamXServer_CaseServer_IApplicationClass::create() const
+::CORBA::StaticValueType _Marshaller_FoamXServer_CaseServer_IApplication::create() const
 {
   return (StaticValueType) new _MICO_T( 0 );
 }
 
-void _Marshaller_FoamXServer_CaseServer_IApplicationClass::assign( StaticValueType d, const StaticValueType s ) const
+void _Marshaller_FoamXServer_CaseServer_IApplication::assign( StaticValueType d, const StaticValueType s ) const
 {
-  *(_MICO_T*) d = ::FoamXServer::CaseServer::IApplicationClass::_duplicate( *(_MICO_T*) s );
+  *(_MICO_T*) d = ::FoamXServer::CaseServer::IApplication::_duplicate( *(_MICO_T*) s );
 }
 
-void _Marshaller_FoamXServer_CaseServer_IApplicationClass::free( StaticValueType v ) const
+void _Marshaller_FoamXServer_CaseServer_IApplication::free( StaticValueType v ) const
 {
   ::CORBA::release( *(_MICO_T *) v );
   delete (_MICO_T*) v;
 }
 
-void _Marshaller_FoamXServer_CaseServer_IApplicationClass::release( StaticValueType v ) const
+void _Marshaller_FoamXServer_CaseServer_IApplication::release( StaticValueType v ) const
 {
   ::CORBA::release( *(_MICO_T *) v );
 }
 
-::CORBA::Boolean _Marshaller_FoamXServer_CaseServer_IApplicationClass::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
+::CORBA::Boolean _Marshaller_FoamXServer_CaseServer_IApplication::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
 {
   ::CORBA::Object_ptr obj;
   if (!::CORBA::_stc_Object->demarshal(dc, &obj))
     return FALSE;
-  *(_MICO_T *) v = ::FoamXServer::CaseServer::IApplicationClass::_narrow( obj );
+  *(_MICO_T *) v = ::FoamXServer::CaseServer::IApplication::_narrow( obj );
   ::CORBA::Boolean ret = ::CORBA::is_nil (obj) || !::CORBA::is_nil (*(_MICO_T *)v);
   ::CORBA::release (obj);
   return ret;
 }
 
-void _Marshaller_FoamXServer_CaseServer_IApplicationClass::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
+void _Marshaller_FoamXServer_CaseServer_IApplication::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
 {
   ::CORBA::Object_ptr obj = *(_MICO_T *) v;
   ::CORBA::_stc_Object->marshal( ec, &obj );
 }
 
-::CORBA::TypeCode_ptr _Marshaller_FoamXServer_CaseServer_IApplicationClass::typecode()
+::CORBA::TypeCode_ptr _Marshaller_FoamXServer_CaseServer_IApplication::typecode()
 {
-  return FoamXServer::CaseServer::_tc_IApplicationClass;
+  return FoamXServer::CaseServer::_tc_IApplication;
 }
 
-::CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IApplicationClass;
+::CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IApplication;
 
 void
-operator<<=( CORBA::Any &_a, const FoamXServer::CaseServer::IApplicationClass_ptr _obj )
+operator<<=( CORBA::Any &_a, const FoamXServer::CaseServer::IApplication_ptr _obj )
 {
-  CORBA::StaticAny _sa (_marshaller_FoamXServer_CaseServer_IApplicationClass, &_obj);
+  CORBA::StaticAny _sa (_marshaller_FoamXServer_CaseServer_IApplication, &_obj);
   _a.from_static_any (_sa);
 }
 
 void
-operator<<=( CORBA::Any &_a, FoamXServer::CaseServer::IApplicationClass_ptr* _obj_ptr )
+operator<<=( CORBA::Any &_a, FoamXServer::CaseServer::IApplication_ptr* _obj_ptr )
 {
-  CORBA::StaticAny _sa (_marshaller_FoamXServer_CaseServer_IApplicationClass, _obj_ptr);
+  CORBA::StaticAny _sa (_marshaller_FoamXServer_CaseServer_IApplication, _obj_ptr);
   _a.from_static_any (_sa);
   CORBA::release (*_obj_ptr);
 }
 
 CORBA::Boolean
-operator>>=( const CORBA::Any &_a, FoamXServer::CaseServer::IApplicationClass_ptr &_obj )
+operator>>=( const CORBA::Any &_a, FoamXServer::CaseServer::IApplication_ptr &_obj )
 {
-  FoamXServer::CaseServer::IApplicationClass_ptr *p;
-  if (_a.to_static_any (_marshaller_FoamXServer_CaseServer_IApplicationClass, (void *&)p)) {
+  FoamXServer::CaseServer::IApplication_ptr *p;
+  if (_a.to_static_any (_marshaller_FoamXServer_CaseServer_IApplication, (void *&)p)) {
     _obj = *p;
     return TRUE;
   }
@@ -8909,51 +8778,51 @@ operator>>=( const CORBA::Any &_a, FoamXServer::CaseServer::IApplicationClass_pt
 
 
 /*
- * Stub interface for class IApplicationClass
+ * Stub interface for class IApplication
  */
 
-FoamXServer::CaseServer::IApplicationClass_stub::~IApplicationClass_stub()
+FoamXServer::CaseServer::IApplication_stub::~IApplication_stub()
 {
 }
 
 #ifndef MICO_CONF_NO_POA
 
 void *
-POA_FoamXServer::CaseServer::IApplicationClass::_narrow_helper (const char * repoid)
+POA_FoamXServer::CaseServer::IApplication::_narrow_helper (const char * repoid)
 {
-  if (strcmp (repoid, "IDL:FoamXServer/CaseServer/IApplicationClass:1.0") == 0) {
+  if (strcmp (repoid, "IDL:FoamXServer/CaseServer/IApplication:1.0") == 0) {
     return (void *) this;
   }
   return NULL;
 }
 
-POA_FoamXServer::CaseServer::IApplicationClass *
-POA_FoamXServer::CaseServer::IApplicationClass::_narrow (PortableServer::Servant serv) 
+POA_FoamXServer::CaseServer::IApplication *
+POA_FoamXServer::CaseServer::IApplication::_narrow (PortableServer::Servant serv) 
 {
   void * p;
-  if ((p = serv->_narrow_helper ("IDL:FoamXServer/CaseServer/IApplicationClass:1.0")) != NULL) {
+  if ((p = serv->_narrow_helper ("IDL:FoamXServer/CaseServer/IApplication:1.0")) != NULL) {
     serv->_add_ref ();
-    return (POA_FoamXServer::CaseServer::IApplicationClass *) p;
+    return (POA_FoamXServer::CaseServer::IApplication *) p;
   }
   return NULL;
 }
 
-FoamXServer::CaseServer::IApplicationClass_stub_clp::IApplicationClass_stub_clp ()
+FoamXServer::CaseServer::IApplication_stub_clp::IApplication_stub_clp ()
 {
 }
 
-FoamXServer::CaseServer::IApplicationClass_stub_clp::IApplicationClass_stub_clp (PortableServer::POA_ptr poa, CORBA::Object_ptr obj)
+FoamXServer::CaseServer::IApplication_stub_clp::IApplication_stub_clp (PortableServer::POA_ptr poa, CORBA::Object_ptr obj)
   : CORBA::Object(*obj), PortableServer::StubBase(poa)
 {
 }
 
-FoamXServer::CaseServer::IApplicationClass_stub_clp::~IApplicationClass_stub_clp ()
+FoamXServer::CaseServer::IApplication_stub_clp::~IApplication_stub_clp ()
 {
 }
 
 #endif // MICO_CONF_NO_POA
 
-char* FoamXServer::CaseServer::IApplicationClass_stub::name()
+char* FoamXServer::CaseServer::IApplication_stub::name()
 {
   char* _res = NULL;
   CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -8972,11 +8841,11 @@ char* FoamXServer::CaseServer::IApplicationClass_stub::name()
 #ifndef MICO_CONF_NO_POA
 
 char*
-FoamXServer::CaseServer::IApplicationClass_stub_clp::name()
+FoamXServer::CaseServer::IApplication_stub_clp::name()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       char* __res;
 
@@ -9000,12 +8869,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::name()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IApplicationClass_stub::name();
+  return FoamXServer::CaseServer::IApplication_stub::name();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::name( const char* _par__value )
+void FoamXServer::CaseServer::IApplication_stub::name( const char* _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value );
   CORBA::StaticRequest __req( this, "_set_name" );
@@ -9021,11 +8890,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::name( const char* _par__va
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::name( const char* _par__value )
+FoamXServer::CaseServer::IApplication_stub_clp::name( const char* _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -9047,12 +8916,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::name( const char* _par__val
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::name(_par__value);
+  FoamXServer::CaseServer::IApplication_stub::name(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-char* FoamXServer::CaseServer::IApplicationClass_stub::description()
+char* FoamXServer::CaseServer::IApplication_stub::description()
 {
   char* _res = NULL;
   CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -9071,11 +8940,11 @@ char* FoamXServer::CaseServer::IApplicationClass_stub::description()
 #ifndef MICO_CONF_NO_POA
 
 char*
-FoamXServer::CaseServer::IApplicationClass_stub_clp::description()
+FoamXServer::CaseServer::IApplication_stub_clp::description()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       char* __res;
 
@@ -9099,12 +8968,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::description()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IApplicationClass_stub::description();
+  return FoamXServer::CaseServer::IApplication_stub::description();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::description( const char* _par__value )
+void FoamXServer::CaseServer::IApplication_stub::description( const char* _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value );
   CORBA::StaticRequest __req( this, "_set_description" );
@@ -9120,11 +8989,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::description( const char* _
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::description( const char* _par__value )
+FoamXServer::CaseServer::IApplication_stub_clp::description( const char* _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -9146,12 +9015,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::description( const char* _p
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::description(_par__value);
+  FoamXServer::CaseServer::IApplication_stub::description(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-char* FoamXServer::CaseServer::IApplicationClass_stub::category()
+char* FoamXServer::CaseServer::IApplication_stub::category()
 {
   char* _res = NULL;
   CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -9170,11 +9039,11 @@ char* FoamXServer::CaseServer::IApplicationClass_stub::category()
 #ifndef MICO_CONF_NO_POA
 
 char*
-FoamXServer::CaseServer::IApplicationClass_stub_clp::category()
+FoamXServer::CaseServer::IApplication_stub_clp::category()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       char* __res;
 
@@ -9198,12 +9067,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::category()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IApplicationClass_stub::category();
+  return FoamXServer::CaseServer::IApplication_stub::category();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::category( const char* _par__value )
+void FoamXServer::CaseServer::IApplication_stub::category( const char* _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value );
   CORBA::StaticRequest __req( this, "_set_category" );
@@ -9219,11 +9088,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::category( const char* _par
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::category( const char* _par__value )
+FoamXServer::CaseServer::IApplication_stub_clp::category( const char* _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -9245,12 +9114,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::category( const char* _par_
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::category(_par__value);
+  FoamXServer::CaseServer::IApplication_stub::category(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::StringList* FoamXServer::CaseServer::IApplicationClass_stub::modules()
+FoamXServer::StringList* FoamXServer::CaseServer::IApplication_stub::modules()
 {
   CORBA::StaticAny __res( CORBA::_stcseq_string );
 
@@ -9268,11 +9137,11 @@ FoamXServer::StringList* FoamXServer::CaseServer::IApplicationClass_stub::module
 #ifndef MICO_CONF_NO_POA
 
 FoamXServer::StringList*
-FoamXServer::CaseServer::IApplicationClass_stub_clp::modules()
+FoamXServer::CaseServer::IApplication_stub_clp::modules()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       FoamXServer::StringList* __res;
 
@@ -9296,12 +9165,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::modules()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IApplicationClass_stub::modules();
+  return FoamXServer::CaseServer::IApplication_stub::modules();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::modules( const FoamXServer::StringList& _par__value )
+void FoamXServer::CaseServer::IApplication_stub::modules( const FoamXServer::StringList& _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stcseq_string, &_par__value );
   CORBA::StaticRequest __req( this, "_set_modules" );
@@ -9317,11 +9186,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::modules( const FoamXServer
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::modules( const FoamXServer::StringList& _par__value )
+FoamXServer::CaseServer::IApplication_stub_clp::modules( const FoamXServer::StringList& _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -9343,12 +9212,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::modules( const FoamXServer:
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::modules(_par__value);
+  FoamXServer::CaseServer::IApplication_stub::modules(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-CORBA::Boolean FoamXServer::CaseServer::IApplicationClass_stub::systemClass()
+CORBA::Boolean FoamXServer::CaseServer::IApplication_stub::systemClass()
 {
   CORBA::Boolean _res;
   CORBA::StaticAny __res( CORBA::_stc_boolean, &_res );
@@ -9367,11 +9236,11 @@ CORBA::Boolean FoamXServer::CaseServer::IApplicationClass_stub::systemClass()
 #ifndef MICO_CONF_NO_POA
 
 CORBA::Boolean
-FoamXServer::CaseServer::IApplicationClass_stub_clp::systemClass()
+FoamXServer::CaseServer::IApplication_stub_clp::systemClass()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       CORBA::Boolean __res;
 
@@ -9395,12 +9264,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::systemClass()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IApplicationClass_stub::systemClass();
+  return FoamXServer::CaseServer::IApplication_stub::systemClass();
 }
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::StringList* FoamXServer::CaseServer::IApplicationClass_stub::fields()
+FoamXServer::StringList* FoamXServer::CaseServer::IApplication_stub::fields()
 {
   CORBA::StaticAny __res( CORBA::_stcseq_string );
 
@@ -9418,11 +9287,11 @@ FoamXServer::StringList* FoamXServer::CaseServer::IApplicationClass_stub::fields
 #ifndef MICO_CONF_NO_POA
 
 FoamXServer::StringList*
-FoamXServer::CaseServer::IApplicationClass_stub_clp::fields()
+FoamXServer::CaseServer::IApplication_stub_clp::fields()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       FoamXServer::StringList* __res;
 
@@ -9446,16 +9315,16 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::fields()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IApplicationClass_stub::fields();
+  return FoamXServer::CaseServer::IApplication_stub::fields();
 }
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::StringList* FoamXServer::CaseServer::IApplicationClass_stub::boundaryTypes()
+FoamXServer::StringList* FoamXServer::CaseServer::IApplication_stub::patchPhysicalTypes()
 {
   CORBA::StaticAny __res( CORBA::_stcseq_string );
 
-  CORBA::StaticRequest __req( this, "_get_boundaryTypes" );
+  CORBA::StaticRequest __req( this, "_get_patchPhysicalTypes" );
   __req.set_result( &__res );
 
   __req.invoke();
@@ -9469,18 +9338,18 @@ FoamXServer::StringList* FoamXServer::CaseServer::IApplicationClass_stub::bounda
 #ifndef MICO_CONF_NO_POA
 
 FoamXServer::StringList*
-FoamXServer::CaseServer::IApplicationClass_stub_clp::boundaryTypes()
+FoamXServer::CaseServer::IApplication_stub_clp::patchPhysicalTypes()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       FoamXServer::StringList* __res;
 
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        __res = _myserv->boundaryTypes();
+        __res = _myserv->patchPhysicalTypes();
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -9497,12 +9366,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::boundaryTypes()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IApplicationClass_stub::boundaryTypes();
+  return FoamXServer::CaseServer::IApplication_stub::patchPhysicalTypes();
 }
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::StringList* FoamXServer::CaseServer::IApplicationClass_stub::dictionaries()
+FoamXServer::StringList* FoamXServer::CaseServer::IApplication_stub::dictionaries()
 {
   CORBA::StaticAny __res( CORBA::_stcseq_string );
 
@@ -9520,11 +9389,11 @@ FoamXServer::StringList* FoamXServer::CaseServer::IApplicationClass_stub::dictio
 #ifndef MICO_CONF_NO_POA
 
 FoamXServer::StringList*
-FoamXServer::CaseServer::IApplicationClass_stub_clp::dictionaries()
+FoamXServer::CaseServer::IApplication_stub_clp::dictionaries()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       FoamXServer::StringList* __res;
 
@@ -9548,12 +9417,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::dictionaries()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IApplicationClass_stub::dictionaries();
+  return FoamXServer::CaseServer::IApplication_stub::dictionaries();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::getField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
+void FoamXServer::CaseServer::IApplication_stub::getField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
 {
   CORBA::StaticAny _sa_fieldName( CORBA::_stc_string, &_par_fieldName );
   CORBA::StaticAny _sa_fieldDescriptor( _marshaller_FoamXServer_CaseServer_IGeometricFieldDescriptor, &_par_fieldDescriptor.ptr() );
@@ -9573,11 +9442,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::getField( const char* _par
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::getField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
+FoamXServer::CaseServer::IApplication_stub_clp::getField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -9599,12 +9468,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::getField( const char* _par_
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::getField(_par_fieldName, _par_fieldDescriptor);
+  FoamXServer::CaseServer::IApplication_stub::getField(_par_fieldName, _par_fieldDescriptor);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::findField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
+void FoamXServer::CaseServer::IApplication_stub::findField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
 {
   CORBA::StaticAny _sa_fieldName( CORBA::_stc_string, &_par_fieldName );
   CORBA::StaticAny _sa_fieldDescriptor( _marshaller_FoamXServer_CaseServer_IGeometricFieldDescriptor, &_par_fieldDescriptor.ptr() );
@@ -9624,11 +9493,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::findField( const char* _pa
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::findField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
+FoamXServer::CaseServer::IApplication_stub_clp::findField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -9650,12 +9519,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::findField( const char* _par
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::findField(_par_fieldName, _par_fieldDescriptor);
+  FoamXServer::CaseServer::IApplication_stub::findField(_par_fieldName, _par_fieldDescriptor);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::addField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
+void FoamXServer::CaseServer::IApplication_stub::addField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
 {
   CORBA::StaticAny _sa_fieldName( CORBA::_stc_string, &_par_fieldName );
   CORBA::StaticAny _sa_fieldDescriptor( _marshaller_FoamXServer_CaseServer_IGeometricFieldDescriptor, &_par_fieldDescriptor.ptr() );
@@ -9675,11 +9544,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::addField( const char* _par
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::addField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
+FoamXServer::CaseServer::IApplication_stub_clp::addField( const char* _par_fieldName, FoamXServer::CaseServer::IGeometricFieldDescriptor_out _par_fieldDescriptor )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -9701,12 +9570,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::addField( const char* _par_
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::addField(_par_fieldName, _par_fieldDescriptor);
+  FoamXServer::CaseServer::IApplication_stub::addField(_par_fieldName, _par_fieldDescriptor);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::deleteField( const char* _par_fieldName )
+void FoamXServer::CaseServer::IApplication_stub::deleteField( const char* _par_fieldName )
 {
   CORBA::StaticAny _sa_fieldName( CORBA::_stc_string, &_par_fieldName );
   CORBA::StaticRequest __req( this, "deleteField" );
@@ -9724,11 +9593,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::deleteField( const char* _
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::deleteField( const char* _par_fieldName )
+FoamXServer::CaseServer::IApplication_stub_clp::deleteField( const char* _par_fieldName )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -9750,18 +9619,18 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::deleteField( const char* _p
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::deleteField(_par_fieldName);
+  FoamXServer::CaseServer::IApplication_stub::deleteField(_par_fieldName);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::getBoundaryType( const char* _par_boundaryTypeName, FoamXServer::CaseServer::IBoundaryTypeDescriptor_out _par_boundaryDescriptor )
+void FoamXServer::CaseServer::IApplication_stub::getPatchPhysicalType( const char* _par_patchPhysicalTypeName, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out _par_patchPhysicalTypeDescriptor )
 {
-  CORBA::StaticAny _sa_boundaryTypeName( CORBA::_stc_string, &_par_boundaryTypeName );
-  CORBA::StaticAny _sa_boundaryDescriptor( _marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, &_par_boundaryDescriptor.ptr() );
-  CORBA::StaticRequest __req( this, "getBoundaryType" );
-  __req.add_in_arg( &_sa_boundaryTypeName );
-  __req.add_out_arg( &_sa_boundaryDescriptor );
+  CORBA::StaticAny _sa_patchPhysicalTypeName( CORBA::_stc_string, &_par_patchPhysicalTypeName );
+  CORBA::StaticAny _sa_patchPhysicalTypeDescriptor( _marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, &_par_patchPhysicalTypeDescriptor.ptr() );
+  CORBA::StaticRequest __req( this, "getPatchPhysicalType" );
+  __req.add_in_arg( &_sa_patchPhysicalTypeName );
+  __req.add_out_arg( &_sa_patchPhysicalTypeDescriptor );
 
   __req.invoke();
 
@@ -9775,16 +9644,16 @@ void FoamXServer::CaseServer::IApplicationClass_stub::getBoundaryType( const cha
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::getBoundaryType( const char* _par_boundaryTypeName, FoamXServer::CaseServer::IBoundaryTypeDescriptor_out _par_boundaryDescriptor )
+FoamXServer::CaseServer::IApplication_stub_clp::getPatchPhysicalType( const char* _par_patchPhysicalTypeName, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out _par_patchPhysicalTypeDescriptor )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->getBoundaryType(_par_boundaryTypeName, _par_boundaryDescriptor);
+        _myserv->getPatchPhysicalType(_par_patchPhysicalTypeName, _par_patchPhysicalTypeDescriptor);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -9801,18 +9670,18 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::getBoundaryType( const char
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::getBoundaryType(_par_boundaryTypeName, _par_boundaryDescriptor);
+  FoamXServer::CaseServer::IApplication_stub::getPatchPhysicalType(_par_patchPhysicalTypeName, _par_patchPhysicalTypeDescriptor);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::findBoundaryType( const char* _par_boundaryTypeName, FoamXServer::CaseServer::IBoundaryTypeDescriptor_out _par_boundaryDescriptor )
+void FoamXServer::CaseServer::IApplication_stub::findPatchPhysicalType( const char* _par_patchPhysicalTypeName, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out _par_patchPhysicalTypeDescriptor )
 {
-  CORBA::StaticAny _sa_boundaryTypeName( CORBA::_stc_string, &_par_boundaryTypeName );
-  CORBA::StaticAny _sa_boundaryDescriptor( _marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, &_par_boundaryDescriptor.ptr() );
-  CORBA::StaticRequest __req( this, "findBoundaryType" );
-  __req.add_in_arg( &_sa_boundaryTypeName );
-  __req.add_out_arg( &_sa_boundaryDescriptor );
+  CORBA::StaticAny _sa_patchPhysicalTypeName( CORBA::_stc_string, &_par_patchPhysicalTypeName );
+  CORBA::StaticAny _sa_patchPhysicalTypeDescriptor( _marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, &_par_patchPhysicalTypeDescriptor.ptr() );
+  CORBA::StaticRequest __req( this, "findPatchPhysicalType" );
+  __req.add_in_arg( &_sa_patchPhysicalTypeName );
+  __req.add_out_arg( &_sa_patchPhysicalTypeDescriptor );
 
   __req.invoke();
 
@@ -9826,16 +9695,16 @@ void FoamXServer::CaseServer::IApplicationClass_stub::findBoundaryType( const ch
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::findBoundaryType( const char* _par_boundaryTypeName, FoamXServer::CaseServer::IBoundaryTypeDescriptor_out _par_boundaryDescriptor )
+FoamXServer::CaseServer::IApplication_stub_clp::findPatchPhysicalType( const char* _par_patchPhysicalTypeName, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out _par_patchPhysicalTypeDescriptor )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->findBoundaryType(_par_boundaryTypeName, _par_boundaryDescriptor);
+        _myserv->findPatchPhysicalType(_par_patchPhysicalTypeName, _par_patchPhysicalTypeDescriptor);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -9852,18 +9721,18 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::findBoundaryType( const cha
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::findBoundaryType(_par_boundaryTypeName, _par_boundaryDescriptor);
+  FoamXServer::CaseServer::IApplication_stub::findPatchPhysicalType(_par_patchPhysicalTypeName, _par_patchPhysicalTypeDescriptor);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::addBoundaryType( const char* _par_boundaryTypeName, FoamXServer::CaseServer::IBoundaryTypeDescriptor_out _par_boundaryDescriptor )
+void FoamXServer::CaseServer::IApplication_stub::addPatchPhysicalType( const char* _par_patchPhysicalTypeName, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out _par_patchPhysicalTypeDescriptor )
 {
-  CORBA::StaticAny _sa_boundaryTypeName( CORBA::_stc_string, &_par_boundaryTypeName );
-  CORBA::StaticAny _sa_boundaryDescriptor( _marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, &_par_boundaryDescriptor.ptr() );
-  CORBA::StaticRequest __req( this, "addBoundaryType" );
-  __req.add_in_arg( &_sa_boundaryTypeName );
-  __req.add_out_arg( &_sa_boundaryDescriptor );
+  CORBA::StaticAny _sa_patchPhysicalTypeName( CORBA::_stc_string, &_par_patchPhysicalTypeName );
+  CORBA::StaticAny _sa_patchPhysicalTypeDescriptor( _marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, &_par_patchPhysicalTypeDescriptor.ptr() );
+  CORBA::StaticRequest __req( this, "addPatchPhysicalType" );
+  __req.add_in_arg( &_sa_patchPhysicalTypeName );
+  __req.add_out_arg( &_sa_patchPhysicalTypeDescriptor );
 
   __req.invoke();
 
@@ -9877,16 +9746,16 @@ void FoamXServer::CaseServer::IApplicationClass_stub::addBoundaryType( const cha
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::addBoundaryType( const char* _par_boundaryTypeName, FoamXServer::CaseServer::IBoundaryTypeDescriptor_out _par_boundaryDescriptor )
+FoamXServer::CaseServer::IApplication_stub_clp::addPatchPhysicalType( const char* _par_patchPhysicalTypeName, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_out _par_patchPhysicalTypeDescriptor )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->addBoundaryType(_par_boundaryTypeName, _par_boundaryDescriptor);
+        _myserv->addPatchPhysicalType(_par_patchPhysicalTypeName, _par_patchPhysicalTypeDescriptor);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -9903,16 +9772,16 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::addBoundaryType( const char
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::addBoundaryType(_par_boundaryTypeName, _par_boundaryDescriptor);
+  FoamXServer::CaseServer::IApplication_stub::addPatchPhysicalType(_par_patchPhysicalTypeName, _par_patchPhysicalTypeDescriptor);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::deleteBoundaryType( const char* _par_boundaryTypeName )
+void FoamXServer::CaseServer::IApplication_stub::deletePatchPhysicalType( const char* _par_patchPhysicalTypeName )
 {
-  CORBA::StaticAny _sa_boundaryTypeName( CORBA::_stc_string, &_par_boundaryTypeName );
-  CORBA::StaticRequest __req( this, "deleteBoundaryType" );
-  __req.add_in_arg( &_sa_boundaryTypeName );
+  CORBA::StaticAny _sa_patchPhysicalTypeName( CORBA::_stc_string, &_par_patchPhysicalTypeName );
+  CORBA::StaticRequest __req( this, "deletePatchPhysicalType" );
+  __req.add_in_arg( &_sa_patchPhysicalTypeName );
 
   __req.invoke();
 
@@ -9926,16 +9795,16 @@ void FoamXServer::CaseServer::IApplicationClass_stub::deleteBoundaryType( const 
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::deleteBoundaryType( const char* _par_boundaryTypeName )
+FoamXServer::CaseServer::IApplication_stub_clp::deletePatchPhysicalType( const char* _par_patchPhysicalTypeName )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->deleteBoundaryType(_par_boundaryTypeName);
+        _myserv->deletePatchPhysicalType(_par_patchPhysicalTypeName);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -9952,12 +9821,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::deleteBoundaryType( const c
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::deleteBoundaryType(_par_boundaryTypeName);
+  FoamXServer::CaseServer::IApplication_stub::deletePatchPhysicalType(_par_patchPhysicalTypeName);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::getDictionary( const char* _par_dictName, FoamXServer::ITypeDescriptor_out _par_dictTypeDescriptor )
+void FoamXServer::CaseServer::IApplication_stub::getDictionary( const char* _par_dictName, FoamXServer::ITypeDescriptor_out _par_dictTypeDescriptor )
 {
   CORBA::StaticAny _sa_dictName( CORBA::_stc_string, &_par_dictName );
   CORBA::StaticAny _sa_dictTypeDescriptor( _marshaller_FoamXServer_ITypeDescriptor, &_par_dictTypeDescriptor.ptr() );
@@ -9977,11 +9846,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::getDictionary( const char*
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::getDictionary( const char* _par_dictName, FoamXServer::ITypeDescriptor_out _par_dictTypeDescriptor )
+FoamXServer::CaseServer::IApplication_stub_clp::getDictionary( const char* _par_dictName, FoamXServer::ITypeDescriptor_out _par_dictTypeDescriptor )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -10003,12 +9872,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::getDictionary( const char* 
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::getDictionary(_par_dictName, _par_dictTypeDescriptor);
+  FoamXServer::CaseServer::IApplication_stub::getDictionary(_par_dictName, _par_dictTypeDescriptor);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::addDictionary( const char* _par_dictName, FoamXServer::ITypeDescriptor_out _par_dictTypeDescriptor )
+void FoamXServer::CaseServer::IApplication_stub::addDictionary( const char* _par_dictName, FoamXServer::ITypeDescriptor_out _par_dictTypeDescriptor )
 {
   CORBA::StaticAny _sa_dictName( CORBA::_stc_string, &_par_dictName );
   CORBA::StaticAny _sa_dictTypeDescriptor( _marshaller_FoamXServer_ITypeDescriptor, &_par_dictTypeDescriptor.ptr() );
@@ -10028,11 +9897,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::addDictionary( const char*
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::addDictionary( const char* _par_dictName, FoamXServer::ITypeDescriptor_out _par_dictTypeDescriptor )
+FoamXServer::CaseServer::IApplication_stub_clp::addDictionary( const char* _par_dictName, FoamXServer::ITypeDescriptor_out _par_dictTypeDescriptor )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -10054,12 +9923,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::addDictionary( const char* 
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::addDictionary(_par_dictName, _par_dictTypeDescriptor);
+  FoamXServer::CaseServer::IApplication_stub::addDictionary(_par_dictName, _par_dictTypeDescriptor);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::deleteDictionary( const char* _par_dictName )
+void FoamXServer::CaseServer::IApplication_stub::deleteDictionary( const char* _par_dictName )
 {
   CORBA::StaticAny _sa_dictName( CORBA::_stc_string, &_par_dictName );
   CORBA::StaticRequest __req( this, "deleteDictionary" );
@@ -10077,11 +9946,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::deleteDictionary( const ch
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::deleteDictionary( const char* _par_dictName )
+FoamXServer::CaseServer::IApplication_stub_clp::deleteDictionary( const char* _par_dictName )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -10103,12 +9972,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::deleteDictionary( const cha
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::deleteDictionary(_par_dictName);
+  FoamXServer::CaseServer::IApplication_stub::deleteDictionary(_par_dictName);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::validate()
+void FoamXServer::CaseServer::IApplication_stub::validate()
 {
   CORBA::StaticRequest __req( this, "validate" );
 
@@ -10125,11 +9994,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::validate()
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::validate()
+FoamXServer::CaseServer::IApplication_stub_clp::validate()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -10151,12 +10020,12 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::validate()
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::validate();
+  FoamXServer::CaseServer::IApplication_stub::validate();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IApplicationClass_stub::save()
+void FoamXServer::CaseServer::IApplication_stub::save()
 {
   CORBA::StaticRequest __req( this, "save" );
 
@@ -10173,11 +10042,11 @@ void FoamXServer::CaseServer::IApplicationClass_stub::save()
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IApplicationClass_stub_clp::save()
+FoamXServer::CaseServer::IApplication_stub_clp::save()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IApplicationClass * _myserv = POA_FoamXServer::CaseServer::IApplicationClass::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IApplication * _myserv = POA_FoamXServer::CaseServer::IApplication::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -10199,7 +10068,7 @@ FoamXServer::CaseServer::IApplicationClass_stub_clp::save()
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IApplicationClass_stub::save();
+  FoamXServer::CaseServer::IApplication_stub::save();
 }
 
 #endif // MICO_CONF_NO_POA
@@ -11516,104 +11385,6 @@ FoamXServer::CaseServer::IPatchDescriptor_stub_clp::description( const char* _pa
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::StringList* FoamXServer::CaseServer::IPatchDescriptor_stub::patchFieldTypes()
-{
-  CORBA::StaticAny __res( CORBA::_stcseq_string );
-
-  CORBA::StaticRequest __req( this, "_get_patchFieldTypes" );
-  __req.set_result( &__res );
-
-  __req.invoke();
-
-  mico_sii_throw( &__req, 
-    0);
-  return (FoamXServer::StringList*) __res._retn();
-}
-
-
-#ifndef MICO_CONF_NO_POA
-
-FoamXServer::StringList*
-FoamXServer::CaseServer::IPatchDescriptor_stub_clp::patchFieldTypes()
-{
-  PortableServer::Servant _serv = _preinvoke ();
-  if (_serv) {
-    POA_FoamXServer::CaseServer::IPatchDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchDescriptor::_narrow (_serv);
-    if (_myserv) {
-      FoamXServer::StringList* __res;
-
-      #ifdef HAVE_EXCEPTIONS
-      try {
-      #endif
-        __res = _myserv->patchFieldTypes();
-      #ifdef HAVE_EXCEPTIONS
-      }
-      catch (...) {
-        _myserv->_remove_ref();
-        _postinvoke();
-        throw;
-      }
-      #endif
-
-      _myserv->_remove_ref();
-      _postinvoke ();
-      return __res;
-    }
-    _postinvoke ();
-  }
-
-  return FoamXServer::CaseServer::IPatchDescriptor_stub::patchFieldTypes();
-}
-
-#endif // MICO_CONF_NO_POA
-
-void FoamXServer::CaseServer::IPatchDescriptor_stub::patchFieldTypes( const FoamXServer::StringList& _par__value )
-{
-  CORBA::StaticAny _sa__value( CORBA::_stcseq_string, &_par__value );
-  CORBA::StaticRequest __req( this, "_set_patchFieldTypes" );
-  __req.add_in_arg( &_sa__value );
-
-  __req.invoke();
-
-  mico_sii_throw( &__req, 
-    0);
-}
-
-
-#ifndef MICO_CONF_NO_POA
-
-void
-FoamXServer::CaseServer::IPatchDescriptor_stub_clp::patchFieldTypes( const FoamXServer::StringList& _par__value )
-{
-  PortableServer::Servant _serv = _preinvoke ();
-  if (_serv) {
-    POA_FoamXServer::CaseServer::IPatchDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchDescriptor::_narrow (_serv);
-    if (_myserv) {
-      #ifdef HAVE_EXCEPTIONS
-      try {
-      #endif
-        _myserv->patchFieldTypes(_par__value);
-      #ifdef HAVE_EXCEPTIONS
-      }
-      catch (...) {
-        _myserv->_remove_ref();
-        _postinvoke();
-        throw;
-      }
-      #endif
-
-      _myserv->_remove_ref();
-      _postinvoke ();
-      return;
-    }
-    _postinvoke ();
-  }
-
-  FoamXServer::CaseServer::IPatchDescriptor_stub::patchFieldTypes(_par__value);
-}
-
-#endif // MICO_CONF_NO_POA
-
 
 /*
  * Base interface for class IGeometryDescriptor
@@ -12095,31 +11866,31 @@ FoamXServer::CaseServer::IGeometryDescriptor_stub_clp::description( const char* 
 
 
 /*
- * Base interface for class IBoundaryTypeDescriptor
+ * Base interface for class IPatchPhysicalTypeDescriptor
  */
 
-FoamXServer::CaseServer::IBoundaryTypeDescriptor::~IBoundaryTypeDescriptor()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::~IPatchPhysicalTypeDescriptor()
 {
 }
 
 void *
-FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow_helper( const char *_repoid )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow_helper( const char *_repoid )
 {
-  if( strcmp( _repoid, "IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0" ) == 0 )
+  if( strcmp( _repoid, "IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0" ) == 0 )
     return (void *)this;
   return NULL;
 }
 
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr
-FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow( CORBA::Object_ptr _obj )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow( CORBA::Object_ptr _obj )
 {
-  FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr _o;
+  FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr _o;
   if( !CORBA::is_nil( _obj ) ) {
     void *_p;
-    if( (_p = _obj->_narrow_helper( "IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0" )))
-      return _duplicate( (FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr) _p );
-    if (!strcmp (_obj->_repoid(), "IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0") || _obj->_is_a_remote ("IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0")) {
-      _o = new FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub;
+    if( (_p = _obj->_narrow_helper( "IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0" )))
+      return _duplicate( (FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr) _p );
+    if (!strcmp (_obj->_repoid(), "IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0") || _obj->_is_a_remote ("IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0")) {
+      _o = new FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub;
       _o->CORBA::Object::operator=( *_obj );
       return _o;
     }
@@ -12127,8 +11898,8 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow( CORBA::Object_ptr _ob
   return _nil();
 }
 
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr
-FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow( CORBA::AbstractBase_ptr _obj )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow( CORBA::AbstractBase_ptr _obj )
 {
   return _narrow (_obj->_to_object());
 }
@@ -12137,13 +11908,13 @@ namespace FoamXServer
 {
 namespace CaseServer
 {
-CORBA::TypeCodeConst _tc_IBoundaryTypeDescriptor;
+CORBA::TypeCodeConst _tc_IPatchPhysicalTypeDescriptor;
 }
 }
-class _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor : public ::CORBA::StaticTypeInfo {
-    typedef FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr _MICO_T;
+class _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor : public ::CORBA::StaticTypeInfo {
+    typedef FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr _MICO_T;
   public:
-    ~_Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor();
+    ~_Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor();
     StaticValueType create () const;
     void assign (StaticValueType dst, const StaticValueType src) const;
     void free (StaticValueType) const;
@@ -12154,75 +11925,75 @@ class _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor : public ::CORB
 };
 
 
-_Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor::~_Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor()
+_Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor::~_Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor()
 {
 }
 
-::CORBA::StaticValueType _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor::create() const
+::CORBA::StaticValueType _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor::create() const
 {
   return (StaticValueType) new _MICO_T( 0 );
 }
 
-void _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor::assign( StaticValueType d, const StaticValueType s ) const
+void _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor::assign( StaticValueType d, const StaticValueType s ) const
 {
-  *(_MICO_T*) d = ::FoamXServer::CaseServer::IBoundaryTypeDescriptor::_duplicate( *(_MICO_T*) s );
+  *(_MICO_T*) d = ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_duplicate( *(_MICO_T*) s );
 }
 
-void _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor::free( StaticValueType v ) const
+void _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor::free( StaticValueType v ) const
 {
   ::CORBA::release( *(_MICO_T *) v );
   delete (_MICO_T*) v;
 }
 
-void _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor::release( StaticValueType v ) const
+void _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor::release( StaticValueType v ) const
 {
   ::CORBA::release( *(_MICO_T *) v );
 }
 
-::CORBA::Boolean _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
+::CORBA::Boolean _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
 {
   ::CORBA::Object_ptr obj;
   if (!::CORBA::_stc_Object->demarshal(dc, &obj))
     return FALSE;
-  *(_MICO_T *) v = ::FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow( obj );
+  *(_MICO_T *) v = ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow( obj );
   ::CORBA::Boolean ret = ::CORBA::is_nil (obj) || !::CORBA::is_nil (*(_MICO_T *)v);
   ::CORBA::release (obj);
   return ret;
 }
 
-void _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
+void _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
 {
   ::CORBA::Object_ptr obj = *(_MICO_T *) v;
   ::CORBA::_stc_Object->marshal( ec, &obj );
 }
 
-::CORBA::TypeCode_ptr _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor::typecode()
+::CORBA::TypeCode_ptr _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor::typecode()
 {
-  return FoamXServer::CaseServer::_tc_IBoundaryTypeDescriptor;
+  return FoamXServer::CaseServer::_tc_IPatchPhysicalTypeDescriptor;
 }
 
-::CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor;
+::CORBA::StaticTypeInfo *_marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor;
 
 void
-operator<<=( CORBA::Any &_a, const FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr _obj )
+operator<<=( CORBA::Any &_a, const FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr _obj )
 {
-  CORBA::StaticAny _sa (_marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, &_obj);
+  CORBA::StaticAny _sa (_marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, &_obj);
   _a.from_static_any (_sa);
 }
 
 void
-operator<<=( CORBA::Any &_a, FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr* _obj_ptr )
+operator<<=( CORBA::Any &_a, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr* _obj_ptr )
 {
-  CORBA::StaticAny _sa (_marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, _obj_ptr);
+  CORBA::StaticAny _sa (_marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, _obj_ptr);
   _a.from_static_any (_sa);
   CORBA::release (*_obj_ptr);
 }
 
 CORBA::Boolean
-operator>>=( const CORBA::Any &_a, FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr &_obj )
+operator>>=( const CORBA::Any &_a, FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr &_obj )
 {
-  FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr *p;
-  if (_a.to_static_any (_marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, (void *&)p)) {
+  FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr *p;
+  if (_a.to_static_any (_marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, (void *&)p)) {
     _obj = *p;
     return TRUE;
   }
@@ -12231,51 +12002,51 @@ operator>>=( const CORBA::Any &_a, FoamXServer::CaseServer::IBoundaryTypeDescrip
 
 
 /*
- * Stub interface for class IBoundaryTypeDescriptor
+ * Stub interface for class IPatchPhysicalTypeDescriptor
  */
 
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::~IBoundaryTypeDescriptor_stub()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::~IPatchPhysicalTypeDescriptor_stub()
 {
 }
 
 #ifndef MICO_CONF_NO_POA
 
 void *
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow_helper (const char * repoid)
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow_helper (const char * repoid)
 {
-  if (strcmp (repoid, "IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0") == 0) {
+  if (strcmp (repoid, "IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0") == 0) {
     return (void *) this;
   }
   return NULL;
 }
 
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor *
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (PortableServer::Servant serv) 
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor *
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (PortableServer::Servant serv) 
 {
   void * p;
-  if ((p = serv->_narrow_helper ("IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0")) != NULL) {
+  if ((p = serv->_narrow_helper ("IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0")) != NULL) {
     serv->_add_ref ();
-    return (POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor *) p;
+    return (POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor *) p;
   }
   return NULL;
 }
 
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::IBoundaryTypeDescriptor_stub_clp ()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::IPatchPhysicalTypeDescriptor_stub_clp ()
 {
 }
 
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::IBoundaryTypeDescriptor_stub_clp (PortableServer::POA_ptr poa, CORBA::Object_ptr obj)
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::IPatchPhysicalTypeDescriptor_stub_clp (PortableServer::POA_ptr poa, CORBA::Object_ptr obj)
   : CORBA::Object(*obj), PortableServer::StubBase(poa)
 {
 }
 
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::~IBoundaryTypeDescriptor_stub_clp ()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::~IPatchPhysicalTypeDescriptor_stub_clp ()
 {
 }
 
 #endif // MICO_CONF_NO_POA
 
-char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::name()
+char* FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::name()
 {
   char* _res = NULL;
   CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -12294,11 +12065,11 @@ char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::name()
 #ifndef MICO_CONF_NO_POA
 
 char*
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::name()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::name()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       char* __res;
 
@@ -12322,12 +12093,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::name()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::name();
+  return FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::name();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::name( const char* _par__value )
+void FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::name( const char* _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value );
   CORBA::StaticRequest __req( this, "_set_name" );
@@ -12343,11 +12114,11 @@ void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::name( const char* _p
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::name( const char* _par__value )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::name( const char* _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -12369,12 +12140,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::name( const char* _pa
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::name(_par__value);
+  FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::name(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::displayName()
+char* FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::displayName()
 {
   char* _res = NULL;
   CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -12393,11 +12164,11 @@ char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::displayName()
 #ifndef MICO_CONF_NO_POA
 
 char*
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::displayName()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::displayName()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       char* __res;
 
@@ -12421,12 +12192,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::displayName()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::displayName();
+  return FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::displayName();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::displayName( const char* _par__value )
+void FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::displayName( const char* _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value );
   CORBA::StaticRequest __req( this, "_set_displayName" );
@@ -12442,11 +12213,11 @@ void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::displayName( const c
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::displayName( const char* _par__value )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::displayName( const char* _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -12468,12 +12239,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::displayName( const ch
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::displayName(_par__value);
+  FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::displayName(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::description()
+char* FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::description()
 {
   char* _res = NULL;
   CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -12492,11 +12263,11 @@ char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::description()
 #ifndef MICO_CONF_NO_POA
 
 char*
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::description()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::description()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       char* __res;
 
@@ -12520,12 +12291,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::description()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::description();
+  return FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::description();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::description( const char* _par__value )
+void FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::description( const char* _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value );
   CORBA::StaticRequest __req( this, "_set_description" );
@@ -12541,11 +12312,11 @@ void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::description( const c
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::description( const char* _par__value )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::description( const char* _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -12567,12 +12338,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::description( const ch
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::description(_par__value);
+  FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::description(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchType()
+char* FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::patchType()
 {
   char* _res = NULL;
   CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -12591,11 +12362,11 @@ char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchType()
 #ifndef MICO_CONF_NO_POA
 
 char*
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::patchType()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::patchType()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       char* __res;
 
@@ -12619,12 +12390,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::patchType()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchType();
+  return FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::patchType();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchType( const char* _par__value )
+void FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::patchType( const char* _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value );
   CORBA::StaticRequest __req( this, "_set_patchType" );
@@ -12640,11 +12411,11 @@ void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchType( const cha
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::patchType( const char* _par__value )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::patchType( const char* _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -12666,17 +12437,17 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::patchType( const char
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchType(_par__value);
+  FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::patchType(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::superType()
+char* FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::parentType()
 {
   char* _res = NULL;
   CORBA::StaticAny __res( CORBA::_stc_string, &_res );
 
-  CORBA::StaticRequest __req( this, "_get_superType" );
+  CORBA::StaticRequest __req( this, "_get_parentType" );
   __req.set_result( &__res );
 
   __req.invoke();
@@ -12690,18 +12461,18 @@ char* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::superType()
 #ifndef MICO_CONF_NO_POA
 
 char*
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::superType()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::parentType()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       char* __res;
 
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        __res = _myserv->superType();
+        __res = _myserv->parentType();
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -12718,15 +12489,15 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::superType()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::superType();
+  return FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::parentType();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::superType( const char* _par__value )
+void FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::parentType( const char* _par__value )
 {
   CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value );
-  CORBA::StaticRequest __req( this, "_set_superType" );
+  CORBA::StaticRequest __req( this, "_set_parentType" );
   __req.add_in_arg( &_sa__value );
 
   __req.invoke();
@@ -12739,16 +12510,16 @@ void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::superType( const cha
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::superType( const char* _par__value )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::parentType( const char* _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->superType(_par__value);
+        _myserv->parentType(_par__value);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -12765,12 +12536,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::superType( const char
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::superType(_par__value);
+  FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::parentType(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
 
-FoamXServer::StringPairList* FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchFieldTypes()
+FoamXServer::StringPairList* FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::patchFieldTypes()
 {
   CORBA::StaticAny __res( _marshaller__seq_FoamXServer_StringPair );
 
@@ -12788,11 +12559,11 @@ FoamXServer::StringPairList* FoamXServer::CaseServer::IBoundaryTypeDescriptor_st
 #ifndef MICO_CONF_NO_POA
 
 FoamXServer::StringPairList*
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::patchFieldTypes()
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::patchFieldTypes()
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       FoamXServer::StringPairList* __res;
 
@@ -12816,12 +12587,12 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::patchFieldTypes()
     _postinvoke ();
   }
 
-  return FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchFieldTypes();
+  return FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::patchFieldTypes();
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchFieldTypes( const FoamXServer::StringPairList& _par__value )
+void FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::patchFieldTypes( const FoamXServer::StringPairList& _par__value )
 {
   CORBA::StaticAny _sa__value( _marshaller__seq_FoamXServer_StringPair, &_par__value );
   CORBA::StaticRequest __req( this, "_set_patchFieldTypes" );
@@ -12837,11 +12608,11 @@ void FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchFieldTypes( con
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::patchFieldTypes( const FoamXServer::StringPairList& _par__value )
+FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp::patchFieldTypes( const FoamXServer::StringPairList& _par__value )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
-    POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (_serv);
+    POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor * _myserv = POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (_serv);
     if (_myserv) {
       #ifdef HAVE_EXCEPTIONS
       try {
@@ -12863,7 +12634,7 @@ FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp::patchFieldTypes( cons
     _postinvoke ();
   }
 
-  FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub::patchFieldTypes(_par__value);
+  FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub::patchFieldTypes(_par__value);
 }
 
 #endif // MICO_CONF_NO_POA
@@ -15525,15 +15296,15 @@ FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::openCase( const FoamXServer::Ca
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseBrowser::ICaseBrowser_stub::newCase( const char* _par_rootDir, const char* _par_caseName, const char* _par_appClass )
+void FoamXServer::CaseBrowser::ICaseBrowser_stub::newCase( const char* _par_rootDir, const char* _par_caseName, const char* _par_app )
 {
   CORBA::StaticAny _sa_rootDir( CORBA::_stc_string, &_par_rootDir );
   CORBA::StaticAny _sa_caseName( CORBA::_stc_string, &_par_caseName );
-  CORBA::StaticAny _sa_appClass( CORBA::_stc_string, &_par_appClass );
+  CORBA::StaticAny _sa_app( CORBA::_stc_string, &_par_app );
   CORBA::StaticRequest __req( this, "newCase" );
   __req.add_in_arg( &_sa_rootDir );
   __req.add_in_arg( &_sa_caseName );
-  __req.add_in_arg( &_sa_appClass );
+  __req.add_in_arg( &_sa_app );
 
   __req.invoke();
 
@@ -15547,7 +15318,7 @@ void FoamXServer::CaseBrowser::ICaseBrowser_stub::newCase( const char* _par_root
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::newCase( const char* _par_rootDir, const char* _par_caseName, const char* _par_appClass )
+FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::newCase( const char* _par_rootDir, const char* _par_caseName, const char* _par_app )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -15556,7 +15327,7 @@ FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::newCase( const char* _par_rootD
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->newCase(_par_rootDir, _par_caseName, _par_appClass);
+        _myserv->newCase(_par_rootDir, _par_caseName, _par_app);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -15573,20 +15344,20 @@ FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::newCase( const char* _par_rootD
     _postinvoke ();
   }
 
-  FoamXServer::CaseBrowser::ICaseBrowser_stub::newCase(_par_rootDir, _par_caseName, _par_appClass);
+  FoamXServer::CaseBrowser::ICaseBrowser_stub::newCase(_par_rootDir, _par_caseName, _par_app);
 }
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseBrowser::ICaseBrowser_stub::importCase( const char* _par_rootDir, const char* _par_caseName, const char* _par_appClass )
+void FoamXServer::CaseBrowser::ICaseBrowser_stub::importCase( const char* _par_rootDir, const char* _par_caseName, const char* _par_app )
 {
   CORBA::StaticAny _sa_rootDir( CORBA::_stc_string, &_par_rootDir );
   CORBA::StaticAny _sa_caseName( CORBA::_stc_string, &_par_caseName );
-  CORBA::StaticAny _sa_appClass( CORBA::_stc_string, &_par_appClass );
+  CORBA::StaticAny _sa_app( CORBA::_stc_string, &_par_app );
   CORBA::StaticRequest __req( this, "importCase" );
   __req.add_in_arg( &_sa_rootDir );
   __req.add_in_arg( &_sa_caseName );
-  __req.add_in_arg( &_sa_appClass );
+  __req.add_in_arg( &_sa_app );
 
   __req.invoke();
 
@@ -15600,7 +15371,7 @@ void FoamXServer::CaseBrowser::ICaseBrowser_stub::importCase( const char* _par_r
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::importCase( const char* _par_rootDir, const char* _par_caseName, const char* _par_appClass )
+FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::importCase( const char* _par_rootDir, const char* _par_caseName, const char* _par_app )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -15609,7 +15380,7 @@ FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::importCase( const char* _par_ro
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->importCase(_par_rootDir, _par_caseName, _par_appClass);
+        _myserv->importCase(_par_rootDir, _par_caseName, _par_app);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -15626,7 +15397,7 @@ FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::importCase( const char* _par_ro
     _postinvoke ();
   }
 
-  FoamXServer::CaseBrowser::ICaseBrowser_stub::importCase(_par_rootDir, _par_caseName, _par_appClass);
+  FoamXServer::CaseBrowser::ICaseBrowser_stub::importCase(_par_rootDir, _par_caseName, _par_app);
 }
 
 #endif // MICO_CONF_NO_POA
@@ -16065,17 +15836,17 @@ FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::unlockCaseDescriptor( const Foa
 
 #endif // MICO_CONF_NO_POA
 
-void FoamXServer::CaseBrowser::ICaseBrowser_stub::addCase( const char* _par_rootDir, const char* _par_rawRootDir, const char* _par_caseName, const char* _par_appClass )
+void FoamXServer::CaseBrowser::ICaseBrowser_stub::addCase( const char* _par_rootDir, const char* _par_rawRootDir, const char* _par_caseName, const char* _par_app )
 {
   CORBA::StaticAny _sa_rootDir( CORBA::_stc_string, &_par_rootDir );
   CORBA::StaticAny _sa_rawRootDir( CORBA::_stc_string, &_par_rawRootDir );
   CORBA::StaticAny _sa_caseName( CORBA::_stc_string, &_par_caseName );
-  CORBA::StaticAny _sa_appClass( CORBA::_stc_string, &_par_appClass );
+  CORBA::StaticAny _sa_app( CORBA::_stc_string, &_par_app );
   CORBA::StaticRequest __req( this, "addCase" );
   __req.add_in_arg( &_sa_rootDir );
   __req.add_in_arg( &_sa_rawRootDir );
   __req.add_in_arg( &_sa_caseName );
-  __req.add_in_arg( &_sa_appClass );
+  __req.add_in_arg( &_sa_app );
 
   __req.invoke();
 
@@ -16088,7 +15859,7 @@ void FoamXServer::CaseBrowser::ICaseBrowser_stub::addCase( const char* _par_root
 #ifndef MICO_CONF_NO_POA
 
 void
-FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::addCase( const char* _par_rootDir, const char* _par_rawRootDir, const char* _par_caseName, const char* _par_appClass )
+FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::addCase( const char* _par_rootDir, const char* _par_rawRootDir, const char* _par_caseName, const char* _par_app )
 {
   PortableServer::Servant _serv = _preinvoke ();
   if (_serv) {
@@ -16097,7 +15868,7 @@ FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::addCase( const char* _par_rootD
       #ifdef HAVE_EXCEPTIONS
       try {
       #endif
-        _myserv->addCase(_par_rootDir, _par_rawRootDir, _par_caseName, _par_appClass);
+        _myserv->addCase(_par_rootDir, _par_rawRootDir, _par_caseName, _par_app);
       #ifdef HAVE_EXCEPTIONS
       }
       catch (...) {
@@ -16114,7 +15885,7 @@ FoamXServer::CaseBrowser::ICaseBrowser_stub_clp::addCase( const char* _par_rootD
     _postinvoke ();
   }
 
-  FoamXServer::CaseBrowser::ICaseBrowser_stub::addCase(_par_rootDir, _par_rawRootDir, _par_caseName, _par_appClass);
+  FoamXServer::CaseBrowser::ICaseBrowser_stub::addCase(_par_rootDir, _par_rawRootDir, _par_caseName, _par_app);
 }
 
 #endif // MICO_CONF_NO_POA
@@ -17618,10 +17389,10 @@ void _Marshaller__seq_FoamXServer_FoamXAny::marshal( ::CORBA::DataEncoder &ec, S
 {
   if (!_tc)
     _tc = (new ::CORBA::TypeCode (
-    "010000001300000038020000010000000f00000028020000010000001d00"
+    "010000001300000034020000010000000f00000024020000010000001d00"
     "000049444c3a466f616d585365727665722f466f616d58416e793a312e30"
     "0000000009000000466f616d58416e790000000002000000050000007479"
-    "70650000000011000000c7010000010000001e00000049444c3a466f616d"
+    "70650000000011000000c3010000010000001e00000049444c3a466f616d"
     "585365727665722f466f616d58547970653a312e300000000a000000466f"
     "616d5854797065000000150000000f000000547970655f556e646566696e"
     "656400000d000000547970655f426f6f6c65616e000000000b0000005479"
@@ -17632,12 +17403,12 @@ void _Marshaller__seq_FoamXServer_FoamXAny::marshal( ::CORBA::DataEncoder &ec, S
     "0000547970655f436173654e616d650000000e000000547970655f486f73"
     "744e616d650000000a000000547970655f46696c650000000f0000005479"
     "70655f4469726563746f727900000a000000547970655f54696d65000000"
-    "12000000547970655f44696d656e73696f6e536574000000110000005479"
-    "70655f566563746f725370616365000000000a000000547970655f4c6973"
-    "7400000010000000547970655f44696374696f6e617279000f0000005479"
-    "70655f53656c656374696f6e00000e000000547970655f436f6d706f756e"
-    "640000000b000000547970655f4669656c6400000600000076616c756500"
-    "00000b00000000000000"))->mk_constant();
+    "12000000547970655f44696d656e73696f6e5365740000000f0000005479"
+    "70655f46697865644c69737400000a000000547970655f4c697374000000"
+    "10000000547970655f44696374696f6e617279000f000000547970655f53"
+    "656c656374696f6e00000e000000547970655f436f6d706f756e64000000"
+    "0b000000547970655f4669656c6400000600000076616c75650000000b00"
+    "000000000000"))->mk_constant();
   return _tc;
 }
 
@@ -18113,11 +17884,11 @@ CORBA::Boolean operator>>=( const CORBA::Any &_a, const SequenceTmpl< FoamXServe
 }
 
 
-class _Marshaller__seq_FoamXServer_ApplicationClassDescriptor : public ::CORBA::StaticTypeInfo {
-    typedef SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> _MICO_T;
+class _Marshaller__seq_FoamXServer_ApplicationDescriptor : public ::CORBA::StaticTypeInfo {
+    typedef SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> _MICO_T;
     static ::CORBA::TypeCode_ptr _tc;
   public:
-    ~_Marshaller__seq_FoamXServer_ApplicationClassDescriptor();
+    ~_Marshaller__seq_FoamXServer_ApplicationDescriptor();
     StaticValueType create () const;
     void assign (StaticValueType dst, const StaticValueType src) const;
     void free (StaticValueType) const;
@@ -18127,190 +17898,87 @@ class _Marshaller__seq_FoamXServer_ApplicationClassDescriptor : public ::CORBA::
 };
 
 
-_Marshaller__seq_FoamXServer_ApplicationClassDescriptor::~_Marshaller__seq_FoamXServer_ApplicationClassDescriptor()
+_Marshaller__seq_FoamXServer_ApplicationDescriptor::~_Marshaller__seq_FoamXServer_ApplicationDescriptor()
 {
   if (_tc)
     delete _tc;
 }
 
-::CORBA::StaticValueType _Marshaller__seq_FoamXServer_ApplicationClassDescriptor::create() const
+::CORBA::StaticValueType _Marshaller__seq_FoamXServer_ApplicationDescriptor::create() const
 {
   return (StaticValueType) new _MICO_T;
 }
 
-void _Marshaller__seq_FoamXServer_ApplicationClassDescriptor::assign( StaticValueType d, const StaticValueType s ) const
+void _Marshaller__seq_FoamXServer_ApplicationDescriptor::assign( StaticValueType d, const StaticValueType s ) const
 {
   *(_MICO_T*) d = *(_MICO_T*) s;
 }
 
-void _Marshaller__seq_FoamXServer_ApplicationClassDescriptor::free( StaticValueType v ) const
+void _Marshaller__seq_FoamXServer_ApplicationDescriptor::free( StaticValueType v ) const
 {
   delete (_MICO_T*) v;
 }
 
-::CORBA::Boolean _Marshaller__seq_FoamXServer_ApplicationClassDescriptor::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
+::CORBA::Boolean _Marshaller__seq_FoamXServer_ApplicationDescriptor::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
 {
   ::CORBA::ULong len;
   if( !dc.seq_begin( len ) )
     return FALSE;
   ((_MICO_T *) v)->length( len );
   for( ::CORBA::ULong i = 0; i < len; i++ ) {
-    if( !_marshaller_FoamXServer_ApplicationClassDescriptor->demarshal( dc, &(*(_MICO_T*)v)[i] ) )
+    if( !_marshaller_FoamXServer_ApplicationDescriptor->demarshal( dc, &(*(_MICO_T*)v)[i] ) )
       return FALSE;
   }
   return dc.seq_end();
 }
 
-void _Marshaller__seq_FoamXServer_ApplicationClassDescriptor::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
+void _Marshaller__seq_FoamXServer_ApplicationDescriptor::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
 {
   ::CORBA::ULong len = ((_MICO_T *) v)->length();
   ec.seq_begin( len );
   for( ::CORBA::ULong i = 0; i < len; i++ )
-    _marshaller_FoamXServer_ApplicationClassDescriptor->marshal( ec, &(*(_MICO_T*)v)[i] );
+    _marshaller_FoamXServer_ApplicationDescriptor->marshal( ec, &(*(_MICO_T*)v)[i] );
   ec.seq_end();
 }
 
-::CORBA::TypeCode_ptr _Marshaller__seq_FoamXServer_ApplicationClassDescriptor::typecode()
+::CORBA::TypeCode_ptr _Marshaller__seq_FoamXServer_ApplicationDescriptor::typecode()
 {
   if (!_tc)
     _tc = (new ::CORBA::TypeCode (
-    "0100000013000000ac000000010000000f0000009c000000010000002f00"
-    "000049444c3a466f616d585365727665722f4170706c69636174696f6e43"
-    "6c61737344657363726970746f723a312e3000001b0000004170706c6963"
-    "6174696f6e436c61737344657363726970746f7200000300000005000000"
-    "6e616d650000000012000000000000000900000063617465676f72790000"
-    "000012000000000000000c00000073797374656d436c6173730008000000"
-    "00000000"))->mk_constant();
+    "0100000013000000b8000000010000000f000000a8000000010000002a00"
+    "000049444c3a466f616d585365727665722f4170706c69636174696f6e44"
+    "657363726970746f723a312e30000000160000004170706c69636174696f"
+    "6e44657363726970746f7200000004000000050000006e616d6500000000"
+    "12000000000000000900000063617465676f727900000000120000000000"
+    "000005000000706174680000000012000000000000000c00000073797374"
+    "656d436c617373000800000000000000"))->mk_constant();
   return _tc;
 }
 
-::CORBA::TypeCode_ptr _Marshaller__seq_FoamXServer_ApplicationClassDescriptor::_tc = 0;
-::CORBA::StaticTypeInfo *_marshaller__seq_FoamXServer_ApplicationClassDescriptor;
+::CORBA::TypeCode_ptr _Marshaller__seq_FoamXServer_ApplicationDescriptor::_tc = 0;
+::CORBA::StaticTypeInfo *_marshaller__seq_FoamXServer_ApplicationDescriptor;
 
-void operator<<=( CORBA::Any &_a, const SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> &_s )
+void operator<<=( CORBA::Any &_a, const SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> &_s )
 {
-  CORBA::StaticAny _sa (_marshaller__seq_FoamXServer_ApplicationClassDescriptor, &_s);
+  CORBA::StaticAny _sa (_marshaller__seq_FoamXServer_ApplicationDescriptor, &_s);
   _a.from_static_any (_sa);
 }
 
-void operator<<=( CORBA::Any &_a, SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> *_s )
+void operator<<=( CORBA::Any &_a, SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> *_s )
 {
   _a <<= *_s;
   delete _s;
 }
 
-CORBA::Boolean operator>>=( const CORBA::Any &_a, SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> &_s )
+CORBA::Boolean operator>>=( const CORBA::Any &_a, SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> &_s )
 {
-  CORBA::StaticAny _sa (_marshaller__seq_FoamXServer_ApplicationClassDescriptor, &_s);
+  CORBA::StaticAny _sa (_marshaller__seq_FoamXServer_ApplicationDescriptor, &_s);
   return _a.to_static_any (_sa);
 }
 
-CORBA::Boolean operator>>=( const CORBA::Any &_a, const SequenceTmpl< FoamXServer::ApplicationClassDescriptor,MICO_TID_DEF> *&_s )
+CORBA::Boolean operator>>=( const CORBA::Any &_a, const SequenceTmpl< FoamXServer::ApplicationDescriptor,MICO_TID_DEF> *&_s )
 {
-  return _a.to_static_any (_marshaller__seq_FoamXServer_ApplicationClassDescriptor, (void *&)_s);
-}
-
-
-class _Marshaller__seq_FoamXServer_UtilityDescriptor : public ::CORBA::StaticTypeInfo {
-    typedef SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> _MICO_T;
-    static ::CORBA::TypeCode_ptr _tc;
-  public:
-    ~_Marshaller__seq_FoamXServer_UtilityDescriptor();
-    StaticValueType create () const;
-    void assign (StaticValueType dst, const StaticValueType src) const;
-    void free (StaticValueType) const;
-    ::CORBA::Boolean demarshal (::CORBA::DataDecoder&, StaticValueType) const;
-    void marshal (::CORBA::DataEncoder &, StaticValueType) const;
-    ::CORBA::TypeCode_ptr typecode ();
-};
-
-
-_Marshaller__seq_FoamXServer_UtilityDescriptor::~_Marshaller__seq_FoamXServer_UtilityDescriptor()
-{
-  if (_tc)
-    delete _tc;
-}
-
-::CORBA::StaticValueType _Marshaller__seq_FoamXServer_UtilityDescriptor::create() const
-{
-  return (StaticValueType) new _MICO_T;
-}
-
-void _Marshaller__seq_FoamXServer_UtilityDescriptor::assign( StaticValueType d, const StaticValueType s ) const
-{
-  *(_MICO_T*) d = *(_MICO_T*) s;
-}
-
-void _Marshaller__seq_FoamXServer_UtilityDescriptor::free( StaticValueType v ) const
-{
-  delete (_MICO_T*) v;
-}
-
-::CORBA::Boolean _Marshaller__seq_FoamXServer_UtilityDescriptor::demarshal( ::CORBA::DataDecoder &dc, StaticValueType v ) const
-{
-  ::CORBA::ULong len;
-  if( !dc.seq_begin( len ) )
-    return FALSE;
-  ((_MICO_T *) v)->length( len );
-  for( ::CORBA::ULong i = 0; i < len; i++ ) {
-    if( !_marshaller_FoamXServer_UtilityDescriptor->demarshal( dc, &(*(_MICO_T*)v)[i] ) )
-      return FALSE;
-  }
-  return dc.seq_end();
-}
-
-void _Marshaller__seq_FoamXServer_UtilityDescriptor::marshal( ::CORBA::DataEncoder &ec, StaticValueType v ) const
-{
-  ::CORBA::ULong len = ((_MICO_T *) v)->length();
-  ec.seq_begin( len );
-  for( ::CORBA::ULong i = 0; i < len; i++ )
-    _marshaller_FoamXServer_UtilityDescriptor->marshal( ec, &(*(_MICO_T*)v)[i] );
-  ec.seq_end();
-}
-
-::CORBA::TypeCode_ptr _Marshaller__seq_FoamXServer_UtilityDescriptor::typecode()
-{
-  if (!_tc)
-    _tc = (new ::CORBA::TypeCode (
-    "010000001300000050010000010000000f00000040010000010000002600"
-    "000049444c3a466f616d585365727665722f5574696c6974794465736372"
-    "6970746f723a312e30000000120000005574696c69747944657363726970"
-    "746f7200000008000000050000006e616d65000000001200000000000000"
-    "0c0000006465736372697074696f6e001200000000000000090000006361"
-    "7465676f72790000000012000000000000000c00000073797374656d436c"
-    "61737300080000000c0000006368616e6765734d65736800080000000e00"
-    "00006368616e6765734669656c6473000000080000000b000000636c6965"
-    "6e744265616e000012000000000000000c000000636f6e74726f6c446963"
-    "74000e00000040000000010000002400000049444c3a466f616d58536572"
-    "7665722f495479706544657363726970746f723a312e3000100000004954"
-    "79706544657363726970746f720000000000"))->mk_constant();
-  return _tc;
-}
-
-::CORBA::TypeCode_ptr _Marshaller__seq_FoamXServer_UtilityDescriptor::_tc = 0;
-::CORBA::StaticTypeInfo *_marshaller__seq_FoamXServer_UtilityDescriptor;
-
-void operator<<=( CORBA::Any &_a, const SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> &_s )
-{
-  CORBA::StaticAny _sa (_marshaller__seq_FoamXServer_UtilityDescriptor, &_s);
-  _a.from_static_any (_sa);
-}
-
-void operator<<=( CORBA::Any &_a, SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> *_s )
-{
-  _a <<= *_s;
-  delete _s;
-}
-
-CORBA::Boolean operator>>=( const CORBA::Any &_a, SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> &_s )
-{
-  CORBA::StaticAny _sa (_marshaller__seq_FoamXServer_UtilityDescriptor, &_s);
-  return _a.to_static_any (_sa);
-}
-
-CORBA::Boolean operator>>=( const CORBA::Any &_a, const SequenceTmpl< FoamXServer::UtilityDescriptor,MICO_TID_DEF> *&_s )
-{
-  return _a.to_static_any (_marshaller__seq_FoamXServer_UtilityDescriptor, (void *&)_s);
+  return _a.to_static_any (_marshaller__seq_FoamXServer_ApplicationDescriptor, (void *&)_s);
 }
 
 
@@ -18375,15 +18043,15 @@ void _Marshaller__seq_FoamXServer_CaseDescriptor::marshal( ::CORBA::DataEncoder 
 {
   if (!_tc)
     _tc = (new ::CORBA::TypeCode (
-    "0100000013000000f0000000010000000f000000e0000000010000002300"
+    "0100000013000000e8000000010000000f000000d8000000010000002300"
     "000049444c3a466f616d585365727665722f436173654465736372697074"
     "6f723a312e3000000f0000004361736544657363726970746f7200000800"
     "000008000000726f6f744469720012000000000000000b00000072617752"
     "6f6f744469720000120000000000000009000000636173654e616d650000"
-    "0000120000000000000009000000617070436c6173730000000012000000"
-    "00000000070000006e50726f6373000003000000080000006d616e616765"
-    "640008000000070000006c6f636b6564000008000000060000006572726f"
-    "720000000800000000000000"))->mk_constant();
+    "000012000000000000000400000061707000120000000000000007000000"
+    "6e50726f6373000003000000080000006d616e6167656400080000000700"
+    "00006c6f636b6564000008000000060000006572726f7200000008000000"
+    "00000000"))->mk_constant();
   return _tc;
 }
 
@@ -18736,7 +18404,7 @@ struct __tc_init_FOAMX {
   __tc_init_FOAMX()
   {
     FoamXServer::_tc_FoamXType = 
-    "0100000011000000c7010000010000001e00000049444c3a466f616d5853"
+    "0100000011000000c3010000010000001e00000049444c3a466f616d5853"
     "65727665722f466f616d58547970653a312e300000000a000000466f616d"
     "5854797065000000150000000f000000547970655f556e646566696e6564"
     "00000d000000547970655f426f6f6c65616e000000000b00000054797065"
@@ -18747,16 +18415,16 @@ struct __tc_init_FOAMX {
     "547970655f436173654e616d650000000e000000547970655f486f73744e"
     "616d650000000a000000547970655f46696c650000000f00000054797065"
     "5f4469726563746f727900000a000000547970655f54696d650000001200"
-    "0000547970655f44696d656e73696f6e5365740000001100000054797065"
-    "5f566563746f725370616365000000000a000000547970655f4c69737400"
-    "000010000000547970655f44696374696f6e617279000f00000054797065"
-    "5f53656c656374696f6e00000e000000547970655f436f6d706f756e6400"
-    "00000b000000547970655f4669656c6400";
+    "0000547970655f44696d656e73696f6e5365740000000f00000054797065"
+    "5f46697865644c69737400000a000000547970655f4c6973740000001000"
+    "0000547970655f44696374696f6e617279000f000000547970655f53656c"
+    "656374696f6e00000e000000547970655f436f6d706f756e640000000b00"
+    "0000547970655f4669656c6400";
     _marshaller_FoamXServer_FoamXType = new _Marshaller_FoamXServer_FoamXType;
     FoamXServer::_tc_FoamXAny = 
-    "010000000f00000028020000010000001d00000049444c3a466f616d5853"
+    "010000000f00000024020000010000001d00000049444c3a466f616d5853"
     "65727665722f466f616d58416e793a312e300000000009000000466f616d"
-    "58416e79000000000200000005000000747970650000000011000000c701"
+    "58416e79000000000200000005000000747970650000000011000000c301"
     "0000010000001e00000049444c3a466f616d585365727665722f466f616d"
     "58547970653a312e300000000a000000466f616d58547970650000001500"
     "00000f000000547970655f556e646566696e656400000d00000054797065"
@@ -18768,19 +18436,19 @@ struct __tc_init_FOAMX {
     "616d650000000e000000547970655f486f73744e616d650000000a000000"
     "547970655f46696c650000000f000000547970655f4469726563746f7279"
     "00000a000000547970655f54696d6500000012000000547970655f44696d"
-    "656e73696f6e53657400000011000000547970655f566563746f72537061"
-    "6365000000000a000000547970655f4c6973740000001000000054797065"
-    "5f44696374696f6e617279000f000000547970655f53656c656374696f6e"
-    "00000e000000547970655f436f6d706f756e640000000b00000054797065"
-    "5f4669656c6400000600000076616c75650000000b000000";
+    "656e73696f6e5365740000000f000000547970655f46697865644c697374"
+    "00000a000000547970655f4c69737400000010000000547970655f446963"
+    "74696f6e617279000f000000547970655f53656c656374696f6e00000e00"
+    "0000547970655f436f6d706f756e640000000b000000547970655f466965"
+    "6c6400000600000076616c75650000000b000000";
     _marshaller_FoamXServer_FoamXAny = new _Marshaller_FoamXServer_FoamXAny;
     FoamXServer::_tc_FoamXAnyList = 
-    "010000001500000080020000010000002100000049444c3a466f616d5853"
+    "01000000150000007c020000010000002100000049444c3a466f616d5853"
     "65727665722f466f616d58416e794c6973743a312e30000000000d000000"
-    "466f616d58416e794c697374000000001300000038020000010000000f00"
-    "000028020000010000001d00000049444c3a466f616d585365727665722f"
+    "466f616d58416e794c697374000000001300000034020000010000000f00"
+    "000024020000010000001d00000049444c3a466f616d585365727665722f"
     "466f616d58416e793a312e300000000009000000466f616d58416e790000"
-    "00000200000005000000747970650000000011000000c701000001000000"
+    "00000200000005000000747970650000000011000000c301000001000000"
     "1e00000049444c3a466f616d585365727665722f466f616d58547970653a"
     "312e300000000a000000466f616d5854797065000000150000000f000000"
     "547970655f556e646566696e656400000d000000547970655f426f6f6c65"
@@ -18792,11 +18460,11 @@ struct __tc_init_FOAMX {
     "0e000000547970655f486f73744e616d650000000a000000547970655f46"
     "696c650000000f000000547970655f4469726563746f727900000a000000"
     "547970655f54696d6500000012000000547970655f44696d656e73696f6e"
-    "53657400000011000000547970655f566563746f72537061636500000000"
-    "0a000000547970655f4c69737400000010000000547970655f4469637469"
-    "6f6e617279000f000000547970655f53656c656374696f6e00000e000000"
-    "547970655f436f6d706f756e640000000b000000547970655f4669656c64"
-    "00000600000076616c75650000000b00000000000000";
+    "5365740000000f000000547970655f46697865644c69737400000a000000"
+    "547970655f4c69737400000010000000547970655f44696374696f6e6172"
+    "79000f000000547970655f53656c656374696f6e00000e00000054797065"
+    "5f436f6d706f756e640000000b000000547970655f4669656c6400000600"
+    "000076616c75650000000b00000000000000";
     FoamXServer::_tc_StringList = 
     "010000001500000050000000010000001f00000049444c3a466f616d5853"
     "65727665722f537472696e674c6973743a312e3000000b00000053747269"
@@ -18940,78 +18608,48 @@ struct __tc_init_FOAMX {
     "0000486f737444657363726970746f72000002000000050000006e616d65"
     "00000000120000000000000006000000616c697665000000080000000000"
     "0000";
-    FoamXServer::_tc_ApplicationClassDescriptor = 
-    "010000000f0000009c000000010000002f00000049444c3a466f616d5853"
-    "65727665722f4170706c69636174696f6e436c6173734465736372697074"
-    "6f723a312e3000001b0000004170706c69636174696f6e436c6173734465"
-    "7363726970746f72000003000000050000006e616d650000000012000000"
-    "000000000900000063617465676f72790000000012000000000000000c00"
-    "000073797374656d436c6173730008000000";
-    _marshaller_FoamXServer_ApplicationClassDescriptor = new _Marshaller_FoamXServer_ApplicationClassDescriptor;
-    FoamXServer::_tc_ApplicationClassDescriptorList = 
-    "010000001500000014010000010000003300000049444c3a466f616d5853"
-    "65727665722f4170706c69636174696f6e436c6173734465736372697074"
-    "6f724c6973743a312e3000001f0000004170706c69636174696f6e436c61"
-    "737344657363726970746f724c697374000013000000ac00000001000000"
-    "0f0000009c000000010000002f00000049444c3a466f616d585365727665"
-    "722f4170706c69636174696f6e436c61737344657363726970746f723a31"
-    "2e3000001b0000004170706c69636174696f6e436c617373446573637269"
-    "70746f72000003000000050000006e616d65000000001200000000000000"
-    "0900000063617465676f72790000000012000000000000000c0000007379"
-    "7374656d436c617373000800000000000000";
-    FoamXServer::_tc_UtilityDescriptor = 
-    "010000000f00000040010000010000002600000049444c3a466f616d5853"
-    "65727665722f5574696c69747944657363726970746f723a312e30000000"
-    "120000005574696c69747944657363726970746f72000000080000000500"
-    "00006e616d650000000012000000000000000c0000006465736372697074"
-    "696f6e0012000000000000000900000063617465676f7279000000001200"
-    "0000000000000c00000073797374656d436c61737300080000000c000000"
-    "6368616e6765734d65736800080000000e0000006368616e676573466965"
-    "6c6473000000080000000b000000636c69656e744265616e000012000000"
-    "000000000c000000636f6e74726f6c44696374000e000000400000000100"
-    "00002400000049444c3a466f616d585365727665722f4954797065446573"
-    "63726970746f723a312e300010000000495479706544657363726970746f"
-    "7200";
-    _marshaller_FoamXServer_UtilityDescriptor = new _Marshaller_FoamXServer_UtilityDescriptor;
-    FoamXServer::_tc_UtilityDescriptorList = 
-    "0100000015000000a8010000010000002a00000049444c3a466f616d5853"
-    "65727665722f5574696c69747944657363726970746f724c6973743a312e"
-    "30000000160000005574696c69747944657363726970746f724c69737400"
-    "00001300000050010000010000000f000000400100000100000026000000"
-    "49444c3a466f616d585365727665722f5574696c69747944657363726970"
-    "746f723a312e30000000120000005574696c69747944657363726970746f"
-    "7200000008000000050000006e616d650000000012000000000000000c00"
-    "00006465736372697074696f6e0012000000000000000900000063617465"
-    "676f72790000000012000000000000000c00000073797374656d436c6173"
-    "7300080000000c0000006368616e6765734d65736800080000000e000000"
-    "6368616e6765734669656c6473000000080000000b000000636c69656e74"
-    "4265616e000012000000000000000c000000636f6e74726f6c4469637400"
-    "0e00000040000000010000002400000049444c3a466f616d585365727665"
-    "722f495479706544657363726970746f723a312e30001000000049547970"
-    "6544657363726970746f720000000000";
+    FoamXServer::_tc_ApplicationDescriptor = 
+    "010000000f000000a8000000010000002a00000049444c3a466f616d5853"
+    "65727665722f4170706c69636174696f6e44657363726970746f723a312e"
+    "30000000160000004170706c69636174696f6e44657363726970746f7200"
+    "000004000000050000006e616d6500000000120000000000000009000000"
+    "63617465676f727900000000120000000000000005000000706174680000"
+    "000012000000000000000c00000073797374656d436c6173730008000000"
+    ;
+    _marshaller_FoamXServer_ApplicationDescriptor = new _Marshaller_FoamXServer_ApplicationDescriptor;
+    FoamXServer::_tc_ApplicationDescriptorList = 
+    "010000001500000018010000010000002e00000049444c3a466f616d5853"
+    "65727665722f4170706c69636174696f6e44657363726970746f724c6973"
+    "743a312e300000001a0000004170706c69636174696f6e44657363726970"
+    "746f724c69737400000013000000b8000000010000000f000000a8000000"
+    "010000002a00000049444c3a466f616d585365727665722f4170706c6963"
+    "6174696f6e44657363726970746f723a312e30000000160000004170706c"
+    "69636174696f6e44657363726970746f7200000004000000050000006e61"
+    "6d650000000012000000000000000900000063617465676f727900000000"
+    "120000000000000005000000706174680000000012000000000000000c00"
+    "000073797374656d436c617373000800000000000000";
     FoamXServer::_tc_CaseDescriptor = 
-    "010000000f000000e0000000010000002300000049444c3a466f616d5853"
+    "010000000f000000d8000000010000002300000049444c3a466f616d5853"
     "65727665722f4361736544657363726970746f723a312e3000000f000000"
     "4361736544657363726970746f7200000800000008000000726f6f744469"
     "720012000000000000000b000000726177526f6f74446972000012000000"
-    "0000000009000000636173654e616d650000000012000000000000000900"
-    "0000617070436c617373000000001200000000000000070000006e50726f"
-    "6373000003000000080000006d616e616765640008000000070000006c6f"
-    "636b6564000008000000060000006572726f7200000008000000";
+    "0000000009000000636173654e616d650000000012000000000000000400"
+    "0000617070001200000000000000070000006e50726f6373000003000000"
+    "080000006d616e616765640008000000070000006c6f636b656400000800"
+    "0000060000006572726f7200000008000000";
     _marshaller_FoamXServer_CaseDescriptor = new _Marshaller_FoamXServer_CaseDescriptor;
     FoamXServer::_tc_CaseDescriptorList = 
-    "010000001500000040010000010000002700000049444c3a466f616d5853"
+    "010000001500000038010000010000002700000049444c3a466f616d5853"
     "65727665722f4361736544657363726970746f724c6973743a312e300000"
-    "130000004361736544657363726970746f724c697374000013000000f000"
-    "0000010000000f000000e0000000010000002300000049444c3a466f616d"
+    "130000004361736544657363726970746f724c697374000013000000e800"
+    "0000010000000f000000d8000000010000002300000049444c3a466f616d"
     "585365727665722f4361736544657363726970746f723a312e3000000f00"
     "00004361736544657363726970746f7200000800000008000000726f6f74"
     "4469720012000000000000000b000000726177526f6f7444697200001200"
     "00000000000009000000636173654e616d65000000001200000000000000"
-    "09000000617070436c617373000000001200000000000000070000006e50"
-    "726f6373000003000000080000006d616e61676564000800000007000000"
-    "6c6f636b6564000008000000060000006572726f72000000080000000000"
-    "0000";
+    "04000000617070001200000000000000070000006e50726f637300000300"
+    "0000080000006d616e616765640008000000070000006c6f636b65640000"
+    "08000000060000006572726f720000000800000000000000";
     FoamXServer::_tc_JobID = 
     "010000000f00000060000000010000001a00000049444c3a466f616d5853"
     "65727665722f4a6f6249443a312e30000000060000004a6f624944000000"
@@ -19144,12 +18782,11 @@ struct __tc_init_FOAMX {
     "65727665722f436173655365727665722f49466f616d50726f7065727469"
     "65733a312e3000001000000049466f616d50726f7065727469657300";
     _marshaller_FoamXServer_CaseServer_IFoamProperties = new _Marshaller_FoamXServer_CaseServer_IFoamProperties;
-    FoamXServer::CaseServer::_tc_IApplicationClass = 
-    "010000000e00000052000000010000003100000049444c3a466f616d5853"
-    "65727665722f436173655365727665722f494170706c69636174696f6e43"
-    "6c6173733a312e300000000012000000494170706c69636174696f6e436c"
-    "61737300";
-    _marshaller_FoamXServer_CaseServer_IApplicationClass = new _Marshaller_FoamXServer_CaseServer_IApplicationClass;
+    FoamXServer::CaseServer::_tc_IApplication = 
+    "010000000e00000045000000010000002c00000049444c3a466f616d5853"
+    "65727665722f436173655365727665722f494170706c69636174696f6e3a"
+    "312e30000d000000494170706c69636174696f6e00";
+    _marshaller_FoamXServer_CaseServer_IApplication = new _Marshaller_FoamXServer_CaseServer_IApplication;
     FoamXServer::CaseServer::_tc_IGeometricFieldDescriptor = 
     "010000000e00000062000000010000003900000049444c3a466f616d5853"
     "65727665722f436173655365727665722f4947656f6d6574726963466965"
@@ -19167,12 +18804,12 @@ struct __tc_init_FOAMX {
     "726970746f723a312e300000140000004947656f6d657472794465736372"
     "6970746f7200";
     _marshaller_FoamXServer_CaseServer_IGeometryDescriptor = new _Marshaller_FoamXServer_CaseServer_IGeometryDescriptor;
-    FoamXServer::CaseServer::_tc_IBoundaryTypeDescriptor = 
-    "010000000e0000005c000000010000003700000049444c3a466f616d5853"
-    "65727665722f436173655365727665722f49426f756e6461727954797065"
-    "44657363726970746f723a312e3000001800000049426f756e6461727954"
-    "79706544657363726970746f7200";
-    _marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor = new _Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor;
+    FoamXServer::CaseServer::_tc_IPatchPhysicalTypeDescriptor = 
+    "010000000e00000065000000010000003c00000049444c3a466f616d5853"
+    "65727665722f436173655365727665722f49506174636850687973696361"
+    "6c5479706544657363726970746f723a312e30001d000000495061746368"
+    "506879736963616c5479706544657363726970746f7200";
+    _marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor = new _Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor;
     FoamXServer::CaseServer::_tc_IGeometricField = 
     "010000000e0000004c000000010000002f00000049444c3a466f616d5853"
     "65727665722f436173655365727665722f4947656f6d6574726963466965"
@@ -19200,8 +18837,7 @@ struct __tc_init_FOAMX {
     _marshaller__a3_float = new _Marshaller__a3_float;
     _marshaller__seq_FoamXServer_StringPair = new _Marshaller__seq_FoamXServer_StringPair;
     _marshaller__seq_FoamXServer_HostDescriptor = new _Marshaller__seq_FoamXServer_HostDescriptor;
-    _marshaller__seq_FoamXServer_ApplicationClassDescriptor = new _Marshaller__seq_FoamXServer_ApplicationClassDescriptor;
-    _marshaller__seq_FoamXServer_UtilityDescriptor = new _Marshaller__seq_FoamXServer_UtilityDescriptor;
+    _marshaller__seq_FoamXServer_ApplicationDescriptor = new _Marshaller__seq_FoamXServer_ApplicationDescriptor;
     _marshaller__seq_FoamXServer_CaseDescriptor = new _Marshaller__seq_FoamXServer_CaseDescriptor;
     _marshaller__seq_FoamXServer_JobID = new _Marshaller__seq_FoamXServer_JobID;
     _marshaller__seq_FoamXServer_JobDescriptor = new _Marshaller__seq_FoamXServer_JobDescriptor;
@@ -19222,8 +18858,7 @@ struct __tc_init_FOAMX {
     delete static_cast<_Marshaller_FoamXServer_MessageType*>(_marshaller_FoamXServer_MessageType);
     delete static_cast<_Marshaller_FoamXServer_StringPair*>(_marshaller_FoamXServer_StringPair);
     delete static_cast<_Marshaller_FoamXServer_HostDescriptor*>(_marshaller_FoamXServer_HostDescriptor);
-    delete static_cast<_Marshaller_FoamXServer_ApplicationClassDescriptor*>(_marshaller_FoamXServer_ApplicationClassDescriptor);
-    delete static_cast<_Marshaller_FoamXServer_UtilityDescriptor*>(_marshaller_FoamXServer_UtilityDescriptor);
+    delete static_cast<_Marshaller_FoamXServer_ApplicationDescriptor*>(_marshaller_FoamXServer_ApplicationDescriptor);
     delete static_cast<_Marshaller_FoamXServer_CaseDescriptor*>(_marshaller_FoamXServer_CaseDescriptor);
     delete static_cast<_Marshaller_FoamXServer_JobID*>(_marshaller_FoamXServer_JobID);
     delete static_cast<_Marshaller_FoamXServer_JobDescriptor*>(_marshaller_FoamXServer_JobDescriptor);
@@ -19231,11 +18866,11 @@ struct __tc_init_FOAMX {
     delete static_cast<_Marshaller_FoamXServer_FoamXSYSError*>(_marshaller_FoamXServer_FoamXSYSError);
     delete static_cast<_Marshaller_FoamXServer_CaseServer_ICaseServer*>(_marshaller_FoamXServer_CaseServer_ICaseServer);
     delete static_cast<_Marshaller_FoamXServer_CaseServer_IFoamProperties*>(_marshaller_FoamXServer_CaseServer_IFoamProperties);
-    delete static_cast<_Marshaller_FoamXServer_CaseServer_IApplicationClass*>(_marshaller_FoamXServer_CaseServer_IApplicationClass);
+    delete static_cast<_Marshaller_FoamXServer_CaseServer_IApplication*>(_marshaller_FoamXServer_CaseServer_IApplication);
     delete static_cast<_Marshaller_FoamXServer_CaseServer_IGeometricFieldDescriptor*>(_marshaller_FoamXServer_CaseServer_IGeometricFieldDescriptor);
     delete static_cast<_Marshaller_FoamXServer_CaseServer_IPatchDescriptor*>(_marshaller_FoamXServer_CaseServer_IPatchDescriptor);
     delete static_cast<_Marshaller_FoamXServer_CaseServer_IGeometryDescriptor*>(_marshaller_FoamXServer_CaseServer_IGeometryDescriptor);
-    delete static_cast<_Marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor*>(_marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor);
+    delete static_cast<_Marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor*>(_marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor);
     delete static_cast<_Marshaller_FoamXServer_CaseServer_IGeometricField*>(_marshaller_FoamXServer_CaseServer_IGeometricField);
     delete static_cast<_Marshaller_FoamXServer_CasePostServer_ICasePostServer*>(_marshaller_FoamXServer_CasePostServer_ICasePostServer);
     delete static_cast<_Marshaller_FoamXServer_CaseBrowser_ICaseBrowser*>(_marshaller_FoamXServer_CaseBrowser_ICaseBrowser);
@@ -19246,8 +18881,7 @@ struct __tc_init_FOAMX {
     delete static_cast<_Marshaller__a3_float*>(_marshaller__a3_float);
     delete static_cast<_Marshaller__seq_FoamXServer_StringPair*>(_marshaller__seq_FoamXServer_StringPair);
     delete static_cast<_Marshaller__seq_FoamXServer_HostDescriptor*>(_marshaller__seq_FoamXServer_HostDescriptor);
-    delete static_cast<_Marshaller__seq_FoamXServer_ApplicationClassDescriptor*>(_marshaller__seq_FoamXServer_ApplicationClassDescriptor);
-    delete static_cast<_Marshaller__seq_FoamXServer_UtilityDescriptor*>(_marshaller__seq_FoamXServer_UtilityDescriptor);
+    delete static_cast<_Marshaller__seq_FoamXServer_ApplicationDescriptor*>(_marshaller__seq_FoamXServer_ApplicationDescriptor);
     delete static_cast<_Marshaller__seq_FoamXServer_CaseDescriptor*>(_marshaller__seq_FoamXServer_CaseDescriptor);
     delete static_cast<_Marshaller__seq_FoamXServer_JobID*>(_marshaller__seq_FoamXServer_JobID);
     delete static_cast<_Marshaller__seq_FoamXServer_JobDescriptor*>(_marshaller__seq_FoamXServer_JobDescriptor);
@@ -20498,16 +20132,9 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
   #ifdef HAVE_EXCEPTIONS
   try {
   #endif
-    switch (mico_string_hash (__req->op_name(), 47)) {
-    case 5:
-      if( strcmp( __req->op_name(), "writeFile" ) == 0 ) {
-        CORBA::String_var _par_name;
-        CORBA::StaticAny _sa_name( CORBA::_stc_string, &_par_name._for_demarshal() );
-        CORBA::String_var _par_contents;
-        CORBA::StaticAny _sa_contents( CORBA::_stc_string, &_par_contents._for_demarshal() );
-
-        __req->add_in_arg( &_sa_name );
-        __req->add_in_arg( &_sa_contents );
+    switch (mico_string_hash (__req->op_name(), 43)) {
+    case 1:
+      if( strcmp( __req->op_name(), "readMesh" ) == 0 ) {
 
         if( !__req->read_args() )
           return true;
@@ -20515,7 +20142,7 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         #ifdef HAVE_EXCEPTIONS
         try {
         #endif
-          writeFile( _par_name.inout(), _par_contents.inout() );
+          readMesh();
         #ifdef HAVE_EXCEPTIONS
         } catch( ::FoamXServer::FoamXError_catch &_ex ) {
           __req->set_exception( _ex->_clone() );
@@ -20531,12 +20158,11 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         return true;
       }
       break;
-    case 6:
-      if( strcmp( __req->op_name(), "copyDefaultDictionary" ) == 0 ) {
-        CORBA::String_var _par_dictionaryName;
-        CORBA::StaticAny _sa_dictionaryName( CORBA::_stc_string, &_par_dictionaryName._for_demarshal() );
-
-        __req->add_in_arg( &_sa_dictionaryName );
+    case 3:
+      if( strcmp( __req->op_name(), "getTime" ) == 0 ) {
+        char* _res;
+        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
+        __req->set_result( &__res );
 
         if( !__req->read_args() )
           return true;
@@ -20544,7 +20170,7 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         #ifdef HAVE_EXCEPTIONS
         try {
         #endif
-          copyDefaultDictionary( _par_dictionaryName.inout() );
+          _res = getTime();
         #ifdef HAVE_EXCEPTIONS
         } catch( ::FoamXServer::FoamXError_catch &_ex ) {
           __req->set_exception( _ex->_clone() );
@@ -20557,16 +20183,12 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         }
         #endif
         __req->write_results();
+        CORBA::string_free( _res );
         return true;
       }
-      if( strcmp( __req->op_name(), "fileModificationDate" ) == 0 ) {
-        CORBA::String_var _par_fileName;
-        CORBA::StaticAny _sa_fileName( CORBA::_stc_string, &_par_fileName._for_demarshal() );
-
-        CORBA::Long _res;
-        CORBA::StaticAny __res( CORBA::_stc_long, &_res );
-        __req->add_in_arg( &_sa_fileName );
-        __req->set_result( &__res );
+      break;
+    case 4:
+      if( strcmp( __req->op_name(), "validate" ) == 0 ) {
 
         if( !__req->read_args() )
           return true;
@@ -20574,9 +20196,17 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         #ifdef HAVE_EXCEPTIONS
         try {
         #endif
-          _res = fileModificationDate( _par_fileName.inout() );
+          validate();
         #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
         } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::ValidationError_catch &_ex ) {
           __req->set_exception( _ex->_clone() );
           __req->write_results();
           return true;
@@ -20585,17 +20215,138 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         __req->write_results();
         return true;
       }
-      if( strcmp( __req->op_name(), "_get_applicationClass" ) == 0 ) {
-        ::FoamXServer::CaseServer::IApplicationClass_ptr _res;
-        CORBA::StaticAny __res( _marshaller_FoamXServer_CaseServer_IApplicationClass, &_res );
+      break;
+    case 5:
+      if( strcmp( __req->op_name(), "_get_caseName" ) == 0 ) {
+        char* _res;
+        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
         __req->set_result( &__res );
 
         if( !__req->read_args() )
           return true;
 
-        _res = applicationClass();
+        _res = caseName();
+        __req->write_results();
+        CORBA::string_free( _res );
+        return true;
+      }
+      break;
+    case 6:
+      if( strcmp( __req->op_name(), "_get_foamProperties" ) == 0 ) {
+        ::FoamXServer::CaseServer::IFoamProperties_ptr _res;
+        CORBA::StaticAny __res( _marshaller_FoamXServer_CaseServer_IFoamProperties, &_res );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = foamProperties();
         __req->write_results();
         CORBA::release( _res );
+        return true;
+      }
+      break;
+    case 7:
+      if( strcmp( __req->op_name(), "getFieldValues" ) == 0 ) {
+        CORBA::String_var _par_fieldName;
+        CORBA::StaticAny _sa_fieldName( CORBA::_stc_string, &_par_fieldName._for_demarshal() );
+        ::FoamXServer::CaseServer::IGeometricField_ptr _par_fieldValues;
+        CORBA::StaticAny _sa_fieldValues( _marshaller_FoamXServer_CaseServer_IGeometricField, &_par_fieldValues );
+
+        __req->add_in_arg( &_sa_fieldName );
+        __req->add_out_arg( &_sa_fieldValues );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          getFieldValues( _par_fieldName.inout(), _par_fieldValues );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_fieldValues );
+        return true;
+      }
+      if( strcmp( __req->op_name(), "save" ) == 0 ) {
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          save();
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::ValidationError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      if( strcmp( __req->op_name(), "_get_meshDefined" ) == 0 ) {
+        CORBA::Boolean _res;
+        CORBA::StaticAny __res( CORBA::_stc_boolean, &_res );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = meshDefined();
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 10:
+      if( strcmp( __req->op_name(), "setPatchPhysicalType" ) == 0 ) {
+        CORBA::String_var _par_patchName;
+        CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName._for_demarshal() );
+        CORBA::String_var _par_patchPhysicalType;
+        CORBA::StaticAny _sa_patchPhysicalType( CORBA::_stc_string, &_par_patchPhysicalType._for_demarshal() );
+
+        __req->add_in_arg( &_sa_patchName );
+        __req->add_in_arg( &_sa_patchPhysicalType );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          setPatchPhysicalType( _par_patchName.inout(), _par_patchPhysicalType.inout() );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
         return true;
       }
       if( strcmp( __req->op_name(), "_get_patchNames" ) == 0 ) {
@@ -20613,32 +20364,22 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         return true;
       }
       break;
-    case 12:
-      if( strcmp( __req->op_name(), "deleteAllPatches" ) == 0 ) {
+    case 11:
+      if( strcmp( __req->op_name(), "_get_caseRoot" ) == 0 ) {
+        char* _res;
+        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
+        __req->set_result( &__res );
 
         if( !__req->read_args() )
           return true;
 
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          deleteAllPatches();
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
+        _res = caseRoot();
         __req->write_results();
+        CORBA::string_free( _res );
         return true;
       }
       break;
-    case 13:
+    case 12:
       if( strcmp( __req->op_name(), "getDictionary" ) == 0 ) {
         CORBA::String_var _par_dictionaryName;
         CORBA::StaticAny _sa_dictionaryName( CORBA::_stc_string, &_par_dictionaryName._for_demarshal() );
@@ -20693,101 +20434,23 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         return true;
       }
       break;
-    case 15:
-      if( strcmp( __req->op_name(), "_get_managed" ) == 0 ) {
-        CORBA::Boolean _res;
-        CORBA::StaticAny __res( CORBA::_stc_boolean, &_res );
+    case 16:
+      if( strcmp( __req->op_name(), "_get_availableTimeSteps" ) == 0 ) {
+        ::FoamXServer::StringList* _res;
+        CORBA::StaticAny __res( CORBA::_stcseq_string );
         __req->set_result( &__res );
 
         if( !__req->read_args() )
           return true;
 
-        _res = managed();
+        _res = availableTimeSteps();
+        __res.value( CORBA::_stcseq_string, _res );
         __req->write_results();
-        return true;
-      }
-      break;
-    case 17:
-      if( strcmp( __req->op_name(), "addPatch" ) == 0 ) {
-        CORBA::String_var _par_patchName;
-        CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName._for_demarshal() );
-        CORBA::String_var _par_boundaryType;
-        CORBA::StaticAny _sa_boundaryType( CORBA::_stc_string, &_par_boundaryType._for_demarshal() );
-
-        __req->add_in_arg( &_sa_patchName );
-        __req->add_in_arg( &_sa_boundaryType );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          addPatch( _par_patchName.inout(), _par_boundaryType.inout() );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
+        delete _res;
         return true;
       }
       break;
     case 19:
-      if( strcmp( __req->op_name(), "_get_caseRoot" ) == 0 ) {
-        char* _res;
-        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = caseRoot();
-        __req->write_results();
-        CORBA::string_free( _res );
-        return true;
-      }
-      break;
-    case 20:
-      if( strcmp( __req->op_name(), "getFieldValues" ) == 0 ) {
-        CORBA::String_var _par_fieldName;
-        CORBA::StaticAny _sa_fieldName( CORBA::_stc_string, &_par_fieldName._for_demarshal() );
-        ::FoamXServer::CaseServer::IGeometricField_ptr _par_fieldValues;
-        CORBA::StaticAny _sa_fieldValues( _marshaller_FoamXServer_CaseServer_IGeometricField, &_par_fieldValues );
-
-        __req->add_in_arg( &_sa_fieldName );
-        __req->add_out_arg( &_sa_fieldValues );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          getFieldValues( _par_fieldName.inout(), _par_fieldValues );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_fieldValues );
-        return true;
-      }
-      break;
-    case 22:
       if( strcmp( __req->op_name(), "setTime" ) == 0 ) {
         CORBA::String_var _par_timeName;
         CORBA::StaticAny _sa_timeName( CORBA::_stc_string, &_par_timeName._for_demarshal() );
@@ -20818,38 +20481,8 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         __req->write_results();
         return true;
       }
-      if( strcmp( __req->op_name(), "runCase" ) == 0 ) {
-        CORBA::String_var _par_arguments;
-        CORBA::StaticAny _sa_arguments( CORBA::_stc_string, &_par_arguments._for_demarshal() );
-
-        CORBA::Long _res;
-        CORBA::StaticAny __res( CORBA::_stc_long, &_res );
-        __req->add_in_arg( &_sa_arguments );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          _res = runCase( _par_arguments.inout() );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
       break;
-    case 23:
+    case 24:
       if( strcmp( __req->op_name(), "importMesh" ) == 0 ) {
         CORBA::String_var _par_hostName;
         CORBA::StaticAny _sa_hostName( CORBA::_stc_string, &_par_hostName._for_demarshal() );
@@ -20884,164 +20517,7 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         return true;
       }
       break;
-    case 28:
-      if( strcmp( __req->op_name(), "deletePatch" ) == 0 ) {
-        CORBA::String_var _par_patchName;
-        CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName._for_demarshal() );
-
-        __req->add_in_arg( &_sa_patchName );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          deletePatch( _par_patchName.inout() );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 30:
-      if( strcmp( __req->op_name(), "_get_availableTimeSteps" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = availableTimeSteps();
-        __res.value( CORBA::_stcseq_string, _res );
-        __req->write_results();
-        delete _res;
-        return true;
-      }
-      break;
-    case 32:
-      if( strcmp( __req->op_name(), "readMesh" ) == 0 ) {
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          readMesh();
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      if( strcmp( __req->op_name(), "validate" ) == 0 ) {
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          validate();
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::ValidationError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 33:
-      if( strcmp( __req->op_name(), "setPatchBoundaryType" ) == 0 ) {
-        CORBA::String_var _par_patchName;
-        CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName._for_demarshal() );
-        CORBA::String_var _par_boundaryType;
-        CORBA::StaticAny _sa_boundaryType( CORBA::_stc_string, &_par_boundaryType._for_demarshal() );
-
-        __req->add_in_arg( &_sa_patchName );
-        __req->add_in_arg( &_sa_boundaryType );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          setPatchBoundaryType( _par_patchName.inout(), _par_boundaryType.inout() );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 34:
-      if( strcmp( __req->op_name(), "_get_foamProperties" ) == 0 ) {
-        ::FoamXServer::CaseServer::IFoamProperties_ptr _res;
-        CORBA::StaticAny __res( _marshaller_FoamXServer_CaseServer_IFoamProperties, &_res );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = foamProperties();
-        __req->write_results();
-        CORBA::release( _res );
-        return true;
-      }
-      if( strcmp( __req->op_name(), "_set_managed" ) == 0 ) {
-        CORBA::Boolean _par__value;
-        CORBA::StaticAny _sa__value( CORBA::_stc_boolean, &_par__value );
-
-        __req->add_in_arg( &_sa__value );
-
-        if( !__req->read_args() )
-          return true;
-
-        managed( _par__value );
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 35:
+    case 26:
       if( strcmp( __req->op_name(), "readFile" ) == 0 ) {
         CORBA::String_var _par_name;
         CORBA::StaticAny _sa_name( CORBA::_stc_string, &_par_name._for_demarshal() );
@@ -21074,7 +20550,145 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         return true;
       }
       break;
-    case 37:
+    case 27:
+      if( strcmp( __req->op_name(), "runCase" ) == 0 ) {
+        CORBA::String_var _par_arguments;
+        CORBA::StaticAny _sa_arguments( CORBA::_stc_string, &_par_arguments._for_demarshal() );
+
+        CORBA::Long _res;
+        CORBA::StaticAny __res( CORBA::_stc_long, &_res );
+        __req->add_in_arg( &_sa_arguments );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          _res = runCase( _par_arguments.inout() );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 28:
+      if( strcmp( __req->op_name(), "writeFile" ) == 0 ) {
+        CORBA::String_var _par_name;
+        CORBA::StaticAny _sa_name( CORBA::_stc_string, &_par_name._for_demarshal() );
+        CORBA::String_var _par_contents;
+        CORBA::StaticAny _sa_contents( CORBA::_stc_string, &_par_contents._for_demarshal() );
+
+        __req->add_in_arg( &_sa_name );
+        __req->add_in_arg( &_sa_contents );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          writeFile( _par_name.inout(), _par_contents.inout() );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 29:
+      if( strcmp( __req->op_name(), "getPatchPhysicalType" ) == 0 ) {
+        CORBA::String_var _par_patchName;
+        CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName._for_demarshal() );
+        char* _par_patchPhysicalType;
+        CORBA::StaticAny _sa_patchPhysicalType( CORBA::_stc_string, &_par_patchPhysicalType );
+
+        __req->add_in_arg( &_sa_patchName );
+        __req->add_out_arg( &_sa_patchPhysicalType );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          getPatchPhysicalType( _par_patchName.inout(), _par_patchPhysicalType );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::string_free( _par_patchPhysicalType );
+        return true;
+      }
+      if( strcmp( __req->op_name(), "_set_managed" ) == 0 ) {
+        CORBA::Boolean _par__value;
+        CORBA::StaticAny _sa__value( CORBA::_stc_boolean, &_par__value );
+
+        __req->add_in_arg( &_sa__value );
+
+        if( !__req->read_args() )
+          return true;
+
+        managed( _par__value );
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 30:
+      if( strcmp( __req->op_name(), "fileModificationDate" ) == 0 ) {
+        CORBA::String_var _par_fileName;
+        CORBA::StaticAny _sa_fileName( CORBA::_stc_string, &_par_fileName._for_demarshal() );
+
+        CORBA::Long _res;
+        CORBA::StaticAny __res( CORBA::_stc_long, &_res );
+        __req->add_in_arg( &_sa_fileName );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          _res = fileModificationDate( _par_fileName.inout() );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 31:
       if( strcmp( __req->op_name(), "modified" ) == 0 ) {
         CORBA::Boolean _res;
         CORBA::StaticAny __res( CORBA::_stc_boolean, &_res );
@@ -21087,43 +20701,42 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         __req->write_results();
         return true;
       }
-      if( strcmp( __req->op_name(), "save" ) == 0 ) {
+      break;
+    case 33:
+      if( strcmp( __req->op_name(), "_get_application" ) == 0 ) {
+        ::FoamXServer::CaseServer::IApplication_ptr _res;
+        CORBA::StaticAny __res( _marshaller_FoamXServer_CaseServer_IApplication, &_res );
+        __req->set_result( &__res );
 
         if( !__req->read_args() )
           return true;
 
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          save();
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
+        _res = application();
+        __req->write_results();
+        CORBA::release( _res );
+        return true;
+      }
+      break;
+    case 34:
+      if( strcmp( __req->op_name(), "_get_managed" ) == 0 ) {
+        CORBA::Boolean _res;
+        CORBA::StaticAny __res( CORBA::_stc_boolean, &_res );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
           return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::ValidationError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
+
+        _res = managed();
         __req->write_results();
         return true;
       }
       break;
-    case 42:
-      if( strcmp( __req->op_name(), "getPatchBoundaryType" ) == 0 ) {
+    case 35:
+      if( strcmp( __req->op_name(), "deletePatch" ) == 0 ) {
         CORBA::String_var _par_patchName;
         CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName._for_demarshal() );
-        char* _par_boundaryType;
-        CORBA::StaticAny _sa_boundaryType( CORBA::_stc_string, &_par_boundaryType );
 
         __req->add_in_arg( &_sa_patchName );
-        __req->add_out_arg( &_sa_boundaryType );
 
         if( !__req->read_args() )
           return true;
@@ -21131,7 +20744,7 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         #ifdef HAVE_EXCEPTIONS
         try {
         #endif
-          getPatchBoundaryType( _par_patchName.inout(), _par_boundaryType );
+          deletePatch( _par_patchName.inout() );
         #ifdef HAVE_EXCEPTIONS
         } catch( ::FoamXServer::FoamXError_catch &_ex ) {
           __req->set_exception( _ex->_clone() );
@@ -21144,7 +20757,6 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         }
         #endif
         __req->write_results();
-        CORBA::string_free( _par_boundaryType );
         return true;
       }
       if( strcmp( __req->op_name(), "close" ) == 0 ) {
@@ -21157,11 +20769,15 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         return true;
       }
       break;
-    case 46:
-      if( strcmp( __req->op_name(), "getTime" ) == 0 ) {
-        char* _res;
-        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
-        __req->set_result( &__res );
+    case 42:
+      if( strcmp( __req->op_name(), "addPatch" ) == 0 ) {
+        CORBA::String_var _par_patchName;
+        CORBA::StaticAny _sa_patchName( CORBA::_stc_string, &_par_patchName._for_demarshal() );
+        CORBA::String_var _par_patchPhysicalType;
+        CORBA::StaticAny _sa_patchPhysicalType( CORBA::_stc_string, &_par_patchPhysicalType._for_demarshal() );
+
+        __req->add_in_arg( &_sa_patchName );
+        __req->add_in_arg( &_sa_patchPhysicalType );
 
         if( !__req->read_args() )
           return true;
@@ -21169,7 +20785,7 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         #ifdef HAVE_EXCEPTIONS
         try {
         #endif
-          _res = getTime();
+          addPatch( _par_patchName.inout(), _par_patchPhysicalType.inout() );
         #ifdef HAVE_EXCEPTIONS
         } catch( ::FoamXServer::FoamXError_catch &_ex ) {
           __req->set_exception( _ex->_clone() );
@@ -21182,31 +20798,28 @@ POA_FoamXServer::CaseServer::ICaseServer::dispatch (CORBA::StaticServerRequest_p
         }
         #endif
         __req->write_results();
-        CORBA::string_free( _res );
         return true;
       }
-      if( strcmp( __req->op_name(), "_get_caseName" ) == 0 ) {
-        char* _res;
-        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
-        __req->set_result( &__res );
+      if( strcmp( __req->op_name(), "deleteAllPatches" ) == 0 ) {
 
         if( !__req->read_args() )
           return true;
 
-        _res = caseName();
-        __req->write_results();
-        CORBA::string_free( _res );
-        return true;
-      }
-      if( strcmp( __req->op_name(), "_get_meshDefined" ) == 0 ) {
-        CORBA::Boolean _res;
-        CORBA::StaticAny __res( CORBA::_stc_boolean, &_res );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          deleteAllPatches();
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
           return true;
-
-        _res = meshDefined();
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
         __req->write_results();
         return true;
       }
@@ -21293,24 +20906,71 @@ POA_FoamXServer::CaseServer::IFoamProperties::dispatch (CORBA::StaticServerReque
   #ifdef HAVE_EXCEPTIONS
   try {
   #endif
-    switch (mico_string_hash (__req->op_name(), 37)) {
-    case 1:
-      if( strcmp( __req->op_name(), "_get_utilities" ) == 0 ) {
-        ::FoamXServer::UtilityDescriptorList* _res;
-        CORBA::StaticAny __res( _marshaller__seq_FoamXServer_UtilityDescriptor );
-        __req->set_result( &__res );
+    switch (mico_string_hash (__req->op_name(), 41)) {
+    case 6:
+      if( strcmp( __req->op_name(), "getFoamControlDict" ) == 0 ) {
+        ::FoamXServer::IDictionaryEntry_ptr _par_controlDict;
+        CORBA::StaticAny _sa_controlDict( _marshaller_FoamXServer_IDictionaryEntry, &_par_controlDict );
+
+        __req->add_out_arg( &_sa_controlDict );
 
         if( !__req->read_args() )
           return true;
 
-        _res = utilities();
-        __res.value( _marshaller__seq_FoamXServer_UtilityDescriptor, _res );
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          getFoamControlDict( _par_controlDict );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
         __req->write_results();
-        delete _res;
+        CORBA::release( _par_controlDict );
         return true;
       }
       break;
-    case 2:
+    case 7:
+      if( strcmp( __req->op_name(), "getFoamType" ) == 0 ) {
+        CORBA::String_var _par_foamTypeName;
+        CORBA::StaticAny _sa_foamTypeName( CORBA::_stc_string, &_par_foamTypeName._for_demarshal() );
+        ::FoamXServer::ITypeDescriptor_ptr _par_typeDesc;
+        CORBA::StaticAny _sa_typeDesc( _marshaller_FoamXServer_ITypeDescriptor, &_par_typeDesc );
+
+        __req->add_in_arg( &_sa_foamTypeName );
+        __req->add_out_arg( &_sa_typeDesc );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          getFoamType( _par_foamTypeName.inout(), _par_typeDesc );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_typeDesc );
+        return true;
+      }
+      break;
+    case 9:
       if( strcmp( __req->op_name(), "saveUserProperties" ) == 0 ) {
 
         if( !__req->read_args() )
@@ -21338,22 +20998,22 @@ POA_FoamXServer::CaseServer::IFoamProperties::dispatch (CORBA::StaticServerReque
         __req->write_results();
         return true;
       }
-      if( strcmp( __req->op_name(), "_get_rawRootDirectories" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
+      if( strcmp( __req->op_name(), "_get_utilities" ) == 0 ) {
+        ::FoamXServer::ApplicationDescriptorList* _res;
+        CORBA::StaticAny __res( _marshaller__seq_FoamXServer_ApplicationDescriptor );
         __req->set_result( &__res );
 
         if( !__req->read_args() )
           return true;
 
-        _res = rawRootDirectories();
-        __res.value( CORBA::_stcseq_string, _res );
+        _res = utilities();
+        __res.value( _marshaller__seq_FoamXServer_ApplicationDescriptor, _res );
         __req->write_results();
         delete _res;
         return true;
       }
       break;
-    case 4:
+    case 11:
       if( strcmp( __req->op_name(), "findPatchFieldType" ) == 0 ) {
         CORBA::String_var _par_patchFieldTypeName;
         CORBA::StaticAny _sa_patchFieldTypeName( CORBA::_stc_string, &_par_patchFieldTypeName._for_demarshal() );
@@ -21386,427 +21046,7 @@ POA_FoamXServer::CaseServer::IFoamProperties::dispatch (CORBA::StaticServerReque
         return true;
       }
       break;
-    case 5:
-      if( strcmp( __req->op_name(), "validate" ) == 0 ) {
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          validate();
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::ValidationError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 7:
-      if( strcmp( __req->op_name(), "addRootDirectory" ) == 0 ) {
-        CORBA::String_var _par_rawRootDir;
-        CORBA::StaticAny _sa_rawRootDir( CORBA::_stc_string, &_par_rawRootDir._for_demarshal() );
-
-        __req->add_in_arg( &_sa_rawRootDir );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          addRootDirectory( _par_rawRootDir.inout() );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 8:
-      if( strcmp( __req->op_name(), "_get_rootDirectories" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = rootDirectories();
-        __res.value( CORBA::_stcseq_string, _res );
-        __req->write_results();
-        delete _res;
-        return true;
-      }
-      break;
-    case 11:
-      if( strcmp( __req->op_name(), "getApplicationClass" ) == 0 ) {
-        CORBA::String_var _par_appClassName;
-        CORBA::StaticAny _sa_appClassName( CORBA::_stc_string, &_par_appClassName._for_demarshal() );
-        ::FoamXServer::CaseServer::IApplicationClass_ptr _par_appClass;
-        CORBA::StaticAny _sa_appClass( _marshaller_FoamXServer_CaseServer_IApplicationClass, &_par_appClass );
-
-        __req->add_in_arg( &_sa_appClassName );
-        __req->add_out_arg( &_sa_appClass );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          getApplicationClass( _par_appClassName.inout(), _par_appClass );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_appClass );
-        return true;
-      }
-      break;
     case 12:
-      if( strcmp( __req->op_name(), "findPatchType" ) == 0 ) {
-        CORBA::String_var _par_patchTypeName;
-        CORBA::StaticAny _sa_patchTypeName( CORBA::_stc_string, &_par_patchTypeName._for_demarshal() );
-        ::FoamXServer::CaseServer::IPatchDescriptor_ptr _par_patchDesc;
-        CORBA::StaticAny _sa_patchDesc( _marshaller_FoamXServer_CaseServer_IPatchDescriptor, &_par_patchDesc );
-
-        __req->add_in_arg( &_sa_patchTypeName );
-        __req->add_out_arg( &_sa_patchDesc );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          findPatchType( _par_patchTypeName.inout(), _par_patchDesc );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_patchDesc );
-        return true;
-      }
-      break;
-    case 14:
-      if( strcmp( __req->op_name(), "getPatchFieldType" ) == 0 ) {
-        CORBA::String_var _par_patchFieldTypeName;
-        CORBA::StaticAny _sa_patchFieldTypeName( CORBA::_stc_string, &_par_patchFieldTypeName._for_demarshal() );
-        ::FoamXServer::ITypeDescriptor_ptr _par_patchFieldDesc;
-        CORBA::StaticAny _sa_patchFieldDesc( _marshaller_FoamXServer_ITypeDescriptor, &_par_patchFieldDesc );
-
-        __req->add_in_arg( &_sa_patchFieldTypeName );
-        __req->add_out_arg( &_sa_patchFieldDesc );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          getPatchFieldType( _par_patchFieldTypeName.inout(), _par_patchFieldDesc );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_patchFieldDesc );
-        return true;
-      }
-      break;
-    case 17:
-      if( strcmp( __req->op_name(), "_get_applicationClasses" ) == 0 ) {
-        ::FoamXServer::ApplicationClassDescriptorList* _res;
-        CORBA::StaticAny __res( _marshaller__seq_FoamXServer_ApplicationClassDescriptor );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = applicationClasses();
-        __res.value( _marshaller__seq_FoamXServer_ApplicationClassDescriptor, _res );
-        __req->write_results();
-        delete _res;
-        return true;
-      }
-      break;
-    case 21:
-      if( strcmp( __req->op_name(), "saveSystemProperties" ) == 0 ) {
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          saveSystemProperties();
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::ValidationError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 22:
-      if( strcmp( __req->op_name(), "_get_patchFieldTypes" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = patchFieldTypes();
-        __res.value( CORBA::_stcseq_string, _res );
-        __req->write_results();
-        delete _res;
-        return true;
-      }
-      break;
-    case 24:
-      if( strcmp( __req->op_name(), "deleteRootDirectory" ) == 0 ) {
-        CORBA::String_var _par_rawRootDir;
-        CORBA::StaticAny _sa_rawRootDir( CORBA::_stc_string, &_par_rawRootDir._for_demarshal() );
-
-        __req->add_in_arg( &_sa_rawRootDir );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          deleteRootDirectory( _par_rawRootDir.inout() );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      if( strcmp( __req->op_name(), "getFoamType" ) == 0 ) {
-        CORBA::String_var _par_foamTypeName;
-        CORBA::StaticAny _sa_foamTypeName( CORBA::_stc_string, &_par_foamTypeName._for_demarshal() );
-        ::FoamXServer::ITypeDescriptor_ptr _par_typeDesc;
-        CORBA::StaticAny _sa_typeDesc( _marshaller_FoamXServer_ITypeDescriptor, &_par_typeDesc );
-
-        __req->add_in_arg( &_sa_foamTypeName );
-        __req->add_out_arg( &_sa_typeDesc );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          getFoamType( _par_foamTypeName.inout(), _par_typeDesc );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_typeDesc );
-        return true;
-      }
-      if( strcmp( __req->op_name(), "_get_geometryTypes" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = geometryTypes();
-        __res.value( CORBA::_stcseq_string, _res );
-        __req->write_results();
-        delete _res;
-        return true;
-      }
-      break;
-    case 25:
-      if( strcmp( __req->op_name(), "cloneApplicationClass" ) == 0 ) {
-        CORBA::String_var _par_appClassNameSrc;
-        CORBA::StaticAny _sa_appClassNameSrc( CORBA::_stc_string, &_par_appClassNameSrc._for_demarshal() );
-        CORBA::String_var _par_appClassNameDest;
-        CORBA::StaticAny _sa_appClassNameDest( CORBA::_stc_string, &_par_appClassNameDest._for_demarshal() );
-        ::FoamXServer::CaseServer::IApplicationClass_ptr _par_appClass;
-        CORBA::StaticAny _sa_appClass( _marshaller_FoamXServer_CaseServer_IApplicationClass, &_par_appClass );
-
-        __req->add_in_arg( &_sa_appClassNameSrc );
-        __req->add_in_arg( &_sa_appClassNameDest );
-        __req->add_out_arg( &_sa_appClass );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          cloneApplicationClass( _par_appClassNameSrc.inout(), _par_appClassNameDest.inout(), _par_appClass );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_appClass );
-        return true;
-      }
-      if( strcmp( __req->op_name(), "_get_foamTypes" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = foamTypes();
-        __res.value( CORBA::_stcseq_string, _res );
-        __req->write_results();
-        delete _res;
-        return true;
-      }
-      break;
-    case 26:
-      if( strcmp( __req->op_name(), "getGeometryType" ) == 0 ) {
-        CORBA::String_var _par_geometryTypeName;
-        CORBA::StaticAny _sa_geometryTypeName( CORBA::_stc_string, &_par_geometryTypeName._for_demarshal() );
-        ::FoamXServer::CaseServer::IGeometryDescriptor_ptr _par_geometryDesc;
-        CORBA::StaticAny _sa_geometryDesc( _marshaller_FoamXServer_CaseServer_IGeometryDescriptor, &_par_geometryDesc );
-
-        __req->add_in_arg( &_sa_geometryTypeName );
-        __req->add_out_arg( &_sa_geometryDesc );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          getGeometryType( _par_geometryTypeName.inout(), _par_geometryDesc );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_geometryDesc );
-        return true;
-      }
-      break;
-    case 29:
-      if( strcmp( __req->op_name(), "deleteApplicationClass" ) == 0 ) {
-        CORBA::String_var _par_appClassName;
-        CORBA::StaticAny _sa_appClassName( CORBA::_stc_string, &_par_appClassName._for_demarshal() );
-
-        __req->add_in_arg( &_sa_appClassName );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          deleteApplicationClass( _par_appClassName.inout() );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 31:
       if( strcmp( __req->op_name(), "getUtilityControlDict" ) == 0 ) {
         CORBA::String_var _par_utilityName;
         CORBA::StaticAny _sa_utilityName( CORBA::_stc_string, &_par_utilityName._for_demarshal() );
@@ -21845,7 +21085,458 @@ POA_FoamXServer::CaseServer::IFoamProperties::dispatch (CORBA::StaticServerReque
         return true;
       }
       break;
-    case 32:
+    case 13:
+      if( strcmp( __req->op_name(), "findPatchType" ) == 0 ) {
+        CORBA::String_var _par_patchTypeName;
+        CORBA::StaticAny _sa_patchTypeName( CORBA::_stc_string, &_par_patchTypeName._for_demarshal() );
+        ::FoamXServer::CaseServer::IPatchDescriptor_ptr _par_patchDesc;
+        CORBA::StaticAny _sa_patchDesc( _marshaller_FoamXServer_CaseServer_IPatchDescriptor, &_par_patchDesc );
+
+        __req->add_in_arg( &_sa_patchTypeName );
+        __req->add_out_arg( &_sa_patchDesc );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          findPatchType( _par_patchTypeName.inout(), _par_patchDesc );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_patchDesc );
+        return true;
+      }
+      if( strcmp( __req->op_name(), "_get_patchTypes" ) == 0 ) {
+        ::FoamXServer::StringList* _res;
+        CORBA::StaticAny __res( CORBA::_stcseq_string );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = patchTypes();
+        __res.value( CORBA::_stcseq_string, _res );
+        __req->write_results();
+        delete _res;
+        return true;
+      }
+      break;
+    case 17:
+      if( strcmp( __req->op_name(), "cloneApplication" ) == 0 ) {
+        CORBA::String_var _par_appNameSrc;
+        CORBA::StaticAny _sa_appNameSrc( CORBA::_stc_string, &_par_appNameSrc._for_demarshal() );
+        CORBA::String_var _par_appNameDest;
+        CORBA::StaticAny _sa_appNameDest( CORBA::_stc_string, &_par_appNameDest._for_demarshal() );
+        CORBA::String_var _par_appDestPath;
+        CORBA::StaticAny _sa_appDestPath( CORBA::_stc_string, &_par_appDestPath._for_demarshal() );
+        ::FoamXServer::CaseServer::IApplication_ptr _par_app;
+        CORBA::StaticAny _sa_app( _marshaller_FoamXServer_CaseServer_IApplication, &_par_app );
+
+        __req->add_in_arg( &_sa_appNameSrc );
+        __req->add_in_arg( &_sa_appNameDest );
+        __req->add_in_arg( &_sa_appDestPath );
+        __req->add_out_arg( &_sa_app );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          cloneApplication( _par_appNameSrc.inout(), _par_appNameDest.inout(), _par_appDestPath.inout(), _par_app );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_app );
+        return true;
+      }
+      break;
+    case 18:
+      if( strcmp( __req->op_name(), "addRootDirectory" ) == 0 ) {
+        CORBA::String_var _par_rawRootDir;
+        CORBA::StaticAny _sa_rawRootDir( CORBA::_stc_string, &_par_rawRootDir._for_demarshal() );
+
+        __req->add_in_arg( &_sa_rawRootDir );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          addRootDirectory( _par_rawRootDir.inout() );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      if( strcmp( __req->op_name(), "_get_applicationes" ) == 0 ) {
+        ::FoamXServer::ApplicationDescriptorList* _res;
+        CORBA::StaticAny __res( _marshaller__seq_FoamXServer_ApplicationDescriptor );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = applicationes();
+        __res.value( _marshaller__seq_FoamXServer_ApplicationDescriptor, _res );
+        __req->write_results();
+        delete _res;
+        return true;
+      }
+      break;
+    case 19:
+      if( strcmp( __req->op_name(), "getGeometryType" ) == 0 ) {
+        CORBA::String_var _par_geometryTypeName;
+        CORBA::StaticAny _sa_geometryTypeName( CORBA::_stc_string, &_par_geometryTypeName._for_demarshal() );
+        ::FoamXServer::CaseServer::IGeometryDescriptor_ptr _par_geometryDesc;
+        CORBA::StaticAny _sa_geometryDesc( _marshaller_FoamXServer_CaseServer_IGeometryDescriptor, &_par_geometryDesc );
+
+        __req->add_in_arg( &_sa_geometryTypeName );
+        __req->add_out_arg( &_sa_geometryDesc );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          getGeometryType( _par_geometryTypeName.inout(), _par_geometryDesc );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_geometryDesc );
+        return true;
+      }
+      break;
+    case 21:
+      if( strcmp( __req->op_name(), "_get_availableModules" ) == 0 ) {
+        ::FoamXServer::StringList* _res;
+        CORBA::StaticAny __res( CORBA::_stcseq_string );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = availableModules();
+        __res.value( CORBA::_stcseq_string, _res );
+        __req->write_results();
+        delete _res;
+        return true;
+      }
+      if( strcmp( __req->op_name(), "_get_geometryTypes" ) == 0 ) {
+        ::FoamXServer::StringList* _res;
+        CORBA::StaticAny __res( CORBA::_stcseq_string );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = geometryTypes();
+        __res.value( CORBA::_stcseq_string, _res );
+        __req->write_results();
+        delete _res;
+        return true;
+      }
+      break;
+    case 22:
+      if( strcmp( __req->op_name(), "_get_rawRootDirectories" ) == 0 ) {
+        ::FoamXServer::StringList* _res;
+        CORBA::StaticAny __res( CORBA::_stcseq_string );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = rawRootDirectories();
+        __res.value( CORBA::_stcseq_string, _res );
+        __req->write_results();
+        delete _res;
+        return true;
+      }
+      break;
+    case 26:
+      if( strcmp( __req->op_name(), "getPatchFieldType" ) == 0 ) {
+        CORBA::String_var _par_patchFieldTypeName;
+        CORBA::StaticAny _sa_patchFieldTypeName( CORBA::_stc_string, &_par_patchFieldTypeName._for_demarshal() );
+        ::FoamXServer::ITypeDescriptor_ptr _par_patchFieldDesc;
+        CORBA::StaticAny _sa_patchFieldDesc( _marshaller_FoamXServer_ITypeDescriptor, &_par_patchFieldDesc );
+
+        __req->add_in_arg( &_sa_patchFieldTypeName );
+        __req->add_out_arg( &_sa_patchFieldDesc );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          getPatchFieldType( _par_patchFieldTypeName.inout(), _par_patchFieldDesc );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_patchFieldDesc );
+        return true;
+      }
+      break;
+    case 27:
+      if( strcmp( __req->op_name(), "saveSystemProperties" ) == 0 ) {
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          saveSystemProperties();
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::ValidationError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 29:
+      if( strcmp( __req->op_name(), "addApplication" ) == 0 ) {
+        CORBA::String_var _par_appName;
+        CORBA::StaticAny _sa_appName( CORBA::_stc_string, &_par_appName._for_demarshal() );
+        ::FoamXServer::CaseServer::IApplication_ptr _par_app;
+        CORBA::StaticAny _sa_app( _marshaller_FoamXServer_CaseServer_IApplication, &_par_app );
+
+        __req->add_in_arg( &_sa_appName );
+        __req->add_out_arg( &_sa_app );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          addApplication( _par_appName.inout(), _par_app );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_app );
+        return true;
+      }
+      if( strcmp( __req->op_name(), "deleteApplication" ) == 0 ) {
+        CORBA::String_var _par_appName;
+        CORBA::StaticAny _sa_appName( CORBA::_stc_string, &_par_appName._for_demarshal() );
+
+        __req->add_in_arg( &_sa_appName );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          deleteApplication( _par_appName.inout() );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 34:
+      if( strcmp( __req->op_name(), "getApplication" ) == 0 ) {
+        CORBA::String_var _par_appName;
+        CORBA::StaticAny _sa_appName( CORBA::_stc_string, &_par_appName._for_demarshal() );
+        ::FoamXServer::CaseServer::IApplication_ptr _par_app;
+        CORBA::StaticAny _sa_app( _marshaller_FoamXServer_CaseServer_IApplication, &_par_app );
+
+        __req->add_in_arg( &_sa_appName );
+        __req->add_out_arg( &_sa_app );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          getApplication( _par_appName.inout(), _par_app );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_app );
+        return true;
+      }
+      if( strcmp( __req->op_name(), "_get_rootDirectories" ) == 0 ) {
+        ::FoamXServer::StringList* _res;
+        CORBA::StaticAny __res( CORBA::_stcseq_string );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = rootDirectories();
+        __res.value( CORBA::_stcseq_string, _res );
+        __req->write_results();
+        delete _res;
+        return true;
+      }
+      break;
+    case 36:
+      if( strcmp( __req->op_name(), "deleteRootDirectory" ) == 0 ) {
+        CORBA::String_var _par_rawRootDir;
+        CORBA::StaticAny _sa_rawRootDir( CORBA::_stc_string, &_par_rawRootDir._for_demarshal() );
+
+        __req->add_in_arg( &_sa_rawRootDir );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          deleteRootDirectory( _par_rawRootDir.inout() );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 37:
+      if( strcmp( __req->op_name(), "validate" ) == 0 ) {
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          validate();
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::ValidationError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
+      break;
+    case 39:
+      if( strcmp( __req->op_name(), "_get_foamTypes" ) == 0 ) {
+        ::FoamXServer::StringList* _res;
+        CORBA::StaticAny __res( CORBA::_stcseq_string );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = foamTypes();
+        __res.value( CORBA::_stcseq_string, _res );
+        __req->write_results();
+        delete _res;
+        return true;
+      }
+      break;
+    case 40:
       if( strcmp( __req->op_name(), "getPatchType" ) == 0 ) {
         CORBA::String_var _par_patchTypeName;
         CORBA::StaticAny _sa_patchTypeName( CORBA::_stc_string, &_par_patchTypeName._for_demarshal() );
@@ -21877,9 +21568,7 @@ POA_FoamXServer::CaseServer::IFoamProperties::dispatch (CORBA::StaticServerReque
         CORBA::release( _par_patchDesc );
         return true;
       }
-      break;
-    case 33:
-      if( strcmp( __req->op_name(), "_get_availableModules" ) == 0 ) {
+      if( strcmp( __req->op_name(), "_get_patchFieldTypes" ) == 0 ) {
         ::FoamXServer::StringList* _res;
         CORBA::StaticAny __res( CORBA::_stcseq_string );
         __req->set_result( &__res );
@@ -21887,54 +21576,7 @@ POA_FoamXServer::CaseServer::IFoamProperties::dispatch (CORBA::StaticServerReque
         if( !__req->read_args() )
           return true;
 
-        _res = availableModules();
-        __res.value( CORBA::_stcseq_string, _res );
-        __req->write_results();
-        delete _res;
-        return true;
-      }
-      break;
-    case 35:
-      if( strcmp( __req->op_name(), "addApplicationClass" ) == 0 ) {
-        CORBA::String_var _par_appClassName;
-        CORBA::StaticAny _sa_appClassName( CORBA::_stc_string, &_par_appClassName._for_demarshal() );
-        ::FoamXServer::CaseServer::IApplicationClass_ptr _par_appClass;
-        CORBA::StaticAny _sa_appClass( _marshaller_FoamXServer_CaseServer_IApplicationClass, &_par_appClass );
-
-        __req->add_in_arg( &_sa_appClassName );
-        __req->add_out_arg( &_sa_appClass );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          addApplicationClass( _par_appClassName.inout(), _par_appClass );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_appClass );
-        return true;
-      }
-      if( strcmp( __req->op_name(), "_get_patchTypes" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = patchTypes();
+        _res = patchFieldTypes();
         __res.value( CORBA::_stcseq_string, _res );
         __req->write_results();
         delete _res;
@@ -21972,31 +21614,31 @@ POA_FoamXServer::CaseServer::IFoamProperties::invoke (CORBA::StaticServerRequest
 }
 
 
-// PortableServer Skeleton Class for interface FoamXServer::CaseServer::IApplicationClass
-POA_FoamXServer::CaseServer::IApplicationClass::~IApplicationClass()
+// PortableServer Skeleton Class for interface FoamXServer::CaseServer::IApplication
+POA_FoamXServer::CaseServer::IApplication::~IApplication()
 {
 }
 
-::FoamXServer::CaseServer::IApplicationClass_ptr
-POA_FoamXServer::CaseServer::IApplicationClass::_this ()
+::FoamXServer::CaseServer::IApplication_ptr
+POA_FoamXServer::CaseServer::IApplication::_this ()
 {
   CORBA::Object_var obj = PortableServer::ServantBase::_this();
-  return ::FoamXServer::CaseServer::IApplicationClass::_narrow (obj);
+  return ::FoamXServer::CaseServer::IApplication::_narrow (obj);
 }
 
 CORBA::Boolean
-POA_FoamXServer::CaseServer::IApplicationClass::_is_a (const char * repoid)
+POA_FoamXServer::CaseServer::IApplication::_is_a (const char * repoid)
 {
-  if (strcmp (repoid, "IDL:FoamXServer/CaseServer/IApplicationClass:1.0") == 0) {
+  if (strcmp (repoid, "IDL:FoamXServer/CaseServer/IApplication:1.0") == 0) {
     return TRUE;
   }
   return FALSE;
 }
 
 CORBA::InterfaceDef_ptr
-POA_FoamXServer::CaseServer::IApplicationClass::_get_interface ()
+POA_FoamXServer::CaseServer::IApplication::_get_interface ()
 {
-  CORBA::InterfaceDef_ptr ifd = PortableServer::ServantBase::_get_interface ("IDL:FoamXServer/CaseServer/IApplicationClass:1.0");
+  CORBA::InterfaceDef_ptr ifd = PortableServer::ServantBase::_get_interface ("IDL:FoamXServer/CaseServer/IApplication:1.0");
 
   if (CORBA::is_nil (ifd)) {
     mico_throw (CORBA::OBJ_ADAPTER (0, CORBA::COMPLETED_NO));
@@ -22006,19 +21648,19 @@ POA_FoamXServer::CaseServer::IApplicationClass::_get_interface ()
 }
 
 CORBA::RepositoryId
-POA_FoamXServer::CaseServer::IApplicationClass::_primary_interface (const PortableServer::ObjectId &, PortableServer::POA_ptr)
+POA_FoamXServer::CaseServer::IApplication::_primary_interface (const PortableServer::ObjectId &, PortableServer::POA_ptr)
 {
-  return CORBA::string_dup ("IDL:FoamXServer/CaseServer/IApplicationClass:1.0");
+  return CORBA::string_dup ("IDL:FoamXServer/CaseServer/IApplication:1.0");
 }
 
 CORBA::Object_ptr
-POA_FoamXServer::CaseServer::IApplicationClass::_make_stub (PortableServer::POA_ptr poa, CORBA::Object_ptr obj)
+POA_FoamXServer::CaseServer::IApplication::_make_stub (PortableServer::POA_ptr poa, CORBA::Object_ptr obj)
 {
-  return new ::FoamXServer::CaseServer::IApplicationClass_stub_clp (poa, obj);
+  return new ::FoamXServer::CaseServer::IApplication_stub_clp (poa, obj);
 }
 
 bool
-POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerRequest_ptr __req)
+POA_FoamXServer::CaseServer::IApplication::dispatch (CORBA::StaticServerRequest_ptr __req)
 {
   #ifdef HAVE_EXCEPTIONS
   try {
@@ -22068,18 +21710,68 @@ POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerReq
       }
       break;
     case 1:
-      if( strcmp( __req->op_name(), "_get_boundaryTypes" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
-        __req->set_result( &__res );
+      if( strcmp( __req->op_name(), "getPatchPhysicalType" ) == 0 ) {
+        CORBA::String_var _par_patchPhysicalTypeName;
+        CORBA::StaticAny _sa_patchPhysicalTypeName( CORBA::_stc_string, &_par_patchPhysicalTypeName._for_demarshal() );
+        ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr _par_patchPhysicalTypeDescriptor;
+        CORBA::StaticAny _sa_patchPhysicalTypeDescriptor( _marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, &_par_patchPhysicalTypeDescriptor );
+
+        __req->add_in_arg( &_sa_patchPhysicalTypeName );
+        __req->add_out_arg( &_sa_patchPhysicalTypeDescriptor );
 
         if( !__req->read_args() )
           return true;
 
-        _res = boundaryTypes();
-        __res.value( CORBA::_stcseq_string, _res );
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          getPatchPhysicalType( _par_patchPhysicalTypeName.inout(), _par_patchPhysicalTypeDescriptor );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
         __req->write_results();
-        delete _res;
+        CORBA::release( _par_patchPhysicalTypeDescriptor );
+        return true;
+      }
+      break;
+    case 2:
+      if( strcmp( __req->op_name(), "addPatchPhysicalType" ) == 0 ) {
+        CORBA::String_var _par_patchPhysicalTypeName;
+        CORBA::StaticAny _sa_patchPhysicalTypeName( CORBA::_stc_string, &_par_patchPhysicalTypeName._for_demarshal() );
+        ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr _par_patchPhysicalTypeDescriptor;
+        CORBA::StaticAny _sa_patchPhysicalTypeDescriptor( _marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, &_par_patchPhysicalTypeDescriptor );
+
+        __req->add_in_arg( &_sa_patchPhysicalTypeName );
+        __req->add_out_arg( &_sa_patchPhysicalTypeDescriptor );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          addPatchPhysicalType( _par_patchPhysicalTypeName.inout(), _par_patchPhysicalTypeDescriptor );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_patchPhysicalTypeDescriptor );
         return true;
       }
       break;
@@ -22172,35 +21864,6 @@ POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerReq
         return true;
       }
       break;
-    case 10:
-      if( strcmp( __req->op_name(), "deleteBoundaryType" ) == 0 ) {
-        CORBA::String_var _par_boundaryTypeName;
-        CORBA::StaticAny _sa_boundaryTypeName( CORBA::_stc_string, &_par_boundaryTypeName._for_demarshal() );
-
-        __req->add_in_arg( &_sa_boundaryTypeName );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          deleteBoundaryType( _par_boundaryTypeName.inout() );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        return true;
-      }
-      break;
     case 11:
       if( strcmp( __req->op_name(), "getField" ) == 0 ) {
         CORBA::String_var _par_fieldName;
@@ -22231,6 +21894,20 @@ POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerReq
         #endif
         __req->write_results();
         CORBA::release( _par_fieldDescriptor );
+        return true;
+      }
+      if( strcmp( __req->op_name(), "_get_patchPhysicalTypes" ) == 0 ) {
+        ::FoamXServer::StringList* _res;
+        CORBA::StaticAny __res( CORBA::_stcseq_string );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = patchPhysicalTypes();
+        __res.value( CORBA::_stcseq_string, _res );
+        __req->write_results();
+        delete _res;
         return true;
       }
       break;
@@ -22359,72 +22036,6 @@ POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerReq
         return true;
       }
       break;
-    case 21:
-      if( strcmp( __req->op_name(), "getBoundaryType" ) == 0 ) {
-        CORBA::String_var _par_boundaryTypeName;
-        CORBA::StaticAny _sa_boundaryTypeName( CORBA::_stc_string, &_par_boundaryTypeName._for_demarshal() );
-        ::FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr _par_boundaryDescriptor;
-        CORBA::StaticAny _sa_boundaryDescriptor( _marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, &_par_boundaryDescriptor );
-
-        __req->add_in_arg( &_sa_boundaryTypeName );
-        __req->add_out_arg( &_sa_boundaryDescriptor );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          getBoundaryType( _par_boundaryTypeName.inout(), _par_boundaryDescriptor );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_boundaryDescriptor );
-        return true;
-      }
-      break;
-    case 24:
-      if( strcmp( __req->op_name(), "addBoundaryType" ) == 0 ) {
-        CORBA::String_var _par_boundaryTypeName;
-        CORBA::StaticAny _sa_boundaryTypeName( CORBA::_stc_string, &_par_boundaryTypeName._for_demarshal() );
-        ::FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr _par_boundaryDescriptor;
-        CORBA::StaticAny _sa_boundaryDescriptor( _marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, &_par_boundaryDescriptor );
-
-        __req->add_in_arg( &_sa_boundaryTypeName );
-        __req->add_out_arg( &_sa_boundaryDescriptor );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          addBoundaryType( _par_boundaryTypeName.inout(), _par_boundaryDescriptor );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_boundaryDescriptor );
-        return true;
-      }
-      break;
     case 25:
       if( strcmp( __req->op_name(), "_get_category" ) == 0 ) {
         char* _res;
@@ -22484,39 +22095,6 @@ POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerReq
         return true;
       }
       break;
-    case 30:
-      if( strcmp( __req->op_name(), "findBoundaryType" ) == 0 ) {
-        CORBA::String_var _par_boundaryTypeName;
-        CORBA::StaticAny _sa_boundaryTypeName( CORBA::_stc_string, &_par_boundaryTypeName._for_demarshal() );
-        ::FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr _par_boundaryDescriptor;
-        CORBA::StaticAny _sa_boundaryDescriptor( _marshaller_FoamXServer_CaseServer_IBoundaryTypeDescriptor, &_par_boundaryDescriptor );
-
-        __req->add_in_arg( &_sa_boundaryTypeName );
-        __req->add_out_arg( &_sa_boundaryDescriptor );
-
-        if( !__req->read_args() )
-          return true;
-
-        #ifdef HAVE_EXCEPTIONS
-        try {
-        #endif
-          findBoundaryType( _par_boundaryTypeName.inout(), _par_boundaryDescriptor );
-        #ifdef HAVE_EXCEPTIONS
-        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
-          __req->set_exception( _ex->_clone() );
-          __req->write_results();
-          return true;
-        }
-        #endif
-        __req->write_results();
-        CORBA::release( _par_boundaryDescriptor );
-        return true;
-      }
-      break;
     case 32:
       if( strcmp( __req->op_name(), "findField" ) == 0 ) {
         CORBA::String_var _par_fieldName;
@@ -22547,6 +22125,39 @@ POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerReq
         #endif
         __req->write_results();
         CORBA::release( _par_fieldDescriptor );
+        return true;
+      }
+      break;
+    case 34:
+      if( strcmp( __req->op_name(), "findPatchPhysicalType" ) == 0 ) {
+        CORBA::String_var _par_patchPhysicalTypeName;
+        CORBA::StaticAny _sa_patchPhysicalTypeName( CORBA::_stc_string, &_par_patchPhysicalTypeName._for_demarshal() );
+        ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr _par_patchPhysicalTypeDescriptor;
+        CORBA::StaticAny _sa_patchPhysicalTypeDescriptor( _marshaller_FoamXServer_CaseServer_IPatchPhysicalTypeDescriptor, &_par_patchPhysicalTypeDescriptor );
+
+        __req->add_in_arg( &_sa_patchPhysicalTypeName );
+        __req->add_out_arg( &_sa_patchPhysicalTypeDescriptor );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          findPatchPhysicalType( _par_patchPhysicalTypeName.inout(), _par_patchPhysicalTypeDescriptor );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        CORBA::release( _par_patchPhysicalTypeDescriptor );
         return true;
       }
       break;
@@ -22584,6 +22195,33 @@ POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerReq
       }
       break;
     case 36:
+      if( strcmp( __req->op_name(), "deletePatchPhysicalType" ) == 0 ) {
+        CORBA::String_var _par_patchPhysicalTypeName;
+        CORBA::StaticAny _sa_patchPhysicalTypeName( CORBA::_stc_string, &_par_patchPhysicalTypeName._for_demarshal() );
+
+        __req->add_in_arg( &_sa_patchPhysicalTypeName );
+
+        if( !__req->read_args() )
+          return true;
+
+        #ifdef HAVE_EXCEPTIONS
+        try {
+        #endif
+          deletePatchPhysicalType( _par_patchPhysicalTypeName.inout() );
+        #ifdef HAVE_EXCEPTIONS
+        } catch( ::FoamXServer::FoamXError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        } catch( ::FoamXServer::FoamXIOError_catch &_ex ) {
+          __req->set_exception( _ex->_clone() );
+          __req->write_results();
+          return true;
+        }
+        #endif
+        __req->write_results();
+        return true;
+      }
       if( strcmp( __req->op_name(), "_get_name" ) == 0 ) {
         char* _res;
         CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -22628,7 +22266,7 @@ POA_FoamXServer::CaseServer::IApplicationClass::dispatch (CORBA::StaticServerReq
 }
 
 void
-POA_FoamXServer::CaseServer::IApplicationClass::invoke (CORBA::StaticServerRequest_ptr __req)
+POA_FoamXServer::CaseServer::IApplication::invoke (CORBA::StaticServerRequest_ptr __req)
 {
   if (dispatch (__req)) {
       return;
@@ -22963,9 +22601,9 @@ POA_FoamXServer::CaseServer::IPatchDescriptor::dispatch (CORBA::StaticServerRequ
   #ifdef HAVE_EXCEPTIONS
   try {
   #endif
-    switch (mico_string_hash (__req->op_name(), 13)) {
-    case 1:
-      if( strcmp( __req->op_name(), "_get_name" ) == 0 ) {
+    switch (mico_string_hash (__req->op_name(), 11)) {
+    case 4:
+      if( strcmp( __req->op_name(), "_get_displayName" ) == 0 ) {
         char* _res;
         CORBA::StaticAny __res( CORBA::_stc_string, &_res );
         __req->set_result( &__res );
@@ -22973,37 +22611,9 @@ POA_FoamXServer::CaseServer::IPatchDescriptor::dispatch (CORBA::StaticServerRequ
         if( !__req->read_args() )
           return true;
 
-        _res = name();
+        _res = displayName();
         __req->write_results();
         CORBA::string_free( _res );
-        return true;
-      }
-      if( strcmp( __req->op_name(), "_set_description" ) == 0 ) {
-        CORBA::String_var _par__value;
-        CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value._for_demarshal() );
-
-        __req->add_in_arg( &_sa__value );
-
-        if( !__req->read_args() )
-          return true;
-
-        description( _par__value.inout() );
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 2:
-      if( strcmp( __req->op_name(), "_set_patchFieldTypes" ) == 0 ) {
-        ::FoamXServer::StringList _par__value;
-        CORBA::StaticAny _sa__value( CORBA::_stcseq_string, &_par__value );
-
-        __req->add_in_arg( &_sa__value );
-
-        if( !__req->read_args() )
-          return true;
-
-        patchFieldTypes( _par__value );
-        __req->write_results();
         return true;
       }
       break;
@@ -23023,6 +22633,21 @@ POA_FoamXServer::CaseServer::IPatchDescriptor::dispatch (CORBA::StaticServerRequ
       }
       break;
     case 7:
+      if( strcmp( __req->op_name(), "_get_name" ) == 0 ) {
+        char* _res;
+        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = name();
+        __req->write_results();
+        CORBA::string_free( _res );
+        return true;
+      }
+      break;
+    case 9:
       if( strcmp( __req->op_name(), "_get_description" ) == 0 ) {
         char* _res;
         CORBA::StaticAny __res( CORBA::_stc_string, &_res );
@@ -23034,22 +22659,6 @@ POA_FoamXServer::CaseServer::IPatchDescriptor::dispatch (CORBA::StaticServerRequ
         _res = description();
         __req->write_results();
         CORBA::string_free( _res );
-        return true;
-      }
-      break;
-    case 9:
-      if( strcmp( __req->op_name(), "_get_patchFieldTypes" ) == 0 ) {
-        ::FoamXServer::StringList* _res;
-        CORBA::StaticAny __res( CORBA::_stcseq_string );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = patchFieldTypes();
-        __res.value( CORBA::_stcseq_string, _res );
-        __req->write_results();
-        delete _res;
         return true;
       }
       if( strcmp( __req->op_name(), "_set_displayName" ) == 0 ) {
@@ -23065,19 +22674,17 @@ POA_FoamXServer::CaseServer::IPatchDescriptor::dispatch (CORBA::StaticServerRequ
         __req->write_results();
         return true;
       }
-      break;
-    case 11:
-      if( strcmp( __req->op_name(), "_get_displayName" ) == 0 ) {
-        char* _res;
-        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
-        __req->set_result( &__res );
+      if( strcmp( __req->op_name(), "_set_description" ) == 0 ) {
+        CORBA::String_var _par__value;
+        CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value._for_demarshal() );
+
+        __req->add_in_arg( &_sa__value );
 
         if( !__req->read_args() )
           return true;
 
-        _res = displayName();
+        description( _par__value.inout() );
         __req->write_results();
-        CORBA::string_free( _res );
         return true;
       }
       break;
@@ -23281,31 +22888,31 @@ POA_FoamXServer::CaseServer::IGeometryDescriptor::invoke (CORBA::StaticServerReq
 }
 
 
-// PortableServer Skeleton Class for interface FoamXServer::CaseServer::IBoundaryTypeDescriptor
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::~IBoundaryTypeDescriptor()
+// PortableServer Skeleton Class for interface FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::~IPatchPhysicalTypeDescriptor()
 {
 }
 
-::FoamXServer::CaseServer::IBoundaryTypeDescriptor_ptr
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_this ()
+::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_ptr
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_this ()
 {
   CORBA::Object_var obj = PortableServer::ServantBase::_this();
-  return ::FoamXServer::CaseServer::IBoundaryTypeDescriptor::_narrow (obj);
+  return ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_narrow (obj);
 }
 
 CORBA::Boolean
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_is_a (const char * repoid)
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_is_a (const char * repoid)
 {
-  if (strcmp (repoid, "IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0") == 0) {
+  if (strcmp (repoid, "IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0") == 0) {
     return TRUE;
   }
   return FALSE;
 }
 
 CORBA::InterfaceDef_ptr
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_get_interface ()
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_get_interface ()
 {
-  CORBA::InterfaceDef_ptr ifd = PortableServer::ServantBase::_get_interface ("IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0");
+  CORBA::InterfaceDef_ptr ifd = PortableServer::ServantBase::_get_interface ("IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0");
 
   if (CORBA::is_nil (ifd)) {
     mico_throw (CORBA::OBJ_ADAPTER (0, CORBA::COMPLETED_NO));
@@ -23315,19 +22922,19 @@ POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_get_interface ()
 }
 
 CORBA::RepositoryId
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_primary_interface (const PortableServer::ObjectId &, PortableServer::POA_ptr)
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_primary_interface (const PortableServer::ObjectId &, PortableServer::POA_ptr)
 {
-  return CORBA::string_dup ("IDL:FoamXServer/CaseServer/IBoundaryTypeDescriptor:1.0");
+  return CORBA::string_dup ("IDL:FoamXServer/CaseServer/IPatchPhysicalTypeDescriptor:1.0");
 }
 
 CORBA::Object_ptr
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::_make_stub (PortableServer::POA_ptr poa, CORBA::Object_ptr obj)
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::_make_stub (PortableServer::POA_ptr poa, CORBA::Object_ptr obj)
 {
-  return new ::FoamXServer::CaseServer::IBoundaryTypeDescriptor_stub_clp (poa, obj);
+  return new ::FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor_stub_clp (poa, obj);
 }
 
 bool
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::dispatch (CORBA::StaticServerRequest_ptr __req)
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::dispatch (CORBA::StaticServerRequest_ptr __req)
 {
   #ifdef HAVE_EXCEPTIONS
   try {
@@ -23373,34 +22980,6 @@ POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::dispatch (CORBA::StaticSer
 
         patchType( _par__value.inout() );
         __req->write_results();
-        return true;
-      }
-      if( strcmp( __req->op_name(), "_set_superType" ) == 0 ) {
-        CORBA::String_var _par__value;
-        CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value._for_demarshal() );
-
-        __req->add_in_arg( &_sa__value );
-
-        if( !__req->read_args() )
-          return true;
-
-        superType( _par__value.inout() );
-        __req->write_results();
-        return true;
-      }
-      break;
-    case 3:
-      if( strcmp( __req->op_name(), "_get_superType" ) == 0 ) {
-        char* _res;
-        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
-        __req->set_result( &__res );
-
-        if( !__req->read_args() )
-          return true;
-
-        _res = superType();
-        __req->write_results();
-        CORBA::string_free( _res );
         return true;
       }
       break;
@@ -23478,6 +23057,21 @@ POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::dispatch (CORBA::StaticSer
         return true;
       }
       break;
+    case 15:
+      if( strcmp( __req->op_name(), "_set_parentType" ) == 0 ) {
+        CORBA::String_var _par__value;
+        CORBA::StaticAny _sa__value( CORBA::_stc_string, &_par__value._for_demarshal() );
+
+        __req->add_in_arg( &_sa__value );
+
+        if( !__req->read_args() )
+          return true;
+
+        parentType( _par__value.inout() );
+        __req->write_results();
+        return true;
+      }
+      break;
     case 17:
       if( strcmp( __req->op_name(), "_set_name" ) == 0 ) {
         CORBA::String_var _par__value;
@@ -23506,6 +23100,21 @@ POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::dispatch (CORBA::StaticSer
         return true;
       }
       break;
+    case 18:
+      if( strcmp( __req->op_name(), "_get_parentType" ) == 0 ) {
+        char* _res;
+        CORBA::StaticAny __res( CORBA::_stc_string, &_res );
+        __req->set_result( &__res );
+
+        if( !__req->read_args() )
+          return true;
+
+        _res = parentType();
+        __req->write_results();
+        CORBA::string_free( _res );
+        return true;
+      }
+      break;
     }
   #ifdef HAVE_EXCEPTIONS
   } catch( CORBA::SystemException_catch &_ex ) {
@@ -23524,7 +23133,7 @@ POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::dispatch (CORBA::StaticSer
 }
 
 void
-POA_FoamXServer::CaseServer::IBoundaryTypeDescriptor::invoke (CORBA::StaticServerRequest_ptr __req)
+POA_FoamXServer::CaseServer::IPatchPhysicalTypeDescriptor::invoke (CORBA::StaticServerRequest_ptr __req)
 {
   if (dispatch (__req)) {
       return;
@@ -24628,12 +24237,12 @@ POA_FoamXServer::CaseBrowser::ICaseBrowser::dispatch (CORBA::StaticServerRequest
         CORBA::StaticAny _sa_rootDir( CORBA::_stc_string, &_par_rootDir._for_demarshal() );
         CORBA::String_var _par_caseName;
         CORBA::StaticAny _sa_caseName( CORBA::_stc_string, &_par_caseName._for_demarshal() );
-        CORBA::String_var _par_appClass;
-        CORBA::StaticAny _sa_appClass( CORBA::_stc_string, &_par_appClass._for_demarshal() );
+        CORBA::String_var _par_app;
+        CORBA::StaticAny _sa_app( CORBA::_stc_string, &_par_app._for_demarshal() );
 
         __req->add_in_arg( &_sa_rootDir );
         __req->add_in_arg( &_sa_caseName );
-        __req->add_in_arg( &_sa_appClass );
+        __req->add_in_arg( &_sa_app );
 
         if( !__req->read_args() )
           return true;
@@ -24641,7 +24250,7 @@ POA_FoamXServer::CaseBrowser::ICaseBrowser::dispatch (CORBA::StaticServerRequest
         #ifdef HAVE_EXCEPTIONS
         try {
         #endif
-          newCase( _par_rootDir.inout(), _par_caseName.inout(), _par_appClass.inout() );
+          newCase( _par_rootDir.inout(), _par_caseName.inout(), _par_app.inout() );
         #ifdef HAVE_EXCEPTIONS
         } catch( ::FoamXServer::FoamXError_catch &_ex ) {
           __req->set_exception( _ex->_clone() );
@@ -25345,12 +24954,12 @@ POA_FoamXServer::CaseBrowser::ICaseBrowser::dispatch (CORBA::StaticServerRequest
         CORBA::StaticAny _sa_rootDir( CORBA::_stc_string, &_par_rootDir._for_demarshal() );
         CORBA::String_var _par_caseName;
         CORBA::StaticAny _sa_caseName( CORBA::_stc_string, &_par_caseName._for_demarshal() );
-        CORBA::String_var _par_appClass;
-        CORBA::StaticAny _sa_appClass( CORBA::_stc_string, &_par_appClass._for_demarshal() );
+        CORBA::String_var _par_app;
+        CORBA::StaticAny _sa_app( CORBA::_stc_string, &_par_app._for_demarshal() );
 
         __req->add_in_arg( &_sa_rootDir );
         __req->add_in_arg( &_sa_caseName );
-        __req->add_in_arg( &_sa_appClass );
+        __req->add_in_arg( &_sa_app );
 
         if( !__req->read_args() )
           return true;
@@ -25358,7 +24967,7 @@ POA_FoamXServer::CaseBrowser::ICaseBrowser::dispatch (CORBA::StaticServerRequest
         #ifdef HAVE_EXCEPTIONS
         try {
         #endif
-          importCase( _par_rootDir.inout(), _par_caseName.inout(), _par_appClass.inout() );
+          importCase( _par_rootDir.inout(), _par_caseName.inout(), _par_app.inout() );
         #ifdef HAVE_EXCEPTIONS
         } catch( ::FoamXServer::FoamXError_catch &_ex ) {
           __req->set_exception( _ex->_clone() );
@@ -25382,13 +24991,13 @@ POA_FoamXServer::CaseBrowser::ICaseBrowser::dispatch (CORBA::StaticServerRequest
         CORBA::StaticAny _sa_rawRootDir( CORBA::_stc_string, &_par_rawRootDir._for_demarshal() );
         CORBA::String_var _par_caseName;
         CORBA::StaticAny _sa_caseName( CORBA::_stc_string, &_par_caseName._for_demarshal() );
-        CORBA::String_var _par_appClass;
-        CORBA::StaticAny _sa_appClass( CORBA::_stc_string, &_par_appClass._for_demarshal() );
+        CORBA::String_var _par_app;
+        CORBA::StaticAny _sa_app( CORBA::_stc_string, &_par_app._for_demarshal() );
 
         __req->add_in_arg( &_sa_rootDir );
         __req->add_in_arg( &_sa_rawRootDir );
         __req->add_in_arg( &_sa_caseName );
-        __req->add_in_arg( &_sa_appClass );
+        __req->add_in_arg( &_sa_app );
 
         if( !__req->read_args() )
           return true;
@@ -25396,7 +25005,7 @@ POA_FoamXServer::CaseBrowser::ICaseBrowser::dispatch (CORBA::StaticServerRequest
         #ifdef HAVE_EXCEPTIONS
         try {
         #endif
-          addCase( _par_rootDir.inout(), _par_rawRootDir.inout(), _par_caseName.inout(), _par_appClass.inout() );
+          addCase( _par_rootDir.inout(), _par_rawRootDir.inout(), _par_caseName.inout(), _par_app.inout() );
         #ifdef HAVE_EXCEPTIONS
         } catch( ::FoamXServer::FoamXError_catch &_ex ) {
           __req->set_exception( _ex->_clone() );

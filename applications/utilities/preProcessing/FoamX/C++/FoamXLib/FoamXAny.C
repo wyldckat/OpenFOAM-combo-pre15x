@@ -20,14 +20,11 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
-// Foam header files.
-#include "IOstreams.H"
+// Foam header files
 #include "dimensionSet.H"
 
 // FoamX header files.
@@ -223,7 +220,7 @@ void FoamX::FoamXAny::read(Istream& is)
             {
                 token t(is);
                 // Label -> tk_long any type.
-                value <<= (CORBA::Long)t.labelToken();
+                value <<= CORBA::Long(t.labelToken());
             }
             break;
 
@@ -245,7 +242,7 @@ void FoamX::FoamXAny::read(Istream& is)
             }
             break;
 
-            case Type_VectorSpace:
+            case Type_FixedList:
             case Type_List:
             case Type_Dictionary:
             case Type_Compound:
@@ -409,7 +406,7 @@ void FoamX::FoamXAny::write(Foam::Ostream& os) const
             }
             break;
 
-            case Type_VectorSpace:
+            case Type_FixedList:
             case Type_List:
             case Type_Dictionary:
             case Type_Compound:
@@ -449,13 +446,13 @@ void FoamX::FoamXAny::setDefaultValue()
 
             case Type_Char:
             {
-                value <<= (const char*)"?";
+                value <<= static_cast<const char*>("?");
             }
             break;
 
             case Type_Word:
             {
-                value <<= (const char*)"<>";
+                value <<= static_cast<const char*>("<>");
             }
             break;
 
@@ -467,7 +464,7 @@ void FoamX::FoamXAny::setDefaultValue()
             case Type_File:
             case Type_Time:
             {
-                value <<= (const char*)"";
+                value <<= static_cast<const char*>("");
             }
             break;
 

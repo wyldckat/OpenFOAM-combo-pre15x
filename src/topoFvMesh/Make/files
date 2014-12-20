@@ -1,0 +1,19 @@
+topoFvMesh                          = topoFvMesh
+
+staticTopoFvMesh                    = staticTopoFvMesh
+linearValveFvMesh                   = linearValveFvMesh
+linearValveLayersFvMesh             = linearValveLayersFvMesh
+movingConeTopoFvMesh                = movingConeTopoFvMesh
+mixerFvMesh                         = mixerFvMesh
+
+
+$(topoFvMesh)/topoFvMesh.C
+$(topoFvMesh)/newTopoFvMesh.C
+
+$(staticTopoFvMesh)/staticTopoFvMesh.C
+$(linearValveFvMesh)/linearValveFvMesh.C
+$(linearValveLayersFvMesh)/linearValveLayersFvMesh.C
+$(movingConeTopoFvMesh)/movingConeTopoFvMesh.C
+$(mixerFvMesh)/mixerFvMesh.C
+
+LIB = $(FOAM_LIBBIN)/libtopoFvMesh

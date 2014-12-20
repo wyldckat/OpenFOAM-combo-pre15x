@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.2                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,9 +11,9 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root ".";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.2/tutorials/icoFoam";
     case "elbow";
-    instance "constant";
+    instance ""constant"";
     local "polyMesh";
 
     class polyBoundaryMesh;
@@ -27,7 +27,6 @@ FoamFile
 wall-4
 {
     type wall;
-    physicalType wall;
     nFaces 100;
     startFace 1300;
 }
@@ -35,7 +34,6 @@ wall-4
 velocity-inlet-5
 {
     type patch;
-    physicalType inlet;
     nFaces 8;
     startFace 1400;
 }
@@ -43,7 +41,6 @@ velocity-inlet-5
 velocity-inlet-6
 {
     type patch;
-    physicalType inlet;
     nFaces 4;
     startFace 1408;
 }
@@ -51,7 +48,6 @@ velocity-inlet-6
 pressure-outlet-7
 {
     type patch;
-    physicalType outlet;
     nFaces 8;
     startFace 1412;
 }
@@ -59,7 +55,6 @@ pressure-outlet-7
 wall-8
 {
     type wall;
-    physicalType wall;
     nFaces 34;
     startFace 1420;
 }
@@ -67,7 +62,6 @@ wall-8
 frontAndBackPlanes
 {
     type empty;
-    physicalType empty;
     nFaces 1836;
     startFace 1454;
 }

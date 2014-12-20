@@ -29,7 +29,6 @@ Description
 #include "error.H"
 
 #include "primitiveMesh.H"
-#include "DynamicList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,7 +43,7 @@ void primitiveMesh::calcPointEdges() const
 
     if (debug)
     {
-        Info<< "primitiveMesh::calcPointEdges() : "
+        Pout<< "primitiveMesh::calcPointEdges() : "
             << "calculating pointEdges"
             << endl;
     }
@@ -61,22 +60,37 @@ void primitiveMesh::calcPointEdges() const
     {
         const edgeList& e = edges();
 
-        // Set up temporary storage
-        List<DynamicList<label, edgesPerPoint_> > pe(nPoints());
+        // Count edges per point
+
+        labelList npe(nPoints(), 0);
 
         forAll (e, edgeI)
         {
-            pe[e[edgeI].start()].append(edgeI);
-            pe[e[edgeI].end()].append(edgeI);
+            npe[e[edgeI].start()]++;
+            npe[e[edgeI].end()]++;
         }
 
-        // Copy into a plain list
-        pePtr_ = new labelListList(pe.size());
+
+        // Size and fill edges per point
+
+        pePtr_ = new labelListList(npe.size());
         labelListList& pointEdgeAddr = *pePtr_;
 
-        forAll (pe, pointI)
+        forAll (pointEdgeAddr, pointI)
         {
-            pointEdgeAddr[pointI].transfer(pe[pointI].shrink());
+            pointEdgeAddr[pointI].setSize(npe[pointI]);
+        }
+        npe = 0;
+
+        forAll (e, edgeI)
+        {
+            label v0 = e[edgeI].start();
+
+            pointEdgeAddr[v0][npe[v0]++] = edgeI;
+
+            label v1 = e[edgeI].end();
+
+            pointEdgeAddr[v1][npe[v1]++] = edgeI;
         }
     }
 }

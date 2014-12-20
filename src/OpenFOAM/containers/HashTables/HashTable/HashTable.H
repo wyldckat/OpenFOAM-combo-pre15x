@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     HashTable
@@ -38,8 +38,8 @@ SourceFiles
 #ifndef HashTable_H
 #define HashTable_H
 
+#include "label.H"
 #include "word.H"
-#include "hashString.H"
 #include "className.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -78,7 +78,7 @@ TemplateName(HashTable);
                           Class HashTable Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class T, class Key=word, class Hash=hashString>
+template<class T, class Key=word, class Hash=string::hash>
 class HashTable
 :
     public HashTableName
@@ -268,8 +268,10 @@ public:
         {
             friend class HashTable;
 
+#           ifndef __INTEL_COMPILER
             template<class TRef2, class TableRef2, class HashedEntryPtr2>
             friend class Iterator;
+#           endif
 
             // Private data
 

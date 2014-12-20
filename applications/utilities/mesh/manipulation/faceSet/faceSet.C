@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Selects a face set through a dictionary.
@@ -111,7 +111,7 @@ int main(int argc, char *argv[])
 
 
     // Create topoSetSources
-    ptrList<topoSetSource> topoSetSources
+    PtrList<topoSetSource> topoSetSources
     (
         faceSetDict.lookup("topoSetSources"),
         topoSetSource::iNew(mesh)
@@ -211,6 +211,11 @@ int main(int argc, char *argv[])
 
     if (action != topoSetSource::LIST)
     {
+        // Set has changed.
+
+        // Sync across coupled patches.
+        currentSet.sync(mesh);
+
         Info<< "Writing " << currentSet.name()
             << " (size " << currentSet.size() << ") to "
             << currentSet.instance()/currentSet.local()

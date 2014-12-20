@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -95,18 +95,18 @@ void gradientEnthalpyFvPatchScalarField::updateCoeffs()
         "thermophysicalProperties"
     );
     
-    const label patchi = patchMesh().index();
+    const label patchi = patch().index();
 
     fvPatchScalarField& Tw = 
-        (fvPatchScalarField&)thermo.T().boundaryField()[patchi];
+        const_cast<fvPatchScalarField&>(thermo.T().boundaryField()[patchi]);
 
     Tw.evaluate();
 
     gradient() = thermo.Cp(Tw, patchi)*Tw.snGrad()
-      + patchMesh().deltaCoeffs()*
+      + patch().deltaCoeffs()*
         (
             thermo.h(Tw, patchi)
-          - thermo.h(Tw, patchMesh().faceCells())
+          - thermo.h(Tw, patch().faceCells())
         );
 
     fixedGradientFvPatchScalarField::updateCoeffs();

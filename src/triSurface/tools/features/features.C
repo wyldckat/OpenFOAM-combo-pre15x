@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -210,7 +210,8 @@ Foam::scalar Foam::features::walkSegment
 
         if (nVisited > surf_.nEdges())
         {
-            Warning<< "walkSegment : reached iteration limit in walking "
+            WarningIn("Foam::features::walkSegment")
+                << "walkSegment : reached iteration limit in walking "
                 << "feature edges on surface from edge:" << startEdgeI
                 << " vertex:" << startPointI << nl
                 << "Returning with large length" << endl;

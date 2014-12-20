@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Editors.DictionaryEntryEditor.EntryCache;
@@ -46,7 +46,7 @@ import FoamX.Editors.CompoundEditor;
 import FoamX.Editors.SelectionEditor;
 import FoamX.Editors.DimensionSetEditor;
 import FoamX.Editors.ListEditor;
-import FoamX.Editors.VectorSpaceEditor;
+import FoamX.Editors.FixedListEditor;
 import FoamX.Util.FoamXAny;
 import FoamX.Util.FoamXTypeEx;
 import FoamX.Editors.TypeEditor.TypeDescriptorCache;
@@ -109,7 +109,40 @@ public class ListCache
         {
             displayValue_ = "List...";
         }
+
         return displayValue_;
+    }
+
+    //--------------------------------------------------------------------------
+    /**
+     * Variant of toString which appends compound entries.
+     * Used to convert command line arguments dictionary to argument string.
+     * Note that now a List will become one argument string.
+     */
+    public void toStringRaw(Vector argListVector)
+    {
+        // Collect arguments into vector (only so we can reuse
+        // CompoundCache.toStringRaw functionality)
+        Vector subArgs = new Vector();
+        super.toStringRaw(subArgs);
+
+        // Compose single string out of arguments. Enclose in brackets.
+
+        String argString = "(";
+
+        for (int i = 0; i < subArgs.size(); i++)
+        {
+            if (i > 0)
+            {
+                argString += " ";
+            }
+            argString += (String)subArgs.elementAt(i);
+        }
+
+        argString += ")";
+
+        // Add as single argument
+        argListVector.addElement(argString);
     }
 
     //--------------------------------------------------------------------------

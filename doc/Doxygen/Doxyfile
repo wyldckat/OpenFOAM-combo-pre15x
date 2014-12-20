@@ -415,6 +415,8 @@ INPUT                  = $(WM_PROJECT_DIR)/src/OpenFOAM \
                          $(WM_PROJECT_DIR)/src/randomProcesses \
                          $(WM_PROJECT_DIR)/src/sampling \
                          $(WM_PROJECT_DIR)/src/meshTools \
+                         $(WM_PROJECT_DIR)/src/movingFvMesh \
+                         $(WM_PROJECT_DIR)/src/topoFvMesh \
                          $(WM_PROJECT_DIR)/src/Gstream \
                          $(WM_PROJECT_DIR)/src/postProcessing
 

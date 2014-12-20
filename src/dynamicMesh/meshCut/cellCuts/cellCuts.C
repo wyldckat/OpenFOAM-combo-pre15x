@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -29,7 +29,7 @@ Description
 #include "cellCuts.H"
 #include "polyMesh.H"
 #include "Time.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "cellLooper.H"
 #include "refineCell.H"
 #include "meshTools.H"
@@ -198,7 +198,12 @@ Foam::label Foam::cellCuts::edgeEdgeToFace
     // Coming here means the loop is illegal since the two edges
     // are not shared by a face. We just mark loop as invalid and continue.
 
-    Warning << "cellCuts : Cannot find face on cell "
+    WarningIn
+    (
+        "Foam::cellCuts::edgeEdgeToFace"
+        "(const label cellI, const label edgeA,"
+        "const label edgeB) const"
+    )   << "cellCuts : Cannot find face on cell "
         << cellI << " that has both edges " << edgeA << ' ' << edgeB << endl
         << "faces : " << cFaces << endl
         << "edgeA : " << mesh().edges()[edgeA] << endl
@@ -237,7 +242,12 @@ Foam::label Foam::cellCuts::edgeVertexToFace
         }
     }
 
-    Warning << "cellCuts : Cannot find face on cell "
+    WarningIn
+    (
+        "Foam::cellCuts::edgeVertexToFace"
+        "(const label cellI, const label edgeI, "
+        "const label vertI) const"
+    )   << "cellCuts : Cannot find face on cell "
         << cellI << " that has both edge " << edgeI << " and vertex "
         << vertI << endl
         << "faces : " << cFaces << endl
@@ -274,7 +284,8 @@ Foam::label Foam::cellCuts::vertexVertexToFace
         }
     }
 
-    Warning << "cellCuts : Cannot find face on cell "
+    WarningIn("Foam::cellCuts::vertexVertexToFace")
+        << "cellCuts : Cannot find face on cell "
         << cellI << " that has vertex " << vertA << " and vertex "
         << vertB << endl
         << "faces : " << cFaces << endl
@@ -403,7 +414,8 @@ void Foam::cellCuts::calcFaceCuts() const
 
         if (allVerticesCut)
         {
-            Warning<< "Face " << faceI << " vertices " << f
+            WarningIn("Foam::cellCuts::calcFaceCuts() const")
+                << "Face " << faceI << " vertices " << f
                 << " has all its vertices cut. Not cutting face." << endl;
 
             cutI = 0;
@@ -714,7 +726,8 @@ bool Foam::cellCuts::walkFace
     }
     else
     {
-        Warning<< "In middle of cut. cell:" << cellI << " face:" << faceI
+        WarningIn("Foam::cellCuts::walkFace")
+            << "In middle of cut. cell:" << cellI << " face:" << faceI
             << " cuts:" << fCuts << " current cut:" << cut << endl;
 
         return false;
@@ -1610,7 +1623,8 @@ bool Foam::cellCuts::validLoop
 
     if (faceContainingLoop != -1)
     {
-        Warning<< "Found loop on cell " << cellI << " with all points"
+        WarningIn("Foam::cellCuts::validLoop")
+            << "Found loop on cell " << cellI << " with all points"
             << " on face " << faceContainingLoop << endl;
 
         writeOBJ(".", cellI, loopPoints(loop, loopWeights), labelList(0));
@@ -1675,7 +1689,7 @@ bool Foam::cellCuts::validLoop
     // Check if faces split off will have enough vertices
     if (!checkFaces(cellI, connectedPoints))
     {
-        Warning
+        WarningIn("Foam::cellCuts::validLoop")
             << "Invalid loop " << loop << " for cell " << cellI
             << " since would have too few faces on one side." << nl
             << "All faces:" << mesh().cells()[cellI] << endl;
@@ -1687,7 +1701,7 @@ bool Foam::cellCuts::validLoop
 
     if (!checkFaces(cellI, otherPoints))
     {
-        Warning
+        WarningIn("Foam::cellCuts::validLoop")
             << "Invalid loop " << loop << " for cell " << cellI
             << " since would have too few faces on one side." << nl
             << "All faces:" << mesh().cells()[cellI] << endl;
@@ -1710,7 +1724,7 @@ bool Foam::cellCuts::validLoop
             // Both sets of points are supposedly on the same side as the
             // loop normal. Oops.
 
-            Warning<< "validLoop:"
+            WarningIn("Foam::cellCuts::validLoop")
                 << " For cell:" << cellI
                 << " achorpoints and nonanchorpoints are geometrically"
                 << " on same side!" << endl
@@ -1779,7 +1793,7 @@ void Foam::cellCuts::setFromCellLoops()
                 writeOBJ(".", cellI, loopPoints(cellI), anchorPoints);
 
                 //FatalErrorIn("cellCuts::setFromCellLoops()")
-                Warning << "cellCuts::setFromCellLoops : "
+                WarningIn("cellCuts::setFromCellLoops")
                     << "Illegal loop " << loop
                     << " when recreating cut-addressing"
                     << " from existing cellLoops" << endl
@@ -2317,7 +2331,7 @@ void Foam::cellCuts::check() const
             {
                 // Should have been snapped.
                 //FatalErrorIn("cellCuts::check()")
-                Warning << "cellCuts::check() : "
+                WarningIn("cellCuts::check()")
                     << "edge:" << edgeI << " vertices:"
                     << mesh().edges()[edgeI]
                     << " weight:" << edgeWeight_[edgeI] << " should have been"

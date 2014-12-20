@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     UILList
@@ -103,25 +103,25 @@ public:
             //- Return the first entry
             T* first()
             {
-                return (T*)LListBase::first();
+                return static_cast<T*>(LListBase::first());
             }
 
             //- Return the first entry
             const T* first() const
             {
-                return (const T*)LListBase::first();
+                return static_cast<const T*>(LListBase::first());
             }
 
             //- Return the last entry
             T* last()
             {
-                return (T*)LListBase::last();
+                return static_cast<T*>(LListBase::last());
             }
 
             //- Return the last entry
             const T* last() const
             {
-                return (const T*)LListBase::last();
+                return static_cast<const T*>(LListBase::last());
             }
 
 
@@ -130,13 +130,13 @@ public:
             //- Return and remove head
             T* removeHead()
             {
-                return (T*)LListBase::removeHead();
+                return static_cast<T*>(LListBase::removeHead());
             }
 
             //- Return and remove element
             T* remove(T* p)
             {
-                return (T*)LListBase::remove(p);
+                return static_cast<T*>(LListBase::remove(p));
             }
 
 
@@ -187,7 +187,7 @@ public:
 
                 T& operator*()
                 {
-                    return (T&)LListBase_iterator::operator*();
+                    return static_cast<T&>(LListBase_iterator::operator*());
                 }
 
                 T& operator()()
@@ -237,7 +237,9 @@ public:
 
                 const T& operator*()
                 {
-                    return (const T&)LListBase_const_iterator::operator*();
+                    return 
+                        static_cast<const T&>
+                        (LListBase_const_iterator::operator*());
                 }
 
                 const T& operator()()

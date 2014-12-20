@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     lduMatrix member operations.
@@ -38,8 +38,8 @@ namespace Foam
 
 void lduMatrix::sumDiag()
 {
-    const scalarField& Lower = ((const lduMatrix&)(*this)).lower();
-    const scalarField& Upper = ((const lduMatrix&)(*this)).upper();
+    const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
+    const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
     scalarField& Diag = diag();
 
     const unallocLabelList& l = lduAddr_.lowerAddr();
@@ -55,8 +55,8 @@ void lduMatrix::sumDiag()
 
 void lduMatrix::negSumDiag()
 {
-    const scalarField& Lower = ((const lduMatrix&)(*this)).lower();
-    const scalarField& Upper = ((const lduMatrix&)(*this)).upper();
+    const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
+    const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
     scalarField& Diag = diag();
 
     const unallocLabelList& l = lduAddr_.lowerAddr();
@@ -72,13 +72,14 @@ void lduMatrix::negSumDiag()
 
 void lduMatrix::relax
 (
+    const FieldField<Field, scalar>& intCoeffsCmptAvg,
     const FieldField<Field, scalar>& magCoupleBouCoeffs,
     const lduCoupledInterfacePtrsList& interfaces,
     const scalar alpha
 )
 {
-    const scalarField& Lower = ((const lduMatrix&)(*this)).lower();
-    const scalarField& Upper = ((const lduMatrix&)(*this)).upper();
+    const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
+    const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
 
     scalarField& Diag = diag();
     scalarField sumOff(Diag.size(), 0.0);
@@ -92,20 +93,19 @@ void lduMatrix::relax
         sumOff[l[face]] += mag(Upper[face]);
     }
 
-    // Add the interface coefficients to diagonal.  Magnitude is already
-    // prepared in interfaces
+    // Add the interface internal coefficients to diagonal
+    // and the interface boundary coefficients to the summ-off-diagonal
     forAll (interfaces, patchI)
     {
         if (interfaces[patchI]->coupled())
         {
-            // Get addressing
             const unallocLabelList& pa = lduAddr_.patchAddr(patchI);
-
-            // Get coefficients
+            const scalarField& iCoeffs = intCoeffsCmptAvg[patchI];
             const scalarField& pCoeffs = magCoupleBouCoeffs[patchI];
 
             for (register label face = 0; face < pa.size(); face++)
             {
+                Diag[pa[face]] += iCoeffs[face];
                 sumOff[pa[face]] += pCoeffs[face];
             }
         }
@@ -113,6 +113,22 @@ void lduMatrix::relax
 
     Diag = max(Diag, sumOff);
     Diag /= alpha;
+
+    // Remove the interface internal coefficients from the diagonal
+    forAll (interfaces, patchI)
+    {
+        if (interfaces[patchI]->coupled())
+        {
+ 
+            const unallocLabelList& pa = lduAddr_.patchAddr(patchI);
+            const scalarField& iCoeffs = intCoeffsCmptAvg[patchI];
+
+            for (register label face = 0; face < pa.size(); face++)
+            {
+                Diag[pa[face]] -= iCoeffs[face];
+            }
+        }
+    }
 }
 
 

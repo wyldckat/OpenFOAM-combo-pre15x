@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     PrimitiveEntry constructor from Istream and Ostream output operator.
@@ -55,6 +55,15 @@ void primitiveEntry::readData(Istream& is)
     {
         newElmt(i++) = currToken;
 
+        if
+        (
+            currToken == token::BEGIN_BLOCK
+         || currToken == token::BEGIN_LIST
+        )
+        {
+            blockCount++;
+        }
+
         while
         (
             is.read(currToken)
@@ -62,11 +71,19 @@ void primitiveEntry::readData(Istream& is)
          && !(currToken == token::END_STATEMENT && blockCount == 0)
         )
         {
-            if (currToken == token::BEGIN_BLOCK)
+            if
+            (
+                currToken == token::BEGIN_BLOCK
+             || currToken == token::BEGIN_LIST
+            )
             {
                 blockCount++;
             }
-            else if (currToken == token::END_BLOCK)
+            else if
+            (
+                currToken == token::END_BLOCK
+             || currToken == token::END_LIST
+            )
             {
                 blockCount--;
             }

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     DynamicList
@@ -29,9 +29,9 @@ Description
     A dynamic list is a 1-D vector of objects of type T which resizes
     itself as necessary to accept the new objects.  Internal storage
     is a compact array and the list can be shrunk to compact storage.
-    The increment of list size is controlled by two template parameters,
-    which allows the list storage to either increate by the given increment
-    or a given multiplier.
+    The increase of list size is controlled by three template parameters,
+    which allows the list storage to either increase by the given increment
+    or the given multiplier and divider (allowing non-integer multiples).
 
 SourceFiles
     DynamicListI.H
@@ -51,14 +51,14 @@ namespace Foam
 
 // * * * * * * Forward declaration of template friend fuctions * * * * * * * //
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
 class DynamicList;
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
 Ostream& operator<<
 (
     Ostream&,
-    const DynamicList<T, SizeIncrement, SizeMultiplier>&
+    const DynamicList<T, SizeInc, SizeMult, SizeDiv>&
 );
 
 
@@ -66,7 +66,7 @@ Ostream& operator<<
                            Class DynamicList Declaration
 \*---------------------------------------------------------------------------*/
 
-template<class T, unsigned SizeIncrement=0, unsigned SizeMultiplier=2>
+template<class T, unsigned SizeInc=0, unsigned SizeMult=2, unsigned SizeDiv=1>
 class DynamicList
 :
     public List<T>
@@ -107,7 +107,7 @@ public:
             void clear();
 
             //- Shrink the List<T> to the number of elements used
-            inline DynamicList<T, SizeIncrement, SizeMultiplier>& shrink();
+            inline DynamicList<T, SizeInc, SizeMult, SizeDiv>& shrink();
 
 
     // Member Operators
@@ -126,10 +126,10 @@ public:
     // Ostream operator
 
         // Write DynamicList to Ostream.
-        friend Ostream& operator<< <T, SizeIncrement, SizeMultiplier>
+        friend Ostream& operator<< <T, SizeInc, SizeMult, SizeDiv>
         (
             Ostream&,
-            const DynamicList<T, SizeIncrement, SizeMultiplier>&
+            const DynamicList<T, SizeInc, SizeMult, SizeDiv>&
         );
 };
 

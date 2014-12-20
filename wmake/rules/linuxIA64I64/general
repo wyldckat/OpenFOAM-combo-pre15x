@@ -1,4 +1,4 @@
-CPP        = /lib/cpp $(WM_CPP_OPTIONS)
+CPP        = /lib/cpp -D$(WM_ARCH)
 AR         = ar
 ARFLAGS    = cr
 RANLIB     = ranlib

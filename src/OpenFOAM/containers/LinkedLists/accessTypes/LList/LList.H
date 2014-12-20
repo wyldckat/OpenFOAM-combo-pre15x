@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     LList
@@ -134,25 +134,25 @@ public:
             //- Return the first entry added
             T& first()
             {
-                return ((link*)LListBase::first())->obj_;
+                return static_cast<link*>(LListBase::first())->obj_;
             }
 
             //- Return const access to the first entry added
             const T& first() const
             {
-                return ((const link*)LListBase::first())->obj_;
+                return static_cast<const link*>(LListBase::first())->obj_;
             }
 
             //- Return the last entry added
             T& last()
             {
-                return ((link*)LListBase::last())->obj_;
+                return static_cast<link*>(LListBase::last())->obj_;
             }
 
             //- Return const access to the last entry added
             const T& last() const
             {
-                return ((const link*)LListBase::last())->obj_;
+                return static_cast<const link*>(LListBase::last())->obj_;
             }
 
 
@@ -173,7 +173,7 @@ public:
             //- Return and remove head
             T removeHead()
             {
-                link* elmtPtr = (link*)LListBase::removeHead();
+                link* elmtPtr = static_cast<link*>(LListBase::removeHead());
                 T data = elmtPtr->obj_;
                 delete elmtPtr;
                 return data;
@@ -231,8 +231,8 @@ public:
                 T& operator*()
                 {
                     return
-                        ((link&)(LListBase_iterator::operator*()))
-                       .obj_;
+                        static_cast<link&>
+                        (LListBase_iterator::operator*()).obj_;
                 }
 
                 T& operator()()
@@ -284,8 +284,8 @@ public:
                 const T& operator*()
                 {
                     return
-                        ((const link&)(LListBase_const_iterator::operator*()))
-                       .obj_;
+                        static_cast<const link&>
+                        (LListBase_const_iterator::operator*()).obj_;
                 }
 
                 const T& operator()()

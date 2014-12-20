@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     messageStream
@@ -131,6 +131,54 @@ public:
 
         //- Convert to Ostream
         //  Prints basic message and then returns Ostream for further info.
+        OSstream& operator()
+        (
+            const char* functionName,
+            const char* sourceFileName,
+            const int sourceFileLineNumber = 0
+        );
+
+        OSstream& operator()
+        (
+            const string& functionName,
+            const char* sourceFileName,
+            const int sourceFileLineNumber = 0
+        );
+
+        //- Convert to Ostream
+        //  Prints basic message and then returns Ostream for further info.
+        OSstream& operator()
+        (
+            const char* functionName,
+            const char* sourceFileName,
+            const int sourceFileLineNumber,
+            const string& ioFileName,
+            const label ioStartLineNumber = -1,
+            const label ioEndLineNumber = -1
+        );
+
+        //- Convert to Ostream
+        //  Prints basic message and then returns Ostream for further info.
+        OSstream& operator()
+        (
+            const char* functionName,
+            const char* sourceFileName,
+            const int sourceFileLineNumber,
+            const IOstream&
+        );
+
+        //- Convert to Ostream
+        //  Prints basic message and then returns Ostream for further info.
+        OSstream& operator()
+        (
+            const char* functionName,
+            const char* sourceFileName,
+            const int sourceFileLineNumber,
+            const dictionary&
+        );
+
+        //- Convert to Ostream
+        //  Prints basic message and then returns Ostream for further info.
         operator OSstream&();
 };
 
@@ -141,6 +189,18 @@ public:
 extern messageStream SeriousError;
 extern messageStream Warning;
 extern messageStream Info;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+// Convienient macros to add the file name and line number to the function name
+
+#define SeriousErrorIn(fn) SeriousError(fn, __FILE__, __LINE__)
+#define SeriousIOErrorIn(fn, ios) SeriousError(fn, __FILE__, __LINE__, ios)
+
+#define WarningIn(fn) Warning(fn, __FILE__, __LINE__)
+#define IOWarningIn(fn, ios) Warning(fn, __FILE__, __LINE__, ios)
+
+#define InfoIn(fn) Info(fn, __FILE__, __LINE__)
+#define IOInfoIn(fn, ios) Info(fn, __FILE__, __LINE__, ios)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

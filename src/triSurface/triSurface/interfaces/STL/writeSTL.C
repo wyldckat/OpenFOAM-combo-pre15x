@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Ascii STL format. Each region becomes 'solid' 'endsolid' block.
@@ -40,10 +40,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-void triSurface::writeSTLASCII
-(
-    Ostream& os
-) const
+void triSurface::writeSTLASCII(Ostream& os) const
 {
     labelList faceMap;
 
@@ -94,17 +91,14 @@ void triSurface::writeSTLASCII
 }
 
 
-void triSurface::writeSTLBINARY
-(
-    std::ostream& os
-) const
+void triSurface::writeSTLBINARY(std::ostream& os) const
 {
     // Write the STL header
     string header("Foam binary STL", STLheaderSize);
-    os.write((char *) header.c_str(), STLheaderSize);
+    os.write(header.c_str(), STLheaderSize);
 
     label nTris = size();
-    os.write((char *) &nTris, sizeof(unsigned int));
+    os.write(reinterpret_cast<char*>(&nTris), sizeof(unsigned int));
 
     const vectorField& normals = faceNormals();
 

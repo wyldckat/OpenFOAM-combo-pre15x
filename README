@@ -43,23 +43,23 @@ Download and unpack the files in the $HOME/OpenFOAM directory as
 described in: http://www.openfoam.org/download.html
 
 The environment variable settings are contained in files in a
-.OpenFOAM-1.1 directory in the OpenFOAM release, i.e. in
-$HOME/OpenFOAM/OpenFOAM-1.1/.OpenFOAM-1.1
+.OpenFOAM-1.2 directory in the OpenFOAM release, i.e. in
+$HOME/OpenFOAM/OpenFOAM-1.2/.OpenFOAM-1.2
 
 a) EITHER, if running bash or ksh (if in doubt type 'echo $SHELL'),
-source the .OpenFOAM-1.1/bashrc file by adding the following line to
+source the .OpenFOAM-1.2/bashrc file by adding the following line to
 the end of your $HOME/.bashrc file:
 
-. $HOME/OpenFOAM/OpenFOAM-1.1/.OpenFOAM-1.1/bashrc
+. $HOME/OpenFOAM/OpenFOAM-1.2/.OpenFOAM-1.2/bashrc
 
 Then update the environment variables by sourcing the $HOME/.bashrc
 file by typing in the terminal:
 . $HOME/.bashrc
 
-b) OR, if running tcsh or csh, source the .OpenFOAM-1.1/cshrc file by
+b) OR, if running tcsh or csh, source the .OpenFOAM-1.2/cshrc file by
 adding the following line to the end of your $HOME/.cshrc file:
 
-source $HOME/OpenFOAM/OpenFOAM-1.1/.OpenFOAM-1.1/cshrc
+source $HOME/OpenFOAM/OpenFOAM-1.2/.OpenFOAM-1.2/cshrc
 
 The update the environment variables by sourcing the $HOME/.bashrc
 file by typing in the terminal:
@@ -97,20 +97,20 @@ contact your system administrator.
 6. Getting Started
 ~~~~~~~~~~~~~~~~~~
 Create a project directory within the $HOME/OpenFOAM directory named
-<userName>-1.1 (e.g. 'chris-1.1' for user chris) and create a
+<userName>-1.2 (e.g. 'chris-1.2' for user chris) and create a
 directory named 'run' within it, e.g. by typing:
 
-mkdir -p $HOME/OpenFOAM/${LOGNAME}-1.1/run
+mkdir -p $HOME/OpenFOAM/${LOGNAME}-1.2/run
 
 Copy the 'tutorial' examples directory in the OpenFOAM distribution to the
 'run' directory.  If OpenFOAM environment variables are set correctly, then  
 the following command will be correct:
 
-cp -r $WM_PROJECT_DIR/tutorials $HOME/OpenFOAM/${LOGNAME}-1.1/run
+cp -r $WM_PROJECT_DIR/tutorials $HOME/OpenFOAM/${LOGNAME}-1.2/run
 
 Run the first example case of incompressible laminar flow in a cavity:
  
-cd $HOME/OpenFOAM/${LOGNAME}-1.1/run/tutorials/icoFoam 
+cd $HOME/OpenFOAM/${LOGNAME}-1.2/run/tutorials/icoFoam 
 blockMesh . cavity 
 icoFoam . cavity 
 
@@ -143,6 +143,7 @@ icoFoam . cavity
     Hilary Spencer
     Andy Heather
     Henrik Rusche
+    Bernhard Gschaider
 
 A. Network settings
 ~~~~~~~~~~~~~~~~~~~

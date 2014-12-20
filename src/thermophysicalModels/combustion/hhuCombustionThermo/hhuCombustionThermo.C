@@ -20,12 +20,16 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "hhuCombustionThermo.H"
 #include "fvMesh.H"
+#include "zeroGradientFvPatchFields.H"
+#include "fixedUnburntEnthalpyFvPatchScalarField.H"
+#include "gradientUnburntEnthalpyFvPatchScalarField.H"
+#include "mixedUnburntEnthalpyFvPatchScalarField.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -36,6 +40,63 @@ namespace Foam
 
 defineTypeNameAndDebug(hhuCombustionThermo, 0);
 defineRunTimeSelectionTable(hhuCombustionThermo, fvMesh);
+
+// * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
+
+wordList hhuCombustionThermo::huBoundaryTypes()
+{
+    const volScalarField::GeometricBoundaryField& tbf = Tu_.boundaryField();
+
+    wordList hbt = tbf.types();
+
+    forAll(tbf, patchi)
+    {
+        if (isA<fixedValueFvPatchScalarField>(tbf[patchi]))
+        {
+            hbt[patchi] = fixedUnburntEnthalpyFvPatchScalarField::typeName;
+        }
+        else if
+        (
+            isA<zeroGradientFvPatchScalarField>(tbf[patchi])
+         || isA<fixedGradientFvPatchScalarField>(tbf[patchi])
+        )
+        {
+            hbt[patchi] = gradientUnburntEnthalpyFvPatchScalarField::typeName;
+        }
+        else if (isA<mixedFvPatchScalarField>(tbf[patchi]))
+        {
+            hbt[patchi] = mixedUnburntEnthalpyFvPatchScalarField::typeName;
+        }
+    }
+
+    return hbt;
+}
+
+void hhuCombustionThermo::huBoundaryCorrection(volScalarField& hu)
+{
+    volScalarField::GeometricBoundaryField& hbf = hu.boundaryField();
+
+    forAll(hbf, patchi)
+    {
+        if
+        (
+            isA<gradientUnburntEnthalpyFvPatchScalarField>(hbf[patchi])
+        )
+        {
+            refCast<gradientUnburntEnthalpyFvPatchScalarField>(hbf[patchi])
+                .gradient() = hbf[patchi].fvPatchField::snGrad();
+        }
+        else if
+        (
+            isA<mixedUnburntEnthalpyFvPatchScalarField>(hbf[patchi])
+        )
+        {
+            refCast<mixedUnburntEnthalpyFvPatchScalarField>(hbf[patchi])
+                .refGrad() = hbf[patchi].fvPatchField::snGrad();
+        }
+    }
+}
+
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -68,7 +129,7 @@ hhuCombustionThermo::hhuCombustionThermo(const fvMesh& mesh)
         ),
         mesh,
         dimensionSet(0, 2, -2, 0, 0),
-        hBoundaryTypes()
+        huBoundaryTypes()
     )
 {}
 

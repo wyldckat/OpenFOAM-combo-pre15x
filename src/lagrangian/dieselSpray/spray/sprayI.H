@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -63,12 +63,12 @@ inline const volScalarField& spray::T() const
     return T_;
 }
 
-inline ptrList<injector>& spray::injectors()
+inline PtrList<injector>& spray::injectors()
 {
     return injectors_;
 }
 
-inline const ptrList<injector>& spray::injectors() const
+inline const PtrList<injector>& spray::injectors() const
 {
     return injectors_;
 }
@@ -228,7 +228,7 @@ inline const liquidMixture& spray::fuels() const
     return fuels_;
 }
 
-inline const ptrList<specieProperties>& spray::gasProperties() const
+inline const PtrList<specieProperties>& spray::gasProperties() const
 {
     return gasProperties_;
 }
@@ -320,12 +320,12 @@ inline const scalarField& spray::shs() const
 }
 
 
-inline ptrList<scalarField>& spray::srhos()
+inline PtrList<scalarField>& spray::srhos()
 {
     return srhos_;
 }
 
-inline const ptrList<scalarField>& spray::srhos() const
+inline const PtrList<scalarField>& spray::srhos() const
 {
     return srhos_;
 }

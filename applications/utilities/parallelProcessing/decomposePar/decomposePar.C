@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     decomposePar
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
     List<SLList<indexedParticle*>*> cellParticles
     (
         mesh.nCells(),
-        (SLList<indexedParticle*>*)NULL
+        reinterpret_cast<SLList<indexedParticle*>*>(NULL)
     );
 
     label i = 0;
@@ -177,16 +177,16 @@ int main(int argc, char *argv[])
 
     // Construct the vol fields
 
-    ptrList<volScalarField> volScalarFields;
+    PtrList<volScalarField> volScalarFields;
     geometricFvFieldDecomposer::readFields(mesh, objects, volScalarFields);
 
-    ptrList<volVectorField> volVectorFields;
+    PtrList<volVectorField> volVectorFields;
     geometricFvFieldDecomposer::readFields(mesh, objects, volVectorFields);
 
-    ptrList<volTensorField> volTensorFields;
+    PtrList<volTensorField> volTensorFields;
     geometricFvFieldDecomposer::readFields(mesh, objects, volTensorFields);
 
-    ptrList<surfaceScalarField> surfaceScalarFields;
+    PtrList<surfaceScalarField> surfaceScalarFields;
     geometricFvFieldDecomposer::readFields(mesh, objects, surfaceScalarFields);
 
 
@@ -195,9 +195,9 @@ int main(int argc, char *argv[])
     IOobjectList tetPVecFields(objects.lookupClass("tetPointVectorField"));
     IOobjectList tetPTensFields(objects.lookupClass("tetPointTensorField"));
 
-    ptrList<tetPointScalarField> tetPointScalarFields(tetPScalFields.size());
-    ptrList<tetPointVectorField> tetPointVectorFields(tetPVecFields.size());
-    ptrList<tetPointTensorField> tetPointTensorFields(tetPTensFields.size());
+    PtrList<tetPointScalarField> tetPointScalarFields(tetPScalFields.size());
+    PtrList<tetPointVectorField> tetPointVectorFields(tetPVecFields.size());
+    PtrList<tetPointTensorField> tetPointTensorFields(tetPTensFields.size());
 
     tetPolyMesh* tetMeshPtr = NULL;
 
@@ -269,21 +269,21 @@ int main(int argc, char *argv[])
 
     IOobjectList lagrangianObjects(mesh, runTime.timeName(), "lagrangian");
 
-    ptrList<scalarIOField> lagrangianScalarFields;
+    PtrList<scalarIOField> lagrangianScalarFields;
     lagrangianFieldDecomposer::readFields
     (
         lagrangianObjects,
         lagrangianScalarFields
     );
 
-    ptrList<vectorIOField> lagrangianVectorFields;
+    PtrList<vectorIOField> lagrangianVectorFields;
     lagrangianFieldDecomposer::readFields
     (
         lagrangianObjects,
         lagrangianVectorFields
     );
 
-    ptrList<tensorIOField> lagrangianTensorFields;
+    PtrList<tensorIOField> lagrangianTensorFields;
     lagrangianFieldDecomposer::readFields
     (
         lagrangianObjects,

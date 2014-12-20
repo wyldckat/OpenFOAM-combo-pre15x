@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Reads a cellShape
@@ -89,7 +89,7 @@ Istream& operator>>(Istream& is, cellShape& s)
     }
 
     // Read the geometry labels
-    is >> (labelList&)s;
+    is >> static_cast<labelList&>(s);
 
     if (readEndBracket)
     {
@@ -113,7 +113,7 @@ Ostream& operator<<(Ostream& os, const cellShape & s)
     // os << (s.m)->name() << token::SPACE;
 
     // Write the geometry
-    os << (const labelList&)s;
+    os << static_cast<const labelList&>(s);
 
     // End of record
     os << token::END_LIST;

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -1579,7 +1579,7 @@ void Foam::boundaryMesh::deletePatch(const word& patchName)
             << abort(FatalError);
     }
 
-    ptrList<boundaryPatch> newPatches(patches_.size() - 1);
+    PtrList<boundaryPatch> newPatches(patches_.size() - 1);
 
     for (label patchI = 0; patchI < delPatchI; patchI++)
     {
@@ -1631,11 +1631,11 @@ void Foam::boundaryMesh::changePatchType
     }
 
 
-    // Cause we can't reassign to individual ptrList elems ;-(
+    // Cause we can't reassign to individual PtrList elems ;-(
     // work on copy
 
 
-    ptrList<boundaryPatch> newPatches(patches_.size());
+    PtrList<boundaryPatch> newPatches(patches_.size());
 
     forAll(patches_, patchI)
     {
@@ -1711,7 +1711,7 @@ void Foam::boundaryMesh::changeFaces
     }
 
     // Update patch info
-    ptrList<boundaryPatch> newPatches(patches_.size());
+    PtrList<boundaryPatch> newPatches(patches_.size());
 
     forAll(patches_, patchI)
     {

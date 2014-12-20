@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -47,15 +47,13 @@ using namespace Foam;
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 
-//void write(const string& procLabel, const word& name, const scalarField& elems)
+//void write(const word& name, const scalarField& elems)
 //{
-//    Sout<< procLabel.c_str()
-//        << name << endl;
+//    Pout<< name << endl;
 //
 //    forAll(elems, elemI)
 //    {
-//        Sout<< procLabel.c_str()
-//            << "    " << elemI << "  " << elems[elemI] << endl;
+//        Pout<< "    " << elemI << "  " << elems[elemI] << endl;
 //    }
 //}
 //
@@ -63,13 +61,11 @@ using namespace Foam;
 //    {
 //        write
 //        (
-//            procLabel,
 //            word("p") + "_" + patches[patchI].name(),
 //            p.boundaryField()[patchI]
 //        );
 //    }
-//    Sout<< procLabel.c_str()
-//        << endl << endl;
+//    Pout<< endl << endl;
 
 
 void send
@@ -81,12 +77,9 @@ void send
     MPI_Request& request
 )
 {
-    string procLabel('[' + word(name(Pstream::myProcNo())) + "]-");
-
     bool transferFailed;
 
-//    Sout<< procLabel.c_str()
-//        << "ProcPatch:" << procPatchI
+//    Pout<< "ProcPatch:" << procPatchI
 //        << "  sending:" << sendBuf.size() * sizeof(float)
 //        << " bytes" << endl;
 
@@ -122,8 +115,7 @@ void send
             << "MPI_Send cannot send outgoing message";
         Pstream::abort();
     }
-//    Sout<< procLabel.c_str()
-//        << "ProcPatch:" << procPatchI
+//    Pout<< "ProcPatch:" << procPatchI
 //        << "  finished sending:" << sendBuf.size() * sizeof(float)
 //        << " bytes" << endl;
 }
@@ -139,12 +131,9 @@ void recv
     MPI_Request& request
 )
 {
-    string procLabel('[' + word(name(Pstream::myProcNo())) + "]-");
-
     bool transferFailed;
 
-//    Sout<< procLabel.c_str()
-//        << "ProcPatch:" << procPatchI
+//    Pout<< "ProcPatch:" << procPatchI
 //        << "  receiving:" << recvBuf.size() * sizeof(float)
 //        << " bytes" << endl;
 
@@ -197,8 +186,7 @@ void recv
         Pstream::abort();
     }
 
-//    Sout<< procLabel.c_str()
-//        << "ProcPatch:" << procPatchI
+//    Pout<< "ProcPatch:" << procPatchI
 //        << "  finished receiving:"
 //        << recvBuf.size() * sizeof(float)
 //        << " bytes" << endl;
@@ -240,10 +228,6 @@ int main(int argc, char *argv[])
     Info<< "Mesh and fields read in = "
         << runTime.cpuTimeIncrement()
         << " s\n" << endl << endl;
-
-
-    string procLabel('[' + word(name(Pstream::myProcNo())) + "]-");
-
 
     const polyPatchList& patches = mesh.boundaryMesh();
 
@@ -294,8 +278,7 @@ int main(int argc, char *argv[])
         sendBuf[procPatchI].setSize(patches[patchI].size());
         recvBuf[procPatchI].setSize(patches[patchI].size());
 
-        Sout<< procLabel.c_str()
-            << "Patch:" << patchI << " procPatch:" << procPatchI
+        Pout<< "Patch:" << patchI << " procPatch:" << procPatchI
             << "  size:" << patches[patchI].size() << endl;
     }
 

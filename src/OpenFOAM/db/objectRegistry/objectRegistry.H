@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     objectRegistry
@@ -157,12 +157,6 @@ public:
 
             //- Remove an regIOobject from registry
             bool checkOut(regIOobject&) const;
-
-            //- Update registry if it hasn't already been updated
-            virtual bool update();
-  
-            //- Reset the updated flag
-            virtual void resetUpdate();
 
 
         // Reading

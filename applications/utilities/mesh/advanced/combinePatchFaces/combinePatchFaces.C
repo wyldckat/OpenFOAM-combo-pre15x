@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Checks for neighbouring patch faces on same cell and combines them.
@@ -37,7 +37,7 @@ Description
 #include "morphMesh.H"
 #include "mapPolyMesh.H"
 #include "Map.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "primitiveFacePatch.H"
 #include "physicalConstants.H"
 
@@ -248,8 +248,13 @@ label mergeCellFaces
             //  so might cause cell < tetrahedron)
             if ((mesh.cells()[cellI].size() - (myFaceI-1)) < 4)
             {
-                Warning
-                    << "Not merging since cell would get less than 4 faces"
+                WarningIn
+                (
+                    "label mergeCellFaces(const morphMesh& mesh, "
+                    "const scalar minCos, const bool allowConcaveFaces,"
+                    "const label patchI, const label cellI, "
+                    "const labelList& meshFaces, polyTopoChange& meshMod)"
+                )   << "Not merging since cell would get less than 4 faces"
                     << nl
                     << "Patch:" << patchI
                     << " cell:" << cellI
@@ -276,8 +281,13 @@ label mergeCellFaces
             )
             {
                 // Region is not convex or has hole. Don't merge.
-                Warning
-                    << "Not merging since faces of region do not form a single"
+                WarningIn
+                (
+                    "label mergeCellFaces(const morphMesh& mesh, "
+                    "const scalar minCos, const bool allowConcaveFaces,"
+                    "const label patchI, const label cellI, "
+                    "const labelList& meshFaces, polyTopoChange& meshMod)"
+                )   << "Not merging since faces of region do not form a single"
                     << " convex, hole-free face."
                     << nl
                     << "Patch:" << patchI

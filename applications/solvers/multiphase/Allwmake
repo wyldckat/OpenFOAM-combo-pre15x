@@ -6,3 +6,5 @@ wmake lesInterFoam
 wmake rasInterFoam
 wmake bubbleFoam
 wmake settlingFoam
+wmake twoLiquidMixingFoam
+(cd twoPhaseEulerFoam ; Allwmake)

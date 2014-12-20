@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -109,8 +109,7 @@ void Foam::ParSortableList<Type>::checkAndSend
 
         if (debug)
         {
-            Sout<< '[' << Pstream::myProcNo() << "] "
-                <<  "Sending to " << destProcI << " elements:" << values
+            Pout<<  "Sending to " << destProcI << " elements:" << values
                 << endl;
         }
 
@@ -173,10 +172,9 @@ void Foam::ParSortableList<Type>::sort()
 
     if (debug)
     {
-        Sout<< '[' << Pstream::myProcNo() << "] "
-            << "pivots:";
-        write(pivots, Sout);
-        Sout<< endl;
+        Pout<< "pivots:";
+        write(pivots, Pout);
+        Pout<< endl;
     }
 
 
@@ -199,10 +197,9 @@ void Foam::ParSortableList<Type>::sort()
 
         if (debug)
         {
-            Sout<< '[' << Pstream::myProcNo() << "] "
-                << "allPivots:";
-            write(allPivots, Sout);
-            Sout<< endl;
+            Pout<< "allPivots:";
+            write(allPivots, Pout);
+            Pout<< endl;
         }
 
         getPivots(sortedPivots, pivots);
@@ -211,10 +208,9 @@ void Foam::ParSortableList<Type>::sort()
 
     if (debug)
     {
-        Sout<< '[' << Pstream::myProcNo() << "] "
-            << "new pivots:";
-        write(pivots, Sout);
-        Sout<< endl;
+        Pout<< "new pivots:";
+        write(pivots, Pout);
+        Pout<< endl;
     }
 
 
@@ -277,8 +273,7 @@ void Foam::ParSortableList<Type>::sort()
 
     if (debug & 2)
     {
-        Sout<< '[' << Pstream::myProcNo() << "] "
-            << "Not sending (to myself) elements "
+        Pout<< "Not sending (to myself) elements "
             << ownValues << endl;
     }
 
@@ -299,8 +294,7 @@ void Foam::ParSortableList<Type>::sort()
         {
             if (debug & 2)
             {
-                Sout<< '[' << Pstream::myProcNo() << "] "
-                    << "Copying from own:" << ownValues << endl;
+                Pout<< "Copying from own:" << ownValues << endl;
             }
 
             // Copy ownValues,ownIndices into combined buffer
@@ -314,8 +308,7 @@ void Foam::ParSortableList<Type>::sort()
             {
                 if (debug)
                 {
-                    Sout<< '[' << Pstream::myProcNo() << "] "
-                        << "Receiving from " << procI << endl;
+                    Pout<< "Receiving from " << procI << endl;
                 }
 
                 IPstream fromSlave(procI);
@@ -324,16 +317,14 @@ void Foam::ParSortableList<Type>::sort()
 
                 if (debug & 2)
                 {
-                    Sout<< '[' << Pstream::myProcNo() << "] "
-                        << "Received from " << procI
+                    Pout<< "Received from " << procI
                         << " elements:" << recValues << endl;
                 }
             }
 
             if (debug)
             {
-                Sout<< '[' << Pstream::myProcNo() << "] "
-                    << "Copying starting at:" << combinedI << endl;
+                Pout<< "Copying starting at:" << combinedI << endl;
             }
             copyInto(recValues, recIndices, procI, combinedI, combinedValues);
         }

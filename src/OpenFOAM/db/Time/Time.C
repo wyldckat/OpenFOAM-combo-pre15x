@@ -20,11 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "Time.H"
+#include "PstreamReduceOps.H"
 
 #include <sstream>
 
@@ -136,7 +137,7 @@ Foam::Time::Time
     stopAt_(saEndTime),
     writeControl_(wcTimeStep),
     writeInterval_(GREAT),
-    cycleWrite_(0),
+    purgeWrite_(0),
 
     writeFormat_(IOstream::ASCII),
     writeVersion_(IOstream::currentVersion),
@@ -169,45 +170,9 @@ Foam::Time::Time
                 }
                 else
                 {
-                    Warning
-                        << "Time::Time(const word&, const fileName&) : " << nl
+                    WarningIn("Time::Time(const word&, const fileName&)")
                         << "    expected startTime, firstTime or latestTime"
                         << " found " << startFrom
-                        << " in dictionary " << controlDict_.name() << nl
-                        << "    Setting time to 0.0" << endl;
-                }
-            }
-        }
-    }
-    else if (controlDict_.found("currentTime"))
-    {
-        token currentTimeToken(controlDict_.lookup("currentTime"));
-
-        if (currentTimeToken.isNumber())
-        {
-            startTime_ = currentTimeToken.number();
-        }
-        else if (currentTimeToken.isWord())
-        {
-            // Search directory for valid time directories
-            instantList Times = findTimes(path());
-
-            if (Times.size() > 0)
-            {
-                if (currentTimeToken.wordToken() == "firstTime")
-                {
-                    startTime_ = Times[0].value();
-                }
-                else if (currentTimeToken.wordToken() == "latestTime")
-                {
-                    startTime_ = Times[Times.size()-1].value();
-                }
-                else
-                {
-                    Warning
-                        << "Time::Time(const word&, const fileName&) : " << nl
-                        << "    expected <time>, firstTime or latestTime"
-                        << " found " << currentTimeToken.wordToken()
                         << " in dictionary " << controlDict_.name() << nl
                         << "    Setting time to 0.0" << endl;
                 }
@@ -223,9 +188,21 @@ Foam::Time::Time
             __LINE__,
             controlDict_.name(),
             0
-        )   << "    expected startFrom or currentTime (deprecated)"
-            << " in dictionary " << controlDict_.name() 
+        )   << "    expected startFrom in dictionary " << controlDict_.name() 
             << exit(FatalIOError);
+    }
+
+    if (Pstream::parRun())
+    {
+        scalar sumStartTime = startTime_;
+        reduce(sumStartTime, sumOp<scalar>());
+
+        if (mag(startTime_ - sumStartTime/Pstream::nProcs()) > SMALL)
+        {
+            FatalErrorIn("Time::Time(const word&, const fileName&)")
+                << "Start time is not the same for all processors"
+                << exit(FatalError); 
+        }
     }
 
     setTime(startTime_, 0);
@@ -391,21 +368,7 @@ void Foam::Time::setTime(const dimensionedScalar& newTime, const label newIndex)
 void Foam::Time::setTime(const scalar newTime, const label newIndex)
 {
     value() = newTime;
-
-    if (cycleWrite_)
-    {
-        dimensionedScalar::name() = timeName
-        (
-            (
-                label(startTime_) + timeIndex_/label(writeInterval_) - 1
-            )%cycleWrite_ + 1
-        );
-    }
-    else
-    {
-        dimensionedScalar::name() = timeName(timeToUserTime(newTime));
-    }
-
+    dimensionedScalar::name() = timeName(timeToUserTime(newTime));
     timeIndex_ = newIndex;
 }
 
@@ -439,10 +402,10 @@ void Foam::Time::setDeltaT(const scalar deltaT)
 Foam::TimeState Foam::Time::subCycle(const label nSubCycles)
 {
     TimeState ts = *this;
-
-    setTime(*this - deltaT(), timeIndex() - 1);
+    setTime(*this - deltaT(), (timeIndex() - 1)*nSubCycles);
     deltaT_ /= nSubCycles;
     deltaT0_ /= nSubCycles;
+    deltaTSave_ = deltaT0_;
 
     return ts;
 }
@@ -549,9 +512,21 @@ Foam::Time& Foam::Time::operator++()
         break;
     };
 
-    if (stopAt_ == saNextWrite && outputTime_ == true && !end())
+    if (!end())
     {
-        endTime_ = value();
+        if (stopAt_ == saNoWriteNow)
+        {
+            endTime_ = value();
+        }
+        else if (stopAt_ == saWriteNow)
+        {
+            endTime_ = value();
+            outputTime_ = true;
+        }
+        else if (stopAt_ == saNextWrite && outputTime_ == true)
+        {
+            endTime_ = value();
+        }
     }
 
     return *this;

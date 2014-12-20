@@ -20,10 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
-
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -185,7 +182,7 @@ GeometricBoundaryField
 (
     const BoundaryMesh& bmesh,
     const Field<Type>& field,
-    const FieldField<PatchField, Type>& ptfl
+    const PtrList<PatchField<Type> >& ptfl
 )
 :
     FieldField<PatchField, Type>(bmesh.size()),
@@ -319,7 +316,7 @@ template<class Type, template<class> class PatchField, class GeoMesh>
 wordList GeometricField<Type, PatchField, GeoMesh>::GeometricBoundaryField::
 types() const
 {
-    FieldField<PatchField, Type>& pff = (FieldField<PatchField, Type>&)(*this);
+    const FieldField<PatchField, Type>& pff = *this;
 
     wordList Types(pff.size());
 
@@ -361,7 +358,7 @@ writeEntry(const word& keyword, Ostream& os) const
     {
         //if (bmesh_[patchi].type() != emptyPolyPatch::typeName)
         //{
-            os  << indent << this->operator[](patchi).patchMesh().name() << nl
+            os  << indent << this->operator[](patchi).patch().name() << nl
                 << indent << token::BEGIN_BLOCK << nl
                 << incrIndent << this->operator[](patchi) << decrIndent
                 << indent << token::END_BLOCK << endl;
@@ -469,7 +466,7 @@ Ostream& operator<<
     GeometricBoundaryField& bf
 )
 {
-    os << (const FieldField<PatchField, Type>&)bf;
+    os << static_cast<const FieldField<PatchField, Type>&>(bf);
     return os;
 }
 

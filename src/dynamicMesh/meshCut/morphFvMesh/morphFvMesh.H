@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     morphFvMesh
@@ -58,7 +58,7 @@ class morphFvMesh
 
     //- Helper function to read fields
     template<class GeoField>
-    void readFields(const IOobjectList&, ptrList<GeoField>&) const;
+    void readFields(const IOobjectList&, PtrList<GeoField>&) const;
 
 public:
 
@@ -84,12 +84,6 @@ public:
 
 
     // Member Functions
-
-        //- Add boundary patches. Constructor helper
-        void addFvPatches(const List<polyPatch*>& patches);
-
-        //- Remove fvPatches
-        void removeFvBoundary();
 
         //- Return raw points
         const pointField& allPoints() const
@@ -139,12 +133,30 @@ public:
             return fvMesh::setV0();
         }
 
+        //- Add boundary patches. Constructor helper
+        virtual void addFvPatches(const List<polyPatch*>& patches);
+
+        //- Remove fvPatches
+        virtual void removeFvBoundary();
+
         //- Change topology of the mesh given the topological changes,
         //  change geometry and map the fields.
-        void updateTopology(const polyTopoChange& changer);
+        virtual void updateTopology(const polyTopoChange& changer);
 
         //- Reset time of last morph
-        bool setMorphTimeIndex(const label newTimeIndex) const;
+        virtual bool setMorphTimeIndex(const label newTimeIndex) const;
+
+        //- Inplace modify mesh primitives. Use addFvPatches to add boundary
+        //  later.
+        void reset
+        (
+            const pointField& points,
+            const faceList& faces,
+            const cellList& cells
+        )
+        {
+            fvMesh::reset(points, faces, cells);
+        }
 };
 
 

@@ -2,7 +2,7 @@
 
 cWARN        = 
 
-cc          = icc
+cc          = icc -gcc-version=330
 
 include $(RULES)/c$(WM_COMPILE_OPTION)
 

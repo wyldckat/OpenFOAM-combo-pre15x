@@ -132,7 +132,7 @@ Foam::pointHit Foam::faceTriangulation::rayEdgeIntersect
     if (mag(mag(rayDir) - 1) > edgeRelTol)
     {
         FatalErrorIn("rayEdgeIntersect")
-            << "Normal " << normal << " mag " << mag(rayDir)
+            << "Ray vector " << rayDir << " mag " << mag(rayDir)
             << " not normalized to within " << edgeRelTol
             << abort(FatalError);
     }
@@ -197,8 +197,6 @@ bool Foam::faceTriangulation::triangleContainsPoint
         return false;
     }
 }
-
-
 
 
 // Starting from startIndex find diagonal. Return in index1, index2.
@@ -274,9 +272,8 @@ void Foam::faceTriangulation::findDiagonal
 
     if (minIndex == -1)
     {
-        Warning
-            << "faceTriangulation::findDiagonal :"
-            << " Could not find intersection starting from " << f[startIndex]
+        WarningIn("faceTriangulation::findDiagonal")
+            << "Could not find intersection starting from " << f[startIndex]
             << " for face " << f << endl;
 
         index1 = -1;
@@ -375,10 +372,6 @@ Foam::label Foam::faceTriangulation::findStart
         const vector& rightEdge = edges[right(size, faceVertI)];
         const vector& leftEdge = -edges[left(size, faceVertI)];
 
-        //Info<< "    Vertex:" << f[faceVertI] << "  sign:"
-        //    << ((rightEdge ^ leftEdge) & normal)
-        //    << "  cos:" << (rightEdge & leftEdge) << endl;
-
         if (((rightEdge ^ leftEdge) & normal) < SMALL)
         {
             scalar cos = rightEdge & leftEdge;
@@ -407,11 +400,11 @@ Foam::label Foam::faceTriangulation::findStart
                 minIndex = faceVertI;
             }
         }
-        //Info<< "    Minimum convex:" << f[minIndex] << endl;
+        //Pout<< "    Minimum convex:" << f[minIndex] << endl;
     }
     else
     {
-        //Info<< "    Minimum concave:" << f[minIndex] << " cos:" << minCos
+        //Pout<< "    Minimum concave:" << f[minIndex] << " cos:" << minCos
         //    << endl;
     }
 
@@ -435,10 +428,12 @@ bool Foam::faceTriangulation::split
 
     if (size <= 2)
     {
-        FatalErrorIn
+        WarningIn
         (
-            "split(const face&, const pointField&, label&, faceList&)"
-        )   << "Illegal face:" << f << abort(FatalError);
+            "split(const pointField&, const face&, const vector&, label&)"
+        )   << "Illegal face:" << f
+            << " with points " << IndirectList<point>(points, f)
+            << endl;
 
         return false;
     }
@@ -457,29 +452,50 @@ bool Foam::faceTriangulation::split
         // General case. Start splitting for -flattest concave angle
         // -or flattest convex angle if no concave angles.
 
-        const vectorField edges(calcEdges(f, points));
+        tmp<vectorField> tedges(calcEdges(f, points));
+        const vectorField& edges = tedges();
 
         label startIndex = findStart(f, edges, normal);
 
         // Find diagonal to split face across
         label index1 = -1;
         label index2 = -1;
-        findDiagonal
-        (
-            points,
-            f,
-            edges,
-            normal,
-            startIndex,
-            index1,
-            index2
-        );
 
-        if ((index1 == -1) && (index2 == -1))
+        for (label iter = 0; iter < f.size(); iter++)
         {
-            // Could not find diagonal.
+            findDiagonal
+            (
+                points,
+                f,
+                edges,
+                normal,
+                startIndex,
+                index1,
+                index2
+            );
+
+            if (index1 != -1 && index2 != -1)
+            {
+                // Found correct diagonal
+                break;
+            }
+
+            // Try splitting from next startingIndex.
+            startIndex = nexti(f.size(), startIndex);
+        }
+
+        if (index1 == -1 || index2 == -1)
+        {
+            WarningIn
+            (
+                "split(const pointField&, const face&, const vector&, label&)"
+            )   << "Cannot find valid diagonal on face " << f
+                << " with points " << IndirectList<point>(points, f)
+                << endl;
+
             return false;
         }
+
 
         // Split into two subshapes.
         //     face1: index1 to index2
@@ -520,11 +536,7 @@ bool Foam::faceTriangulation::split
             faceVertI = nexti(size, faceVertI);
         }
 
-        // Split faces
-        //Info<< "Split " << f.size() << " into" << endl
-        //    << "   face1:" << face1.size() << endl
-        //    << "   face2:" << face2.size() << endl;
-
+        // Decompose the split faces
         return
             split(points, face1, normal, triI)
          && split(points, face2, normal, triI);
@@ -590,28 +602,6 @@ Foam::faceTriangulation::faceTriangulation(Istream& is)
 :
     triFaceList(is)
 {}
-
-
-
-// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
-
-bool Foam::faceTriangulation::operator==(const faceTriangulation& rhs)
-{
-    return this->triFaceList::operator==(rhs);
-}
-
-// * * * * * * * * * * * * * * * Friend Operators  * * * * * * * * * * * * * //
-
-Foam::Istream& Foam::operator>> (Istream& is, faceTriangulation& tris)
-{
-    return is >> (triFaceList&)tris;
-}
-
-
-Foam::Ostream& Foam::operator<< (Ostream& os, const faceTriangulation& tris)
-{
-    return os << (const triFaceList&)tris;
-}
 
 
 // ************************************************************************* //

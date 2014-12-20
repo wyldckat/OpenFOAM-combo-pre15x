@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -56,10 +54,10 @@ template<class Type>
 Foam::fileName Foam::gnuplot<Type>::getFileName
 (
     const coordSet& points,
-    const Foam::HashTable<Field<Type>*>& valueSets
+    const wordList& valueSetNames
 ) const
 {
-    return getBaseName(points, valueSets) + ".gplt";
+    return this->getBaseName(points, valueSetNames) + ".gplt";
 }
 
 
@@ -67,7 +65,8 @@ template<class Type>
 void Foam::gnuplot<Type>::write
 (
     const coordSet& points,
-    const HashTable<Field<Type>*>& valueSets,
+    const wordList& valueSetNames,
+    const List<const Field<Type>*>& valueSets,
     Ostream& os
 ) const
 {
@@ -77,13 +76,7 @@ void Foam::gnuplot<Type>::write
 
     bool firstField = true;
 
-    for
-    (
-        typename HashTable<Field<Type>*>::const_iterator iter =
-            valueSets.begin();
-        iter != valueSets.end();
-        ++iter
-    )
+    forAll(valueSets, i)
     {
         if (!firstField)
         {
@@ -91,21 +84,15 @@ void Foam::gnuplot<Type>::write
         }
         firstField = false;
 
-        os  << "'-' title \"" << iter.key() << "\" with lines";
+        os  << "'-' title \"" << valueSetNames[i] << "\" with lines";
     }
     os << endl;
 
 
-    for
-    (
-        typename HashTable<Field<Type>*>::const_iterator iter =
-            valueSets.begin();
-        iter != valueSets.end();
-        ++iter
-    )
+    forAll(valueSets, i)
     {
         os << endl;
-        writeTable(points, *iter(), os);
+        writeTable(points, *valueSets[i], os);
     }
 }
 

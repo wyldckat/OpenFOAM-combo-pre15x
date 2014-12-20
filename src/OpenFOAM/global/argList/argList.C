@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     argList
@@ -123,7 +123,7 @@ argList::argList(int& argc, char**& argv)
             {
                 if (argi >= argc - 1)
                 {
-                    FatalErrorIn("argList::argList(int argc, char* argv[])")
+                    FatalError
                         << "option " << "'-" << optionName << '\''
                         << " requires an argument"
                         << exit(FatalError);
@@ -150,10 +150,6 @@ argList::argList(int& argc, char**& argv)
 
     Info<< "Exec   : " << argListString.c_str() << endl;
 
-
-    // For parallel runs prepend Sout output with processor ID
-    string procLabel;
-
     // Case is a single processor run unless it is running parallel
     int nProcs = 1;
 
@@ -177,10 +173,10 @@ argList::argList(int& argc, char**& argv)
     string timeString = clock::clockTime();
     fileName currentDir = cwd();
 
-    Sout<< procLabel.c_str() << "Date   : " << dateString.c_str() << nl
-        << procLabel.c_str() << "Time   : " << timeString.c_str() << nl
-        << procLabel.c_str() << "Host   : " << hostName() << nl
-        << procLabel.c_str() << "PID    : " << pid() << endl;
+    Pout<< "Date   : " << dateString.c_str() << nl
+        << "Time   : " << timeString.c_str() << nl
+        << "Host   : " << hostName() << nl
+        << "PID    : " << pid() << endl;
 
     jobInfo.add("startDate", dateString);
     jobInfo.add("startTime", timeString);
@@ -234,8 +230,7 @@ argList::argList(int& argc, char**& argv)
 
                         if (roots.size() != Pstream::nProcs())
                         {
-                            FatalErrorIn
-                                ("argList::argList(int argc, char* argv[])")
+                            FatalError
                                 << "number of entries in "
                                 << "decompositionDict::roots"
                                 << " is not equal to the number of processors "
@@ -259,7 +254,7 @@ argList::argList(int& argc, char**& argv)
 
                     if (nProcDirs != Pstream::nProcs())
                     {
-                        FatalErrorIn("argList::argList(int argc, char* argv[])")
+                        FatalError
                             << "number of processor directories = "
                             << nProcDirs
                             << " is not equal to the number of processors = "
@@ -298,7 +293,6 @@ argList::argList(int& argc, char**& argv)
             fromMaster >> args_ >> options_;
         }
 
-        procLabel = '[' + word(name(Pstream::myProcNo())) + "] ";
         nProcs = Pstream::nProcs();
     }
 
@@ -353,7 +347,7 @@ argList::argList(int& argc, char**& argv)
 
         if (globalCase_[globalCase_.size() - 1] == '/')
         {
-            FatalErrorIn("argList::argList(int& argc, char**& argv)")
+            FatalError
                 << "case " << globalCase_
                 << " does not exist in root " << rootPath_
                 << exit(FatalError);
@@ -372,13 +366,13 @@ argList::argList(int& argc, char**& argv)
     }
 
 
-    Sout<< procLabel.c_str() << "Root   : " << rootPath_.c_str() << nl
-        << procLabel.c_str() << "Case   : " << globalCase_.c_str() << nl
-        << procLabel.c_str() << "Nprocs : " << nProcs << endl;
+    Pout<< "Root   : " << rootPath_.c_str() << nl
+        << "Case   : " << globalCase_.c_str() << nl
+        << "Nprocs : " << nProcs << endl;
 
     if (slaveProcs.size() != 0)
     {
-        Sout<< procLabel.c_str() << "Slaves : " << slaveProcs << endl;
+        Pout<< "Slaves : " << slaveProcs << endl;
     }
 
     jobInfo.add("root", rootPath_);
@@ -455,7 +449,7 @@ bool argList::check() const
 
         if (args_.size() - 1 != validArgs.size())
         {
-            FatalErrorIn("argList::check() const")
+            FatalError
                 << "Wrong number of arguments, expected " << validArgs.size()
                 << " found " << args_.size() - 1 << endl;
             ok = false;
@@ -470,7 +464,7 @@ bool argList::check() const
                  && !validParOptions.found(iter.key())
                 )
                 {
-                    FatalErrorIn("argList::check() const")
+                    FatalError
                         << "Invalid option: -" << iter.key() << endl;
                     ok = false;
                 }
@@ -498,7 +492,7 @@ bool argList::checkRootCase() const
     {
         if (!dir(rootPath()))
         {
-            FatalErrorIn("argList::checkRootCase() const")
+            FatalError
                 << executable_
                 << ": cannot open root directory " << rootPath()
                 << endl;
@@ -508,7 +502,7 @@ bool argList::checkRootCase() const
 
         if (!dir(path()))
         {
-            FatalErrorIn("argList::checkRootCase() const")
+            FatalError
                 << executable_
                 << ": Cannot open case directory " << path()
                 << endl;
@@ -520,7 +514,7 @@ bool argList::checkRootCase() const
     }
     else
     {
-        FatalErrorIn("argList::checkRootCase() const")
+        FatalError
             << executable_
             << ": <root> <case> not given" << endl;
 

@@ -20,12 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "geometricFvFieldReconstructor.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "fvPatchFields.H"
 #include "emptyFvPatch.H"
 #include "emptyFvPatchField.H"
@@ -45,7 +45,7 @@ geometricFvFieldReconstructor::reconstructFvVolumeField
 )
 {
     // Read the field for all the processors
-    ptrList<GeometricField<Type, fvPatchField, volMesh> > procFields
+    PtrList<GeometricField<Type, fvPatchField, volMesh> > procFields
     (
         procMeshes_.size()
     );
@@ -74,7 +74,7 @@ geometricFvFieldReconstructor::reconstructFvVolumeField
     Field<Type> internalField(mesh_.nCells());
 
     // Create the patch fields
-    ptrList<fvPatchField<Type> > patchFields(mesh_.boundary().size());
+    PtrList<fvPatchField<Type> > patchFields(mesh_.boundary().size());
 
 
     forAll (procMeshes_, procI)
@@ -237,7 +237,7 @@ geometricFvFieldReconstructor::reconstructFvSurfaceField
 )
 {
     // Read the field for all the processors
-    ptrList<GeometricField<Type, fvPatchField, surfaceMesh> > procFields
+    PtrList<GeometricField<Type, fvPatchField, surfaceMesh> > procFields
     (
         procMeshes_.size()
     );
@@ -266,7 +266,7 @@ geometricFvFieldReconstructor::reconstructFvSurfaceField
     Field<Type> internalField(mesh_.nInternalFaces());
 
     // Create the patch fields
-    ptrList<fvPatchField<Type> > patchFields(mesh_.boundary().size());
+    PtrList<fvPatchField<Type> > patchFields(mesh_.boundary().size());
 
 
     forAll (procMeshes_, procI)

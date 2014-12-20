@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     directionMixedFvPatchField
@@ -125,10 +125,10 @@ void directionMixedFvPatchField<Type>::autoMap
     }
     else
     {
-        Field<Type>::autoMap((const FieldMapper&)m);
-        refValue_.autoMap((const FieldMapper&)m);
-        refGrad_.autoMap((const FieldMapper&)m);
-        valueFraction_.autoMap((const FieldMapper&)m);
+        Field<Type>::autoMap(m);
+        refValue_.autoMap(m);
+        refGrad_.autoMap(m);
+        valueFraction_.autoMap(m);
     }
 }
 
@@ -156,19 +156,19 @@ void directionMixedFvPatchField<Type>::rmap
 template<class Type>
 tmp<Field<Type> > directionMixedFvPatchField<Type>::snGrad() const
 {
-    const vectorField& nHat = this->patchMesh().nf();
+    const vectorField& nHat = this->patch().nf();
     Field<Type> pif = this->patchInternalField();
 
     Field<Type> normalValue = valueFraction_*transform(nHat*nHat, refValue_);
 
-    Field<Type> gradValue = pif + refGrad_/this->patchMesh().deltaCoeffs();
+    Field<Type> gradValue = pif + refGrad_/this->patch().deltaCoeffs();
 
     Field<Type> transformGradValue =
         transform(I - valueFraction_*nHat*nHat, gradValue);
 
     return
         (normalValue + transformGradValue - pif)*
-        this->patchMesh().deltaCoeffs();
+        this->patch().deltaCoeffs();
 }
 
 
@@ -181,13 +181,13 @@ void directionMixedFvPatchField<Type>::evaluate()
         this->updateCoeffs();
     }
 
-    const vectorField& nHat = this->patchMesh().nf();
+    const vectorField& nHat = this->patch().nf();
 
     Field<Type> normalValue =
         valueFraction_*transform(nHat*nHat, refValue_);
 
     Field<Type> gradValue =
-        this->patchInternalField() + refGrad_/this->patchMesh().deltaCoeffs();
+        this->patchInternalField() + refGrad_/this->patch().deltaCoeffs();
 
     Field<Type> transformGradValue =
         transform(I - valueFraction_*nHat*nHat, gradValue);
@@ -202,7 +202,7 @@ void directionMixedFvPatchField<Type>::evaluate()
 template<class Type>
 tmp<Field<Type> > directionMixedFvPatchField<Type>::snGradTransformDiag() const
 {
-    const vectorField& nHat = this->patchMesh().nf();
+    const vectorField& nHat = this->patch().nf();
     vectorField diag(nHat.size());
 
     diag.replace(vector::X, mag(nHat.component(vector::X)));

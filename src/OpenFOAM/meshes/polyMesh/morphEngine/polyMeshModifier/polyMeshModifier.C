@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Virtual base class for mesh modifiers.
@@ -48,13 +48,13 @@ Foam::polyMeshModifier::polyMeshModifier
 (
     const word& name,
     const label index,
-    const polyMeshMorphEngine& mme,
+    const polyMesh& mesh,
     const bool act
 )
 :
     name_(name),
     index_(index),
-    morphEngine_(mme),
+    mesh_(mesh),
     active_(act)
 {}
 
@@ -67,9 +67,9 @@ Foam::polyMeshModifier::~polyMeshModifier()
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
-const Foam::polyMeshMorphEngine& Foam::polyMeshModifier::morphEngine() const
+const Foam::polyMesh& Foam::polyMeshModifier::mesh() const
 {
-    return morphEngine_;
+    return mesh_;
 }
 
 

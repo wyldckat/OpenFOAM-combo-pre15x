@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     reconstructPar
@@ -76,13 +76,13 @@ int main(int argc, char *argv[])
 
     // Create the processor databases, meshes, cell addressing
     // and boundary adressing
-    ptrList<Time> databases(nProcs);
-    ptrList<fvMesh> fvMeshes(nProcs);
+    PtrList<Time> databases(nProcs);
+    PtrList<fvMesh> fvMeshes(nProcs);
 
-    ptrList<labelIOList> pointProcAddressing(nProcs);
-    ptrList<labelIOList> faceProcAddressing(nProcs);
-    ptrList<labelIOList> cellProcAddressing(nProcs);
-    ptrList<labelIOList> boundaryProcAddressing(nProcs);
+    PtrList<labelIOList> pointProcAddressing(nProcs);
+    PtrList<labelIOList> faceProcAddressing(nProcs);
+    PtrList<labelIOList> cellProcAddressing(nProcs);
+    PtrList<labelIOList> boundaryProcAddressing(nProcs);
 
     forAll (databases, procI)
     {
@@ -189,7 +189,7 @@ int main(int argc, char *argv[])
     polyMeshReconstructor meshReconstructor
     (
         mesh,
-        (ptrList<polyMesh>&)fvMeshes,
+        reinterpret_cast<PtrList<polyMesh>&>(fvMeshes),
         pointProcAddressing,
         faceProcAddressing,
         cellProcAddressing,
@@ -259,7 +259,7 @@ int main(int argc, char *argv[])
             Info << "Reconstructing tet point fields" << nl << endl;
 
             tetPolyMesh tetMesh(mesh);
-            ptrList<tetPolyMesh> tetMeshes(fvMeshes.size());
+            PtrList<tetPolyMesh> tetMeshes(fvMeshes.size());
 
             forAll (tetMeshes, procI)
             {
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
             reconstructLagrangianPositions
             (
                 mesh,
-                (ptrList<polyMesh>&)fvMeshes,
+                reinterpret_cast<PtrList<polyMesh>&>(fvMeshes),
                 faceProcAddressing,
                 cellProcAddressing
             );

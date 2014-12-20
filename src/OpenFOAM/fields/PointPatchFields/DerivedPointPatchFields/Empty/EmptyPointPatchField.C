@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -89,7 +87,7 @@ EmptyPointPatchField
 :
     PatchField<Type>(p, iF)
 {
-    if (typeid(p) != typeid(EmptyPointPatch))
+    if (!isType<EmptyPointPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -102,7 +100,7 @@ EmptyPointPatchField
             "    const dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index() << " not empty type. "
+        )   << "patch " << this->patch().index() << " not empty type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -127,7 +125,7 @@ EmptyPointPatchField
 :
     PatchField<Type>(p, iF)
 {
-    if (typeid(this->patchMesh()) != typeid(EmptyPointPatch))
+    if (!isType<EmptyPointPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -142,9 +140,9 @@ EmptyPointPatchField
             "    const PointPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }

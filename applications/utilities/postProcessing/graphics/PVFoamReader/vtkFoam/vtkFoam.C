@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -195,8 +193,6 @@ void Foam::vtkFoam::convertMesh()
 
     const fvMesh& mesh = *meshPtr_;
 
-    label nRegions = reader_->GetRegionSelection()->GetNumberOfArrays();
-
     // Read the internal mesh as region 0 if selected
     if (reader_->GetRegionSelection()->GetArraySetting(0))
     {
@@ -220,34 +216,31 @@ void Foam::vtkFoam::convertMesh()
 
 
     // Read the selected patches and add to the region list
-    for (label i=1; i<nRegions; i++)
+    label regioni = 0;
+    forAll (mesh.boundaryMesh(), patchi)
     {
-        vtkUnstructuredGrid *vtkMesh =
-            vtkUnstructuredGrid::SafeDownCast(reader_->GetOutput(i));
-
-        label patchi = i - 1;
-
-        if (reader_->GetRegionSelection()->GetArraySetting(i))
+        if (mesh.boundaryMesh()[patchi].size())
         {
-            if (mesh.boundaryMesh()[patchi].size())
+            regioni++;
+
+            vtkUnstructuredGrid *vtkMesh =
+                vtkUnstructuredGrid::SafeDownCast(reader_->GetOutput(regioni));
+
+            if (reader_->GetRegionSelection()->GetArraySetting(regioni))
             {
-                selectedRegions_[i] = true;
+                selectedRegions_[regioni] = true;
                 addPatch(mesh.boundaryMesh()[patchi], vtkMesh);
             }
             else
             {
-                selectedRegions_[i] = false;
+                selectedRegions_[regioni] = false;
+                vtkMesh->Initialize();
+                SetName
+                (
+                    vtkMesh,
+                    ('(' + mesh.boundaryMesh()[patchi].name() + ')').c_str()
+                );
             }
-        }
-        else
-        {
-            selectedRegions_[i] = false;
-            vtkMesh->Initialize();
-            SetName
-            (
-                vtkMesh,
-                ('(' + mesh.boundaryMesh()[patchi].name() + ')').c_str()
-            );
         }
     }
 }
@@ -299,20 +292,28 @@ Foam::vtkFoam::vtkFoam(const char* const FileName, vtkFoamReader* reader)
         )
     );
 
+    label regioni = 0;
     forAll(patchEntries, entryi)
     {
-        reader_->GetRegionSelection()->AddArray
-        (
-            patchEntries[entryi].keyword().c_str()
-        );
+        label nFaces(readLabel(patchEntries[entryi].dict().lookup("nFaces")));
 
-        vtkUnstructuredGrid* ugrid = vtkUnstructuredGrid::New();
-        reader_->SetNthOutput(entryi + 1, ugrid);
-        ugrid->Delete();
-        reader_->GetOutput(entryi + 1)->Initialize();
+        if (nFaces)
+        {
+            regioni++;
+
+            reader_->GetRegionSelection()->AddArray
+            (
+                patchEntries[entryi].keyword().c_str()
+            );
+
+            vtkUnstructuredGrid* ugrid = vtkUnstructuredGrid::New();
+            reader_->SetNthOutput(regioni, ugrid);
+            ugrid->Delete();
+            reader_->GetOutput(regioni)->Initialize();
+        }
     }
 
-    selectedRegions_.setSize(patchEntries.size() + 1);
+    selectedRegions_.setSize(regioni + 1);
     selectedRegions_ = true;
 
     UpdateInformation();

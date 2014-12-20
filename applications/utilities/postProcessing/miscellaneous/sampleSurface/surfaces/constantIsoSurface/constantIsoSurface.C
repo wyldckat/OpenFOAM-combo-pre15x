@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -121,38 +121,55 @@ void Foam::constantIsoSurface::correct
     const pointScalarField& pField =
         scalarCache.pointField(isoFieldName_, pInterp);
 
-    meshCutSurface constantIsoSurfaceTris
+    // Create smooth volField.
+    volScalarField smoothVolField(vField);
+
+    const labelListList& cellPoints = vField.mesh().cellPoints();
+
+    forAll(cellPoints, cellI)
+    {
+        const labelList& cPoints = cellPoints[cellI];
+
+        scalar sum = 0;
+
+        forAll(cPoints, i)
+        {
+            sum += pField[cPoints[i]];
+        }
+        smoothVolField[cellI] = sum / cPoints.size();
+    }
+    
+
+    cellDecompIsoSurfaceCuts isoSurfaceCuts 
     (
-        (const cellDecompCuts&)cellDecompIsoSurfaceCuts
-        (
-            vField,
-            pField,
-            isoVal_,
-            -0.1
-        )
+        smoothVolField,
+        pField,
+        isoVal_,
+        -0.1
     );
 
-    points_ = constantIsoSurfaceTris.points();
+    meshCutSurface isoSurf(isoSurfaceCuts);
+
+    points_ = isoSurf.points();
 
     // Convert triangles into faces
-    const triFaceList& tris = constantIsoSurfaceTris.tris();
+    faces_.setSize(isoSurf.size());
+    cellLabels_.setSize(isoSurf.size());
 
-    faces_.setSize(tris.size());
-
-    forAll(tris, triI)
+    forAll(isoSurf, triI)
     {
         face& f = faces_[triI];
-        const triFace& t = tris[triI];
+        const labelledTri& t = isoSurf[triI];
 
-        f.setSize(t.size());
+        f.setSize(3);
         f[0] = t[0];
         f[1] = t[1];
         f[2] = t[2];
+
+        cellLabels_[triI] = t.region();
     }
 
-    cellLabels_ = constantIsoSurfaceTris.cellLabels();
-
-    Info<< "Created " << name() << " :"
+    Pout<< "Created " << name() << " :"
         << "  isoValue:" << isoVal_
         << "  field:" << isoFieldName_
         << "  faces:" << faces_.size()

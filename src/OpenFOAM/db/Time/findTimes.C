@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Searches the current case directory for valid times
@@ -31,6 +31,7 @@ Description
 
 #include "Time.H"
 #include "OSspecific.H"
+#include "IStringStream.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,14 +58,16 @@ instantList Time::findTimes(const fileName& directory)
 
     // Temporary variables and counters
     label nTimes = 1;
-    double f;
 
     // Read and parse all the entries in the directory
     forAll(dirEntries, i)
     {
-        if (sscanf(dirEntries[i].c_str(), "%lf", &f) == 1)
+        IStringStream timeStream(dirEntries[i]);
+        token timeToken(timeStream);
+
+        if (timeToken.isNumber() && timeStream.eof())
         {
-            Times[nTimes].value() = f;
+            Times[nTimes].value() = timeToken.number();
             Times[nTimes].name() = dirEntries[i];
             nTimes++;
         }

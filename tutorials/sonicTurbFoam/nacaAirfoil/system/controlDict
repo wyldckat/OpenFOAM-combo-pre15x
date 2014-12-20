@@ -22,13 +22,13 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass sonicTurbFoam;
+application sonicTurbFoam;
 
 startFrom       latestTime;
 
 startTime       0;
 
-stopAt          nextWrite;
+stopAt          endTime;
 
 endTime         0.03;
 
@@ -38,13 +38,13 @@ writeControl    runTime;
 
 writeInterval   1e-06;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 
 writePrecision  6;
 
-writeCompression uncompressed;
+writeCompression compressed;
 
 timeFormat      general;
 

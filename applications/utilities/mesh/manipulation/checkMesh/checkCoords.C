@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Routines to check for point-nearness.
@@ -108,7 +108,7 @@ bool checkCoords
 
             if (report)
             {
-                Info<< "checkCoords : points "
+                Pout<< "checkCoords : points "
                     << ptI << " and " << prevPtI
                     << " with coordinates:" << pts[ptI]
                     << " and " << pts[prevPtI] << endl
@@ -131,8 +131,12 @@ bool checkCoords
     {
         if (Pstream::master())
         {
-            Warning
-                << nClose  << " points that are close together found.\n"
+            WarningIn
+            (
+                "bool checkCoords(const primitiveMesh& mesh, "
+                "const bool report, const scalar mergeTol, "
+                "labelHashSet* setPtr)"
+            ) << nClose  << " points that are close together found." << nl
                 << endl;
         }
 

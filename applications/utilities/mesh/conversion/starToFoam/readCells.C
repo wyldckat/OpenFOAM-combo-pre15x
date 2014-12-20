@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Create intermediate mesh from Prostar files
@@ -60,7 +60,7 @@ void starMesh::addRegularCell
     label regularTypeFlag = -1;
 
     // grab the shape from the table
-    const cellModel* curModelPtr = (cellModel*)NULL;
+    const cellModel* curModelPtr = reinterpret_cast<cellModel*>(NULL);
 
     if      // Tetrahedron
     (
@@ -142,7 +142,7 @@ void starMesh::addSAMMcell
 
     // grab the shape from the table
     label sammTypeFlag = -1;
-    const cellModel* curModelPtr = (cellModel*)NULL;
+    const cellModel* curModelPtr = reinterpret_cast<cellModel*>(NULL);
 
     switch (typeFlag)
     {

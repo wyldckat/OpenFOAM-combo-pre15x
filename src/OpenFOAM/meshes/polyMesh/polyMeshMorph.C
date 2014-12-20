@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Change topology of a polyMesh and create mesh-to-mesh mapping information
@@ -42,7 +42,7 @@ Description
 #include "mapPolyMesh.H"
 #include "objectMap.H"
 #include "parallelInfo.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -87,7 +87,7 @@ bool Foam::polyMesh::reorderCoupledPatches
     // Prepare patches for face reordering
     forAll (boundary_, patchI)
     {
-        boundary_[patchI].sendOrder(ref, morphMap);
+        boundary_[patchI].initOrder(ref, morphMap);
     }
 
     // Get patch face reordering
@@ -182,8 +182,8 @@ bool Foam::polyMesh::reorderCoupledPatches
         clearFaceCells();
 
         // Set new faces and cells.
-        (faceList&)faces_ = newFaces;
-        (cellList&)cells_ = newCells;
+        faces_ = newFaces;
+        cells_ = newCells;
 
         // Redo owner/neighbour calc.
         calcFaceCells();
@@ -269,7 +269,7 @@ void Foam::polyMesh::morph
     // Note.  Modified points are only influenced in the mesh motion stage
     if (debug || morphDebug)
     {
-        Sout<< "Foam::polyMesh::morph" << nl
+        Pout<< "Foam::polyMesh::morph" << nl
             << '(' << nl
             << "    const polyTopoChange& ref" << nl
             << ") : started executing topological change." << nl << endl;
@@ -346,7 +346,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added untouched points. Point count = "
+        Pout<< "Added untouched points. Point count = "
             << nNewPoints << endl;
 
         debugPointCounter = nNewPoints;
@@ -373,7 +373,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added live points: modified = "
+        Pout<< "Added live points: modified = "
             << nNewPoints - debugPointCounter;
 
         debugPointCounter = nNewPoints;
@@ -414,7 +414,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " added = " << nNewPoints - debugPointCounter
+        Pout<< " added = " << nNewPoints - debugPointCounter
             << ".  Point count = "
             << nNewPoints << endl;
 
@@ -439,7 +439,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added retired points: modified = "
+        Pout<< "Added retired points: modified = "
             << nNewPoints - debugPointCounter;
 
         debugPointCounter = nNewPoints;
@@ -472,7 +472,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " added = " << nNewPoints - debugPointCounter
+        Pout<< " added = " << nNewPoints - debugPointCounter
             << ".  Point count = "
             << nNewPoints << endl;
 
@@ -484,7 +484,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added all points.  Final point count = "
+        Pout<< "Added all points.  Final point count = "
             << nNewPoints << nl << endl;
     }
 
@@ -499,10 +499,10 @@ void Foam::polyMesh::morph
     const labelList& allOwn = allOwner();
     const labelList& allNei = allNeighbour();
 
-    List<DynamicList<face, primitiveMesh::facesPerCell_> >
+    List<DynamicList<face, primitiveMesh::facesPerCell_, 1> >
         cf(cells_.size() + ref.addedCells().size());
 
-    List<DynamicList<label, primitiveMesh::facesPerCell_> >
+    List<DynamicList<label, primitiveMesh::facesPerCell_, 1> >
         cfLabels(cells_.size() + ref.addedCells().size());
 
     // Insert untouched internal faces
@@ -606,7 +606,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Inserted added faces into cells" << endl;
+        Pout<< "Inserted added faces into cells" << endl;
     }
 
     // All internal faces now exist on the list.  Create the new face
@@ -624,7 +624,7 @@ void Foam::polyMesh::morph
     {
         if (!removedCells.found(cellI))
         {
-            const DynamicList<face, primitiveMesh::facesPerCell_>& curFaces =
+            const DynamicList<face, primitiveMesh::facesPerCell_, 1>& curFaces =
                 cf[cellI];
 
             // Resize and reset the cell-face list at the same time
@@ -676,7 +676,7 @@ void Foam::polyMesh::morph
         }
     }
 
-    List<DynamicList<label, primitiveMesh::facesPerCell_> >
+    List<DynamicList<label, primitiveMesh::facesPerCell_, 1> >
         newCellFaces(cf.size());
 
     faceList newFaces(faces_.size() + ref.faceBalance());
@@ -700,7 +700,7 @@ void Foam::polyMesh::morph
 
     forAll (cf, cellI)
     {
-        const DynamicList<face, primitiveMesh::facesPerCell_>&
+        const DynamicList<face, primitiveMesh::facesPerCell_, 1>&
             curFaces = cf[cellI];
         labelList neiCells(curFaces.size(), -1);
         label nNeighbours = 0;
@@ -734,7 +734,7 @@ void Foam::polyMesh::morph
                     if (curNei > cellI)
                     {
                         // Get the list of search faces
-                        const DynamicList<face, primitiveMesh::facesPerCell_>&
+                        const DynamicList<face, primitiveMesh::facesPerCell_, 1>&
                             searchFaces = cf[curNei];
 
                         forAll(searchFaces, neiFaceI)
@@ -819,7 +819,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added internal faces.  Face count = "
+        Pout<< "Added internal faces.  Face count = "
             << nNewFaces << endl;
 
         debugFaceCounter = nNewFaces;
@@ -882,7 +882,7 @@ void Foam::polyMesh::morph
 
         if (morphDebug)
         {
-            Sout<< "Patch " << patchI
+            Pout<< "Patch " << patchI
                 << ": added faces: untouched = "
                 << nNewFaces - debugFaceCounter;
 
@@ -913,7 +913,7 @@ void Foam::polyMesh::morph
 
         if (morphDebug)
         {
-            Sout<< " modified = " << nNewFaces - debugFaceCounter;
+            Pout<< " modified = " << nNewFaces - debugFaceCounter;
 
             debugFaceCounter = nNewFaces;
         }
@@ -939,7 +939,7 @@ void Foam::polyMesh::morph
 
         if (morphDebug)
         {
-            Sout<< " added = " << nNewFaces - debugFaceCounter
+            Pout<< " added = " << nNewFaces - debugFaceCounter
                 << ".  Face count = " << nNewFaces << endl;
 
             debugFaceCounter = nNewFaces;
@@ -963,7 +963,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added zone-only faces: modified = "
+        Pout<< "Added zone-only faces: modified = "
             << nNewFaces - debugFaceCounter;
 
             debugFaceCounter = nNewFaces;
@@ -981,7 +981,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " added = " << nNewFaces - debugFaceCounter
+        Pout<< " added = " << nNewFaces - debugFaceCounter
             << ".  Final face count = "
             << nNewFaces << nl << endl;
 
@@ -1334,7 +1334,7 @@ void Foam::polyMesh::morph
 
         if (nUnmappedFaces > 0)
         {
-            Sout<< "void polyMesh::morph(const polyTopoChange& ref) : "
+            Pout<< "void polyMesh::morph(const polyTopoChange& ref) : "
                 << "unmapped data for " << nUnmappedFaces << " faces." << endl;
         }
     }
@@ -1403,7 +1403,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added all cells.  Final cell count = "
+        Pout<< "Added all cells.  Final cell count = "
             << nNewCells << nl << endl;
     }
 
@@ -1586,7 +1586,7 @@ void Foam::polyMesh::morph
 
         if (nUnmappedCells > 0)
         {
-            Sout<< "void polyMesh::morph(const polyTopoChange& ref) : "
+            Pout<< "void polyMesh::morph(const polyTopoChange& ref) : "
                 << "unmapped data for " << nUnmappedCells << " cells." << endl;
         }
     }
@@ -1659,7 +1659,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added zone points:  untouched = " << nPointsInZone;
+        Pout<< "Added zone points:  untouched = " << nPointsInZone;
 
         debugPointsInZone = nPointsInZone;
     }
@@ -1680,7 +1680,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " modified = " << nPointsInZone - debugPointsInZone;
+        Pout<< " modified = " << nPointsInZone - debugPointsInZone;
     }
 
     // Distribute added zone points
@@ -1699,7 +1699,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " added = " << nPointsInZone - debugPointsInZone
+        Pout<< " added = " << nPointsInZone - debugPointsInZone
             << ".  Points per zone = " << nPointsInZone << endl;
     }
 
@@ -1798,7 +1798,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added zone faces: untouched = " << nFacesInZone;
+        Pout<< "Added zone faces: untouched = " << nFacesInZone;
 
         debugFacesInZone = nFacesInZone;
     }
@@ -1824,7 +1824,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " modified = " << nFacesInZone - debugFacesInZone;
+        Pout<< " modified = " << nFacesInZone - debugFacesInZone;
 
         debugFacesInZone = nFacesInZone;
     }
@@ -1849,7 +1849,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " added = " << nFacesInZone - debugFacesInZone
+        Pout<< " added = " << nFacesInZone - debugFacesInZone
             << ".  Faces per zone = " << nFacesInZone << endl;
     }
 
@@ -1957,7 +1957,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< "Added zone cells: untouched = " << nCellsInZone;
+        Pout<< "Added zone cells: untouched = " << nCellsInZone;
 
         debugCellsInZone = nCellsInZone;
     }
@@ -1978,7 +1978,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " modified = " << nCellsInZone - debugCellsInZone;
+        Pout<< " modified = " << nCellsInZone - debugCellsInZone;
 
         debugCellsInZone = nCellsInZone;
     }
@@ -1999,7 +1999,7 @@ void Foam::polyMesh::morph
 
     if (morphDebug)
     {
-        Sout<< " added = " << nCellsInZone - debugCellsInZone
+        Pout<< " added = " << nCellsInZone - debugCellsInZone
             << ".  Cells per zone = " << nCellsInZone << endl;
     }
 
@@ -2038,8 +2038,8 @@ void Foam::polyMesh::morph
 
     // Reset the new points, faces, cells
     points_ = newPointsZeroVol;
-    (faceList&)faces_ = newFaces;
-    (cellList&)cells_ = newCells;
+    faces_ = newFaces;
+    cells_ = newCells;
 
     // Reset the boundary patches
     forAll (boundary_, patchI)
@@ -2206,7 +2206,7 @@ void Foam::polyMesh::morph
 
     if (debug || morphDebug)
     {
-        Sout<< "Foam::polyMesh::morph" << nl
+        Pout<< "Foam::polyMesh::morph" << nl
             << '(' << nl
             << "    const polyTopoChange& ref" << nl
             << ") : completed topological change." << nl << endl;

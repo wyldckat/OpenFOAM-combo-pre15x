@@ -20,15 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
-    A dynamic list is a 1-D vector of objects of type T which resizes
-    itself as necessary to accept the new objects.  Internal storage
-    is a compact array and the list can be shrunk to compact storage.
-    The increment of list size is controlled by two template parameters,
-    which allows the list storage to either increate by the given increment
-    or a given multiplier.
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -36,15 +28,17 @@ Description
 
 // * * * * * * * * * * * * * * * Ostream Operator *  * * * * * * * * * * * * //
 
-template<class T, unsigned SizeIncrement, unsigned SizeMultiplier>
+template<class T, unsigned SizeInc, unsigned SizeMult, unsigned SizeDiv>
 Foam::Ostream& Foam::operator<<
 (
     Foam::Ostream& os,
-    const Foam::DynamicList<T, SizeIncrement, SizeMultiplier>& DL
+    const Foam::DynamicList<T, SizeInc, SizeMult, SizeDiv>& DL
 )
 {
-    ((DynamicList<T, SizeIncrement, SizeMultiplier>&)DL).setSize(DL.nextFree_);
-    os << (const List<T>&)DL;
+    const_cast<DynamicList<T, SizeInc, SizeMult, SizeDiv>&>(DL)
+        .setSize(DL.nextFree_);
+
+    os << static_cast<const List<T>&>(DL);
     return os;
 }
 

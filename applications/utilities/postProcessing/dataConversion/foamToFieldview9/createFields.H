@@ -1,6 +1,11 @@
 // Construct List of pointers to all vol fields
 int nFields = volScalarNames.size() + 3*volVectorNames.size();
-List<volScalarField*> volFieldPtrs(nFields, (volScalarField*)NULL);
+List<volScalarField*> volFieldPtrs
+(
+    nFields,
+    reinterpret_cast<volScalarField*>(NULL)
+);
+
 stringList volFieldNames(nFields);
 
 nFields = 0;
@@ -98,7 +103,12 @@ nFields = 0;
 
 
 int nSurfFields = surfScalarNames.size() + 3*surfVectorNames.size();
-List<surfaceScalarField*> surfFieldPtrs(nSurfFields, (surfaceScalarField*)NULL);
+List<surfaceScalarField*> surfFieldPtrs
+(
+    nSurfFields,
+    reinterpret_cast<surfaceScalarField*>(NULL)
+);
+
 stringList surfFieldNames(nSurfFields);
 
 nSurfFields = 0;

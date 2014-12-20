@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     'Stitches' a mesh.
@@ -56,19 +56,17 @@ Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "argList.H"
-#include "Time.H"
+#include "fvCFD.H"
 #include "polyTopoChange.H"
-#include "morphMesh.H"
+#include "morphFvMesh.H"
 #include "mapPolyMesh.H"
 #include "Map.H"
-#include "ListSearch.H"
-#include "morphMesh.H"
+#include "ListOps.H"
 #include "IndirectList.H"
 #include "slidingInterface.H"
 #include "perfectInterface.H"
+#include "IOobjectList.H"
 
-using namespace Foam;
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -95,6 +93,33 @@ void checkPatch(const polyBoundaryMesh& bMesh, const word& name)
 }
 
 
+// Read field
+template<class GeoField>
+void readFields
+(
+    const fvMesh& mesh,
+    const IOobjectList& objects,
+    PtrList<GeoField>& fields
+)
+{
+    // Search list of objects for volScalarFields
+    IOobjectList fieldObjects(objects.lookupClass(GeoField::typeName));
+
+    // Construct the vol scalar fields
+    fields.setSize(fieldObjects.size());
+
+    for
+    (
+        IOobjectList::iterator iter = fieldObjects.begin();
+        iter != fieldObjects.end();
+        ++iter
+    )
+    {
+        fields.hook(new GeoField(*iter(), mesh));
+    }
+}
+
+
 // Main program:
 
 int main(int argc, char *argv[])
@@ -109,6 +134,8 @@ int main(int argc, char *argv[])
 
 #   include "setRootCase.H"
 #   include "createTime.H"
+#   include "createMesh.H"
+
 
     word masterPatchName(args.args()[3]);
     word slavePatchName(args.args()[4]);
@@ -165,29 +192,17 @@ int main(int argc, char *argv[])
             << "If this is not the case use the -partial option" << nl << endl;
     }
 
-
-    morphMesh pMesh
-    (
-        IOobject
-        (
-            morphMesh::defaultRegion,
-            runTime.timeName(),
-            runTime
-        )
-    );
-
-
     // Check for non-empty master and slave patches
-    checkPatch(pMesh.boundaryMesh(), masterPatchName);
-    checkPatch(pMesh.boundaryMesh(), slavePatchName);
+    checkPatch(mesh.boundaryMesh(), masterPatchName);
+    checkPatch(mesh.boundaryMesh(), slavePatchName);
 
     // Create and add face zones and mesh modifiers
 
     // Master patch
     const polyPatch& masterPatch =
-        pMesh.boundaryMesh()
+        mesh.boundaryMesh()
         [
-            pMesh.boundaryMesh().findPatchID(masterPatchName)
+            mesh.boundaryMesh().findPatchID(masterPatchName)
         ];
 
     // Make list of masterPatch faces
@@ -215,14 +230,14 @@ int main(int argc, char *argv[])
                 isf,
                 boolList(masterPatch.size(), false),
                 0,
-                pMesh.faceZones()
+                mesh.faceZones()
             )
         );
 
         // Note: make sure to add the zones BEFORE constructing polyMeshModifier
         // (since looks up various zones at construction time)
         Info << "Adding point and face zones" << endl;
-        pMesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
+        mesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
 
         // Add the perfect interface mesh modifier
         tm[0] =
@@ -230,7 +245,7 @@ int main(int argc, char *argv[])
             (
                 "couple",
                 0,
-                pMesh.morphEngine(),
+                mesh,
                 cutZoneName,
                 masterPatchName,
                 slavePatchName
@@ -245,7 +260,7 @@ int main(int argc, char *argv[])
                 mergePatchName + "CutPointZone",
                 labelList(0),
                 0,
-                pMesh.pointZones()
+                mesh.pointZones()
             )
         );
 
@@ -257,15 +272,15 @@ int main(int argc, char *argv[])
                 isf,
                 boolList(masterPatch.size(), false),
                 0,
-                pMesh.faceZones()
+                mesh.faceZones()
             )
         );
 
         // Slave patch
         const polyPatch& slavePatch =
-            pMesh.boundaryMesh()
+            mesh.boundaryMesh()
             [
-                pMesh.boundaryMesh().findPatchID(slavePatchName)
+                mesh.boundaryMesh().findPatchID(slavePatchName)
             ];
 
         labelList osf(slavePatch.size());
@@ -283,7 +298,7 @@ int main(int argc, char *argv[])
                 osf,
                 boolList(slavePatch.size(), false),
                 1,
-                pMesh.faceZones()
+                mesh.faceZones()
             )
         );
 
@@ -296,7 +311,7 @@ int main(int argc, char *argv[])
                 labelList(0),
                 boolList(0, false),
                 2,
-                pMesh.faceZones()
+                mesh.faceZones()
             )
         );
 
@@ -304,7 +319,7 @@ int main(int argc, char *argv[])
         // Note: make sure to add the zones BEFORE constructing polyMeshModifier
         // (since looks up various zones at construction time)
         Info << "Adding point and face zones" << endl;
-        pMesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
+        mesh.addZones(pz.shrink(), fz.shrink(), cz.shrink());
 
         // Add the sliding interface mesh modifier
         tm[0] =
@@ -312,7 +327,7 @@ int main(int argc, char *argv[])
             (
                 "couple",
                 0,
-                pMesh.morphEngine(),
+                mesh,
                 mergePatchName + "MasterZone",
                 mergePatchName + "SlaveZone",
                 mergePatchName + "CutPointZone",
@@ -325,30 +340,63 @@ int main(int argc, char *argv[])
 
 
     Info << "Adding topology modifiers" << endl;
-    pMesh.addTopologyModifiers(tm);
+    mesh.addTopologyModifiers(tm);
 
-    pMesh.morphEngine().write();
+    //// Write for debugging purposes
+    //Info<< "Writing polyMesh/meshModifiers file (for debugging)" << endl;
+    //mesh.morphEngine().write();
+
+
+    // Search for list of objects for this time
+    IOobjectList objects(mesh, runTime.timeName());
+
+    // Read all current fvFields so they will get mapped
+    Info<< "Reading all current volfields" << endl;    
+    PtrList<volScalarField> volScalarFields;
+    readFields(mesh, objects, volScalarFields);
+
+    PtrList<volVectorField> volVectorFields;
+    readFields(mesh, objects, volVectorFields);
+
+    PtrList<volTensorField> volTensorFields;
+    readFields(mesh, objects, volTensorFields);
+
+    //- uncomment if you want to interpolate surface fields (usually bad idea)
+    //Info<< "Reading all current surfaceFields" << endl;    
+    //PtrList<surfaceScalarField> surfaceScalarFields;
+    //readFields(mesh, objects, surfaceScalarFields);
+    //
+    //PtrList<surfaceVectorField> surfaceVectorFields;
+    //readFields(mesh, objects, surfaceVectorFields);
+    //
+    //PtrList<surfaceTensorField> surfaceTensorFields;
+    //readFields(mesh, objects, surfaceTensorFields);
 
     runTime++;
 
+
     // Execute all polyMeshModifiers
-    pMesh.polyMesh::updateTopology();
+    mesh.updateTopology();
 
-    pMesh.movePoints(pMesh.morphMap().preMotionPoints());
+    mesh.movePoints(mesh.morphMap().preMotionPoints());
 
+    // Write mesh
     Info << nl << "Writing polyMesh to time " << runTime.timeName() << endl;
 
     IOstream::defaultPrecision(10);
-    if (!pMesh.write())
+    if (!mesh.write())
     {
         FatalErrorIn(args.executable())
             << "Failed writing polyMesh."
             << exit(FatalError);
     }
 
-    pMesh.faceZones().write();
-    pMesh.pointZones().write();
-    pMesh.cellZones().write();
+    mesh.faceZones().write();
+    mesh.pointZones().write();
+    mesh.cellZones().write();
+
+    // Write fields
+    runTime.write();
 
     Info<< nl << "end" << endl;
 

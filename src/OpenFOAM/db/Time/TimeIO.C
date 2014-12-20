@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -64,25 +64,24 @@ void Time::readDict()
         controlDict_.lookup("writeFrequency") >> writeInterval_;
     }
 
-    if (controlDict_.found("cycleWrite"))
+    if (controlDict_.found("purgeWrite"))
     {
-        cycleWrite_ = readInt(controlDict_.lookup("cycleWrite"));
+        purgeWrite_ = readInt(controlDict_.lookup("purgeWrite"));
 
-        if (cycleWrite_ < 0)
+        if (purgeWrite_ < 0)
         {
-            Warning
-                << "Time::readDict(const dictionary&) : "
-                << "invalid value for cycleWrite " << cycleWrite_
+            WarningIn("Time::readDict(const dictionary&)")
+                << "invalid value for purgeWrite " << purgeWrite_
                 << ", should be >= 0, setting to 0"
                 << endl;
 
-            cycleWrite_ = 0;
+            purgeWrite_ = 0;
         }
 
-        if (writeControl_ != wcTimeStep && cycleWrite_ > 0)
+        if (writeControl_ != wcTimeStep && purgeWrite_ > 0)
         {
             FatalIOErrorIn("Time::readDict(const dictionary&)", controlDict_)
-                << "writeControl must be set to timeStep for cycleWrite "
+                << "writeControl must be set to timeStep for purgeWrite "
                 << exit(FatalIOError);
         }
     }
@@ -105,8 +104,7 @@ void Time::readDict()
         }
         else
         {
-            Warning
-                << "Time::readDict(const dictionary&) : "
+            WarningIn("Time::readDict(const dictionary&)")
                 << "unsupported time format " << formatName
                 << endl;
         }
@@ -125,28 +123,9 @@ void Time::readDict()
         {
             endTime_ = readScalar(controlDict_.lookup("endTime"));
         }
-        else if (stopAt_ == saNoWriteNow)
-        {
-            endTime_ = value();
-        }
-        else if (stopAt_ == saWriteNow)
-        {
-            endTime_ = value();
-            outputTime_ = true;
-        }
-        else if (stopAt_ == saNextWrite)
-        {
-            endTime_ = GREAT;
-        }
         else
         {
-            Warning
-                << "Time::readDict(const dictionary&) : "
-                   "unsupported stopAt option "
-                << stopAtControlNames_[stopAt_] << nl
-                << "    supported options are "
-                   "endTime, noWriteNow, writeNow and nextWrite"
-                << nl << endl;
+            endTime_ = GREAT;
         }
     }
     else
@@ -178,6 +157,12 @@ void Time::readDict()
         (
             readUint(controlDict_.lookup("writePrecision"))
         );
+
+        Sout.precision(IOstream::defaultPrecision());
+        Serr.precision(IOstream::defaultPrecision());
+
+        Pout.precision(IOstream::defaultPrecision());
+        Perr.precision(IOstream::defaultPrecision());
     }
 
     if (controlDict_.found("writeCompression"))
@@ -228,7 +213,12 @@ void Time::readModifiedObjects()
 }
 
 
-bool Time::write() const
+bool Time::write
+(
+    IOstream::streamFormat fmt,
+    IOstream::versionNumber ver,
+    IOstream::compressionType cmp
+) const
 {
     if (outputTime())
     {
@@ -246,14 +236,42 @@ bool Time::write() const
         timeDict.add("deltaT", deltaT_);
         timeDict.add("deltaT0", deltaT0_);
 
-        timeDict.regIOobject::write();
+        timeDict.regIOobject::write
+        (
+            fmt,
+            ver,
+            cmp
+        );
 
-        return regIOobject::write();
+        bool writeOK = objectRegistry::write
+        (
+            fmt,
+            ver,
+            cmp
+        );
+
+        if (writeOK && purgeWrite_)
+        {
+            previousOutputTimes_.push(timeName());
+
+            while(previousOutputTimes_.size() > purgeWrite_)
+            {
+                rmDir(objectRegistry::path(previousOutputTimes_.pop()));
+            }
+        }
+
+        return writeOK;
     }
     else
     {
         return false;
     }
+}
+
+
+bool Time::write() const
+{
+    return regIOobject::write();
 }
 
 

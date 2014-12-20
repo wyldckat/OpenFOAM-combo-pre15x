@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     combineSampleValues
@@ -37,7 +37,7 @@ SourceFiles
 #define combineSampleValues_H
 
 #include "labelList.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "volFieldSampler.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -46,9 +46,9 @@ SourceFiles
 template<class T>
 void combineSampleValues
 (
-    const Foam::ptrList<Foam::volFieldSampler<T> >& sampledFields,
+    const Foam::PtrList<Foam::volFieldSampler<T> >& sampledFields,
     const Foam::labelListList& indexSets,
-    Foam::ptrList<Foam::volFieldSampler<T> >& masterFields
+    Foam::PtrList<Foam::volFieldSampler<T> >& masterFields
 );
 
 

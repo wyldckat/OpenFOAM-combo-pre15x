@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
     
 \*---------------------------------------------------------------------------*/
 
@@ -46,36 +44,7 @@ template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
 steadyStateDdtScheme<Type>::fvcDdt
 (
-    const dimensioned<Type> dt
-)
-{
-    return tmp<GeometricField<Type, fvPatchField, volMesh> >
-    (
-        new GeometricField<Type, fvPatchField, volMesh>
-        (
-            IOobject
-            (
-                "ddt("+dt.name()+')',
-                mesh().time().timeName(),
-                mesh()
-            ),
-            mesh(),
-            dimensioned<Type>
-            (
-                "0",
-                dt.dimensions()/dimTime,
-                pTraits<Type>::zero
-            )
-        )
-    );
-}
-
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, volMesh> >
-steadyStateDdtScheme<Type>::fvcDdt0
-(
-    const dimensioned<Type> dt
+    const dimensioned<Type>& dt
 )
 {
     return tmp<GeometricField<Type, fvPatchField, volMesh> >
@@ -131,64 +100,6 @@ steadyStateDdtScheme<Type>::fvcDdt
 
 template<class Type>
 tmp<GeometricField<Type, fvPatchField, volMesh> >
-steadyStateDdtScheme<Type>::fvcDdt0
-(
-    const GeometricField<Type, fvPatchField, volMesh>& vf
-)
-{
-    return tmp<GeometricField<Type, fvPatchField, volMesh> >
-    (
-        new GeometricField<Type, fvPatchField, volMesh>
-        (
-            IOobject
-            (
-                "ddt0("+vf.name()+')',
-                mesh().time().timeName(),
-                mesh()
-            ),
-            mesh(),
-            dimensioned<Type>
-            (
-                "0",
-                vf.dimensions()/dimTime,
-                pTraits<Type>::zero
-            )
-        )
-    );
-}
-
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
-steadyStateDdtScheme<Type>::fvcDdt0
-(
-    const GeometricField<Type, fvPatchField, surfaceMesh>& vf
-)
-{
-    return tmp<GeometricField<Type, fvPatchField, surfaceMesh> >
-    (
-        new GeometricField<Type, fvPatchField, surfaceMesh>
-        (
-            IOobject
-            (
-                "ddt0("+vf.name()+')',
-                mesh().time().timeName(),
-                mesh()
-            ),
-            mesh(),
-            dimensioned<Type>
-            (
-                "0",
-                vf.dimensions()/dimTime,
-                pTraits<Type>::zero
-            )
-        )
-    );
-}
-
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, volMesh> >
 steadyStateDdtScheme<Type>::fvcDdt
 (
     const dimensionedScalar& rho,
@@ -202,35 +113,6 @@ steadyStateDdtScheme<Type>::fvcDdt
             IOobject
             (
                 "ddt("+rho.name()+", "+vf.name()+')',
-                mesh().time().timeName(),
-                mesh()
-            ),
-            mesh(),
-            dimensioned<Type>
-            (
-                "0",
-                rho.dimensions()*vf.dimensions()/dimTime,
-                pTraits<Type>::zero
-            )
-        )
-    );
-}
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, volMesh> >
-steadyStateDdtScheme<Type>::fvcDdt0
-(
-    const dimensionedScalar& rho,
-    const GeometricField<Type, fvPatchField, volMesh>& vf
-)
-{
-    return tmp<GeometricField<Type, fvPatchField, volMesh> >
-    (
-        new GeometricField<Type, fvPatchField, volMesh>
-        (
-            IOobject
-            (
-                "ddt0("+rho.name()+", "+vf.name()+')',
                 mesh().time().timeName(),
                 mesh()
             ),
@@ -275,35 +157,6 @@ steadyStateDdtScheme<Type>::fvcDdt
     );
 }
 
-
-template<class Type>
-tmp<GeometricField<Type, fvPatchField, volMesh> >
-steadyStateDdtScheme<Type>::fvcDdt0
-(
-    const volScalarField& rho,
-    const GeometricField<Type, fvPatchField, volMesh>& vf
-)
-{
-    return tmp<GeometricField<Type, fvPatchField, volMesh> >
-    (
-        new GeometricField<Type, fvPatchField, volMesh>
-        (
-            IOobject
-            (
-                "ddt0("+rho.name()+", "+vf.name()+')',
-                mesh().time().timeName(),
-                mesh()
-            ),
-            mesh(),
-            dimensioned<Type>
-            (
-                "0",
-                rho.dimensions()*vf.dimensions()/dimTime,
-                pTraits<Type>::zero
-            )
-        )
-    );
-}
 
 template<class Type>
 tmp<fvMatrix<Type> >
@@ -364,6 +217,95 @@ steadyStateDdtScheme<Type>::fvmDdt
     );
 
     return tfvm;
+}
+
+
+template<class Type>
+tmp<typename steadyStateDdtScheme<Type>::fluxFieldType>
+steadyStateDdtScheme<Type>::fvcDdtPhiCorr
+(
+    const volScalarField& rA,
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const fluxFieldType& phi
+)
+{
+    return tmp<fluxFieldType>
+    (
+        new fluxFieldType
+        (
+            IOobject
+            (
+                "ddtPhiCorr("
+              + rA.name() + ',' + U.name() + ',' + phi.name() + ')',
+                mesh().time().timeName(),
+                mesh()
+            ),
+            mesh(),
+            dimensioned<typename flux<Type>::type>
+            (
+                "0",
+                rA.dimensions()*phi.dimensions()/dimTime,
+                pTraits<typename flux<Type>::type>::zero
+            )
+        )
+    );
+}
+
+
+template<class Type>
+tmp<typename steadyStateDdtScheme<Type>::fluxFieldType>
+steadyStateDdtScheme<Type>::fvcDdtPhiCorr
+(
+    const volScalarField& rA,
+    const volScalarField& rho,
+    const GeometricField<Type, fvPatchField, volMesh>& U,
+    const fluxFieldType& phi
+)
+{
+    return tmp<fluxFieldType>
+    (
+        new fluxFieldType
+        (
+            IOobject
+            (
+                "ddtPhiCorr("
+              + rA.name() + ',' + rho.name()
+              + ',' + U.name() + ',' + phi.name() + ')',
+                mesh().time().timeName(),
+                mesh()
+            ),
+            mesh(),
+            dimensioned<typename flux<Type>::type>
+            (
+                "0",
+                rA.dimensions()*rho.dimensions()*phi.dimensions()/dimTime,
+                pTraits<typename flux<Type>::type>::zero
+            )
+        )
+    );
+}
+
+
+template<class Type>
+tmp<surfaceScalarField> steadyStateDdtScheme<Type>::meshPhi
+(
+    const GeometricField<Type, fvPatchField, volMesh>& vf
+)
+{
+    return tmp<surfaceScalarField>
+    (
+        new surfaceScalarField
+        (
+            IOobject
+            (
+                "meshPhi",
+                mesh().time().timeName(),
+                mesh()
+            ),
+            mesh(),
+            dimensionedScalar("0", dimVolume/dimTime, 0.0)
+        )
+    );
 }
 
 

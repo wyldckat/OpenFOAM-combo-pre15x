@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     multivariateSelectionScheme
@@ -63,9 +63,6 @@ class multivariateSelectionScheme
 
     // Private Member Functions
 
-        //- Make the muti-variate weighting factors
-        void makeWeights();
-
         //- Disallow default bitwise copy construct
         multivariateSelectionScheme(const multivariateSelectionScheme&);
 
@@ -89,21 +86,7 @@ public:
                 fieldTable& fields,
             const surfaceScalarField& faceFlux,
             Istream& schemeData
-        )
-        :
-            multivariateSurfaceInterpolationScheme<Type>
-            (
-                mesh,
-                fields,
-                faceFlux,
-                schemeData
-            ),
-            schemes_(schemeData),
-            faceFlux_(faceFlux),
-            weights_(mesh.surfaceInterpolation::weights())
-        {
-            makeWeights();
-        }
+        );
 
 
     // Member Operators

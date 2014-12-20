@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IGeometricFieldDescriptorImpl
@@ -36,6 +36,7 @@ SourceFiles
 #define IGeometricFieldDescriptorImpl_H
 
 // Foam header files.
+#include "IDLList.H"
 #include "dictionary.H"
 
 // FoamX header files.
@@ -60,7 +61,8 @@ class IGeometryDescriptorImpl;
 class IGeometricFieldDescriptorImpl
 :
     public POA_FoamXServer::CaseServer::IGeometricFieldDescriptor,
-    public PortableServer::RefCountServantBase
+    public PortableServer::RefCountServantBase,
+    public IDLList<IGeometricFieldDescriptorImpl>::link
 {
     // Private data
 
@@ -111,6 +113,17 @@ public:
 
     // Member Functions
  
+        // Foam access functions
+
+            //- Keyword used by Dictionary
+            const word& keyword() const
+            {
+                return fieldName_;
+            }
+
+
+        // FoamServer access functions
+
             virtual FoamXServer::ITypeDescriptor_ptr typeDescriptor();
             virtual FoamXServer::ITypeDescriptor_ptr fieldTypeDescriptor();
 

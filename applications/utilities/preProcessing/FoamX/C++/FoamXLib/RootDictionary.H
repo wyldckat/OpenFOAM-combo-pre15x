@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IDictionaryEntryImpl
@@ -75,11 +75,28 @@ public:
 
     // Member Functions
 
+        //- Return the dictPath with root and case if it isn't absolute
+        static Foam::fileName path
+        (
+            const Foam::fileName& rootDir,
+            const Foam::fileName& caseName,
+            const Foam::fileName& dictPath
+        );
+
+        //- Return the full path of the dictionary
+        Foam::fileName pathName();
+
         // Overridden IDictionaryEntry load
         virtual void load(Foam::Istream&);
 
+        //- Load the dictionary if the it's file exists
+        void load();
+
         // Overridden IDictionaryEntry save
         virtual void save();
+
+        //- Write the dictionary entries using the dictWriter
+        void writeEntries(DictionaryWriter& dictWriter);
 };
 
 

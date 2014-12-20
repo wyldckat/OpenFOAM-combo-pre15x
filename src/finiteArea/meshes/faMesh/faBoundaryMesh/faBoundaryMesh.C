@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -59,7 +59,7 @@ faBoundaryMesh::faBoundaryMesh
         // Read polyPatchList
         Istream& is = readStream(typeName);
 
-        ptrList<entry> patchEntries(is);
+        PtrList<entry> patchEntries(is);
         patches.setSize(patchEntries.size());
 
         forAll(patches, patchI)
@@ -209,14 +209,6 @@ label faBoundaryMesh::findPatchID(const word& patchName) const
     }
 
     // Patch not found
-    FatalErrorIn
-    (
-        "label faBoundaryMesh::findPatchID(const word& patchName) const"
-    )   << "Patch named " << patchName << " not found.  List of available "
-        << "patch names: " << names()
-        << abort(FatalError);
-
-    // A dummy return to keep the compiler happy
     return -1;
 }
 
@@ -294,10 +286,11 @@ bool faBoundaryMesh::checkDefinition(const bool report) const
 
     if (boundaryError)
     {
-        SeriousError
-            << "bool faBoundaryMesh::checkDefinition("
-            << "const bool report) const : "
-            << "This mesh is not valid: boundary definition is in error."
+        SeriousErrorIn
+        (
+            "bool faBoundaryMesh::checkDefinition("
+            "const bool report) const"
+        )   << "This mesh is not valid: boundary definition is in error."
             << endl;
     }
     else

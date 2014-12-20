@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -28,8 +28,6 @@ Description
 
 #include "patchToFace.H"
 #include "polyMesh.H"
-#include "pointSet.H"
-#include "Map.H"
 
 #include "addToRunTimeSelectionTable.H"
 
@@ -72,7 +70,7 @@ void Foam::patchToFace::combine(topoSet& set, const bool add) const
     }
     else
     {
-        Warning<< "patchToFace::combine(topoSet&, const bool) : "
+        WarningIn("patchToFace::combine(topoSet&, const bool)")
             << "Cannot find patch named " << patchName_ << endl
             << "Valid names are " << mesh_.boundaryMesh().names() << endl;
     }

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Reads .ele and .node and .face files as written by tetgen.
@@ -66,7 +66,7 @@ and you'll have to run without face file (-noFaceFile option)
 #include "IFstream.H"
 #include "polyPatch.H"
 #include "cellModeller.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include <fstream>
 
 using namespace Foam;
@@ -250,7 +250,8 @@ int main(int argc, char *argv[])
 
     if (nElemAttr != 0)
     {
-        Warning << "Element attributes (third elemenent in .ele header)"
+        WarningIn(args.executable())
+            << "Element attributes (third elemenent in .ele header)"
             << " not used" << endl;
     }
  

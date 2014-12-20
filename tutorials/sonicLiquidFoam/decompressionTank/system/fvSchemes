@@ -36,15 +36,15 @@ gradSchemes
 divSchemes
 {
     default         none;
-    div(phi,U)      Gauss Gamma2V 1;
-    div(phid,p)     Gauss Gamma2 0.2;
+    div(phi,U)      Gauss limitedLinearV 1;
+    div(phid,p)     Gauss limitedLinear 1;
 }
 
 laplacianSchemes
 {
     default         none;
     laplacian(mu,U) Gauss linear corrected;
-    laplacian((rho|A(U)),p) Gauss linear corrected;
+    laplacian((rho*1|A(U)),p) Gauss linear corrected;
 }
 
 interpolationSchemes

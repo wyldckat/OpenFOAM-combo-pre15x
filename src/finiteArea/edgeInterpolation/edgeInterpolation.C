@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Face to edge interpolation scheme. Included in faMesh.
@@ -47,6 +47,7 @@ defineTypeNameAndDebug(edgeInterpolation, 0);
 
 void edgeInterpolation::clearOut()
 {
+    deleteDemandDrivenData(lPN_);
     deleteDemandDrivenData(weightingFactors_);
     deleteDemandDrivenData(differenceFactors_);
     deleteDemandDrivenData(correctionVectors_);
@@ -58,11 +59,16 @@ void edgeInterpolation::clearOut()
 
 // * * * * * * * * * * * * * * * * Constructors * * * * * * * * * * * * * * //
 
-edgeInterpolation::edgeInterpolation(const faMesh& fam)
+edgeInterpolation::edgeInterpolation
+(
+    const faMesh& fam,
+    const polyMesh& pm
+)
 :
-    faSchemes(fam().time()),
-    faSolution(fam().time()),
+    faSchemes(pm),
+    faSolution(pm),
     mesh_(fam),
+    lPN_(NULL),
     weightingFactors_(NULL),
     differenceFactors_(NULL),
     orthogonal_(false),
@@ -83,6 +89,17 @@ edgeInterpolation::~edgeInterpolation()
 
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
+
+const edgeScalarField& edgeInterpolation::lPN() const
+{
+    if (!lPN_)
+    {
+        makeLPN();
+    }
+
+    return (*lPN_);
+}
+
 
 const edgeScalarField& edgeInterpolation::weights() const
 {
@@ -179,6 +196,7 @@ const edgeVectorField& edgeInterpolation::skewCorrectionVectors() const
 // Do what is neccessary if the mesh has moved
 bool edgeInterpolation::movePoints()
 {
+    deleteDemandDrivenData(lPN_);
     deleteDemandDrivenData(weightingFactors_);
     deleteDemandDrivenData(differenceFactors_);
 
@@ -192,6 +210,88 @@ bool edgeInterpolation::movePoints()
 //     deleteDemandDrivenData(leastSquareNvectors_);
 
     return true;
+}
+
+
+void edgeInterpolation::makeLPN() const
+{
+    if (debug)
+    {
+        Info<< "edgeInterpolation::makeLPN() : "
+            << "Constructing geodesic distance between points P and N"
+            << endl;
+    }
+
+
+    lPN_ = new edgeScalarField
+    (
+        IOobject
+        (
+            "lPN",
+            faSolution::time().constant(),
+            faSolution::db(),
+            IOobject::NO_READ,
+            IOobject::NO_WRITE,
+            false
+        ),
+        mesh(),
+        dimLength
+    );
+    edgeScalarField& lPN = *lPN_;
+
+
+    // Set local references to mesh data
+    const edgeVectorField& edgeCentres = mesh().edgeCentres();
+    const areaVectorField& faceCentres = mesh().centres();
+    const unallocLabelList& owner = mesh().owner();
+    const unallocLabelList& neighbour = mesh().neighbour();
+
+    forAll(owner, edgeI)
+    {
+        vector curSkewCorrVec = vector::zero;
+        
+        if (skew())
+        {
+            curSkewCorrVec = skewCorrectionVectors()[edgeI];
+        }
+
+        scalar lPE =
+            mag
+            (
+                edgeCentres[edgeI]
+              - curSkewCorrVec
+              - faceCentres[owner[edgeI]]
+            );
+
+        scalar lEN = 
+            mag
+            (
+                faceCentres[neighbour[edgeI]]
+              - edgeCentres[edgeI]
+              + curSkewCorrVec
+            );
+
+        lPN.internalField()[edgeI] = (lPE + lEN);
+    }
+
+
+    forAll(lPN.boundaryField(), patchI)
+    {
+        mesh().boundary()[patchI].makeDeltaCoeffs
+        (
+            lPN.boundaryField()[patchI]
+        );
+
+        lPN.boundaryField()[patchI] = 1.0/lPN.boundaryField()[patchI];
+    }
+
+
+    if (debug)
+    {
+        Info<< "edgeInterpolation::makeLPN() : "
+            << "Finished constructing geodesic distance PN"
+            << endl;
+    }
 }
 
 

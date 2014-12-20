@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     
@@ -32,17 +32,6 @@ Description
 
 namespace Foam
 {
-
-// * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
-
-template<class ReactionThermo, class ReactionRate>
-const word ReversibleReaction<ReactionThermo, ReactionRate>::typeName
-(
-    ReversibleReaction<ReactionThermo, ReactionRate>::typeName_()
-  + ReactionRate::type()
-  + Reaction<ReactionThermo>::typeName_()
-);
-
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -70,6 +59,19 @@ ReversibleReaction<ReactionThermo, ReactionRate>::ReversibleReaction
 :
     Reaction<ReactionThermo>(species, thermoDatabase, is),
     k_(species, is)
+{}
+
+
+// Construct as copy given new speciesTable
+template<class ReactionThermo, class ReactionRate>
+ReversibleReaction<ReactionThermo, ReactionRate>::ReversibleReaction
+(
+    const ReversibleReaction<ReactionThermo, ReactionRate>& rr,
+    const speciesTable& species
+)
+:
+    Reaction<ReactionThermo>(rr, species),
+    k_(rr.k_)
 {}
 
 

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.1                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,9 +11,9 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "";
-    case "";
-    instance "";
+    root "/home/coyote/hjasak/OpenFOAM/OpenFOAM-1.1/tutorials/icoFoamAutoMotion";
+    case "newMovingCone";
+    instance "0";
     local "";
 
     class elementScalarField;
@@ -24,7 +24,7 @@ FoamFile
 
 dimensions      [0 0 0 0 0 0 0];
 
-internalField   nonuniform List<scalar> 
+internalField   nonuniform      List<scalar> 
 1900
 (
 1
@@ -1929,6 +1929,7 @@ internalField   nonuniform List<scalar>
 1
 )
 ;
+
 
 boundaryField
 {

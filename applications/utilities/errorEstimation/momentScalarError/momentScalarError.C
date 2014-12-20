@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     momentScalarError
@@ -43,18 +43,19 @@ int main(int argc, char *argv[])
 
 #   include "addTimeOptions.H"
 #   include "setRootCase.H"
-#   include "createTime.H"
-#   include "createMesh.H"
-
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
     Info<< "\nEstimating error in scalar transport equation\n" << endl;
+
+#   include "createTime.H"
 
     // Get times list
     instantList Times = runTime.times();
 
 #   include "checkTimeOptions.H"
+
+    runTime.setTime(Times[startTime], startTime);
+
+#   include "createMesh.H"
 
     Info<< "Reading transportProperties\n" << endl;
 
@@ -154,8 +155,10 @@ int main(int argc, char *argv[])
                             (
                                 mesh,
                                 phi,
-                                (const surfaceInterpolationScheme<scalar>&)
-                                linear<scalar>(mesh)
+                                tmp<surfaceInterpolationScheme<scalar> >
+                                (
+                                    new linear<scalar>(mesh)
+                                )
                             ).fvcDiv(phi, TE)
 
                           - DT*

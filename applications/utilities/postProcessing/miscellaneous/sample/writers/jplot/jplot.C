@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -69,10 +67,10 @@ template<class Type>
 Foam::fileName Foam::jplot<Type>::getFileName
 (
     const coordSet& points,
-    const Foam::HashTable<Field<Type>*>& valueSets
+    const wordList& valueSetNames
 ) const
 {
-    return getBaseName(points, valueSets) + ".dat";
+    return this->getBaseName(points, valueSetNames) + ".dat";
 }
 
 
@@ -80,42 +78,25 @@ template<class Type>
 void Foam::jplot<Type>::write
 (
     const coordSet& points,
-    const HashTable<Field<Type>*>& valueSets,
+    const wordList& valueSetNames,
+    const List<const Field<Type>*>& valueSets,
     Ostream& os
 ) const
 {
     os  << "# JPlot file" << endl
         << "# column 1: " << points.name() << endl;
 
-    label fieldI = 0;
-
-    for
-    (
-        typename HashTable<Field<Type>*>::const_iterator iter =
-            valueSets.begin();
-        iter != valueSets.end();
-        ++iter
-    )
+    forAll(valueSets, i)
     {
-        os  << "# column " << fieldI + 2 << ": " << iter.key() << endl;
-
-        fieldI++;
+        os  << "# column " << i + 2 << ": " << valueSetNames[i] << endl;
     }
 
     // Collect sets into columns
-    List<List<Type>*> columns(fieldI);
+    List<const List<Type>*> columns(valueSets.size());
 
-    fieldI = 0;
-
-    for
-    (
-        typename HashTable<Field<Type>*>::const_iterator iter =
-            valueSets.begin();
-        iter != valueSets.end();
-        ++iter
-    )
+    forAll(valueSets, i)
     {
-        columns[fieldI++] = iter();
+        columns[i] = valueSets[i];
     }
 
     writeTable(points, columns, os);

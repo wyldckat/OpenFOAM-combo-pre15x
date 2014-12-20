@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Implementation of parser: test the state of either an istream or an
@@ -56,22 +56,22 @@ void state(ostream& to, const string& s)
         break;
 
         case _fail:
-            SeriousError
+            SeriousErrorIn("state(ostream& to, const string& s)")
                 << "Output stream failure (bad format?)", s << endl;
         break;
 
         case (_fail + _eof) :
-         SeriousError
+         SeriousErrorIn("state(ostream& to, const string& s)")
              << "Output stream failure and end of stream", s << endl;
         break;
 
         case _bad:
-            SeriousError
+            SeriousErrorIn("state(ostream& to, const string& s)")
                 << "Serious output stream failure", s << endl;
         break;
 
         default:
-            SeriousError
+            SeriousErrorIn("state(ostream& to, const string& s)")
                 << "Output stream failure of unknown type", s << endl
                 << "Stream state value = ", osState << endl;
         break;
@@ -98,26 +98,26 @@ void state(istream& from, const string& s)
         break;
 
         case _fail:
-            SeriousError
+            SeriousErrorIn("state(istream& from, const string& s)")
                 << "Input stream failure (bad format?)", s << endl;
             Info<< "If all else well, possibly a quote mark missing" << endl;
         break;
 
         case (_fail + _eof) :
-            SeriousError
+            SeriousErrorIn("state(istream& from, const string& s)")
                 << "Input stream failure and end of stream", s << endl;
             Info<< "If all else well, possibly a quote mark missing" << endl;
         break;
 
         case _bad:
-            SeriousError
+            SeriousErrorIn("state(istream& from, const string& s)")
                 << "Serious input stream failure", s << endl;
         break;
 
         default:
-            SeriousError
+            SeriousErrorIn("state(istream& from, const string& s)")
                 << "Input stream failure of unknown type", s << endl;
-            SeriousError
+            SeriousErrorIn("state(istream& from, const string& s)")
                 << "Stream state value = ", isState << endl;
         break;
     }

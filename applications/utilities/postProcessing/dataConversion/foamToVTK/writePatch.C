@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -43,11 +41,14 @@ namespace Foam
 void writePatch
 (
     const bool binary,
+    const bool nearCellValue,
     const vtkMesh& vMesh,
     const label patchI,
     const fileName& fileName,
-    const ptrList<volScalarField>& volScalarFields,
-    const ptrList<volVectorField>& volVectorFields
+    const PtrList<volScalarField>& volScalarFields,
+    const PtrList<volVectorField>& volVectorFields,
+    const PtrList<pointScalarField>& pointScalarFields,
+    const PtrList<pointVectorField>& pointVectorFields
 )
 {
     const fvMesh& mesh = vMesh.mesh();
@@ -85,7 +86,7 @@ void writePatch
     // 
     //-----------------------------------------------------------------
 
-    if (typeid(pp) != typeid(emptyPolyPatch))
+    if (!isType<emptyPolyPatch>(pp))
     {
         // Face data
         pStream
@@ -99,7 +100,7 @@ void writePatch
         {
             const volScalarField& vsf = volScalarFields[fieldI];
 
-            const scalarField& pField = vsf.boundaryField()[patchI];
+            const fvPatchScalarField& pField = vsf.boundaryField()[patchI];
 
             pStream
                 << vsf.name() << " 1 "
@@ -107,7 +108,22 @@ void writePatch
 
             DynamicList<floatScalar> fField(pField.size());
 
-            writeFuns::insert(pField, fField);
+            if (nearCellValue)
+            {
+                // Write value of neighbouring cell instead of patch value
+                writeFuns::insert
+                (
+                    pField.patchInternalField
+                    (
+                        vsf.internalField()
+                    )(),
+                    fField
+                );
+            }
+            else
+            {
+                writeFuns::insert(pField, fField);
+            }
 
             writeFuns::write(pStream, binary, fField);
         }
@@ -117,7 +133,7 @@ void writePatch
         {
             const volVectorField& vvf = volVectorFields[fieldI];
 
-            const vectorField& pField = vvf.boundaryField()[patchI];
+            const fvPatchVectorField& pField = vvf.boundaryField()[patchI];
 
             pStream
                 << vvf.name() << " 3 "
@@ -125,7 +141,21 @@ void writePatch
 
             DynamicList<floatScalar> fField(3*pField.size());
 
-            writeFuns::insert(pField, fField);
+            if (nearCellValue)
+            {
+                writeFuns::insert
+                (
+                    pField.patchInternalField
+                    (
+                        vvf.internalField()
+                    )(),
+                    fField
+                );
+            }
+            else
+            {
+                writeFuns::insert(pField, fField);
+            }
 
             writeFuns::write(pStream, binary, fField);
         }
@@ -134,7 +164,10 @@ void writePatch
         pStream
             << "POINT_DATA " << pp.nPoints() << std::endl
             << "FIELD attributes "
-            << volScalarFields.size() + volVectorFields.size()
+            << volScalarFields.size()
+             + volVectorFields.size()
+             + pointScalarFields.size()
+             + pointVectorFields.size()
             << std::endl;
 
         PrimitivePatchInterpolation<primitivePatch> pInter(pp);
@@ -147,22 +180,44 @@ void writePatch
 
             const volScalarField& vsf = tvsf();
 
-            tmp<scalarField> tpField =
-                pInter.faceToPointInterpolate
-                (
-                    vsf.boundaryField()[patchI]
-                );
+            const fvPatchScalarField& bField = vsf.boundaryField()[patchI];
 
-            const scalarField& pField = tpField();
+            DynamicList<floatScalar> fField;
 
-            pStream
-                << vsf.name() << " 1 "
-                << pField.size() << " float" << std::endl;
+            if (nearCellValue)
+            {
+                tmp<scalarField> tpField =
+                    pInter.faceToPointInterpolate
+                    (
+                        bField.patchInternalField
+                        (
+                            vsf.internalField()
+                        )()
+                    );
+                const scalarField& pField = tpField();
 
-            DynamicList<floatScalar> fField(pField.size());
+                pStream
+                    << vsf.name() << " 1 "
+                    << pField.size() << " float" << std::endl;
 
-            writeFuns::insert(pField, fField);
+                fField.setSize(pField.size());
 
+                writeFuns::insert(pField, fField);
+            }
+            else
+            {
+                tmp<scalarField> tpField = pInter.faceToPointInterpolate(bField);
+                const scalarField& pField = tpField();
+
+                pStream
+                    << vsf.name() << " 1 "
+                    << pField.size() << " float" << std::endl;
+
+                fField.setSize(pField.size());
+
+                writeFuns::insert(pField, fField);
+            }
+    
             writeFuns::write(pStream, binary, fField);
         }
 
@@ -173,26 +228,86 @@ void writePatch
                 vMesh.interpolate(volVectorFields[fieldI]);
             const volVectorField& vvf = tvvf();
 
-            tmp<vectorField> tpField =
-                pInter.faceToPointInterpolate
-                (
-                    vvf.boundaryField()[patchI]
-                );
+            const fvPatchVectorField& bField = vvf.boundaryField()[patchI];
 
-            const vectorField& pField = tpField();
+            // Storage for components of vector
+            DynamicList<floatScalar> fField;
+
+            if (nearCellValue)
+            {
+                tmp<vectorField> tpField =
+                    pInter.faceToPointInterpolate
+                    (
+                        bField.patchInternalField
+                        (
+                            vvf.internalField()
+                        )()
+                    );
+                const vectorField& pField = tpField();
+
+                pStream
+                    << vvf.name() << " 3 "
+                    << pField.size() << " float" << std::endl;
+
+                fField.setSize(3*pField.size());
+
+                writeFuns::insert(pField, fField);
+            }
+            else
+            {
+                tmp<vectorField> tpField = pInter.faceToPointInterpolate(bField);
+                const vectorField& pField = tpField();
+
+                pStream
+                    << vvf.name() << " 3 "
+                    << pField.size() << " float" << std::endl;
+
+                fField.setSize(3*pField.size());
+
+                writeFuns::insert(pField, fField);
+            }
+
+            writeFuns::write(pStream, binary, fField);
+        }
+
+        // PointScalarFields
+        forAll(pointScalarFields, fieldI)
+        {
+            const pointScalarField& psf = pointScalarFields[fieldI];
+
+            scalarField pf = psf.boundaryField()[patchI].patchInternalField();
 
             pStream
-                << vvf.name() << " 3 "
-                << pField.size() << " float" << std::endl;
+                << psf.name() << " 1 "
+                << pf.size() << " float" << std::endl;
 
-            DynamicList<floatScalar> fField(3*pField.size());
+            DynamicList<floatScalar> fField(pf.size());
 
-            writeFuns::insert(pField, fField);
+            writeFuns::insert(pf, fField);
+
+            writeFuns::write(pStream, binary, fField);
+        }
+
+        // PointVectorFields
+        forAll(pointVectorFields, fieldI)
+        {
+            const pointVectorField& psf = pointVectorFields[fieldI];
+
+            vectorField pf = psf.boundaryField()[patchI].patchInternalField();
+
+            pStream
+                << psf.name() << " 3 "
+                << pf.size() << " float" << std::endl;
+
+            DynamicList<floatScalar> fField(3*pf.size());
+
+            writeFuns::insert(pf, fField);
 
             writeFuns::write(pStream, binary, fField);
         }
     }
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

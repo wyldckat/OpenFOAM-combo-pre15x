@@ -30,12 +30,14 @@
 #   include "createPhi.H"
 
 
-    autoPtr<transportModel> laminarTransport
-    (
-        transportModel::New(U, phi)
-    );
+    label pRefCell = 0;
+    scalar pRefValue = 0.0;
+    setRefCell(p, mesh.solutionDict().subDict("PISO"), pRefCell, pRefValue);
+
+
+    singlePhaseTransportModel laminarTransport(U, phi);
 
     autoPtr<LESmodel> sgsModel
     (
-        LESmodel::New(U, phi, laminarTransport())
+        LESmodel::New(U, phi, laminarTransport)
     );

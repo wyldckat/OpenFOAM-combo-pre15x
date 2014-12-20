@@ -20,17 +20,9 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-// Foam header files.
-#include "word.H"
-#include "string.H"
-#include "IFstream.H"
-#include "dimensionSet.H"
-#include "OSspecific.H"
 
 // FoamX header files.
 #include "FoamX.H"
@@ -64,15 +56,15 @@ FoamX::IGeometricFieldDescriptorImpl::IGeometricFieldDescriptorImpl
     LogEntry log(functionName, __FILE__, __LINE__);
 
     // Initialise dimension set.
-    dimensionSet_ == Foam::dimless;
+    dimensionSet_ == dimless;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
 FoamX::IGeometricFieldDescriptorImpl::IGeometricFieldDescriptorImpl
 (
-    const Foam::word& fieldName,
-    const Foam::dictionary& fieldDict,
+    const word& fieldName,
+    const dictionary& fieldDict,
     const ObjRefHashTable<ITypeDescriptorImpl*>& foamTypes,
     const ObjRefHashTable<IGeometryDescriptorImpl*>& geometryTypes
 )
@@ -83,7 +75,7 @@ FoamX::IGeometricFieldDescriptorImpl::IGeometricFieldDescriptorImpl
 {
     static const char* functionName =
         "FoamX::IGeometricFieldDescriptorImpl::IGeometricFieldDescriptorImpl"
-        "(const Foam::word& fieldName, const Foam::dictionary& fieldDict)";
+        "(const word& fieldName, const dictionary& fieldDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -113,7 +105,7 @@ FoamX::IGeometricFieldDescriptorImpl::IGeometricFieldDescriptorImpl
 
 
         // Get the field descriptor for the specified field type.
-        Foam::word fieldName = fieldTypeName_ + "Field";
+        word fieldName = fieldTypeName_ + "Field";
         if (!foamTypes.found(fieldName))
         {
             throw FoamXError

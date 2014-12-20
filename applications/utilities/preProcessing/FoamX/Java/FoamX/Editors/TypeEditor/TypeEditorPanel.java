@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Editors.TypeEditor;
@@ -29,7 +29,7 @@ import javax.swing.table.*;
 import javax.swing.event.*;
 import javax.swing.tree.*;
 
-import FoamXServer.CaseServer.IApplicationClass;
+import FoamXServer.CaseServer.IApplication;
 
 import FoamX.App;
 
@@ -43,7 +43,7 @@ public class TypeEditorPanel
     //--------------------------------------------------------------------------
     /** Creates a new TypeEditorPanel object for manipulating the application class dictionaries.
      */
-    public TypeEditorPanel(IApplicationClass appClass)
+    public TypeEditorPanel(IApplication app)
     {
         try
         {
@@ -52,7 +52,7 @@ public class TypeEditorPanel
             tree_.putClientProperty("JTree.lineStyle", "Angled");
 
             // Initialise the type model.
-            typeModel_ = new TypeEditorModel(appClass, tree_, table_);
+            typeModel_ = new TypeEditorModel(app, tree_, table_);
 
             // Get the mode to initialise the toolbar.
             typeModel_.initialiseToolbar(toolBar_);

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Generic field type.
@@ -1532,7 +1532,7 @@ operator op                                                                   \
     const VectorSpace<Form,Cmpt,nCmpt>& vs                                    \
 )                                                                             \
 {                                                                             \
-    return gf1 op dimensioned<Form>((const Form&)vs);                         \
+    return gf1 op dimensioned<Form>(static_cast<const Form&>(vs));            \
 }                                                                             \
                                                                               \
                                                                               \
@@ -1588,7 +1588,7 @@ operator op                                                                   \
     const VectorSpace<Form,Cmpt,nCmpt>& vs                                    \
 )                                                                             \
 {                                                                             \
-    return tgf1 op dimensioned<Form>((const Form&)vs);                        \
+    return tgf1 op dimensioned<Form>(static_cast<const Form&>(vs));           \
 }                                                                             \
                                                                               \
                                                                               \
@@ -1653,7 +1653,7 @@ operator op                                                                   \
     const GeometricField<Type, PatchField, GeoMesh>& gf1                      \
 )                                                                             \
 {                                                                             \
-    return dimensioned<Form>((const Form&)vs) op gf1;                         \
+    return dimensioned<Form>(static_cast<const Form&>(vs)) op gf1;            \
 }                                                                             \
                                                                               \
 template                                                                      \
@@ -1708,7 +1708,7 @@ operator op                                                                   \
     const tmp<GeometricField<Type, PatchField, GeoMesh> >& tgf1               \
 )                                                                             \
 {                                                                             \
-    return dimensioned<Form>((const Form&)vs) op tgf1;                        \
+    return dimensioned<Form>(static_cast<const Form&>(vs)) op tgf1;           \
 }                                                                             \
                                                                               \
 

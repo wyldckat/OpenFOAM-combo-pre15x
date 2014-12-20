@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
     //Info<< ck.specieThermo() << endl;
     //Info<< ck.reactions() << endl;
 
-    ptrList<chemkinReader::reaction> reactions = ck.reactions();
+    PtrList<chemkinReader::reaction> reactions = ck.reactions();
 
     {
         OFstream reactionStream("reactions");
@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
         label nReactions(readLabel(reactionStream));
         reactionStream.readBeginList(args.executable().c_str());
 
-        ptrList<chemkinReader::reaction> testReactions(nReactions);
+        PtrList<chemkinReader::reaction> testReactions(nReactions);
 
         forAll (testReactions, i)
         {

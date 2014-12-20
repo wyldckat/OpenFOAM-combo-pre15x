@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0.3                                 |
+|  \\    /   O peration     | Version:  1.2                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -11,9 +11,9 @@ FoamFile
     version 2.0;
     format ascii;
 
-    root "/home/dm2/henry/OpenFOAM/henry-1.0.3/run/tutorials/interFoam";
+    root "..";
     case "damBreak";
-    instance "constant";
+    instance ""constant"";
     local "polyMesh";
 
     class polyBoundaryMesh;
@@ -27,7 +27,7 @@ FoamFile
 leftWall
 {
     type wall;
-    physicalType wallNoSurfaceTension;
+    physicalType wall;
     nFaces 50;
     startFace 4432;
 }
@@ -35,7 +35,7 @@ leftWall
 rightWall
 {
     type wall;
-    physicalType wallNoSurfaceTension;
+    physicalType wall;
     nFaces 50;
     startFace 4482;
 }
@@ -43,7 +43,7 @@ rightWall
 lowerWall
 {
     type wall;
-    physicalType wallNoSurfaceTension;
+    physicalType wall;
     nFaces 62;
     startFace 4532;
 }

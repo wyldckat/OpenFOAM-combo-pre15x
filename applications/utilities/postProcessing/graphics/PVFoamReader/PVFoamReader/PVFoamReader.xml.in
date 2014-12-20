@@ -28,10 +28,11 @@
             property="TimeStep"
             trace_name="TimeStep"
             label="Time step"
-            display_entry="1"
+            display_entry="0"
             display_value="1"
             entry_and_label_on_top="0"
             help="Select a time step."
+            keeps_timesteps="1"
             range_source="TimeStepRange"/>
 
         <VectorEntry

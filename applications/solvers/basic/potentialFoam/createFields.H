@@ -43,3 +43,8 @@
         ),
         fvc::interpolate(U) & mesh.Sf()
     );
+
+
+    label pRefCell = 0;
+    scalar pRefValue = 0.0;
+    setRefCell(p, mesh.solutionDict().subDict("SIMPLE"), pRefCell, pRefValue);

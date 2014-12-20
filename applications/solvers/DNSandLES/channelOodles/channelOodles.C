@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     oodles
@@ -31,7 +31,7 @@ Description
 \*---------------------------------------------------------------------------*/
 
 #include "fvCFD.H"
-#include "incompressible/transportModel/transportModel.H"
+#include "incompressible/singlePhaseTransportModel/singlePhaseTransportModel.H"
 #include "incompressible/LESmodel/LESmodel.H"
 #include "IFstream.H"
 #include "OFstream.H"
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
           + fvm::div(phi, U)
           + sgsModel->divB(U)
          ==
-            gradP
+            flowDirection*gradP
         );
 
         if (momentumPredictor)
@@ -84,24 +84,19 @@ int main(int argc, char *argv[])
 
         // --- PISO loop
 
+        volScalarField rUA = 1.0/UEqn.A();
+
         for (int corr=0; corr<nCorr; corr++)
         {
-            volScalarField A = UEqn.A();
-
-            U = UEqn.H()/A;
-            phi = 
-            (
-                fvc::interpolate
-                (
-                    U + UphiCoeff*fvc::ddt0(U)/A, "interpolate((H(U)|A(U)))"
-                ) & mesh.Sf()
-            ) - UphiCoeff*fvc::interpolate(1.0/A)*fvc::ddt0(phi);
+            U = rUA*UEqn.H();
+            phi = (fvc::interpolate(U) & mesh.Sf()) 
+                + fvc::ddtPhiCorr(rUA, U, phi);
 
             for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
             {
                 fvScalarMatrix pEqn
                 (
-                    fvm::laplacian(1.0/A, p) == fvc::div(phi)
+                    fvm::laplacian(rUA, p) == fvc::div(phi)
                 );
 
                 fvScalarMatrix::reference pRef =
@@ -117,20 +112,28 @@ int main(int argc, char *argv[])
 
 #           include "continuityErrs.H"
 
-            U -= fvc::grad(p)/A;
+            U -= rUA*fvc::grad(p);
             U.correctBoundaryConditions();
         }
 
 
         // Correct driving force for a constant mass flow rate
 
-        dimensionedVector UbarStar = flowMask & U.weightedAverage(mesh.V());
+        // Extract the velocity in the flow direction
+        dimensionedScalar magUbarStar = 
+            (flowDirection & U)().weightedAverage(mesh.V());
 
-        U += (Ubar - UbarStar);
-        gradP += (Ubar - UbarStar)/(1.0/UEqn.A())().weightedAverage(mesh.V());
+        // Calculate the pressure gradient increment needed to 
+        // adjust the average flow-rate to the correct value
+        dimensionedScalar gragPplus = 
+            (magUbar - magUbarStar)/rUA.weightedAverage(mesh.V());
 
-        Info<< "Uncorrected Ubar = " << (flowDirection & UbarStar.value())<< tab
-            << "pressure gradient = " << (flowDirection & gradP.value())<< endl;
+        U += flowDirection*rUA*gragPplus;
+
+        gradP += gragPplus;
+
+        Info<< "Uncorrected Ubar = " << magUbarStar.value() << tab
+            << "pressure gradient = " << gradP.value() << endl;
 
 
 #       include "calculateAverages.H"
@@ -144,13 +147,9 @@ int main(int argc, char *argv[])
 #       include "writeProbes.H"
 
         Info<< "ExecutionTime = "
-             << runTime.elapsedCpuTime()
-             << " s\n" << endl;
+            << runTime.elapsedCpuTime()
+            << " s\n\n" << endl;
     }
-
-    Info<< "Final Execution Time = "
-         << runTime.elapsedCpuTime()
-         << " s\n" << endl;
 
     Info<< "End\n" << endl;
 

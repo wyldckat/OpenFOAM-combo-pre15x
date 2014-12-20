@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -54,9 +52,6 @@ void Pstream::addValidParOptions(HashTable<string>& validParOptions)
 
 bool Pstream::init(int& argc, char**& argv)
 {
-    // This is a parallel run!
-    parRun_ = true;
-
     // Set the comunications options
     pvm_setopt(PvmRoute, PvmRouteDirect);
 
@@ -218,6 +213,8 @@ bool Pstream::init(int& argc, char**& argv)
         Sout<< "Child " << myProcNo_ << " started successfully." << nl << endl;
     }
 
+    setParRun();
+
     // Everything is OK
     return true;
 }
@@ -258,7 +255,7 @@ void Pstream::abort()
 }
 
 
-void reduce(scalar& Value, sumOp<scalar> bop)
+void reduce(scalar& Value, const sumOp<scalar>& bop)
 {
     if (Pstream::parRun())
     {
@@ -277,8 +274,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
             ) != PvmOk
         )
         {
-            FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                << "pvm_reduce failed"
+            FatalErrorIn
+            (
+                "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+            )   << "pvm_reduce failed"
                 << abort(FatalError);
         }
 #       endif
@@ -308,8 +307,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                     ) != PvmOk
                 )
                 {
-                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                        << "pvm_precv failed"
+                    FatalErrorIn
+                    (
+                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                    )   << "pvm_precv failed"
                         << abort(FatalError);
                 }
 
@@ -330,8 +331,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                 ) != PvmOk
             )
             {
-                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                    << "pvm_psend failed"
+                FatalErrorIn
+                (
+                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                )   << "pvm_psend failed"
                     << abort(FatalError);
             }
         }
@@ -352,8 +355,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                 ) != PvmOk
             )
             {
-                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                    << "pvm_mcast failed"
+                FatalErrorIn
+                (
+                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                )   << "pvm_mcast failed"
                     << abort(FatalError);
             }
         }
@@ -368,8 +373,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                 ) <= 0
             )
             {
-                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                    << "pvm_psend failed"
+                FatalErrorIn
+                (
+                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                )   << "pvm_psend failed"
                     << abort(FatalError);
             }
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -86,7 +86,7 @@ ZoneMesh<ZoneType>::ZoneMesh
     const polyMesh& mesh
 )
 :
-    ptrList<ZoneType>(),
+    PtrList<ZoneType>(),
     regIOobject(io),
     mesh_(mesh),
     zoneMapPtr_(NULL)
@@ -97,12 +97,12 @@ ZoneMesh<ZoneType>::ZoneMesh
      || (readOpt() == IOobject::READ_IF_PRESENT && headerOk())
     )
     {
-        ptrList<ZoneType>& zones = *this;
+        PtrList<ZoneType>& zones = *this;
 
         // Read zones
         Istream& is = readStream(typeName);
 
-        ptrList<entry> patchEntries(is);
+        PtrList<entry> patchEntries(is);
         zones.setSize(patchEntries.size());
 
         forAll(zones, zoneI)
@@ -145,7 +145,7 @@ ZoneMesh<ZoneType>::ZoneMesh
     const label size
 )
 :
-    ptrList<ZoneType>(size),
+    PtrList<ZoneType>(size),
     regIOobject(io),
     mesh_(mesh),
     zoneMapPtr_(NULL)
@@ -199,7 +199,7 @@ label ZoneMesh<ZoneType>::whichZone(const label objectIndex) const
 template<class ZoneType>
 wordList ZoneMesh<ZoneType>::types() const
 {
-    const ptrList<ZoneType>& zones = *this;
+    const PtrList<ZoneType>& zones = *this;
 
     wordList t(zones.size());
 
@@ -216,7 +216,7 @@ wordList ZoneMesh<ZoneType>::types() const
 template<class ZoneType>
 wordList ZoneMesh<ZoneType>::names() const
 {
-    const ptrList<ZoneType>& zones = *this;
+    const PtrList<ZoneType>& zones = *this;
 
     wordList t(zones.size());
 
@@ -232,7 +232,7 @@ wordList ZoneMesh<ZoneType>::names() const
 template<class ZoneType>
 label ZoneMesh<ZoneType>::findZoneID(const word& zoneName) const
 {
-    const ptrList<ZoneType>& zones = *this;
+    const PtrList<ZoneType>& zones = *this;
 
     forAll (zones, zoneI)
     {
@@ -261,7 +261,7 @@ void ZoneMesh<ZoneType>::clearAddressing()
 {
     deleteDemandDrivenData(zoneMapPtr_);
 
-    ptrList<ZoneType>& zones = *this;
+    PtrList<ZoneType>& zones = *this;
 
     forAll (zones, zoneI)
     {
@@ -274,7 +274,7 @@ template<class ZoneType>
 void ZoneMesh<ZoneType>::clear()
 {
     clearAddressing();
-    ptrList<ZoneType>::clear();
+    PtrList<ZoneType>::clear();
 }
 
 
@@ -282,7 +282,7 @@ void ZoneMesh<ZoneType>::clear()
 template<class ZoneType>
 void ZoneMesh<ZoneType>::movePoints(const pointField& p)
 {
-    ptrList<ZoneType>& zones = *this;
+    PtrList<ZoneType>& zones = *this;
 
     forAll (zones, zoneI)
     {

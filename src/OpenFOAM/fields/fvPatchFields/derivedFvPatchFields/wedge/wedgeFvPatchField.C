@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -59,7 +57,7 @@ wedgeFvPatchField<Type>::wedgeFvPatchField
 :
     transformFvPatchField<Type>(ptf, p, iF, mapper)
 {
-    if (typeid(this->patchMesh()) != typeid(wedgeFvPatch))
+    if (!isType<wedgeFvPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -71,9 +69,9 @@ wedgeFvPatchField<Type>::wedgeFvPatchField
             "    const fvPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }
@@ -89,7 +87,7 @@ wedgeFvPatchField<Type>::wedgeFvPatchField
 :
     transformFvPatchField<Type>(p, iF, dict)
 {
-    if (typeid(p) != typeid(wedgeFvPatch))
+    if (!isType<wedgeFvPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -100,7 +98,7 @@ wedgeFvPatchField<Type>::wedgeFvPatchField
             "    dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index() << " not wedge type. "
+        )   << "patch " << this->patch().index() << " not wedge type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -130,8 +128,8 @@ tmp<Field<Type> > wedgeFvPatchField<Type>::snGrad() const
 {
     Field<Type> pif = this->patchInternalField();
     return
-        (transform(refCast<const wedgeFvPatch>(this->patchMesh()).cellT(), pif) - pif)
-       *(0.5*this->patchMesh().deltaCoeffs());
+        (transform(refCast<const wedgeFvPatch>(this->patch()).cellT(), pif) - pif)
+       *(0.5*this->patch().deltaCoeffs());
 }
 
 
@@ -148,7 +146,7 @@ void wedgeFvPatchField<Type>::evaluate()
     (
         transform
         (
-            refCast<const wedgeFvPatch>(this->patchMesh()).faceT(),
+            refCast<const wedgeFvPatch>(this->patch()).faceT(),
             this->patchInternalField()
         )
     );
@@ -166,7 +164,7 @@ tmp<Field<Type> > wedgeFvPatchField<Type>::snGradTransformDiag() const
             this->size(),
             pow
             (
-                0.5*diag(I - refCast<const wedgeFvPatch>(this->patchMesh()).cellT()),
+                0.5*diag(I - refCast<const wedgeFvPatch>(this->patch()).cellT()),
                 pTraits<Type>::zero
             )
         )

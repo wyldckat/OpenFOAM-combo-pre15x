@@ -1,11 +1,11 @@
 EXE_INC = \
-	/* -ImovingCone */ -ImixerVessel /*-Islider*/ \
+    -I$(LIB_SRC)/topoFvMesh/lnInclude \
     -I$(LIB_SRC)/cfdTools/incompressible \
-    -I$(LIB_SRC)/cfdTools/lnInclude \
-    -I$(LIB_SRC)/dynamicMesh/lnInclude \
+    -I$(LIB_SRC)/cfdTools/general/lnInclude \
     -I$(LIB_SRC)/meshTools/lnInclude
 
 EXE_LIBS = \
+    -ltopoFvMesh \
+    -lmeshTools \
     -lcfdTools \
-    -ldynamicMesh \
-    -lmeshTools
+    -ldynamicMesh

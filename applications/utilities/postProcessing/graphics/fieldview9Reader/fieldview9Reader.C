@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Reader module for Fieldview9 to read Foam mesh&data.
@@ -41,7 +41,7 @@ Description
 #include "volPointInterpolation.H"
 #include "readerDatabase.H"
 #include "wallPolyPatch.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "cellModeller.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -609,7 +609,7 @@ void user_query_file_function
 
         strcpy(face_type_names[patchI], patch.name().c_str());
 
-        if (typeid(patch) == typeid(wallPolyPatch))
+        if (isType<wallPolyPatch>(patch))
         {
             wall_flags[patchI] = 1;
         }

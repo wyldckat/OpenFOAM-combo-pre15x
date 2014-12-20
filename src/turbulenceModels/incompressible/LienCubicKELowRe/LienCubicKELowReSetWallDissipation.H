@@ -37,13 +37,13 @@
 
     forAll(patches, patchi)
     {
-        const fvPatch& currPatch = patches[patchi];
+        const fvPatch& curPatch = patches[patchi];
 
-        if (typeid(currPatch) == typeid(wallFvPatch))
+        if (isType<wallFvPatch>(curPatch))
         {
-            forAll(currPatch, facei)
+            forAll(curPatch, facei)
             {
-                label faceCelli = currPatch.faceCells()[facei];
+                label faceCelli = curPatch.faceCells()[facei];
 
                 boundaryCentral[faceCelli] += 1.0;
                 boundarySource[faceCelli] +=

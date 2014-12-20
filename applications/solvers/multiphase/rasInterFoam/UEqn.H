@@ -1,23 +1,29 @@
-    surfaceScalarField gammaf = fvc::interpolate(gamma);
-
-    surfaceScalarField UBlendingFactor
-    (
-        IOobject
-        (
-            "UBlendingFactor",
-            runTime.timeName(),
-            mesh
-        ),
-        max
-        (
-            1.0 - mag(1.0 - Foam::pow(4.0*(gammaf - 0.5)*(0.5 - gammaf), 4.0)),
-            0.0
-        )
-    );
+    surfaceScalarField muf = 
+        twoPhaseProperties.muf() 
+      + fvc::interpolate(rho*turbulence->nut());
 
     fvVectorMatrix UEqn
     (
-        fvm::ddt(U)
-      + fvm::div(phi, U)
-      + turbulence->divR(U)
+        fvm::ddt(rho, U)
+      + fvm::div(rhoPhi, U)
+      - fvm::laplacian(muf, U)
+      - (fvc::grad(U) & fvc::grad(muf))
+    //- fvc::div(muf*(fvc::interpolate(dev(fvc::grad(U))) & mesh.Sf()))
     );
+
+    if (momentumPredictor)
+    {
+        solve
+        (
+            UEqn
+         ==
+            fvc::reconstruct
+            (
+                (
+                    fvc::interpolate(interface.sigmaK())*fvc::snGrad(gamma)
+                  - ghf*fvc::snGrad(rho)
+                  - fvc::snGrad(pd)
+                ) * mesh.magSf()
+            )
+        );
+    }

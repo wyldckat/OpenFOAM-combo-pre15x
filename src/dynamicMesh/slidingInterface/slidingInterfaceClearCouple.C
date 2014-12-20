@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -48,11 +48,8 @@ void Foam::slidingInterface::clearCouple
     }
 
     // Remove all points from the point zone
-
-    const polyMesh& mesh = morphEngine().mesh();
-
     const labelList& cutPointZoneLabels =
-        mesh.pointZones()[cutPointZoneID_.index()].addressing();
+        mesh().pointZones()[cutPointZoneID_.index()].addressing();
 
     forAll (cutPointZoneLabels, pointI)
     {
@@ -61,7 +58,7 @@ void Foam::slidingInterface::clearCouple
 
     // Remove all faces from the face zone
     const labelList& cutFaceZoneLabels =
-        mesh.faceZones()[cutFaceZoneID_.index()].addressing();
+        mesh().faceZones()[cutFaceZoneID_.index()].addressing();
 
     forAll (cutFaceZoneLabels, faceI)
     {

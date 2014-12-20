@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     JANAF tables based thermodynamics package templated ito the equationOfState.
@@ -356,7 +356,7 @@ inline janafThermo<equationOfState> operator*
 {
     return janafThermo<equationOfState>
     (
-        s*((const equationOfState&)jt),
+        s*static_cast<const equationOfState&>(jt),
         jt.Tlow_,
         jt.Thigh_,
         jt.Tcommon_,

@@ -20,11 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "prefixOSstream.H"
+#include "Pstream.H"
 #include "token.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -34,6 +35,21 @@ namespace Foam
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+prefixOSstream::prefixOSstream
+(
+    ostream& os,
+    const string& name,
+    streamFormat format,
+    versionNumber version,
+    compressionType compression
+)
+:
+    OSstream(os, name, format, version, compression),
+    printPrefix_(true),
+    prefix_("")
+{}
+
+
 inline void prefixOSstream::checkWritePrefix()
 {
     if (printPrefix_ && prefix_.size())
@@ -41,6 +57,12 @@ inline void prefixOSstream::checkWritePrefix()
         OSstream::write(prefix_.c_str());
         printPrefix_ = false;
     }
+}
+
+
+Ostream& prefixOSstream::write(const token&)
+{
+    return *this;
 }
 
 

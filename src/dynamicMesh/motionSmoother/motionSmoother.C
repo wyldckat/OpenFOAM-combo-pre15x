@@ -20,14 +20,14 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "motionSmoother.H"
 #include "twoDPointCorrector.H"
 #include "faceSet.H"
-
+#include "fixedValuePointPatchFields.H"
 
 namespace Foam
 {
@@ -250,6 +250,33 @@ Foam::motionSmoother::motionSmoother
 {
     const pointBoundaryMesh& patches = pMesh_.boundary();
 
+    // Check whether displacement has fixed value b.c. on adaptPatchID
+    forAll(adaptPatchIDs_, i)
+    {
+        label patchI = adaptPatchIDs_[i];
+
+        if
+        (
+           !isA<fixedValuePointPatchVectorField>
+            (
+                displacement_.boundaryField()[patchI]
+            )
+        )
+        {
+            FatalErrorIn
+            (
+                "motionSmoother::motionSmoother"
+            )   << "Patch " << patches[patchI].name()
+                << " has wrong boundary condition "
+                << displacement_.boundaryField()[patchI].type()
+                << " on field " << displacement_.name() << nl
+                << "Only type allowed is "
+                << fixedValuePointPatchVectorField::typeName
+                << exit(FatalError);
+        }
+    }
+
+
     // Get twoDcorrector stuff
     IOdictionary motionProps
     (
@@ -315,6 +342,12 @@ const Foam::polyMesh& Foam::motionSmoother::mesh() const
 }
 
 
+const Foam::pointMesh& Foam::motionSmoother::pMesh() const
+{
+    return pMesh_;
+}
+
+
 const Foam::indirectPrimitivePatch& Foam::motionSmoother::patch() const
 {
     return pp_;
@@ -346,6 +379,12 @@ Foam::scalar Foam::motionSmoother::minArea() const
 
 
 Foam::pointVectorField& Foam::motionSmoother::displacement()
+{
+    return displacement_;
+}
+
+
+const Foam::pointVectorField& Foam::motionSmoother::displacement() const
 {
     return displacement_;
 }
@@ -383,7 +422,13 @@ Foam::tmp<Foam::scalarField> Foam::motionSmoother::movePoints
     // Correct for 2-D motion
     if (correct2DPtr_)
     {
-        Info << "Correct-ing 2-D mesh motion";
+        Pout<< "Correct-ing 2-D mesh motion";
+
+        if (mesh_.parallelData().parallel())
+        {
+            WarningIn("motionSmoother::movePoints(pointField& newPoints)")
+                << "2D mesh-motion probably not correct in parallel" << endl;
+        }
 
         // We do not want to move 3D planes so project all points onto those
         const pointField& oldPoints = mesh_.points();
@@ -407,7 +452,7 @@ Foam::tmp<Foam::scalarField> Foam::motionSmoother::movePoints
 
         // Correct tangentially
         correct2DPtr_->correctPoints(newPoints);
-        Info << " ...done" << endl;
+        Pout<< " ...done" << endl;
     }    
 
     tmp<scalarField> tsweptVol = mesh_.movePoints(newPoints);
@@ -438,22 +483,30 @@ bool Foam::motionSmoother::scaleMesh
 
     cpuTime timer;
 
+    // Make sure displacement consistent across patches
+    syncField
+    (
+        displacement_,
+        vector(GREAT, GREAT, GREAT),
+        minEqOp<Field<vector> >()
+    );
+
     // Set newPoints as old + scale*displacement
     pointField newPoints
     (
         oldPoints_
       + scale_.internalField()*displacement_.internalField()
     );
-    Info<< "Calculated new mesh position in = "
+    Pout<< "Calculated new mesh position in = "
         << timer.cpuTimeIncrement() << " s\n" << nl << endl;
 
     {
-        Info<< "scale:" << "  min:" << min(scale_.internalField())
+        Pout<< "scale        : " << " min:" << min(scale_.internalField())
             << "  max:" << max(scale_.internalField()) << endl;
 
         pointScalarField magDisp(mag(displacement_));
 
-        Info<< "disp:" << "  min:" << min(magDisp.internalField())
+        Pout<< "displacement : " << "  min:" << min(magDisp.internalField())
             << "  max:" << max(magDisp.internalField()) << endl;
     }
 
@@ -461,23 +514,23 @@ bool Foam::motionSmoother::scaleMesh
 
     // Move
     movePoints(newPoints);
-    Info<< "Moved mesh in = "
+    Pout<< "Moved mesh in = "
         << timer.cpuTimeIncrement() << " s\n" << nl << endl;
 
-    // Check
+    // Check. Returns parallel number of incorrect faces.
     faceSet wrongFaces(mesh_, "wrongFaces", mesh_.nFaces()/100+100);
-    checkMesh(wrongFaces);
+    label nWrongFaces = checkMesh(wrongFaces);
 
-    Info<< "Checked mesh in = "
+    Pout<< "Checked mesh in = "
         << timer.cpuTimeIncrement() << " s\n" << nl << endl;
 
-    if (wrongFaces.size() <= nAllowableErrors)
+    if (nWrongFaces <= nAllowableErrors)
     {
         return true;
     }
     else
     {
-        Info<< "Writing faceSet with incorrect faces to " << wrongFaces.name()
+        Pout<< "Writing faceSet with incorrect faces to " << wrongFaces.name()
             << endl;
         wrongFaces.write();
 
@@ -517,12 +570,22 @@ bool Foam::motionSmoother::scaleMesh
                 checkFld(scale_);
             }
         }
-        Info<< "After smoothing :"
+
+        // Make sure scale_ consistent across patches
+        syncField
+        (
+            scale_,
+            GREAT,
+            minEqOp<Field<scalar> >()
+        );
+
+
+        Pout<< "After smoothing :"
             << " min:" << Foam::gMin(scale_)
             << " max:" << Foam::gMax(scale_)
             << endl;
 
-        Info<< nl << endl;
+        Pout<< nl << endl;
 
         return false;
     }
@@ -542,41 +605,41 @@ bool Foam::motionSmoother::checkMesh(labelHashSet& wrongFaces) const
 {
     if (maxNonOrtho_ < 180.0-SMALL)
     {
-        Info<< "Checking non orthogonality" << endl;
+        Pout<< "Checking non orthogonality" << endl;
 
         label nOldSize = wrongFaces.size();
         mesh_.setOrthWarn(maxNonOrtho_);
         mesh_.checkFaceDotProduct(false, &wrongFaces);
 
-        Info<< "Detected " << wrongFaces.size() - nOldSize
+        Pout<< "Detected " << wrongFaces.size() - nOldSize
             << " faces with non-orthogonality > " << maxNonOrtho_ << " degrees"
             << endl;
     }
 
     if (minVol_ > -GREAT)
     {
-        Info<< "Checking face pyramids" << endl;
+        Pout<< "Checking face pyramids" << endl;
 
         label nOldSize = wrongFaces.size();
         mesh_.checkFacePyramids(false, minVol_, &wrongFaces);
-        Info<< "Detected additional " << wrongFaces.size() - nOldSize
+        Pout<< "Detected additional " << wrongFaces.size() - nOldSize
             << " faces with illegal face pyramids" << endl;
     }
 
     if (maxConcave_ < 180.0-SMALL)
     {
-        Info<< "Checking face angles" << endl;
+        Pout<< "Checking face angles" << endl;
 
         label nOldSize = wrongFaces.size();
         mesh_.checkFaceAngles(false, maxConcave_, &wrongFaces);
-        Info<< "Detected additional " << wrongFaces.size() - nOldSize
+        Pout<< "Detected additional " << wrongFaces.size() - nOldSize
             << " faces with concavity > " << maxConcave_ << " degrees"
             << endl;
     }
 
     if (minArea_ > -SMALL)
     {
-        Info<< "Checking face areas" << endl;
+        Pout<< "Checking face areas" << endl;
 
         label nOldSize = wrongFaces.size();
 
@@ -589,11 +652,15 @@ bool Foam::motionSmoother::checkMesh(labelHashSet& wrongFaces) const
                 wrongFaces.insert(faceI);
             }
         }
-        Info<< "Detected additional " << wrongFaces.size() - nOldSize
+        Pout<< "Detected additional " << wrongFaces.size() - nOldSize
             << " faces with area < " << minArea_ << " m^2" << endl;
     }
 
-    return wrongFaces.size() > 0;
+    label nWrongFaces = wrongFaces.size();
+
+    reduce(nWrongFaces, sumOp<label>());
+
+    return nWrongFaces;
 }
 
 

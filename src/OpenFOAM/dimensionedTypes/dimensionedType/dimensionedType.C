@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Generic dimensioned Type class
@@ -442,7 +442,7 @@ operator op                                                                   \
     (                                                                        \
         dt1.name() + #op + word(name(t2)),                                    \
         dt1.dimensions(),                                                     \
-        dt1.value() op (const Form&)t2                                        \
+        dt1.value() op static_cast<const Form&>(t2)                           \
     );                                                                        \
 }                                                                             \
                                                                               \
@@ -458,7 +458,7 @@ operator op                                                                   \
     (                                                                         \
         word(name(t1)) + #op + dt2.name(),                                    \
         dt2.dimensions(),                                                     \
-        (const Form&)t1 op dt2.value()                                        \
+        static_cast<const Form&>(t1) op dt2.value()                           \
     );                                                                        \
 }
 

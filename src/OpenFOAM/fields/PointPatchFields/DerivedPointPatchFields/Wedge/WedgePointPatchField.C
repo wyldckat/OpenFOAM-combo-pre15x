@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -90,7 +88,7 @@ WedgePointPatchField
 :
     PatchField<Type>(p, iF)
 {
-    if (typeid(p) != typeid(WedgePointPatch))
+    if (!isType<WedgePointPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -103,7 +101,7 @@ WedgePointPatchField
             "    const dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index() << " not wedge type. "
+        )   << "patch " << this->patch().index() << " not wedge type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -128,7 +126,7 @@ WedgePointPatchField
 :
     PatchField<Type>(p, iF)
 {
-    if (typeid(this->patchMesh()) != typeid(WedgePointPatch))
+    if (!isType<WedgePointPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -143,9 +141,9 @@ WedgePointPatchField
             "    const PointPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }
@@ -185,17 +183,17 @@ evaluate()
 {
     // In order to ensure that the wedge patch is always flat, take the
     // normal vector from the first point
-    const vector& nHat = this->patchMesh().pointNormals()[0];
+    const vector& nHat = this->patch().pointNormals()[0];
 
     tmp<Field<Type> > tvalues =
         transform(I - nHat*nHat, this->patchInternalField());
     const Field<Type>& values = tvalues();
 
     // Get internal field to insert values into
-    Field<Type>& iF = ((Field<Type>&)(this->internalField()));
+    Field<Type>& iF = const_cast<Field<Type>&>(this->internalField());
 
     // Get addressing
-    const labelList& meshPoints = this->patchMesh().meshPoints();
+    const labelList& meshPoints = this->patch().meshPoints();
 
     forAll (meshPoints, pointI)
     {

@@ -71,7 +71,7 @@
 
         {
             scalarField linerPoints =
-                motionUz.boundaryField()[linerIndex].patchMesh()
+                motionUz.boundaryField()[linerIndex].patch()
                 .localPoints().component(vector::Z);
 
             motionUz.boundaryField()[linerIndex] ==
@@ -124,7 +124,7 @@
     bool absolutePhi = false;
     if (mesh.moving())
     {
-        phi += fvc::interpolate(rho)*mesh.phi();
+        phi += fvc::interpolate(rho)*fvc::meshPhi(rho, U);
         absolutePhi = true;
     }
 #   endif
@@ -134,7 +134,7 @@
 #   ifndef NoFields
     if (absolutePhi)
     {
-        phi -= fvc::interpolate(rho)*mesh.phi();
+        phi -= fvc::interpolate(rho)*fvc::meshPhi(rho, U);
     }
 #   endif
 

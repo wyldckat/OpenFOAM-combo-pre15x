@@ -20,14 +20,14 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 // Foam header files.
 #include "SLList.H"
+#include "OSspecific.H"
+#include "IFstream.H"
 
 // Project header files.
 #include "ITypeDescriptorImpl.H"
@@ -43,14 +43,14 @@ Description
 
 FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
 (
-    const Foam::word& name,
+    const word& name,
     const FoamXType& type,
-    const Foam::string& parentPath
+    const string& parentPath
 )
 :
     type_(type),
-    path_(parentPath + ':' + name),
     name_(name),
+    path_(parentPath + ':' + name),
     optional_(false),
     visible_(true),
     editable_(true),
@@ -59,8 +59,8 @@ FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
 {
     static const char* functionName =
         "FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl"
-        "(const Foam::word& name, const FoamXType& type, "
-        "const Foam::string& parentPath)";
+        "(const word& name, const FoamXType& type, "
+        "const string& parentPath)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -84,15 +84,15 @@ FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
 
 FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
 (
-    const Foam::word& name,
-    const Foam::string& parentPath,
-    const Foam::dictionary& typeDict,
-    const Foam::dictionary& foamTypesDict
+    const word& name,
+    const string& parentPath,
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
 )
 :
     type_(Type_Undefined),
-    path_(parentPath + ':' + name),
     name_(name),
+    path_(parentPath + ':' + name),
     optional_(false),
     visible_(true),
     editable_(true),
@@ -101,9 +101,9 @@ FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
 {
     static const char* functionName =
         "FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl"
-        "(const Foam::word& name, const Foam::string& parentPath, "
-        "const Foam::dictionary& typeDict, "
-        "const Foam::dictionary& foamTypesDict)";
+        "(const word& name, const string& parentPath, "
+        "const dictionary& typeDict, "
+        "const dictionary& foamTypesDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -117,6 +117,74 @@ FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
 
         // Load the type descriptor information from the dictionary.
         load(typeDict, foamTypesDict);
+    }
+    CATCH_ALL(functionName);
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
+(
+    const word& name,
+    const string& parentPath,
+    const entry& typeEntry,
+    const dictionary& foamTypesDict
+)
+:
+    type_(Type_Undefined),
+    name_(name),
+    path_(parentPath + ':' + name),
+    optional_(false),
+    visible_(true),
+    editable_(true),
+    numElements_(0),
+    default_(NULL)
+{
+    static const char* functionName =
+        "FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl"
+        "(const word& name, const string& parentPath, const entry& typeEntry, "
+        "const dictionary& foamTypesDict)";
+
+    LogEntry log(functionName, __FILE__, __LINE__);
+
+    try
+    {
+        log << "Constructing TypeDescriptor for " << path_ << "." << endl;
+
+        if (typeEntry.isDict())
+        {
+            // Load the type descriptor information from the dictionary.
+            load(typeEntry.dict(), foamTypesDict);
+        }
+        else if (exists(parentPath/name_ + ".cfg"))
+        {
+            fileName dictPathName = parentPath/name_ + ".cfg";
+        
+            dictionary typeDict((IFstream(dictPathName)()));
+
+            log << "Reading dictionary " << typeDict.name()
+                << " start line " << typeDict.startLineNumber()
+                << " end line " << typeDict.endLineNumber() << endl;
+
+            // Load the type descriptor information from the dictionary.
+            load(typeDict, foamTypesDict);
+        }
+        else if (foamTypesDict.found(name_))
+        {
+            // Load the type descriptor information from the dictionary.
+            load(foamTypesDict.subDict(name_), foamTypesDict);
+        }
+        else
+        {
+            throw FoamXError
+            (
+                E_FAIL,
+                "Definition for type '" + name_ + "', " + path_ + " could not be found in "
+              + typeEntry.name() + " or in foamTypesDict",
+                functionName,
+                __FILE__, __LINE__
+            );
+        }
     }
     CATCH_ALL(functionName);
 }
@@ -148,9 +216,9 @@ FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
         // Set basic type.
         type_ = typeDesc->type();
 
-        // Copy common data;
-        path_ = typeDesc->path();
+        // Copy common data
         name_ = typeDesc->name();
+        path_ = typeDesc->path();
         displayName_ = typeDesc->displayName();
         description_ = typeDesc->description();
         comment_ = typeDesc->comment();
@@ -184,7 +252,7 @@ FoamX::ITypeDescriptorImpl::ITypeDescriptorImpl
             for (label i=0; i<valueList_.size(); i++)
             {
                 valueList_[i].setType(type_);
-                valueList_[i].setValue(anyList[(unsigned long)(i)]);
+                valueList_[i].setValue(anyList[ulong(i)]);
             }
         }
         else
@@ -769,7 +837,7 @@ FoamX::TypeDescriptorList* FoamX::ITypeDescriptorImpl::subTypes()
     int i = 0;
     for
     (
-        Foam::DLList<FoamX::ITypeDescriptorImpl*>::iterator iter =
+        DLList<FoamX::ITypeDescriptorImpl*>::iterator iter =
             subTypes_.begin();
         iter != subTypes_.end();
         ++iter
@@ -800,7 +868,7 @@ FoamX::ITypeDescriptor_ptr FoamX::ITypeDescriptorImpl::elementType()
         if
         (
             type_ != FoamXServer::Type_List
-         && type_ != FoamXServer::Type_VectorSpace
+         && type_ != FoamXServer::Type_FixedList
         )
         {
             throw FoamXError
@@ -824,11 +892,10 @@ FoamX::ITypeDescriptor_ptr FoamX::ITypeDescriptorImpl::elementType()
             );
         }
 
-        pTypeDesc =
-            FoamXServer::ITypeDescriptor::_duplicate
-            (
-                subTypes_.first()->_this()
-            );
+        pTypeDesc = FoamXServer::ITypeDescriptor::_duplicate
+        (
+            subTypes_.first()->_this()
+        );
     }
     CATCH_ALL(functionName);
 
@@ -868,7 +935,7 @@ void FoamX::ITypeDescriptorImpl::addSubType
         // Only dictionaries and compound types can have more than one sub-type.
         if
         (
-            (type_ == Type_List || type_ == Type_VectorSpace)
+            (type_ == Type_List || type_ == Type_FixedList)
          && subTypes_.size() >= 1
         )
         {
@@ -884,7 +951,7 @@ void FoamX::ITypeDescriptorImpl::addSubType
 
         // Temporary name for this sub-type.
         word name = "newSubType";
-        name += Foam::name(subTypes_.size());
+        name += name(subTypes_.size());
 
         // Create type descriptor object.
         ITypeDescriptorImpl* pTypeDescriptor = new ITypeDescriptorImpl
@@ -933,7 +1000,7 @@ void FoamX::ITypeDescriptorImpl::removeSubType(ITypeDescriptor_ptr subEntry)
         // Remove from List.
         for
         (
-            Foam::DLList<ITypeDescriptorImpl*>::iterator iter = 
+            DLList<ITypeDescriptorImpl*>::iterator iter = 
                 subTypes_.begin();
             iter != subTypes_.end();
             ++iter
@@ -947,7 +1014,7 @@ void FoamX::ITypeDescriptorImpl::removeSubType(ITypeDescriptor_ptr subEntry)
                 // Release and remove from linked list.
                 subTypes_.remove
                 (
-                    &(iter.Foam::DLListBase::iterator::operator*())
+                    &(iter.DLListBase::iterator::operator*())
                 );
 
                 break;
@@ -1020,10 +1087,10 @@ void FoamX::ITypeDescriptorImpl::validate()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-bool FoamX::ITypeDescriptorImpl::setType(const Foam::word& type)
+bool FoamX::ITypeDescriptorImpl::setType(const word& type)
 {
     static const char* functionName =
-        "FoamX::ITypeDescriptorImpl::setType(const Foam::word& type)";
+        "FoamX::ITypeDescriptorImpl::setType(const word& type)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1064,14 +1131,14 @@ bool FoamX::ITypeDescriptorImpl::setType(const Foam::word& type)
 
 void FoamX::ITypeDescriptorImpl::load
 (
-    const Foam::dictionary& typeDict,
-    const Foam::dictionary& foamTypesDict
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
 )
 {
     static const char* functionName =
         "FoamX::ITypeDescriptorImpl::load"
-        "(const Foam::dictionary& typeDict, "
-        "const Foam::dictionary& foamTypesDict)";
+        "(const dictionary& typeDict, "
+        "const dictionary& foamTypesDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1094,11 +1161,53 @@ void FoamX::ITypeDescriptorImpl::load
             );
         }
 
-        // Get type.
-        word type(typeDict.lookup("type"));
+        // Get the type
 
-        // Resolve any Foam types and get sub types for compound types.
-        resolveType(type, typeDict, foamTypesDict);
+        // If it is a dictionary get the type from the dictionary
+        if (typeDict.isDict("type"))
+        {
+            // Get the type dictionary ...
+            const dictionary& typeTypeDict(typeDict.subDict("type"));
+
+            // ... and check it only has one entry
+            if (typeTypeDict.size() != 1)
+            {
+                throw FoamXError
+                (
+                    E_FAIL,
+                    "Dictionary for 'type' of type '"  
+                  + FoamXTypes::typeName(type_) + " " + name_
+                  + " in dictionary '" + typeDict.name()
+                  + "' does contain a single entry",
+                    functionName,
+                    __FILE__, __LINE__
+                );
+            }
+
+            // Get the type entry ...
+            const entry& typeEntry = *typeTypeDict.first();
+
+            // ... and it's dictionary ...
+            const dictionary& typeEntryTypeDict = typeEntry.dict();
+
+            // ... and get the actual type from it ...
+            word type(typeEntryTypeDict.lookup("type"));
+
+            // ... then resolve this type as normal ...
+            resolveType(type, typeEntryTypeDict, foamTypesDict);
+
+            // ... but also add the optional additiona entries and data
+            addEntries(typeDict, foamTypesDict);
+            readOptionalData(typeDict);
+        }
+        else // it's a system type or defined in foamTypesDict
+        {
+            // Get the type
+            word type(typeDict.lookup("type"));
+
+            // Resolve any Foam types and get sub types for compound types.
+            resolveType(type, typeDict, foamTypesDict);
+        }
     }
     CATCH_ALL(functionName);
 }
@@ -1107,15 +1216,38 @@ void FoamX::ITypeDescriptorImpl::load
 
 void FoamX::ITypeDescriptorImpl::resolveType
 (
-    Foam::word& type,
-    const Foam::dictionary& typeDict,
-    const Foam::dictionary& foamTypesDict
+    word& type,
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
+)
+{
+    if (typeDict.found("types"))
+    {
+        resolveTypeDict
+        (
+            type,
+            typeDict,
+            foamTypesDict + typeDict.subDict("types")
+        );
+    }
+    else
+    {
+        resolveTypeDict(type, typeDict, foamTypesDict);
+    }
+}
+
+
+void FoamX::ITypeDescriptorImpl::resolveTypeDict
+(
+    word& type,
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
 )
 {
     static const char* functionName =
-        "FoamX::ITypeDescriptorImpl::resolveType(Foam::word& type, "
-        "const Foam::dictionary& typeDict, "
-        "const Foam::dictionary& foamTypesDict)";
+        "FoamX::ITypeDescriptorImpl::resolveTypeDict(word& type, "
+        "const dictionary& typeDict, "
+        "const dictionary& foamTypesDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1139,7 +1271,7 @@ void FoamX::ITypeDescriptorImpl::resolveType
                 typeAliasDict.lookup("type") >> type;
 
                 resolveType(type, typeAliasDict, foamTypesDict);
-                addEntries(type, typeDict, foamTypesDict);
+                addEntries(typeDict, foamTypesDict);
                 readOptionalData(typeDict);
             }
             else
@@ -1162,15 +1294,15 @@ void FoamX::ITypeDescriptorImpl::resolveType
 
 void FoamX::ITypeDescriptorImpl::readType
 (
-    Foam::word& type,
-    const Foam::dictionary& typeDict,
-    const Foam::dictionary& foamTypesDict
+    word& type,
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
 )
 {
     static const char* functionName =
-        "FoamX::ITypeDescriptorImpl::readType(Foam::word& type, "
-        "const Foam::dictionary& typeDict, "
-        "const Foam::dictionary& foamTypesDict)";
+        "FoamX::ITypeDescriptorImpl::readType(word& type, "
+        "const dictionary& typeDict, "
+        "const dictionary& foamTypesDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1186,7 +1318,8 @@ void FoamX::ITypeDescriptorImpl::readType
             throw FoamXError
             (
                 E_FAIL,
-                "Illegal type token '" + type
+                "Illegal type token '" + type + "' of type '"
+              + FoamXTypes::typeName(type_) + " " + name_
               + "' in dictionary '" + typeDict.name() + "'.",
                 functionName,
                 __FILE__, __LINE__
@@ -1196,37 +1329,45 @@ void FoamX::ITypeDescriptorImpl::readType
         // If this type is a compound type, we need the sub type list.
         if (FoamXTypes::isCompound(type_))
         {
-            if (type_ == Type_VectorSpace)
+            if (type_ == Type_FixedList)
             {
+                addElementType(typeDict, foamTypesDict);
+
                 if (!typeDict.found("numElements"))
                 {
                     throw FoamXError
                     (
                         E_FAIL,
-                        "Mandatory entry 'numElements' "
-                        "not found in dictionary '" + typeDict.name() + "'.",
+                        "Mandatory entry 'numElements' of type '" 
+                      + FoamXTypes::typeName(type_) + " " + name_
+                      + "' not found in dictionary '" + typeDict.name() + "'.",
                         functionName,
                         __FILE__, __LINE__
                     );
                 }
-
-                addSubType(typeDict.lookup("elementType"), foamTypesDict);
-
                 typeDict.lookup("numElements") >> numElements_;
+
+                if (!typeDict.found("elementLabels"))
+                {
+                    throw FoamXError
+                    (
+                        E_FAIL,
+                        "Mandatory entry 'elementLabels' of type '"  
+                      + FoamXTypes::typeName(type_) + " " + name_
+                      + "' not found in dictionary '" + typeDict.name() + "'.",
+                        functionName,
+                        __FILE__, __LINE__
+                    );
+                }
                 elementLabels_.read(typeDict.lookup("elementLabels"));
             }
             else if (type_ == Type_List)
             {
-                addSubType(typeDict.lookup("elementType"), foamTypesDict);
+                addElementType(typeDict, foamTypesDict);
             }
-            else if
-            (
-                type_ == Type_Dictionary
-             || type_ == Type_Selection
-             || type_ == Type_Compound
-            )
+            else
             {
-                addEntries(type, typeDict, foamTypesDict);
+                addEntries(typeDict, foamTypesDict);
             }
         }
 
@@ -1239,9 +1380,8 @@ void FoamX::ITypeDescriptorImpl::readType
 
 void FoamX::ITypeDescriptorImpl::addEntries
 (
-    const Foam::word& type,
-    const Foam::dictionary& typeDict,
-    const Foam::dictionary& foamTypesDict
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
 )
 {
     if
@@ -1254,116 +1394,292 @@ void FoamX::ITypeDescriptorImpl::addEntries
      && typeDict.found("entries")
     )
     {
-        //IDLList<entry> entries(typeDict.lookup("entries"));
-        const dictionary& entries(typeDict.subDict("entries"));
-
-        for
-        (
-            //IDLList<entry>::iterator iter = entries.begin();
-            dictionary::const_iterator iter = entries.begin();
-            iter != entries.end();
-            ++iter
-        )
+        if (type_ == Type_Dictionary)
         {
-            addSubType(iter().keyword(), iter().dict(), foamTypesDict);
+            addDictionaryEntries(typeDict, foamTypesDict);
+        }
+        else
+        {
+            addCompoundEntries(typeDict, foamTypesDict);
         }
     }
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::ITypeDescriptorImpl::addSubType
+void FoamX::ITypeDescriptorImpl::addDictionaryEntries
 (
-    const Foam::word& subType,
-    const Foam::dictionary& typeDict,
-    const Foam::dictionary& foamTypesDict
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
 )
 {
     static const char* functionName =
-        "FoamX::ITypeDescriptorImpl::addSubType(const Foam::word& type, "
-        "const Foam::dictionary& typeDict, "
-        "const Foam::dictionary& foamTypesDict)";
+        "FoamX::ITypeDescriptorImpl::addDictionaryEntries"
+        "(const dictionary& typeDict, const dictionary& foamTypesDict)";
 
-    LogEntry log(functionName, __FILE__, __LINE__);
+    const dictionary& entries(typeDict.subDict("entries"));
 
-    if (FoamXTypes::found(subType))
+    for
+    (
+        dictionary::const_iterator iter = entries.begin();
+        iter != entries.end();
+        ++iter
+    )
     {
-        // Add to map and list.
-        subTypes_.append
-        (
-            new ITypeDescriptorImpl
+        const word& keyword = iter().keyword();
+
+        if (iter().isDict())
+        {
+            subTypes_.append
             (
-                subType,
-                FoamXTypes::lookupType(subType),
-                path_
-            )
-        );
-    }
-    else
-    {
-        subTypes_.append
-        (
-            new ITypeDescriptorImpl
-            (
-                subType,
-                path_,
-                typeDict,
-                foamTypesDict
-            )
-        );
+                new ITypeDescriptorImpl
+                (
+                    keyword,
+                    path_,
+                    iter().dict(),
+                    foamTypesDict
+                )
+            );
+        }
+        else
+        {
+            if (!iter().stream().size())
+            {
+                throw FoamXError
+                (
+                    E_FAIL,
+                    "Entry '" + keyword
+                  + "' for 'entries' of type '"  
+                  + FoamXTypes::typeName(type_) + " " + name_
+                  + "' in dictionary '" + typeDict.name()
+                  + "' does not have a type.",
+                    functionName,
+                    __FILE__, __LINE__
+                );
+            }
+
+            word subType(iter().stream());
+
+            if (foamTypesDict.found(subType))
+            {
+                subTypes_.append
+                (
+                    new ITypeDescriptorImpl
+                    (
+                        keyword,
+                        path_,
+                        foamTypesDict.subDict(subType),
+                        foamTypesDict
+                    )
+                );
+            }
+            else if (FoamXTypes::found(subType))
+            {
+                subTypes_.append
+                (
+                    new ITypeDescriptorImpl
+                    (
+                        keyword,
+                        FoamXTypes::lookupType(subType),
+                        path_
+                    )
+                );
+            }
+            else
+            {
+                throw FoamXError
+                (
+                    E_FAIL,
+                    "Type '" + subType
+                  + "' for 'entries' of type '"  
+                  + FoamXTypes::typeName(type_) + " " + name_
+                  + "' in dictionary '" + typeDict.name() + "' not defined.",
+                    functionName,
+                    __FILE__, __LINE__
+                );
+            }
+        }
     }
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::ITypeDescriptorImpl::addSubType
+void FoamX::ITypeDescriptorImpl::addCompoundEntries
 (
-    const Foam::word& subType,
-    const Foam::dictionary& foamTypesDict
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
 )
 {
     static const char* functionName =
-        "FoamX::ITypeDescriptorImpl::addSubType(const Foam::word& type, "
-        "const Foam::dictionary& typeDict, "
-        "const Foam::dictionary& foamTypesDict)";
+        "FoamX::ITypeDescriptorImpl::addCompoundEntries"
+        "(const dictionary& typeDict, const dictionary& foamTypesDict)";
+
+    const dictionary& entries(typeDict.subDict("entries"));
+
+    for
+    (
+        dictionary::const_iterator iter = entries.begin();
+        iter != entries.end();
+        ++iter
+    )
+    {
+        const word& subType = iter().keyword();
+
+        if (iter().isDict())
+        {
+            subTypes_.append
+            (
+                new ITypeDescriptorImpl
+                (
+                    subType,
+                    path_,
+                    iter().dict(),
+                    foamTypesDict
+                )
+            );
+        }
+        else if (foamTypesDict.found(subType))
+        {
+            subTypes_.append
+            (
+                new ITypeDescriptorImpl
+                (
+                    subType,
+                    path_,
+                    foamTypesDict.subDict(subType),
+                    foamTypesDict
+                )
+            );
+        }
+        else if (FoamXTypes::found(subType))
+        {
+            subTypes_.append
+            (
+                new ITypeDescriptorImpl
+                (
+                    subType,
+                    FoamXTypes::lookupType(subType),
+                    path_
+                )
+            );
+        }
+        else
+        {
+            throw FoamXError
+            (
+                E_FAIL,
+                "Type '" + subType
+              + "' for 'entries' of type '"  
+              + FoamXTypes::typeName(type_) + " " + name_
+              + "' in dictionary '" + typeDict.name() + "' not defined.",
+                functionName,
+                __FILE__, __LINE__
+            );
+        }
+    }
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+void FoamX::ITypeDescriptorImpl::addElementType
+(
+    const dictionary& typeDict,
+    const dictionary& foamTypesDict
+)
+{
+    static const char* functionName =
+        "FoamX::ITypeDescriptorImpl::addSubType(const dictionary& typeDict, "
+        "const dictionary& foamTypesDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
-    if (FoamXTypes::found(subType))
+    if (!typeDict.found("elementType"))
     {
-        // Add to map and list.
-        subTypes_.append
+        throw FoamXError
         (
-            new ITypeDescriptorImpl
-            (
-                subType,
-                FoamXTypes::lookupType(subType),
-                path_
-            )
+            E_FAIL,
+            "Mandatory entry 'elementType' of type '"  
+          + FoamXTypes::typeName(type_) + "' '" + name_
+          + "' not found in dictionary '" + typeDict.name() + "'.",
+            functionName,
+            __FILE__, __LINE__
         );
     }
-    else if (foamTypesDict.found(subType))
+
+    if (typeDict.isDict("elementType"))
     {
+        const dictionary& elementTypeDict = typeDict.subDict("elementType");
+
+        if (elementTypeDict.size() != 1)
+        {
+            throw FoamXError
+            (
+                E_FAIL,
+                "Dictionary for 'elementType' of type '"  
+              + FoamXTypes::typeName(type_) + " " + name_
+              + " in dictionary '" + typeDict.name()
+              + "' does contain a single entry",
+                functionName,
+                __FILE__, __LINE__
+            );
+        }
+
+        const entry& elementTypeEntry = *elementTypeDict.first();
+
         subTypes_.append
         (
             new ITypeDescriptorImpl
             (
-                subType,
+                elementTypeEntry.keyword(),
                 path_,
-                foamTypesDict.subDict(subType),
+                elementTypeEntry.dict(),
                 foamTypesDict
             )
         );
     }
     else
     {
-        throw FoamXError
-        (
-            E_FAIL,
-            "Type '" + subType + "' not defined.",
-            functionName,
-            __FILE__, __LINE__
-        );
+        word subType = typeDict.lookup("elementType");
+
+        if (FoamXTypes::found(subType))
+        {
+            // Add to map and list.
+            subTypes_.append
+            (
+                new ITypeDescriptorImpl
+                (
+                    subType,
+                    FoamXTypes::lookupType(subType),
+                    path_
+                )
+            );
+        }
+        else if (foamTypesDict.found(subType))
+        {
+            subTypes_.append
+            (
+                new ITypeDescriptorImpl
+                (
+                    subType,
+                    path_,
+                    foamTypesDict.subDict(subType),
+                    foamTypesDict
+                )
+            );
+        }
+        else
+        {
+            throw FoamXError
+            (
+                E_FAIL,
+                "Type '" + subType
+              + "' for 'elementType' of type '"  
+              + FoamXTypes::typeName(type_) + " " + name_
+              + " in dictionary '" + typeDict.name() + "' not defined.",
+                functionName,
+                __FILE__, __LINE__
+            );
+        }
     }
 }
 
@@ -1371,12 +1687,12 @@ void FoamX::ITypeDescriptorImpl::addSubType
 
 void FoamX::ITypeDescriptorImpl::readOptionalData
 (
-    const Foam::dictionary& typeDict
+    const dictionary& typeDict
 )
 {
     static const char* functionName =
         "FoamX::ITypeDescriptorImpl::readOptionalData"
-        "(const Foam::dictionary& typeDict)";
+        "(const dictionary& typeDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1398,6 +1714,7 @@ void FoamX::ITypeDescriptorImpl::readOptionalData
     if (typeDict.found("dictionaryPath"))
     {
         typeDict.lookup("dictionaryPath") >> dictionaryPath_;
+        dictionaryPath_.expand();
     }
 
     if (typeDict.found("category"))
@@ -1502,7 +1819,7 @@ void FoamX::ITypeDescriptorImpl::readOptionalData
 
         for
         (
-            Foam::DLList<FoamX::ITypeDescriptorImpl*>::iterator iter =
+            DLList<FoamX::ITypeDescriptorImpl*>::iterator iter =
                 subTypes_.begin();
             iter != subTypes_.end();
             ++iter
@@ -1527,10 +1844,10 @@ void FoamX::ITypeDescriptorImpl::readOptionalData
 
         default_->load(typeDict.lookupEntry("default"));
 
-        Foam::DLList<FoamX::ITypeDescriptorImpl*>::iterator iter1 =
+        DLList<FoamX::ITypeDescriptorImpl*>::iterator iter1 =
             subTypes_.begin();
 
-        Foam::DLList<IDictionaryEntryImpl*>::const_iterator iter2 =
+        DLList<IDictionaryEntryImpl*>::const_iterator iter2 =
             default_->subElementPtrs().begin();
 
         for
@@ -1655,7 +1972,7 @@ void FoamX::ITypeDescriptorImpl::save
         }
         else if(FoamXTypes::isCompound(type_))
         {
-            if (type_ == Type_VectorSpace)
+            if (type_ == Type_FixedList)
             {
                 dictWriter.writeEntry("numElements", numElements_);
 
@@ -1697,7 +2014,7 @@ void FoamX::ITypeDescriptorImpl::save
                 // Write sub-type data into their sub-dictionaries.
                 for
                 (
-                    Foam::DLList<ITypeDescriptorImpl*>::iterator iter = 
+                    DLList<ITypeDescriptorImpl*>::iterator iter = 
                         subTypes_.begin();
                     iter != subTypes_.end();
                     ++iter
@@ -1734,5 +2051,6 @@ void FoamX::ITypeDescriptorImpl::save
     }
     CATCH_ALL(functionName);
 }
+
 
 // ************************************************************************* //

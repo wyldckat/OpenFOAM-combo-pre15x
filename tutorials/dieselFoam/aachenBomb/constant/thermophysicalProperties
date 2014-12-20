@@ -6,14 +6,19 @@
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
 
-version             1.0;
-format              ascii;
-root                "";
-case                "aachen";
-local               "constant";
-class               dictionary;
-form                dictionary;
-object              thermodynamicProperties;
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "";
+    local           "";
+
+    class           dictionary;
+    object          thermodynamicProperties;
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
@@ -24,26 +29,11 @@ CHEMKINThermoFile           "$FOAM_ROOT/$FOAM_CASE/chemkin/therm.dat";
 
 inertSpecie                 N2;
 
-// explicit or implict chemical source terms
-// 1 - fully explicit, 0 - fully implicit
-//expImp            1.0;
-
-stoichiometricAirFuelMassRatio1 stoichiometricAirFuelMassRatio [0 0 0 0 0 0 0] 14.9207;
-
-burntProducts1 burntProducts    1   28.5809
-    200 6000 1000
-    3.12297 0.00178679 -5.94666e-07 9.09361e-11 -5.12055e-15 -11005.6 5.04351 
-    3.47795 0.000748332 -3.54025e-07 1.3343e-09 -8.05648e-13 -11072.3 3.29518 
-    -10002.9
-    1.67212e-6 170.672;
-
 liquidFuelComponents
 (
     C7H16
 );
 
 C7H16               C7H16           defaultCoeffs;
-
-/* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 /*********************************************************************/

@@ -1,7 +1,7 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.1                                   |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
@@ -24,33 +24,38 @@ FoamFile
 
 applicationClass rhopSonicFoam;
 
-startFrom       startTime;
+startFrom startTime;
 
-startTime       0;
+startTime 0;
 
-stopAt          endTime;
+stopAt endTime;
 
-endTime         0.007;
+endTime 0.007;
 
-deltaT          1e-05;
+deltaT 1e-05;
 
-writeControl    runTime;
+writeControl runTime;
 
-writeInterval   0.001;
+writeInterval 0.001;
 
-cycleWrite      0;
+cycleWrite 0;
 
-writeFormat     ascii;
+writeFormat ascii;
 
-writePrecision  6;
+writePrecision 6;
 
 writeCompression uncompressed;
 
-timeFormat      general;
+timeFormat general;
 
-timePrecision   6;
+timePrecision 6;
 
 runTimeModifiable yes;
 
+adjustTimeStep no;
+
+maxCo 0.2;
+
+maxDeltaT 1;
 
 // ************************************************************************* //

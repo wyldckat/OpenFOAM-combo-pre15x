@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -200,7 +200,7 @@ labelList faPatch::ngbPolyPatchFaces() const
     ngbFaces.setSize(size());
 
     const faMesh& aMesh = boundaryMesh().mesh();
-    const polyMesh& pMesh = aMesh.basicMesh();
+    const polyMesh& pMesh = aMesh();
     const indirectPrimitivePatch& patch = aMesh.patch();
 
     const labelListList& edgeFaces = pMesh.edgeFaces();
@@ -266,7 +266,7 @@ tmp<vectorField> faPatch::ngbPolyPatchFaceNormals() const
 
     labelList ngbFaces = ngbPolyPatchFaces();
 
-    const polyMesh& pMesh = boundaryMesh().mesh().basicMesh();
+    const polyMesh& pMesh = boundaryMesh().mesh()();
 
     const faceList& faces = pMesh.faces();
     const pointField& points = pMesh.points();
@@ -312,7 +312,7 @@ labelList::subList faPatch::edgeFaces() const
 {
 //     return labelList::subList
 //     (
-//         boundaryMesh().mesh().basicMesh().edgeOwner(),
+//         boundaryMesh().mesh()().edgeOwner(),
 //         size(),
 //         start()
 //     );
@@ -413,8 +413,8 @@ void faPatch::movePoints(const pointField& points)
 void faPatch::write(Ostream& os) const
 {
     os  << nl << type()
-        << (const patchIdentifier&)(*this) << endl
-        << (const labelList&)(*this) << endl
+        << static_cast<const patchIdentifier&>(*this) << endl
+        << static_cast<const labelList&>(*this) << endl
         << ngbPolyPatchIndex_;
 }
 
@@ -426,7 +426,8 @@ void faPatch::writeDict(Ostream& os) const
 
     patchIdentifier::writeDict(os);
 
-    os  << "    edgeLabels " << (const labelList&)(*this) << ';' << nl;
+    os  << "    edgeLabels " << static_cast<const labelList&>(*this) << ';'
+        << nl;
 
     os  << "    ngbPolyPatchIndex " << ngbPolyPatchIndex_ << ';' << nl
         << token::END_BLOCK << endl;

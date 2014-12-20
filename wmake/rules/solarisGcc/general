@@ -1,4 +1,4 @@
-CPP        = /usr/ccs/lib/cpp -undef $(WM_CPP_OPTIONS)
+CPP        = /usr/lib/cpp -undef -D$(WM_ARCH)
 
 GLIBS      = -L$(FOAM_LIBBIN)/dummy -lPstream -lm -lnsl -lsocket
 

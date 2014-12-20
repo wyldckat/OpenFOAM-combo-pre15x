@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     polyMesh reconstructor.
@@ -42,11 +42,11 @@ namespace Foam
 polyMeshReconstructor::polyMeshReconstructor
 (
     polyMesh& mesh,
-    const ptrList<polyMesh>& procMeshes,
-    const ptrList<labelIOList>& pointProcAddressing,
-    const ptrList<labelIOList>& faceProcAddressing,
-    const ptrList<labelIOList>& cellProcAddressing,
-    const ptrList<labelIOList>& boundaryProcAddressing
+    const PtrList<polyMesh>& procMeshes,
+    const PtrList<labelIOList>& pointProcAddressing,
+    const PtrList<labelIOList>& faceProcAddressing,
+    const PtrList<labelIOList>& cellProcAddressing,
+    const PtrList<labelIOList>& boundaryProcAddressing
 )
 :
     mesh_(mesh),
@@ -78,7 +78,7 @@ void polyMeshReconstructor::reconstructPoints()
     }
 
     // Read the field for all the processors
-    ptrList<pointIOField> procsPoints(procMeshes_.size());
+    PtrList<pointIOField> procsPoints(procMeshes_.size());
 
     forAll (procMeshes_, procI)
     {

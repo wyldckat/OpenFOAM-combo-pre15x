@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Namespace
     fvc
@@ -60,39 +60,13 @@ namespace fvc
     );
 
     template<class Type>
-    tmp<GeometricField<Type, fvPatchField, volMesh> > ddt0
-    (
-        const dimensioned<Type>,
-        const fvMesh&
-    );
-
-    template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > ddt
     (
         const GeometricField<Type, fvPatchField, volMesh>&
     );
 
     template<class Type>
-    tmp<GeometricField<Type, fvPatchField, volMesh> > ddt0
-    (
-        const GeometricField<Type, fvPatchField, volMesh>&
-    );
-
-    template<class Type>
-    tmp<GeometricField<Type, fvPatchField, surfaceMesh> > ddt0
-    (
-        const GeometricField<Type, fvPatchField, surfaceMesh>&
-    );
-
-    template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > ddt
-    (
-        const dimensionedScalar&,
-        const GeometricField<Type, fvPatchField, volMesh>&
-    );
-
-    template<class Type>
-    tmp<GeometricField<Type, fvPatchField, volMesh> > ddt0
     (
         const dimensionedScalar&,
         const GeometricField<Type, fvPatchField, volMesh>&
@@ -106,10 +80,32 @@ namespace fvc
     );
 
     template<class Type>
-    tmp<GeometricField<Type, fvPatchField, volMesh> > ddt0
+    tmp<GeometricField<typename flux<Type>::type, fvPatchField, surfaceMesh> >
+    ddtPhiCorr
     (
-        const volScalarField&,
-        const GeometricField<Type, fvPatchField, volMesh>&
+        const volScalarField& rA,
+        const GeometricField<Type, fvPatchField, volMesh>& U,
+        const GeometricField
+        <
+            typename flux<Type>::type,
+            fvPatchField,
+            surfaceMesh
+        >& phi
+    );
+
+    template<class Type>
+    tmp<GeometricField<typename flux<Type>::type, fvPatchField, surfaceMesh> >
+    ddtPhiCorr
+    (
+        const volScalarField& rA,
+        const volScalarField& rho,
+        const GeometricField<Type, fvPatchField, volMesh>& U,
+        const GeometricField
+        <
+            typename flux<Type>::type,
+            fvPatchField,
+            surfaceMesh
+        >& phi
     );
 }
 

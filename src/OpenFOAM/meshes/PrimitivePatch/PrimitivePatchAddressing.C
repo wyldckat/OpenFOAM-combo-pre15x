@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     This function calculates the list of patch edges, defined on the list of
@@ -102,7 +102,7 @@ void PrimitivePatch<Face, FaceList, PointField>::calcAddressing() const
 
     forAll (locFcs, faceI)
     {
-        faceIntoEdges.hook(new edgeList(locFcs[faceI].edges()));
+        faceIntoEdges[faceI] = locFcs[faceI].edges();
 
         labelList& curFaceEdges = faceEdges[faceI];
         curFaceEdges.setSize(faceIntoEdges[faceI].size());

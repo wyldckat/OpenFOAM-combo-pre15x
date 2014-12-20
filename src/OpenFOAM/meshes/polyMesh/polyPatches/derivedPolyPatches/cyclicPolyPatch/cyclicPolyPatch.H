@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     cyclicPolyPatch
@@ -76,7 +76,14 @@ class cyclicPolyPatch
 
     // Private data
 
+        //- List of edges formed from connected points. e[0] is the point on
+        //  the first half of the patch, e[1] the corresponding point on the
+        //  second half.
         mutable edgeList* coupledPointsPtr_;
+
+        //- List of connected edges. e[0] is the edge on the first half of the
+        //  patch, e[1] the corresponding edge on the second half.
+        mutable edgeList* coupledEdgesPtr_;
 
 
     // Private member functions
@@ -132,6 +139,11 @@ protected:
         //- Correct patches after moving points
         void movePoints(const pointField&);
 
+        //- Initialise the update of the patch topology
+        virtual void initUpdateTopology();
+
+        //- Update of the patch topology
+        virtual void updateTopology();
 
 public:
 
@@ -223,6 +235,9 @@ public:
         //- Return connected points (in patch local point indexing)
         const edgeList& coupledPoints() const;
 
+        //- Return connected edges (in patch local edge indexing)
+        const edgeList& coupledEdges() const;
+
 
         vector separation(const label facei) const
         {
@@ -290,8 +305,11 @@ public:
             //- Initialize ordering (on new mesh)
             //  Gets -changes (in old mesh ordering)
             //  -map from old to new mesh
-            virtual void sendOrder(const polyTopoChange&, const mapPolyMesh&)
-             const;
+            virtual void initOrder
+            (
+                const polyTopoChange&,
+                const mapPolyMesh&
+            ) const;
 
             //- Morph:Return new ordering. Ordering is -faceMap: for every face
             //  index of the new face -rotation:for every new face the clockwise
@@ -304,7 +322,6 @@ public:
                 labelList& faceMap,
                 labelList& rotation
             ) const;
-
 };
 
 

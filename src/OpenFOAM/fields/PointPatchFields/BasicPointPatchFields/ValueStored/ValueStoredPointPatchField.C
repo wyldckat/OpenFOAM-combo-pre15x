@@ -20,15 +20,14 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "ValueStoredPointPatchField.H"
+#include "PointPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -41,7 +40,7 @@ template<template<class> class PatchField, class PointPatch, class Type>
 void ValueStoredPointPatchField<PatchField, PointPatch, Type>::
 checkFieldSize() const
 {
-    if (size() != this->patchMesh().size())
+    if (size() != this->patch().size())
     {
         FatalErrorIn
         (
@@ -49,7 +48,7 @@ checkFieldSize() const
             "checkField() const"
         )   << "field does not correspond to patch. " << endl
             << "Field size: " << size() << " patch size: "
-            << this->patchMesh().size()
+            << this->patch().size()
             << abort(FatalError);
     }
 }
@@ -111,7 +110,7 @@ ValueStoredPointPatchField
 )
 :
     PatchField<Type>(p, iF),
-    Field<Type>((const Field<Type>&)ptf, (const FieldMapper&)mapper)
+    Field<Type>(ptf, mapper)
 {}
 
 
@@ -137,7 +136,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::autoMap
     const PointPatchFieldMapper& m
 )
 {
-    Field<Type>::autoMap((const FieldMapper&)(m));
+    Field<Type>::autoMap(m);
 }
 
 
@@ -145,7 +144,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::autoMap
 template<template<class> class PatchField, class PointPatch, class Type>
 void ValueStoredPointPatchField<PatchField, PointPatch, Type>::rmap
 (
-    const PatchField<Type>& ptf,
+    const PointPatchField<PatchField, PointPatch, Type>& ptf,
     const labelList& addr
 )
 {
@@ -173,7 +172,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::evaluate()
         const Field<Type>& values = *this;
 
         // Get internal field to insert values into
-        Field<Type>& iF = ((Field<Type>&)(this->internalField()));
+        Field<Type>& iF = const_cast<Field<Type>&>(this->internalField());
 
         setInInternalField(iF, values);
     }
@@ -198,7 +197,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::operator=
     const ValueStoredPointPatchField<PatchField, PointPatch, Type>& ptf
 )
 {
-    (Field<Type>&)(*this) = (Field<Type>&)ptf;
+    Field<Type>::operator=(ptf);
 }
 
 
@@ -208,7 +207,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::operator=
     const Field<Type>& tf
 )
 {
-    (Field<Type>&)(*this) = tf;
+    Field<Type>::operator=(tf);
 }
 
 
@@ -218,7 +217,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::operator=
     const Type& t
 )
 {
-    (Field<Type>&)(*this) = t;
+    Field<Type>::operator=(t);
 }
 
 
@@ -229,7 +228,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::operator==
     const ValueStoredPointPatchField<PatchField, PointPatch, Type>& ptf
 )
 {
-    (Field<Type>&)(*this) = (Field<Type>&)ptf;
+    Field<Type>::operator=(ptf);
 }
 
 
@@ -239,7 +238,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::operator==
     const Field<Type>& tf
 )
 {
-    (Field<Type>&)(*this) = tf;
+    Field<Type>::operator=(tf);
 }
 
 
@@ -249,7 +248,7 @@ void ValueStoredPointPatchField<PatchField, PointPatch, Type>::operator==
     const Type& t
 )
 {
-    (Field<Type>&)(*this) = t;
+    Field<Type>::operator=(t);
 }
 
 

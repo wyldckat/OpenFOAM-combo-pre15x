@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -257,7 +257,7 @@ void topoSet::writeDebug
     // Bounding box of contents.
     boundBox bb
     (
-        (const pointField&)pointField(IndirectList<point>(coords, toc())())
+        pointField(IndirectList<point>(coords, toc())())
     );
 
     Info<< "Set bounding box: min = "
@@ -311,7 +311,7 @@ topoSet::topoSet(const IOobject& obj, const word& wantedType)
     {
         if (readStream(wantedType).good())
         {
-            readStream(wantedType) >> (labelHashSet&)(*this);
+            readStream(wantedType) >> static_cast<labelHashSet&>(*this);
 
             close();
         }
@@ -352,7 +352,7 @@ topoSet::topoSet
     {
         if (readStream(wantedType).good())
         {
-            readStream(wantedType) >> (labelHashSet&)(*this);
+            readStream(wantedType) >> static_cast<labelHashSet&>(*this);
 
             close();
         }
@@ -502,6 +502,12 @@ void topoSet::deleteSet(const topoSet& set)
 }
 
 
+void topoSet::sync(const polyMesh&)
+{
+    notImplemented("topoSet::sync(const polyMesh&)");
+}
+
+
 void topoSet::writeDebug(Ostream& os, const label maxLen) const
 {
     label n = 0;
@@ -562,7 +568,7 @@ void topoSet::updateTopology(const mapPolyMesh&)
 
 
 //- Return max index+1.
-label topoSet::maxSize(const polyMesh&)
+label topoSet::maxSize(const polyMesh&) const
 {
     notImplemented("topoSet::maxSize(const polyMesh&)");
 

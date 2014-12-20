@@ -53,39 +53,27 @@
 #   include "createPhi.H"
 
     Info<< "Reading transportProperties\n" << endl;
-
-    IOdictionary transportProperties
-    (
-        IOobject
-        (
-            "transportProperties",
-            runTime.constant(),
-            mesh,
-            IOobject::MUST_READ,
-            IOobject::NO_WRITE
-        )
-    );
-
-
-
-    autoPtr<transportModel> twoPhaseLaminar
-    (
-        transportModel::New(U, phi,"twoPhase")
-    );
+    twoPhaseMixture twoPhaseProperties(U, phi);
     
-    dimensionedScalar rho1
-    (
-        dictionary(transportProperties.subDict("phase1")).lookup("rho")
-    );
-
-    dimensionedScalar rho2
-    (
-        dictionary(transportProperties.subDict("phase2")).lookup("rho")
-    );
+    const dimensionedScalar& rho1 = twoPhaseProperties.rho1();
+    const dimensionedScalar& rho2 = twoPhaseProperties.rho2();
 
 
     // Need to store rho for ddt(rho, U)
-    volScalarField rho(gamma*rho1 + (1.0- gamma)*rho2);
+    volScalarField rho
+    (
+        IOobject
+        (
+            "rho",
+            runTime.timeName(),
+            mesh,
+            IOobject::READ_IF_PRESENT
+        ),
+        gamma*rho1 + (1.0 - gamma)*rho2,
+        gamma.boundaryField().types()
+    );
+    rho.oldTime();
+
 
     // Mass flux
     // Initialisation does not matter because rhoPhi is reset after the
@@ -104,15 +92,20 @@
     );
 
 
+    label pdRefCell = 0;
+    scalar pdRefValue = 0.0;
+    setRefCell(pd, mesh.solutionDict().subDict("PISO"), pdRefCell, pdRefValue);
+
+
     Info<< "Calculating field g.h\n" << endl;
-    surfaceScalarField ghf = fvc::interpolate(g & mesh.C());
+    surfaceScalarField ghf("gh", g & mesh.Cf());
 
 
     // Construct interface from gamma distribution
-    interfaceProperties interface(gamma, U, transportProperties);
+    interfaceProperties interface(gamma, U, twoPhaseProperties);
 
     // Construct LES model
     autoPtr<turbulenceModel> turbulence
     (
-        turbulenceModel::New(U, phi, twoPhaseLaminar())
+        turbulenceModel::New(U, phi, twoPhaseProperties)
     );

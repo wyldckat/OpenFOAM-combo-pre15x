@@ -20,12 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
 #include "error.H"
-#include "swap.H"
+#include "Swap.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -135,11 +135,11 @@ inline const T& UList<T>::operator[](const label i) const
 }
 
 
-// Allow cast to a const Field<Type>&
+// Allow cast to a const List<T>&
 template<class T>
 inline UList<T>::operator const List<T>&() const
 {
-    return *((const List<T>*)(this));
+    return *reinterpret_cast<const List<T>*>(this);
 }
 
 
@@ -236,7 +236,7 @@ inline void reverse(UList<T>& ul, const label n)
 {
     for (int i=0; i<n/2; i++)
     {
-        swap(ul[i], ul[n-1-i]);
+        Swap(ul[i], ul[n-1-i]);
     }
 }
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -263,7 +263,7 @@ void Foam::meshWave<Type>::checkCyclic(const polyPatch& patch) const
 
         if (!allFaceInfo_[i1].sameGeometry(allFaceInfo_[i2], geomTol_))
         {
-            Sout<< procLabel_.c_str()
+            Pout<< procLabel_.c_str()
                 << " problem: i:" << i1 << "  otheri:" << i2
                 << "   faceInfo:" << allFaceInfo_[i1]
                 << "   otherfaceInfo:" << allFaceInfo_[i2]
@@ -274,7 +274,7 @@ void Foam::meshWave<Type>::checkCyclic(const polyPatch& patch) const
 
         if (changedFace_[i1] != changedFace_[i2])
         {
-            Sout<< procLabel_.c_str()
+            Pout<< procLabel_.c_str()
                 << " problem: i:" << i1 << "  otheri:" << i2
                 << "   faceInfo:" << allFaceInfo_[i1]
                 << "   otherfaceInfo:" << allFaceInfo_[i2]
@@ -564,7 +564,7 @@ void Foam::meshWave<Type>::handleProcPatches()
 
             if (debug)
             {
-                Sout<< procLabel_.c_str()
+                Pout<< procLabel_.c_str()
                     << " Processor patch " << patchI << ' ' << patch.name()
                     << " communicating with " << procPatch.neighbProcNo()
                     << "  Sending:" << nSendFaces
@@ -606,7 +606,7 @@ void Foam::meshWave<Type>::handleProcPatches()
 
             if (debug)
             {
-                Sout<< procLabel_.c_str()
+                Pout<< procLabel_.c_str()
                     << " Processor patch " << patchI << ' ' << patch.name()
                     << " communicating with " << procPatch.neighbProcNo()
                     << "  Receiving:" << nReceiveFaces
@@ -747,7 +747,7 @@ void Foam::meshWave<Type>::handleCyclicPatches()
 
             if (debug)
             {
-                Sout<< procLabel_.c_str()
+                Pout<< procLabel_.c_str()
                     << " Cyclic patch " << patchI << ' ' << patch.name() 
                     << "  Changed on first half : " << nSendFaces
                     << "  Changed on second half : " << nReceiveFaces
@@ -1003,7 +1003,7 @@ Foam::label Foam::meshWave<Type>::faceToCell()
 
     if (debug)
     {
-        Sout<< procLabel_.c_str()
+        Pout<< procLabel_.c_str()
             << " Changed cells            : " << nChangedCells_ << endl;
     }
 
@@ -1080,7 +1080,7 @@ Foam::label Foam::meshWave<Type>::cellToFace()
 
     if (debug)
     {
-        Sout<< procLabel_.c_str()
+        Pout<< procLabel_.c_str()
             << " Changed faces            : " << nChangedFaces_ << endl;
     }
 
@@ -1101,7 +1101,7 @@ Foam::label Foam::meshWave<Type>::iterate(const label maxIter)
     {
         if (debug)
         {
-            Sout<< procLabel_.c_str()
+            Pout<< procLabel_.c_str()
                 << " Iteration " << iter_ << endl;
         }
 
@@ -1111,7 +1111,7 @@ Foam::label Foam::meshWave<Type>::iterate(const label maxIter)
 
         if (debug)
         {
-            Sout<< procLabel_.c_str()
+            Pout<< procLabel_.c_str()
                 << " Total changed cells      : " << nCells << endl;
         }
 
@@ -1124,16 +1124,16 @@ Foam::label Foam::meshWave<Type>::iterate(const label maxIter)
 
         if (debug)
         {
-            Sout<< procLabel_.c_str()
+            Pout<< procLabel_.c_str()
                 << " Total changed faces      : " << nFaces << endl;
 
-            Sout<< procLabel_.c_str()
+            Pout<< procLabel_.c_str()
                 << " Total evaluations        : " << nEvals_ << endl;
 
-            Sout<< procLabel_.c_str()
+            Pout<< procLabel_.c_str()
                 << " Remaining unvisited cells: " << nUnvisitedCells_ << endl;
 
-            Sout<< procLabel_.c_str()
+            Pout<< procLabel_.c_str()
                 << " Remaining unvisited faces: " << nUnvisitedFaces_ << endl;
 
             Info<< endl;

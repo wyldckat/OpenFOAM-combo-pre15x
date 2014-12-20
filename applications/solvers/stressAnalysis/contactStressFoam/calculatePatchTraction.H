@@ -1,5 +1,5 @@
     Info << "Calculating patch traction" << endl;
-    ptrList<vectorField> traction(mesh.boundary().size());
+    PtrList<vectorField> traction(mesh.boundary().size());
 
     {
         const fvPatchVectorFieldField& Apatches = mesh.Sf().boundaryField();

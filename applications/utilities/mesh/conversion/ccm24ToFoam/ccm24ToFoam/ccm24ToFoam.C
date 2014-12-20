@@ -20,16 +20,16 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Reads CCM/NGeom files as written by Prostar/ccm.
 
     - does polyhedral mesh
-    - loses patch names (creates 'patch0', 'patch1' etc. instead)
     - does not handle 'interfaces' (couples)
     - does not handle cyclics
     - does not do data
+    - not tested for patch names (these seem to go as 'Label' into adf file?)
 
     Uses libccmiosrc/test/Mesh* classes to do actual reading. At our level we
     only add the compacting of vertices and cells (vertices might be
@@ -39,16 +39,15 @@ Description
 
 #include "argList.H"
 #include "Time.H"
-#include "polyMesh.H"
+#include "fvMesh.H"
+#include "volFields.H"
 #include "emptyPolyPatch.H"
+#include "symmetryPolyPatch.H"
+#include "wallPolyPatch.H"
 #include "SortableList.H"
 
 #include "Mesh.h"
 #include "MeshCCMIO.h"
-#include "MeshNGEOM.h"
-#include "PostCCMIO.h"
-#include "PostNPOST.h"
-#include "IOException.h"
 #include <iostream>
 
 using namespace Foam;
@@ -64,16 +63,15 @@ labelList getFaceOrder
     const cellList& cells,
     const labelList& owner,
     const labelList& neighbour,
-    const label nInternalFaces
+    const labelList& region,
+    const label nPatches,
+    labelList& patchSizes
 )
 {
     labelList oldToNew(owner.size(), -1);
 
-    // First unassigned internal face
-    label internalFaceI = 0;
-
-    // First unassigned boundary face
-    label boundaryFaceI = nInternalFaces;
+    // First unassigned face
+    label newFaceI = 0;
 
     forAll(cells, cellI)
     {
@@ -108,10 +106,8 @@ labelList getFaceOrder
             }
             else
             {
-                // External face. Assign to first free boundary face spot.
+                // External face. Do later.
                 nbr[i] = -1;
-
-                oldToNew[faceI] = boundaryFaceI++;
             }
         }
 
@@ -121,11 +117,28 @@ labelList getFaceOrder
         {
             if (nbr[i] != -1)
             {
-                oldToNew[cFaces[nbr.indices()[i]]] = internalFaceI++;
+                oldToNew[cFaces[nbr.indices()[i]]] = newFaceI++;
             }
         }
     }
 
+
+    // Pick up all patch faces in patch face order. (note: loops over all
+    // faces for all patches. Not very efficient)
+    patchSizes.setSize(nPatches);
+    patchSizes = 0;
+
+    for (label patchI = 0; patchI < nPatches; patchI++)
+    {
+        forAll(region, faceI)
+        {
+            if (region[faceI] == patchI)
+            {
+                oldToNew[faceI] = newFaceI++;
+                patchSizes[patchI]++;
+            }
+        }
+    }
 
     // Check done all faces.
     forAll(oldToNew, faceI)
@@ -133,11 +146,12 @@ labelList getFaceOrder
         if (oldToNew[faceI] == -1)
         {
             FatalErrorIn("getFaceOrder") << "Did not determine new position"
-                << " for face " << faceI
+                << " for face " << faceI << endl
+                << "Face owner cell: " << owner[faceI]
+                << ", face neighbour cell: " << neighbour[faceI] << endl
                 << abort(FatalError);
         }
     }
-
 
     return oldToNew;
 }
@@ -191,168 +205,227 @@ int main(int argc, char *argv[])
 #   include "setRootCase.H"
 #   include "createTime.H"
 
-    fileName ccmFile(args.args()[3]);
-
-    if (!exists(ccmFile))
+    // Foam storage of mesh data
+    faceList faces;
+    labelList owner;
+    labelList neighbour;
+    labelList region;
+    labelList cellId;
+    pointField points;
+    List<word> patchNames;
+    List<word> patchTypes;
+    label nInternalFaces = -1;
+    
     {
-        FatalErrorIn(args.executable())
-            << "Cannot read file " << ccmFile
-            << exit(FatalError);
-    }
+        fileName ccmFile(args.args()[3]);
 
-    word ccmExt = ccmFile.ext();
-
-    autoPtr<Mesh> meshPtr(NULL);
-
-    if (ccmExt == "ccm" || ccmExt == "sff")
-    {
-        meshPtr.reset(new MeshCCMIO(ccmFile.c_str()));
-    }
-    else if (ccmExt == "ngeom")
-    {
-        meshPtr.reset(new MeshNGEOM(ccmFile.c_str()));
-    }
-    else
-    {
-        FatalErrorIn(args.executable())
-            << "Illegal extension " << ccmExt << " for file " << ccmFile << nl
-            << "Allowed extensions are '.ccm', '.sff' or '.ngeom'"
-            << exit(FatalError);
-    }
-
-    const Mesh& ccMesh = meshPtr();
-
-    //
-    // Convert MeshVertex to pointField
-    //
-
-    const Mesh::VertexArray& ccVerts = ccMesh.vertices;
-
-    // Vertex 0 never used so store with one offset.
-
-    Info<< "Number of (uncompacted) points:" << label(ccVerts.size()) << endl;
-
-    pointField points(ccVerts.size());
-
-    forAll(ccVerts, pointI)
-    {
-        const ::MeshVertex& ccVert = ccVerts[pointI];
-
-        points[pointI] =
-            Foam::point
-            (
-                ccVert.coord[0],
-                ccVert.coord[1],
-                ccVert.coord[2]
-            );
-    }
-
-
-    //
-    // MeshFace to faceList
-    //
-
-    const Mesh::FaceArray& ccIntFaces = ccMesh.internalFaces;
-    const Mesh::FaceArray& ccExtFaces = ccMesh.boundaryFaces;
-    const Mesh::CellArray& ccCells = ccMesh.cells;
-
-    Info<< "Number of internal faces:" << label(ccIntFaces.size()) << endl;
-    Info<< "Number of boundary faces:" << label(ccExtFaces.size()) << endl;
-    Info<< "Number of (uncompacted) cells:" << label(ccCells.size()) << endl;
-
-    // Foam storage
-    faceList faces(ccIntFaces.size() + ccExtFaces.size());
-    labelList owner(faces.size(), -1);
-    labelList neighbour(faces.size(), -1);
-    labelList region(faces.size(), -1);
-
-    label faceI = 0;
-
-    // Internal faces
-    for
-    (
-        Mesh::FaceArray::const_iterator iter = ccIntFaces.begin();
-        iter != ccIntFaces.end();
-        ++iter
-    )
-    {
-        const ::MeshFace& ccFace = *iter;
-
-        face& f = faces[faceI];
-
-        f.setSize(ccFace.nVerts);
-
-        forAll(f, fp)
-        {
-            f[fp] = ccFace.verts[fp];
-        }
-
-        owner[faceI] = ccFace.cells[0];
-        neighbour[faceI] = ccFace.cells[1];
-
-        if (neighbour[faceI] < 0)
+        if (!exists(ccmFile))
         {
             FatalErrorIn(args.executable())
-                << "Internal face has invalid neighbour cell." << nl
-                << "Face:" << faceI << " verts:" << f
-                << " owner:" << owner[faceI]
-                << " neighbour:" << neighbour[faceI]
-                << abort(FatalError);
+                << "Cannot read file " << ccmFile
+                << exit(FatalError);
         }
 
-        faceI++;
-    }
+        word ccmExt = ccmFile.ext();
 
-    // External faces
-    label maxPatch = labelMin;
-
-    for
-    (
-        Mesh::FaceArray::const_iterator iter = ccExtFaces.begin();
-        iter != ccExtFaces.end();
-        ++iter
-    )
-    {
-        const ::MeshFace& ccFace = *iter;
-
-        face& f = faces[faceI];
-
-        f.setSize(ccFace.nVerts);
-
-        forAll(f, fp)
-        {
-            f[fp] = ccFace.verts[fp];
-        }
-
-        owner[faceI] = ccFace.cells[0];
-
-        region[faceI] = ccFace.boundary;
-
-        maxPatch = max(maxPatch, region[faceI]);
-
-        if (ccFace.cells[1] >= 0)
+        if (ccmExt != "ccm" && ccmExt != "sff")
         {
             FatalErrorIn(args.executable())
-                << "Boundary face has valid neighbour cell." << nl
-                << "Face:" << faceI << " verts:" << f
-                << " region:" << region[faceI]
-                << " owner:" << owner[faceI]
-                << " neighbour:" << ccFace.cells[1]
-                << abort(FatalError);
+                << "Illegal extension " << ccmExt << " for file " << ccmFile
+                << nl << "Allowed extensions are '.ccm', '.sff'"
+                << exit(FatalError);
         }
 
-        faceI++;
+        MeshCCMIO ccMesh(ccmFile.c_str());
+
+
+        //
+        // Convert MeshVertex to pointField
+        //
+
+        const Mesh::VertexArray& ccVerts = ccMesh.vertices;
+
+        Info<< "Number of (uncompacted) points:" << label(ccVerts.size())
+            << endl;
+
+        points.setSize(ccVerts.size());
+
+        for (unsigned int pointI = 0; pointI < ccVerts.size(); pointI++)
+        {
+            const ::MeshVertex& ccVert = ccVerts[pointI];
+
+            points[pointI] =
+                Foam::point
+                (
+                    ccVert.coord[0],
+                    ccVert.coord[1],
+                    ccVert.coord[2]
+                );
+        }
+
+
+        //
+        // MeshFace to faceList
+        //
+
+        const Mesh::FaceArray& ccIntFaces = ccMesh.internalFaces;
+        const Mesh::FaceArray& ccExtFaces = ccMesh.boundaryFaces;
+        const Mesh::CellArray& ccCells = ccMesh.cells;
+
+        Info<< "Number of internal faces:" << label(ccIntFaces.size()) << endl;
+        Info<< "Number of boundary faces:" << label(ccExtFaces.size()) << endl;
+        Info<< "Number of (uncompacted) cells:" << label(ccCells.size())
+            << endl;
+
+        // Size Foam storage
+        nInternalFaces = ccIntFaces.size();
+        faces.setSize(nInternalFaces + ccExtFaces.size());
+        owner.setSize(faces.size());
+        owner = -1;
+        neighbour.setSize(faces.size());
+        neighbour = -1;
+        region.setSize(faces.size());
+        region = -1;
+        cellId.setSize(ccCells.size());
+        cellId = -1;
+        
+        // Cells ids
+        label cellI = 0;
+        for
+        (
+            Mesh::CellArray::const_iterator iter = ccCells.begin();
+            iter != ccCells.end();
+            ++iter, cellI++
+        )
+        {
+            const ::MeshCell& ccCell = *iter;
+
+            cellId[cellI] = ccCell.id;
+        }
+
+
+        label faceI = 0;
+
+        // Internal faces
+        for
+        (
+            Mesh::FaceArray::const_iterator iter = ccIntFaces.begin();
+            iter != ccIntFaces.end();
+            ++iter
+        )
+        {
+            const ::MeshFace& ccFace = *iter;
+
+            face& f = faces[faceI];
+
+            f.setSize(ccFace.verts.size());
+
+            forAll(f, fp)
+            {
+                f[fp] = ccFace.verts[fp];
+            }
+
+            owner[faceI] = ccFace.cells[0];
+            neighbour[faceI] = ccFace.cells[1];
+
+            if (neighbour[faceI] < 0)
+            {
+                FatalErrorIn(args.executable())
+                    << "Internal face has invalid neighbour cell." << nl
+                    << "Face:" << faceI << " verts:" << f
+                    << " owner:" << owner[faceI]
+                    << " neighbour:" << neighbour[faceI]
+                    << abort(FatalError);
+            }
+
+            faceI++;
+        }
+
+        // Map from ccm boundary id to Foam patch
+        Map<label> ccmToPatch(ccMesh.boundaryRegionInfo.size());
+
+        // Patches
+        patchNames.setSize(ccMesh.boundaryRegionInfo.size());
+        patchTypes.setSize(patchNames.size());
+        forAll(patchNames, pnI)
+        {
+            ccmToPatch.insert(ccMesh.boundaryRegionInfo[pnI].boundary, pnI);
+            patchNames[pnI] = ccMesh.boundaryRegionInfo[pnI].label;
+            patchTypes[pnI] = ccMesh.boundaryRegionInfo[pnI].boundaryType;
+
+            Info<< "Patch:" << pnI
+                << " ccm boundary id:"
+                << ccMesh.boundaryRegionInfo[pnI].boundary
+                << " name:" << patchNames[pnI]
+                << " type:" << patchTypes[pnI] << endl;
+        }
+
+
+        // External faces. Remap region.
+
+        for
+        (
+            Mesh::FaceArray::const_iterator iter = ccExtFaces.begin();
+            iter != ccExtFaces.end();
+            ++iter
+        )
+        {
+            const ::MeshFace& ccFace = *iter;
+
+            face& f = faces[faceI];
+
+            f.setSize(ccFace.verts.size());
+
+            forAll(f, fp)
+            {
+                f[fp] = ccFace.verts[fp];
+            }
+
+            owner[faceI] = ccFace.cells[0];
+
+            region[faceI] = ccmToPatch[ccFace.boundary];
+
+            if (ccFace.cells[1] >= 0)
+            {
+                FatalErrorIn(args.executable())
+                    << "Boundary face has valid neighbour cell." << nl
+                    << "Face:" << faceI << " verts:" << f
+                    << " region:" << region[faceI]
+                    << " owner:" << owner[faceI]
+                    << " neighbour:" << ccFace.cells[1]
+                    << exit(FatalError);
+            }
+
+            faceI++;
+        }
+
+    } // release the MeshCCMIO mesh.
+
+
+    // Do some sanity checks
+    forAll(region, faceI)
+    {
+        if
+        (
+            (neighbour[faceI] == -1 && region[faceI] == -1)
+         || (neighbour[faceI] != -1 && region[faceI] != -1)
+        )
+        {
+            FatalErrorIn("getFaceOrder") << "Problem"
+                << " for face " << faceI << endl
+                << "Face owner cell: " << owner[faceI]
+                << ", face neighbour cell: " << neighbour[faceI]
+                << " face region:" << region[faceI] << endl
+                << abort(FatalError);
+        }
     }
-
-    const label nPatches = maxPatch+1;
-
-    Info<< "Number of patches:" << nPatches << endl;
 
 
     // We now have extracted all info from CCMIO:
     // - coordinates (points)
     // - face to point addressing (faces)
     // - face to cell addressing (owner, neighbour, region)
+    // - cell based data (cellId)
     //
     // Problem is that points and cells are non-compact so compact
 
@@ -407,12 +480,14 @@ int main(int argc, char *argv[])
         {
             label own = owner[faceI];
 
-            if (cellMap[own] == -1)
+            if (own >= 0)
             {
-                cellMap[own] = nCells++;
+                if (cellMap[own] == -1)
+                {
+                    cellMap[own] = nCells++;
+                }
+                owner[faceI] = cellMap[own];
             }
-            owner[faceI] = cellMap[own];
-
 
             label nei = neighbour[faceI];
 
@@ -427,7 +502,20 @@ int main(int argc, char *argv[])
                 neighbour[faceI] = cellMap[nei];
             }
         }
-        Info<< "Compacted cells from " << label(ccCells.size()) << " down to "
+
+        // Compact cellId
+        labelList newCellId(nCells, -1);
+
+        forAll(cellId, oldCellI)
+        {
+            if (cellMap[oldCellI] != -1)
+            {
+                newCellId[cellMap[oldCellI]] = cellId[oldCellI];
+            }
+        }
+        cellId.transfer(newCellId);
+
+        Info<< "Compacted cells from " << cellId.size() << " down to "
             << nCells << endl;
     }
 
@@ -438,12 +526,20 @@ int main(int argc, char *argv[])
 
     {
         // Create cell-faces addressing.
-        List<DynamicList<label> > cellFaces(cells.size());
+        List<DynamicList<label,1,2> > cellFaces(cells.size());
+
+        // Presize cellFaces for quads.
+        forAll(cellFaces, cellI)
+        {
+            cellFaces[cellI].setSize(4);
+        }
 
         forAll(owner, faceI)
         {
-            cellFaces[owner[faceI]].append(faceI);
-
+            if (owner[faceI] >= 0)
+            {
+                cellFaces[owner[faceI]].append(faceI);
+            }
             if (neighbour[faceI] >= 0)
             {
                 cellFaces[neighbour[faceI]].append(faceI);
@@ -467,20 +563,19 @@ int main(int argc, char *argv[])
     //   internal faces
     //
 
-
     // Set owner/neighbour so owner < neighbour
     forAll(neighbour, faceI)
     {
         label nbr = neighbour[faceI];
         label own = owner[faceI];
 
-        if (nbr >= cells.size() || own < 0 || own >= cells.size())
+        if (nbr >= cells.size() || own >= cells.size())
         {
             FatalErrorIn(args.executable())
-                << "face:" << faceI 
+                << "face:" << faceI
                 << " nbr:" << nbr
                 << " own:" << own
-                << abort(FatalError);
+                << exit(FatalError);
         }
 
         if (nbr >= 0)
@@ -489,58 +584,41 @@ int main(int argc, char *argv[])
             {
                 owner[faceI] = neighbour[faceI];
                 neighbour[faceI] = own;
-                reverse(faces[faceI]);
+                faces[faceI] = faces[faceI].reverseFace();
             }
         }
     }
 
+
     // Determine face order for upper-triangular ordering and internal/external
     // face ordering
-    labelList oldToNew(getFaceOrder(cells, owner, neighbour, ccIntFaces.size()));
-
-    // Get starting face label of patches
-    labelList patchSizes(nPatches, 0);
-
-    forAll(region, faceI)
-    {
-        if (region[faceI] >= 0)
-        {
-            patchSizes[region[faceI]]++;
-        }
-    }
-    Info<< "patchSizes:" << patchSizes << endl;
+    labelList patchSizes(patchNames.size(), 0);
 
 
-    labelList start(nPatches, 0);
+    labelList oldToNew
+    (
+        getFaceOrder
+        (
+            cells,
+            owner,
+            neighbour,
+            region,
+            patchNames.size(),
+            patchSizes
+        )
+    );
 
-    label meshFaceI = ccIntFaces.size();
-
-    for (label patchI = 0; patchI < nPatches; patchI++)
-    {
-        start[patchI] = meshFaceI;
-
-        meshFaceI += patchSizes[patchI];
-    }
-    Info<< "patches starting at faces:" << start << endl;
-
-    forAll(region, faceI)
-    {
-        if (region[faceI] >= 0)
-        {
-            oldToNew[faceI] = start[region[faceI]]++;
-        }
-    }
-
+    Info<< "Size per patch:" << patchSizes << endl;
 
     // Reorder faces accordingly
     reorderFaces(oldToNew, cells, faces, owner, neighbour);
 
-    // Construct polyMesh (without patches)
-    polyMesh mesh
+    // Construct fvMesh (without patches)
+    fvMesh mesh
     (
         IOobject
         (
-            polyMesh::defaultRegion,
+            fvMesh::defaultRegion,
             runTime.constant(),
             runTime
         ),
@@ -549,35 +627,105 @@ int main(int argc, char *argv[])
         cells
     );
 
-    // Create single empty patch
-    List<polyPatch*> newPatches(nPatches);
+    // Create patches. Use patch types to determine what Foam types to generate.
+    List<polyPatch*> newPatches(patchNames.size());
 
+    label meshFaceI = nInternalFaces;
+
+    forAll(newPatches, patchI)
     {
-        label meshFaceI = ccIntFaces.size();
+        const word& patchName  = patchNames[patchI];
+        const word& patchType = patchTypes[patchI];
 
-        forAll(newPatches, patchI)
+        if (patchType == "wall")
         {
             newPatches[patchI] =
-                new emptyPolyPatch
+                new wallPolyPatch
                 (
-                    "patch" + Foam::name(patchI),
-                    start[patchI] - meshFaceI,
+                    patchName,
+                    patchSizes[patchI],
                     meshFaceI,
                     patchI,
                     mesh.boundaryMesh()
                 );
-
-            meshFaceI = start[patchI];
         }
+        else if (patchType == "symmetry")
+        {
+            newPatches[patchI] =
+                new symmetryPolyPatch
+                (
+                    patchName,
+                    patchSizes[patchI],
+                    meshFaceI,
+                    patchI,
+                    mesh.boundaryMesh()
+                );
+        }
+        else if (patchType == "empty")
+        {
+            // Note: not ccm name, introduced by us above.
+            newPatches[patchI] =
+                new emptyPolyPatch
+                (
+                    patchName,
+                    patchSizes[patchI],
+                    meshFaceI,
+                    patchI,
+                    mesh.boundaryMesh()
+                );
+        }
+        else
+        {
+            // All other ccm types become straight polyPatch:
+            // 'inlet', 'outlet', 'pressured'.
+            newPatches[patchI] =
+                new polyPatch
+                (
+                    patchName,
+                    patchSizes[patchI],
+                    meshFaceI,
+                    patchI,
+                    mesh.boundaryMesh()
+                );
+        }
+
+        meshFaceI += patchSizes[patchI];
     }
 
-    mesh.addPatches(newPatches);
+    mesh.addFvPatches(newPatches);
 
-    Info<< "Writing polyMesh to " << runTime.constant()/polyMesh::defaultRegion
+    //merge couples
+
+
+    Info<< "Writing polyMesh to " << mesh.objectRegistry::objectPath()
         << "..." << nl << endl;
 
     mesh.write();
 
+
+    // Construct field with calculated bc to hold Star cell Id.
+    volScalarField cellIdField
+    (
+        IOobject
+        (
+            "cellId",
+            runTime.timeName(),
+            mesh,
+            IOobject::NO_READ,
+            IOobject::AUTO_WRITE
+        ),
+        mesh,
+        dimensionedScalar("cellId", dimless, 0.0)
+    );
+
+    forAll(cellId, cellI)
+    {
+        cellIdField[cellI] = cellId[cellI];
+    }
+
+    Info<< "Writing cellIds as volScalarField to " << cellIdField.objectPath()
+        << "..." << nl << endl;
+    cellIdField.write();
 
     Info<< "End\n" << endl;
 

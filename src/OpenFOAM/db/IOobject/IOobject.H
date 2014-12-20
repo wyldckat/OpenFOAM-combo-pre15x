@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     IOobject
@@ -67,6 +67,7 @@ SourceFiles
 
 #include "fileName.H"
 #include "typeInfo.H"
+#include "autoPtr.H"
 #include "InfoProxy.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -106,8 +107,9 @@ public:
         //- Enumeration defining the write options
         enum writeOption
         {
-            AUTO_WRITE,
-            NO_WRITE
+            WRITE = 0,
+            AUTO_WRITE = 0,
+            NO_WRITE = 1
         };
 
 
@@ -125,7 +127,7 @@ private:
         string note_;
 
         //- Instance path component
-        word instance_;
+        fileName instance_;
 
         //- Local path component
         fileName local_;
@@ -174,7 +176,7 @@ public:
         IOobject
         (
             const word& name,
-            const word& instance,
+            const fileName& instance,
             const objectRegistry& registry,
             readOption r=NO_READ,
             writeOption w=NO_WRITE,
@@ -185,7 +187,7 @@ public:
         IOobject
         (
             const word& name,
-            const word& instance,
+            const fileName& instance,
             const fileName& local,
             const objectRegistry& registry,
             readOption r=NO_READ,
@@ -282,12 +284,12 @@ public:
 
             const fileName& caseName() const;
 
-            const word& instance() const
+            const fileName& instance() const
             {
                 return instance_;
             }
 
-            word& instance()
+            fileName& instance()
             {
                 return instance_;
             }

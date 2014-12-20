@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -141,14 +141,14 @@ inline Istream& operator>>(Istream& is, face& f)
         token t(is);
 
         // Read labels
-        is >> (labelList&)f;
+        is >> static_cast<labelList&>(f);
 
         // Read end)
         is.readEnd("face");
     }
     else
     {
-        is >> (labelList&)f;
+        is >> static_cast<labelList&>(f);
     }
 
     // Check state of Ostream

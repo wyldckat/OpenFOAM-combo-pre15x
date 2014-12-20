@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Given a set of points, find out if the mesh resulting from point motion will
@@ -46,7 +46,7 @@ bool Foam::primitiveMesh::checkMeshMotion
 {
     if (debug || report)
     {
-        Info<< "bool primitiveMesh::checkMeshMotion("
+        Pout<< "bool primitiveMesh::checkMeshMotion("
             << "const pointField& newPoints, const bool report) const: "
             << "checking mesh motion" << endl;
     }
@@ -78,7 +78,7 @@ bool Foam::primitiveMesh::checkMeshMotion
         {
             if (debug || report)
             {
-                Info<< "Zero or negative cell volume detected for cell "
+                Pout<< "Zero or negative cell volume detected for cell "
                     << cellI << ".  Volume = " << cellVols[cellI] << endl;
             }
 
@@ -92,14 +92,14 @@ bool Foam::primitiveMesh::checkMeshMotion
     {
         error = true;
 
-        Info<< "Zero or negative cell volume in mesh motion in " << nNegVols
+        Pout<< "Zero or negative cell volume in mesh motion in " << nNegVols
             << " cells.  Min volume: " << minVolume << endl;
     }
     else
     {
         if (debug || report)
         {
-            Info<< "Min volume = " << minVolume
+            Pout<< "Min volume = " << minVolume
                 << ".  Total volume = " << sum(cellVols)
                 << ".  Cell volumes OK." << endl;
         }
@@ -122,14 +122,14 @@ bool Foam::primitiveMesh::checkMeshMotion
             {
                 if (isInternalFace(faceI))
                 {
-                    Info<< "Zero or negative face area detected for "
+                    Pout<< "Zero or negative face area detected for "
                         << "internal face "<< faceI << " between cells "
                         << own[faceI] << " and " << nei[faceI]
                         << ".  Face area magnitude = " << a << endl;
                 }
                 else
                 {
-                    Info<< "Zero or negative face area detected for "
+                    Pout<< "Zero or negative face area detected for "
                         << "boundary face " << faceI << " next to cell "
                         << own[faceI] << ".  Face area magnitude = "
                         << a << endl;
@@ -149,7 +149,7 @@ bool Foam::primitiveMesh::checkMeshMotion
         {
             if (debug || report)
             {
-                Info<< "Negative pyramid volume: " << -pyrVol
+                Pout<< "Negative pyramid volume: " << -pyrVol
                     << " for face " << faceI << " " << f[faceI]
                     << "  and owner cell: " << own[faceI] << endl
                     << "Owner cell vertex labels: "
@@ -174,7 +174,7 @@ bool Foam::primitiveMesh::checkMeshMotion
             {
                 if (debug || report)
                 {
-                    Info<< "Negative pyramid volume: " << pyrVol
+                    Pout<< "Negative pyramid volume: " << pyrVol
                         << " for face " << faceI << " " << f[faceI]
                         << "  and neighbour cell: " << nei[faceI] << nl
                         << "Neighbour cell vertex labels: "
@@ -193,8 +193,11 @@ bool Foam::primitiveMesh::checkMeshMotion
             if (dDotS < SMALL && nDotProductErrors == 0)
             {
                 // Non-orthogonality greater than 90 deg
-                Warning
-                    << "Severe non-orthogonality in mesh motion for face "
+                WarningIn
+                (
+                    "primitiveMesh::checkMeshMotion"
+                    "(const pointField& newPoints, const bool report) const"
+                )   << "Severe non-orthogonality in mesh motion for face "
                     << faceI
                     << " between cells " << own[faceI] << " and " << nei[faceI]
                     << ": Angle = " << ::acos(dDotS)/physicalConstant::pi*180.0
@@ -209,22 +212,25 @@ bool Foam::primitiveMesh::checkMeshMotion
     {
         error = true;
 
-        Warning
-            << "Zero or negative face area in mesh motion in " << nNegAreas
+        WarningIn
+        (
+            "primitiveMesh::checkMeshMotion"
+            "(const pointField& newPoints, const bool report) const"
+        )   << "Zero or negative face area in mesh motion in " << nNegAreas
             << " faces.  Min area: " << minArea << endl;
     }
     else
     {
         if (debug || report)
         {
-            Info<< "Min area = " << minArea
+            Pout<< "Min area = " << minArea
                 << ".  Face areas OK." << endl;
         }
     }
 
     if (nPyrErrors > 0)
     {
-        Info<< "Detected " << nPyrErrors
+        Pout<< "Detected " << nPyrErrors
             << " negative pyramid volume in mesh motion" << endl;
 
         error = true;
@@ -233,13 +239,13 @@ bool Foam::primitiveMesh::checkMeshMotion
     {
         if (debug || report)
         {
-            Info<< "Pyramid volumes OK." << endl;
+            Pout<< "Pyramid volumes OK." << endl;
         }
     }
 
     if (nDotProductErrors > 0)
     {
-        Info<< "Detected " << nDotProductErrors
+        Pout<< "Detected " << nDotProductErrors
             << " in non-orthogonality in mesh motion." << endl;
 
         error = true;
@@ -248,13 +254,13 @@ bool Foam::primitiveMesh::checkMeshMotion
     {
         if (debug || report)
         {
-            Info<< "Non-orthogonality check OK." << endl;
+            Pout<< "Non-orthogonality check OK." << endl;
         }
     }
 
     if (!error && (debug || report))
     {
-        Info << "Mesh motion check OK." << endl;
+        Pout << "Mesh motion check OK." << endl;
     }
 
     return error;

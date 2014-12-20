@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     volPointInterpolation
@@ -68,7 +68,7 @@ class volPointInterpolation
         mutable FieldField<Field, scalar>* pointWeightsPtr_;
 
         //- Primitive patch interpolators
-        mutable ptrList<primitivePatchInterpolation>* patchInterpolatorsPtr_;
+        mutable PtrList<primitivePatchInterpolation>* patchInterpolatorsPtr_;
 
         //- List of points that will be corrected
         mutable labelList* boundaryPointsPtr_;
@@ -80,7 +80,7 @@ class volPointInterpolation
     // Private member functions
 
         //- Return patch interpolators
-        const ptrList<primitivePatchInterpolation>& patchInterpolators() const;
+        const PtrList<primitivePatchInterpolation>& patchInterpolators() const;
 
         //- Construct point weighting factors
         void makeWeights() const;

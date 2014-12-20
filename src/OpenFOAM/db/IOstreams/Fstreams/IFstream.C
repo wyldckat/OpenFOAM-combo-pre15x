@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -147,6 +145,30 @@ void IFstream::print(Ostream& os) const
     // Print File data
     os  << "IFstream: ";
     ISstream::print(os);
+}
+
+
+//- Return a non-const reference to const Istream
+//  Needed for read-constructors where the stream argument is temporary:
+//  e.g. thing thisThing(IFstream("thingFileName")());
+IFstream& IFstream::operator()() const
+{
+    if (!good())
+    {
+        if (!file(pathname_) && !file(pathname_ + ".gz"))
+        {
+            FatalIOErrorIn("IFstream::operator()", *this)
+                << "file " << pathname_ << " does not exist"
+                << exit(FatalIOError);
+        }
+        else
+        {
+            check("IFstream::operator()");
+            FatalIOError.exit();
+        }
+    }
+
+    return const_cast<IFstream&>(*this);
 }
 
 

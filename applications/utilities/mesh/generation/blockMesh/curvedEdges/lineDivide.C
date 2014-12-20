@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     lineDivide class : divides a line into segments
@@ -46,7 +46,7 @@ lineDivide::lineDivide(const curvedEdge& bc, const label n, const scalar xratio)
     divisions_(n + 1),
     noPoints_(n)
 {
-    scalar np((scalar) n);
+    scalar np(n);
     scalar lambda(0.0);
 
     if (xratio == 1.0)
@@ -54,9 +54,9 @@ lineDivide::lineDivide(const curvedEdge& bc, const label n, const scalar xratio)
         scalar y(1.0/np);
         for (label i=0; i<=noPoints_; i++)
         {
-            lambda = ((scalar) i)/np;
+            lambda = scalar(i)/np;
             points_[i] = bc.position(lambda);
-            divisions_[i] = y*((scalar) i);
+            divisions_[i] = y*i;
         }
     }
     else

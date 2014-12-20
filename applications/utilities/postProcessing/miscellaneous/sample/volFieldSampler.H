@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     volFieldSampler
@@ -38,7 +38,7 @@ SourceFiles
 
 #include "sampleSet.H"
 #include "List.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "volFields.H"
 
 
@@ -73,7 +73,7 @@ public:
             const volPointInterpolation&,
             const dictionary& interpolationSchemes,
             const GeometricField<Type, fvPatchField, volMesh>& field,
-            const ptrList<sampleSet>&
+            const PtrList<sampleSet>&
         );
 
         //- Construct from components

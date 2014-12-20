@@ -20,7 +20,7 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with OpenFOAM; if not, write to the Free Software Foundation,
-#     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Script
 #     Makefile
@@ -67,9 +67,9 @@ PROJECT_INC        =
 PROJECT_LIBS       = 
 
 EXE_INC            = 
-EXE_LIBS           =
+EXE_LIBS           = 
 
-LIB_LIBS           =
+LIB_LIBS           = 
 
 
 #------------------------------------------------------------------------------
@@ -127,12 +127,12 @@ include $(OBJECTS_DIR)/dependencyFiles
 # set header file include paths
 #------------------------------------------------------------------------------
 
-LIB_HEADER_DIRS = -I$(LIB_SRC)/$(WM_PROJECT)/lnInclude \
+LIB_HEADER_DIRS = $(EXE_INC) \
+                  -I$(LIB_SRC)/$(WM_PROJECT)/lnInclude \
                   -IlnInclude \
                   -I. \
                   $(GINC) \
                   $(PROJECT_INC) \
-                  $(EXE_INC) \
                   $(SYS_INC)
 
 

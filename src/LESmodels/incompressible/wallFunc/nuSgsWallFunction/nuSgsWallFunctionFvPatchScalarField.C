@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -107,7 +107,7 @@ void nuSgsWallFunctionFvPatchScalarField::evaluate()
         sgsModel.subDict("wallFunctionCoeffs").lookup("E")
     ).value();
 
-    const scalarField& ry = patchMesh().deltaCoeffs();
+    const scalarField& ry = patch().deltaCoeffs();
 
     const fvPatchVectorField& U = lookupPatchField<volVectorField, vector>("U");
     vectorField Up = U.patchInternalField();
@@ -148,9 +148,9 @@ void nuSgsWallFunctionFvPatchScalarField::evaluate()
                 err = mag((utau - utauNew)/utau);
                 utau = utauNew;
 
-            } while (err > 0.01 && ++iter < 10);
+            } while (utau > 0 && err > 0.01 && ++iter < 10);
 
-            nuSgsw[facei] = sqr(utau)/magFaceGradU[facei] - nuw[facei];
+            nuSgsw[facei] = sqr(max(utau, 0))/magFaceGradU[facei] - nuw[facei];
         }
         else
         {

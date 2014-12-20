@@ -2,6 +2,7 @@
 
 currDir=`pwd`
 application=`basename $currDir`
+#cases="mixer2D linearValveLayers movingConeTopological"
 cases="mixer2D"
 
 tutorialPath=`dirname $0`/..
@@ -11,5 +12,3 @@ for case in $cases
 do
     cleanCase $case
 done 
-
-

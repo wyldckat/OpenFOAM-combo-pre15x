@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     structuredScalars2D
@@ -84,7 +84,7 @@ inline const scalarList& structuredScalars2D::DataRow(const label& i) const
 
 inline colour structuredScalars2D::newColour(const scalar& val) const
 {
-    label thisval = label(val*(scalar)(palette.size()-1));
+    label thisval = label(val*scalar(palette.size()-1));
     return palette[thisval];
 }
 

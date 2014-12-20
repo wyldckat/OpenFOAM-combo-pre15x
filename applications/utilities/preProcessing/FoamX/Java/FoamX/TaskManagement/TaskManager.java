@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.TaskManagement;
@@ -48,7 +48,7 @@ public class TaskManager
         statusBar_ = new TaskStatusBar();
         taskStack_ = new Stack();
 
-        defaultText_ = "FoamX Version 2.3";
+        defaultText_ = "OpenFoamX Version 1.2";
 
         // Hide the progress bar initially.
         statusBar_.showProgress(false);

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -31,7 +31,7 @@ Description
 #include "ListListOps.H"
 #include "combineSampleSets.H"
 #include "SortableList.H"
-#include "unIndex.H"
+#include "IndirectList.H"
 
 using namespace Foam;
 
@@ -41,8 +41,8 @@ using namespace Foam;
 // index list. Valid result only on master processor.
 void combineSampleSets
 (
-    const ptrList<sampleSet>& sampleSets,
-    ptrList<coordSet>& masterSampleSets,
+    const PtrList<sampleSet>& sampleSets,
+    PtrList<coordSet>& masterSampleSets,
     labelListList& indexSets
 )
 {
@@ -110,7 +110,7 @@ void combineSampleSets
             (
                 samplePts.name(),
                 samplePts.axis(),
-                unIndex(allPts, indexSets[setI]),
+                IndirectList<point>(allPts, indexSets[setI]),
                 refPt
             )
         );

@@ -20,13 +20,10 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
 #include "GlobalProcessorPointPatchField.H"
 #include "lduMatrix.H"
 #include "Map.H"
@@ -235,7 +232,7 @@ GlobalProcessorPointPatchField
     CoupledPointPatchField<PatchField, PointPatch, Type>(p, iF),
     procPatch_(refCast<const GlobalProcessorPointPatch>(p))
 {
-    if (typeid(p) != typeid(GlobalProcessorPointPatch))
+    if (!isType<GlobalProcessorPointPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -247,7 +244,7 @@ GlobalProcessorPointPatchField
             " const dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index()
+        )   << "patch " << this->patch().index()
             << " not processorPoint type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
@@ -284,9 +281,9 @@ GlobalProcessorPointPatchField
 )
 :
     CoupledPointPatchField<PatchField, PointPatch, Type>(p, iF),
-    procPatch_(refCast<const GlobalProcessorPointPatch>(ptf.patchMesh()))
+    procPatch_(refCast<const GlobalProcessorPointPatch>(ptf.patch()))
 {
-    if (typeid(this->patchMesh()) != typeid(GlobalProcessorPointPatch))
+    if (!isType<GlobalProcessorPointPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -301,9 +298,9 @@ GlobalProcessorPointPatchField
             " const PointPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }
@@ -336,7 +333,7 @@ GlobalProcessorPointPatchField
 )
 :
     CoupledPointPatchField<PatchField, PointPatch, Type>(ptf, iF),
-    procPatch_(refCast<const GlobalProcessorPointPatch>(ptf.patchMesh()))
+    procPatch_(refCast<const GlobalProcessorPointPatch>(ptf.patch()))
 {}
 
 

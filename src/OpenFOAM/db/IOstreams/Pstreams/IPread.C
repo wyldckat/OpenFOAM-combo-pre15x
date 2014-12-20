@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Read token and binary block from IPstream
@@ -52,7 +52,7 @@ inline void IPstream::readFromBuffer(T& t)
 inline void IPstream::readFromBuffer(void* data, size_t count)
 {
     register const char* bufPtr = &buf_[bufPosition_];
-    register char* dataPtr = (char*)data;
+    register char* dataPtr = reinterpret_cast<char*>(data);
     register size_t i = count;
     while (i--) *dataPtr++ = *bufPtr++;
 

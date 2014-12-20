@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -55,10 +53,10 @@ template<class Type>
 Foam::fileName Foam::xmgr<Type>::getFileName
 (
     const coordSet& points,
-    const Foam::HashTable<Field<Type>*>& valueSets
+    const wordList& valueSetNames
 ) const
 {
-    return getBaseName(points, valueSets) + ".agr";
+    return this->getBaseName(points, valueSetNames) + ".agr";
 }
 
 
@@ -66,29 +64,24 @@ template<class Type>
 void Foam::xmgr<Type>::write
 (
     const coordSet& points,
-    const HashTable<Field<Type>*>& valueSets,
+    const wordList& valueSetNames,
+    const List<const Field<Type>*>& valueSets,
     Ostream& os
 ) const
 {
     os  << "@title \"" << points.name() << '"' << endl
         << "@xaxis label " << '"' << points.axis() << '"' << endl;
 
-    label fieldI = 0;
-
-    typename HashTable<Field<Type>*>::const_iterator iter = valueSets.begin();
-
-    for(; iter != valueSets.end(); ++iter)
+    forAll(valueSets, i)
     {
-        os  << "@s" << fieldI << " legend " << '"'
-            << iter.key() << '"' << endl
-            << "@target G0.S" << fieldI << endl
+        os  << "@s" << i << " legend " << '"'
+            << valueSetNames[i] << '"' << endl
+            << "@target G0.S" << i << endl
             << "@type xy" << endl;
 
-        writeTable(points, *iter(), os);
+        writeTable(points, *valueSets[i], os);
 
         os << endl;
-
-        fieldI++;
     }
 }
 

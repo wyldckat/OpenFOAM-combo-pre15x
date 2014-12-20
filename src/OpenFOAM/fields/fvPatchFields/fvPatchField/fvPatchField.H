@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     fvPatchField
@@ -122,7 +122,7 @@ public:
                 const Field<Type>& iF,
                 const fvPatchFieldMapper& m
             ),
-            ((const fvPatchFieldType&)ptf, p, iF, m)
+            (dynamic_cast<const fvPatchFieldType&>(ptf), p, iF, m)
         );
 
         declareRunTimeSelectionTable
@@ -242,7 +242,7 @@ public:
             const objectRegistry& db() const;
 
             //- Return patch
-            const fvPatch& patchMesh() const
+            const fvPatch& patch() const
             {
                 return patch_;
             }

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -53,7 +53,7 @@ DimensionedField<Type, GeoMesh>::DimensionedField
     if (is.version() < 2.0)
     {
         dimensions_.reset(dimensionSet(is));
-        operator>>(is, (Field<Type>&)(*this));
+        operator>>(is, static_cast<Field<Type>&>(*this));
     }
     else
     {
@@ -82,7 +82,7 @@ template<class Type, class GeoMesh>
 bool DimensionedField<Type, GeoMesh>::writeData(Ostream& os) const
 {
     os  << dimensions() << nl
-        << (const Field<Type>&)(*this)
+        << static_cast<const Field<Type>&>(*this)
         << endl;
 
     // Check state of Ostream

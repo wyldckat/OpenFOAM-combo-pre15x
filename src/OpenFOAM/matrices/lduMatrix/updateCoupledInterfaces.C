@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -35,7 +33,7 @@ namespace Foam
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
-void lduMatrix::updateMatrixInterfaces
+void lduMatrix::initMatrixInterfaces
 (
     const FieldField<Field, scalar>& coupleCoeffs,
     const lduCoupledInterfacePtrsList& interfaces,
@@ -50,7 +48,11 @@ void lduMatrix::updateMatrixInterfaces
 
         if (interfaces[interfaceI]->coupled())
         {
-            if (lduCoupledInterfaceSchedule_[i].init)
+            if
+            (
+                lduCoupledInterfaceSchedule_[i].init
+             && lduCoupledInterfaceSchedule_[i].bufferedTransfer
+            )
             {
                 interfaces[interfaceI]->initInterfaceMatrixUpdate
                 (
@@ -60,17 +62,6 @@ void lduMatrix::updateMatrixInterfaces
                     coupleCoeffs[interfaceI],
                     cmpt,
                     lduCoupledInterfaceSchedule_[i].bufferedTransfer
-                );
-            }
-            else
-            {
-                interfaces[interfaceI]->updateInterfaceMatrix
-                (
-                    psiif,
-                    result,
-                    *this,
-                    coupleCoeffs[interfaceI],
-                    cmpt
                 );
             }
         }
@@ -94,6 +85,52 @@ void lduMatrix::updateMatrixInterfaces
                 cmpt,
                 true
             );
+        }
+    }
+}
+
+
+void lduMatrix::updateMatrixInterfaces
+(
+    const FieldField<Field, scalar>& coupleCoeffs,
+    const lduCoupledInterfacePtrsList& interfaces,
+    const scalarField& psiif,
+    scalarField& result,
+    const direction cmpt
+) const
+{
+    forAll (lduCoupledInterfaceSchedule_, i)
+    {
+        label interfaceI = lduCoupledInterfaceSchedule_[i].patch;
+
+        if (interfaces[interfaceI]->coupled())
+        {
+            if (lduCoupledInterfaceSchedule_[i].init)
+            {
+                if (!lduCoupledInterfaceSchedule_[i].bufferedTransfer)
+                {
+                    interfaces[interfaceI]->initInterfaceMatrixUpdate
+                    (
+                        psiif,
+                        result,
+                        *this,
+                        coupleCoeffs[interfaceI],
+                        cmpt,
+                        lduCoupledInterfaceSchedule_[i].bufferedTransfer
+                    );
+                }
+            }
+            else
+            {
+                interfaces[interfaceI]->updateInterfaceMatrix
+                (
+                    psiif,
+                    result,
+                    *this,
+                    coupleCoeffs[interfaceI],
+                    cmpt
+                );
+            }
         }
     }
 

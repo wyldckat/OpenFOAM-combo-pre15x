@@ -1,78 +1,84 @@
 /*---------------------------------------------------------------------------*\
 | =========                 |                                                 |
 | \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
-|  \\    /   O peration     | Version:  1.0                                   |
+|  \\    /   O peration     | Version:  1.1.1                                 |
 |   \\  /    A nd           | Web:      http://www.openfoam.org               |
 |    \\/     M anipulation  |                                                 |
 \*---------------------------------------------------------------------------*/
-// FoamX Mesh Description File
 
 FoamFile
 {
-    version         2.0;
-    format          ascii;
+    version 2.0;
+    format ascii;
 
-    root            "";
-    case            "";
-    instance        "";
-    local           "";
+    root "/home/dm2/henry/OpenFOAM/OpenFOAM-1.1.1/tutorials/simpleFoam";
+    case "pitzDaily3Blocks";
+    instance ""constant"";
+    local "polyMesh";
 
-    class           polyBoundaryMesh;
-    object          boundary;
+    class polyBoundaryMesh;
+    object boundary;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
+8
+(
+inlet
+{
+    type patch;
+    nFaces 30;
+    startFace 26013;
+}
 
-(    inlet
-    {
-        type            patch;
-        physicalType    inlet;
-        startFace       26013;
-        nFaces          30;
-    }
+outlet
+{
+    type patch;
+    nFaces 60;
+    startFace 26043;
+}
 
-    outlet
-    {
-        type            patch;
-        physicalType    outlet;
-        startFace       26043;
-        nFaces          60;
-    }
+upperWall
+{
+    type wallFunctions;
+    nFaces 228;
+    startFace 26103;
+}
 
-    upperWall
-    {
-        type            wall;
-        physicalType    wall;
-        startFace       26103;
-        nFaces          228;
-    }
+lowerWall
+{
+    type wallFunctions;
+    nFaces 210;
+    startFace 26331;
+}
 
-    lowerWall
-    {
-        type            wall;
-        physicalType    wall;
-        startFace       26331;
-        nFaces          246;
-    }
+lowerWallInterface
+{
+    type wallFunctions;
+    nFaces 36;
+    startFace 26541;
+}
 
-    lowerWallInlet
-    {
-        type            wall;
-        physicalType    wall;
-        startFace       26577;
-        nFaces          18;
-    }
+lowerWallInlet
+{
+    type wallFunctions;
+    nFaces 18;
+    startFace 26577;
+}
 
-    defaultFaces
-    {
-        type            empty;
-        physicalType    empty;
-        startFace       26595;
-        nFaces          26280;
-    }
+interface
+{
+    type patch;
+    nFaces 0;
+    startFace 26595;
+}
 
-
+defaultFaces
+{
+    type empty;
+    nFaces 26280;
+    startFace 26595;
+}
 )
 
 // ************************************************************************* //

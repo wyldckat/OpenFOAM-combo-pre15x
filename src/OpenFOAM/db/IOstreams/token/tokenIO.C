@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Stream operators for token
@@ -64,10 +64,8 @@ Ostream& operator<<(Ostream& os, const token& t)
     {
         case token::UNDEFINED:
             os << "UNDEFINED";
-            Warning
-                << "Ostream& operator<< (Ostream&, const token&) : "
-                   "Undefined token"
-                << endl;
+            WarningIn("Ostream& operator<< (Ostream&, const token&)")
+                << "Undefined token" << endl;
         break;
 
         case token::PUNCTUATION:
@@ -96,17 +94,14 @@ Ostream& operator<<(Ostream& os, const token& t)
 
         case token::ERROR:
             os << "ERROR";
-            Warning
-                << "Ostream& operator<< (Ostream&, const token&) : "
-                   "Error token"
-                << endl;
+            WarningIn("Ostream& operator<< (Ostream&, const token&)")
+                << "Error token" << endl;
         break;
 
         default:
             os << "UNKNOWN";
-            SeriousError
-                << "Ostream& operator<< (Ostream&, const token&) : "
-                   "Unknown token"
+            SeriousErrorIn("Ostream& operator<< (Ostream&, const token&)")
+                << "Unknown token"
                 << endl;
     }
 

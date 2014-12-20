@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -150,7 +150,7 @@ patchInternalField
     }
 
     // get addressing
-    const labelList& meshPoints = patchMesh().meshPoints();
+    const labelList& meshPoints = patch().meshPoints();
 
     tmp<Field<Type1> > tvalues(new Field<Type1>(meshPoints.size()));
     Field<Type1>& values = tvalues();
@@ -170,7 +170,7 @@ bool PointPatchField<PatchField, PointPatch, Type>::isPointField() const
 {
     return
         internalField().size()
-     == patchMesh().boundaryMesh().mesh().nPoints();
+     == patch().boundaryMesh().mesh().nPoints();
 }
 
 // Does this patchField correspond to a pointTypeField
@@ -227,7 +227,7 @@ void PointPatchField<PatchField, PointPatch, Type>::addToInternalField
     }
 
     // Get the addressing
-    const labelList& mp = patchMesh().meshPoints();
+    const labelList& mp = patch().meshPoints();
 
     forAll (mp, pointI)
     {
@@ -272,7 +272,7 @@ void PointPatchField<PatchField, PointPatch, Type>::setInInternalField
     }
 
     // Get the addressing
-    const labelList& mp = patchMesh().meshPoints();
+    const labelList& mp = patch().meshPoints();
 
     forAll (mp, pointI)
     {

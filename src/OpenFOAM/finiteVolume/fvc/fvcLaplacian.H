@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Namespace
     fvc
@@ -66,7 +66,6 @@ namespace fvc
         const word&
     );
 
-
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
     (
@@ -95,7 +94,6 @@ namespace fvc
         const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
         const word&
     );
-
 
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
@@ -143,7 +141,6 @@ namespace fvc
         const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
         const word&
     );
-
 
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
@@ -206,7 +203,6 @@ namespace fvc
         const word&
     );
 
-
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
     (
@@ -233,6 +229,39 @@ namespace fvc
     (
         const tmp<surfaceScalarField>&,
         const tmp<GeometricField<Type, fvPatchField, volMesh> >&
+    );
+
+
+    template<class Type>
+    tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
+    (
+        const volTensorField&,
+        const GeometricField<Type, fvPatchField, volMesh>&,
+        const word&
+    );
+
+    template<class Type>
+    tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
+    (
+        const tmp<volTensorField>&,
+        const GeometricField<Type, fvPatchField, volMesh>&,
+        const word&
+    );
+
+    template<class Type>
+    tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
+    (
+        const volTensorField&,
+        const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
+        const word&
+    );
+
+    template<class Type>
+    tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
+    (
+        const tmp<volTensorField>&,
+        const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
+        const word&
     );
 
     template<class Type>
@@ -263,6 +292,38 @@ namespace fvc
         const tmp<GeometricField<Type, fvPatchField, volMesh> >&
     );
 
+
+    template<class Type>
+    tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
+    (
+        const surfaceTensorField&,
+        const GeometricField<Type, fvPatchField, volMesh>&,
+        const word&
+    );
+
+    template<class Type>
+    tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
+    (
+        const tmp<surfaceTensorField>&,
+        const GeometricField<Type, fvPatchField, volMesh>&,
+        const word&
+    );
+
+    template<class Type>
+    tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
+    (
+        const surfaceTensorField&,
+        const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
+        const word&
+    );
+
+    template<class Type>
+    tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian
+    (
+        const tmp<surfaceTensorField>&,
+        const tmp<GeometricField<Type, fvPatchField, volMesh> >&,
+        const word&
+    );
 
     template<class Type>
     tmp<GeometricField<Type, fvPatchField, volMesh> > laplacian

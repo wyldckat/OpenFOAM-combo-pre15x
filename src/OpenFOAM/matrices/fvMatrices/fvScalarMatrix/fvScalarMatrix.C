@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
      Finite-Volume scalar matrix member functions and operators
@@ -163,47 +163,6 @@ tmp<volScalarField> fvMatrix<scalar>::H() const
     Hphi.correctBoundaryConditions();
 
     return tHphi;
-}
-
-
-// operator&
-template<>
-tmp<scalarField> fvMatrix<scalar>::operator&(const scalarField& psi) const
-{
-    tmp<scalarField > tApsi(new scalarField(psi.size()));
-    scalarField& Apsi = tApsi();
-
-    // There is no boundaries on psi, so no interface coupling
-    // 
-    lduMatrix::Amul
-    (
-        Apsi,
-        psi,
-        FieldField<Field, scalar>(0),
-        lduCoupledInterfacePtrsList(0),
-        0
-    );
-
-    Apsi -= source_;
-
-    scalarField boundaryDiag(psi.size(), 0.0);
-    addBoundaryDiag(boundaryDiag, 0);
-    Apsi += boundaryDiag*psi;
-
-    scalarField boundarySource(psi.size(), 0.0);
-    addBoundarySource(boundarySource);
-
-    Apsi -= boundarySource;
-
-    return tApsi;
-}
-
-template<>
-tmp<scalarField> fvMatrix<scalar>::operator&(const tmp<scalarField>& tpsi) const
-{
-    tmp<scalarField > tHpsi = operator&(tpsi());
-    tpsi.clear();
-    return tHpsi;
 }
 
 

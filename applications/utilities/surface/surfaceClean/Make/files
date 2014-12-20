@@ -1,0 +1,6 @@
+collapseBase.C
+collapseEdge.C
+
+surfaceClean.C
+
+EXE = $(FOAM_USER_APPBIN)/surfaceClean

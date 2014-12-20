@@ -20,13 +20,9 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "lduAddressing.H"
 #include "demandDrivenData.H"
@@ -42,8 +38,7 @@ void lduAddressing::calcLosort() const
 {
     if (losortPtr_)
     {
-        FatalError
-            << "void lduAddressing::calcLosort() const : "
+        FatalErrorIn("lduAddressing::calcLosort() const")
             << "losort already calculated"
             << abort(FatalError);
     }
@@ -104,8 +99,7 @@ void lduAddressing::calcOwnerStart() const
 {
     if (ownerStartPtr_)
     {
-        FatalError
-            << "void lduAddressing::calcOwnerStart() const : "
+        FatalErrorIn("lduAddressing::calcOwnerStart() const")
             << "owner start already calculated"
             << abort(FatalError);
     }
@@ -142,8 +136,7 @@ void lduAddressing::calcLosortStart() const
 {
     if (losortStartPtr_)
     {
-        FatalError
-            << "void lduAddressing::calcLosortStart() const : "
+        FatalErrorIn("lduAddressing::calcLosortStart() const")
             << "losort start already calculated"
             << abort(FatalError);
     }
@@ -252,8 +245,7 @@ label lduAddressing::triIndex(const label a, const label b) const
     // wrong with the addressing mechanism
     FatalErrorIn
     (
-        "label lduAddressing::triIndex(const label owner, "
-        "const label nbr) const"
+        "lduAddressing::triIndex(const label owner, const label nbr) const"
     )   << "neighbour " << nbr << " not found for owner " << own << ". "
         << "Problem with addressing"
         << abort(FatalError);

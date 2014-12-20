@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -69,7 +69,7 @@ void vanDriestDelta::calcDelta()
     const fvPatchList& patches = mesh_.boundary();
     forAll(patches, patchi)
     {
-        if(typeid(patches[patchi]) == typeid(wallFvPatch))
+        if (isType<wallFvPatch>(patches[patchi]))
         {
             const fvPatchVectorField& Uw = U.boundaryField()[patchi];
             const scalarField& nuw = nu.boundaryField()[patchi];
@@ -81,12 +81,11 @@ void vanDriestDelta::calcDelta()
     }
 
     wallPointYPlus::yPlusCutOff = 500;
-    volScalarField y = 
-        (const volScalarField&)wallDistData<wallPointYPlus>(mesh_, ystar);
+    wallDistData<wallPointYPlus> y(mesh_, ystar);
 
     delta_ = min
     (
-        (const volScalarField&)(geometricDelta_()),
+        static_cast<const volScalarField&>(geometricDelta_()),
         (kappa_/Cdelta_)*((1.0 + SMALL) - exp(-y/ystar/Aplus_))*y
     );
 }

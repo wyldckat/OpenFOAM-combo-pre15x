@@ -70,4 +70,10 @@
         p.boundaryField().types()
     );
 
+
+    label pdRefCell = 0;
+    scalar pdRefValue = 0.0;
+    setRefCell(pd, mesh.solutionDict().subDict("SIMPLE"), pdRefCell, pdRefValue);
+
+
     dimensionedScalar initialMass = fvc::domainIntegrate(rho);

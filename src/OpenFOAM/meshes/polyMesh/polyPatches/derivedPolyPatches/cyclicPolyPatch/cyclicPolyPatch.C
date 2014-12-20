@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -55,8 +55,8 @@ void cyclicPolyPatch::calcTransforms()
     {
         const pointField& points = allPoints();
 
-        const face& f0 = ((const faceList&)(*this))[0];
-        const face& fn2 = ((const faceList&)(*this))[size()/2];
+        const face& f0 = static_cast<const faceList&>(*this)[0];
+        const face& fn2 = static_cast<const faceList&>(*this)[size()/2];
 
         vector nf0 = f0.normal(points);
         nf0 /= mag(nf0);
@@ -88,7 +88,8 @@ cyclicPolyPatch::cyclicPolyPatch
 )
 :
     coupledPolyPatch(name, size, start, index, bm),
-    coupledPointsPtr_(NULL)
+    coupledPointsPtr_(NULL),
+    coupledEdgesPtr_(NULL)
 {
     calcTransforms();
 }
@@ -103,7 +104,8 @@ cyclicPolyPatch::cyclicPolyPatch
 )
 :
     coupledPolyPatch(is, index, bm),
-    coupledPointsPtr_(NULL)
+    coupledPointsPtr_(NULL),
+    coupledEdgesPtr_(NULL)
 {
     calcTransforms();
 }
@@ -119,7 +121,8 @@ cyclicPolyPatch::cyclicPolyPatch
 )
 :
     coupledPolyPatch(name, dict, index, bm),
-    coupledPointsPtr_(NULL)
+    coupledPointsPtr_(NULL),
+    coupledEdgesPtr_(NULL)
 {
     calcTransforms();
 }
@@ -131,7 +134,9 @@ cyclicPolyPatch::cyclicPolyPatch
     const polyBoundaryMesh& bm
 )
 :
-    coupledPolyPatch(pp, bm)
+    coupledPolyPatch(pp, bm),
+    coupledPointsPtr_(NULL),
+    coupledEdgesPtr_(NULL)
 {
     calcTransforms();
 }
@@ -147,7 +152,8 @@ cyclicPolyPatch::cyclicPolyPatch
 )
 :
     coupledPolyPatch(pp, bm, index, newSize, newStart),
-    coupledPointsPtr_(NULL)
+    coupledPointsPtr_(NULL),
+    coupledEdgesPtr_(NULL)
 {
     calcTransforms();
 }
@@ -158,6 +164,7 @@ cyclicPolyPatch::cyclicPolyPatch
 cyclicPolyPatch::~cyclicPolyPatch()
 {
     deleteDemandDrivenData(coupledPointsPtr_);
+    deleteDemandDrivenData(coupledEdgesPtr_);
 }
 
 
@@ -165,18 +172,36 @@ cyclicPolyPatch::~cyclicPolyPatch()
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 void cyclicPolyPatch::initGeometry()
-{}
+{
+    polyPatch::initGeometry();
+}
 
 void cyclicPolyPatch::calcGeometry()
-{}
+{
+    polyPatch::calcGeometry();
+}
 
-void cyclicPolyPatch::initMovePoints(const pointField&)
-{}
+void cyclicPolyPatch::initMovePoints(const pointField& p)
+{
+    polyPatch::initMovePoints(p);
+}
 
 void cyclicPolyPatch::movePoints(const pointField& p)
 {
     polyPatch::movePoints(p);
     calcTransforms();
+}
+
+void cyclicPolyPatch::initUpdateTopology()
+{
+    polyPatch::initUpdateTopology();
+}
+
+void cyclicPolyPatch::updateTopology()
+{
+    polyPatch::updateTopology();
+    deleteDemandDrivenData(coupledPointsPtr_);
+    deleteDemandDrivenData(coupledEdgesPtr_);
 }
 
 
@@ -249,6 +274,120 @@ const edgeList& cyclicPolyPatch::coupledPoints() const
         }
     }
     return *coupledPointsPtr_;
+}
+
+
+const edgeList& cyclicPolyPatch::coupledEdges() const
+{
+    if (!coupledEdgesPtr_)
+    {
+        // Build map from points on halfA to points on halfB.
+        const edgeList& pointCouples = coupledPoints();
+
+        Map<label> aToB(2*pointCouples.size());
+
+        forAll(pointCouples, i)
+        {
+            const edge& e = pointCouples[i];
+
+            aToB.insert(e[0], e[1]);
+        }
+
+        // Map from edge on half A to points (in halfB indices)
+        HashTable<label, edge, Hash<edge> > edgeMap(nEdges());
+
+        for (label patchFaceA = 0; patchFaceA < size()/2; patchFaceA++)
+        {
+            const labelList& fEdges = faceEdges()[patchFaceA];
+
+            forAll(fEdges, i)
+            {
+                label edgeI = fEdges[i];
+
+                const edge& e = edges()[edgeI];
+
+                // Convert edge end points to corresponding points on halfB
+                // side.
+
+                edge halfBEdge(aToB[e[0]], aToB[e[1]]);
+
+                edgeMap.insert(halfBEdge, edgeI);
+            }
+        }
+
+        coupledEdgesPtr_ = new edgeList(nEdges()/2);
+        edgeList& coupledEdges = *coupledEdgesPtr_;
+        label coupleI = 0;
+
+        for (label patchFaceB = size()/2; patchFaceB < size(); patchFaceB++)
+        {
+            const labelList& fEdges = faceEdges()[patchFaceB];
+
+            forAll(fEdges, i)
+            {
+                label edgeI = fEdges[i];
+
+                const edge& e = edges()[edgeI];
+
+                // Look up edge from HashTable.
+                label halfAEdgeI = edgeMap[e];
+
+                // Store correspondence
+                coupledEdges[coupleI++] = edge(halfAEdgeI, edgeI);
+
+                // Remove (since should be used only once)
+                edgeMap.erase(e);
+            }
+        }
+
+
+        // Some checks
+
+        if (coupleI != coupledEdges.size())
+        {
+            FatalErrorIn("cyclicPolyPatch::coupledEdges() const")
+                << "Problem : coupleI:" << coupleI
+                << " number of edges per halfpatch:" << coupledEdges.size()
+                << abort(FatalError);
+        }
+
+        forAll(coupledEdges, i)
+        {
+            const edge& e = coupledEdges[i];
+
+            if (e[0] == e[1] || e[0] < 0 || e[1] < 0)
+            {
+                FatalErrorIn("cyclicPolyPatch::coupledEdges() const")
+                    << "Problem : at position " << i
+                    << " illegal couple:" << e
+                    << abort(FatalError);
+            }
+        }
+
+        if (debug)
+        {
+            Info<< "Writing file coupledEdges.obj with centres of "
+                << "coupled edges" << endl;
+
+            OFstream str("coupledEdges.obj");
+            label vertI = 0;
+
+            forAll(coupledEdges, i)
+            {
+                const edge& e = coupledEdges[i];
+
+                const point& a = edges()[e[0]].centre(localPoints());
+                const point& b = edges()[e[1]].centre(localPoints());
+
+                str<< "v " << a.x() << ' ' << a.y() << ' ' << a.z() << nl;
+                str<< "v " << b.x() << ' ' << b.y() << ' ' << b.z() << nl;
+                vertI += 2;
+
+                str<< "l " << vertI-1 << ' ' << vertI << nl;
+            }
+        }
+    }
+    return *coupledEdgesPtr_;
 }
 
 

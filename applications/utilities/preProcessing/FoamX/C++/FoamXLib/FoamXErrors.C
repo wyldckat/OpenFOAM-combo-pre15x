@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -36,6 +34,9 @@ Description
 #include "FoamX.H"
 #include "FoamXErrors.H"
 
+// Namespaces
+#include "FoamXNameSpaces.H"
+
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
 defineTypeNameAndDebug(FoamX::FoamXError, 0);
@@ -46,10 +47,10 @@ defineTypeNameAndDebug(FoamX::FoamXError, 0);
 FoamX::FoamXError::FoamXError
 (
     FoamXServer::ErrorCode errCode,
-    const Foam::string& message,
+    const string& message,
     const char* function,
     const char* fName, 
-    Foam::label lineNo
+    label lineNo
 )
 :
     FoamXServer::FoamXError
@@ -63,11 +64,11 @@ FoamX::FoamXError::FoamXError
 {
     static const char* functionName =
         "FoamX::FoamXError::FoamXError"
-        "(FoamXServer::ErrorCode errCode, const Foam::string& message,"
-        "const char* functionName, const char* fName, Foam::label lineNo)";
+        "(FoamXServer::ErrorCode errCode, const string& message,"
+        "const char* functionName, const char* fName, label lineNo)";
 
-    Foam::LogEntry log(functionName, __FILE__, __LINE__);
-    log << *this << Foam::endl;
+    LogEntry log(functionName, __FILE__, __LINE__);
+    log << *this << endl;
 }
 
 FoamX::FoamXError::FoamXError(const FoamXServer::FoamXError& fErr)
@@ -77,11 +78,11 @@ FoamX::FoamXError::FoamXError(const FoamXServer::FoamXError& fErr)
     static const char* functionName =
         "FoamX::FoamXError::FoamXError(const FoamXServer::FoamXError& fErr)";
 
-    Foam::LogEntry log(functionName, __FILE__, __LINE__);
-    log << *this << Foam::endl;
+    LogEntry log(functionName, __FILE__, __LINE__);
+    log << *this << endl;
 }
 
-FoamX::FoamXError::FoamXError(const Foam::error& fErr)
+FoamX::FoamXError::FoamXError(const error& fErr)
 :
     FoamXServer::FoamXError
     (
@@ -93,22 +94,22 @@ FoamX::FoamXError::FoamXError(const Foam::error& fErr)
     )
 {
     static const char* functionName =
-        "FoamX::FoamXError::FoamXError(const Foam::error& fErr)";
+        "FoamX::FoamXError::FoamXError(const error& fErr)";
 
-    Foam::LogEntry log(functionName, __FILE__, __LINE__);
-    log << *this << Foam::endl;
+    LogEntry log(functionName, __FILE__, __LINE__);
+    log << *this << endl;
 }
 
 
 Foam::Ostream& FoamX::operator<<
 (
-    Foam::Ostream& os,
+    Ostream& os,
     const FoamXServer::FoamXError& fxErr
 )
 {
-    os  << "FoamXError " << Foam::string(fxErr.errorMessage) << Foam::nl
-        << "In function " << Foam::string(fxErr.methodName) << Foam::nl
-        << "in file " << Foam::fileName(fxErr.fileName)
+    os  << "FoamXError " << string(fxErr.errorMessage) << nl
+        << "In function " << string(fxErr.methodName) << nl
+        << "in file " << fileName(fxErr.fileName)
         << " at line " << fxErr.lineNo;
 
     return os;
@@ -118,11 +119,11 @@ Foam::Ostream& FoamX::operator<<
 FoamX::FoamXSYSError::FoamXSYSError
 (
     FoamXServer::ErrorCode errCode,
-    const Foam::string& message,
-    const Foam::string& hostName,
+    const string& message,
+    const string& hostName,
     const char* function,
     const char* fName, 
-    Foam::label lineNo
+    label lineNo
 )
 :
     FoamXServer::FoamXSYSError
@@ -137,12 +138,12 @@ FoamX::FoamXSYSError::FoamXSYSError
 {
     static const char* functionName =
         "FoamX::FoamXError::FoamXSYSError"
-        "(FoamXServer::ErrorCode errCode, const Foam::string& messsage, "
-        "const Foam::string& hostName, "
-        "const char* functionName, const char* fName, Foam::label lineNo)";
+        "(FoamXServer::ErrorCode errCode, const string& messsage, "
+        "const string& hostName, "
+        "const char* functionName, const char* fName, label lineNo)";
 
-    Foam::LogEntry log(functionName, __FILE__, __LINE__);
-    log << *this << Foam::endl;
+    LogEntry log(functionName, __FILE__, __LINE__);
+    log << *this << endl;
 }
 
 FoamX::FoamXSYSError::FoamXSYSError(const FoamXServer::FoamXSYSError& sysErr)
@@ -153,20 +154,20 @@ FoamX::FoamXSYSError::FoamXSYSError(const FoamXServer::FoamXSYSError& sysErr)
         "FoamX::FoamXError::FoamXError"
         "(const FoamXServer::FoamXSYSError& sysErr)";
 
-    Foam::LogEntry log(functionName, __FILE__, __LINE__);
-    log << *this << Foam::endl;
+    LogEntry log(functionName, __FILE__, __LINE__);
+    log << *this << endl;
 }
 
 Foam::Ostream& FoamX::operator<<
 (
-    Foam::Ostream& os,
+    Ostream& os,
     const FoamXServer::FoamXSYSError& sysErr
 )
 {
-    os  << "FoamXSYSError " << Foam::string(sysErr.errorMessage) << Foam::nl
-        << "Problem with machine " << Foam::string(sysErr.hostName) << Foam::nl
-        << "In function " << Foam::string(sysErr.methodName) << Foam::nl
-        << "in file " << Foam::fileName(sysErr.fileName)
+    os  << "FoamXSYSError " << string(sysErr.errorMessage) << nl
+        << "Problem with machine " << string(sysErr.hostName) << nl
+        << "In function " << string(sysErr.methodName) << nl
+        << "in file " << fileName(sysErr.fileName)
         << " at line " << sysErr.lineNo;
 
     return os;
@@ -175,13 +176,13 @@ Foam::Ostream& FoamX::operator<<
 
 FoamX::FoamXIOError::FoamXIOError
 (
-    const Foam::string& message,
-    const Foam::string& ioFileName,
-    Foam::label ioStartLineNumber,
-    Foam::label ioEndLineNumber,
+    const string& message,
+    const string& ioFileName,
+    label ioStartLineNumber,
+    label ioEndLineNumber,
     const char* function,
     const char* fName, 
-    Foam::label lineNo
+    label lineNo
 )
 :
     FoamXServer::FoamXIOError
@@ -197,12 +198,12 @@ FoamX::FoamXIOError::FoamXIOError
 {
     static const char* functionName =
         "FoamX::FoamXError::FoamXError"
-        "(const Foam::string& message, const Foam::string& ioFileName, "
-        "Foam::label ioStartLineNumber, Foam::label ioEndLineNumber, "
-        "const char* functionName, const char* fName, Foam::label lineNo)";
+        "(const string& message, const string& ioFileName, "
+        "label ioStartLineNumber, label ioEndLineNumber, "
+        "const char* functionName, const char* fName, label lineNo)";
 
-    Foam::LogEntry log(functionName, __FILE__, __LINE__);
-    log << *this << Foam::endl;
+    LogEntry log(functionName, __FILE__, __LINE__);
+    log << *this << endl;
 }
 
 FoamX::FoamXIOError::FoamXIOError(const FoamXServer::FoamXIOError& fErr)
@@ -213,11 +214,11 @@ FoamX::FoamXIOError::FoamXIOError(const FoamXServer::FoamXIOError& fErr)
         "FoamX::FoamXIOError::FoamXIOError"
         "(const FoamXServer::FoamXIOError& fErr)";
 
-    Foam::LogEntry log(functionName, __FILE__, __LINE__);
-    log << *this << Foam::endl;
+    LogEntry log(functionName, __FILE__, __LINE__);
+    log << *this << endl;
 }
 
-FoamX::FoamXIOError::FoamXIOError(const Foam::IOerror& fIOErr)
+FoamX::FoamXIOError::FoamXIOError(const IOerror& fIOErr)
 :
     FoamXServer::FoamXIOError
     (
@@ -231,25 +232,25 @@ FoamX::FoamXIOError::FoamXIOError(const Foam::IOerror& fIOErr)
     )
 {
     static const char* functionName =
-        "FoamX::foamXError(const Foam::IOerror& fIOErr)";
+        "FoamX::foamXError(const IOerror& fIOErr)";
 
-    Foam::LogEntry log(functionName, __FILE__, __LINE__);
-    log << *this << Foam::endl;
+    LogEntry log(functionName, __FILE__, __LINE__);
+    log << *this << endl;
 }
 
 
 Foam::Ostream& FoamX::operator<<
 (
-    Foam::Ostream& os,
+    Ostream& os,
     const FoamXServer::FoamXIOError& fIOErr
 )
 {
-    os  << "FoamXIOError " << Foam::string(fIOErr.errorMessage) << Foam::nl
-        << "File " << Foam::fileName(fIOErr.ioFileName)
+    os  << "FoamXIOError " << string(fIOErr.errorMessage) << nl
+        << "File " << fileName(fIOErr.ioFileName)
         << " starting at line " << fIOErr.ioStartLineNo
-        << " ending at line " << fIOErr.ioEndLineNo << Foam::nl
-        << "In function " << Foam::string(fIOErr.methodName) << Foam::nl
-        << "in file " << Foam::fileName(fIOErr.fileName)
+        << " ending at line " << fIOErr.ioEndLineNo << nl
+        << "In function " << string(fIOErr.methodName) << nl
+        << "in file " << fileName(fIOErr.fileName)
         << " at line " << fIOErr.lineNo;
 
     return os;
@@ -257,24 +258,24 @@ Foam::Ostream& FoamX::operator<<
 
 
 
-Foam::dictionary FoamX::dict(const Foam::error& fErr)
+Foam::dictionary FoamX::dict(const error& fErr)
 {
     return fErr;
 }
 
-Foam::dictionary FoamX::dict(const Foam::IOerror& fIOErr)
+Foam::dictionary FoamX::dict(const IOerror& fIOErr)
 {
     return fIOErr;
 }
 
 Foam::dictionary FoamX::dict(const FoamXServer::FoamXError& fxErr)
 {
-    Foam::dictionary fxErrDict;
-    fxErrDict.add("type", Foam::word("FoamXServer::FoamXError"));
-    fxErrDict.add("errorCode", Foam::label(fxErr.errorCode));
-    fxErrDict.add("message", Foam::string(fxErr.errorMessage));
-    fxErrDict.add("function", Foam::string(fxErr.methodName));
-    fxErrDict.add("sourceFile", Foam::fileName(fxErr.fileName));
+    dictionary fxErrDict;
+    fxErrDict.add("type", word("FoamXServer::FoamXError"));
+    fxErrDict.add("errorCode", label(fxErr.errorCode));
+    fxErrDict.add("message", string(fxErr.errorMessage));
+    fxErrDict.add("function", string(fxErr.methodName));
+    fxErrDict.add("sourceFile", fileName(fxErr.fileName));
     fxErrDict.add("sourceFileLineNumber", fxErr.lineNo);
 
     return fxErrDict;
@@ -282,14 +283,14 @@ Foam::dictionary FoamX::dict(const FoamXServer::FoamXError& fxErr)
 
 Foam::dictionary FoamX::dict(const FoamXServer::FoamXIOError& fIOErr)
 {
-    Foam::dictionary fIOErrDict;
-    fIOErrDict.add("type", Foam::word("FoamXServer::FoamXIOError"));
-    fIOErrDict.add("message", Foam::string(fIOErr.errorMessage));
-    fIOErrDict.add("ioFileName", Foam::fileName(fIOErr.ioFileName));
+    dictionary fIOErrDict;
+    fIOErrDict.add("type", word("FoamXServer::FoamXIOError"));
+    fIOErrDict.add("message", string(fIOErr.errorMessage));
+    fIOErrDict.add("ioFileName", fileName(fIOErr.ioFileName));
     fIOErrDict.add("ioStartLineNumber", fIOErr.ioStartLineNo);
     fIOErrDict.add("ioEndLineNumber", fIOErr.ioEndLineNo);
-    fIOErrDict.add("function", Foam::string(fIOErr.methodName));
-    fIOErrDict.add("sourceFile", Foam::fileName(fIOErr.fileName));
+    fIOErrDict.add("function", string(fIOErr.methodName));
+    fIOErrDict.add("sourceFile", fileName(fIOErr.fileName));
     fIOErrDict.add("sourceFileLineNumber", fIOErr.lineNo);
 
     return fIOErrDict;
@@ -297,44 +298,44 @@ Foam::dictionary FoamX::dict(const FoamXServer::FoamXIOError& fIOErr)
 
 Foam::dictionary FoamX::dict(const CORBA::COMM_FAILURE& ex)
 {
-    Foam::dictionary exDict;
-    exDict.add("type", Foam::word("CORBA::COMM_FAILURE"));
+    dictionary exDict;
+    exDict.add("type", word("CORBA::COMM_FAILURE"));
     return exDict;
 }
 
 Foam::dictionary FoamX::dict(const CORBA::SystemException& ex)
 {
-    Foam::dictionary exDict;
-    exDict.add("type", Foam::word("CORBA::SystemException"));
+    dictionary exDict;
+    exDict.add("type", word("CORBA::SystemException"));
     return exDict;
 }
 
 Foam::dictionary FoamX::dict(const CORBA::Exception& ex)
 {
-    Foam::dictionary exDict;
-    exDict.add("type", Foam::word("CORBA::Exception"));
+    dictionary exDict;
+    exDict.add("type", word("CORBA::Exception"));
     return exDict;
 }
 
 Foam::dictionary FoamX::dict(const FoamX::systemError& ex)
 {
-    Foam::dictionary exDict;
-    exDict.add("type", Foam::word("::systemError"));
+    dictionary exDict;
+    exDict.add("type", word("::systemError"));
     return exDict;
 }
 
 
-void FoamX::reThrow(const Foam::dictionary& errorDict)
+void FoamX::reThrow(const dictionary& errorDict)
 {
-    Foam::word errorType(errorDict.lookup("type"));
+    word errorType(errorDict.lookup("type"));
 
-    if (errorType == "Foam::error")
+    if (errorType == "error")
     {
-        throw FoamXError(Foam::error(errorDict));
+        throw FoamXError(error(errorDict));
     }
-    else if (errorType == "Foam::IOerror")
+    else if (errorType == "IOerror")
     {
-        throw FoamXIOError(Foam::IOerror(errorDict));
+        throw FoamXIOError(IOerror(errorDict));
     }
     else if (errorType == "FoamXServer::FoamXError")
     {
@@ -342,25 +343,25 @@ void FoamX::reThrow(const Foam::dictionary& errorDict)
         (
             FoamXServer::ErrorCode
             (
-                Foam::readLabel(errorDict.lookup("errorCode"))
+                readLabel(errorDict.lookup("errorCode"))
             ),
-            Foam::string(errorDict.lookup("message")),
-            Foam::string(errorDict.lookup("function")).c_str(),
-            Foam::string(errorDict.lookup("sourceFile")).c_str(),
-            Foam::readLabel(errorDict.lookup("sourceFileLineNumber"))
+            string(errorDict.lookup("message")),
+            string(errorDict.lookup("function")).c_str(),
+            string(errorDict.lookup("sourceFile")).c_str(),
+            readLabel(errorDict.lookup("sourceFileLineNumber"))
         );
     }
     else if (errorType == "FoamXServer::FoamXIOError")
     {
         throw FoamXIOError
         (
-            Foam::string(errorDict.lookup("message")),
-            Foam::string(errorDict.lookup("ioFileName")),
-            Foam::readLabel(errorDict.lookup("ioStartLineNumber")),
-            Foam::readLabel(errorDict.lookup("ioEndLineNumber")),
-            Foam::string(errorDict.lookup("function")).c_str(),
-            Foam::string(errorDict.lookup("sourceFile")).c_str(),
-            Foam::readLabel(errorDict.lookup("sourceFileLineNumber"))
+            string(errorDict.lookup("message")),
+            string(errorDict.lookup("ioFileName")),
+            readLabel(errorDict.lookup("ioStartLineNumber")),
+            readLabel(errorDict.lookup("ioEndLineNumber")),
+            string(errorDict.lookup("function")).c_str(),
+            string(errorDict.lookup("sourceFile")).c_str(),
+            readLabel(errorDict.lookup("sourceFileLineNumber"))
         );
     }
     else
@@ -369,7 +370,7 @@ void FoamX::reThrow(const Foam::dictionary& errorDict)
         (
             FoamXServer::E_UNEXPECTED,
             "Unexpected error: " + errorType,
-            "FoamX::reThrow(const Foam::dictionary& errorDict)",
+            "FoamX::reThrow(const dictionary& errorDict)",
             __FILE__, __LINE__
         );
     }

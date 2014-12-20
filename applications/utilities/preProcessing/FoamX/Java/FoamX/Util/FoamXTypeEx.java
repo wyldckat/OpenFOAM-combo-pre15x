@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Util;
@@ -65,7 +65,7 @@ public class FoamXTypeEx
     public static final int TIME_TYPE         = FoamXType._Type_Time;
 
     public static final int DIMENSIONSET_TYPE = FoamXType._Type_DimensionSet;
-    public static final int VECTORSPACE_TYPE  = FoamXType._Type_VectorSpace;
+    public static final int VECTORSPACE_TYPE  = FoamXType._Type_FixedList;
     public static final int LIST_TYPE         = FoamXType._Type_List;
     public static final int DICTIONARY_TYPE   = FoamXType._Type_Dictionary;
     public static final int SELECTION_TYPE    = FoamXType._Type_Selection;
@@ -95,7 +95,7 @@ public class FoamXTypeEx
             icons_[TIME_TYPE]         = App.getResources().getIcon("StringImage");
 
             icons_[DIMENSIONSET_TYPE] = App.getResources().getIcon("DimensionSetImage");
-            icons_[VECTORSPACE_TYPE]  = App.getResources().getIcon("VectorSpaceImage");
+            icons_[VECTORSPACE_TYPE]  = App.getResources().getIcon("FixedListImage");
             icons_[LIST_TYPE]         = App.getResources().getIcon("ListImage");
             icons_[DICTIONARY_TYPE]   = App.getResources().getIcon("DictionaryImage");
             icons_[SELECTION_TYPE]    = App.getResources().getIcon("SelectionImage");
@@ -119,7 +119,7 @@ public class FoamXTypeEx
             names_[TIME_TYPE]         = "Time";
 
             names_[DIMENSIONSET_TYPE] = "DimensionSet";
-            names_[VECTORSPACE_TYPE]  = "VectorSpace";
+            names_[VECTORSPACE_TYPE]  = "FixedList";
             names_[LIST_TYPE]         = "List";
             names_[DICTIONARY_TYPE]   = "Dictionary";
             names_[SELECTION_TYPE]    = "Selection";
@@ -143,7 +143,7 @@ public class FoamXTypeEx
             namedTypes_[TIME_TYPE]         = new FoamXNamedType(FoamXType._Type_Time);
 
             namedTypes_[DIMENSIONSET_TYPE] = new FoamXNamedType(FoamXType._Type_DimensionSet);
-            namedTypes_[VECTORSPACE_TYPE]  = new FoamXNamedType(FoamXType._Type_VectorSpace);
+            namedTypes_[VECTORSPACE_TYPE]  = new FoamXNamedType(FoamXType._Type_FixedList);
             namedTypes_[LIST_TYPE]         = new FoamXNamedType(FoamXType._Type_List);
             namedTypes_[DICTIONARY_TYPE]   = new FoamXNamedType(FoamXType._Type_Dictionary);
             namedTypes_[SELECTION_TYPE]    = new FoamXNamedType(FoamXType._Type_Selection);

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     attachPolyMesh
@@ -80,10 +80,7 @@ public:
     // Constructors
 
         //- Construct from IOobject
-        attachPolyMesh(const IOobject& io)
-        :
-            polyMesh(io)
-        {}
+        attachPolyMesh(const IOobject& io);
 
         //- Construct from components without boundary.
         //  Boundary is added using addPatches() member function
@@ -93,10 +90,7 @@ public:
             const pointField& points,
             const faceList& faces,
             const cellList& cells
-        )
-        :
-            polyMesh(io, points, faces, cells)
-        {}
+        );
 
         //- Construct from cell shapes
         attachPolyMesh
@@ -109,130 +103,30 @@ public:
             const wordList& boundaryPatchTypes,
             const word& defaultBoundaryPatchType,
             const wordList& boundaryPatchPhysicalTypes
-        )
-        :
-            polyMesh
-            (
-                io,
-                points,
-                shapes,
-                boundaryFaces,
-                boundaryPatchNames,
-                boundaryPatchTypes,
-                defaultBoundaryPatchType,
-                boundaryPatchPhysicalTypes
-            )
-        {}
+        );
 
 
     // Destructor
 
-        virtual ~attachPolyMesh()
-        {}
+        virtual ~attachPolyMesh();
 
 
     // Member Functions
 
-        //- Attach mesh
-        void attach()
-        {
-            if (polyMesh::debug || polyMesh::morphDebug)
-            {
-                Info<< "void attachPolyMesh::attach(): "
-                    << "Attaching mesh" << endl;
-            }
+        //- Attach mesh. By default filter out empty patches.
+        void attach(const bool removeEmptyPatches = true);
 
-            // Save current file instance
-            const fileName oldInst = cellsInstance();
-
-            // Reset morph time index
-            setMorphTimeIndex(-1);
-
-            // Execute all polyMeshModifiers
-            updateTopology();
-
-            const pointField p = oldAllPoints();
-
-            movePoints(p);
-
-            if (polyMesh::debug || polyMesh::morphDebug)
-            {
-                Info << "Clearing mesh." << endl;
-            }
-
-            removePointZones();
-            removeFaceZones();
-            removeCellZones();
-            removeMeshModifiers();
-
-//            // Re-do the boundary patches, removing the ones with zero size
-//            const polyBoundaryMesh& oldPatches = boundaryMesh();
-//
-//            List<polyPatch*> newPatches(oldPatches.size());
-//            label nNewPatches = 0;
-//
-//            forAll (oldPatches, patchI)
-//            {
-//                if (oldPatches[patchI].size() > 0)
-//                {
-//                    newPatches[nNewPatches] =
-//                        oldPatches[patchI].clone
-//                        (
-//                            boundaryMesh(),
-//                            nNewPatches,
-//                            oldPatches[patchI].size(),
-//                            oldPatches[patchI].start()
-//                        ).ptr();
-//
-//                    nNewPatches++;
-//                }
-//                else
-//                {
-//                    if (polyMesh::debug || polyMesh::morphDebug)
-//                    {
-//                        Info<< "Removing zero-sized patch " << patchI
-//                            << " named " << oldPatches[patchI].name() << endl;
-//                    }
-//                }
-//            }
-//
-//            newPatches.setSize(nNewPatches);
-//
-//            removeBoundary();
-//            addPatches(newPatches);
-
-            // Reset the file instance to overwrite the original mesh
-            setInstance(oldInst);
-
-            if (polyMesh::debug || polyMesh::morphDebug)
-            {
-                Info<< "void attachPolyMesh::attach(): "
-                    << "Finished attaching mesh" << endl;
-            }
-
-            checkMesh();
-        }
 
         //- Write after removing files from old mesh
-        virtual bool write() const
-        {
-            if (polyMesh::debug)
-            {
-                Info<< "void attachPolyMesh::attach(): "
-                    << "Removing old mesh files from "
-                    << cellsInstance() << endl;
-            }
+        virtual bool write
+        (
+            IOstream::streamFormat fmt,
+            IOstream::versionNumber ver,
+            IOstream::compressionType cmp
+        ) const;
 
-            removeFiles(cellsInstance());
 
-            if (polyMesh::debug)
-            {
-                Info<< "Writing attachPolyMesh to " << cellsInstance() << endl;
-            }
-
-            return polyMesh::write();
-        }
-
+        bool write() const;
 };
 
 

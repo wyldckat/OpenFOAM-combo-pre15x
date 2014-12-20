@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Reads the header information of a File up to and including the class name.
@@ -59,7 +59,7 @@ bool IOobject::readHeader(Istream& is)
 
         if (IOobject::debug)
         {
-            SeriousError
+            SeriousIOErrorIn("IOobject::readHeader(Istream&)", is)
                 << "IOobject::readHeader(Istream&) :"
                 << " stream not open for reading from file "
                 << is.name() << endl;
@@ -104,8 +104,7 @@ bool IOobject::readHeader(Istream& is)
     fileName headerRoot(headerDict.lookup("root"));
     if (IOobject::debug && headerRoot != rootPath())
     {
-        Warning
-            << "IOobject::readHeader(Istream&) :"
+        IOWarningIn("IOobject::readHeader(Istream&)", is)
             << " root moved from " << headerRoot
             << " to " << rootPath()
             << " for file " << is.name() << endl;
@@ -114,8 +113,7 @@ bool IOobject::readHeader(Istream& is)
     fileName headerCase(headerDict.lookup("case"));
     if (IOobject::debug && headerCase != caseName())
     {
-        Warning
-            << "IOobject::readHeader(Istream&) :"
+        IOWarningIn("IOobject::readHeader(Istream&)", is)
             << " case moved from " << headerCase
             << " to " << caseName()
             << " for file " << is.name() << endl;
@@ -129,8 +127,7 @@ bool IOobject::readHeader(Istream& is)
 
         if (IOobject::debug && headerInstance != instance())
         {
-            Warning
-                << "IOobject::readHeader(Istream&) :"
+            IOWarningIn("IOobject::readHeader(Istream&)", is)
                 << " instance moved from " << headerInstance
                 << " to " << instance()
                 << " for file " << is.name() << endl;
@@ -143,8 +140,7 @@ bool IOobject::readHeader(Istream& is)
 
         if (IOobject::debug && headerLocal != local())
         {
-            Warning
-                << "IOobject::readHeader(Istream&) :"
+            IOWarningIn("IOobject::readHeader(Istream&)", is)
                 << " local moved from " << headerLocal
                 << " to " << local()
                 << " for file " << is.name() << endl;
@@ -199,8 +195,7 @@ bool IOobject::readHeader(Istream& is)
     word headerObject(headerDict.lookup("object"));
     if (IOobject::debug && headerObject != name())
     {
-        Warning
-            << "IOobject::readHeader(Istream&) :"
+        IOWarningIn("IOobject::readHeader(Istream&)", is)
             << " object renamed from "
             << name() << " to " << headerObject
             << " for file " << is.name() << endl;

@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -54,7 +52,7 @@ vector cellModel::centre
     }
 
     // Average by dividing by the number summed over.
-    cEst /= (scalar)pointLabels.size();
+    cEst /= scalar(pointLabels.size());
 
 
     // Calculate the centre by breaking the cell into pyramids and
@@ -77,8 +75,7 @@ vector cellModel::centre
 
         if (pyrVol > SMALL)
         {
-            Warning
-                << "cellModel::centre(const labelList&, const pointField&) : "
+            WarningIn("cellModel::centre(const labelList&, const pointField&)")
                 << "zero or negative pyramid volume: " << -pyrVol
                 << " for face " << i
                 << endl;
@@ -92,7 +89,7 @@ vector cellModel::centre
         sumV -= pyrVol;
     }
 
-    return sumVc/sumV;
+    return sumVc/(sumV + VSMALL);
 }
 
 
@@ -112,7 +109,7 @@ scalar cellModel::mag
     }
 
     // Average by dividing by the number summed over.
-    cEst /= (scalar)pointLabels.size();
+    cEst /= scalar(pointLabels.size());
 
 
     // Calculate the magnitude by summing the -mags of the pyramids
@@ -136,9 +133,7 @@ scalar cellModel::mag
 
         if (pyrVol > SMALL)
         {
-            Warning
-                << "cellModel::"
-                << "mag(const labelList&, const pointField&) : "
+            WarningIn("cellModel::mag(const labelList&, const pointField&)")
                 << "zero or negative pyramid volume: " << -pyrVol
                 << " for face " << i
                 << endl;

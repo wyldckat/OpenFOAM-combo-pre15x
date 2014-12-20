@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -54,7 +54,7 @@ particle<particleType>::particle
     {
         is.read
         (
-            (char*)&position_,
+            reinterpret_cast<char*>(&position_),
             sizeof(position_) + sizeof(celli_)
         );
     }
@@ -78,7 +78,7 @@ Ostream& operator<<(Ostream& os, const particle<particleType>& p)
     {
         os.write
         (
-            (const char*)&p.position_,
+            reinterpret_cast<const char*>(&p.position_),
             sizeof(p.position_) + sizeof(p.celli_)
         );
     }

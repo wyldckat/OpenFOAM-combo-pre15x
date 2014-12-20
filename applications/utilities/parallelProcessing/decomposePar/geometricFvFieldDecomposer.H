@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     geometricFvFieldDecomposer
@@ -301,7 +301,7 @@ public:
         (
             const fvMesh& mesh,
             const IOobjectList& objects,
-            ptrList<GeoField>& fields
+            PtrList<GeoField>& fields
         );
 
         //- Decompose volume field
@@ -321,7 +321,7 @@ public:
         ) const;
 
         template<class GeoField>
-        void decomposeFields(const ptrList<GeoField>& fields) const;
+        void decomposeFields(const PtrList<GeoField>& fields) const;
 };
 
 

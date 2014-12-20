@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     lduMatrix member H operations.
@@ -79,8 +79,8 @@ tmp<Field<Type> > lduMatrix::H(const tmp<Field<Type> >& tsf) const
 template<class Type>
 tmp<Field<Type> > lduMatrix::faceH(const Field<Type>& sf) const
 {
-    const scalarField& Lower = ((const lduMatrix&)(*this)).lower();
-    const scalarField& Upper = ((const lduMatrix&)(*this)).upper();
+    const scalarField& Lower = const_cast<const lduMatrix&>(*this).lower();
+    const scalarField& Upper = const_cast<const lduMatrix&>(*this).upper();
 
     // Take refereces to addressing
     const unallocLabelList& l = lduAddr_.lowerAddr();

@@ -1,0 +1,51 @@
+// The FOAM Project // File: motionU
+/*
+-------------------------------------------------------------------------------
+ =========         | tetPointVectorField
+ \\      /         | 
+  \\    /          | Name:   motionU
+   \\  /           | Family: FoamX configuration file
+    \\/            | 
+    F ield         | FOAM version: 2.2
+    O peration     | Product of Nabla Ltd.
+    A and          | 
+    M anipulation  | Email: Enquiries@Nabla.co.uk
+-------------------------------------------------------------------------------
+*/
+// Field Dictionary
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "";
+    case            "";
+    instance        "0";
+    local           "";
+
+    class           tetPointVectorField;
+    object          motionU;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+dimensions      [0 1 -1 0 0 0 0];
+
+referenceLevel  (0 0 0);
+
+internalField   uniform (0 0 0);
+
+
+boundaryField
+{
+    outer      
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+}
+
+
+// ************************************************************************* //

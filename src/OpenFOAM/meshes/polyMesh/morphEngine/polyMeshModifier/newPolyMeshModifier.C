@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     polyMeshModifier
@@ -44,13 +44,13 @@ autoPtr<polyMeshModifier> polyMeshModifier::New
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyMeshMorphEngine& mme
+    const polyMesh& mesh
 )
 {
     if (debug)
     {
         Info<< "polyMeshModifier::New(const word&, const dictionary&, "
-            << "const label, const polyMeshMorphEngine&) : "
+            << "const label, const polyMesh&) : "
             << "constructing polyMeshModifier"
             << endl;
     }
@@ -73,7 +73,7 @@ autoPtr<polyMeshModifier> polyMeshModifier::New
             << exit(FatalIOError);
     }
 
-    return autoPtr<polyMeshModifier>(cstrIter()(name, dict, index, mme));
+    return autoPtr<polyMeshModifier>(cstrIter()(name, dict, index, mesh));
 }
 
 

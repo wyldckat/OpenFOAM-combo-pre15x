@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     combustionMixture
@@ -36,7 +36,7 @@ SourceFiles
 #define combustionMixture_H
 
 #include "volFields.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "speciesTable.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -59,7 +59,7 @@ protected:
         speciesTable species_;
 
         //- Species mass fractions
-        ptrList<volScalarField> Y_;
+        PtrList<volScalarField> Y_;
 
 
 public:
@@ -78,13 +78,13 @@ public:
     // Member functions
 
         //- Return the mass-fraction fields
-        ptrList<volScalarField>& Y()
+        PtrList<volScalarField>& Y()
         {
             return Y_;
         }
 
         //- Return the const mass-fraction fields
-        const ptrList<volScalarField>& Y() const
+        const PtrList<volScalarField>& Y() const
         {
             return Y_;
         }

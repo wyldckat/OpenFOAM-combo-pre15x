@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     errorManip
@@ -32,7 +32,7 @@ Description
 
 Usage
 
-    error << "message1" << "message2" << FoamDataType << exit(error, status);
+    error << "message1" << "message2" << FoamDataType << exit(error, errNo);
     error << "message1" << "message2" << FoamDataType << abort(error);
 
 \*---------------------------------------------------------------------------*/
@@ -121,9 +121,9 @@ inline Ostream& operator<<(Ostream& os, errorManipArg<Err, T> m)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-inline errorManipArg<error, int> exit(error& err, const int status = 1)
+inline errorManipArg<error, int> exit(error& err, const int errNo = 1)
 {
-    return errorManipArg<error, int>(&error::exit, err, status);
+    return errorManipArg<error, int>(&error::exit, err, errNo);
 }
 
 inline errorManip<error> abort(error& err)
@@ -132,9 +132,9 @@ inline errorManip<error> abort(error& err)
 }
 
 
-inline errorManipArg<IOerror, int> exit(IOerror& err, const int status = 1)
+inline errorManipArg<IOerror, int> exit(IOerror& err, const int errNo = 1)
 {
-    return errorManipArg<IOerror, int>(&IOerror::exit, err, status);
+    return errorManipArg<IOerror, int>(&IOerror::exit, err, errNo);
 }
 
 inline errorManip<IOerror> abort(IOerror& err)

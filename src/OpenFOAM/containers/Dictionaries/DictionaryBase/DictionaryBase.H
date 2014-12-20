@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     DictionaryBase
@@ -74,6 +74,12 @@ class DictionaryBase
         HashTable<T*> hashedTs_;
 
 
+    // Private Member functions
+
+        // Add the IDLListType entries into the HashTable
+        void addEntries();
+
+
 public:
 
     // Constructors
@@ -83,6 +89,13 @@ public:
 
         //- Copy construct
         DictionaryBase(const DictionaryBase&);
+
+        //- Construct from Istream using given Istream constructor class
+        template<class INew>
+        DictionaryBase(Istream& is, const INew& inewt);
+
+        //- Construct from Istream
+        DictionaryBase(Istream& is);
 
 
     // Member functions

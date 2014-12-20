@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -334,7 +334,8 @@ void Foam::triSurfaceTools::otherEdges
     {
         const edgeList& edges = surf.edges();
 
-        Warning<< "Face consisting of edges:";
+        WarningIn("Foam::triSurfaceTools::otherEdges")
+            << "Face consisting of edges:";
         forAll(myEdges, myEdgeI)
         {
             Warning<< ' ' << edges[myEdges[myEdgeI]];
@@ -1994,8 +1995,7 @@ Foam::triSurface Foam::triSurfaceTools::triangulate
 
         if (verbose)
         {
-            Sout<< '[' << Pstream::myProcNo() << "] "
-                << patch.name() << " : generated " << nTriTotal
+            Pout<< patch.name() << " : generated " << nTriTotal
                 << " triangles from " << patch.size() << " faces with"
                 << " new patchid " << newPatchI << endl;
         }
@@ -2112,8 +2112,7 @@ Foam::triSurface Foam::triSurfaceTools::triangulateFaceCentre
 
         if (verbose)
         {
-            Sout<< '[' << Pstream::myProcNo() << "] "
-                << patch.name() << " : generated " << nTriTotal
+            Pout<< patch.name() << " : generated " << nTriTotal
                 << " triangles from " << patch.size() << " faces with"
                 << " new patchid " << newPatchI << endl;
         }

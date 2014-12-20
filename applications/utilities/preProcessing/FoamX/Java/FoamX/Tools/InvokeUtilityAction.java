@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Tools;
@@ -34,7 +34,7 @@ import org.omg.CORBA.StringHolder;
 import FoamXServer.IDictionaryEntryHolder;
 import FoamXServer.CaseBrowser.ICaseBrowser;
 import FoamXServer.CaseServer.ICaseServer;
-import FoamXServer.UtilityDescriptor;
+import FoamXServer.ApplicationDescriptor;
 
 import FoamX.App;
 import FoamX.Editors.StringListEditor;
@@ -107,10 +107,10 @@ public class InvokeUtilityAction
             // Source must have a utilityDescriptor client property.
             if (evt.getSource() instanceof JComponent)
             {
-                // Get UtilityDescriptor object.
+                // Get ApplicationDescriptor object.
                 JComponent comp = (JComponent)evt.getSource();
-                UtilityDescriptor desc =
-                    (UtilityDescriptor)comp.getClientProperty
+                ApplicationDescriptor desc =
+                    (ApplicationDescriptor)comp.getClientProperty
                     (
                         "utilityDescriptor"
                     );
@@ -137,7 +137,7 @@ public class InvokeUtilityAction
     /** construct argument list for utility */
     static public String[] makeUtilityArgs
     (
-        UtilityDescriptor desc,
+        ApplicationDescriptor desc,
         String caseRoot,
         String caseName
     )
@@ -217,7 +217,7 @@ public class InvokeUtilityAction
 
     //--------------------------------------------------------------------------
 
-//    public void invokeCaseServerUtility(UtilityDescriptor desc)
+//    public void invokeCaseServerUtility(ApplicationDescriptor desc)
 //    {
 //        try
 //        {
@@ -308,94 +308,42 @@ public class InvokeUtilityAction
 
     //--------------------------------------------------------------------------
 
-    public void invokeCaseBrowserUtility(UtilityDescriptor desc)
+    public void invokeCaseBrowserUtility(ApplicationDescriptor desc)
     {
         try
         {
-            // See if a client side bean has been defined for this action.
-            if (desc.clientBean.length()> 0)
+            // Get the DictionaryEntry reference for this dictionary.
+            IDictionaryEntryHolder dictHolder = new IDictionaryEntryHolder();
+            caseBrowser_.foamProperties().getUtilityControlDict
+            (
+                desc.name,
+                caseRoot_,
+                caseName_,
+                dictHolder
+            );
+
+
+            DictionaryCache controlDict = null;
+            if (dictHolder.value != null)
             {
-                // Load the specified bean.
-                Object utilityObj;
-                try
-                {
-                    ClassLoader loader = ClassLoader.getSystemClassLoader();
-                    utilityObj =
-                        java.beans.Beans.instantiate(loader, desc.clientBean);
-                }
-                catch (Exception ex)
-                {
-                    throw new Exception
-                    (
-                        "Couldn't instantiate utility bean " + desc.clientBean
-                        + "."
-                    );
-                }
-
-                // Make sure that this bean supports the IUtility interface.
-                java.lang.Class c;
-                c = Class.forName("FoamX.Tools.IUtility");
-                if (!java.beans.Beans.isInstanceOf(utilityObj, c))
-                {
-                    throw new Exception
-                    (
-                        "Utility bean " + desc.clientBean
-                        + " does not support the IUtility interface."
-                    );
-                }
-
-                // Invoke the utility.
-                IUtility utilityBean = (IUtility)utilityObj;
-                utilityBean.prepareUtility();
-                utilityBean.invokeBrowserUtility
+                controlDict = (DictionaryCache)DictionaryEntryCache.New
                 (
-                    desc,
-                    caseBrowser_,
-                    caseRoot_,
-                    caseName_
+                    dictHolder.value
                 );
             }
-            else
-            {
-                // Get the DictionaryEntry reference for this dictionary.
-                IDictionaryEntryHolder dictHolder =
-                    new IDictionaryEntryHolder();
-                caseBrowser_.foamProperties().getUtilityControlDict
-                (
-                    desc.name,
-                    caseRoot_,
-                    caseName_,
-                    dictHolder
-                );
 
-
-                DictionaryCache controlDict = null;
-                if (dictHolder.value != null)
-                {
-                    controlDict =
-                        (DictionaryCache)DictionaryEntryCache.New
-                        (
-                            dictHolder.value
-                        );
-                }
-
-                RunPanel runPanel = new RunPanel
-                (
-                    App.getRootFrame(),
-                    caseBrowser_,
-                    caseRoot_,
-                    caseName_,
-                    desc.name,
-                    false,              // Is utility
-                    desc.name + "Dict",
-                    controlDict
-                );
-                runPanel.show();
-            }
-        }
-        catch (FoamXCancel  ex)
-        {
-            // Editing of argument list was cancelled.
+            RunPanel runPanel = new RunPanel
+            (
+                App.getRootFrame(),
+                caseBrowser_,
+                caseRoot_,
+                caseName_,
+                desc.name,
+                false,              // Is utility
+                desc.name + "Dict",
+                controlDict
+            );
+            runPanel.show();
         }
         catch (Exception ex)
         {

@@ -7,7 +7,7 @@ if (transSonic)
 {
     surfaceScalarField phid =
         fvc::interpolate(thermo->psi())
-       *((fvc::interpolate(U) & mesh.Sf()) - mesh.phi());
+       *((fvc::interpolate(U) & mesh.Sf()) - fvc::meshPhi(rho, U));
 
     for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     {
@@ -31,7 +31,7 @@ if (transSonic)
 else
 {
     phi = fvc::interpolate(rho)
-         *((fvc::interpolate(U) & mesh.Sf()) - mesh.phi());
+         *((fvc::interpolate(U) & mesh.Sf()) - fvc::meshPhi(rho, U));
 
     for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
     {

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     edgeInterpolation
@@ -49,6 +49,8 @@ SourceFiles
 namespace Foam
 {
 
+class polyMesh;
+
 /*---------------------------------------------------------------------------*\
                      Class edgeInterpolation Declaration
 \*---------------------------------------------------------------------------*/
@@ -62,6 +64,9 @@ class edgeInterpolation
 
         // Reference to faMesh
         const faMesh& mesh_;
+
+        //- Geodesic distance between centroides of neighbour finite areas
+        mutable edgeScalarField* lPN_;
 
         //- Cenral-differencing weighting factors
         mutable edgeScalarField* weightingFactors_;
@@ -87,6 +92,9 @@ class edgeInterpolation
 
 
     // Private member functions
+
+        //- Construct geodesic distance between P and N
+        void makeLPN() const;
 
         //- Construct central-differencing weighting factors
         void makeWeights() const;
@@ -123,7 +131,7 @@ public:
     // Constructors
 
         //- Construct given an faMesh
-        edgeInterpolation(const faMesh&);
+        edgeInterpolation(const faMesh&, const polyMesh&);
 
 
     // Destructor
@@ -138,6 +146,9 @@ public:
         {
             return mesh_;
         }
+
+        //- Return reference to PN geodesic distance
+        const edgeScalarField& lPN() const;
 
         //- Return reference to weighting factors array
         const edgeScalarField& weights() const;

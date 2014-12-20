@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Constructors & destructor for regIOobject.
@@ -54,7 +54,6 @@ regIOobject::regIOobject(const IOobject& io)
     registered_(false),
     registries_(false),
     lastModified_(0),
-    updated_(false),
     isPtr_(NULL)
 {
     // Register with objectRegistry if requested
@@ -72,7 +71,6 @@ regIOobject::regIOobject(const regIOobject& rio)
     registered_(false),
     registries_(false),
     lastModified_(rio.lastModified_),
-    updated_(false),
     isPtr_(NULL)
 {
     // Do not register copy with objectRegistry
@@ -87,12 +85,11 @@ regIOobject::regIOobject(const regIOobject& rio, bool registerCopy)
     registered_(false),
     registries_(false),
     lastModified_(rio.lastModified_),
-    updated_(false),
     isPtr_(NULL)
 {
     if (registerCopy && rio.registered_)
     {
-        ((regIOobject&)rio).checkOut();
+        const_cast<regIOobject&>(rio).checkOut();
         checkIn();
     }
 }
@@ -116,8 +113,12 @@ regIOobject::~regIOobject()
         delete isPtr_;
     }
 
-    // Check out of objectRegistry
-    checkOut();
+    // Check out of objectRegistry if not owned by the registry
+
+    if (!registries_)
+    {
+        checkOut();
+    }
 }
 
 
@@ -132,8 +133,7 @@ void regIOobject::checkIn()
         {
             if (objectRegistry::debug)
             {
-                Warning
-                    << "regIOobject::checkIn() : "
+                WarningIn("regIOobject::checkIn()")
                     << "failed to register object " << name()
                     << " the name already exists in the objectRegistry"
                     << endl;
@@ -167,22 +167,6 @@ void regIOobject::rename(const word& newName)
 
     // Re-register object with objectRegistry
     checkIn();
-}
-
-
-// Reset the updated flag
-void regIOobject::resetUpdate()
-{
-    updated_ = false;
-}
-
-
-// Update this object if it hasn't already been updated
-bool regIOobject::update()
-{
-    updated_ = true;
-
-    return true;
 }
 
 

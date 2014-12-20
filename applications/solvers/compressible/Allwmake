@@ -2,6 +2,7 @@
 set -x
 
 wmake rhoTurbFoam
+wmake rhoSimpleFoam
 wmake sonicFoam
 wmake rhoSonicFoam
 wmake rhopSonicFoam

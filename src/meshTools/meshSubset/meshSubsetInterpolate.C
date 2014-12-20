@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -48,7 +48,7 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > meshSubset::interpolate
     // Create and map the patch field values
     const labelList& pm = patchMap();
 
-    ptrList<fvPatchField<Type> > patchFields(pm.size());
+    PtrList<fvPatchField<Type> > patchFields(pm.size());
 
     forAll (patchFields, patchI)
     {
@@ -78,6 +78,8 @@ tmp<GeometricField<Type, fvPatchField, volMesh> > meshSubset::interpolate
                     patchFieldSubset(*this, patchI)
                 )
             );
+
+            //?Want to do anything for internal faces added to this patch?
         }
     }
 

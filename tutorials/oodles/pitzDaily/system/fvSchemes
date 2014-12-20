@@ -38,10 +38,11 @@ divSchemes
 {
     default         none;
     div(phi,U)      Gauss linear;
-    div(phi,k)      Gauss linear;
-    div(phi,B)      Gauss linear;
+    div(phi,k)      Gauss limitedLinear 1;
+    div(phi,B)      Gauss limitedLinear 1;
+    div(phi,nuTilda) Gauss limitedLinear 1;
+
     div(B)          Gauss linear;
-    div(phi,nuTilda) Gauss linear;
     div((nuEff*dev(grad(U).T()))) Gauss linear;
 }
 
@@ -50,15 +51,15 @@ laplacianSchemes
     default         none;
     laplacian(nuEff,U) Gauss linear corrected;
     laplacian(1|A(U),p) Gauss linear corrected;
-    laplacian(DkEff,k) Gauss linear limited 0.5;
-    laplacian(DBEff,B) Gauss linear limited 0.5;
-    laplacian(DnuTildaEff,nuTilda) Gauss linear limited 0.5;
+    laplacian(DkEff,k) Gauss linear corrected;
+    laplacian(DBEff,B) Gauss linear corrected;
+    laplacian(DnuTildaEff,nuTilda) Gauss linear corrected;
 }
 
 interpolationSchemes
 {
     default         linear;
-    interpolate(HbyA) linear;
+    interpolate(U)  linear;
 }
 
 snGradSchemes

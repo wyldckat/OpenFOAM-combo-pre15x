@@ -20,16 +20,11 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
-// Foam header files.
-#include "word.H"
-#include "string.H"
-#include "IFstream.H"
+// Foam header files
 #include "OSspecific.H"
 
 // FoamX header files.
@@ -52,7 +47,6 @@ FoamX::IGeometricFieldImpl::IGeometricFieldImpl
 )
 :
     internalFieldValue_(NULL)
-    //,referenceLevelValue_(NULL)
 {
     static const char* functionName =
         "FoamX::IGeometricFieldImpl::IGeometricFieldImpl"
@@ -93,23 +87,6 @@ FoamX::IGeometricFieldImpl::IGeometricFieldImpl
         // Get the field name.
         fieldName_ = fieldDescriptor_->name();
 
-        // Create the reference level value.
-        /*
-        ITypeDescriptor_var type = fieldDescriptor_->typeDescriptor();
-        referenceLevelValue_ = new IDictionaryEntryImpl(type);
-        if (referenceLevelValue_ == NULL)
-        {
-            throw FoamXError
-            (
-                E_FAIL,
-                "Failed to create reference level value "
-                "dictionary entry object.",
-                functionName,
-                __FILE__, __LINE__
-            );
-        }
-        */
-
         // Create the internal field value.
         ITypeDescriptor_var fieldType = fieldDescriptor_->fieldTypeDescriptor();
         internalFieldValue_ = new IDictionaryEntryImpl(fieldType);
@@ -142,13 +119,6 @@ FoamX::IGeometricFieldImpl::~IGeometricFieldImpl()
     {
         internalFieldValue_->_remove_ref();
     }
-
-    /*
-    if (referenceLevelValue_ != NULL)
-    {
-        referenceLevelValue_->_remove_ref();
-    }
-    */
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -201,39 +171,6 @@ void FoamX::IGeometricFieldImpl::getInternalFieldValue
     }
     CATCH_ALL(functionName);
 }
-
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-/*
-void FoamX::IGeometricFieldImpl::getReferenceLevelValue
-(
-    IDictionaryEntry_out referenceLevelValue
-)
-{
-    static const char* functionName =
-        "FoamX::IGeometricFieldImpl::getReferenceLevelValue"
-        "(IDictionaryEntry_out referenceLevelValue)";
-
-    LogEntry log(functionName, __FILE__, __LINE__);
-
-    try
-    {
-        if (referenceLevelValue_ == NULL)
-        {
-            throw FoamXError
-            (
-                E_UNEXPECTED,
-                "Invalid reference level value object.",
-                functionName,
-                __FILE__, __LINE__
-            );
-        }
-
-        referenceLevelValue = referenceLevelValue_->_this();
-    }
-    CATCH_ALL(functionName);
-}
-*/
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -387,7 +324,7 @@ void FoamX::IGeometricFieldImpl::deletePatch(const char* patchName)
         // Remove from patch field parameter map if necessary.
         if (patchFields_.found(patchName))
         {
-            Foam::HashTable<IDictionaryEntryImpl*>::iterator iter =
+            HashTable<IDictionaryEntryImpl*>::iterator iter =
                 patchFields_.find(patchName);
             patchFields_.erase(iter);     // Releases reference.
         }
@@ -437,7 +374,6 @@ CORBA::Boolean FoamX::IGeometricFieldImpl::modified()
     try
     {
         if (internalFieldValue_->modified()) return true;
-        //if (referenceLevelValue_->modified()) return true;
 
         for
         (
@@ -457,10 +393,10 @@ CORBA::Boolean FoamX::IGeometricFieldImpl::modified()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
+void FoamX::IGeometricFieldImpl::load(const dictionary& fieldDict)
 {
     static const char* functionName =
-        "FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)";
+        "FoamX::IGeometricFieldImpl::load(const dictionary& fieldDict)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -476,7 +412,6 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
         if
         (
             !fieldDict.found("internalField")
-       //|| !fieldDict.found("referenceLevel")
          || !fieldDict.found("boundaryField")
         )
         {
@@ -492,9 +427,6 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
         // Read the internal field value.
         internalFieldValue_->load(fieldDict.lookup("internalField"));
 
-        // Read the reference level value.
-        //referenceLevelValue_->load(fieldDict.lookup("referenceLevel"));
-
         // Open boundary field dictionary.
         const dictionary& boundaryFieldDict(fieldDict.subDict("boundaryField"));
 
@@ -502,7 +434,7 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
         wordList patchNames = patchFieldNames_.toc();
         forAll(patchNames, i)
         {
-            Foam::word patchName(patchNames[i]);
+            word patchName(patchNames[i]);
 
             if (!boundaryFieldDict.found(patchName))
             {
@@ -511,8 +443,8 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
                     << "' not found in field dictionary '" << fieldName_
                     << "'." << endl;
 
-                Warning
-                    << "Warning : Patch dictionary '" << patchName
+                WarningIn(functionName)
+                    << "Patch dictionary '" << patchName
                     << "' not found in field dictionary '" << fieldName_
                     << "'." << endl;
                 continue;
@@ -535,7 +467,7 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
             }
 
             // Read the patch field type. This is the actual type not the key.
-            Foam::word patchFieldType(patchDict.lookup("type"));
+            word patchFieldType(patchDict.lookup("type"));
 
             // Get the PatchFieldDescriptor object. Search by type.
             ITypeDescriptor_var pfDesc;
@@ -553,8 +485,8 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
                     << "' in field dictionary '" << fieldName_ << "'."
                     << endl;
 
-                Warning
-                    << "Warning : Invalid patch field type '" << patchFieldType
+                WarningIn(functionName)
+                    << "Invalid patch field type '" << patchFieldType
                     << "' for patch '" << patchName
                     << "' in field dictionary '" << fieldName_ << "'."
                     << endl;
@@ -564,7 +496,7 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
 
             // Check that the patch field type is valid for the boundary type
             // specified for this patch.
-            Foam::word boundaryPatchFieldType = patchFieldNames_[patchName];
+            word boundaryPatchFieldType = patchFieldNames_[patchName];
             if (patchFieldType != boundaryPatchFieldType)
             {
                 log << "Warning : Incorrect patch field type '"
@@ -574,7 +506,8 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
                     << "' for field '" << fieldName_ << "'."
                     << endl;
 
-                Warning << "Warning : Incorrect patch field type '"
+                WarningIn(functionName)
+                    << "Incorrect patch field type '"
                     << patchFieldType << "' for patch '" << patchName << "'."
                     << endl << "          Boundary condition specifies '"
                     << boundaryPatchFieldType
@@ -588,7 +521,7 @@ void FoamX::IGeometricFieldImpl::load(const Foam::dictionary& fieldDict)
             // Release any previous patch field parameter object.
             if (patchFields_.found(patchName))
             {
-                Foam::HashTable<IDictionaryEntryImpl*>::iterator iter =
+                HashTable<IDictionaryEntryImpl*>::iterator iter =
                     patchFields_.find(patchName);
                 patchFields_.erase(iter);
             }
@@ -660,10 +593,9 @@ void FoamX::IGeometricFieldImpl::save
     {
         // Validate the dictionary entry items.
         internalFieldValue_->validate();
-        //referenceLevelValue_->validate();
 
         // Construct class name (eg, "volScalarField").
-        Foam::word className
+        word className
         (
             word(fieldDescriptor_->geometryDescriptor()->name())
           & word(fieldDescriptor_->fieldTypeDescriptor()->name())
@@ -681,13 +613,6 @@ void FoamX::IGeometricFieldImpl::save
         DimensionSet fieldDimension = fieldDescriptor_->dimensions();
         dictWriter.writeEntry("dimensions", fieldDimension);
         dictWriter.writeEndl();
-
-        /*
-        dictWriter.writeKeyword("referenceLevel");
-        referenceLevelValue_->save(dictWriter, false);
-        dictWriter.endEntry();
-        dictWriter.writeEndl();
-        */
 
         // Write internal field and reference values.
         dictWriter.writeKeyword("internalField");

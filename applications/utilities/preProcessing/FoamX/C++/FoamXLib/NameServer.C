@@ -20,13 +20,11 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
-// Foam header files.
-#include "fileName.H"
+
+// Foam header files
 #include "IFstream.H"
 #include "OSspecific.H"
 
@@ -118,7 +116,7 @@ void FoamX::NameServer::connect(CORBA::ORB_ptr pOrb)
             if (CORBA::is_nil(initServ))
             {
                 // See if the name service reference file exists.
-                Foam::fileName nsRefFile = Paths::user/"ns.ref";
+                fileName nsRefFile = Paths::tmp/"ns.ref";
                 if (!exists(nsRefFile))
                 {
                     throw FoamXError
@@ -134,7 +132,7 @@ void FoamX::NameServer::connect(CORBA::ORB_ptr pOrb)
                 log << "Reading name service reference file '"
                     << nsRefFile << "'." << endl;
 
-                word ior((Foam::IFstream(nsRefFile)()));
+                word ior((IFstream(nsRefFile)()));
                 initServ = pOrb->string_to_object(ior.c_str());
             }
         }
@@ -245,13 +243,13 @@ void FoamX::NameServer::disconnect()
 
 void FoamX::NameServer::createContext
 (
-    const Foam::fileName& path,
+    const fileName& path,
     bool failAlreadyBound
 )
 {
     static const char* functionName =
         "FoamX::NameServer::createContext"
-        "(const Foam::fileName& path, bool failAlreadyBound)";
+        "(const fileName& path, bool failAlreadyBound)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -293,7 +291,7 @@ void FoamX::NameServer::createContext
     }
     catch (CosNaming::NamingContext::NotFound& ex)
     {
-        Foam::string msg = "CosNaming::NamingContext::NotFound Exception : ";
+        string msg = "CosNaming::NamingContext::NotFound Exception : ";
 
         if (ex.why == CosNaming::NamingContext::missing_node)
         {
@@ -371,22 +369,22 @@ void FoamX::NameServer::createContext
 
 void FoamX::NameServer::createContexts
 (
-    const Foam::fileName& path,
+    const fileName& path,
     bool failAlreadyBound
 )
 {
     static const char* functionName =
         "FoamX::NameServer::createContext"
-        "(const Foam::fileName& path, bool failAlreadyBound)";
+        "(const fileName& path, bool failAlreadyBound)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
 
     // Pass errors through
 
-    Foam::wordList components = path.components();
+    wordList components = path.components();
 
-    Foam::fileName dir = "";
+    fileName dir = "";
 
     forAll(components, compI)
     {
@@ -404,10 +402,10 @@ void FoamX::NameServer::createContexts
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::NameServer::removeContext(const Foam::fileName& path)
+void FoamX::NameServer::removeContext(const fileName& path)
 {
     static const char* functionName =
-        "FoamX::NameServer::removeContext(const Foam::fileName& path)";
+        "FoamX::NameServer::removeContext(const fileName& path)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -450,7 +448,7 @@ void FoamX::NameServer::removeContext(const Foam::fileName& path)
     }
     catch (CosNaming::NamingContext::NotFound& ex)
     {
-        Foam::string msg = "CosNaming::NamingContext::NotFound Exception : ";
+        string msg = "CosNaming::NamingContext::NotFound Exception : ";
 
         if (ex.why == CosNaming::NamingContext::missing_node)
         {
@@ -538,17 +536,17 @@ void FoamX::NameServer::removeContext(const Foam::fileName& path)
 
 void FoamX::NameServer::removeContexts
 (
-    const Foam::fileName& root,
-    const Foam::fileName& path
+    const fileName& root,
+    const fileName& path
 )
 {
     static const char* functionName =
         "FoamX::NameServer::removeContexts"
-        "(const Foam::fileName& root, const Foam::fileName& path)";
+        "(const fileName& root, const fileName& path)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
-    Foam::fileName dir(path);
+    fileName dir(path);
 
     while((dir != "/") && (dir != "") && (dir != root))
     {
@@ -561,14 +559,14 @@ void FoamX::NameServer::removeContexts
 
 void FoamX::NameServer::bindObject
 (
-    const Foam::fileName& name,
+    const fileName& name,
     CORBA::Object_ptr pObject,
     bool rebind
 )
 {
     static const char* functionName =
         "FoamX::NameServer::bindObject"
-        "(const Foam::fileName& name, CORBA::Object_ptr pObject, bool rebind)";
+        "(const fileName& name, CORBA::Object_ptr pObject, bool rebind)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -611,7 +609,7 @@ void FoamX::NameServer::bindObject
     }
     catch (CosNaming::NamingContext::NotFound& ex)
     {
-        Foam::string msg = "CosNaming::NamingContext::NotFound Exception : ";
+        string msg = "CosNaming::NamingContext::NotFound Exception : ";
 
         if (ex.why == CosNaming::NamingContext::missing_node)
         {
@@ -697,10 +695,10 @@ void FoamX::NameServer::bindObject
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::NameServer::unbindObject(const Foam::fileName& name)
+void FoamX::NameServer::unbindObject(const fileName& name)
 {
     static const char* functionName =
-        "FoamX::NameServer::unbindObject(const Foam::fileName& name)";
+        "FoamX::NameServer::unbindObject(const fileName& name)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -797,7 +795,7 @@ void FoamX::NameServer::unbindObject(const Foam::fileName& name)
     }
     catch (CosNaming::NamingContext::NotFound& ex)
     {
-        Foam::string msg = "CosNaming::NamingContext::NotFound Exception : ";
+        string msg = "CosNaming::NamingContext::NotFound Exception : ";
 
         if (ex.why == CosNaming::NamingContext::missing_node)
         {
@@ -883,10 +881,10 @@ void FoamX::NameServer::unbindObject(const Foam::fileName& name)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-bool FoamX::NameServer::isObjectBound(const Foam::fileName& name)
+bool FoamX::NameServer::isObjectBound(const fileName& name)
 {
     static const char* functionName =
-        "FoamX::NameServer::isObjectBound(const Foam::fileName& name)";
+        "FoamX::NameServer::isObjectBound(const fileName& name)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -967,7 +965,7 @@ bool FoamX::NameServer::isObjectBound(const Foam::fileName& name)
     }
     catch (CosNaming::NamingContext::NotFound& ex)
     {
-        Foam::string msg = "CosNaming::NamingContext::NotFound Exception : ";
+        string msg = "CosNaming::NamingContext::NotFound Exception : ";
 
         if (ex.why == CosNaming::NamingContext::missing_node)
         {
@@ -1064,10 +1062,10 @@ bool FoamX::NameServer::isObjectBound(const Foam::fileName& name)
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-CORBA::Object_ptr FoamX::NameServer::resolve(const Foam::fileName& name)
+CORBA::Object_ptr FoamX::NameServer::resolve(const fileName& name)
 {
     static const char* functionName =
-        "FoamX::NameServer::resolve(const Foam::fileName& name)";
+        "FoamX::NameServer::resolve(const fileName& name)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1099,7 +1097,7 @@ CORBA::Object_ptr FoamX::NameServer::resolve(const Foam::fileName& name)
     }
     catch (CosNaming::NamingContext::NotFound& ex)
     {
-        Foam::string msg = "CosNaming::NamingContext::NotFound Exception : ";
+        string msg = "CosNaming::NamingContext::NotFound Exception : ";
 
         if (ex.why == CosNaming::NamingContext::missing_node)
         {
@@ -1208,7 +1206,7 @@ void FoamX::NameServer::createNameFromString
 
         std::string sub;
 
-        if ((CORBA::Long)p <0)
+        if (CORBA::Long(p) <0)
         {
             sub = str.substr(pos);
         }
@@ -1222,7 +1220,7 @@ void FoamX::NameServer::createNameFromString
         name[num - 1].id   = CORBA::string_dup(sub.c_str());
         name[num - 1].kind = CORBA::string_dup("");
 
-    } while ((CORBA::Long)p>= 0);
+    } while (CORBA::Long(p) >= 0);
 }
 
 

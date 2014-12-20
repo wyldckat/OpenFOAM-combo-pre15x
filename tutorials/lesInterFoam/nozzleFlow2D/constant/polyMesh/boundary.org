@@ -43,7 +43,7 @@ inlet
 wall
 {
     type wall;
-    physicalType wallNoSurfaceTension;
+    physicalType wall;
     nFaces 70;
     startFace 41061;
 }

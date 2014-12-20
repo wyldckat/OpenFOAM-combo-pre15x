@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -210,7 +210,7 @@ bool faPatchField<Type>::areaPatchField() const
 {
     return
         internalField().size()
-     == patchMesh().boundaryMesh().mesh().nFaces();
+     == patch().boundaryMesh().mesh().nFaces();
 }
 
 // Does this patchField correspond to a areaTypeField
@@ -321,7 +321,7 @@ const faPatchField<Type2>& faPatchField<Type>::lookupPatchField
 {
     return patchField<GeometricField, Type2>
     (
-        db().lookupType(name, (GeometricField*)NULL)
+        db().lookupType(name, reinterpret_cast<GeometricField*>(NULL))
     );
 }
 
@@ -410,7 +410,7 @@ void faPatchField<Type>::operator*=
     const faPatchField<scalar>& ptf
 )
 {
-    if (&patch_ != &ptf.patchMesh())
+    if (&patch_ != &ptf.patch())
     {
         FatalErrorIn
         (
@@ -429,7 +429,7 @@ void faPatchField<Type>::operator/=
     const faPatchField<scalar>& ptf
 )
 {
-    if (&patch_ != &ptf.patchMesh())
+    if (&patch_ != &ptf.patch())
     {
         FatalErrorIn
         (
@@ -539,7 +539,7 @@ void faPatchField<Type>::operator==
     const faPatchField<Type>& ptf
 )
 {
-    (Field<Type>&)(*this) = (Field<Type>&)ptf;
+    Field<Type>::operator=(ptf);
 }
 
 
@@ -549,7 +549,7 @@ void faPatchField<Type>::operator==
     const Field<Type>& tf
 )
 {
-    (Field<Type>&)(*this) = tf;
+    Field<Type>::operator=(tf);
 }
 
 
@@ -559,7 +559,7 @@ void faPatchField<Type>::operator==
     const Type& t
 )
 {
-    (Field<Type>&)(*this) = t;
+    Field<Type>::operator=(t);
 }
 
 

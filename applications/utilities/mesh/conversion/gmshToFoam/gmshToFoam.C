@@ -20,13 +20,18 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Reads .msh file as written by Gmsh.
 
     Needs surface elements on mesh to be present and aligned with outside faces
     of the mesh. I.e. if the mesh is hexes, the outside faces need to be quads
+
+    Note: There is something seriously wrong with the ordering written in the
+    .msh file. Normal operation is to use the ordering as described
+    in the manual. Use the -autoInvert to invert based on the geometry.
+    Not very well tested.
 
 \*---------------------------------------------------------------------------*/
 
@@ -35,7 +40,6 @@ Description
 #include "polyMesh.H"
 #include "IFstream.H"
 #include "wallPolyPatch.H"
-#include "ListSearch.H"
 #include "cellModeller.H"
 #include "repatchPolyMesh.H"
 
@@ -70,59 +74,92 @@ label findFace(const primitivePatch& pp, const labelList& meshF)
 {
     const Map<label> meshPointMap = pp.meshPointMap();
 
-    // Get patch labels of meshF.
-    labelList newF(meshF.size());
-    forAll(newF, fp)
+    // meshF[0] in pp labels.
+    if (!meshPointMap.found(meshF[0]))
     {
-        newF[fp] = meshPointMap[meshF[fp]];
+        Warning<< "Not using gmsh face " << meshF
+            << " since zero vertex is not on boundary of polyMesh" << endl;
+        return -1;
     }
 
     // Find faces using first point
-    const labelList& pFaces = pp.pointFaces()[newF[0]];
+    const labelList& pFaces = pp.pointFaces()[meshPointMap[meshF[0]]];
 
     // Go through all these faces and check if there is one which uses all of
-    // newF vertices (in any order ;-)
+    // meshF vertices (in any order ;-)
     forAll(pFaces, i)
     {
         label faceI = pFaces[i];
 
         const face& f = pp[faceI];
 
-        // Count uses of vertices of newF for f
+        // Count uses of vertices of meshF for f
         label nMatched = 0;
 
         forAll(f, fp)
         {
-            if (findIndex(newF, f[fp]) != -1)
+            if (findIndex(meshF, f[fp]) != -1)
             {
                 nMatched++;
             }
         }
 
-        if (nMatched == newF.size())
+        if (nMatched == meshF.size())
         {
             return faceI;
         }
     }
 
-    FatalErrorIn("findFace") << "Problem : cannot find face " << meshF
-        << " in patch" << abort(FatalError);
+    Warning << "Could not match gmsh face " << meshF
+        << " to any of the outside mesh faces that share the same zeroth point:"
+        << IndirectList<face>(pp, pFaces) << endl;
 
     return -1;
 }
 
+
+// Determine whether cell is inside-out by checking for any wrong-oriented
+// face.
+bool correctOrientation(const pointField& points, const cellShape& shape)
+{
+    // Get centre of shape.
+    point cc(shape.centre(points));
+
+    // Get outwards pointing faces.
+    faceList faces(shape.faces());
+
+    forAll(faces, i)
+    {
+        const face& f = faces[i];
+
+        vector n(f.normal(points));
+
+        // Check if vector from any point on face to cc points outwards
+        if (((points[f[0]] - cc) & n) < 0)
+        {
+            // Incorrectly oriented
+            return false;
+        }
+    }
+
+    return true;
+}
 
 
 // Main program:
 
 int main(int argc, char *argv[])
 {
+    argList::noParallel();
     argList::validArgs.append(".msh file");
+    argList::validOptions.insert("autoInvert", "");
 
 #   include "setRootCase.H"
 #   include "createTime.H"
 
     fileName mshName(args.args()[3]);
+
+    bool autoInvert = args.options().found("autoInvert");
 
     IFstream inFile(mshName);
 
@@ -312,25 +349,65 @@ int main(int argc, char *argv[])
         else if (elmType == MSHPRISM)
         {
             inFile
-                >> prismPoints[3] >> prismPoints[4] >> prismPoints[5]
-                >> prismPoints[0] >> prismPoints[1] >> prismPoints[2];
+                >> prismPoints[0] >> prismPoints[1] >> prismPoints[2]
+                >> prismPoints[3] >> prismPoints[4] >> prismPoints[5];
 
             renumber(mshToFoam, prismPoints);
 
-            cells[cellI++] = cellShape(prism, prismPoints);
+            cells[cellI] = cellShape(prism, prismPoints);
+
+            const cellShape& cell = cells[cellI];
+
+            if (autoInvert && !correctOrientation(points, cell))
+            {
+                Info<< "Inverting prism " << cellI << endl;
+                // Reorder prism.
+                prismPoints[0] = cell[0];
+                prismPoints[1] = cell[2];
+                prismPoints[2] = cell[1];
+                prismPoints[3] = cell[3];
+                prismPoints[4] = cell[4];
+                prismPoints[5] = cell[5];
+
+                cells[cellI] = cellShape(prism, prismPoints);
+            }
+
+            cellI++;
 
             nPrism++;
         }
         else if (elmType == MSHHEX)
         {
             inFile
-                >> hexPoints[0] >> hexPoints[1] >> hexPoints[2]
-                >> hexPoints[3] >> hexPoints[4] >> hexPoints[5]
+                >> hexPoints[0] >> hexPoints[1]
+                >> hexPoints[2] >> hexPoints[3]
+                >> hexPoints[4] >> hexPoints[5]
                 >> hexPoints[6] >> hexPoints[7];
 
             renumber(mshToFoam, hexPoints);
 
-            cells[cellI++] = cellShape(hex, hexPoints);
+            cells[cellI] = cellShape(hex, hexPoints);
+
+            const cellShape& cell = cells[cellI];
+
+            if (autoInvert && !correctOrientation(points, cell))
+            {
+                Info<< "Inverting hex " << cellI << endl;
+
+                // Reorder hex.
+                hexPoints[0] = cell[4];
+                hexPoints[1] = cell[5];
+                hexPoints[2] = cell[6];
+                hexPoints[3] = cell[7];
+                hexPoints[4] = cell[0];
+                hexPoints[5] = cell[1];
+                hexPoints[6] = cell[2];
+                hexPoints[7] = cell[3];
+
+                cells[cellI] = cellShape(hex, hexPoints);
+            }
+
+            cellI++;
 
             nHex++;
         }
@@ -426,7 +503,7 @@ int main(int argc, char *argv[])
     // Go through all the patchFaces and find corresponding face in pp.
     forAll(patchFaces, patchI)
     {
-        DynamicList<face>& pFaces = patchFaces[patchI];
+        const DynamicList<face>& pFaces = patchFaces[patchI];
 
         forAll(pFaces, i)
         {
@@ -435,9 +512,12 @@ int main(int argc, char *argv[])
             // Find face in pp using all vertices of f.
             label patchFaceI = findFace(pp, f);
 
-            label meshFaceI = pp.start() + patchFaceI;
+            if (patchFaceI != -1)
+            {
+                label meshFaceI = pp.start() + patchFaceI;
 
-            mesh.changePatchID(meshFaceI, patchI);
+                mesh.changePatchID(meshFaceI, patchI);
+            }
         }
     }
 
@@ -455,3 +535,4 @@ int main(int argc, char *argv[])
 
 
 // ************************************************************************* //
+

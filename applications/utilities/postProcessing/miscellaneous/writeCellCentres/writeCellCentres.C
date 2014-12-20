@@ -20,9 +20,11 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
+    Write the three components of the cell centres as volScalarFields so
+    they can be used in postprocessing in thresholding.
 
 \*---------------------------------------------------------------------------*/
 
@@ -39,48 +41,67 @@ using namespace Foam;
 
 int main(int argc, char *argv[])
 {
+#   include "addTimeOptions.H"
 #   include "setRootCase.H"
 #   include "createTime.H"
+
+
+    // Get times list
+    instantList Times = runTime.times();
+
+#   include "checkTimeOptions.H"
+
+    runTime.setTime(Times[startTime], startTime);
+
 #   include "createMesh.H"
 
-    volVectorField cc
-    (
-        IOobject
-        (
-            "cellCentres",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::AUTO_WRITE
-        ),
-        mesh.C()
-    );
-
-    Info<< "Writing cellCentre positions to " << cc.name() << " in "
-        << runTime.timeName() << endl;
-
-    cc.write();
-
-
-    Info<< "Writing components of cellCentre positions to volScalarFields"
-        << " ccx, ccy, ccz in " <<  runTime.timeName() << endl;
-
-    for (direction i=0; i<vector::nComponents; i++)
+    for (label i=startTime; i<endTime; i++)
     {
-        volScalarField cci
+        runTime.setTime(Times[i], i);
+
+        Info<< "Time = " << runTime.timeName() << endl;
+
+        // Check for new mesh
+        mesh.readUpdate();
+
+        volVectorField cc
         (
             IOobject
             (
-                "cc" + word(vector::componentNames[i]),
+                "cellCentres",
                 runTime.timeName(),
                 mesh,
                 IOobject::NO_READ,
                 IOobject::AUTO_WRITE
             ),
-            mesh.C().component(i)
+            mesh.C()
         );
 
-        cci.write();
+        //Info<< "Writing cellCentre positions to " << cc.name() << " in "
+        //    << runTime.timeName() << endl;
+        //
+        //cc.write();
+
+        Info<< "Writing components of cellCentre positions to volScalarFields"
+            << " ccx, ccy, ccz in " <<  runTime.timeName() << endl;
+
+        for (direction i=0; i<vector::nComponents; i++)
+        {
+            volScalarField cci
+            (
+                IOobject
+                (
+                    "cc" + word(vector::componentNames[i]),
+                    runTime.timeName(),
+                    mesh,
+                    IOobject::NO_READ,
+                    IOobject::AUTO_WRITE
+                ),
+                mesh.C().component(i)
+            );
+
+            cci.write();
+        }
     }
 
     Info << nl << "End" << endl;

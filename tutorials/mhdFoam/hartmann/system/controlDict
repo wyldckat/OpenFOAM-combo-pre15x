@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass mhdFoam;
+application mhdFoam;
 
 startFrom       startTime;
 
@@ -38,7 +38,7 @@ writeControl    timeStep;
 
 writeInterval   100;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

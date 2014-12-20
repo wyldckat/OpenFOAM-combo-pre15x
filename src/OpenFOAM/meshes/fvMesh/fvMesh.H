@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     fvMesh
@@ -56,10 +56,10 @@ SourceFiles
 #include "volFieldsFwd.H"
 #include "surfaceFieldsFwd.H"
 #include "pointFieldsFwd.H"
+#include "slicedVolFieldsFwd.H"
+#include "slicedSurfaceFieldsFwd.H"
 #include "lduAddressing.H"
 #include "className.H"
-
-#define BAD_MESH_STABILISATION
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -82,6 +82,10 @@ class fvMesh
         //- Boundary mesh
         fvBoundaryMesh boundary_;
 
+        //- vector of valid directions in mesh
+        //  defined according to the presence of empty patches
+        Vector<label> directions_;
+
 
     // Demand-driven data
 
@@ -100,16 +104,16 @@ class fvMesh
         mutable scalarIOField* V00Ptr_;
 
         //- Face area vectors
-        mutable surfaceVectorField* SfPtr_;
+        mutable slicedSurfaceVectorField* SfPtr_;
 
         //- Mag face area vectors
         mutable surfaceScalarField* magSfPtr_;
 
         //- Cell centres
-        mutable volVectorField* CPtr_;
+        mutable slicedVolVectorField* CPtr_;
 
         //- Face centres
-        mutable surfaceVectorField* CfPtr_;
+        mutable slicedSurfaceVectorField* CfPtr_;
 
         //- Face motion fluxes
         mutable surfaceScalarField* phiPtr_;
@@ -134,6 +138,7 @@ class fvMesh
 
        // Make geometric data
 
+            Vector<label> makeDirections();
             void makeSf() const;
             void makeMagSf() const;
             void makePhi() const;
@@ -148,23 +153,6 @@ class fvMesh
         //- Disallow assignment
         void operator=(const fvMesh&);
 
-protected:
-
-        //- Map all fields in time using current polyMesh::morphMap.
-        virtual void mapFields();
-
-        //- Update mesh info after topo change
-        virtual void handleMorph();
-
-        //- Remove boundary patches. Warning: fvPatchFields hold ref to
-        //  these fvPatches.
-        void removeFvBoundary();
-
-        //- Return cell face motion fluxes
-        surfaceScalarField& setPhi();
-
-        //- Return old-time cell volumes
-        scalarField& setV0();
 
 public:
 
@@ -187,19 +175,6 @@ public:
             const cellList& cells
         );
 
-        //- Construct from cell shapes
-        fvMesh
-        (
-            const IOobject& io,
-            const pointField& points,
-            const cellShapeList& shapes,
-            const faceListList& boundaryFaces,
-            const wordList& boundaryPatchNames,
-            const wordList& boundaryPatchTypes,
-            const word& defaultBoundaryPatchType,
-            const wordList& boundaryPatchPhysicalTypes
-        );
-
 
     // Destructor
 
@@ -211,11 +186,12 @@ public:
         // Helpers
 
             //- Add boundary patches. Constructor helper
-            void addFvPatches(const List<polyPatch* > &);
+            void addFvPatches(const List<polyPatch*>&);
 
             //- Update the mesh based on the mesh files saved in time
             //  directories
             virtual readUpdateState readUpdate();
+
 
         // Access
 
@@ -235,6 +211,13 @@ public:
 
             //- Return reference to boundary mesh
             const fvBoundaryMesh& boundary() const;
+
+            //- Return the vector of valid directions in mesh
+            //  defined according to the presence of empty patches
+            const Vector<label>& directions() const
+            {
+                return directions_;
+            }
 
             //- Return cell volumes
             const scalarField& V() const;
@@ -290,6 +273,22 @@ public:
 
             //- Move points, returns volumes swept by faces in motion
             virtual tmp<scalarField> movePoints(const vectorField&);
+
+            //- Map all fields in time using current polyMesh::morphMap.
+            virtual void mapFields();
+
+            //- Update mesh info after topo change
+            virtual void handleMorph();
+
+            //- Remove boundary patches. Warning: fvPatchFields hold ref to
+            //  these fvPatches.
+            void removeFvBoundary();
+
+            //- Return cell face motion fluxes
+            surfaceScalarField& setPhi();
+
+            //- Return old-time cell volumes
+            scalarField& setV0();
 
 
         // Write

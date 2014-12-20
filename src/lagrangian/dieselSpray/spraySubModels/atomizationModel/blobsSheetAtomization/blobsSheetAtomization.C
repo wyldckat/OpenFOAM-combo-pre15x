@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -97,7 +97,7 @@ void blobsSheetAtomization::atomizeParcel
 ) const
 {
 
-    const ptrList<volScalarField>& Y = spray_.composition().Y();
+    const PtrList<volScalarField>& Y = spray_.composition().Y();
 
     label Ns = Y.size();
     label cellI = p.cell();
@@ -124,7 +124,9 @@ void blobsSheetAtomization::atomizeParcel
 
     scalar U = mag(p.Urel(vel));
 
-    const injectorType& it = spray_.injectors()[(label)p.injector()].properties();
+    const injectorType& it = 
+        spray_.injectors()[label(p.injector())].properties();
+
     const vector itPosition = it.position();
     
     scalar lBU = B_ * sqrt

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -38,9 +38,9 @@ namespace Paths
 {
     Foam::fileName systemPath()
     {
-        if (Foam::env("FOAMX_SYSTEM_CONFIG"))
+        if (Foam::env("FOAMX_CONFIG"))
         {
-            return Foam::getEnv("FOAMX_SYSTEM_CONFIG");
+            return Foam::getEnv("FOAMX_CONFIG");
         }
         else
         {
@@ -53,9 +53,9 @@ namespace Paths
 
     Foam::fileName userPath()
     {
-        if (Foam::env("FOAMX_USER_CONFIG"))
+        if (Foam::env("FOAMX_CONFIG"))
         {
-            return Foam::getEnv("FOAMX_USER_CONFIG");
+            return Foam::getEnv("FOAMX_CONFIG");
         }
         else
         {

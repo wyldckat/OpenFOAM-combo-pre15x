@@ -20,15 +20,13 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Surface sampling. Runs in parallel (but does not merge points).
 
 \*---------------------------------------------------------------------------*/
 
-#include "fieldsCache.H"
-#include "HashPtrTable.H"
 #include "argList.H"
 #include "OSspecific.H"
 #include "meshSearch.H"
@@ -40,7 +38,9 @@ Description
 #include "ListListOps.H"
 #include "Cloud.H"
 #include "passiveParticle.H"
+#include "mergePoints.H"
 
+#include "fieldsCache.H"
 #include "surface.H"
 #include "surfaceWriter.H"
 
@@ -74,6 +74,77 @@ public:
     }
 };
 
+}
+
+
+void mergePoints
+(
+    const polyMesh& mesh,
+    const scalar mergeTol,
+    List<pointField>& allPoints,
+    List<faceList>& allFaces,
+    labelListList& allOldToNew
+)
+{
+    const boundBox& bb = mesh.parallelData().bb();
+
+    scalar mergeDim = mergeTol * mag(bb.max() - bb.min());
+
+    Info<< nl << "Merging all points within " << mergeDim << " meter." << endl;
+
+    allOldToNew.setSize(allPoints.size());
+
+    forAll(allPoints, surfaceI)
+    {
+        pointField newPoints;
+        labelList oldToNew;
+
+        bool hasMerged = mergePoints
+        (
+            allPoints[surfaceI],
+            mergeDim,
+            false,                  // verbosity
+            oldToNew,
+            newPoints
+        );
+
+        if (hasMerged)
+        {
+            // Copy points
+            allPoints[surfaceI].transfer(newPoints);
+
+            // Store point mapping
+            allOldToNew[surfaceI].transfer(oldToNew);
+
+            // Relabel faces.
+            faceList& faces = allFaces[surfaceI];
+
+            forAll(faces, faceI)
+            {
+                inplaceRenumber(allOldToNew[surfaceI], faces[faceI]);
+            }
+
+            Info<< "For surface " << surfaceI << " merged from "
+                << allOldToNew[surfaceI].size() << " points down to "
+                << allPoints[surfaceI].size() << " points." << endl;
+        }
+    }
+}
+
+
+template<class T>
+void renumberData
+(
+    const labelList& oldToNewPoints,
+    const label newSize,
+    Field<T>& values
+)
+{
+    if (oldToNewPoints.size() == values.size())
+    {
+        inplaceReorder(oldToNewPoints, values);
+        values.setSize(newSize);
+    }
 }
 
 
@@ -187,7 +258,7 @@ int main(int argc, char *argv[])
     meshSearch searchEngine(mesh, true);
 
     // Create sample surfaces
-    ptrList<surface> surfaces
+    PtrList<surface> surfaces
     (
         sampleDict.lookup("surfaces"),
         surface::iNew(mesh, searchEngine)
@@ -348,6 +419,7 @@ int main(int argc, char *argv[])
 
         List<pointField> allPoints(surfaces.size());
         List<faceList> allFaces(surfaces.size());
+
         forAll(surfaces, surfaceI)
         {
             // Collect points from all processors
@@ -372,7 +444,8 @@ int main(int argc, char *argv[])
 
             if (Pstream::master())
             {
-                allFaces[surfaceI] = (const faceList&)
+                allFaces[surfaceI] = static_cast<const faceList&>
+                (
                     ListListOps::combineOffset<faceList>
                     (
                         gatheredFaces,
@@ -383,9 +456,14 @@ int main(int argc, char *argv[])
                         ),
                         accessOp<faceList>(),
                         offsetOp<face>()
-                    );
+                    )
+                );
             }
         }
+
+        // Merge close points (1E-10 of mesh bounding box)
+        labelListList allOldToNewPoints;
+        mergePoints(mesh, 1E-10, allPoints, allFaces, allOldToNewPoints);
 
 
         //
@@ -434,6 +512,14 @@ int main(int argc, char *argv[])
                                 gatheredValues,
                                 accessOp<scalarField>()
                             )
+                        );
+
+                        // Renumber (point data) to correspond to merged points
+                        renumberData
+                        (
+                            allOldToNewPoints[surfaceI],
+                            allPoints[surfaceI].size(),
+                            allValues
                         );
 
                         // Write to time directory under sampleSurfaces/
@@ -488,6 +574,14 @@ int main(int argc, char *argv[])
                             )
                         );
 
+                        // Renumber (point data) to correspond to merged points
+                        renumberData
+                        (
+                            allOldToNewPoints[surfaceI],
+                            allPoints[surfaceI].size(),
+                            allValues
+                        );
+
                         // Write to time directory under sampleSurfaces/
                         vectorFormatter().write
                         (
@@ -538,6 +632,14 @@ int main(int argc, char *argv[])
                                 gatheredValues,
                                 accessOp<tensorField>()
                             )
+                        );
+
+                        // Renumber (point data) to correspond to merged points
+                        renumberData
+                        (
+                            allOldToNewPoints[surfaceI],
+                            allPoints[surfaceI].size(),
+                            allValues
                         );
 
                         // Write to time directory under sampleSurfaces/

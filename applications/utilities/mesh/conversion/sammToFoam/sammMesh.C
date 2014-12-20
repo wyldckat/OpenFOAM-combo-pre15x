@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -89,9 +89,17 @@ const label sammMesh::shapeFaceLookup[19][9] =
 
 // List of pointers used instead of pointer list o avoid
 // de-allocation problems
-List<const cellModel*> sammMesh::sammShapeLookup(256, (cellModel*)NULL);
+List<const cellModel*> sammMesh::sammShapeLookup
+(
+    256,
+    reinterpret_cast<cellModel*>(NULL)
+);
 
-List<const label*> sammMesh::sammAddressingTable(256, (label*)NULL);
+List<const label*> sammMesh::sammAddressingTable
+(
+    256,
+    reinterpret_cast<label*>(NULL)
+);
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 

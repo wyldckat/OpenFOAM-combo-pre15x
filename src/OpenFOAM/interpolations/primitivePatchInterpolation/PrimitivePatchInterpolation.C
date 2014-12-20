@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -65,25 +63,22 @@ void PrimitivePatchInterpolation<Patch>::makeFaceToEdgeWeights() const
     const pointField& points = patch_.localPoints();
     const faceList& faces = patch_.localFaces();
     const edgeList& edges = patch_.edges();
-    const labelList& internalEdges = patch_.internalEdges();
     const labelListList& edgeFaces = patch_.edgeFaces();
 
-    faceToEdgeWeightsPtr_ = new scalarField(internalEdges.size());
+    faceToEdgeWeightsPtr_ = new scalarField(patch_.nInternalEdges.size());
     scalarField& weights = *faceToEdgeWeightsPtr_;
 
-    label curEdge, ownerFace, neighbourFace;
+    label ownerFace, neighbourFace;
 
-    forAll (internalEdges, edgeI)
+    for (label edgeI = 0; edgeI < weights.size(); edgeI++)
     {
-        curEdge = internalEdges[edgeI];
-
-        ownerFace = edgeFaces[curEdge][0];
-        neighbourFace = edgeFaces[curEdge][1];
+        ownerFace = edgeFaces[edgeI][0];
+        neighbourFace = edgeFaces[edgeI][1];
 
         vector P = faces[ownerFace].centre(points);
         vector N = faces[neighbourFace].centre(points);
-        vector S = points[edges[curEdge].start()];
-        vector e = edges[curEdge].vec(points);
+        vector S = points[edges[edgeI].start()];
+        vector e = edges[edgeI].vec(points);
 
         scalar alpha = - ( ( (N - P)^(S - P) )&( (N - P)^e ) )/
             ( ( (N - P)^e )&( (N - P)^e ) );
@@ -267,33 +262,27 @@ tmp<Field<Type> > PrimitivePatchInterpolation<Patch>::faceToEdgeInterpolate
     const pointField& points = patch_.localPoints();
     const faceList& faces = patch_.localFaces();
     const edgeList& edges = patch_.edges();
-    const labelList& internalEdges = patch_.internalEdges();
-    const labelList& boundaryEdges = patch_.boundaryEdges();
     const labelListList& edgeFaces = patch_.edgeFaces();
 
     const scalarField& weights = faceToEdgeWeights();
 
-    label curEdge, ownerFace, neighbourFace;
+    label ownerFace, neighbourFace;
 
-    forAll (internalEdges, edgeI)
+    for (label edgeI = 0; edgeI < patch_.nInternalEdges(); edgeI++)
     {
-        curEdge = internalEdges[edgeI];
+        ownerFace = edgeFaces[edgeI][0];
+        neighbourFace = edgeFaces[edgeI][1];
 
-        ownerFace = edgeFaces[curEdge][0];
-        neighbourFace = edgeFaces[curEdge][1];
-
-        result[curEdge] = 
+        result[edgeI] = 
             weights[edgeI]*pf[ownerFace]
           + (1.0 - weights[edgeI])*pf[neighbourFace];
     }
 
-    forAll (boundaryEdges, edgeI)
+    for (label edgeI = patch_.nInternalEdges(); edgeI < edges.size(); edgeI++)
     {
-        const label curEdge = boundaryEdges[edgeI];
+        const label ownerFace = edgeFaces[edgeI][0];
 
-        const label ownerFace = edgeFaces[curEdge][0];
-
-        result[curEdge] = pf[ownerFace];
+        result[edgeI] = pf[ownerFace];
     }
 
     return tresult;

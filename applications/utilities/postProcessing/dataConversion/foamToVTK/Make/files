@@ -1,3 +1,5 @@
+foamToVTK.C
+writeInternal.C
 writePatchGeom.C
 writeFaceSet.C
 writePatch.C
@@ -7,6 +9,5 @@ writeLagrangian.C
 vtkMesh.C
 floatScalar.C
 vtkTopo.C
-foamToVTK.C
 
 EXE = $(FOAM_APPBIN)/foamToVTK

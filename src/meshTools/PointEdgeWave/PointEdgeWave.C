@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -35,7 +35,7 @@ Description
 #include "PstreamCombineReduceOps.H"
 #include "debug.H"
 #include "typeInfo.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 
 // * * * * * * * * * * * * * * Static Data Members * * * * * * * * * * * * * //
 
@@ -69,7 +69,7 @@ void Foam::PointEdgeWave<Type>::calcCyclicAddressing()
     {
         const polyPatch& patch = mesh.boundaryMesh()[patchI];
 
-        if (typeid(patch) == typeid(cyclicPolyPatch))
+        if (isA<cyclicPolyPatch>(patch))
         {
             label halfSize = patch.size()/2;
 
@@ -345,14 +345,14 @@ void Foam::PointEdgeWave<Type>::setPointInfo
 
 // Check if patches of given type name are present
 template <class Type>
-Foam::label Foam::PointEdgeWave<Type>::countPatchType(const word& nameOfType)
- const
+template <class PatchType>
+Foam::label Foam::PointEdgeWave<Type>::countPatchType() const
 {
     label nPatches = 0;
 
     forAll(pMesh_().boundaryMesh(), patchI)
     {
-        if (pMesh_().boundaryMesh()[patchI].type() == nameOfType)
+        if (isA<PatchType>(pMesh_().boundaryMesh()[patchI]))
         {
             nPatches++;
         }
@@ -468,7 +468,7 @@ void Foam::PointEdgeWave<Type>::handleProcPatches()
         {
             const polyPatch& patch = mesh.boundaryMesh()[patchI];
 
-            if (typeid(patch) == typeid(processorPolyPatch))
+            if (isA<processorPolyPatch>(patch))
             {
                 // Get all changed points in relative addressing
 
@@ -494,7 +494,7 @@ void Foam::PointEdgeWave<Type>::handleProcPatches()
 
                 if (debug)
                 {
-                    Sout<< " Processor patch " << patchI << ' ' << patch.name()
+                    Pout<< "Processor patch " << patchI << ' ' << patch.name()
                         << " communicating with " << procPatch.neighbProcNo()
                         << "  Sending:" << patchInfo.size() << endl;
                 }
@@ -516,7 +516,7 @@ void Foam::PointEdgeWave<Type>::handleProcPatches()
         {
             const polyPatch& patch = mesh.boundaryMesh()[patchI];
 
-            if (typeid(patch) == typeid(processorPolyPatch))
+            if (isA<processorPolyPatch>(patch))
             {
                 const processorPolyPatch& procPatch =
                     refCast<const processorPolyPatch>(patch);
@@ -532,7 +532,7 @@ void Foam::PointEdgeWave<Type>::handleProcPatches()
 
                 if (debug)
                 {
-                    Sout<< " Processor patch " << patchI << ' ' << patch.name()
+                    Pout<< "Processor patch " << patchI << ' ' << patch.name()
                         << " communicating with " << procPatch.neighbProcNo()
                         << "  Received:" << patchInfo.size() << endl;
                 }
@@ -608,7 +608,7 @@ void Foam::PointEdgeWave<Type>::handleCyclicPatches()
     {
         const polyPatch& patch = mesh.boundaryMesh()[patchI];
 
-        if (typeid(patch) == typeid(cyclicPolyPatch))
+        if (isA<cyclicPolyPatch>(patch))
         {
             const primitivePatch& halfA = cycHalves_[cycHalf++];
             const primitivePatch& halfB = cycHalves_[cycHalf++];
@@ -668,18 +668,31 @@ void Foam::PointEdgeWave<Type>::handleCyclicPatches()
 
             if (debug)
             {
-                Sout<< " Cyclic patch " << patchI << ' ' << patch.name() 
+                Pout<< "Cyclic patch " << patchI << ' ' << patch.name() 
                     << "  Changed on first half : " << halfAInfo.size()
                     << "  Changed on second half : " << halfBInfo.size()
                     << endl;
             }
 
             // Half1: update with data from halfB
-            updateFromPatchInfo(patch, halfA, halfBOwner, halfBIndex, halfBInfo);
+            updateFromPatchInfo
+            (
+                patch,
+                halfA,
+                halfBOwner,
+                halfBIndex,
+                halfBInfo
+            );
 
             // Half2: update with data from halfA
-            updateFromPatchInfo(patch, halfB, halfAOwner, halfAIndex, halfAInfo);
-
+            updateFromPatchInfo
+            (
+                patch,
+                halfB,
+                halfAOwner,
+                halfAIndex,
+                halfAInfo
+            );
 
             if (debug)
             {
@@ -716,19 +729,14 @@ Foam::PointEdgeWave<Type>::PointEdgeWave
     changedEdge_(pMesh_().nEdges(), false),
     changedEdges_(pMesh_().nEdges()),
     nChangedEdges_(0),
-    nCyclicPatches_(countPatchType(cyclicPolyPatch::typeName)),
+    nCyclicPatches_(countPatchType<cyclicPolyPatch>()),
     cycHalves_(2*nCyclicPatches_),
-    hasProcPatches_(countPatchType(processorPolyPatch::typeName) != 0),
+    hasProcPatches_(countPatchType<processorPolyPatch>() > 0),
     nEvals_(0),
     nUnvisitedPoints_(pMesh_().nPoints()),
     nUnvisitedEdges_(pMesh_().nEdges()),
     iter_(0)
 {
-    if (debug)
-    {
-        Sout.prefix() = '[' + name(Pstream::myProcNo()) + "] ";
-    }
-
     if (allPointInfo_.size() != pMesh_().nPoints())
     {
         FatalErrorIn
@@ -736,8 +744,7 @@ Foam::PointEdgeWave<Type>::PointEdgeWave
             "PointEdgeWave<Type>::PointEdgeWave"
             "(const pointMesh&, const labelList&, const List<Type>,"
             " List<Type>&, List<Type>&, const label maxIter)"
-        )
-            << "size of pointInfo work array is not equal to the number"
+        )   << "size of pointInfo work array is not equal to the number"
             << " of points in the mesh" << endl
             << "    pointInfo   :" << allPointInfo_.size() << endl
             << "    mesh.nPoints:" << pMesh_().nPoints()
@@ -750,8 +757,7 @@ Foam::PointEdgeWave<Type>::PointEdgeWave
             "PointEdgeWave<Type>::PointEdgeWave"
             "(const pointMesh&, const labelList&, const List<Type>,"
             " List<Type>&, List<Type>&, const label maxIter)"
-        )
-            << "size of edgeInfo work array is not equal to the number"
+        )   << "size of edgeInfo work array is not equal to the number"
             << " of edges in the mesh" << endl
             << "    edgeInfo   :" << allEdgeInfo_.size() << endl
             << "    mesh.nEdges:" << pMesh_().nEdges()
@@ -769,6 +775,11 @@ Foam::PointEdgeWave<Type>::PointEdgeWave
     // Set from initial changed points data
     setPointInfo(changedPoints, changedPointsInfo);
 
+    if (debug)
+    {
+        Pout<< "Seed points               : " << nChangedPoints_ << endl;
+    }
+
     // Iterate until nothing changes
     iterate(maxIter);
 
@@ -778,9 +789,8 @@ Foam::PointEdgeWave<Type>::PointEdgeWave
         (
             "PointEdgeWave<Type>::PointEdgeWave"
             "(const pointMesh&, const labelList&, const List<Type>,"
-            " const volScalarField&, const label maxIter)"
-        )
-            << "Maximum number of iterations reached. Increase maxIter." << endl
+            " List<Type>&, List<Type>&, const label maxIter)"
+        )   << "Maximum number of iterations reached. Increase maxIter." << endl
             << "    maxIter:" << maxIter << endl
             << "    nChangedPoints:" << nChangedPoints_ << endl
             << "    nChangedEdges:" << nChangedEdges_ << endl
@@ -830,8 +840,9 @@ Foam::label Foam::PointEdgeWave<Type>::edgeToPoint()
         {
             FatalErrorIn("PointEdgeWave<Type>::edgeToPoint()")
                 << "edge " << edgeI
-                << " not marked as having been changed"
-                << abort(FatalError);
+                << " not marked as having been changed" << nl
+                << "This might be caused by multiple occurences of the same"
+                << " seed point." << abort(FatalError);
         }
 
 
@@ -877,7 +888,7 @@ Foam::label Foam::PointEdgeWave<Type>::edgeToPoint()
 
     if (debug)
     {
-        Sout<< " Changed points            : " << nChangedPoints_ << endl;
+        Pout<< "Changed points            : " << nChangedPoints_ << endl;
     }
 
     // Sum nChangedPoints over all procs
@@ -908,8 +919,9 @@ Foam::label Foam::PointEdgeWave<Type>::pointToEdge()
         {
             FatalErrorIn("PointEdgeWave<Type>::pointToEdge()")
                 << "Point " << pointI
-                << " not marked as having been changed"
-                << abort(FatalError);
+                << " not marked as having been changed" << nl
+                << "This might be caused by multiple occurences of the same"
+                << " seed point." << abort(FatalError);
         }
 
         const Type& neighbourWallInfo = allPointInfo_[pointI];
@@ -945,7 +957,7 @@ Foam::label Foam::PointEdgeWave<Type>::pointToEdge()
 
     if (debug)
     {
-        Sout<< " Changed edges             : " << nChangedEdges_ << endl;
+        Pout<< "Changed edges             : " << nChangedEdges_ << endl;
     }
 
     // Sum nChangedPoints over all procs
@@ -961,20 +973,20 @@ Foam::label Foam::PointEdgeWave<Type>::pointToEdge()
 template <class Type>
 Foam::label Foam::PointEdgeWave<Type>::iterate(const label maxIter)
 {
+    nEvals_ = 0;
+
     while(iter_ < maxIter)
     {
         if (debug)
         {
-            Sout<< " Iteration " << iter_ << endl;
+            Pout<< "Iteration " << iter_ << endl;
         }
-
-        nEvals_ = 0;
 
         label nEdges = pointToEdge();
 
         if (debug)
         {
-            Sout<< " Total changed edges       : " << nEdges << endl;
+            Pout<< "Total changed edges       : " << nEdges << endl;
         }
 
         if (nEdges == 0)
@@ -986,15 +998,15 @@ Foam::label Foam::PointEdgeWave<Type>::iterate(const label maxIter)
 
         if (debug)
         {
-            Sout<< " Total changed points      : " << nPoints << endl;
+            Pout<< "Total changed points      : " << nPoints << endl;
 
-            Sout<< " Total evaluations         : " << nEvals_ << endl;
+            Pout<< "Total evaluations         : " << nEvals_ << endl;
 
-            Sout<< " Remaining unvisited points: " << nUnvisitedPoints_ << endl;
+            Pout<< "Remaining unvisited points: " << nUnvisitedPoints_ << endl;
 
-            Sout<< " Remaining unvisited edges : " << nUnvisitedEdges_ << endl;
+            Pout<< "Remaining unvisited edges : " << nUnvisitedEdges_ << endl;
 
-            Sout<< endl;
+            Pout<< endl;
         }
 
         if (nPoints == 0)

@@ -38,11 +38,7 @@
 
         for (label i=0; i<Ub.boundaryField().size(); i++)
         {
-            if 
-            (
-                typeid(Ub.boundaryField()[i])
-             == typeid(fixedValueFvPatchVectorField)
-            )
+            if (isType<fixedValueFvPatchVectorField>(Ub.boundaryField()[i]))
             {
                 phiTypes[i] = fixedValueFvPatchScalarField::typeName;
             }

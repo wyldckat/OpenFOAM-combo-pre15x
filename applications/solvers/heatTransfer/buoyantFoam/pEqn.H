@@ -5,18 +5,12 @@ pd.boundaryField() ==
 
 rho = thermo->rho();
 
-volScalarField A = UEqn.A();
-U = UEqn.H()/A;
+volScalarField rUA = 1.0/UEqn.A();
+U = rUA*UEqn.H();
 
-phi =
-(
-    fvc::interpolate
-    (
-        rho*(U + UphiCoeff*fvc::ddt0(rho, U)/A),
-        "interpolate((H(U)|A(U)))"
-    ) & mesh.Sf()
-) - UphiCoeff*fvc::interpolate(rho/A)*fvc::ddt0(phi)
-  - fvc::interpolate(rho*gh/A)*fvc::snGrad(rho)*mesh.magSf();
+phi = (fvc::interpolate(rho*U) & mesh.Sf())
+    + fvc::ddtPhiCorr(rUA, rho, U, phi)
+    - fvc::interpolate(rUA*rho*gh)*fvc::snGrad(rho)*mesh.magSf();
 
 for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
 {
@@ -26,7 +20,7 @@ for (int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
       + fvc::ddt(psi)*pRef
       + fvc::ddt(psi, rho)*gh
       + fvc::div(phi)
-      - fvm::laplacian(rho/A, pd)
+      - fvm::laplacian(rho*rUA, pd)
     );
 
     closedVolume = pd.needReference();
@@ -44,7 +38,7 @@ dpdt = fvc::ddt(p);
 #include "rhoEqn.H"
 #include "continuityErrs.H"
 
-U -= (fvc::grad(pd) + fvc::grad(rho)*gh)/A;
+U -= rUA*(fvc::grad(pd) + fvc::grad(rho)*gh);
 U.correctBoundaryConditions();
 
 

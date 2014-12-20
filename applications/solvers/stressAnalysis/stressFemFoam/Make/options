@@ -1,6 +1,6 @@
 EXE_INC = \
     -IfemStress/Traction \
-    -I$(LIB_SRC)/cfdTools/lnInclude \
+    -I$(LIB_SRC)/cfdTools/general/lnInclude \
     -I$(LIB_SRC)/finiteElement/lnInclude \
     $(WM_DECOMP_INC)
 

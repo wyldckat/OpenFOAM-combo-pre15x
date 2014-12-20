@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     writePatch
@@ -44,14 +44,20 @@ namespace Foam
 {
 
 // Write lagrangian fields.
+// nearCellValue writes the patchInternalField which is useful for e.g.
+// walls where the wall velocity is usually not terribly interesting but
+// the neighbouring cell value is.
 void writePatch
 (
-    const bool binary,
+    const bool binary,              // write binary
+    const bool nearCellValue,       // write near cell value
     const vtkMesh& vMesh,
     const label patchI,
     const fileName& fileName,
-    const ptrList<volScalarField>& volScalarFields,
-    const ptrList<volVectorField>& volVectorFields
+    const PtrList<volScalarField>& volScalarFields,
+    const PtrList<volVectorField>& volVectorFields,
+    const PtrList<pointScalarField>& pointScalarFields,
+    const PtrList<pointVectorField>& pointVectorFields
 );
 
 } // End namespace Foam

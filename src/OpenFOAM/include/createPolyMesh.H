@@ -1,4 +1,6 @@
-    Info<< "Create polyMesh for time = " << runTime.value() << nl << endl;
+    Info<< "Create polyMesh for time = "
+        << runTime.timeName() << nl << endl;
+
     polyMesh mesh
     (
         IOobject

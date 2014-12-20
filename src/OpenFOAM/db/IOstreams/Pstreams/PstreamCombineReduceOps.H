@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     Pstream
@@ -51,7 +51,7 @@ void combineReduce
 (
     const List<Pstream::commsStruct>& comms,
     T& Value,
-    CombineOp cop
+    const CombineOp& cop
 )
 {
     Pstream::combineGather(comms, Value, cop);
@@ -60,7 +60,7 @@ void combineReduce
 
 
 template <class T, class CombineOp>
-void combineReduce(T& Value, CombineOp cop)
+void combineReduce(T& Value, const CombineOp& cop)
 {
     if (Pstream::nProcs() < Pstream::nProcsSimpleSum)
     {
@@ -84,6 +84,71 @@ public:
     void operator()(T& x, const T& y) const
     {
         x += y;
+    }
+};
+
+
+template <class T>
+class productEqOp
+{
+
+public:
+
+    void operator()(T& x, const T& y) const
+    {
+        x *= y;
+    }
+};
+
+
+template <class T>
+class maxEqOp
+{
+
+public:
+
+    void operator()(T& x, const T& y) const
+    {
+        x = max(x, y);
+    }
+};
+
+
+template <class T>
+class minEqOp
+{
+
+public:
+
+    void operator()(T& x, const T& y) const
+    {
+        x = min(x, y);
+    }
+};
+
+
+template <class T>
+class andEqOp
+{
+
+public:
+
+    void operator()(T& x, const T& y) const
+    {
+        x = (x && y);
+    }
+};
+
+
+template <class T>
+class orEqOp
+{
+
+public:
+
+    void operator()(T& x, const T& y) const
+    {
+        x  = (x || y);
     }
 };
 

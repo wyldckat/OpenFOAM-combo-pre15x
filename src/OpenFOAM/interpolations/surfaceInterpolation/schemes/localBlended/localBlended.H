@@ -20,16 +20,16 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     localBlended
 
 Description
-    linear/upwind localBlended differencing scheme.
+    Two-scheme localBlended differencing scheme.
 
 SourceFiles
-    localBlendedMake.C
+    localBlended.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,7 +50,7 @@ namespace Foam
 template<class Type>
 class localBlended
 :
-    virtual public surfaceInterpolationScheme<Type>
+    public surfaceInterpolationScheme<Type>
 {
     // Private Member Functions
 

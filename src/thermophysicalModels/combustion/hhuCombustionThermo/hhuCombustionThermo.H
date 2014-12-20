@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     hhuCombustionThermo
@@ -58,6 +58,12 @@ protected:
 
         volScalarField Tu_;
         volScalarField hu_;
+
+
+    // Protected member functions
+
+        wordList huBoundaryTypes();
+        void huBoundaryCorrection(volScalarField& hu);
 
 
 public:
@@ -117,6 +123,20 @@ public:
 
 
         // Fields derived from thermodynamic state variables
+
+            //- Unburnt gas enthalpy for cell-set [J/kg]
+            virtual tmp<scalarField> hu
+            (
+                const scalarField& T,
+                const labelList& cells
+            ) const = 0;
+
+            //- Unburnt gas enthalpy for patch [J/kg]
+            virtual tmp<scalarField> hu
+            (
+                const scalarField& T,
+                const label patchi
+            ) const = 0;
 
             //- Unburnt gas temperature [K]
             const volScalarField& Tu() const

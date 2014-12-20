@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     cubicCorrection
@@ -30,7 +30,7 @@ Description
     linear weighting factors but also applies an explicit correction.
 
 SourceFiles
-    cubicCorrectionMake.C
+    cubicCorrection.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -74,7 +74,6 @@ public:
         //- Construct from mesh
         cubicCorrection(const fvMesh& mesh)
         :
-            surfaceInterpolationScheme<Type>(mesh),
             linear<Type>(mesh)
         {}
 
@@ -85,7 +84,6 @@ public:
             Istream&
         )
         :
-            surfaceInterpolationScheme<Type>(mesh),
             linear<Type>(mesh)
         {}
 
@@ -97,7 +95,6 @@ public:
             Istream&
         )
         :
-            surfaceInterpolationScheme<Type>(mesh),
             linear<Type>(mesh)
         {}
 
@@ -139,21 +136,23 @@ public:
                 )
             );
 
+            GeometricField<Type, fvPatchField, surfaceMesh>& sfCorr = tsfCorr();
+
             for (direction cmpt=0; cmpt<pTraits<Type>::nComponents; cmpt++)
             {
-                tsfCorr().replace
+                sfCorr.replace
                 (
                     cmpt,
-                    tsfCorr().component(cmpt)
+                    sfCorr.component(cmpt)
                   + (
-                        linear
+                        surfaceInterpolationScheme
                         <
                             typename outerProduct
                             <
                                 vector,
                                 typename pTraits<Type>::cmptType
                             >::type
-                        >(mesh).interpolate
+                        >::interpolate
                         (
                             fv::gaussGrad
                             <typename pTraits<Type>::cmptType>(mesh)
@@ -163,6 +162,14 @@ public:
                         ) & mesh.Sf()
                     )/mesh.magSf()/mesh.surfaceInterpolation::deltaCoeffs()
                 );
+            }
+
+            forAll (sfCorr.boundaryField(), pi)
+            {
+                if (!sfCorr.boundaryField()[pi].coupled())
+                {
+                    sfCorr.boundaryField()[pi] = pTraits<Type>::zero;
+                }
             }
 
             return tsfCorr;

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Modules.CaseEditor;
@@ -57,7 +57,7 @@ import FoamX.Editors.DictionaryEntryEditor.CompoundEntryEvent;
 import FoamX.Editors.DictionaryEntryEditor.DictionaryEditorPanel;
 
 import FoamX.WindowManagement.FoamXInternalFrame;
-import FoamX.Editors.ApplicationClassEditor.BoundaryDefinitionModelItem;
+import FoamX.Editors.ApplicationEditor.BoundaryDefinitionModelItem;
 import FoamX.Editors.TypeEditor.TypeDescriptorCache;
 
 public class CaseEditorModule
@@ -227,7 +227,7 @@ public class CaseEditorModule
             //-----------------------------------------------------------------
             // Get list of dictionaries from the case's application class
             // object.
-            String[] dictList = caseServer.applicationClass().dictionaries();
+            String[] dictList = caseServer.application().dictionaries();
 
             // Add Dictionaries node to tree.
             int dictRootNode = moduleHost_.addNode
@@ -258,7 +258,7 @@ public class CaseEditorModule
                 ""
             );
 
-            String[] fieldNameList = caseServer.applicationClass().fields();
+            String[] fieldNameList = caseServer.application().fields();
             IGeometricFieldHolder holder = new IGeometricFieldHolder();
 
             for (int nField = 0; nField <fieldNameList.length; nField++)
@@ -493,7 +493,7 @@ public class CaseEditorModule
     //---- PatchStatusListener Interface
     //--------------------------------------------------------------------------
 
-    public void boundaryTypeChanged(PatchStatusEvent evt)
+    public void patchPhysicalTypeChanged(PatchStatusEvent evt)
     {
         try
         {
@@ -875,14 +875,14 @@ public class CaseEditorModule
     extends javax.swing.event.InternalFrameAdapter
     {
         private String patchName_;
-        private String boundaryType_;
+        private String patchPhysicalType_;
         private int windowID_;
         private PatchEditorWindow windowObj_;
 
-        public PatchWindowHandler(String patchName, String boundaryType)
+        public PatchWindowHandler(String patchName, String patchPhysicalType)
         {
             patchName_    = patchName;
-            boundaryType_ = boundaryType;
+            patchPhysicalType_ = patchPhysicalType;
             windowID_     = -1;
             windowObj_    = null;
         }
@@ -892,14 +892,14 @@ public class CaseEditorModule
             return patchName_;
         }
 
-        public String getBoundaryType()
+        public String getPatchPhysicalType()
         {
-            return boundaryType_;
+            return patchPhysicalType_;
         }
 
-        public void setBoundaryType(String boundaryType)
+        public void setPatchPhysicalType(String patchPhysicalType)
         {
-            boundaryType_ = boundaryType;
+            patchPhysicalType_ = patchPhysicalType;
         }
 
         public int getWindowID()
@@ -957,8 +957,8 @@ public class CaseEditorModule
             //-----------------------------------------------------------------
             // Get list of dictionaries from the case's application class
             // object.
-            String[] dictList = caseServer.applicationClass().dictionaries();
-            String[] fieldNameList = caseServer.applicationClass().fields();
+            String[] dictList = caseServer.application().dictionaries();
+            String[] fieldNameList = caseServer.application().fields();
 
             // All dictionaries, field and mesh files
             File[] files = new File[dictList.length + fieldNameList.length + 1];
@@ -1264,7 +1264,7 @@ public class CaseEditorModule
 
             // Loop over all fields and check whether parameters are required
             // for this patch.
-            String[] fieldNameList = caseServer.applicationClass().fields();
+            String[] fieldNameList = caseServer.application().fields();
             for (int nField = 0; nField <fieldNameList.length; nField++)
             {
                 String fieldName = fieldNameList[nField];
@@ -1360,11 +1360,11 @@ public class CaseEditorModule
                     String patchName = patchNameList[nPatch];
 
                     // Get patch boundary type.
-                    StringHolder boundaryTypeHolder = new StringHolder();
-                    caseServer.getPatchBoundaryType
+                    StringHolder patchPhysicalTypeHolder = new StringHolder();
+                    caseServer.getPatchPhysicalType
                     (
                         patchName,
-                        boundaryTypeHolder
+                        patchPhysicalTypeHolder
                     );
 
                     // Create a window data object for this patch and add
@@ -1373,7 +1373,7 @@ public class CaseEditorModule
                         new PatchWindowHandler
                         (
                             patchName,
-                            boundaryTypeHolder.value
+                            patchPhysicalTypeHolder.value
                         );
                     patchWindowMap_.put(patchName, windowData);
 
@@ -1718,7 +1718,7 @@ public class CaseEditorModule
                     // Might have changed the number of patches
                     initialisePatchWindowHandlers();
 
-                    boundaryTypeChanged
+                    patchPhysicalTypeChanged
                     (
                         // Dummy patch status event
                         new PatchStatusEvent

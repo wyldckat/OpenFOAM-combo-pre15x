@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     coodles
@@ -53,7 +53,7 @@ int main(int argc, char *argv[])
 
     for (runTime++; !runTime.end(); runTime++)
     {
-        Info<< "\n\nTime = " << runTime.timeName() << endl;
+        Info<< "Time = " << runTime.timeName() << nl << endl;
 
 #       include "readPISOControls.H"
 #       include "CourantNo.H"
@@ -70,14 +70,16 @@ int main(int argc, char *argv[])
 
         turbulence->correct();
 
+        rho = thermo->rho();
+
         runTime.write();
 
-        Info<< "\nExecutionTime = "
-             << runTime.elapsedCpuTime()
-             << " s\n" << endl;
+        Info<< "ExecutionTime = "
+            << runTime.elapsedCpuTime()
+            << " s\n\n" << endl;
     }
 
-    Info<< "\n end\n";
+    Info<< "End\n" << endl;
 
     return(0);
 }

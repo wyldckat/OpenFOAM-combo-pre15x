@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass potentialFoam;
+application potentialFoam;
 
 startFrom       startTime;
 
@@ -38,7 +38,7 @@ writeControl    timeStep;
 
 writeInterval   1;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

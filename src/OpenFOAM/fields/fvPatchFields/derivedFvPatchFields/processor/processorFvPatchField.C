@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -55,7 +53,11 @@ void processorFvPatchField<Type>::send
         this->size()*sizeof(Type2),
         bufferdTransfer
     );
-    toNeighbProc.write((const char*)tf().begin(), this->size()*sizeof(Type2));
+    toNeighbProc.write
+    (
+        reinterpret_cast<const char*>(tf().begin()),
+        this->size()*sizeof(Type2)
+    );
 }
 
 template<class Type>
@@ -66,7 +68,11 @@ tmp<Field<Type2> > processorFvPatchField<Type>::receive() const
     Field<Type2>& f = tf();
 
     IPstream fromNeighbProc(neighbProcNo(), this->size()*sizeof(Type2));
-    fromNeighbProc.read((char*)f.begin(), this->size()*sizeof(Type2));
+    fromNeighbProc.read
+    (
+        reinterpret_cast<char*>(f.begin()),
+        this->size()*sizeof(Type2)
+    );
 
     return tf;
 }
@@ -90,7 +96,7 @@ void processorFvPatchField<Type>::compressedSend
         label nBytes = nFloats*sizeof(float);
 
         const Field<Type2>& f = tf();
-        const scalar *sArray = (const scalar*)f.begin();
+        const scalar *sArray = reinterpret_cast<const scalar*>(f.begin());
         const scalar *slast = &sArray[nm1];
         float fArray[nFloats];
 
@@ -99,10 +105,10 @@ void processorFvPatchField<Type>::compressedSend
             fArray[i] = sArray[i] - slast[i%nCmpts];
         }
 
-        (Type2&)fArray[nm1] = f[this->size() - 1];
+        reinterpret_cast<Type2&>(fArray[nm1]) = f[this->size() - 1];
 
         OPstream toNeighbProc(neighbProcNo(), nBytes, bufferdTransfer);
-        toNeighbProc.write((const char*)fArray, nBytes);
+        toNeighbProc.write(reinterpret_cast<const char*>(fArray), nBytes);
         tf.clear();
     }
     else
@@ -129,10 +135,10 @@ tmp<Field<Type2> > processorFvPatchField<Type>::compressedReceive() const
         float fArray[nFloats];
 
         IPstream fromNeighbProc(neighbProcNo(), nBytes);
-        fromNeighbProc.read((char*)fArray, nBytes);
+        fromNeighbProc.read(reinterpret_cast<char*>(fArray), nBytes);
 
-        f[this->size() - 1] = (const Type2&)fArray[nm1];
-        scalar *sArray = (scalar*)f.begin();
+        f[this->size() - 1] = reinterpret_cast<const Type2&>(fArray[nm1]);
+        scalar *sArray = reinterpret_cast<scalar*>(f.begin());
         const scalar *slast = &sArray[nm1];
 
         for (register label i=0; i<nm1; i++)
@@ -189,7 +195,7 @@ processorFvPatchField<Type>::processorFvPatchField
     coupledFvPatchField<Type>(ptf, p, iF, mapper),
     procPatch_(refCast<const processorFvPatch>(p))
 {
-    if (typeid(this->patchMesh()) != typeid(processorFvPatch))
+    if (!isType<processorFvPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -201,9 +207,9 @@ processorFvPatchField<Type>::processorFvPatchField
             "    const fvPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }
@@ -220,7 +226,7 @@ processorFvPatchField<Type>::processorFvPatchField
     coupledFvPatchField<Type>(p, iF, dict),
     procPatch_(refCast<const processorFvPatch>(p))
 {
-    if (typeid(p) != typeid(processorFvPatch))
+    if (!isType<processorFvPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -231,7 +237,7 @@ processorFvPatchField<Type>::processorFvPatchField
             "    const dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index() << " not processor type. "
+        )   << "patch " << this->patch().index() << " not processor type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }
@@ -247,7 +253,7 @@ processorFvPatchField<Type>::processorFvPatchField
     lduCoupledInterface(),
     processorLduCoupledInterface(),
     coupledFvPatchField<Type>(ptf),
-    procPatch_(refCast<const processorFvPatch>(ptf.patchMesh()))
+    procPatch_(refCast<const processorFvPatch>(ptf.patch()))
 {}
 
 
@@ -259,7 +265,7 @@ processorFvPatchField<Type>::processorFvPatchField
 )
 :
     coupledFvPatchField<Type>(ptf, iF),
-    procPatch_(refCast<const processorFvPatch>(ptf.patchMesh()))
+    procPatch_(refCast<const processorFvPatch>(ptf.patch()))
 {}
 
 
@@ -278,8 +284,8 @@ template<class Type>
 tmp<Field<Type> > processorFvPatchField<Type>::patchNeighbourField() const
 {
     return
-        (*this - this->patchMesh().weights()*this->patchInternalField())
-       /(1.0 - this->patchMesh().weights());
+        (*this - this->patch().weights()*this->patchInternalField())
+       /(1.0 - this->patch().weights());
 }
 
 
@@ -309,8 +315,8 @@ void processorFvPatchField<Type>::evaluate()
 
     Field<Type>::operator=
     (
-        this->patchMesh().weights()*this->patchInternalField()
-      + (1.0 - this->patchMesh().weights())*tpnf()
+        this->patch().weights()*this->patchInternalField()
+      + (1.0 - this->patch().weights())*tpnf()
     );
 }
 
@@ -373,7 +379,7 @@ void processorFvPatchField<Type>::updateInterfaceMatrix
 
     // Multiply the field by coefficients and add into the result
 
-    const labelList::subList FaceCells = this->patchMesh().faceCells();
+    const labelList::subList FaceCells = this->patch().faceCells();
 
     forAll(FaceCells, elemI)
     {

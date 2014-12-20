@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -324,6 +324,45 @@ template<class T, label Size>
 inline bool FixedList<T, Size>::empty() const
 {
     return false;
+}
+
+
+template<class T, label Size>
+template<class HashT>
+inline FixedList<T, Size>::Hash<HashT>::Hash()
+{}
+
+
+//- Rotating Hash. From http://burtleburtle.net/bob/hash/doobs.html.
+template<class T, label Size>
+template<class HashT>
+inline label FixedList<T, Size>::Hash<HashT>::operator()
+(
+    const FixedList<T, Size>& fl
+) const
+{
+    static const label farbit(8*sizeof(label)-4);
+
+    label val = Size;
+
+    for (register int i=0; i<Size; i++)
+    {
+        val = (val<<4)^(val>>farbit)^HashT()(fl[i]);
+    }
+
+    return val;
+}
+
+
+template<class T, label Size>
+template<class HashT>
+inline label FixedList<T, Size>::Hash<HashT>::operator()
+(
+    const FixedList<T, Size>& fl,
+    const label tableSize
+) const
+{
+    return mag(operator()(fl)) % tableSize;
 }
 
 

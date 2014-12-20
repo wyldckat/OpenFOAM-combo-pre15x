@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -77,7 +77,7 @@ void Foam::octreeDataFace::calcBb()
 // Construct from selected mesh faces
 Foam::octreeDataFace::octreeDataFace
 (
-    const polyMesh& mesh,
+    const primitiveMesh& mesh,
     const labelList& meshFaces,
     const treeBoundBoxList& allBb
 )
@@ -91,7 +91,7 @@ Foam::octreeDataFace::octreeDataFace
 // Construct from selected mesh faces. Bounding box calculated.
 Foam::octreeDataFace::octreeDataFace
 (
-    const polyMesh& mesh,
+    const primitiveMesh& mesh,
     const labelList& meshFaces
 )
 :
@@ -107,7 +107,7 @@ Foam::octreeDataFace::octreeDataFace
 // Construct from selected mesh faces
 Foam::octreeDataFace::octreeDataFace
 (
-    const polyMesh& mesh,
+    const primitiveMesh& mesh,
     const List<const labelList*>& meshFaceListPtrs,
     const List<const treeBoundBoxList*>& bbListPtrs
 )
@@ -146,7 +146,7 @@ Foam::octreeDataFace::octreeDataFace
 // Construct from selected mesh faces. Bounding box calculated.
 Foam::octreeDataFace::octreeDataFace
 (
-    const polyMesh& mesh,
+    const primitiveMesh& mesh,
     const List<const labelList*>& meshFaceListPtrs
 )
 :
@@ -180,10 +180,7 @@ Foam::octreeDataFace::octreeDataFace
 
 
 // Construct from all faces in polyPatch. Bounding box calculated.
-Foam::octreeDataFace::octreeDataFace
-(
-    const polyPatch& patch
-)
+Foam::octreeDataFace::octreeDataFace(const polyPatch& patch)
 :
     mesh_(patch.boundaryMesh().mesh()),
     meshFaces_(patch.size())
@@ -199,10 +196,7 @@ Foam::octreeDataFace::octreeDataFace
 
 
 // Construct from primitiveMesh. Inserts all boundary faces.
-Foam::octreeDataFace::octreeDataFace
-(
-    const polyMesh& mesh
-)
+Foam::octreeDataFace::octreeDataFace(const primitiveMesh& mesh)
 :
     mesh_(mesh),
     meshFaces_(0),
@@ -568,11 +562,7 @@ bool Foam::octreeDataFace::overlaps
 }
 
 
-bool Foam::octreeDataFace::contains
-(
-    const label,
-    const point&
-) const
+bool Foam::octreeDataFace::contains(const label, const point&) const
 {
     notImplemented
     (
@@ -709,7 +699,6 @@ Foam::scalar Foam::octreeDataFace::calcNearest
             << "sample:" << sample
             << "  index:" << index
             << "  faceI:" << faceI
-            //<< "  patch:" << mesh_.boundaryMesh().whichPatch(faceI)
             << "  ctr:" << ctr
             << "  sign:" << sign
             << "  nearest point:" << nearest
@@ -738,11 +727,7 @@ Foam::scalar Foam::octreeDataFace::calcNearest
 }
 
 
-void Foam::octreeDataFace::write
-(
-    Ostream& os,
-    const label index
-) const
+void Foam::octreeDataFace::write(Ostream& os, const label index) const
 {
     os << meshFaces_[index] << " " << allBb_[index];
 }

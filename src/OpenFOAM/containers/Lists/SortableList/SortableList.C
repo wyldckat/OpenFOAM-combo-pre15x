@@ -20,13 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
 \*---------------------------------------------------------------------------*/
 
-#include "SortableList.H"
 #include "OSspecific.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -94,13 +93,33 @@ SortableList<Type>::SortableList(const label size)
 }
 
 
+// Construct as copy.
+template <class Type>
+SortableList<Type>::SortableList(const SortableList<Type>& lst)
+:
+    List<Type>(lst),
+    indices_(lst.indices())
+{}
+
+
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
 template <class Type>
-void SortableList<Type>::setSize(const label size)
+void SortableList<Type>::setSize(const label newSize)
 {
-    List<Type>::setSize(size);
-    indices_.setSize(size);
+    label oldSize = List<Type>::size();
+
+    List<Type>::setSize(newSize);
+    indices_.setSize(newSize);
+
+    if (newSize > oldSize)
+    {
+        // Has grown. Adapt indices.
+        for (label elemI = oldSize; elemI < newSize; elemI++)
+        {
+            indices_[elemI] = elemI;
+        }
+    }
 }
 
 
@@ -117,6 +136,16 @@ void SortableList<Type>::sort()
     }
 
     List<Type>::operator=(tmpValues);
+}
+
+
+// * * * * * * * * * * * * * * * Member Operators  * * * * * * * * * * * * * //
+
+template <class Type>
+void Foam::SortableList<Type>::operator=(const SortableList<Type>& rhs)
+{
+    List<Type>::operator=(rhs);
+    indices_ = rhs.indices();
 }
 
 

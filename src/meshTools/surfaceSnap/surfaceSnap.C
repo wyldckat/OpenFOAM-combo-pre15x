@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -234,7 +234,8 @@ Foam::point Foam::surfaceSnap::getAvgPos
 //    }
 //    else
 //    {
-//        Warning<< "Did not find angle on face > 90 degrees" << nl
+//        WarningIn("Foam::surfaceSnap::unsnapFace")
+//            << "Did not find angle on face > 90 degrees" << nl
 //            << "Face:" << faceI << " unsnapped points:"
 //            << IndirectList<point>(points_, f)
 //            << " snapped points:" << facePts
@@ -818,7 +819,8 @@ Foam::label Foam::surfaceSnap::snapFeaturesPost
 
             if (patchEdgeI == -1)
             {
-                Warning<< "Did not find patch edge close to point "
+                WarningIn("Foam::surfaceSnap::snapFeaturesPost")
+                    << "Did not find patch edge close to point "
                     << edgePoint << " on surface feature edge "
                     << surfEdgeI << endl;
             }

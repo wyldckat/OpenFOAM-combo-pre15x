@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -53,11 +51,8 @@ Foam::label Foam::globalPoints::countPatchPoints
 
         if
         (
-            (
-                Pstream::parRun()
-             && typeid(pp) == typeid(processorPolyPatch)
-            )
-         || typeid(pp) == typeid(cyclicPolyPatch)
+            (Pstream::parRun() && isA<processorPolyPatch>(pp))
+         || isA<cyclicPolyPatch>(pp)
         )
         {
             nTotPoints += pp.nPoints();
@@ -214,11 +209,8 @@ void Foam::globalPoints::initOwnPoints
 
         if
         (
-            (
-                Pstream::parRun()
-             && typeid(pp) == typeid(processorPolyPatch)
-            )
-         || typeid(pp) == typeid(cyclicPolyPatch)
+            (Pstream::parRun() && isA<processorPolyPatch>(pp))
+         || isA<cyclicPolyPatch>(pp)
         )
         {
             const labelList& meshPoints = pp.meshPoints();
@@ -280,7 +272,7 @@ void Foam::globalPoints::sendPatchPoints(const labelHashSet& changedPoints)
     {
         const polyPatch& pp = patches[patchI];
 
-        if (Pstream::parRun() && typeid(pp) == typeid(processorPolyPatch))
+        if (Pstream::parRun() && isA<processorPolyPatch>(pp))
         {
             // Information to send:
             // patch face
@@ -331,7 +323,7 @@ void Foam::globalPoints::sendPatchPoints(const labelHashSet& changedPoints)
 
                 if (debug)
                 {
-                    Sout<< " Sending to "
+                    Pout<< " Sending to "
                         << procPatch.neighbProcNo() << "   point information:"
                         << patchFaces.size() << endl;
                 }
@@ -360,7 +352,7 @@ void Foam::globalPoints::receivePatchPoints(labelHashSet& changedPoints)
     {
         const polyPatch& pp = patches[patchI];
 
-        if (Pstream::parRun() && typeid(pp) == typeid(processorPolyPatch))
+        if (Pstream::parRun() && isA<processorPolyPatch>(pp))
         {
             const processorPolyPatch& procPatch =
                 refCast<const processorPolyPatch>(pp);
@@ -376,7 +368,7 @@ void Foam::globalPoints::receivePatchPoints(labelHashSet& changedPoints)
 
             if (debug)
             {
-                Sout<< " Received from "
+                Pout<< " Received from "
                     << procPatch.neighbProcNo() << "   point information:"
                     << patchFaces.size() << endl;
             }
@@ -392,14 +384,14 @@ void Foam::globalPoints::receivePatchPoints(labelHashSet& changedPoints)
                 label meshPointI = f[index];
 
                 //const procPointList& info = nbrInfo[i];
-                //Sout << "Received for my coord "
+                //Pout << "Received for my coord "
                 //    << mesh_.points()[meshPointI];
                 //
                 //forAll(info, j)
                 //{
-                //    Sout<< ' ' <<info[j];
+                //    Pout<< ' ' <<info[j];
                 //}
-                //Sout<< endl;
+                //Pout<< endl;
 
                 if (storeInfo(nbrInfo[i], meshPointI))
                 {
@@ -407,7 +399,7 @@ void Foam::globalPoints::receivePatchPoints(labelHashSet& changedPoints)
                 }
             }
         }
-        else if (typeid(pp) == typeid(cyclicPolyPatch))
+        else if (isA<cyclicPolyPatch>(pp))
         {
             // Handle cyclics: send lower half to upper half and vice versa.
             // Or since they both are in memory just do it point by point.
@@ -501,13 +493,13 @@ void Foam::globalPoints::remove(const Map<label>& directNeighbours)
                 // Normal faceNeighbours
                 if (a[0] == Pstream::myProcNo())
                 {
-                    //Sout<< "Removing direct neighbour:"
+                    //Pout<< "Removing direct neighbour:"
                     //    << mesh_.points()[a[1]]
                     //    << endl;
                 }
                 else if (b[0] == Pstream::myProcNo())
                 {
-                    //Sout<< "Removing direct neighbour:"
+                    //Pout<< "Removing direct neighbour:"
                     //    << mesh_.points()[b[1]]
                     //    << endl;
                 }
@@ -580,7 +572,7 @@ Foam::labelList Foam::globalPoints::getMasterPoints() const
             // Points should have an equivalence list >= 2 since otherwise
             // they would be direct neighbours and have been removed in the
             // call to 'remove'.
-            Sout<< "MeshPoint:" << meshPointI
+            Pout<< "MeshPoint:" << meshPointI
                 << " coord:" << mesh_.points()[meshPointI]
                 << " has no corresponding point on a neighbouring processor"
                 << endl;
@@ -639,7 +631,7 @@ void Foam::globalPoints::sendSharedPoints(const labelList& changedIndices) const
     {
         const polyPatch& pp = patches[patchI];
 
-        if (Pstream::parRun() && typeid(pp) == typeid(processorPolyPatch))
+        if (Pstream::parRun() && isA<processorPolyPatch>(pp))
         {
             const processorPolyPatch& procPatch =
                 refCast<const processorPolyPatch>(pp);
@@ -648,7 +640,7 @@ void Foam::globalPoints::sendSharedPoints(const labelList& changedIndices) const
 
             if (debug)
             {
-                Sout<< "Sending to " << procPatch.neighbProcNo()
+                Pout<< "Sending to " << procPatch.neighbProcNo()
                     << "  changed sharedPoints info:"
                     << changedIndices.size() << endl;
             }
@@ -677,7 +669,7 @@ void Foam::globalPoints::receiveSharedPoints(labelList& changedIndices)
     {
         const polyPatch& pp = patches[patchI];
 
-        if (Pstream::parRun() && typeid(pp) == typeid(processorPolyPatch))
+        if (Pstream::parRun() && isA<processorPolyPatch>(pp))
         {
             const processorPolyPatch& procPatch =
                 refCast<const processorPolyPatch>(pp);
@@ -751,7 +743,7 @@ void Foam::globalPoints::receiveSharedPoints(labelList& changedIndices)
                 }
             }
         }
-        else if (typeid(pp) == typeid(cyclicPolyPatch))
+        else if (isA<cyclicPolyPatch>(pp))
         {
             const cyclicPolyPatch& cycPatch =
                 refCast<const cyclicPolyPatch>(pp);
@@ -899,9 +891,7 @@ Foam::globalPoints::globalPoints(const polyMesh& mesh)
 {
     if (debug)
     {
-        Sout.prefix() = '[' +  name(Pstream::myProcNo()) + "] ";
-
-        Sout<< "globalPoints::globalPoints(const polyMesh&) : "
+        Pout<< "globalPoints::globalPoints(const polyMesh&) : "
             << "doing processor to processor communication to get sharedPoints"
             << endl;
     }
@@ -948,6 +938,8 @@ Foam::globalPoints::globalPoints(const polyMesh& mesh)
     // Remove direct neighbours from point equivalences.
     remove(neighbourList);
 
+
+    //Pout<< "After removing locally connected points:" << endl;
     //for
     //(
     //    Map<label>::const_iterator iter = meshToProcPoint_.begin();
@@ -960,13 +952,14 @@ Foam::globalPoints::globalPoints(const polyMesh& mesh)
     //
     //    forAll(pointInfo, i)
     //    {
-    //        Sout<< "pointI:" << meshPointI << ' '
+    //        Pout<< "    pointI:" << meshPointI << ' '
     //            << mesh.points()[meshPointI]
     //            << " connected to proc " << pointInfo[i][0]
     //            << " point:" << pointInfo[i][1] 
     //        << endl;
     //    }
     //}
+
 
     // We now have - in procPoints_ - a list of points which are shared between
     // multiple processors. These are the ones for which are sharedPoint
@@ -997,7 +990,7 @@ Foam::globalPoints::globalPoints(const polyMesh& mesh)
 
     if (debug)
     {
-        Sout<< "sharedPointSizes:" << sharedPointSizes << endl;
+        Pout<< "sharedPointSizes:" << sharedPointSizes << endl;
     }
 
     // Get total number of shared points
@@ -1053,7 +1046,7 @@ Foam::globalPoints::globalPoints(const polyMesh& mesh)
     {
         if (debug)
         {
-            Sout<< "Determined " << changedIndices.size() << " shared points."
+            Pout<< "Determined " << changedIndices.size() << " shared points."
                 << " Exchanging them" << endl;
         }
         sendSharedPoints(changedIndices);
@@ -1081,7 +1074,7 @@ Foam::globalPoints::globalPoints(const polyMesh& mesh)
 
     if (debug)
     {
-        Sout<< "globalPoints::globalPoints(const polyMesh&) : "
+        Pout<< "globalPoints::globalPoints(const polyMesh&) : "
             << "Finished global points" << endl;
     }
 }

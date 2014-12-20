@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     plane
@@ -53,6 +53,34 @@ namespace Foam
 
 class plane
 {
+public:
+
+        class ray
+        {
+            point refPoint_;
+
+            vector dir_;
+
+        public:
+
+            ray(const point& refPoint, const vector& dir)
+            :
+                refPoint_(refPoint),
+                dir_(dir)
+            {}
+
+            const point& refPoint() const
+            {
+                return refPoint_;
+            }
+
+            const vector& dir() const
+            {
+                return dir_;
+            }
+        };
+
+private:
     // Private data
 
         //- Plane normal
@@ -96,6 +124,9 @@ public:
         //- Construct from dictionary
         plane(const dictionary& planeDict);
 
+        //- Construct from Istream. Assumes the base + normal notation.
+        plane(Istream& is);
+
 
     // Member Functions
 
@@ -119,6 +150,12 @@ public:
         //  origin and direction
         scalar normalIntersect(const point& pnt0, const vector& dir) const;
 
+        //- Return cut coefficient for plane and ray
+        scalar normalIntersect(const ray& r) const
+        {
+            return normalIntersect(r.refPoint(), r.dir());
+        }
+
         //- Return the cutting point between the plane and
         // a line passing through the supplied points
         template<class Point, class PointRef>
@@ -127,11 +164,12 @@ public:
             return normalIntersect(l.start(), l.vec());
         }
 
+        //- Return the cutting line between this plane and another.
+        //  Returned as direction vector and point line goes through.
+        ray planeIntersect(const plane&) const;
+
         //- Return the cutting point between this plane and two other planes
         point planePlaneIntersect(const plane&, const plane&) const;
-
-        //- Return the cutting line between this plane and another
-        //line planeIntersect(const plane&) const;
 
     // IOstream Operators
 

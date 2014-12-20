@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -32,7 +30,7 @@ Description
 #include "physicalConstants.H"
 #include "boolList.H"
 #include "labelHashSet.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "Map.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -87,8 +85,10 @@ bool primitiveMesh::checkClosedBoundary(const bool report) const
 
     if (maxOpen > closedTolerance_*max(1.0, sumMagClosedBoundary))
     {
-        SeriousError
-            << "Possible hole in boundary description" << endl;
+        SeriousErrorIn
+        (
+            "primitiveMesh::checkClosedBoundary(const bool report) const"
+        )   << "Possible hole in boundary description" << endl;
 
         Info<< "Boundary openness in x-direction = "
             << sumClosed.component(vector::X) << endl;
@@ -146,10 +146,11 @@ bool primitiveMesh::checkClosedCells
 
         if (min(curCell) < 0 || max(curCell) > nFaces())
         {
-            Warning
-                << "bool primitiveMesh::checkClosedCells("
-                << "const bool, labelHashSet*) const: "
-                << "Cell " << cI << " contains face labels out of range: "
+            WarningIn
+            (
+                "bool primitiveMesh::checkClosedCells("
+                "const bool, labelHashSet*) const"
+            )   << "Cell " << cI << " contains face labels out of range: "
                 << curCell << " Max face index = " << nFaces() << endl;
 
             if (setPtr)
@@ -163,10 +164,11 @@ bool primitiveMesh::checkClosedCells
 
     if (nErrorClosed > 0)
     {
-        SeriousError
-            << "bool primitiveMesh::checkClosedCells("
-            << "const bool report, labelHashSet*) const: "
-            << nErrorClosed << " cells with invalid face labels found"
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkClosedCells("
+            "const bool report, labelHashSet*) const"
+        )  << nErrorClosed << " cells with invalid face labels found"
             << endl;
 
         return true;
@@ -224,7 +226,7 @@ bool primitiveMesh::checkClosedCells
         {
             if (debug || report)
             {
-                Sout<< "Cell " << cellI << " is not closed. "
+                Pout<< "Cell " << cellI << " is not closed. "
                     << "Face area vectors sum up to " << mag(sumClosed[cellI])
                     << " directionwise " << sumClosed[cellI] << " or "
                     << mag(sumClosed[cellI])
@@ -251,7 +253,7 @@ bool primitiveMesh::checkClosedCells
         {
             if (debug || report)
             {
-                Sout<< "High aspect ratio for cell " << cellI
+                Pout<< "High aspect ratio for cell " << cellI
                     << ": " << aspectRatio << endl;
             }
 
@@ -268,8 +270,11 @@ bool primitiveMesh::checkClosedCells
 
     if (nOpen > 0)
     {
-        SeriousError
-            << nOpen << " open cells found. Max cell openness: "
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkClosedCells("
+            "const bool report, labelHashSet*) const"
+        )   << nOpen << " open cells found. Max cell openness: "
             << maxOpenCell << endl;
 
         return true;
@@ -277,8 +282,11 @@ bool primitiveMesh::checkClosedCells
 
     if (nAspect > 0)
     {
-        SeriousError
-            << nAspect << " high aspect ratio cells found.  "
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkClosedCells("
+            "const bool report, labelHashSet*) const"
+        )   << nAspect << " high aspect ratio cells found.  "
             << "Max aspect ratio: " << maxAspectRatio
             << endl;
 
@@ -326,7 +334,7 @@ bool primitiveMesh::checkFaceAreas
             {
                 if (isInternalFace(faceI))
                 {
-                    Sout<< "Zero or negative face area detected for "
+                    Pout<< "Zero or negative face area detected for "
                         << "internal face " << faceI << " between cells "
                         << own[faceI] << " and " << nei[faceI]
                         << ".  Face area magnitude = "
@@ -334,7 +342,7 @@ bool primitiveMesh::checkFaceAreas
                 }
                 else
                 {
-                    Sout<< "Zero or negative face area detected for "
+                    Pout<< "Zero or negative face area detected for "
                         << "boundary face " << faceI << " next to cell "
                         << own[faceI] << ".  Face area magnitude = "
                         << magFaceAreas[faceI] << endl;
@@ -356,10 +364,11 @@ bool primitiveMesh::checkFaceAreas
 
     if (minArea < VSMALL)
     {
-        SeriousError
-            << "bool primitiveMesh::checkFaceAreas("
-            << "const bool, labelHashSet*) const: "
-            << "Zero or negative face area detected.  Minimum negative area: " 
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkFaceAreas("
+            "const bool report, labelHashSet*) const"
+        )   << "Zero or negative face area detected.  Minimum negative area: " 
             << minArea << ". This mesh is invalid"
             << endl;
 
@@ -405,7 +414,7 @@ bool primitiveMesh::checkCellVolumes
         {
             if (debug || report)
             {
-                Sout<< "Zero or negative cell volume detected for cell "
+                Pout<< "Zero or negative cell volume detected for cell "
                     << cellI << ".  Volume = " << vols[cellI] << endl;
             }
 
@@ -427,10 +436,11 @@ bool primitiveMesh::checkCellVolumes
 
     if (minVolume < VSMALL)
     {
-        SeriousError
-            << "bool primitiveMesh::checkCellVolumes("
-            << "const bool, labelHashSet*) const: "
-            << "Zero or negative cell volume detected.  "
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkCellVolumes("
+            "const bool report, labelHashSet*) const"
+        )   << "Zero or negative cell volume detected.  "
             << "Minimum negative volume: " 
             << minVolume << ".\nNumber of negative volume cells: "
             << nNegVolCells << ".  This mesh is invalid"
@@ -499,7 +509,7 @@ bool primitiveMesh::checkFaceDotProduct
                 if (debug || report)
                 {
                     // Severe non-orthogonality but mesh still OK
-                    Sout<< "Severe non-orthogonality for face " << faceI
+                    Pout<< "Severe non-orthogonality for face " << faceI
                         << " between cells " << own[faceI]
                         << " and " << nei[faceI]
                         << ": Angle = "
@@ -517,8 +527,11 @@ bool primitiveMesh::checkFaceDotProduct
             else
             {
                 // Non-orthogonality greater than 90 deg
-                Warning
-                    << "Severe non-orthogonality detected for face " << faceI
+                WarningIn
+                (
+                    "primitiveMesh::checkFaceDotProduct"
+                    "(const bool report, labelHashSet* setPtr) const"
+                )   << "Severe non-orthogonality detected for face " << faceI
                     << " between cells " << own[faceI] << " and " << nei[faceI]
                     << ": Angle = " << ::acos(dDotS)/physicalConstant::pi*180.0
                     << " deg." << endl;
@@ -560,10 +573,25 @@ bool primitiveMesh::checkFaceDotProduct
         }
     }
 
+    if (debug || report)
+    {
+        if (neiSize > 0)
+        {
+            Info<< "Mesh non-orthogonality Max: "
+                << ::acos(minDDotS)/physicalConstant::pi*180.0
+                << " average: " <<
+                   ::acos(sumDDotS/neiSize)/physicalConstant::pi*180.0
+                << endl;
+        }
+    }
+
     if (errorNonOrth > 0)
     {
-        SeriousError
-            << "Error in non-orthogonality detected" << endl;
+        SeriousErrorIn
+        (
+            "primitiveMesh::checkFaceDotProduct"
+            "(const bool report, labelHashSet* setPtr) const"
+        )   << "Error in non-orthogonality detected" << endl;
 
         return true;
     }
@@ -571,15 +599,6 @@ bool primitiveMesh::checkFaceDotProduct
     {
         if (debug || report)
         {
-            if (neiSize > 0)
-            {
-                Info<< "Mesh non-orthogonality Max: "
-                    << ::acos(minDDotS)/physicalConstant::pi*180.0
-                    << " average: " <<
-                       ::acos(sumDDotS/neiSize)/physicalConstant::pi*180.0
-                    << endl;
-            }
-
             Info<< "Non-orthogonality check OK.\n" << endl;
         }
 
@@ -623,7 +642,7 @@ bool primitiveMesh::checkFacePyramids
         {
             if (debug || report)
             {
-                Sout<< "bool primitiveMesh::checkFacePyramids("
+                Pout<< "bool primitiveMesh::checkFacePyramids("
                     << "const bool, const scalar, labelHashSet*) const: "
                     << "face " << faceI << " points the wrong way. " << endl
                     << "Pyramid volume: " << -pyrVol
@@ -653,7 +672,7 @@ bool primitiveMesh::checkFacePyramids
             {
                 if (debug || report)
                 {
-                    Sout<< "bool primitiveMesh::checkFacePyramids("
+                    Pout<< "bool primitiveMesh::checkFacePyramids("
                         << "const bool, const scalar, labelHashSet*) const: "
                         << "face " << faceI << " points the wrong way. " << endl
                         << "Pyramid volume: " << -pyrVol
@@ -678,8 +697,11 @@ bool primitiveMesh::checkFacePyramids
 
     if (nErrorPyrs > 0)
     {
-        SeriousError
-            << "Error in face pyramids: faces pointing the wrong way!"
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkFacePyramids("
+            "const bool, const scalar, labelHashSet*) const"
+        )   << "Error in face pyramids: faces pointing the wrong way!"
             << endl;
 
         return true;
@@ -740,7 +762,7 @@ bool primitiveMesh::checkFaceSkewness
         {
             if (debug || report)
             {
-                Sout<< " Severe skewness for face " << faceI
+                Pout<< " Severe skewness for face " << faceI
                     << " skewness = " << skewness << endl;
             }
 
@@ -758,13 +780,62 @@ bool primitiveMesh::checkFaceSkewness
         }
     }
 
+
+    // Boundary faces: consider them to have only skewness error.
+    // (i.e. treat as if mirror cell on other side)
+
+    const vectorField& fAreas = faceAreas();
+
+    for (label faceI = nInternalFaces(); faceI < nFaces(); faceI++)
+    {
+        vector faceNormal = fAreas[faceI];
+        faceNormal /= mag(faceNormal) + VSMALL;
+
+        vector dOwn = faceCtrs[faceI] - cellCtrs[own[faceI]];
+
+        vector dWall = faceNormal*(faceNormal & dOwn);
+
+        point faceIntersection = cellCtrs[own[faceI]] + dWall;
+
+        scalar skewness =
+            mag(faceCtrs[faceI] - faceIntersection)
+            /(2*mag(dWall) + VSMALL);
+
+        // Check if the skewness vector is greater than the PN vector.
+        // This does not cause trouble but is a good indication of a poor mesh.
+        if (skewness > skewWarn_)
+        {
+            if (debug || report)
+            {
+                Pout<< " Severe skewness for boundary face " << faceI
+                    << " skewness = " << skewness << endl;
+            }
+
+            if (setPtr)
+            {
+                setPtr->insert(faceI);
+            }
+
+            nWarnSkew++;
+        }
+
+        if(skewness > maxSkew)
+        {
+            maxSkew = skewness;
+        }
+    }
+
+
     reduce(maxSkew, maxOp<scalar>());
     reduce(nWarnSkew, sumOp<label>());
 
     if (nWarnSkew > 0)
     {
-        Warning
-            << "Large face skewness detected.  Max skewness = " << 100*maxSkew
+        WarningIn
+        (
+            "primitiveMesh::checkFaceSkewness"
+            "(const bool report, labelHashSet* setPtr) const"
+        )   << "Large face skewness detected.  Max skewness = " << 100*maxSkew
             << " percent.\nThis may impair the quality of the result." << nl
             << nWarnSkew << " highly skew faces detected."
             << endl;
@@ -806,8 +877,11 @@ bool primitiveMesh::checkPoints
     {
         if (pf[pointI].size() == 0)
         {
-            Warning
-                << "Point " << pointI << " not used by any faces." << endl;
+            WarningIn
+            (
+                "bool primitiveMesh::checkPoints"
+                "(const bool, labelHashSet*) const"
+            )   << "Point " << pointI << " not used by any faces." << endl;
 
             if (setPtr)
             {
@@ -824,8 +898,11 @@ bool primitiveMesh::checkPoints
     {
         if (pc[pointI].size() == 0)
         {
-            Warning
-                << "Point " << pointI << " not used by any cells." << endl;
+            WarningIn
+            (
+                "bool primitiveMesh::checkPoints"
+                "(const bool, labelHashSet*) const"
+            )   << "Point " << pointI << " not used by any cells." << endl;
 
             if (setPtr)
             {
@@ -840,8 +917,11 @@ bool primitiveMesh::checkPoints
 
     if (nFaceErrors > 0 || nCellErrors > 0)
     {
-        SeriousError
-            << "Error in point usage detected: " << nFaceErrors
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkPoints"
+            "(const bool, labelHashSet*) const"
+        )   << "Error in point usage detected: " << nFaceErrors
             << " unused points found in the mesh.  This mesh is invalid."
             << endl;
 
@@ -982,9 +1062,142 @@ bool primitiveMesh::checkFaceAngles
 
     if (nConcave > 0)
     {
-        Warning
-            << nConcave  << " face points with severe concave angle (> "
+        WarningIn
+        (
+            "primitiveMesh::checkFaceAngles"
+            "(const bool, const scalar, labelHashSet*)"
+        )   << nConcave  << " face points with severe concave angle (> "
             << maxDeg << " deg) found.\n"
+            << endl;
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+
+// Check warpage of faces. Is calculated as the difference between areas of
+// individual triangles and the overall area of the face (which ifself is
+// is the average of the areas of the individual triangles).
+bool primitiveMesh::checkFaceFlatness
+(
+    const bool report,
+    const scalar warnFlatness,
+    labelHashSet* setPtr
+) const
+{
+    if (debug)
+    {
+        Info<< "bool primitiveMesh::checkFaceFlatness"
+            << "(const bool, const scalar, labelHashSet*) const: "
+            << "checking face flatness" << endl;
+    }
+
+    if (warnFlatness < 0 || warnFlatness > 1)
+    {
+        FatalErrorIn
+        (
+            "primitiveMesh::checkFaceFlatness"
+            "(const bool, const scalar, labelHashSet*)"
+        )   << "warnFlatness should be [0..1] but is now " << warnFlatness
+            << abort(FatalError);
+    }
+
+
+    const pointField& p = points();
+    const faceList& fcs = faces();
+    const pointField& fctrs = faceCentres();
+
+    // Areas are calculated as the sum of areas. (see
+    // primitiveMeshFaceCentresAndAreas.C)
+    scalarField magAreas(mag(faceAreas()));
+
+    label nWarped = 0;
+
+    scalar minFlatness = GREAT;
+    scalar sumFlatness = 0;
+    label nSummed = 0;
+
+    forAll(fcs, faceI)
+    {
+        const face& f = fcs[faceI];
+
+        if (f.size() > 3 && magAreas[faceI] > VSMALL)
+        {
+            const point& fc = fctrs[faceI];
+
+            // Calculate the sum of magnitude of areas and compare to magnitude
+            // of sum of areas.
+
+            scalar sumA = 0.0;
+
+            forAll(f, fp)
+            {
+                const point& thisPoint = p[f[fp]];
+                const point& nextPoint = p[f.nextLabel(fp)];
+
+                // Triangle around fc.
+                vector n = 0.5*((nextPoint - thisPoint)^(fc - thisPoint));
+                sumA += mag(n);
+            }
+
+            scalar flatness = magAreas[faceI] / (sumA+VSMALL);
+
+            sumFlatness += flatness;
+            nSummed++;
+
+            minFlatness = min(minFlatness, flatness);
+
+            if (flatness < warnFlatness)
+            {
+                nWarped++;
+
+                if (setPtr)
+                {
+                    setPtr->insert(faceI);
+                }
+            }
+        }
+    }
+
+
+    reduce(nWarped, sumOp<label>());
+    reduce(minFlatness, minOp<scalar>());
+
+    reduce(nSummed, sumOp<label>());
+    reduce(sumFlatness, sumOp<scalar>());
+
+    if (report && nWarped > 0)
+    {
+        Info<< "Face flatness (1 = flat, 0 = butterfly) : average = "
+            << sumFlatness / nSummed << "  min = " << minFlatness << endl;
+
+        if (nWarped> 0)
+        {
+            Info<< "There are " << nWarped
+                << " faces with ratio between projected and actual area < "
+                << warnFlatness
+                << ".\nMinimum ratio (minimum flatness, maximum warpage) = "
+                << minFlatness << nl << endl;
+        }
+        else
+        {
+            Info<< "All faces are flat in that the ratio between projected"
+                << " and actual area is > " << warnFlatness << nl << endl;
+        }
+    }
+
+    if (nWarped > 0)
+    {
+        WarningIn
+        (
+            "primitiveMesh::checkFaceFlatness"
+            "(const bool, const scalar, labelHashSet*)"
+        )   << nWarped  << " faces with severe warpage (flatness < "
+            << warnFlatness << ") found.\n"
             << endl;
 
         return true;
@@ -1032,7 +1245,7 @@ bool primitiveMesh::checkUpperTriangular
         {
             if (debug || report)
             {
-                Sout<< "bool primitiveMesh::checkUpperTriangular("
+                Pout<< "bool primitiveMesh::checkUpperTriangular("
                     << "const bool, labelHashSet*) const : " << endl
                     << "face " << faceI
                     << " has the owner label greater than neighbour:" << endl
@@ -1111,7 +1324,7 @@ bool primitiveMesh::checkUpperTriangular
         {
             error = true;
 
-            Sout<< "bool primitiveMesh::checkUpperTriangular(const bool"
+            Pout<< "bool primitiveMesh::checkUpperTriangular(const bool"
                 << ", labelHashSet*) const : " << endl
                 << "face " << faceI << " out of position. Markup label: "
                 << checkInternalFaces[faceI] << ". All subsequent faces will "
@@ -1131,8 +1344,11 @@ bool primitiveMesh::checkUpperTriangular
 
     if (error)
     {
-        SeriousError
-            << "Error in face ordering: faces not in upper triangular order!"
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkUpperTriangular(const bool"
+            ", labelHashSet*) const"
+        )   << "Error in face ordering: faces not in upper triangular order!"
             << endl;
 
         return true;
@@ -1207,11 +1423,11 @@ bool primitiveMesh::checkCellsZipUp
             }
             else if (edgeUsage[edgeI] != 2)
             {
-                Warning
-                    << "bool primitiveMesh::checkCellsZipUp("
-                    << "const bool, labelHashSet*) "
-                    << "const : " << endl
-                    << "edge " << cellEdges[edgeI] << " in cell " << cellI
+                WarningIn
+                (
+                    "bool primitiveMesh::checkCellsZipUp("
+                    "const bool, labelHashSet*) const"
+                )   << "edge " << cellEdges[edgeI] << " in cell " << cellI
                     << " used " << edgeUsage[edgeI] << " times. " << endl
                     << "Should be 1 or 2 - serious error in mesh structure"
                     << endl;
@@ -1229,7 +1445,7 @@ bool primitiveMesh::checkCellsZipUp
             {
                 singleEdges.setSize(nSingleEdges);
 
-                Sout<< "bool primitiveMesh::checkCellsZipUp(const bool"
+                Pout<< "bool primitiveMesh::checkCellsZipUp(const bool"
                     << ", labelHashSet*) const : " << endl
                     << "Cell " << cellI << " has got " << nSingleEdges
                     << " unmatched edges: " << singleEdges << endl;
@@ -1248,10 +1464,11 @@ bool primitiveMesh::checkCellsZipUp
 
     if (nOpenCells > 0)
     {
-        Warning
-            << "bool primitiveMesh::checkCellsZipUp("
-            << "const bool, labelHashSet*) const : "
-            << nOpenCells
+        WarningIn
+        (
+            "bool primitiveMesh::checkCellsZipUp("
+            "const bool, labelHashSet*) const"
+        )   << nOpenCells
             << " open cells found.  Please use the mesh zip-up tool. "
             << endl;
 
@@ -1294,10 +1511,11 @@ bool primitiveMesh::checkFaceVertices
 
         if (min(curFace) < 0 || max(curFace) > nPoints())
         {
-            Warning
-                << "bool primitiveMesh::checkFaceVertices("
-                << "const bool, labelHashSet*) const: "
-                << "Face " << fI << " contains vertex labels out of range: "
+            WarningIn
+            (
+                "bool primitiveMesh::checkFaceVertices("
+                "const bool, labelHashSet*) const"
+            )   << "Face " << fI << " contains vertex labels out of range: "
                 << curFace << " Max point index = " << nPoints()-1 << endl;
 
             if (setPtr)
@@ -1317,10 +1535,11 @@ bool primitiveMesh::checkFaceVertices
 
             if (!inserted)
             {
-                Warning
-                    << "bool primitiveMesh::checkFaceVertices("
-                    << "const bool, labelHashSet*) const: "
-                    << "Face " << fI << " contains duplicate vertex labels: "
+                WarningIn
+                (
+                    "bool primitiveMesh::checkFaceVertices("
+                    "const bool, labelHashSet*) const"
+                )   << "Face " << fI << " contains duplicate vertex labels: "
                     << curFace << endl;
 
                 if (setPtr)
@@ -1337,9 +1556,11 @@ bool primitiveMesh::checkFaceVertices
 
     if (nErrorFaces > 0)
     {
-        SeriousError
-            << "bool primitiveMesh::checkFaceVertices("
-            << "const bool, labelHashSet*) const: "
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkFaceVertices("
+            "const bool, labelHashSet*) const"
+        )   << "const bool, labelHashSet*) const: "
             << nErrorFaces << " faces with invalid vertex labels found"
             << endl;
 
@@ -1376,10 +1597,11 @@ void primitiveMesh::warnCommonPoints
             // Warning for if more than 2 shared points
             if (!hasWarned)
             {
-                Warning
-                    << "bool primitiveMesh::warnCommonPoints(const label"
-                    << ", const Map<label>&, bool&) const :" << endl
-                    << "Face " << faceI << " vertex labels "
+                WarningIn
+                (
+                    "bool primitiveMesh::warnCommonPoints(const label"
+                    ", const Map<label>&, bool&) const"
+                )   << "Face " << faceI << " vertex labels "
                     << faces()[faceI]
                     << " and face " << nbFaceI << " vertex labels "
                     << faces()[nbFaceI]
@@ -1402,7 +1624,8 @@ void primitiveMesh::warnCommonPoints
 bool primitiveMesh::checkDuplicateFaces
 (
     const label faceI,
-    const Map<label>& nCommonPoints
+    const Map<label>& nCommonPoints,
+    labelHashSet* setPtr
 ) const
 {
     bool error = false;
@@ -1418,11 +1641,17 @@ bool primitiveMesh::checkDuplicateFaces
 
         if (nCommon == nbFace.size() || nCommon == curFace.size())
         {
-            Sout<< "bool primitiveMesh::checkDuplicateFaces("
+            Pout<< "bool primitiveMesh::checkDuplicateFaces("
                 << "const label, const Map<label>&) const :" << endl
                 << "Face " << faceI << " vertex labels " << curFace
                 << " and face " << nbFaceI << " vertex labels " << nbFace
                 << " share too many vertices" << endl;
+
+            if (setPtr)
+            {
+                setPtr->insert(faceI);
+                setPtr->insert(nbFaceI);
+            }
 
             error = true;
         }
@@ -1435,7 +1664,8 @@ bool primitiveMesh::checkDuplicateFaces
 bool primitiveMesh::checkCommonOrder
 (
     const label faceI,
-    const Map<label>& nCommonPoints
+    const Map<label>& nCommonPoints,
+    labelHashSet* setPtr
 ) const
 {
     bool error = false;
@@ -1568,7 +1798,7 @@ bool primitiveMesh::checkCommonOrder
 
                         if (curFace[curFp] != nbFace[curNb])
                         {
-                            Sout<< "bool primitiveMesh::checkCommonOrder("
+                            Pout<< "bool primitiveMesh::checkCommonOrder("
                                 << "const label, const Map<label>&) const: "
                                 << endl
                                 << "Face " << faceI << " vertex labels "
@@ -1577,6 +1807,12 @@ bool primitiveMesh::checkCommonOrder
                                 << nCommon
                                 << " vertices which are not in consecutive"
                                 << " order" << endl;
+
+                            if (setPtr)
+                            {
+                                setPtr->insert(faceI);
+                                setPtr->insert(nbFaceI);
+                            }
 
                             error = true;
 
@@ -1662,24 +1898,14 @@ bool primitiveMesh::checkFaceFaces
         warnCommonPoints(faceI, nCommonPoints, hasWarned);
 
         // Check all vertices shared (duplicate point)
-        if (checkDuplicateFaces(faceI, nCommonPoints))
+        if (checkDuplicateFaces(faceI, nCommonPoints, setPtr))
         {
-            if (setPtr)
-            {
-                setPtr->insert(faceI);
-            }
-
             nErrorDuplicate++;
         }
 
         // Check common vertices are consecutive on both faces
-        if (checkCommonOrder(faceI, nCommonPoints))
+        if (checkCommonOrder(faceI, nCommonPoints, setPtr))
         {
-            if (setPtr)
-            {
-                setPtr->insert(faceI);
-            }
-
             nErrorOrder++;
         }
     }
@@ -1691,17 +1917,19 @@ bool primitiveMesh::checkFaceFaces
     {
         if (nErrorDuplicate > 0)
         {
-            SeriousError
-                << "bool primitiveMesh::checkFaceFaces(const bool"
-                << ", labelHashSet*) const : "
-                << nErrorDuplicate << " duplicate faces found" << endl;
+            SeriousErrorIn
+            (
+                "bool primitiveMesh::checkFaceFaces(const bool"
+                ", labelHashSet*) const"
+            )   << nErrorDuplicate << " duplicate faces found" << endl;
         }
         if (nErrorOrder > 0)
         {
-            SeriousError
-                << "bool primitiveMesh::checkFaceFaces(const bool"
-                << ", labelHashSet*) const : "
-                << nErrorOrder
+            SeriousErrorIn
+            (
+                "bool primitiveMesh::checkFaceFaces(const bool"
+                ", labelHashSet*) const"
+            )   << nErrorOrder
                 << " faces with non-consecutive shared points found" << endl;
         }
 
@@ -1762,7 +1990,7 @@ bool primitiveMesh::checkFloatingCells
         {
             if (debug || report)
             {
-                Sout<< " Cell " << cellI << " has only " << nInternalFaces
+                Pout<< " Cell " << cellI << " has only " << nInternalFaces
                     << " cells connected other cells. This will probably lead"
                     << " to numerical problems" << endl;
             }
@@ -1780,10 +2008,11 @@ bool primitiveMesh::checkFloatingCells
 
     if (nErrorCells > 0)
     {
-        SeriousError
-            << "bool primitiveMesh::checkFloatingCells(const bool"
-            << ", labelHashSet*) const: "
-            << nErrorCells << " cells which are connected to <= "
+        SeriousErrorIn
+        (
+            "bool primitiveMesh::checkFloatingCells(const bool"
+            ", labelHashSet*) const"
+        )   << nErrorCells << " cells which are connected to <= "
             << minInternalFaces << " other cells found"
             << endl;
 

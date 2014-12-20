@@ -30,19 +30,23 @@ setsTopoSetSource                   =  $(sets)/topoSetSource
 
 setsCellSources                     =  $(sets)/cellSources
 setsCellSourcesFaceToCell           =  $(setsCellSources)/faceToCell
+setsCellSourcesFieldToCell          =  $(setsCellSources)/fieldToCell
 setsCellSourcesPointToCell          =  $(setsCellSources)/pointToCell
 setsCellSourcesLabelToCell          =  $(setsCellSources)/labelToCell
 setsCellSourcesSurfaceToCell        =  $(setsCellSources)/surfaceToCell
 setsCellSourcesCellToCell           =  $(setsCellSources)/cellToCell
 setsCellSourcesShapeToCell          =  $(setsCellSources)/shapeToCell
 setsCellSourcesBoxToCell            =  $(setsCellSources)/boxToCell
+setsCellSourcesRotatedBoxToCell     =  $(setsCellSources)/rotatedBoxToCell
 setsCellSourcesNearestToCell        =  $(setsCellSources)/nearestToCell
 setsCellSourcesNbrToCell            =  $(setsCellSources)/nbrToCell
+setsCellSourcesZoneToCell           =  $(setsCellSources)/zoneToCell
 
 setsFaceSources                     =  $(sets)/faceSources
 setsFaceSourcesFaceToFace           =  $(setsFaceSources)/faceToFace
 setsFaceSourcesLabelToFace          =  $(setsFaceSources)/labelToFace
 setsFaceSourcesCellToFace           =  $(setsFaceSources)/cellToFace
+setsFaceSourcesNormalToFace         =  $(setsFaceSources)/normalToFace
 setsFaceSourcesPointToFace          =  $(setsFaceSources)/pointToFace
 setsFaceSourcesPatchToFace          =  $(setsFaceSources)/patchToFace
 setsFaceSourcesZoneToFace           =  $(setsFaceSources)/zoneToFace
@@ -111,18 +115,22 @@ $(setsTopoSets)/pointSet.C
 $(setsTopoSetSource)/topoSetSource.C
 
 $(setsCellSourcesFaceToCell)/faceToCell.C
+$(setsCellSourcesFieldToCell)/fieldToCell.C
 $(setsCellSourcesPointToCell)/pointToCell.C
 $(setsCellSourcesShapeToCell)/shapeToCell.C
 $(setsCellSourcesBoxToCell)/boxToCell.C
+$(setsCellSourcesRotatedBoxToCell)/rotatedBoxToCell.C
 $(setsCellSourcesLabelToCell)/labelToCell.C
 $(setsCellSourcesSurfaceToCell)/surfaceToCell.C
 $(setsCellSourcesCellToCell)/cellToCell.C
 $(setsCellSourcesNearestToCell)/nearestToCell.C
 $(setsCellSourcesNbrToCell)/nbrToCell.C
+$(setsCellSourcesZoneToCell)/zoneToCell.C
 
 $(setsFaceSourcesFaceToFace)/faceToFace.C
 $(setsFaceSourcesLabelToFace)/labelToFace.C
 $(setsFaceSourcesCellToFace)/cellToFace.C
+$(setsFaceSourcesNormalToFace)/normalToFace.C
 $(setsFaceSourcesPointToFace)/pointToFace.C
 $(setsFaceSourcesPatchToFace)/patchToFace.C
 $(setsFaceSourcesZoneToFace)/zoneToFace.C

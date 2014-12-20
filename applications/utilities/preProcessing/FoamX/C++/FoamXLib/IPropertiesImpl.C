@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -35,7 +33,7 @@ Description
 #include "FoamXErrors.H"
 #include "IPropertiesImpl.H"
 #include "ITypeDescriptorImpl.H"
-#include "IApplicationClassImpl.H"
+#include "IApplicationImpl.H"
 #include "IDictionaryEntryImpl.H"
 #include "RootDictionary.H"
 #include "IGeometryDescriptorImpl.H"
@@ -50,28 +48,30 @@ Description
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-FoamXServer::ApplicationClassDescriptor*
-FoamX::IPropertiesImpl::readAppClassDescriptor
+FoamXServer::ApplicationDescriptor*
+FoamX::IPropertiesImpl::readApplicationDescriptor
 (
-    const Foam::word& name,
-    const Foam::fileName& category,
+    const word& name,
+    const fileName& category,
+    const fileName& path,
     const bool systemClass
 )
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::readAppClassDescriptor"
-        "(const Foam::word& name, const Foam::fileName& category, "
+        "FoamX::IPropertiesImpl::readApplicationDescriptor"
+        "(const word& name, const fileName& category, "
         "const bool systemClass)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
     try
     {
-        // Create and initialise a new ApplicationClassDescriptor object.
-        ApplicationClassDescriptor* pDesc = new ApplicationClassDescriptor();
+        // Create and initialise a new ApplicationDescriptor object.
+        ApplicationDescriptor* pDesc = new ApplicationDescriptor();
 
         pDesc->name = name.c_str();
         pDesc->category = category.c_str();
+        pDesc->path = path.c_str();
         pDesc->systemClass = systemClass;
 
         return pDesc;
@@ -80,49 +80,57 @@ FoamX::IPropertiesImpl::readAppClassDescriptor
 }
 
 
-void FoamX::IPropertiesImpl::readAppClassDescriptors
+void FoamX::IPropertiesImpl::readApplicationDescriptors
 (
-    const Foam::fileName& dir,
-    const Foam::fileName& category,
+    Foam::HashPtrTable<FoamXServer::ApplicationDescriptor>&
+        appDescriptorsMap,
+    const fileName& dir,
+    const fileName& category,
     const bool systemClass
 )
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::readAppClassDescriptor"
-        "(const Foam::fileName& dir, "
-        "const Foam::fileName& category, "
+        "FoamX::IPropertiesImpl::readApplicationDescriptor"
+        "(const fileName& dir, "
+        "const fileName& category, "
         "const bool systemClass)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
     try
     {
-        fileNameList appClassDirs = readDir(dir, fileName::DIRECTORY);
+        fileNameList appDirs = readDir(dir, fileName::DIRECTORY);
 
-        forAll (appClassDirs, i)
+        forAll (appDirs, i)
         {
+            fileName path = dir/appDirs[i];
+            fileName appDictPathName =
+                path/"FoamX"/(appDirs[i] + ".cfg");
+
             if
             (
-                Foam::file(dir/appClassDirs[i]/(appClassDirs[i] + ".cfg"))
-            && !appClassDescriptorMap_.found(appClassDirs[i])
+                file(appDictPathName)
+            && !appDescriptorsMap.found(appDirs[i])
             )
             {
-                appClassDescriptorMap_.insert
+                appDescriptorsMap.insert
                 (
-                    appClassDirs[i],
-                    readAppClassDescriptor
+                    appDirs[i],
+                    readApplicationDescriptor
                     (
-                        appClassDirs[i],
+                        appDirs[i],
                         category,
+                        path,
                         systemClass
                     )
                 );
             }
 
-            readAppClassDescriptors
+            readApplicationDescriptors
             (
-                dir/appClassDirs[i],
-                category/appClassDirs[i],
+                appDescriptorsMap,
+                path,
+                category/appDirs[i],
                 systemClass
             );
         }
@@ -130,137 +138,49 @@ void FoamX::IPropertiesImpl::readAppClassDescriptors
     CATCH_ALL(functionName);
 }
 
-// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-FoamXServer::UtilityDescriptor* FoamX::IPropertiesImpl::readUtilityDescriptor
+void FoamX::IPropertiesImpl::addPatchFields
 (
-    const Foam::word& name,
-    const Foam::fileName& category,
-    const bool systemClass
+    const dictionary& patchFieldDict
 )
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::readUtilityDescriptor"
-        "(const Foam::word& name, const Foam::fileName& category, "
-        "const bool systemClass)";
+        "FoamX::IPropertiesImpl::addPatchFields"
+        "(const dictionary& patchFieldDict)";
 
-    LogEntry log(functionName, __FILE__, __LINE__);
-
-    try
+    // Initialise the patch field descriptor objects.
+    forAllConstIter(dictionary, patchFieldDict, iter)
     {
-        fileName utilityPath;
+        const word& patchFieldTypeName = iter().keyword();
 
-        if (systemClass)
+        // Create and initialise a new PatchFieldDescriptor object.
+        ITypeDescriptorImpl* pPatchFieldDescriptor = new ITypeDescriptorImpl
+        (
+            patchFieldTypeName, 
+            patchFieldDict.name(),
+            iter(),
+            foamTypesDict_
+        );
+
+        if (pPatchFieldDescriptor == NULL)
         {
-            utilityPath = Paths::system;
-        }
-        else
-        {
-            utilityPath = Paths::user;
-        }
-
-        utilityPath += "/utilities"/category;
-
-        fileName utilityCfgPath = utilityPath/(name + ".cfg");
-
-        // Create and initialise a new UtilityDescriptor object.
-        UtilityDescriptor* pDesc = new UtilityDescriptor();
-
-        pDesc->name = name.c_str();
-        pDesc->category = category.c_str();
-        pDesc->systemClass = systemClass;
-
-        dictionary utilityConfigDict((IFstream(utilityCfgPath)()));
-
-//        pDesc->changesMesh =
-//            readBool(utilityConfigDict.lookup("changesMesh"));
-        pDesc->changesMesh = false;
-
-//        pDesc->changesFields =
-//            readBool(utilityConfigDict.lookup("changesFields"));
-        pDesc->changesFields = false;
-
-        pDesc->description =
-            Foam::string(utilityConfigDict.lookup("description")).c_str();
-
-        pDesc->clientBean = 
-            Foam::string(utilityConfigDict.lookup("clientBean")).c_str();
-
-        word controlDictName = name + "Dict";
-
-        if (utilityConfigDict.found(controlDictName))
-        {
-            ITypeDescriptorImpl* itdPtr = new ITypeDescriptorImpl
+            throw FoamXError
             (
-                controlDictName,
-                utilityCfgPath,
-                utilityConfigDict.subDict(controlDictName),
-                foamTypesDict_
+                E_FAIL,
+                "Failed to create PatchFieldDescriptor object for "
+                "patch field type '" + patchFieldTypeName + "'.",
+                functionName,
+                __FILE__, __LINE__
             );
-
-            pDesc->controlDict = itdPtr->_this();
-        }
-        else
-        {
-            pDesc->controlDict = ITypeDescriptor::_nil();
         }
 
-        return pDesc;
+        // Add to map.
+        patchFieldMap_.insert(patchFieldTypeName, pPatchFieldDescriptor);
     }
-    CATCH_ALL(functionName);
 }
+
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
-
-void FoamX::IPropertiesImpl::readUtilityDescriptors
-(
-    const Foam::fileName& dir,
-    const Foam::fileName& category,
-    const bool systemClass
-)
-{
-    static const char* functionName =
-        "FoamX::IPropertiesImpl::readUtilityDescriptor"
-        "(const Foam::fileName& dir, "
-        "const Foam::fileName& category, "
-        "const bool systemClass)";
-
-    LogEntry log(functionName, __FILE__, __LINE__);
-
-    try
-    {
-        fileNameList utilityCfgs = readDir(dir, fileName::FILE);
-
-        // Initialise the utility descriptor objects.
-        forAll (utilityCfgs, i)
-        {
-            word utilName = utilityCfgs[i].lessExt();
-
-            if (!utilityDescriptorMap_.found(utilName))
-            {
-                utilityDescriptorMap_.insert
-                (
-                    utilName,
-                    readUtilityDescriptor(utilName, category, systemClass)
-                );
-            }
-        }
-
-        fileNameList utilityDirs = readDir(dir, fileName::DIRECTORY);
-
-        forAll (utilityDirs, i)
-        {
-            readUtilityDescriptors
-            (
-                dir/utilityDirs[i],
-                category/utilityDirs[i],
-                systemClass
-            );
-        }
-    }
-    CATCH_ALL(functionName);
-}
-
 
 FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
 :
@@ -274,7 +194,7 @@ FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
     try
     {
         // Open the FoamX system config dictionary.
-        fileName fxConfigFileName = Paths::system/"FoamX.cfg";
+        fileName fxConfigFileName = dotFoam("apps/FoamX/FoamX.cfg");
         if (!exists(fxConfigFileName))
         {
             throw FoamXError
@@ -293,8 +213,7 @@ FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
 
 
         // Open the Foam types dictionary.
-        Foam::fileName foamTypesDictFileName =
-            Paths::system/"types/types.cfg";
+        fileName foamTypesDictFileName = Paths::config/"types/types.cfg";
 
         if (!exists(foamTypesDictFileName))
         {
@@ -309,32 +228,17 @@ FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
         }
         (IFstream(foamTypesDictFileName)()) >> foamTypesDict_;
 
-        foamTypes_ = (const Foam::wordList&)foamTypesDict_.toc();
-
         // Initialise the foam type descriptor objects.
-        forAll(foamTypes_, i)
+        forAllConstIter(dictionary, foamTypesDict_, iter)
         {
-            word foamTypeName(foamTypes_[i]);
-
-            // Check for a definition dictionary.
-            if (!foamTypesDict_.found(foamTypeName))
-            {
-                throw FoamXError
-                (
-                    E_FAIL,
-                    "Foam type descriptor dictionary not found for field type '"
-                  + foamTypeName + "'.",
-                    functionName,
-                    __FILE__, __LINE__
-                );
-            }
+            const word& foamTypeName = iter().keyword();
 
             // Create and initialise a new TypeDescriptor object.
             ITypeDescriptorImpl* pFieldTypeDescriptor = new ITypeDescriptorImpl
             (
                 foamTypeName,
                 "FoamX:foamTypes",
-                foamTypesDict_.subDict(foamTypeName),
+                iter(),
                 foamTypesDict_
             );
 
@@ -357,27 +261,13 @@ FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
 
         dictionary geometryDict
         (
-            IFstream(Paths::system/"types/geometries.cfg")()
+            IFstream(Paths::config/"types/geometries.cfg")()
         );
-        geometryTypes_ = (const Foam::wordList&)geometryDict.toc();
 
         // Initialise the geometry descriptor objects.
-        forAll(geometryTypes_, i)
+        forAllConstIter(dictionary, geometryDict, iter)
         {
-            word geometricTypeName(geometryTypes_[i]);
-
-            // Check for a definition dictionary.
-            if (!geometryDict.found(geometricTypeName))
-            {
-                throw FoamXError
-                (
-                    E_FAIL,
-                    "Geometry descriptor dictionary not found for "
-                    "geometry type '" + geometricTypeName + "'.",
-                    functionName,
-                    __FILE__, __LINE__
-                );
-            }
+            const word& geometricTypeName = iter().keyword();
 
             // Create and initialise a new GeometryDescriptor object.
             IGeometryDescriptorImpl* pGeometryTypeDescriptor = new
@@ -403,29 +293,12 @@ FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
             geometryTypeMap_.insert(geometricTypeName, pGeometryTypeDescriptor);
         }
 
-        dictionary patchDict
-        (
-            IFstream(Paths::system/"types/patches.cfg")()
-        );
-        patchTypes_ = (const Foam::wordList&)patchDict.toc();
+        dictionary patchDict(IFstream(Paths::config/"types/patches.cfg")());
 
         // Initialise the patch descriptor objects.
-        forAll(patchTypes_, i)
+        forAllConstIter(dictionary, patchDict, iter)
         {
-            word patchTypeName(patchTypes_[i]);
-
-            // Check for a definition dictionary.
-            if (!patchDict.found(patchTypeName))
-            {
-                throw FoamXError
-                (
-                    E_FAIL,
-                    "Patch descriptor dictionary not found for patch type '"
-                   + patchTypeName + "'.",
-                    functionName,
-                    __FILE__, __LINE__
-                );
-            }
+            const word& patchTypeName = iter().keyword();
 
             // Create and initialise a new PatchDescriptor object.
             IPatchDescriptorImpl* pPatchDescriptor =
@@ -450,58 +323,15 @@ FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
 
         dictionary patchFieldDict
         (
-            IFstream(Paths::system/"types/patchFields.cfg")()
+            IFstream(Paths::config/"types/patchFields.cfg")()
         );
-        patchFieldTypes_ = (const Foam::wordList&)patchFieldDict.toc();
 
-        // Initialise the patch field descriptor objects.
-        forAll(patchFieldTypes_, i)
-        {
-            word patchFieldTypeName(patchFieldTypes_[i]);
-
-            // Check for a definition dictionary.
-            if (!patchFieldDict.found(patchFieldTypeName))
-            {
-                throw FoamXError
-                (
-                    E_FAIL,
-                    "Patch field descriptor dictionary not found for "
-                    "patch field type '" + patchFieldTypeName + "'.",
-                    functionName,
-                    __FILE__, __LINE__
-                );
-            }
-
-            // Create and initialise a new PatchFieldDescriptor object.
-            ITypeDescriptorImpl* pPatchFieldDescriptor = 
-            new ITypeDescriptorImpl
-            (
-                patchFieldTypeName, 
-                patchFieldDict.name(),
-                patchFieldDict.subDict(patchFieldTypeName),
-                foamTypesDict_
-            );
-
-            if (pPatchFieldDescriptor == NULL)
-            {
-                throw FoamXError
-                (
-                    E_FAIL,
-                    "Failed to create PatchFieldDescriptor object for "
-                    "patch field type '" + patchFieldTypeName + "'.",
-                    functionName,
-                    __FILE__, __LINE__
-                );
-            }
-
-            // Add to map.
-            patchFieldMap_.insert(patchFieldTypeName, pPatchFieldDescriptor);
-        }
+        addPatchFields(patchFieldDict);
 
 
         // ---------------------------------------------------------------------
         // Open the user's Foam control dictionary.
-        fileName controlDictFileName = Foam::dotFoam("controlDict");
+        fileName controlDictFileName = dotFoam("controlDict");
         if (exists(controlDictFileName))
         {
             dictionary controlDict((IFstream(controlDictFileName)()));
@@ -542,7 +372,7 @@ FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
                 }
                 else
                 {
-                    Warning
+                    WarningIn(functionName)
                         << "User specified root directory " << rawRootDirs[i];
 
                     if (rootDir.size() != rawRootDirs[i].size())
@@ -560,21 +390,45 @@ FoamX::IPropertiesImpl::IPropertiesImpl(bool readOnly)
         // ---------------------------------------------------------------------
         // Initialise the application class descriptor map.
 
-        // Scan the user's utilities directory for valid utilities
-        readAppClassDescriptors(Paths::user/"applications", "", false);
+        // Scan the user's utilities directory for valid solvers
+        readApplicationDescriptors
+        (
+            appDescriptorMap_,
+            Paths::userSolvers,
+            "",
+            false
+        );
 
-        // Scan the system utilities directory for valid utilities
-        readAppClassDescriptors(Paths::system/"applications", "", true);
+        // Scan the system utilities directory for valid solvers
+        readApplicationDescriptors
+        (
+            appDescriptorMap_,
+            Paths::solvers,
+            "",
+            true
+        );
 
 
         // ---------------------------------------------------------------------
         // Initialise the utility descriptor map.
 
         // Scan the user's utilities directory for valid utilities
-        readUtilityDescriptors(Paths::user/"utilities", "", false);
+        readApplicationDescriptors
+        (
+            utilityDescriptorMap_,
+            Paths::userUtilities,
+            "",
+            false
+        );
 
         // Scan the system utilities directory for valid utilities
-        readUtilityDescriptors(Paths::system/"utilities", "", true);
+        readApplicationDescriptors
+        (
+            utilityDescriptorMap_,
+            Paths::utilities,
+            "",
+            true
+        );
     }
     CATCH_ALL(functionName);
 }
@@ -676,8 +530,11 @@ FoamXServer::StringList* FoamX::IPropertiesImpl::foamTypes()
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
-    // Duplicate list and return.
-    return new FoamXServer::StringList(foamTypes_);
+    // Duplicate list and return
+    return new FoamXServer::StringList
+    (
+        FoamXWordList(static_cast<const wordList&>(foamTypeMap_.toc()))
+    );
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -724,8 +581,11 @@ FoamXServer::StringList* FoamX::IPropertiesImpl::geometryTypes()
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
-    // Duplicate list and return.
-    return new FoamXServer::StringList(geometryTypes_);
+    // Duplicate list and return
+    return new FoamXServer::StringList
+    (
+        FoamXWordList(static_cast<const wordList&>(geometryTypeMap_.toc()))
+    );
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -772,8 +632,11 @@ FoamXServer::StringList* FoamX::IPropertiesImpl::patchTypes()
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
-    // Duplicate list and return.
-    return new FoamXServer::StringList(patchTypes_);
+    // Duplicate list and return
+    return new FoamXServer::StringList
+    (
+        FoamXWordList(static_cast<const wordList&>(patchMap_.toc()))
+    );
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -827,23 +690,11 @@ void  FoamX::IPropertiesImpl::findPatchType
 
     try
     {
-
         IPatchDescriptorImpl* pPatchDescriptor = NULL;
 
-        // Loop over all known patch types and find the one with the
-        // specified name.
-        for (unsigned int i = 0; i <patchTypes_.length(); i++)
+        if (patchMap_.found(patchTypeName));
         {
-            IPatchDescriptor_var patchDesc;
-            getPatchType(patchTypes_[i], patchDesc.out());
-
-            // Check for matching name.
-            CORBA::String_var typeName = patchDesc->name();
-            if (strcmp(typeName, patchTypeName) == 0)
-            {
-                pPatchDescriptor = patchMap_[word(patchTypes_[i])];
-                break;
-            }
+            pPatchDescriptor = patchMap_.find(patchTypeName)();
         }
 
         // Return a reference to the PatchFieldDescriptor object.
@@ -864,8 +715,11 @@ FoamXServer::StringList* FoamX::IPropertiesImpl::patchFieldTypes()
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
-    // Duplicate list and return.
-    return new FoamXServer::StringList(patchFieldTypes_);
+    // Duplicate list and return
+    return new FoamXServer::StringList
+    (
+        FoamXWordList(static_cast<const wordList&>(patchFieldMap_.toc()))
+    );
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -924,21 +778,9 @@ void FoamX::IPropertiesImpl::findPatchFieldType
 
         ITypeDescriptorImpl* pPatchFieldDescriptor = NULL;
 
-        // Loop over all knwon patch field types and find the one with
-        // the specified name.
-        for (unsigned int i = 0; i <patchFieldTypes_.length(); i++)
+        if (patchFieldMap_.found(patchFieldTypeName))
         {
-            ITypeDescriptor_var patchFieldDesc;
-            getPatchFieldType(patchFieldTypes_[i], patchFieldDesc.out());
-
-            // Check for matching name.
-            CORBA::String_var typeName = patchFieldDesc->name();
-            if (strcmp(typeName, patchFieldTypeName) == 0)
-            {
-                pPatchFieldDescriptor =
-                    patchFieldMap_[word(patchFieldTypes_[i])];
-                break;
-            }
+            pPatchFieldDescriptor = patchFieldMap_.find(patchFieldTypeName)();
         }
 
         // Return a reference to the PatchFieldDescriptor object.
@@ -952,26 +794,83 @@ void FoamX::IPropertiesImpl::findPatchFieldType
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-FoamXServer::ApplicationClassDescriptorList*
-FoamX::IPropertiesImpl::applicationClasses()
+void FoamX::IPropertiesImpl::getFoamControlDict
+(
+    FoamXServer::IDictionaryEntry_out controlDict
+)
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::applicationClasses()";
+        "FoamX::IPropertiesImpl::getFoamControlDict"
+        "(FoamXServer::ApplicationDescriptor_out utilityDesc)";
+
+    LogEntry log(functionName, __FILE__, __LINE__);
+
+    try
+    {
+        fileName controlDictCfgPath = 
+            Paths::config/"dictionaries/OpenFOAMControlDict/controlDict.cfg";
+
+        dictionary controlDictConfigDict((IFstream(controlDictCfgPath)()));
+
+        ITypeDescriptorImpl* controlDictDesc = new ITypeDescriptorImpl
+        (
+            "controlDict",
+            controlDictCfgPath,
+            controlDictConfigDict,
+            foamTypesDict_
+        );
+
+        fileName controlDictPath = Foam::dotFoam("");
+
+        // Create an appropriate sub entry object and store its reference.
+        RootDictionary* controlDictPtr = new RootDictionary
+        (
+            controlDictDesc->_this(),
+            controlDictPath,
+            ""
+        );
+
+        if (controlDictPtr == NULL)
+        {
+            throw FoamXError
+            (
+                E_FAIL,
+                "Couldn't create IDictionaryEntryImpl object for OpenFOAM "
+                "controlDict " + controlDictPath,
+                functionName,
+                __FILE__, __LINE__
+            );
+        }
+
+        controlDict = controlDictPtr->_this();
+
+        // Load the values from the file.
+        controlDictPtr->load();
+    }
+    CATCH_ALL(functionName);
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+FoamXServer::ApplicationDescriptorList* FoamX::IPropertiesImpl::applicationes()
+{
+    static const char* functionName =
+        "FoamX::IPropertiesImpl::applicationes()";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
     // Construct an application class list and return.
-    ApplicationClassDescriptorList* pAppClassList =
-        new ApplicationClassDescriptorList();
-    pAppClassList->length(appClassDescriptorMap_.size());
+    ApplicationDescriptorList* pAppClassList =
+        new ApplicationDescriptorList();
+    pAppClassList->length(appDescriptorMap_.size());
 
     label i = 0;
 
     for
     (
-        Foam::HashPtrTable<ApplicationClassDescriptor>::iterator iter = 
-            appClassDescriptorMap_.begin();
-        iter != appClassDescriptorMap_.end();
+        Foam::HashPtrTable<ApplicationDescriptor>::iterator iter = 
+            appDescriptorMap_.begin();
+        iter != appDescriptorMap_.end();
         ++iter
     )
     {
@@ -983,49 +882,49 @@ FoamX::IPropertiesImpl::applicationClasses()
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::IPropertiesImpl::getApplicationClass
+void FoamX::IPropertiesImpl::getApplication
 (
-    const char* appClassKey,
-    IApplicationClass_out appClass
+    const char* appKey,
+    IApplication_out app
 )
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::getApplicationClass"
-        "(const char* appClassKey, IApplicationClass_out appClass)";
+        "FoamX::IPropertiesImpl::getApplication"
+        "(const char* appKey, IApplication_out app)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
     try
     {
-        IApplicationClassImpl* pAppClass = NULL;
+        IApplicationImpl* pAppClass = NULL;
 
         // See if the specified application class name is valid.
-        if (!appClassDescriptorMap_.found(appClassKey))
+        if (!appDescriptorMap_.found(appKey))
         {
             throw FoamXError
             (
                 E_INVALID_ARG,
-                "getApplicationClass::Invalid application class name '"
-              + word(appClassKey) + "'.",
+                "getApplication::Invalid application class name '"
+              + word(appKey) + "'.",
                 "IPropertiesImpl",
                 __FILE__, __LINE__
             );
         }
 
         // See if we have this application class object cached.
-        if (appClassMap_.found(appClassKey))
+        if (appMap_.found(appKey))
         {
             log << "Existing." << endl;
-            pAppClass = appClassMap_[appClassKey];
+            pAppClass = appMap_[appKey];
         }
         else
         {
-            log << "New application class " << appClass << endl;
+            log << "New application class " << app << endl;
 
-            // Create and initialise a new ApplicationClass object.
-            pAppClass = new IApplicationClassImpl
+            // Create and initialise a new Application object.
+            pAppClass = new IApplicationImpl
             (
-                *appClassDescriptorMap_[appClassKey],
+                *appDescriptorMap_[appKey],
                 *this
             );
 
@@ -1034,8 +933,8 @@ void FoamX::IPropertiesImpl::getApplicationClass
                 throw FoamXError
                 (
                     E_FAIL,
-                    "Failed to create ApplicationClass object for '"
-                  + word(appClassKey) + "'.",
+                    "Failed to create Application object for '"
+                  + word(appKey) + "'.",
                     functionName,
                     __FILE__, __LINE__
                 );
@@ -1047,26 +946,26 @@ void FoamX::IPropertiesImpl::getApplicationClass
             pAppClass->load();
 
             // Add application class object to map.
-            appClassMap_.insert(appClassKey, pAppClass);
+            appMap_.insert(appKey, pAppClass);
         }
 
-        // Return a reference to the ApplicationClass object.
-        appClass = pAppClass->_this();
+        // Return a reference to the Application object.
+        app = pAppClass->_this();
     }
     CATCH_ALL(functionName);
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::IPropertiesImpl::addApplicationClass
+void FoamX::IPropertiesImpl::addApplication
 (
-    const char* appClassKey,
-    IApplicationClass_out appClass
+    const char* appKey,
+    IApplication_out app
 )
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::addApplicationClass"
-        "(const char* appClassKey, IApplicationClass_out appClass)";
+        "FoamX::IPropertiesImpl::addApplication"
+        "(const char* appKey, IApplication_out app)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1078,7 +977,7 @@ void FoamX::IPropertiesImpl::addApplicationClass
             throw FoamXError
             (
                 E_UNEXPECTED,
-                "Invalid call to addApplicationClass for '" + word(appClassKey)
+                "Invalid call to addApplication for '" + word(appKey)
               + "'. Object is read only.",
                 functionName,
                 __FILE__, __LINE__
@@ -1086,26 +985,26 @@ void FoamX::IPropertiesImpl::addApplicationClass
         }
 
         // See if the specified application class name is valid.
-        if (appClassDescriptorMap_.found(appClassKey))
+        if (appDescriptorMap_.found(appKey))
         {
             throw FoamXError
             (
                 E_INVALID_ARG,
-                "Invalid application class name '" + word(appClassKey) + "'.",
+                "Invalid application class name '" + word(appKey) + "'.",
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
-        // Create and initialise a new ApplicationClassDescriptor object.
-        ApplicationClassDescriptor* pDesc = new ApplicationClassDescriptor();
-        pDesc->name        = appClassKey;
+        // Create and initialise a new ApplicationDescriptor object.
+        ApplicationDescriptor* pDesc = new ApplicationDescriptor();
+        pDesc->name        = appKey;
         pDesc->category    = "";
         pDesc->systemClass = false;
 
-        // Create and initialise a new ApplicationClass object.
+        // Create and initialise a new Application object.
         // User defined application class.
-        IApplicationClassImpl* pAppClass = new IApplicationClassImpl
+        IApplicationImpl* pAppClass = new IApplicationImpl
         (
             *pDesc,
             *this
@@ -1116,32 +1015,32 @@ void FoamX::IPropertiesImpl::addApplicationClass
             throw FoamXError
             (
                 E_FAIL,
-                "Failed to create ApplicationClass object for '"
-              + word(appClassKey) + "'.",
+                "Failed to create Application object for '"
+              + word(appKey) + "'.",
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
         // Add application class object to map.
-        appClassMap_.insert(appClassKey, pAppClass);
+        appMap_.insert(appKey, pAppClass);
 
         // Add application class descriptor to map.
-        appClassDescriptorMap_.insert(appClassKey, pDesc);
+        appDescriptorMap_.insert(appKey, pDesc);
 
         // Return a reference to the application class object.
-        appClass = pAppClass->_this();
+        app = pAppClass->_this();
     }
     CATCH_ALL(functionName);
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::IPropertiesImpl::deleteApplicationClass(const char* appClassKey)
+void FoamX::IPropertiesImpl::deleteApplication(const char* appKey)
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::deleteApplicationClass"
-        "(const char* appClassKey)";
+        "FoamX::IPropertiesImpl::deleteApplication"
+        "(const char* appKey)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1153,85 +1052,86 @@ void FoamX::IPropertiesImpl::deleteApplicationClass(const char* appClassKey)
             throw FoamXError
             (
                 E_UNEXPECTED,
-                "Invalid call to deleteApplicationClass for " 
-              + word(appClassKey) + "'. Object is read only.",
+                "Invalid call to deleteApplication for " 
+              + word(appKey) + "'. Object is read only.",
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
         // See if the specified application class name is valid.
-        if (!appClassDescriptorMap_.found(appClassKey))
+        if (!appDescriptorMap_.found(appKey))
         {
             throw FoamXError
             (
                 E_INVALID_ARG,
-                "Invalid application class name '" + word(appClassKey) + "'.",
+                "Invalid application class name '" + word(appKey) + "'.",
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
         // See if the specified application class name is user defined.
-        if (appClassDescriptorMap_[appClassKey]->systemClass)
+        if (appDescriptorMap_[appKey]->systemClass)
         {
             throw FoamXError
             (
                 E_INVALID_ARG,
                 "Unable to delete system application class '"
-              + word(appClassKey) + "'.",
+              + word(appKey) + "'.",
+                functionName,
+                __FILE__, __LINE__
+            );
+        }
+
+        // Remove the complete application directory structure
+        if (!rmDir(fileName(appDescriptorMap_[appKey]->path)))
+        {
+            throw FoamXError
+            (
+                E_INVALID_ARG,
+                "Unable to delete application class "
+              + fileName(appDescriptorMap_[appKey]->path),
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
         // See if we have this application class object cached.
-        if (appClassMap_.found(appClassKey))
+        if (appMap_.found(appKey))
         {
-            ObjRefHashTable<IApplicationClassImpl*>::iterator iter
+            ObjRefHashTable<IApplicationImpl*>::iterator iter
             (
-                appClassMap_.find(appClassKey)
+                appMap_.find(appKey)
             );
 
-            appClassMap_.erase(iter);   // Releases implementation reference.
+            appMap_.erase(iter);   // Releases implementation reference.
         }
 
         // Remove application class descriptor.
-        Foam::HashPtrTable<ApplicationClassDescriptor>::iterator iter
+        Foam::HashPtrTable<ApplicationDescriptor>::iterator iter
         (
-            appClassDescriptorMap_.find(appClassKey)
+            appDescriptorMap_.find(appKey)
         );
-        appClassDescriptorMap_.erase(iter);
-
-        // Remove the complete aplicationClass directory structure
-        if (!rmDir(Paths::user/"applications"/appClassKey))
-        {
-            throw FoamXError
-            (
-                E_INVALID_ARG,
-                "Unable to delete application class "
-              + Paths::user/"applications"/appClassKey,
-                functionName,
-                __FILE__, __LINE__
-            );
-        }
+        appDescriptorMap_.erase(iter);
     }
     CATCH_ALL(functionName);
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-void FoamX::IPropertiesImpl::cloneApplicationClass
+void FoamX::IPropertiesImpl::cloneApplication
 (
-    const char* appClassKeySrc,
-    const char* appClassKeyDest,
-    IApplicationClass_out appClass
+    const char* appKeySrc,
+    const char* appKeyDest,
+    const char* appDestPath,
+    IApplication_out app
 )
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::cloneApplicationClass"
-        "(const char* appClassKeySrc, const char* appClassKeyDest, "
-        "IApplicationClass_out appClass)";
+        "FoamX::IPropertiesImpl::cloneApplication"
+        "(const char* appKeySrc, const char* appKeyDest, "
+        "IApplication_out app)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1243,86 +1143,66 @@ void FoamX::IPropertiesImpl::cloneApplicationClass
             throw FoamXError
             (
                 E_UNEXPECTED,
-                "Invalid call to cloneApplicationClass for '"
-              + word(appClassKeySrc) + "'. Object is read only.",
+                "Invalid call to cloneApplication for '"
+              + word(appKeySrc) + "'. Object is read only.",
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
         // See if the specified source application class name is valid.
-        if (!appClassDescriptorMap_.found(appClassKeySrc))
+        if (!appDescriptorMap_.found(appKeySrc))
         {
             throw FoamXError
             (
                 E_INVALID_ARG,
                 "Invalid source application class name '"
-              + word(appClassKeySrc) + "'.",
+              + word(appKeySrc) + "'.",
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
         // See if the specified destination application class name is valid.
-        if (appClassDescriptorMap_.found(appClassKeyDest))
+        if (appDescriptorMap_.found(appKeyDest))
         {
             throw FoamXError
             (
                 E_INVALID_ARG,
                 "Invalid destination application class name '"
-              + word(appClassKeyDest) + "'.",
+              + word(appKeyDest) + "'.",
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
         // Copy application class definition files.
-        ApplicationClassDescriptor* pDescriptor =
-            appClassDescriptorMap_[appClassKeySrc];
-
-        fileName sourcePath =
-            (pDescriptor->systemClass ? Paths::system : Paths::user)
-           /"applications"/appClassKeySrc;
-
-        fileName destPath = Paths::user/"applications"/appClassKeyDest;
+        ApplicationDescriptor* pDescriptor =
+            appDescriptorMap_[appKeySrc];
 
         // Make application class directory.
-        if (!dir(destPath) && !mkDir(destPath))
+        if (!cp(fileName(pDescriptor->path), appDestPath))
         {
             throw FoamXError
             (
                 E_UNEXPECTED,
-                "Failed to create directory '" + destPath + "'.",
+                "Failed to copy directory " + fileName(pDescriptor->path)
+              + " to " + appDestPath,
                 functionName,
                 __FILE__, __LINE__
             );
         }
 
-        // Copy main configuration file.
-        fileName srcConfig(fileName(appClassKeySrc) + ".cfg");
-        fileName destConfig(fileName(appClassKeyDest) + ".cfg");
-        cp(sourcePath/srcConfig, destPath/destConfig); // File to file copy.
-
-        // Copy rest of files.
-        fileNameList contents = readDir(sourcePath, fileName::FILE);
-        forAll(contents, i)
-        {
-             // Do not copy original app class config file.
-            if (contents[i] != srcConfig)
-            {
-                cp(sourcePath/contents[i], destPath/contents[i]);
-            }
-        }
-
-        // Create and initialise a new ApplicationClassDescriptor object.
+        // Create and initialise a new ApplicationDescriptor object.
         // User defined application class.
-        ApplicationClassDescriptor* pDesc = new ApplicationClassDescriptor();
-        pDesc->name        = appClassKeyDest;
-        pDesc->category    = "";
+        ApplicationDescriptor* pDesc = new ApplicationDescriptor();
+        pDesc->name        = appKeyDest;
+        pDesc->category    = pDescriptor->category;
+        pDesc->path        = appDestPath;
         pDesc->systemClass = false;
 
-        // Create and initialise a new ApplicationClass object.
-        IApplicationClassImpl* pAppClass = new IApplicationClassImpl
+        // Create and initialise a new Application object.
+        IApplicationImpl* pAppClass = new IApplicationImpl
         (
             *pDesc,
             *this
@@ -1333,8 +1213,8 @@ void FoamX::IPropertiesImpl::cloneApplicationClass
             throw FoamXError
             (
                 E_FAIL,
-                "Failed to create ApplicationClass object '"
-              + word(appClassKeyDest) + "'.",
+                "Failed to create Application object '"
+              + word(appKeyDest) + "'.",
                 functionName,
                 __FILE__, __LINE__
             );
@@ -1346,20 +1226,20 @@ void FoamX::IPropertiesImpl::cloneApplicationClass
         pAppClass->load();
 
         // Add to application class map.
-        appClassMap_.insert(appClassKeyDest, pAppClass);
+        appMap_.insert(appKeyDest, pAppClass);
 
         // Add application class descriptor to map.
-        appClassDescriptorMap_.insert(appClassKeyDest, pDesc);
+        appDescriptorMap_.insert(appKeyDest, pDesc);
 
         // Return a reference to the application class object.
-        appClass = pAppClass->_this();
+        app = pAppClass->_this();
     }
     CATCH_ALL(functionName);
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-FoamXServer::UtilityDescriptorList* FoamX::IPropertiesImpl::utilities()
+FoamXServer::ApplicationDescriptorList* FoamX::IPropertiesImpl::utilities()
 {
     static const char* functionName =
         "FoamX::IPropertiesImpl::utilities()";
@@ -1367,14 +1247,15 @@ FoamXServer::UtilityDescriptorList* FoamX::IPropertiesImpl::utilities()
     LogEntry log(functionName, __FILE__, __LINE__);
 
     // Construct an application class list and return.
-    UtilityDescriptorList* pUtilityList = new UtilityDescriptorList();
+    ApplicationDescriptorList* pUtilityList = 
+        new ApplicationDescriptorList();
     pUtilityList->length(utilityDescriptorMap_.size());
 
     label i = 0;
 
     for
     (
-        Foam::HashPtrTable<UtilityDescriptor>::iterator iter = 
+        Foam::HashPtrTable<ApplicationDescriptor>::iterator iter = 
             utilityDescriptorMap_.begin();
         iter != utilityDescriptorMap_.end();
         ++iter
@@ -1397,8 +1278,9 @@ void FoamX::IPropertiesImpl::getUtilityControlDict
 )
 {
     static const char* functionName =
-        "FoamX::IPropertiesImpl::getUtilityDescriptor"
-        "(const char* utilityName, FoamXServer::UtilityDescriptor_out utilityDesc)";
+        "FoamX::IPropertiesImpl::getUtilityControlDict"
+        "(const char* utilityName, const char* rootDir, const char* caseName,"
+        "FoamXServer::ApplicationDescriptor_out utilityDesc)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1416,14 +1298,30 @@ void FoamX::IPropertiesImpl::getUtilityControlDict
             );
         }
 
-        UtilityDescriptor* utilityDescriptor = utilityDescriptorMap_[utilityName];
+        ApplicationDescriptor* utilityDescriptor = 
+            utilityDescriptorMap_[utilityName];
 
-        if (!CORBA::is_nil(utilityDescriptor->controlDict))
+        word name(utilityDescriptor->name);
+        fileName path(utilityDescriptor->path);
+
+        fileName utilityCfgPath = path/"FoamX"/(name + ".cfg");
+        dictionary utilityConfigDict((IFstream(utilityCfgPath)()));
+        word controlDictName = name + "Dict";
+
+        if (utilityConfigDict.found(controlDictName))
         {
-            // Create an appropriate sub entry object and store its reference.
-            IDictionaryEntryImpl* controlDictPtr = new RootDictionary
+            ITypeDescriptorImpl* controlDictDesc = new ITypeDescriptorImpl
             (
-                utilityDescriptor->controlDict,
+                controlDictName,
+                utilityCfgPath,
+                utilityConfigDict.subDict(controlDictName),
+                foamTypesDict_
+            );
+
+            // Create an appropriate sub entry object and store its reference.
+            RootDictionary* controlDictPtr = new RootDictionary
+            (
+                controlDictDesc->_this(),
                 rootDir,
                 caseName
             );
@@ -1442,19 +1340,8 @@ void FoamX::IPropertiesImpl::getUtilityControlDict
 
             controlDict = controlDictPtr->_this();
 
-            // Get dictionary full file name
-            // (using the dictionary path information in the type descriptor).
-            fileName dictName =
-                fileName(rootDir)/fileName(caseName)
-               /fileName(controlDict->typeDescriptor()->dictionaryPath())
-               /controlDict->typeDescriptor()->name();
-
-            // See if the dictionary file exists.
-            if (exists(dictName))
-            {
-                // Load the values from the file.
-                controlDictPtr->load((IFstream(dictName)()));
-            }
+            // Load the values from the file.
+            controlDictPtr->load();
         }
         else
         {
@@ -1504,7 +1391,7 @@ void FoamX::IPropertiesImpl::saveSystemProperties()
         }
 
         {
-        fileName configDictFileName = Paths::system/"FoamX.cfg";
+        fileName configDictFileName = dotFoam("apps/FoamX/FoamX.cfg");
         DictionaryWriter dict(configDictFileName);
 
         dict.writeHeader
@@ -1516,7 +1403,7 @@ void FoamX::IPropertiesImpl::saveSystemProperties()
         dict.writeEntry("availableModules", availableModules_);
 
         dict.startSubDict("processControl");
-        dict.writeEntry("remoteShell", Foam::string("rsh"));
+        dict.writeEntry("remoteShell", string("rsh"));
         dict.endSubDict();
         dict.writeBar();
 
@@ -1576,8 +1463,7 @@ void FoamX::IPropertiesImpl::saveSystemProperties()
 
 
         {
-        fileName configDictFileName = Paths::system/"types/types.cfg";
-        DictionaryWriter dict(configDictFileName);
+        DictionaryWriter dict(Paths::config/"types/types.cfg");
 
         dict.writeHeader
         (
@@ -1599,44 +1485,6 @@ void FoamX::IPropertiesImpl::saveSystemProperties()
 
         dict.writeEndl();
         dict.writeEndBar();
-        }
-
-
-        // Foam utilities.
-        for
-        (
-            Foam::HashPtrTable<UtilityDescriptor>::iterator iter = 
-                utilityDescriptorMap_.begin();
-            iter != utilityDescriptorMap_.end();
-            ++iter
-        )
-        {
-            fileName utilityDictFileName = 
-                Paths::system/"utilities"/(word(iter()->name) + ".cfg");
-            DictionaryWriter utilityDict(utilityDictFileName);
-
-            utilityDict.writeHeader
-            (
-                "FoamX Utility Configuration File " + word(iter()->name),
-                "dictionary"
-            );
-
-            utilityDict.writeEntry("changesMesh", bool(iter()->changesMesh));
-            utilityDict.writeEntry("changesFields", bool(iter()->changesFields));
-            utilityDict.writeEntry("description", iter()->description);
-            utilityDict.writeEntry("category", iter()->category);
-
-            if (!CORBA::is_nil(iter()->controlDict))
-            {
-                utilityDict.writeEntry
-                (
-                    iter()->controlDict->name(),
-                    iter()->controlDict
-                );
-            }
-
-            utilityDict.writeEndl();
-            utilityDict.writeEndBar();
         }
     }
     CATCH_ALL(functionName);
@@ -1665,7 +1513,7 @@ void FoamX::IPropertiesImpl::saveUserProperties()
             );
         }
 
-        fileName controlDictFileName = Foam::dotFoam("controlDict");
+        fileName controlDictFileName = dotFoam("controlDict");
         DictionaryWriter dict(controlDictFileName);
 
         dict.writeHeader

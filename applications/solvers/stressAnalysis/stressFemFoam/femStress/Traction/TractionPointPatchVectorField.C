@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -31,6 +31,7 @@ Description
 #include "constraints.H"
 #include "tetFemMatrix.H"
 #include "primitivePatch.H"
+#include "PointPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -49,9 +50,9 @@ void TractionPointPatchVectorField<PatchField, PointPatch>
 {
     if
     (
-        this->size() != this->patchMesh().size()
-     || traction_.size() != this->patchMesh().size()
-     || pressure_.size() != this->patchMesh().size()
+        this->size() != this->patch().size()
+     || traction_.size() != this->patch().size()
+     || pressure_.size() != this->patch().size()
     )
     {
         FatalErrorIn
@@ -61,7 +62,7 @@ void TractionPointPatchVectorField<PatchField, PointPatch>
             << "Field size: " << this->size()
             << " traction size: " << traction_.size()
             << " pressure size: " << pressure_.size()
-            << " patch size: " << this->patchMesh().size()
+            << " patch size: " << this->patch().size()
             << abort(FatalError);
     }
 }
@@ -166,8 +167,8 @@ TractionPointPatchVectorField
 )
 :
     PatchField<vector>(p, iF),
-    traction_(ptf.traction_, (const FieldMapper&)mapper),
-    pressure_(ptf.pressure_, (const FieldMapper&)mapper)
+    traction_(ptf.traction_, mapper),
+    pressure_(ptf.pressure_, mapper)
 {}
 
 
@@ -223,18 +224,18 @@ addBoundarySourceDiag
     tetFemMatrix<vector>& matrix
 ) const
 {
-    const vectorField& points = this->patchMesh().localPoints();
+    const vectorField& points = this->patch().localPoints();
 
-    const labelList& meshPoints = this->patchMesh().meshPoints();
-    const vectorField& pointNormals = this->patchMesh().pointNormals();
-    const label nFaces = this->patchMesh().nFaces();
+    const labelList& meshPoints = this->patch().meshPoints();
+    const vectorField& pointNormals = this->patch().pointNormals();
+    const label nFaces = this->patch().nFaces();
 
     vectorField& source = matrix.source();
 
     for (label faceI = 0; faceI < nFaces; faceI++)
     {
         List<triFace> faceTriangles =
-            this->patchMesh().faceTriangles(faceI);
+            this->patch().faceTriangles(faceI);
 
         forAll (faceTriangles, triI)
         {

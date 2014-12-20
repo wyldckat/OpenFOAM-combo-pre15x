@@ -33,7 +33,7 @@ sampleSets
     {
         name            leftPatch;
         axis            y;
-        start           (0 0.5001 0.25);
+        start           (0 0.5 0.25);
         end             (0 2 0.25);
         nPoints         100;
     }

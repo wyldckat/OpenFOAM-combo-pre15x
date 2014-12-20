@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -50,7 +50,7 @@ Description
 
 void Foam::writeFuns::swapWord(label& word32)
 {
-    char* mem = (char*)&word32;
+    char* mem = reinterpret_cast<char*>(&word32);
 
     char a = mem[0];
     mem[0] = mem[3];
@@ -80,10 +80,14 @@ void Foam::writeFuns::write
 {
     if (binary)
     {
-#ifdef LITTLEENDIAN
-        swapWords(fField.size(), (label*)fField.begin());
-#endif
-        os.write((char *)fField.begin(), fField.size()*sizeof(float));
+#       ifdef LITTLEENDIAN
+        swapWords(fField.size(), reinterpret_cast<label*>(fField.begin()));
+#       endif
+        os.write
+        (
+            reinterpret_cast<char*>(fField.begin()),
+            fField.size()*sizeof(float)
+        );
 
         os << std::endl;
     }
@@ -125,10 +129,14 @@ void Foam::writeFuns::write
 {
     if (binary)
     {
-#ifdef LITTLEENDIAN
-        swapWords(elems.size(), (label*)elems.begin());
-#endif
-        os.write((char *)elems.begin(), elems.size()*sizeof(label));
+#       ifdef LITTLEENDIAN
+        swapWords(elems.size(), reinterpret_cast<label*>(elems.begin()));
+#       endif
+        os.write
+        (
+            reinterpret_cast<char*>(elems.begin()),
+            elems.size()*sizeof(label)
+        );
 
         os << std::endl;
     }

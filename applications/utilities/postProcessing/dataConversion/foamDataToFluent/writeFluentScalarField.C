@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Given a volScalarField and Fluent field identifier, write the field in
@@ -72,11 +72,7 @@ void writeFluentField
     // Writing boundary faces
     forAll (phi.boundaryField(), patchI)
     {
-        if
-        (
-            typeid(phi.boundaryField()[patchI])
-         == typeid(emptyFvPatchScalarField)
-        )
+        if (isType<emptyFvPatchScalarField>(phi.boundaryField()[patchI]))
         {
             // Form empty patch field repeat the internal field to
             // allow for the node interpolation in Fluent
@@ -84,7 +80,7 @@ void writeFluentField
 
             // Get reference to internal cells
             const labelList emptyFaceCells =
-                phi.boundaryField()[patchI].patchMesh().patch().faceCells();
+                phi.boundaryField()[patchI].patch().patch().faceCells();
 
             // Writing cells for empty patch
             stream

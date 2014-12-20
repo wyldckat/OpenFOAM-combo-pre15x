@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     messageStream
@@ -66,6 +66,115 @@ messageStream::messageStream(const dictionary& dict)
     maxErrors_(0),
     errorCount_(0)
 {}
+
+
+OSstream& messageStream::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber
+)
+{
+    OSstream& os = operator OSstream&();
+
+    os  << endl
+        << "    From function " << functionName << endl
+        << "    in file " << sourceFileName
+        << " at line " << sourceFileLineNumber << endl
+        << "    ";
+
+    return os;
+}
+
+
+OSstream& messageStream::operator()
+(
+    const string& functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber
+)
+{
+    return operator()
+    (
+        functionName.c_str(),
+        sourceFileName,
+        sourceFileLineNumber
+    );
+}
+
+
+OSstream& messageStream::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const string& ioFileName,
+    const label ioStartLineNumber,
+    const label ioEndLineNumber
+)
+{
+    OSstream& os = operator OSstream&();
+
+    os  << endl
+        << "    From function " << functionName << endl
+        << "    in file " << sourceFileName
+        << " at line " << sourceFileLineNumber << endl
+        << "    Reading " << ioFileName;
+
+    if (ioStartLineNumber >= 0 && ioEndLineNumber >= 0)
+    {
+        os  << " from line " << ioStartLineNumber
+            << " to line " << ioEndLineNumber;
+    }
+    else if (ioStartLineNumber >= 0)
+    {
+        os  << " at line " << ioStartLineNumber;
+    }
+
+    os << endl  << "    ";
+
+    return os;
+}
+
+
+OSstream& messageStream::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const IOstream& ioStream
+)
+{
+    return operator()
+    (
+        functionName,
+        sourceFileName,
+        sourceFileLineNumber,
+        ioStream.name(),
+        ioStream.lineNumber(),
+        -1
+    );
+}
+
+
+OSstream& messageStream::operator()
+(
+    const char* functionName,
+    const char* sourceFileName,
+    const int sourceFileLineNumber,
+    const dictionary& dict
+)
+{
+    return operator()
+    (
+        functionName,
+        sourceFileName,
+        sourceFileLineNumber,
+        dict.name(),
+        dict.startLineNumber(),
+        dict.endLineNumber()
+    );
+}
 
 
 messageStream::operator OSstream&()
@@ -114,7 +223,6 @@ messageStream SeriousError
 
 messageStream Warning("--> FOAM Warning : ", messageStream::WARNING);
 messageStream Info("", messageStream::INFO);
-
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 

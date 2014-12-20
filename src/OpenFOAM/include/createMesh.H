@@ -1,5 +1,5 @@
     Info<< "Create mesh for time = "
-        << runTime.value() << nl << endl;
+        << runTime.timeName() << nl << endl;
 
     fvMesh mesh
     (

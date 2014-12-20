@@ -2,8 +2,7 @@
 
 currDir=`pwd`
 application=`basename $currDir`
-cases="shockTube"
-utility=setShock
+cases="shockTube wedge15Ma5"
 
 tutorialPath=`dirname $0`/..
 . $tutorialPath/RunFunctions
@@ -13,16 +12,8 @@ do
     runApplication blockMesh $case
 #
     if [ "$case" = "shockTube" ] ; then
-        compileApplication ../sonicFoam/$case $utility
-        runApplication $utility $case
+        runApplication setFields $case
     fi
 #
     runApplication $application $case
-#
-    if [ "$case" = "shockTube" ] ; then
-        runApplication magU $case
-        runApplication sample $case
-    fi
-#
 done 
-

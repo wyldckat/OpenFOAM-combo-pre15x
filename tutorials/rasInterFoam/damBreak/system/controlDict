@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass rasInterFoam;
+application rasInterFoam;
 
 startFrom       startTime;
 
@@ -38,7 +38,7 @@ writeControl    adjustableRunTime;
 
 writeInterval   0.05;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

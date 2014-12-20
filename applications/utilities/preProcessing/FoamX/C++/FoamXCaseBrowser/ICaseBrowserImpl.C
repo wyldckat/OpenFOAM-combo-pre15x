@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -59,7 +57,7 @@ Description
 FoamX::ICaseBrowserImpl::ICaseBrowserImpl
 (
     Orb& orb,
-    const Foam::stringList& args
+    const stringList& args
 )
 :
     hostContext_(hostName()),
@@ -68,7 +66,7 @@ FoamX::ICaseBrowserImpl::ICaseBrowserImpl
     args_(args),
     hostBrowser_(NULL),
     foamProperties_(NULL),
-    procControl_(Paths::system/"FoamX.cfg", Paths::user/"FoamX.cfg")
+    procControl_(dotFoam("apps/FoamX/FoamX.cfg"))
 {
     static const char* functionName =
         "FoamX::ICaseBrowserImpl::ICaseBrowserImpl(Orb& orb)";
@@ -184,7 +182,7 @@ FoamX::CaseDescriptorList* FoamX::ICaseBrowserImpl::cases()
     label i = 0;
     for
     (
-        Foam::HashPtrTable<FoamXServer::CaseDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::CaseDescriptor, string>::iterator
             iter = cases_.begin();
         iter != cases_.end();
         ++iter
@@ -287,9 +285,9 @@ CORBA::Long FoamX::ICaseBrowserImpl::fileModificationDate
     const char* fName
 )
 {
-    if (Foam::exists(fName))
+    if (exists(fName))
     {
-        return label(Foam::lastModified(fName));
+        return label(lastModified(fName));
     }
     else
     {
@@ -453,7 +451,7 @@ CORBA::Long FoamX::ICaseBrowserImpl::invokeUtility
         args[argi++] = utilityName;
         for (unsigned int i = 0; i <arguments.length(); i++)
         {
-            args[argi++] = (const char *)arguments[i];
+            args[argi++] = static_cast<const char*>(arguments[i]);
         }
 
         if (hostName == Foam::hostName())
@@ -476,10 +474,10 @@ CORBA::Long FoamX::ICaseBrowserImpl::invokeUtility
             (
                 procControl_.remoteShellArgs
                 (
-                    Foam::userName(),
+                    userName(),
                     hostName,
                     args,
-                    Foam::string(logName),
+                    string(logName),
                     background
                 ),
                 background ? procControl_.timeOut() : 0
@@ -487,7 +485,7 @@ CORBA::Long FoamX::ICaseBrowserImpl::invokeUtility
 
             if (err != 0)
             {
-                Foam::string msg("Error executing utility ");
+                string msg("Error executing utility ");
                 msg += utilityName;
 
                 if (err == ProcessControl::TIMEDOUT)
@@ -497,7 +495,7 @@ CORBA::Long FoamX::ICaseBrowserImpl::invokeUtility
                     // timeout)
                     msg +=
                         "\nHost "
-                        + Foam::string(hostName)
+                        + string(hostName)
                         + " can not be reached (timeout).";
 
                     if (!background)
@@ -524,7 +522,7 @@ CORBA::Long FoamX::ICaseBrowserImpl::invokeUtility
                 {
                     msg +=
                         "\nThe utility exited with error code "
-                      + Foam::name(err);
+                      + name(err);
                 }
 
                 throw FoamXError
@@ -730,12 +728,12 @@ void FoamX::ICaseBrowserImpl::newCase
 (
     const char* rootDir,
     const char* caseName,
-    const char* appClass
+    const char* app
 )
 {
     static const char* functionName =
         "FoamX::ICaseBrowserImpl::newCase"
-        "(const char* rootDir, const char* caseName, const char* appClass)";
+        "(const char* rootDir, const char* caseName, const char* app)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -772,7 +770,7 @@ void FoamX::ICaseBrowserImpl::newCase
 
         // Everything is pucker so run the case server process.
         log << "Spawning CaseServer process to create the case " 
-            << caseDir << " for application " << appClass << endl;
+            << caseDir << " for application " << app << endl;
 
         stringList serverArgs(args_.size() + 5);
 
@@ -788,7 +786,7 @@ void FoamX::ICaseBrowserImpl::newCase
         serverArgs[argI++] = expandedRootDir;
         serverArgs[argI++] = caseName;
         serverArgs[argI++] = "-create";
-        serverArgs[argI++] = appClass;
+        serverArgs[argI++] = app;
         serverArgs[argI++] = "&";
 
         if (procControl_.system(serverArgs, procControl_.timeOut()) != 0)
@@ -811,12 +809,12 @@ void FoamX::ICaseBrowserImpl::importCase
 (
     const char* rootDir,
     const char* caseName,
-    const char* appClass
+    const char* app
 )
 {
     static const char* functionName =
         "FoamX::ICaseBrowserImpl::importCase"
-        "(const char* rootDir, const char* caseName, const char* appClass)";
+        "(const char* rootDir, const char* caseName, const char* app)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -870,7 +868,7 @@ void FoamX::ICaseBrowserImpl::importCase
 
         // Everything is pucker so run the case server process.
         log << "Spawning CaseServer process to import the case " 
-            << caseDir << " for application " << appClass << endl;
+            << caseDir << " for application " << app << endl;
 
         stringList serverArgs(args_.size() + 5);
 
@@ -886,7 +884,7 @@ void FoamX::ICaseBrowserImpl::importCase
         serverArgs[argI++] = expandedRootDir;
         serverArgs[argI++] = caseName;
         serverArgs[argI++] = "-import";
-        serverArgs[argI++] = appClass;
+        serverArgs[argI++] = app;
         serverArgs[argI++] = "&";
 
         if (procControl_.system(serverArgs, procControl_.timeOut()) != 0)
@@ -953,7 +951,7 @@ void FoamX::ICaseBrowserImpl::deleteCase
         rmDir(caseDir);
 
         // Remove case from list.
-        Foam::HashPtrTable<FoamXServer::CaseDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::CaseDescriptor, string>::iterator
             iter = cases_.find(caseDir);
 
         if (iter != cases_.end())
@@ -1059,7 +1057,7 @@ void FoamX::ICaseBrowserImpl::cloneCase
             );
         }
 
-        instantList times(Foam::Time::findTimes(caseDir));
+        instantList times(Time::findTimes(caseDir));
 
         label firstTimeI = 0;
         label lastTimeI = -1;
@@ -1125,7 +1123,7 @@ void FoamX::ICaseBrowserImpl::cloneCase
         // Create a temporary foam database.
         Time db(Time::controlDictName, newRootDir, newCaseName);
 
-        // Read controlDict, change applicationClass and save
+        // Read controlDict, change application and save
         IOdictionary controlDict
         (
             IOobject
@@ -1138,11 +1136,15 @@ void FoamX::ICaseBrowserImpl::cloneCase
             )
         );
 
-        if (!controlDict.remove("applicationClass"))
+        if
+        (
+            !controlDict.remove("application")
+         && !controlDict.remove("applicationClass")
+        )
         {
             throw FoamXIOError
             (
-                "Could not find applicationClass entry in controlDict",
+                "Could not find application entry in controlDict",
                 controlDict.name(),
                 controlDict.startLineNumber(),
                 controlDict.endLineNumber(),
@@ -1151,7 +1153,7 @@ void FoamX::ICaseBrowserImpl::cloneCase
             );
         }
 
-        controlDict.add("applicationClass", newAppClassName);
+        controlDict.add("application", newAppClassName);
 
         if (!controlDict.regIOobject::write())
         {
@@ -1230,7 +1232,7 @@ void FoamX::ICaseBrowserImpl::unlockCase
             rm(lockFileName);
         }
 
-        Foam::HashPtrTable<FoamXServer::CaseDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::CaseDescriptor, string>::iterator
             iter = cases_.find(caseDir);
 
         if (iter != cases_.end())
@@ -1312,7 +1314,7 @@ FoamXServer::CaseDescriptor* FoamX::ICaseBrowserImpl::caseDescriptor
         caseDesc.rootDir = rootDir.c_str();
         caseDesc.rawRootDir = rawRootDir.c_str();
         caseDesc.caseName = caseName.c_str();
-        caseDesc.appClass = "";
+        caseDesc.app = "";
 
 
         // Get number of processors
@@ -1351,23 +1353,23 @@ FoamXServer::CaseDescriptor* FoamX::ICaseBrowserImpl::caseDescriptor
         }
 
         // See if this is a FoamX managed case
-        // (ie, the applicationClass entry in the
+        // (ie, the application entry in the
         // controlDict is defined).
         fileName controlDictFileName = caseDir/"system/controlDict";
 
         dictionary controlDict((IFstream(controlDictFileName)()));
 
-        caseDesc.managed = controlDict.found("applicationClass");
-
-        if (caseDesc.managed)
+        if (controlDict.found("application"))
         {
-            // Note the application class.
-            word appClass = controlDict.lookup
-            (
-                "applicationClass"
-            );
-
-            caseDesc.appClass = appClass.c_str();
+            caseDesc.managed = true;
+            word app = controlDict.lookup("application");
+            caseDesc.app = app.c_str();
+        }
+        else if (controlDict.found("applicationClass"))
+        {
+            caseDesc.managed = true;
+            word app = controlDict.lookup("applicationClass");
+            caseDesc.app = app.c_str();
         }
 
         log << "Found case " << caseDir << endl;
@@ -1386,13 +1388,13 @@ void FoamX::ICaseBrowserImpl::addCase
     const char* rootDir,
     const char* rawRootDir,
     const char* caseName,
-    const char* appClassName
+    const char* appName
 )
 {
     static const char* functionName =
         "FoamX::ICaseBrowserImpl::addCase"
         "(const fileName& rootDir, const fileName& rawRootDir, "
-        "const fileName& caseName, const fileName& appClassName)";
+        "const fileName& caseName, const fileName& appName)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1408,7 +1410,7 @@ void FoamX::ICaseBrowserImpl::addCase
         caseDescriptor.rootDir = rootDir;
         caseDescriptor.rawRootDir = rawRootDir;
         caseDescriptor.caseName = caseName;
-        caseDescriptor.appClass = appClassName;
+        caseDescriptor.app = appName;
         caseDescriptor.managed = true;
         caseDescriptor.locked = true;
         caseDescriptor.error = false;
@@ -1450,7 +1452,7 @@ void FoamX::ICaseBrowserImpl::caseOpen
         fileName caseDir = fileName(rootDir)/fileName(caseName);
 
         // Remove case from list.
-        Foam::HashPtrTable<FoamXServer::CaseDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::CaseDescriptor, string>::iterator
             iter = cases_.find(caseDir);
 
         if (iter != cases_.end())
@@ -1525,7 +1527,7 @@ void FoamX::ICaseBrowserImpl::caseIsInError
             fileName(caseDesc.rootDir)/fileName(caseDesc.caseName);
 
         // Remove case from list.
-        Foam::HashPtrTable<FoamXServer::CaseDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::CaseDescriptor, string>::iterator
             iter = cases_.find(caseDir);
 
         if (iter != cases_.end())
@@ -1561,7 +1563,7 @@ void FoamX::ICaseBrowserImpl::refreshCaseList()
 
     for
     (
-        Foam::HashPtrTable<FoamXServer::CaseDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::CaseDescriptor, string>::iterator
             iter = cases_.begin();
         iter != cases_.end();
         ++iter
@@ -1673,7 +1675,7 @@ void FoamX::ICaseBrowserImpl::addToCaseList(const char* dir)
                     }
                 }
             }
-            catch (Foam::error& fErr)
+            catch (error& fErr)
             {
                 log << fErr << " failed to open case "
                     << rootDir/caseDirs[nCaseDir] << endl;
@@ -1687,9 +1689,9 @@ void FoamX::ICaseBrowserImpl::addToCaseList(const char* dir)
 
 Foam::label FoamX::ICaseBrowserImpl::getEntry
 (
-    const Foam::dictionary& dict,
-    const Foam::word& key,
-    const Foam::label defaultValue
+    const dictionary& dict,
+    const word& key,
+    const label defaultValue
 )
 {
     if (dict.found(key))
@@ -1706,9 +1708,9 @@ Foam::label FoamX::ICaseBrowserImpl::getEntry
 
 Foam::string FoamX::ICaseBrowserImpl::getEntry
 (
-    const Foam::dictionary& dict,
-    const Foam::word& key,
-    const Foam::string& defaultValue
+    const dictionary& dict,
+    const word& key,
+    const string& defaultValue
 )
 {
     if (dict.found(key))
@@ -1726,13 +1728,13 @@ Foam::string FoamX::ICaseBrowserImpl::getEntry
 void FoamX::ICaseBrowserImpl::readJobs
 (
     JobHashTable& jobsList,
-    const Foam::fileName& dir,
+    const fileName& dir,
     const bool throwOnError
 )
 {
     static const char* functionName =
         "FoamX::ICaseBrowserImpl::readJobs"
-        "(JobHashTable& jobsList, const Foam::fileName& dir)";
+        "(JobHashTable& jobsList, const fileName& dir)";
 
     LogEntry log(functionName, __FILE__, __LINE__);
 
@@ -1750,7 +1752,7 @@ void FoamX::ICaseBrowserImpl::readJobs
 
             try
             {
-                if (Foam::size(dir/jobFile) > 0)
+                if (size(dir/jobFile) > 0)
                 {
                     dictionary jobDict(IFstream(dir/jobFile)());
 
@@ -1758,7 +1760,7 @@ void FoamX::ICaseBrowserImpl::readJobs
 
                     JobDescriptor* jobDescPtr = new JobDescriptor();
 
-                    Foam::string::size_type dotPos =
+                    string::size_type dotPos =
                         jobFile.find_last_of('.');
 
                     jobDescPtr->jobID.hostName = jobFile(0, dotPos).c_str();
@@ -1840,7 +1842,7 @@ void FoamX::ICaseBrowserImpl::readJobs
                         {
                             const word& sl = slaveJobs[i];
 
-                            Foam::string::size_type dotPos =
+                            string::size_type dotPos =
                                 sl.find_last_of('.');
 
                             jobDescPtr->slaves[i].hostName =
@@ -1910,7 +1912,7 @@ void FoamX::ICaseBrowserImpl::readJobs
                 }
                 else
                 {
-                    Warning
+                    WarningIn(functionName)
                         << "Removing illegal jobInfo file " << fName
                         << endl;
 
@@ -2006,12 +2008,12 @@ void FoamX::ICaseBrowserImpl::checkRunningJobs()
         // hosts. It writes file (see processLogFileName below) which is gives
         // for every process the status.
 
-        Foam::stringList args(2);
+        stringList args(2);
         args[0] = "foamProcessInfo";
 
 
         HashSet<word> unLicensedMachines;
-        Foam::string unLicensedMsg = "";
+        string unLicensedMsg = "";
 
         for
         (
@@ -2044,13 +2046,13 @@ void FoamX::ICaseBrowserImpl::checkRunningJobs()
             }
 
             fileName processLogFileName =
-                licenceDir/(Foam::userName() + '@' + hostName + ".log");
+                licenceDir/(userName() + '@' + hostName + ".log");
 
             args[1] = processLogFileName;
 
-            Foam::stringList systemArgs = procControl_.remoteShellArgs
+            stringList systemArgs = procControl_.remoteShellArgs
             (
-                Foam::userName(),
+                userName(),
                 hostName,
                 args,
                 "",
@@ -2064,7 +2066,7 @@ void FoamX::ICaseBrowserImpl::checkRunningJobs()
 
             if (sysStatus == ProcessControl::TIMEDOUT)
             {
-                Foam::string msg =
+                string msg =
                     "Error executing "
                     + procControl_.commandString(systemArgs)
                     + "\nHost " + hostName + " can not be reached (timeout).";
@@ -2107,7 +2109,7 @@ void FoamX::ICaseBrowserImpl::checkRunningJobs()
 
             // Convert output from foamProcessInfo into hashtable
             HashTable<word, label, Hash<label> > processTable(processLogFile);
-            Foam::rm(processLogFileName);
+            rm(processLogFileName);
 
             // Check for each process in runningJobs whether it is
             // in the processLogFile
@@ -2183,7 +2185,7 @@ void FoamX::ICaseBrowserImpl::checkRunningJobs()
             }
             purgeRunningJobs();
 
-            Foam::string msg =
+            string msg =
                 "Detected unlicensed hosts\n"
               + unLicensedMsg
               + "\nPurged jobs from runningJobs/.";
@@ -2268,11 +2270,11 @@ void FoamX::ICaseBrowserImpl::purgeRunningJobs()
             fileName jobFileName =
                 word(jobID.hostName)
               + '.'
-              + Foam::name(jobID.processID);
+              + name(jobID.processID);
 
             if (exists(runningJobsDir/jobFileName))
             {
-                Foam::mv(runningJobsDir/jobFileName, finishedJobsDir);
+                mv(runningJobsDir/jobFileName, finishedJobsDir);
             }
         }
 
@@ -2283,9 +2285,9 @@ void FoamX::ICaseBrowserImpl::purgeRunningJobs()
         {
             fileName jobFileName = runningJobsDir/jobFiles[i];
 
-            if (Foam::size(jobFileName) == 0)
+            if (size(jobFileName) == 0)
             {
-                Foam::rm(jobFileName);
+                rm(jobFileName);
             }
         }
     }
@@ -2318,9 +2320,9 @@ void FoamX::ICaseBrowserImpl::purgeFinishedJob(const FoamXServer::JobID& jobID)
 
         fileName jobFileName = 
             finishedJobsDir
-           /(word(jobID.hostName) + '.' + Foam::name(jobID.processID));
+           /(word(jobID.hostName) + '.' + name(jobID.processID));
 
-        Foam::rm(jobFileName);
+        rm(jobFileName);
 
         JobHashTable::iterator finishFnd = finishedJobs_.find(jobID);
 
@@ -2374,19 +2376,19 @@ void FoamX::ICaseBrowserImpl::purgeFinishedJobs(CORBA::Long nDays)
             fileName jobName =
                 word(iter.key().hostName)
               + '.'
-              + Foam::name(iter.key().processID);
+              + name(iter.key().processID);
 
 
             fileName jobFileName = finishedJobsDir/jobName;
 
-            if (Foam::exists(jobFileName))
+            if (exists(jobFileName))
             {
-                if (Foam::size(jobFileName) > 0)
+                if (size(jobFileName) > 0)
                 {
-                    if ((now - Foam::lastModified(jobFileName))/86400 > nDays)
+                    if ((now - lastModified(jobFileName))/86400 > nDays)
                     {
                         // File older than nDays days
-                        Foam::rm(jobFileName);
+                        rm(jobFileName);
                         toBeRemoved.append(iter.key());
                     }
                     else
@@ -2397,9 +2399,9 @@ void FoamX::ICaseBrowserImpl::purgeFinishedJobs(CORBA::Long nDays)
                 else
                 {
                     // Zero sized file. Keep if has runningJobs equivalence
-                    if (!Foam::exists(runningJobsDir/jobName))
+                    if (!exists(runningJobsDir/jobName))
                     {
-                        Foam::rm(jobFileName);
+                        rm(jobFileName);
                         toBeRemoved.append(iter.key());
                     }
                 }
@@ -2431,12 +2433,12 @@ void FoamX::ICaseBrowserImpl::purgeFinishedJobs(CORBA::Long nDays)
         {
             fileName jobFileName = finishedJobsDir/jobFiles[i];
 
-            if (Foam::size(jobFileName) == 0)
+            if (size(jobFileName) == 0)
             {
                 // Zero sized file. Keep if has runningJobs equivalence
-                if (!Foam::exists(runningJobsDir/jobFiles[i]))
+                if (!exists(runningJobsDir/jobFiles[i]))
                 {
-                    Foam::rm(jobFileName);
+                    rm(jobFileName);
                 }
             }
         }
@@ -2459,9 +2461,9 @@ void FoamX::ICaseBrowserImpl::kill(const JobID& jobID)
 
         if (retVal == ProcessControl::TIMEDOUT)
         {
-            Foam::string msg =
+            string msg =
                 "Error killing job on " + word(jobID.hostName)
-                + " with PID " + Foam::name(jobID.processID)
+                + " with PID " + name(jobID.processID)
                 + "\nHost " + word(jobID.hostName)
                 + " can not be reached (timeout).";
 
@@ -2480,7 +2482,7 @@ void FoamX::ICaseBrowserImpl::kill(const JobID& jobID)
             (
                 E_FAIL,
                 "Error killing job on " + word(jobID.hostName)
-              + " with PID " + Foam::name(jobID.processID),
+              + " with PID " + name(jobID.processID),
                 functionName,
                 __FILE__, __LINE__
             );
@@ -2531,9 +2533,9 @@ void FoamX::ICaseBrowserImpl::suspend(const JobID& jobID)
         );
         if (retVal  == ProcessControl::TIMEDOUT)
         {
-            Foam::string msg =
+            string msg =
                 "Error killing job on " + word(jobID.hostName)
-                + " with PID " + Foam::name(jobID.processID)
+                + " with PID " + name(jobID.processID)
                 + "\nHost " + word(jobID.hostName)
                 + " can not be reached (timeout).";
 
@@ -2552,7 +2554,7 @@ void FoamX::ICaseBrowserImpl::suspend(const JobID& jobID)
             (
                 E_FAIL,
                 "Error suspending job on " + word(jobID.hostName)
-              + " with PID " + Foam::name(jobID.processID),
+              + " with PID " + name(jobID.processID),
                 functionName,
                 __FILE__, __LINE__
             );
@@ -2585,9 +2587,9 @@ void FoamX::ICaseBrowserImpl::cont(const JobID& jobID)
 
         if (retVal == ProcessControl::TIMEDOUT)
         {
-            Foam::string msg =
+            string msg =
                 "Error killing job on " + word(jobID.hostName)
-                + " with PID " + Foam::name(jobID.processID)
+                + " with PID " + name(jobID.processID)
                 + "\nHost " + word(jobID.hostName)
                 + " can not be reached (timeout).";
 
@@ -2606,7 +2608,7 @@ void FoamX::ICaseBrowserImpl::cont(const JobID& jobID)
             (    
                 E_FAIL,
                 "Error continuing job on " + word(jobID.hostName)
-              + " with PID " + Foam::name(jobID.processID),
+              + " with PID " + name(jobID.processID),
                 functionName,
                 __FILE__, __LINE__
             );
@@ -2649,7 +2651,7 @@ void FoamX::ICaseBrowserImpl::end
             argsLen = 5;
         }
 
-        Foam::stringList args(argsLen);
+        stringList args(argsLen);
 
         int argi = 0;
 
@@ -2660,11 +2662,11 @@ void FoamX::ICaseBrowserImpl::end
         }
         args[argi++] = rootDir;
         args[argi++] = caseName;
-        args[argi++] = Foam::name(jobID.processID);
+        args[argi++] = name(jobID.processID);
 
-        Foam::stringList systemArgs = procControl_.remoteShellArgs
+        stringList systemArgs = procControl_.remoteShellArgs
         (
-            Foam::userName(),
+            userName(),
             word(jobID.hostName),
             args,
             "",
@@ -2679,7 +2681,7 @@ void FoamX::ICaseBrowserImpl::end
 
         if (sysStatus == ProcessControl::TIMEDOUT)
         {
-            Foam::string msg =
+            string msg =
                 "Error executing "
                 + procControl_.commandString(systemArgs)
                 + "\nHost " + word(jobID.hostName)
@@ -2746,7 +2748,7 @@ void FoamX::ICaseBrowserImpl::setStatus
             (    
                 E_FAIL,
                 "Error setting status for job on " + word(jobID.hostName)
-              + " with PID " + Foam::name(jobID.processID)
+              + " with PID " + name(jobID.processID)
               + ", job not in runningJobs list.",
                 functionName,
                 __FILE__, __LINE__
@@ -2829,7 +2831,7 @@ Foam::fileName FoamX::ICaseBrowserImpl::caseServerKey
     const char* caseName
 )
 {
-    return Foam::hostName()/Foam::userName()/word(rootDir)/caseName;
+    return hostName()/userName()/word(rootDir)/caseName;
 }
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -2917,12 +2919,12 @@ CORBA::Boolean FoamX::ICaseBrowserImpl::getCasePostServerReference
     fileNameList serverKeys(nProcs);
 
     serverKeys[0] =
-        "FoamXCasePostServer"/Foam::userName()/word(rootDir)/caseName;
+        "FoamXCasePostServer"/userName()/word(rootDir)/caseName;
 
     for(label procIndex = 1; procIndex < nProcs; procIndex++)
     {
         serverKeys[procIndex] =
-            "FoamXCasePostServer"/Foam::userName()/word(rootDir)
+            "FoamXCasePostServer"/userName()/word(rootDir)
           / word(caseName/("processor" + name(procIndex)));
     }
 
@@ -2931,14 +2933,14 @@ CORBA::Boolean FoamX::ICaseBrowserImpl::getCasePostServerReference
         // Connect to name server.
         NameServer fxNameServer(orb_.orbPtr_);
 
-        Foam::string procLabel = '[' + word(name(Pstream::myProcNo())) + "]-";
+        string procLabel = '[' + word(name(Pstream::myProcNo())) + "]-";
 
         // See if all processors bound
         forAll(serverKeys, keyI)
         {
             if (!fxNameServer.isObjectBound(serverKeys[keyI]))
             {
-                Sout<< procLabel.c_str() << serverKeys[keyI]
+                Pout<< serverKeys[keyI]
                     << " not yet resolved." << endl;
 
                 return false;

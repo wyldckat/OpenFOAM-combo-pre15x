@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     dictionary
@@ -98,8 +98,14 @@ public:
         //- Construct as copy
         dictionary(const dictionary&);
 
+        //- Construct and return clone
+        autoPtr<dictionary> clone() const;
 
-    // Destructor
+        //- Construct on freestore from Istream
+        static autoPtr<dictionary> New(Istream& is);
+
+
+    // Desstructor
 
         ~dictionary();
 
@@ -135,6 +141,9 @@ public:
 
             //- Find and return an entry data stream
             ITstream& lookup(const word&) const;
+
+            //- Check if entry is a sub-dictionary
+            bool isDict(const word&) const;
 
             //- Find and return a sub-dictionary
             const dictionary& subDict(const word&) const;
@@ -192,6 +201,8 @@ public:
 
         void operator=(const dictionary&);
 
+        void operator+=(const dictionary&);
+
 
     // IOstream operators
 
@@ -201,6 +212,11 @@ public:
         //- Write dictionary to Ostream
         friend Ostream& operator<<(Ostream&, const dictionary&);
 };
+
+
+// Global Operators
+
+dictionary operator+(const dictionary&, const dictionary&);
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

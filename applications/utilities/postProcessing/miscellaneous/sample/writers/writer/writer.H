@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     writer
@@ -68,7 +68,6 @@ SourceFiles
 #include "typeInfo.H"
 #include "runTimeSelectionTables.H"
 #include "autoPtr.H"
-#include "HashTable.H"
 #include "Field.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -78,7 +77,6 @@ namespace Foam
 
 // Class forward declarations
 class coordSet;
-class Time;
 
 /*---------------------------------------------------------------------------*\
                            Class writer Declaration
@@ -91,11 +89,7 @@ class writer
 protected:
 
     //- Generates filename from coordSet and sampled fields
-    fileName getBaseName
-    (
-        const coordSet&,
-        const HashTable<Field<Type>*>&
-    ) const;
+    fileName getBaseName(const coordSet&, const wordList&) const;
     
     void writeCoord
     (
@@ -120,9 +114,10 @@ protected:
     void writeTable
     (
         const coordSet&,
-        const List<List<Type>*>&,
+        const List<const List<Type>*>&,
         Ostream& os
     ) const;
+
 
 public:
 
@@ -155,6 +150,7 @@ public:
         //- Construct null
         writer();
 
+
     // Destructor
 
         virtual ~writer() = 0;
@@ -170,7 +166,7 @@ public:
             virtual fileName getFileName
             (
                 const coordSet&,
-                const Foam::HashTable<Field<Type>*>&
+                const wordList&
             ) const = 0;
 
             //- General entry point for writing.
@@ -179,7 +175,8 @@ public:
             virtual void write
             (
                 const coordSet&,
-                const Foam::HashTable<Field<Type>*>&,
+                const wordList&,
+                const List<const Field<Type>*>&,
                 Ostream&
             ) const = 0;
 

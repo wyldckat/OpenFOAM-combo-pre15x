@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -50,13 +48,13 @@ Description
 FoamX::IHostBrowserImpl::IHostBrowserImpl
 (
     Orb& orb,
-    const Foam::stringList& args
+    const stringList& args
 )
 :
     orb_(orb),
     args_(args),
     objectName_("FoamXHostBrowser"),
-    procControl_(Paths::system/"FoamX.cfg", Paths::user/"FoamX.cfg")
+    procControl_(dotFoam("apps/FoamX/FoamX.cfg"))
 {
     static const char* functionName =
         "FoamX::IHostBrowserImpl::IHostBrowserImpl(Orb& orb)";
@@ -68,7 +66,7 @@ FoamX::IHostBrowserImpl::IHostBrowserImpl
         wordList hosts(1, hostName());
 
         // Open the user's Foam control dictionary.
-        fileName controlDictFileName = Foam::dotFoam("controlDict");
+        fileName controlDictFileName = dotFoam("controlDict");
         if (exists(controlDictFileName))
         {
             dictionary controlDict((IFstream(controlDictFileName)()));
@@ -137,7 +135,7 @@ FoamXServer::HostDescriptorList* FoamX::IHostBrowserImpl::hosts()
     label i = 0;
     for
     (
-        Foam::HashPtrTable<FoamXServer::HostDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::HostDescriptor, string>::iterator
             iter = hosts_.begin();
         iter != hosts_.end();
         ++iter
@@ -162,7 +160,7 @@ void FoamX::IHostBrowserImpl::refreshHostList()
     {
         for
         (
-            Foam::HashPtrTable<FoamXServer::HostDescriptor, Foam::string>::
+            Foam::HashPtrTable<FoamXServer::HostDescriptor, string>::
                 iterator iter = hosts_.begin();
             iter != hosts_.end();
             ++iter
@@ -171,9 +169,9 @@ void FoamX::IHostBrowserImpl::refreshHostList()
             try
             {
                 iter()->alive =
-                    Foam::ping(word(iter()->name), procControl_.timeOut());
+                    ping(word(iter()->name), procControl_.timeOut());
             }
-            catch (Foam::error& fErr)
+            catch (error& fErr)
             {
                 /* even ping gives problems so rsh/ssh will certainly fail */
                 iter()->alive = false;
@@ -194,7 +192,7 @@ CORBA::Boolean FoamX::IHostBrowserImpl::isHostAlive(const char* hostName)
 
     try
     {
-        Foam::HashPtrTable<FoamXServer::HostDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::HostDescriptor, string>::iterator
             iter = hosts_.find(hostName);
 
         if (iter != hosts_.end())
@@ -229,7 +227,7 @@ void FoamX::IHostBrowserImpl::hostIsAlive(const char* hostName)
 
     try
     {
-        Foam::HashPtrTable<FoamXServer::HostDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::HostDescriptor, string>::iterator
             iter = hosts_.find(hostName);
 
         if (iter != hosts_.end())
@@ -262,7 +260,7 @@ void FoamX::IHostBrowserImpl::hostIsDead(const char* hostName)
 
     try
     {
-        Foam::HashPtrTable<FoamXServer::HostDescriptor, Foam::string>::iterator
+        Foam::HashPtrTable<FoamXServer::HostDescriptor, string>::iterator
             iter = hosts_.find(hostName);
 
         if (iter != hosts_.end())
@@ -309,7 +307,7 @@ void FoamX::IHostBrowserImpl::openCaseBrowser
             throw FoamXError
             (
                 E_FAIL,
-                Foam::string("CaseBrowser already running on ") + hostName
+                string("CaseBrowser already running on ") + hostName
               + " according to nameserver",
                 functionName,
                 __FILE__, __LINE__
@@ -322,11 +320,11 @@ void FoamX::IHostBrowserImpl::openCaseBrowser
 
         browserArgs[0] = "FoamXCaseBrowser";
 
-        Foam::stringList argList
+        stringList argList
         (
             procControl_.remoteShellArgs
             (
-                Foam::userName(),
+                userName(),
                 hostName,
                 browserArgs,
                 "",         // no log file

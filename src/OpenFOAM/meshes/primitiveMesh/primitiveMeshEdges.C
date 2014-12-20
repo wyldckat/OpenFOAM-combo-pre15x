@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -41,7 +39,7 @@ void primitiveMesh::calcEdges() const
 {
     if (debug)
     {
-        Info<< "primitiveMesh::calcEdges() : "
+        Pout<< "primitiveMesh::calcEdges() : "
             << "calculating edges and faceEdges"
             << endl;
     }
@@ -79,7 +77,7 @@ void primitiveMesh::calcEdges() const
 
         forAll (f, faceI)
         {
-            edgesOfFace.hook(new edgeList(f[faceI].edges()));
+            edgesOfFace[faceI] = f[faceI].edges();
 
             maxEdges += f[faceI].nEdges();
 

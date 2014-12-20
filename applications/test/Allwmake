@@ -1,5 +1,5 @@
 wmake DLList
-wmake Dictionary
+#wmake Dictionary
 wmake DimensionedField
 wmake DynamicList
 wmake exe Field
@@ -44,7 +44,6 @@ wmake pointField
 wmake primitivePatch
 wmake ptrList
 wmake readCHEMKINIII
-wmake reduce
 wmake router
 wmake simpleMatrix
 wmake sort

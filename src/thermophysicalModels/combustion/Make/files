@@ -26,4 +26,8 @@ $(hhuCombustionThermo)/hhuCombustionThermo.C
 $(hhuCombustionThermo)/newhhuCombustionThermo.C
 $(hhuCombustionThermo)/hhuCombustionThermos.C
 
+derivedFvPatchFields/fixedUnburntEnthalpy/fixedUnburntEnthalpyFvPatchScalarField.C
+derivedFvPatchFields/gradientUnburntEnthalpy/gradientUnburntEnthalpyFvPatchScalarField.C
+derivedFvPatchFields/mixedUnburntEnthalpy/mixedUnburntEnthalpyFvPatchScalarField.C
+
 LIB = $(FOAM_LIBBIN)/libcombustionThermophysicalModels

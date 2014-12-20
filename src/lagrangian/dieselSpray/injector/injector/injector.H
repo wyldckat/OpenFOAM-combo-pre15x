@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     injector
@@ -34,7 +34,7 @@ Description
 
 #include "vector.H"
 #include "List.H"
-#include "dictionaryEntry.H"
+#include "dictionary.H"
 #include "autoPtr.H"
 #include "runTimeSelectionTables.H"
 #include "Time.H"
@@ -52,9 +52,11 @@ namespace Foam
 class injector
 {
     // Private data
+
         dictionary injectorDict_;
 
         autoPtr<injectorType> properties_;
+
 
 public:
 
@@ -90,6 +92,7 @@ public:
 
         inline autoPtr<injectorType>& properties();
         inline const autoPtr<injectorType>& properties() const;
+
 
     // Ostream Operator
 

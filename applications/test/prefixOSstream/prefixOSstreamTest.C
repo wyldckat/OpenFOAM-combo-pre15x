@@ -20,10 +20,11 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
-    
+    prefixOSstreamTest
+
 Description
 
 \*---------------------------------------------------------------------------*/
@@ -34,7 +35,7 @@ Description
 #include "IStringStream.H"
 #include "scalar.H"
 #include "vector.H"
-#include "ListSearch.H"
+#include "ListOps.H"
 #include "Pstream.H"
 #include "argList.H"
 
@@ -48,7 +49,7 @@ int main(int argc, char *argv[])
     argList::validArgs.clear();
     argList args(argc, argv);
 
-    Sout.prefix() = '[' + name(Pstream::myProcNo()) + "] ";
+    //Pout.prefix() = '[' + name(Pstream::myProcNo()) + "] ";
 
     List<vector> list(IStringStream("1 ((0 1 2))")());
     Info<< list << endl;
@@ -75,7 +76,7 @@ int main(int argc, char *argv[])
              )"
         )()
     );
-    Sout<< list2 << endl;
+    Pout<< list2 << endl;
 
     Info<< findIndex(list2, vector(3, 4, 5)) << endl;
 

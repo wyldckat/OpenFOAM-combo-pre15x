@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Gauss-Seidel smoother with fixed number of sweeps.
@@ -52,16 +52,20 @@ void lduMatrix::smooth
     }
     else if (symmetric() || asymmetric())
     {
-        scalarField dD = 1.0/diag();
+        scalar* restrict psiPtr = psi.begin();
+
+        const scalar* restrict diagPtr = diag().begin();
 
         scalarField bPrime(psi.size());
+        scalar* restrict bPrimePtr = bPrime.begin();
 
-        const unallocLabelList& u = lduAddr_.upperAddr();
-        const unallocLabelList& ownStart = lduAddr_.ownerStartAddr();
+        const label* restrict uPtr = lduAddr_.upperAddr().begin();
+        const label* restrict ownStartPtr = lduAddr_.ownerStartAddr().begin();
 
-        const scalarField& Lower = lower();
-        const scalarField& Upper = upper();
-        const label nCells = ownStart.size() - 1;
+        const scalar* restrict lowerPtr = lower().begin();
+        const scalar* restrict upperPtr = upper().begin();
+
+        const label nCells = psi.size();
 
         for (label sweep=0; sweep<nSweeps; sweep++)
         {
@@ -77,56 +81,65 @@ void lduMatrix::smooth
             // coefficient contribution is of a source-kind (i.e. they
             // have a sign as if they are on the r.h.s. of the matrix.
             // To compensate for this, it is necessary to turn the
-            // sign of the contribution.  
-            updateMatrixInterfaces
-            (
-                bouCoeffs,
-                interfaces,
-                -psi,
-                bPrime,
-                cmpt
-            );
+            // sign of the contribution.
+            {
+                FieldField<Field, scalar> mBouCoeffs = -bouCoeffs;
+
+                initMatrixInterfaces
+                (
+                    mBouCoeffs,
+                    interfaces,
+                    psi,
+                    bPrime,
+                    cmpt
+                );
+
+                updateMatrixInterfaces
+                (
+                    mBouCoeffs,
+                    interfaces,
+                    psi,
+                    bPrime,
+                    cmpt
+                );
+            }
 
             for (register label cellI = 0; cellI < nCells; cellI++)
             {
-                register label curFace = ownStart[cellI];
-                label fEnd = ownStart[cellI + 1];
-
                 // lCell is equal to cellI
-
-                scalar& curPsi = psi[cellI];
+                scalar& curPsi = psiPtr[cellI];
 
                 // Grab the accumulated neighbour side
-                curPsi = bPrime[cellI];
+                curPsi = bPrimePtr[cellI];
+
+                // Start and end of this row
+                label fStart = ownStartPtr[cellI];
+                label fEnd = ownStartPtr[cellI + 1];
 
                 // Accumulate the owner product side
-                for (; curFace < fEnd; curFace++)
+                for (register label curFace = fStart; curFace < fEnd; curFace++)
                 {
-                    register label uCell = u[curFace];
-                    curPsi -= Upper[curFace]*psi[uCell];
+                    curPsi -= upperPtr[curFace]*psiPtr[uPtr[curFace]];
                 }
 
                 // Finish current psi
-                curPsi *= dD[cellI];
+                curPsi /= diagPtr[cellI];
 
                 // Distribute the neighbour side using current psi
-                curFace = ownStart[cellI];
-
-                for (; curFace < fEnd; curFace++)
+                for (register label curFace = fStart; curFace < fEnd; curFace++)
                 {
-                    register label uCell = u[curFace];
-                    bPrime[uCell] -= Lower[curFace]*curPsi;
+                    bPrimePtr[uPtr[curFace]] -= lowerPtr[curFace]*curPsi;
                 }
             }
         }
     }
     else
     {
-        FatalError
-            << "lduMatrix::smooth"
-            << "(scalarField&, const scalarField&, const label) : "
-            << "cannot solve incomplete matrix, no diagonal"
-            << abort(FatalError);
+        FatalErrorIn
+        (
+            "lduMatrix::smooth(scalarField&, const scalarField&, const label)"
+        )   << "cannot solve incomplete matrix, no diagonal"
+            << exit(FatalError);
     }
 }
 

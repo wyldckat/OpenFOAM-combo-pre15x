@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     Pstream
@@ -56,9 +56,6 @@ void Pstream::addValidParOptions(HashTable<string>& validParOptions)
 
 bool Pstream::init(int& argc, char**& argv)
 {
-    // This is a parallel run!
-    parRun_ = true;
-
     MPI_Init(&argc, &argv);
 
     int numprocs;
@@ -81,6 +78,8 @@ bool Pstream::init(int& argc, char**& argv)
     {
         procIDs_[procNo] = procNo;
     }
+
+    setParRun();
 
 #   ifndef SGIMPI
     string bufferSizeName = getEnv("MPI_BUFFER_SIZE");
@@ -144,7 +143,7 @@ void Pstream::abort()
 }
 
 
-void reduce(scalar& Value, sumOp<scalar> bop)
+void reduce(scalar& Value, const sumOp<scalar>& bop)
 {
     if (!Pstream::parRun())
     {
@@ -180,8 +179,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                     )
                 )
                 {
-                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                        << "MPI_Recv failed"
+                    FatalErrorIn
+                    (
+                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                    )   << "MPI_Recv failed"
                         << abort(FatalError);
                 }
 
@@ -203,8 +204,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                 )
             )
             {
-                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                    << "MPI_Send failed"
+                FatalErrorIn
+                (
+                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                )   << "MPI_Send failed"
                     << abort(FatalError);
             }
         }
@@ -232,8 +235,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                     )
                 )
                 {
-                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                        << "MPI_Send failed"
+                    FatalErrorIn
+                    (
+                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                    )   << "MPI_Send failed"
                         << abort(FatalError);
                 }
             }
@@ -254,8 +259,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                 )
             )
             {
-                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                    << "MPI_Recv failed"
+                FatalErrorIn
+                (
+                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                )   << "MPI_Recv failed"
                     << abort(FatalError);
             }
         }
@@ -305,8 +312,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                     )
                 )
                 {
-                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                        << "MPI_Recv failed"
+                    FatalErrorIn
+                    (
+                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                    )   << "MPI_Recv failed"
                         << abort(FatalError);
                 }
 
@@ -338,8 +347,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                 )
             )
             {
-                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                    << "MPI_Send failed"
+                FatalErrorIn
+                (
+                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                )   << "MPI_Send failed"
                     << abort(FatalError);
             }
 
@@ -357,8 +368,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                 )
             )
             {
-                FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                    << "MPI_Recv failed"
+                FatalErrorIn
+                (
+                    "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                )   << "MPI_Recv failed"
                     << abort(FatalError);
             }
         }
@@ -390,8 +403,10 @@ void reduce(scalar& Value, sumOp<scalar> bop)
                     )
                 )
                 {
-                    FatalErrorIn("reduce(scalar& Value, sumOp<scalar> sumOp)")
-                        << "MPI_Send failed"
+                    FatalErrorIn
+                    (
+                        "reduce(scalar& Value, const sumOp<scalar>& sumOp)"
+                    )   << "MPI_Send failed"
                         << abort(FatalError);
                 }
             }

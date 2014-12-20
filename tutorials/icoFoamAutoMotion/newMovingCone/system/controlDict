@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass icoFoamAutoMotion;
+application icoFoamAutoMotion;
 
 startFrom       startTime;
 
@@ -38,7 +38,7 @@ writeControl    timeStep;
 
 writeInterval   40;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

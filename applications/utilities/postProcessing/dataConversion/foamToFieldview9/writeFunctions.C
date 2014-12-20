@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -51,9 +51,7 @@ bool writeStr80(std::ostream& os, const string& str)
 // Write single integer
 bool writeInt(std::ostream& os, int val1)
 {
-    //Info<< "Writing int:" << val1 << endl;
-
-    os.write((char *)&val1, sizeof(int));
+    os.write(reinterpret_cast<char*>(&val1), sizeof(int));
 
     return os.good();
 }
@@ -64,9 +62,7 @@ bool writeFloat(std::ostream& os, scalar val1)
 {
     float floatVal = val1;
 
-    //Info<< "Writing float:" << floatVal << endl;
-
-    os.write((char *)&floatVal, sizeof(float));
+    os.write(reinterpret_cast<char*>(&floatVal), sizeof(float));
 
     return os.good();
 }
@@ -75,11 +71,8 @@ bool writeFloat(std::ostream& os, scalar val1)
 // Debug: write raw bytes
 void writeBytes(char* start, int nBytes)
 {
-    //Info<< "Writing bytes:" << nBytes << endl;
-
     cout.setf(std::ios::hex, std::ios::basefield);
 
-    //cout.setw(8);
     cout<< start << " : ";
 
     for(int i = 0; i < nBytes; i++)

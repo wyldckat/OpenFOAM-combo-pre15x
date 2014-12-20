@@ -20,16 +20,17 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     transportModel
 
 Description
+    Base-class for all transport models used by the incompressible turbulence
+    models.
 
 SourceFiles
     transportModel.C
-    newTransportModel.C
 
 \*---------------------------------------------------------------------------*/
 
@@ -37,12 +38,8 @@ SourceFiles
 #define transportModel_H
 
 #include "IOdictionary.H"
-#include "typeInfo.H"
-#include "runTimeSelectionTables.H"
 #include "volFieldsFwd.H"
 #include "surfaceFieldsFwd.H"
-#include "tmp.H"
-#include "autoPtr.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -57,25 +54,6 @@ class transportModel
 :
     public IOdictionary
 {
-
-protected:
-
-    // Protected data
-
-        const volVectorField& U_;
-        const surfaceScalarField& phi_;
-
-
-private:
-
-        word phaseName_;
-
-
-protected:
-
-        dictionary phaseTransportProperties_;
-
-
     // Private Member Functions
 
         //- Disallow copy construct
@@ -84,46 +62,8 @@ protected:
         //- Disallow default bitwise assignment
         void operator=(const transportModel&);
 
-        //- Lookup and return the phase transport properties dictionary
-        static const dictionary& lookupPhaseTransportProperties
-        (
-            const dictionary& transportProperties,
-            const word& phaseName = ""
-        );
-
 
 public:
-
-    //- Runtime type information
-    TypeName("transportModel");
-
-
-    // Declare run-time constructor selection table
-
-        declareRunTimeSelectionTable
-        (
-            autoPtr,
-            transportModel,
-            dictionary,
-            (
-                const volVectorField& U,
-                const surfaceScalarField& phi,
-                const word& phaseName
-            ),
-            (U, phi, phaseName)
-        );
-
-
-    // Selectors
-
-        //- Return a reference to the selected turbulence model
-        static autoPtr<transportModel> New
-        (
-            const volVectorField& U,
-            const surfaceScalarField& phi,
-            const word& phaseName = ""
-        );
-
 
     // Constructors
 
@@ -131,36 +71,19 @@ public:
         transportModel
         (
             const volVectorField& U,
-            const surfaceScalarField& phi,
-            const word& phaseName = ""
+            const surfaceScalarField& phi
         );
 
 
     // Destructor
 
-        virtual ~transportModel()
-        {}
+        virtual ~transportModel();
 
 
     // Member Functions
 
-        //- Return the name of this phase
-        const word& phaseName() const
-        {
-            return phaseName_;
-        }
-
-        //- Return the phase transport properties dictionary
-        const dictionary& phaseTransportProperties() const
-        {
-            return phaseTransportProperties_;
-        }
-
-        //- Return the strain rate mag(grad(U))
-        tmp<volScalarField> strainRate() const;
-
         //- Return the laminar viscosity
-        virtual const volScalarField& nu() const = 0;
+        virtual tmp<volScalarField> nu() const = 0;
 
         //- Correct the laminar viscosity
         virtual void correct() = 0;

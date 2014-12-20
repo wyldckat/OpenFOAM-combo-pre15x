@@ -1,0 +1,22 @@
+// ************************************************************************** //
+// FoamX Case Dictionary.
+
+version             2.0;
+format              ascii;
+root                ".";
+case                "brick";
+local               "constant";
+class               dictionary;
+form                dictionary;
+object              faMeshDefinition;
+
+// ************************************************************************** //
+
+polyMeshPatches  1( outer );
+
+boundary
+{
+}
+
+
+// ************************************************************************** //

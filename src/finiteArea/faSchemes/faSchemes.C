@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -35,6 +35,8 @@ Description
 
 namespace Foam
 {
+
+int faSchemes::debug(Foam::debug::debugSwitch("faSchemes", false));
 
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
@@ -51,7 +53,10 @@ faSchemes::faSchemes(const objectRegistry& obr)
             IOobject::NO_WRITE
         )
     ),
-    timeScheme_(EI),
+    ddtSchemes_(ITstream("ddtSchemes", tokenList())()),
+    defaultDdtScheme_("default", tokenList()),
+    d2dt2Schemes_(ITstream("d2dt2Schemes", tokenList())()),
+    defaultD2dt2Scheme_("default", tokenList()),
     interpolationSchemes_(ITstream("interpolationSchemes", tokenList())()),
     defaultInterpolationScheme_("default", tokenList()),
     divSchemes_(ITstream("divSchemes", tokenList())()),
@@ -76,39 +81,93 @@ bool faSchemes::read()
     {
         const dictionary& dict = schemesDict();
 
-        word timeSchemeName(dict.lookup("timeScheme"));
-        
-        if (timeSchemeName == "SteadyState")
+        if (dict.found("ddtSchemes"))
         {
-            timeScheme_ = SS;
+            ddtSchemes_ = dict.subDict("ddtSchemes");
         }
-        else if (timeSchemeName == "EulerImplicit")
+        else if (dict.found("timeScheme"))
         {
-            timeScheme_ = EI;
-        }
-        else if (timeSchemeName == "BackwardDifferencing")
-        {
-            timeScheme_ = BD;
-        }
-        else if (timeSchemeName == "CrankNicholson")
-        {
-            timeScheme_ = CN;
+            // For backward compatibility.
+            // The timeScheme will be deprecated with warning or removed in 2.4.
 
-            FatalIOErrorIn("faSchemes::read()", *this)
-                << timeSchemeName << " is not currently supported"
-                << exit(FatalIOError);
+            word timeSchemeName(dict.lookup("timeScheme"));
+
+            if (timeSchemeName == "EulerImplicit")
+            {
+                timeSchemeName = "Euler";
+            }
+            else if (timeSchemeName == "BackwardDifferencing")
+            {
+                timeSchemeName = "backward";
+            }
+            else if (timeSchemeName == "SteadyState")
+            {
+                timeSchemeName = "steadyState";
+            }
+
+            if (ddtSchemes_.found("default"))
+            {
+                ddtSchemes_.remove("default");
+            }
+
+            ddtSchemes_.add("default", timeSchemeName);
         }
         else
         {
-            FatalIOErrorIn("faSchemes::read()", *this)
-                << "unknown timeScheme "
-                << timeSchemeName << endl
-                << "    Should be one of "
-                   "SteadyState"
-                   ", EulerImplicit"
-                   " or BackwardDifferencing"
-                << exit(FatalIOError);
+            ddtSchemes_.add("default", "none");
         }
+
+        if
+        (
+            ddtSchemes_.found("default")
+         && word(ddtSchemes_.lookup("default")) != "none"
+        )
+        {
+            defaultDdtScheme_ = ddtSchemes_.lookup("default");
+        }
+
+
+        if (dict.found("d2dt2Schemes"))
+        {
+            d2dt2Schemes_ = dict.subDict("d2dt2Schemes");
+        }
+        else if (dict.found("timeScheme"))
+        {
+            // For backward compatibility.
+            // The timeScheme will be deprecated with warning or removed in 2.4.
+
+            word timeSchemeName(dict.lookup("timeScheme"));
+
+            if (timeSchemeName == "EulerImplicit")
+            {
+                timeSchemeName = "Euler";
+            }
+            else if (timeSchemeName == "SteadyState")
+            {
+                timeSchemeName = "steadyState";
+            }
+
+            if (d2dt2Schemes_.found("default"))
+            {
+                d2dt2Schemes_.remove("default");
+            }
+
+            d2dt2Schemes_.add("default", timeSchemeName);
+        }
+        else
+        {
+            d2dt2Schemes_.add("default", "none");
+        }
+
+        if
+        (
+            d2dt2Schemes_.found("default")
+         && word(d2dt2Schemes_.lookup("default")) != "none"
+        )
+        {
+            defaultD2dt2Scheme_ = d2dt2Schemes_.lookup("default");
+        }
+
 
         if (dict.found("interpolationSchemes"))
         {
@@ -212,9 +271,49 @@ const dictionary& faSchemes::schemesDict() const
 }
 
 
-faSchemes::timeSchemes faSchemes::timeScheme() const
+ITstream& faSchemes::ddtScheme(const word& name) const
 {
-    return timeScheme_;
+    if (debug)
+    {
+        Info<< "Lookup ddtScheme for " << name << endl;
+    }
+
+    if
+    (
+        ddtSchemes_.found(name)
+     || !defaultDdtScheme_.size()
+    )
+    {
+        return ddtSchemes_.lookup(name);
+    }
+    else
+    {
+        const_cast<ITstream&>(defaultDdtScheme_).rewind();
+        return const_cast<ITstream&>(defaultDdtScheme_);
+    }
+}
+
+
+ITstream& faSchemes::d2dt2Scheme(const word& name) const
+{
+    if (debug)
+    {
+        Info<< "Lookup d2dt2Scheme for " << name << endl;
+    }
+
+    if
+    (
+        d2dt2Schemes_.found(name)
+     || !defaultD2dt2Scheme_.size()
+    )
+    {
+        return d2dt2Schemes_.lookup(name);
+    }
+    else
+    {
+        const_cast<ITstream&>(defaultD2dt2Scheme_).rewind();
+        return const_cast<ITstream&>(defaultD2dt2Scheme_);
+    }
 }
 
 
@@ -230,8 +329,8 @@ ITstream& faSchemes::interpolationScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultInterpolationScheme_)).rewind();
-        return (ITstream&)defaultInterpolationScheme_;
+        const_cast<ITstream&>(defaultInterpolationScheme_).rewind();
+        return const_cast<ITstream&>(defaultInterpolationScheme_);
     }
 }
 
@@ -244,8 +343,8 @@ ITstream& faSchemes::divScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultDivScheme_)).rewind();
-        return (ITstream&)defaultDivScheme_;
+        const_cast<ITstream&>(defaultDivScheme_).rewind();
+        return const_cast<ITstream&>(defaultDivScheme_);
     }
 }
 
@@ -258,8 +357,8 @@ ITstream& faSchemes::gradScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultGradScheme_)).rewind();
-        return (ITstream&)defaultGradScheme_;
+        const_cast<ITstream&>(defaultGradScheme_).rewind();
+        return const_cast<ITstream&>(defaultGradScheme_);
     }
 }
 
@@ -272,8 +371,8 @@ ITstream& faSchemes::snGradScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultSnGradScheme_)).rewind();
-        return (ITstream&)defaultSnGradScheme_;
+        const_cast<ITstream&>(defaultSnGradScheme_).rewind();
+        return const_cast<ITstream&>(defaultSnGradScheme_);
     }
 }
 
@@ -286,8 +385,8 @@ ITstream& faSchemes::laplacianScheme(const word& name) const
     }
     else
     {
-        ((ITstream&)(defaultLaplacianScheme_)).rewind();
-        return (ITstream&)defaultLaplacianScheme_;
+        const_cast<ITstream&>(defaultLaplacianScheme_).rewind();
+        return const_cast<ITstream&>(defaultLaplacianScheme_);
     }
 }
 

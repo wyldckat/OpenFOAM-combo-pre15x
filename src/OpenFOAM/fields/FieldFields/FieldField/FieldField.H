@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     FieldField<T>
@@ -37,7 +37,7 @@ SourceFiles
 #define FieldField_H
 
 #include "tmp.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "scalar.H"
 #include "direction.H"
 #include "VectorSpace.H"
@@ -75,7 +75,7 @@ template<template<class> class Field, class Type>
 class FieldField
 :
     public refCount,
-    public ptrList<Field<Type> >
+    public PtrList<Field<Type> >
 {
 
 public:
@@ -102,8 +102,8 @@ public:
         //- Construct as copy
         FieldField(const FieldField<Field, Type>&);
 
-        //- Construct as copy of a ptrList<Field, Type>
-        FieldField(const ptrList<Field<Type> >&);
+        //- Construct as copy of a PtrList<Field, Type>
+        FieldField(const PtrList<Field<Type> >&);
 
         //- Construct as copy of tmp<FieldField>
 #       ifdef ConstructFromTmp
@@ -180,19 +180,13 @@ public:
 
     // IOstream operators
 
-        friend Ostream& operator<<
-#       ifndef KAI
-            <Field, Type>
-#       endif
+        friend Ostream& operator<< <Field, Type>
         (
             Ostream&,
             const FieldField<Field, Type>&
         );
 
-        friend Ostream& operator<<
-#       ifndef KAI
-            <Field, Type>
-#       endif
+        friend Ostream& operator<< <Field, Type>
         (
             Ostream&,
             const tmp<FieldField<Field, Type> >&

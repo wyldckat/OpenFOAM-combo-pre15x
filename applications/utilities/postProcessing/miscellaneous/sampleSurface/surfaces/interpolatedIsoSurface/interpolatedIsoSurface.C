@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -145,6 +143,7 @@ void Foam::interpolatedIsoSurface::correct
     {
         delete isoSurfCutsPtr_;
     }
+
     isoSurfCutsPtr_ = new cellDecompIsoSurfaceCuts
     (
         vField,
@@ -153,27 +152,25 @@ void Foam::interpolatedIsoSurface::correct
         -0.1
     );
 
-    meshCutSurface interpolatedIsoSurfaceTris(isoSurfCuts());
+    meshCutSurface isoSurf(isoSurfCuts());
 
-    points_ = interpolatedIsoSurfaceTris.points();
+    points_ = isoSurf.points();
 
     // Convert triangles into faces
-    const triFaceList& tris = interpolatedIsoSurfaceTris.tris();
+    faces_.setSize(isoSurf.size());
 
-    faces_.setSize(tris.size());
-
-    forAll(tris, triI)
+    forAll(isoSurf, triI)
     {
         face& f = faces_[triI];
-        const triFace& t = tris[triI];
+        const labelledTri& t = isoSurf[triI];
 
-        f.setSize(t.size());
+        f.setSize(3);
         f[0] = t[0];
         f[1] = t[1];
         f[2] = t[2];
     }
 
-    Info<< "Created " << name() << " :"
+    Pout<< "Created " << name() << " :"
         << "  isoValue:" << isoVal_
         << "  field:" << isoFieldName_
         << "  faces:" << faces_.size()

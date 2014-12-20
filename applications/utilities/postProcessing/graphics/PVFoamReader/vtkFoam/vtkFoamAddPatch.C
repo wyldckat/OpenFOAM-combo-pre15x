@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -83,15 +83,30 @@ void Foam::vtkFoam::addPatch
 
         if (f.size() == 3)
         {
-            vtkPatch->InsertNextCell(VTK_TRIANGLE, 3, (int*)f.begin());
+            vtkPatch->InsertNextCell
+            (
+                VTK_TRIANGLE,
+                3,
+                const_cast<int*>(f.begin())
+            );
         }
         else if (f.size() == 4)
         {
-            vtkPatch->InsertNextCell(VTK_QUAD, 4, (int*)f.begin());
+            vtkPatch->InsertNextCell
+            (
+                VTK_QUAD,
+                4,
+                const_cast<int*>(f.begin())
+            );
         }
         else
         {
-            vtkPatch->InsertNextCell(VTK_POLYGON, f.size(), (int*)f.begin());
+            vtkPatch->InsertNextCell
+            (
+                VTK_POLYGON,
+                f.size(),
+                const_cast<int*>(f.begin())
+            );
         }
     }
 }

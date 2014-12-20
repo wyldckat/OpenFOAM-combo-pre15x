@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -180,10 +180,10 @@ void Foam::cellDecompIsoSurfaceCuts::constructEdgeCuts
 
     // Tranfer lists to cellDecompCuts
 
-    cells_ = (const labelList&)cutCells.toc();
+    cells_ = cutCells.toc();
 
-    meshVerts_ = (const labelList&)cutVerts.toc();
-    meshCellCentres_ = (const labelList&)cutCellCentres.toc();
+    meshVerts_ = cutVerts.toc();
+    meshCellCentres_ = cutCellCentres.toc();
 
     meshEdges_.transfer(meshCutEdges);
     meshEdgeWeights_.transfer(meshEdgeWeights);

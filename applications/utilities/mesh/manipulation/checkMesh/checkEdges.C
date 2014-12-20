@@ -2,7 +2,7 @@
   =========                 |
   \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
    \\    /   O peration     |
-    \\  /    A nd           | Copyright (C) 1991-2005 OpenCFD Ltd.
+    \\  /    A nd           | Copyright (C) 1991-2004 OpenCFD Ltd.
      \\/     M anipulation  |
 -------------------------------------------------------------------------------
 License
@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -56,7 +56,7 @@ bool checkEdges
         {
             if (report)
             {
-                Info<< "Zero size or very small edge size detected for "
+                Pout<< "Zero size or very small edge size detected for "
                     << "edge " << edgeI << " vertices " << e
                     << ".  Length = " << magE << endl;
             }
@@ -81,14 +81,19 @@ bool checkEdges
     {
         Info<< "Minumum edge length = " << minLen
             << ". Maximum edge length = " << maxLen
-            << ".\n" << endl;
+            << '.' << nl << endl;
     }
 
     if (nSmall > 0)
     {
         if (Pstream::master())
         {
-            Warning << nSmall  << " small edges found\n" << endl;
+            WarningIn
+            (
+                "checkEdges"
+                "(const primitiveMesh& mesh, const bool report,"
+                "const scalar tol, labelHashSet* setPtr"
+            )  << nSmall  << " small edges found" << nl << endl;
         }
 
         return true;

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -258,7 +258,7 @@ inline typename powProduct<Form, 1>::type pow
   = pTraits<typename powProduct<Form, 1>::type>::zero
 )
 {
-    return (const Form&)v;
+    return static_cast<const Form&>(v);
 }
 
 // sqr(Form) = Form*Form
@@ -268,7 +268,7 @@ inline typename powProduct<Form, 2>::type sqr
     const VectorSpace<Form, Cmpt, nCmpt>& v
 )
 {
-    return ((const Form&)v)*((const Form&)v);
+    return static_cast<const Form&>(v)*static_cast<const Form&>(v);
 }
 
 // Form^2 = sqr(Form)

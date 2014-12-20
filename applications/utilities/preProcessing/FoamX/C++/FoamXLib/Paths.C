@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -36,35 +34,33 @@ Description
 
 namespace Paths
 {
-    Foam::fileName systemPath()
+    Foam::fileName config(Foam::getEnv("FOAMX_CONFIG"));
+    //Foam::fileName tmp(Foam::dotFoam("tmp"));
+    Foam::fileName tmp(config);
+
+    Foam::fileName solversPath()
     {
-        if (Foam::env("FOAMX_SYSTEM_CONFIG"))
-        {
-            return Foam::getEnv("FOAMX_SYSTEM_CONFIG");
-        }
-        else
-        {
-            // Set FoamX system configuration file path.
-            return Foam::dotFoam("apps/FoamX");
-        }
+        return Foam::getEnv("WM_PROJECT_DIR")/"applications/solvers";
     }
+    Foam::fileName solvers(solversPath());
 
-    Foam::fileName system(systemPath());
-
-    Foam::fileName userPath()
+    Foam::fileName userSolversPath()
     {
-        if (Foam::env("FOAMX_USER_CONFIG"))
-        {
-            return Foam::getEnv("FOAMX_USER_CONFIG");
-        }
-        else
-        {
-            // Set FoamX user configuration file path.
-            return Foam::dotFoam("apps/FoamX");
-        }
+        return Foam::getEnv("WM_PROJECT_USER_DIR")/"applications/solvers";
     }
+    Foam::fileName userSolvers(userSolversPath());
 
-    Foam::fileName user(userPath());
+    Foam::fileName utilitiesPath()
+    {
+        return Foam::getEnv("WM_PROJECT_DIR")/"applications/utilities";
+    }
+    Foam::fileName utilities(utilitiesPath());
+
+    Foam::fileName userUtilitiesPath()
+    {
+        return Foam::getEnv("WM_PROJECT_USER_DIR")/"applications/utilities";
+    }
+    Foam::fileName userUtilities(userUtilitiesPath());
 }
 
 

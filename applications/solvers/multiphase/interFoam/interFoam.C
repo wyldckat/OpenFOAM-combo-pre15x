@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     interFoam
@@ -36,8 +36,7 @@ Description
 
 #include "subCycle.H"
 #include "interfaceProperties.H"
-#include "fixedValueFvPatchFields.H"
-#include "incompressible/transportModel/transportModel.H"
+#include "twoPhaseMixture.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -70,12 +69,11 @@ int main(int argc, char *argv[])
 
         Info<< "Time = " << runTime.timeName() << nl << endl;
 
-        phi += mesh.phi();
+        phi += fvc::meshPhi(rho, U);
         mesh.move();
-        phi -= mesh.phi();
+        phi -= fvc::meshPhi(rho, U);
 
-        phase1->correct();
-        phase2->correct();
+        twoPhaseProperties.correct();
 
 #       include "gammaEqnSubCycle.H"
 
@@ -87,16 +85,16 @@ int main(int argc, char *argv[])
 #           include "pEqn.H"
         }
 
-#       include "movingMeshContinuityErrs.H"
+#       include "movingMeshRhoUContinuityErrs.H"
 
         runTime.write();
 
         Info<< "ExecutionTime = "
             << runTime.elapsedCpuTime()
-            << " s\n" << endl << endl;
+            << " s\n\n" << endl;
     }
 
-    Info<< "\n end \n";
+    Info<< "End\n" << endl;
 
     return(0);
 }

@@ -20,11 +20,12 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     legacy VTK file format writer.
-    - handles volScalar, volVector, pointScalar, pointVector fields.
+    - handles volScalar, volVector, pointScalar, pointVector, surfaceScalar
+      fields.
     - mesh topo changes.
     - both ascii and binary.
     - single time step writing.
@@ -58,6 +59,7 @@ Description
 #include "vtkMesh.H"
 #include "readFields.H"
 #include "writeFuns.H"
+#include "writeInternal.H"
 #include "writeLagrangian.H"
 #include "writePatch.H"
 #include "writeFaceSet.H"
@@ -74,7 +76,7 @@ static const label VTK_HEXAHEDRON = 12;
 
 
 template<class GeoField>
-void print(Ostream& os, const ptrList<GeoField>& flds)
+void print(Ostream& os, const PtrList<GeoField>& flds)
 {
     forAll(flds, i)
     {
@@ -95,10 +97,15 @@ int main(int argc, char *argv[])
     argList::validOptions.insert("faceSet", "faceSet name");
     argList::validOptions.insert("ascii","");
     argList::validOptions.insert("surfaceFields","");
+    argList::validOptions.insert("nearCellValue","");
+    argList::validOptions.insert("noInternal","");
+    argList::validOptions.insert("noPointValues","");
 
 #   include "setRootCase.H"
 #   include "createTime.H"
 
+
+    bool doWriteInternal = !args.options().found("noInternal");
 
     bool binary = !args.options().found("ascii");
 
@@ -110,6 +117,23 @@ int main(int argc, char *argv[])
             << exit(FatalError);
     }
 
+    bool nearCellValue = args.options().found("nearCellValue");
+
+    if (nearCellValue)
+    {
+        WarningIn(args.executable())
+            << "Using neighbouring cell value instead of patch value"
+            << nl << endl;
+    }
+
+    bool noPointValues = args.options().found("noPointValues");
+
+    if (noPointValues)
+    {
+        WarningIn(args.executable())
+            << "Outputting cell values only" << nl << endl;
+    }
+
     word cellSetName;
     word vtkName;
 
@@ -117,6 +141,18 @@ int main(int argc, char *argv[])
     {
         cellSetName = args.options()["cellSet"];
         vtkName = cellSetName;
+    }
+    else if (Pstream::parRun())
+    {
+        // Strip off leading casename, leaving just processor_DDD ending.
+        vtkName = runTime.caseName();
+
+        string::size_type i = vtkName.rfind("processor");
+
+        if (i != string::npos)
+        {
+            vtkName = vtkName.substr(i);
+        }
     }
     else
     {
@@ -188,7 +224,6 @@ int main(int argc, char *argv[])
         polyMesh::readUpdateState meshState = vMesh.readUpdate();
 
         const fvMesh& mesh = vMesh.mesh();
-        const vtkTopo& topo = vMesh.topo();
 
         if
         (
@@ -196,11 +231,7 @@ int main(int argc, char *argv[])
          || meshState == polyMesh::TOPO_PATCH_CHANGE
         )
         {
-            Info<< "    Original cells:" << mesh.nCells()
-                << " points:" << mesh.nPoints()
-                << "   Additional cells:" << topo.superCells().size()
-                << "  additional points:" << topo.addPointCellLabels().size()
-                << nl << endl;
+            Info<< "    Read new mesh" << nl << endl;
         }
 
 
@@ -240,18 +271,18 @@ int main(int argc, char *argv[])
 
         // Construct the vol fields (on the original mesh if subsetted)
 
-        ptrList<volScalarField> volScalarFields;
+        PtrList<volScalarField> volScalarFields;
         readFields(vMesh, objects, selectedFields, volScalarFields);
         Info<< "    volScalarFields   :";
         print(Info, volScalarFields);
 
-        ptrList<volVectorField> volVectorFields;
+        PtrList<volVectorField> volVectorFields;
         readFields(vMesh, objects, selectedFields, volVectorFields);
         Info<< "    volVectorFields   :";
         print(Info, volVectorFields);
 
-        ptrList<surfaceScalarField> surfScalarFields;
-        ptrList<surfaceVectorField> surfVectorFields;
+        PtrList<surfaceScalarField> surfScalarFields;
+        PtrList<surfaceVectorField> surfVectorFields;
         if (args.options().found("surfaceFields"))
         {
             readFields
@@ -275,239 +306,60 @@ int main(int argc, char *argv[])
             print(Info, surfVectorFields);
         }
 
-        pointMesh pMesh(vMesh);
-
-        ptrList<pointScalarField> pointScalarFields;
-        ptrList<pointVectorField> pointVectorFields;
-        if (!vMesh.useSubMesh())
+        // Construct pointMesh only if nessecary since constructs edge
+        // addressing (expensive on polyhedral meshes)
+        autoPtr<pointMesh> pMeshPtr(NULL);
+        if (noPointValues)
         {
-            readFields(pMesh, objects, selectedFields, pointScalarFields);
-            Info<< "    pointScalarFields :";
-            print(Info, pointScalarFields);
-
-            readFields(pMesh, objects, selectedFields, pointVectorFields);
-            Info<< "    pointVectorFields :";
-            print(Info, pointVectorFields);
+            Info<< "    pointScalarFields : switched off"
+                << " (\"-noPointValues\" option)\n";
+            Info<< "    pointVectorFields : switched off"
+                << " (\"-noPointValues\" option)\n";
         }
         else
         {
-            Info<< "    pointScalarFields : Not supported on subMesh\n";
-            Info<< "    pointVectorFields : Not supported on subMesh\n";
+            pMeshPtr.reset(new pointMesh(vMesh));
+        }
+
+        PtrList<pointScalarField> pointScalarFields;
+        PtrList<pointVectorField> pointVectorFields;
+        if (pMeshPtr.valid() && !vMesh.useSubMesh())
+        {
+            readFields(pMeshPtr(), objects, selectedFields, pointScalarFields);
+            Info<< "    pointScalarFields :";
+            print(Info, pointScalarFields);
+
+            readFields(pMeshPtr(), objects, selectedFields, pointVectorFields);
+            Info<< "    pointVectorFields :";
+            print(Info, pointVectorFields);
         }
 
         Info<< endl;
 
-
-        //
-        // Create file and write header
-        //
-        fileName vtkFileName
-        (
-            fvPath/vtkName + "_" + Foam::name(runTime.timeIndex()) + ".vtk"
-        );
-
-        Info<< "    Internal  : " << vtkFileName << endl;
-
-        std::ofstream vtkStream(vtkFileName.c_str());
-
-
-        //
-        // Write header
-        //
-        vtkStream
-            << "# vtk DataFile Version 2.0" << std::endl
-            << runTime.caseName() << std::endl;
-        if (binary)
+        if (doWriteInternal)
         {
-            vtkStream << "BINARY" << std::endl;
+            //
+            // Create file and write header
+            //
+            fileName vtkFileName
+            (
+                fvPath/vtkName + "_" + Foam::name(runTime.timeIndex()) + ".vtk"
+            );
+
+            Info<< "    Internal  : " << vtkFileName << endl;
+
+            writeInternal
+            (
+                binary,              // write binary
+                vMesh,
+                pMeshPtr,
+                vtkFileName,
+                volScalarFields,
+                volVectorFields,
+                pointScalarFields,
+                pointVectorFields
+            );
         }
-        else
-        {
-            vtkStream << "ASCII" << std::endl;
-        }
-        vtkStream << "DATASET UNSTRUCTURED_GRID" << std::endl;
-
-
-        //---------------------------------------------------------------------
-        //
-        // Write topology
-        // 
-        //---------------------------------------------------------------------
-
-        const labelList& addPointCellLabels = topo.addPointCellLabels();
-        const label nTotPoints = mesh.nPoints() + addPointCellLabels.size();
-
-        vtkStream
-            << "POINTS " << nTotPoints
-            << " float" << std::endl;
-
-        DynamicList<floatScalar> ptField(3*nTotPoints);
-
-        writeFuns::insert(mesh.points(), ptField);
-
-        const pointField& ctrs = mesh.cellCentres();
-        forAll(addPointCellLabels, api)
-        {
-            writeFuns::insert(ctrs[addPointCellLabels[api]], ptField);
-        }
-        writeFuns::write(vtkStream, binary, ptField);
-
-
-        //
-        // Write cells
-        //
-
-        const labelListList& vtkVertLabels = topo.vertLabels();
-
-        // Count total number of vertices referenced.
-        label nFaceVerts = 0;
-
-        forAll(vtkVertLabels, cellI)
-        {
-            nFaceVerts += vtkVertLabels[cellI].size() + 1;
-        }
-
-        vtkStream << "CELLS " << vtkVertLabels.size() << ' ' << nFaceVerts
-            << std::endl;
-
-
-        DynamicList<label> vertLabels(nFaceVerts);
-
-        forAll(vtkVertLabels, cellI)
-        {
-            const labelList& vtkVerts = vtkVertLabels[cellI];
-
-            vertLabels.append(vtkVerts.size());
-
-            writeFuns::insert(vtkVerts, vertLabels);
-        }
-        writeFuns::write(vtkStream, binary, vertLabels);
-
-
-
-        const labelList& vtkCellTypes = topo.cellTypes();
-
-        vtkStream << "CELL_TYPES " << vtkCellTypes.size() << std::endl;
-
-        // Make copy since writing might swap stuff.
-        DynamicList<label> cellTypes(vtkCellTypes.size());
-
-        writeFuns::insert(vtkCellTypes, cellTypes);
-
-        writeFuns::write(vtkStream, binary, cellTypes);
-
-
-
-        //---------------------------------------------------------------------
-        //
-        // Write data
-        // 
-        //---------------------------------------------------------------------
-
-        // Construct cell-mapping (= identity if no subset)
-        const labelList& cMap = vMesh.cMap();
-
-
-        // Cell data
-
-        const labelList& superCells = topo.superCells();
-
-        vtkStream
-            << "CELL_DATA " << vtkCellTypes.size() << std::endl
-            << "FIELD attributes "
-            << 1 + volScalarFields.size() + volVectorFields.size() << std::endl;
-
-
-        // Cell ids first
-        vtkStream << "cellID 1 " << vtkCellTypes.size() << " int" << std::endl;
-
-        labelList cellId(vtkCellTypes.size());
-        label labelI = 0;
-
-        forAll(mesh.cells(), cellI)
-        {
-            cellId[labelI++] = cMap[cellI];
-        }
-        forAll(superCells, superCellI)
-        {
-            label origCellI = cMap[superCells[superCellI]];
-
-            cellId[labelI++] = origCellI;
-        }
-        writeFuns::write(vtkStream, binary, cellId);
-
-
-        // VolScalarFields
-        forAll(volScalarFields, fieldI)
-        {
-            const volScalarField& vsf = volScalarFields[fieldI];
-
-            writeFuns::writeVSF(vtkStream, binary, vsf, vMesh);
-        }
-
-        // VolVectorFields
-        forAll(volVectorFields, fieldI)
-        {
-            const volVectorField& vvf = volVectorFields[fieldI];
-
-            writeFuns::writeVVF(vtkStream, binary, vvf, vMesh);
-        }
-
-
-        // Point data
-
-        // Construct interpolation on the raw mesh
-        volPointInterpolation pInterp(vMesh, pMesh);
-
-
-        vtkStream
-            << "POINT_DATA " << nTotPoints
-            << std::endl
-            << "FIELD attributes "
-            << volScalarFields.size()
-             + volVectorFields.size()
-             + pointScalarFields.size()
-             + pointVectorFields.size()
-            << std::endl;
-
-        // PointScalarFields
-        forAll(pointScalarFields, fieldI)
-        {
-            const pointScalarField& psf = pointScalarFields[fieldI];
-
-            writeFuns::writePSF(vtkStream, binary, psf, vMesh);
-        }
-
-        // PointVectorFields
-        forAll(pointVectorFields, fieldI)
-        {
-            const pointVectorField& pvf = pointVectorFields[fieldI];
-
-            writeFuns::writePVF(vtkStream, binary, pvf, vMesh);
-        }
-
-        // VolScalarFields
-        forAll(volScalarFields, fieldI)
-        {
-            const volScalarField& vsf = volScalarFields[fieldI];
-
-            // Interpolate to points
-            pointScalarField psf(pInterp.interpolate(vsf));
-
-            writeFuns::writeIntVSF(vtkStream, binary, vsf, psf, vMesh);
-        }
-
-        // VolVectorFields
-        forAll(volVectorFields, fieldI)
-        {
-            const volVectorField& vvf = volVectorFields[fieldI];
-
-            // Interpolate to points
-            pointVectorField pvf(pInterp.interpolate(vvf));
-
-            writeFuns::writeIntVVF(vtkStream, binary, vvf, pvf, vMesh);
-        }
-
 
         //---------------------------------------------------------------------
         //
@@ -578,11 +430,14 @@ int main(int argc, char *argv[])
             writePatch
             (
                 binary,
+                nearCellValue,
                 vMesh,
                 patchI,
                 patchFileName,
                 volScalarFields,
-                volVectorFields
+                volVectorFields,
+                pointScalarFields,
+                pointVectorFields
             );
         }
 

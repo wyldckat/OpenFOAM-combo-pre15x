@@ -39,6 +39,7 @@ boundaryField
         type            pressureTransmissive;
         pInf            1e5;
         lInf            0.3;
+        value           uniform 1e5;
     }
 
     upperWall       

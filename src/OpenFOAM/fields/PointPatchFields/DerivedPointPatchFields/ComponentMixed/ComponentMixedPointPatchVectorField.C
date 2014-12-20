@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -28,6 +28,7 @@ Description
 
 #include "ComponentMixedPointPatchVectorField.H"
 #include "constraints.H"
+#include "PointPatchFieldMapper.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -46,9 +47,9 @@ void ComponentMixedPointPatchVectorField<PatchField, PointPatch>
 {
     if
     (
-        this->size() != this->patchMesh().size()
-     || refValue_.size() != this->patchMesh().size()
-     || valueFraction_.size() != this->patchMesh().size()
+        this->size() != this->patch().size()
+     || refValue_.size() != this->patch().size()
+     || valueFraction_.size() != this->patch().size()
     )
     {
         FatalErrorIn
@@ -58,7 +59,7 @@ void ComponentMixedPointPatchVectorField<PatchField, PointPatch>
             << "Field size: " << this->size()
             << " value size: " << refValue_.size()
             << " valueFraction size: " << valueFraction_.size()
-            << " patch size: " << this->patchMesh().size()
+            << " patch size: " << this->patch().size()
             << abort(FatalError);
     }
 }
@@ -142,8 +143,8 @@ ComponentMixedPointPatchVectorField
 )
 :
     PatchField<vector>(p, iF),
-    refValue_(ptf.refValue_, (const FieldMapper&)mapper),
-    valueFraction_(ptf.valueFraction_, (const FieldMapper&)mapper)
+    refValue_(ptf.refValue_, mapper),
+    valueFraction_(ptf.valueFraction_, mapper)
 {}
 
 
@@ -177,8 +178,8 @@ void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::autoMap
     const PointPatchFieldMapper& m
 )
 {
-    refValue_.autoMap((const FieldMapper&)(m));
-    valueFraction_.autoMap((const FieldMapper&)(m));
+    refValue_.autoMap(m);
+    valueFraction_.autoMap(m);
 }
 
 
@@ -213,7 +214,7 @@ void ComponentMixedPointPatchVectorField<PatchField, PointPatch>::evaluate()
     tmp<vectorField> internalValues = this->patchInternalField();
 
     // Get internal field to insert values into
-    vectorField& iF = ((vectorField&)(this->internalField()));
+    vectorField& iF = const_cast<vectorField&>(this->internalField());
 
     vectorField values =
         scale(refValue_, valueFraction_)
@@ -236,7 +237,7 @@ setBoundaryCondition
 ) const
 {
     // get addressing
-    const labelList& meshPoints = this->patchMesh().meshPoints();
+    const labelList& meshPoints = this->patch().meshPoints();
 
     // The boundary nod eequation expects a list of valueFractions
     // associated with each component.  In order to enforce

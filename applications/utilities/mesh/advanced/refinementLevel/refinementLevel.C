@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Tries to figure out what the refinement level is on refined cartesian
@@ -235,7 +235,8 @@ int main(int argc, char *argv[])
 
     if (!readLevel && refHeader.headerOk())
     {
-        Warning<< "Detected " << refHeader.name() << " file in "
+        WarningIn(args.executable())
+            << "Detected " << refHeader.name() << " file in "
             << polyMesh::defaultRegion <<  " directory. Please remove to"
             << " recreate it or use the -readLevel option to use it"
             << endl;

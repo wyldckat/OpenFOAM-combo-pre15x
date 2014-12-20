@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -51,6 +51,7 @@ const Foam::scalar Foam::parallelInfo::matchTol_ = 1E-10;
 
 // * * * * * * * * * * * * * Private Member Functions  * * * * * * * * * * * //
 
+// Collect processor patch addressing.
 void Foam::parallelInfo::initProcAddr()
 {
     processorPatchIndices_.setSize(mesh_.boundaryMesh().size());
@@ -67,11 +68,7 @@ void Foam::parallelInfo::initProcAddr()
 
     forAll (mesh_.boundaryMesh(), patchi)
     {
-        if
-        (
-            typeid(mesh_.boundaryMesh()[patchi])
-         == typeid(processorPolyPatch)
-        )
+        if (isA<processorPolyPatch>(mesh_.boundaryMesh()[patchi]))
         {
             processorPatches_[nNeighbours] = patchi;
             processorPatchIndices_[patchi] = nNeighbours++;
@@ -116,6 +113,307 @@ void Foam::parallelInfo::initProcAddr()
 }
 
 
+// Given information about locally used edges allocate global shared edges.
+void Foam::parallelInfo::countSharedEdges
+(
+    const HashTable<labelList, edge, Hash<edge> >& procSharedEdges,
+    HashTable<label, edge, Hash<edge> >& globalShared,
+    label& sharedEdgeI
+)
+{
+    // Count occurrences of procSharedEdges in global shared edges table.
+    for
+    (
+        HashTable<labelList, edge, Hash<edge> >::const_iterator iter =
+            procSharedEdges.begin();
+        iter != procSharedEdges.end();
+        ++iter
+    )
+    {
+        const edge& e = iter.key();
+
+        HashTable<label, edge, Hash<edge> >::iterator globalFnd =
+            globalShared.find(e);
+
+        if (globalFnd == globalShared.end())
+        {
+            // First time occurrence of this edge. Check how many we are adding.
+            if (iter().size() == 1)
+            {
+                // Only one edge. Mark with special value.
+                globalShared.insert(e, -1);
+            }
+            else
+            {
+                // Edge used more than once (even by local shared edges alone)
+                // so allocate proper shared edge label.
+                globalShared.insert(e, sharedEdgeI++);
+            }
+        }
+        else
+        {
+            if (globalFnd() == -1)
+            {
+                // Second time occurence of this edge. Assign proper
+                // edge label.
+                globalFnd() = sharedEdgeI++;
+            }
+        }
+    }
+}
+
+
+// Shared edges are shared between multiple processors. By their nature both
+// of their endpoints are shared points. (but not all edges using two shared
+// points are shared edges! There might e.g. be an edge between two unrelated
+// clusters of shared points)
+void Foam::parallelInfo::calcSharedEdges() const
+{
+    if (nGlobalEdges_ != -1 || sharedEdgeLabelsPtr_ || sharedEdgeAddrPtr_)
+    {
+        FatalErrorIn("parallelInfo::calcSharedEdges()")
+            << "Shared edge addressing already done" << abort(FatalError);
+    }
+
+
+    const labelList& sharedPtAddr = sharedPointAddr();
+    const labelList& sharedPtLabels = sharedPointLabels();
+
+    // Since don't want to construct pointEdges for whole mesh create
+    // Map for all shared points.
+    Map<label> meshToShared(2*sharedPtLabels.size());
+    forAll(sharedPtLabels, i)
+    {
+        meshToShared.insert(sharedPtLabels[i], i);
+    }
+
+    // Find edges using shared points. Store correspondence to local edge
+    // numbering. Note that multiple local edges can have the same shared
+    // points! (for cyclics or separated processor patches)
+    HashTable<labelList, edge, Hash<edge> > localShared
+    (
+        2*sharedPtAddr.size()
+    );
+
+    const edgeList& edges = mesh_.edges();
+
+    forAll(edges, edgeI)
+    {
+        const edge& e = edges[edgeI];
+
+        Map<label>::const_iterator e0Fnd = meshToShared.find(e[0]);
+
+        if (e0Fnd != meshToShared.end())
+        {
+            Map<label>::const_iterator e1Fnd = meshToShared.find(e[1]);
+
+            if (e1Fnd != meshToShared.end())
+            {
+                // Found edge which uses shared points. Probably shared.
+
+                // Construct the edge in shared points (or rather global indices
+                // of the shared points)
+                edge sharedEdge
+                (
+                    sharedPtAddr[e0Fnd()],
+                    sharedPtAddr[e1Fnd()]
+                );
+
+                HashTable<labelList, edge, Hash<edge> >::iterator iter =
+                    localShared.find(sharedEdge);
+
+                if (iter == localShared.end())
+                {
+                    // First occurrence of this point combination. Store.
+                    localShared.insert(sharedEdge, labelList(1, edgeI));
+                }
+                else
+                {
+                    // Add this edge to list of edge labels.
+                    labelList& edgeLabels = iter();
+
+                    label sz = edgeLabels.size();
+                    edgeLabels.setSize(sz+1);
+                    edgeLabels[sz] = edgeI;
+                }
+            }
+        }
+    }
+
+
+    // Now we have a table on every processors which gives its edges which use
+    // shared points. Send this all to the master and have it allocate
+    // global edge numbers for it. But only allocate a global edge number for
+    // edge if it is used more than once!
+    // Note that we are now sending the whole localShared to the master whereas
+    // we only need the local count (i.e. the number of times a global edge is
+    // used). But then this only gets done once so not too bothered about the
+    // extra global communication.
+
+    HashTable<label, edge, Hash<edge> > globalShared(nGlobalPoints());
+
+    if (Pstream::master())
+    {
+        label sharedEdgeI = 0;
+
+        // Merge my shared edges into the global list
+        if (debug)
+        {
+            Pout<< "parallelInfo::calcSharedEdges : Merging in from proc0 : "
+                << localShared.size() << endl;
+        }
+        countSharedEdges(localShared, globalShared, sharedEdgeI);
+
+        // Receive data from slaves and insert
+        if (Pstream::parRun())
+        {
+            for
+            (
+                int slave=Pstream::firstSlave();
+                slave<=Pstream::lastSlave();
+                slave++
+            )
+            {
+                // Receive the edges using shared points from the slave.
+                IPstream fromSlave(slave);
+                HashTable<labelList, edge, Hash<edge> > procSharedEdges
+                (
+                    fromSlave
+                );
+
+                if (debug)
+                {
+                    Pout<< "parallelInfo::calcSharedEdges : "
+                        << "Merging in from proc"
+                        << Foam::name(slave) << " : " << procSharedEdges.size()
+                        << endl;
+                }
+                countSharedEdges(procSharedEdges, globalShared, sharedEdgeI);
+            }
+        }
+
+        // Now our globalShared should have some edges with -1 as edge label
+        // These were only used once so are not proper shared edges.
+        // Remove them.
+        {
+            HashTable<label, edge, Hash<edge> > oldSharedEdges(globalShared);
+
+            globalShared.clear();
+
+            for
+            (
+                HashTable<label, edge, Hash<edge> >::const_iterator iter =
+                    oldSharedEdges.begin();
+                iter != oldSharedEdges.end();
+                ++iter
+            )
+            {
+                if (iter() != -1)
+                {
+                    globalShared.insert(iter.key(), iter());
+                }
+            }
+            if (debug)
+            {
+                Pout<< "parallelInfo::calcSharedEdges : Filtered "
+                    << oldSharedEdges.size()
+                    << " down to " << globalShared.size() << endl;
+            }
+        }
+
+
+        // Send back to slaves.
+        if (Pstream::parRun())
+        {
+            for
+            (
+                int slave=Pstream::firstSlave();
+                slave<=Pstream::lastSlave();
+                slave++
+            )
+            {
+                // Receive the edges using shared points from the slave.
+                OPstream toSlave(slave);
+                toSlave << globalShared;
+            }
+        }
+    }
+    else
+    {
+        // Send local edges to master
+        {
+            OPstream toMaster(Pstream::masterNo());
+
+            toMaster << localShared;
+        }
+        // Receive merged edges from master.
+        {
+            IPstream fromMaster(Pstream::masterNo());
+
+            fromMaster >> globalShared;
+        }
+    }
+
+    // Now use the global shared edges list (globalShared) to classify my local
+    // ones (localShared)
+
+    nGlobalEdges_ = globalShared.size();
+
+    DynamicList<label> dynSharedEdgeLabels(globalShared.size());
+    DynamicList<label> dynSharedEdgeAddr(globalShared.size());
+
+    for
+    (
+        HashTable<labelList, edge, Hash<edge> >::const_iterator iter =
+            localShared.begin();
+        iter != localShared.end();
+        ++iter
+    )
+    {
+        const edge& e = iter.key();
+
+        HashTable<label, edge, Hash<edge> >::const_iterator edgeFnd =
+            globalShared.find(e);
+
+        if (edgeFnd != globalShared.end())
+        {
+            // My local edge is indeed a shared one. Go through all local edge
+            // labels with this point combination.
+            const labelList& edgeLabels = iter();
+
+            forAll(edgeLabels, i)
+            {
+                // Store label of local mesh edge
+                dynSharedEdgeLabels.append(edgeLabels[i]);
+
+                // Store label of shared edge
+                dynSharedEdgeAddr.append(edgeFnd());
+            }
+        }
+    }
+    dynSharedEdgeLabels.shrink();
+    sharedEdgeLabelsPtr_ = new labelList();
+    labelList& sharedEdgeLabels = *sharedEdgeLabelsPtr_;
+    sharedEdgeLabels.transfer(dynSharedEdgeLabels);
+    dynSharedEdgeLabels.clear();
+
+    dynSharedEdgeAddr.shrink();
+    sharedEdgeAddrPtr_ = new labelList();
+    labelList& sharedEdgeAddr = *sharedEdgeAddrPtr_;
+    sharedEdgeAddr.transfer(dynSharedEdgeAddr);
+    dynSharedEdgeAddr.clear();
+
+    if (debug)
+    {
+        Pout<< "parallelInfo : nGlobalEdges_:" << nGlobalEdges_ << nl
+            << "parallelInfo : sharedEdgeLabels:" << sharedEdgeLabels.size()
+            << nl
+            << "parallelInfo : sharedEdgeAddr:" << sharedEdgeAddr.size()
+            << endl;
+    }
+}
+
+
 // * * * * * * * * * * * * * * * * Constructors  * * * * * * * * * * * * * * //
 
 // Construct from components. For testing only!
@@ -146,13 +444,16 @@ Foam::parallelInfo::parallelInfo
     nGlobalPoints_(nGlobalPoints),
     sharedPointLabels_(sharedPointLabels),
     sharedPointAddr_(sharedPointAddr),
-    sharedPointGlobalLabelsPtr_(new labelList(sharedPointGlobalLabels))
+    sharedPointGlobalLabelsPtr_(new labelList(sharedPointGlobalLabels)),
+    nGlobalEdges_(-1),
+    sharedEdgeLabelsPtr_(NULL),
+    sharedEdgeAddrPtr_(NULL)
 {
     initProcAddr();
 }
 
 
-// Construct from components
+// Construct from polyMesh
 Foam::parallelInfo::parallelInfo(const polyMesh& mesh)
 :
     processorTopology(mesh.boundaryMesh()),
@@ -168,7 +469,10 @@ Foam::parallelInfo::parallelInfo(const polyMesh& mesh)
     nGlobalPoints_(-1),
     sharedPointLabels_(0),
     sharedPointAddr_(0),
-    sharedPointGlobalLabelsPtr_(NULL)
+    sharedPointGlobalLabelsPtr_(NULL),
+    nGlobalEdges_(-1),
+    sharedEdgeLabelsPtr_(NULL),
+    sharedEdgeAddrPtr_(NULL)
 {
     // Dummy map - not used.
     mapPolyMesh dummyMap
@@ -210,7 +514,10 @@ Foam::parallelInfo::parallelInfo(const IOobject& io, const polyMesh& mesh)
     mesh_(mesh),
     cyclicParallel_(false),
     bb_(mesh.points()),
-    sharedPointGlobalLabelsPtr_(NULL)
+    sharedPointGlobalLabelsPtr_(NULL),
+    nGlobalEdges_(-1),
+    sharedEdgeLabelsPtr_(NULL),
+    sharedEdgeAddrPtr_(NULL)
 {
     initProcAddr();
 
@@ -240,7 +547,12 @@ Foam::parallelInfo::~parallelInfo()
 void Foam::parallelInfo::clearOut()
 {
     deleteDemandDrivenData(sharedPointGlobalLabelsPtr_);
+    // Edge
+    nGlobalPoints_ = -1;
+    deleteDemandDrivenData(sharedEdgeLabelsPtr_);
+    deleteDemandDrivenData(sharedEdgeAddrPtr_);
 }
+
 
 // * * * * * * * * * * * * * * * Member Functions  * * * * * * * * * * * * * //
 
@@ -264,7 +576,7 @@ const Foam::labelList& Foam::parallelInfo::sharedPointGlobalLabels() const
         {
             // There is a pointProcAddressing file so use it to get labels
             // on the original mesh
-            Sout<< "parallelInfo::sharedPointGlobalLabels : "
+            Pout<< "parallelInfo::sharedPointGlobalLabels : "
                 << "Reading pointProcAddressing" << endl;
 
             labelIOList pointProcAddressing(addrHeader);
@@ -280,7 +592,7 @@ const Foam::labelList& Foam::parallelInfo::sharedPointGlobalLabels() const
         }
         else
         {
-            Sout<< "parallelInfo::sharedPointGlobalLabels :"
+            Pout<< "parallelInfo::sharedPointGlobalLabels :"
                 << " Setting pointProcAddressing to -1" << endl;
 
             sharedPointGlobalLabels = -1;
@@ -402,8 +714,41 @@ Foam::pointField Foam::parallelInfo::geometricSharedPoints() const
 }
 
 
+Foam::label Foam::parallelInfo::nGlobalEdges() const
+{
+    if (nGlobalEdges_ == -1)
+    {
+        calcSharedEdges();
+    }
+    return nGlobalEdges_;
+}
+
+
+const Foam::labelList& Foam::parallelInfo::sharedEdgeLabels() const
+{
+    if (!sharedEdgeLabelsPtr_)
+    {
+        calcSharedEdges();
+    }
+    return *sharedEdgeLabelsPtr_;
+}
+
+
+const Foam::labelList& Foam::parallelInfo::sharedEdgeAddr() const
+{
+    if (!sharedEdgeAddrPtr_)
+    {
+        calcSharedEdges();
+    }
+    return *sharedEdgeAddrPtr_;
+}
+
+
 void Foam::parallelInfo::movePoints(const pointField& newPoints)
-{}
+{
+    // Topology does not change and we don't store any geometry so nothing
+    // needs to be done.
+}
 
 
 // Update all data after morph
@@ -431,7 +776,7 @@ void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
 
     if (debug)
     {
-        Sout<< "parallelInfo : cyclicParallel_:" << cyclicParallel_ << endl;
+        Pout<< "parallelInfo : cyclicParallel_:" << cyclicParallel_ << endl;
     }
 
     {
@@ -444,7 +789,6 @@ void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
         sharedPointAddr_ = parallelPoints.sharedPointAddr();
     }
 
-
     // Bounding box (does communication)
     bb_ = boundBox(mesh_.points());
 
@@ -452,7 +796,7 @@ void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
 
     if (debug)
     {
-        Sout<< "parallelInfo : bb_:" << bb_ << " merge dist:" << tolDim << endl;
+        Pout<< "parallelInfo : bb_:" << bb_ << " merge dist:" << tolDim << endl;
     }
 
 
@@ -501,7 +845,7 @@ void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
 
     if (debug)
     {
-        Sout<< "parallelInfo : nTotalFaces_:" << nTotalFaces_ << endl;
+        Pout<< "parallelInfo : nTotalFaces_:" << nTotalFaces_ << endl;
     }
 
 
@@ -510,7 +854,7 @@ void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
 
     if (debug)
     {
-        Sout<< "parallelInfo : nTotalCells_:" << nTotalCells_ << endl;
+        Pout<< "parallelInfo : nTotalCells_:" << nTotalCells_ << endl;
     }
 
     nTotalPoints_ = mesh_.nPoints();
@@ -614,7 +958,7 @@ void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
 
     if (debug)
     {
-        Sout<< "parallelInfo : nTotalPoints_:" << nTotalPoints_ << endl;
+        Pout<< "parallelInfo : nTotalPoints_:" << nTotalPoints_ << endl;
     }
 
     //
@@ -629,7 +973,7 @@ void Foam::parallelInfo::updateTopology(const mapPolyMesh& map)
             // We have the geometricSharedPoints already so write them.
             // Ideally would like to write the networks of connected points as
             // well but this is harder. (Todo)
-            Sout<< "parallelInfo : writing geometrically separated shared"
+            Pout<< "parallelInfo : writing geometrically separated shared"
                 << " points to geomSharedPoints.obj" << endl;
 
             OFstream str("geomSharedPoints.obj");

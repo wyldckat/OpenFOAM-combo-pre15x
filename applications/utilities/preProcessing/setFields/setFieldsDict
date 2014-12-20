@@ -1,0 +1,58 @@
+/*---------------------------------------------------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  1.0                                   |
+|   \\  /    A nd           | Web:      http://www.openfoam.org               |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+
+FoamFile
+{
+    version         2.0;
+    format          ascii;
+
+    root            "/home/penfold/mattijs/foam/mattijs2.2/run/icoFoam";
+    case            "cavityTut";
+    instance        "system";
+    local           "";
+
+    class           dictionary;
+    object          setFieldsDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+
+defaultFieldValues
+{
+    U     (0 0 0);
+    gamma 0;
+}
+
+regions
+(
+    boxToCell
+    {
+        box    (0 0 0) (0.02 0.02 0.01);
+
+        fieldValues
+        {
+            U     (2 0 0);
+            gamma 1.0;
+        }
+    }
+
+    boxToCell
+    {
+        box    (0.02 0.02 0) (0.03 0.03 0.01);
+
+        fieldValues
+        {
+            U     (1 0 0);
+            gamma 1.0;
+        }
+    }
+);
+
+
+// ************************************************************************* //

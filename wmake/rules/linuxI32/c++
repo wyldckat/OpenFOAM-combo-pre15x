@@ -1,6 +1,7 @@
 .SUFFIXES: .C .cxx .cc .cpp
 
-c++WARN     = -wd654,819,1125
+c++WARN     = -w1 -wd654
+# -Werror 
 
 CC          = icc
 
@@ -15,7 +16,8 @@ cxxtoo      = $(Ctoo)
 cctoo       = $(Ctoo)
 cpptoo      = $(Ctoo)
 
-LINK_LIBS   = $(c++DBUG) -L$(IA32ROOT)/lib
+#LINK_LIBS   = $(c++DBUG) -L$(IA32ROOT)/lib
+LINK_LIBS   = $(c++DBUG) -lstdc++
 
 LINKLIBSO   = $(CC) $(c++FLAGS) -shared
 LINKEXE     = $(CC) $(c++FLAGS)

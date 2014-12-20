@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     interfaceProperties
@@ -145,10 +145,23 @@ void interfaceProperties::calculateK()
 
     // Interpolated face-gradient of gamma
     surfaceVectorField gradGammaf = fvc::interpolate(gradGamma);
+    //gradGammaf -=
+    //    2*(mesh.Sf()/mesh.magSf())
+    //    *(fvc::snGrad(gamma_) - (mesh.Sf() & gradGammaf)/mesh.magSf());
 
     // Face unit interface normal
     surfaceVectorField nHatfv = gradGammaf/(mag(gradGammaf) + deltaN_);
     correctContactAngle(nHatfv.boundaryField());
+
+    /*
+    dimensionedVector cen
+    (
+        "cen",
+        dimLength,
+        sum(mesh.V()*gamma_*mesh.C())/sum(mesh.V()*gamma_)
+    );
+    surfaceVectorField nHatfv = -(mesh.Cf() - cen)/mag(mesh.Cf() - cen);
+    */
 
     // Face unit interface normal flux
     nHatf_ = nHatfv & Sf;

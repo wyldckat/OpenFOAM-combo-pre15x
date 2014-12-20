@@ -22,14 +22,9 @@ License
     along with OpenFOAM; if not, write to the Free Software Foundation,
     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
 
-Description
-
 \*---------------------------------------------------------------------------*/
 
-#include "error.H"
-
 #include "primitiveMesh.H"
-#include "DynamicList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -44,7 +39,7 @@ void primitiveMesh::calcCellCells() const
 
     if (debug)
     {
-        Info<< "primitiveMesh::calcCellCells() : calculating cellCells"
+        Pout<< "primitiveMesh::calcCellCells() : calculating cellCells"
             << endl;
     }
 
@@ -58,25 +53,40 @@ void primitiveMesh::calcCellCells() const
     }
     else
     {
-        List<DynamicList<label, facesPerCell_> > cc(nCells());
+        // 1. Count number of internal faces per cell
+
+        labelList ncc(nCells(), 0);
 
         const labelList& own = faceOwner();
         const labelList& nei = faceNeighbour();
 
         forAll (nei, faceI)
         {
-            cc[own[faceI]].append(nei[faceI]);
-            cc[nei[faceI]].append(own[faceI]);
+            ncc[own[faceI]]++;
+            ncc[nei[faceI]]++;
         }
 
         // Create the storage
-        ccPtr_ = new labelListList(cc.size());
+        ccPtr_ = new labelListList(ncc.size());
         labelListList& cellCellAddr = *ccPtr_;
 
-        // Pack the addressing
-        forAll (cc, cellI)
+
+
+        // 2. Size and fill cellFaceAddr
+
+        forAll (cellCellAddr, cellI)
         {
-            cellCellAddr[cellI].transfer(cc[cellI].shrink());
+            cellCellAddr[cellI].setSize(ncc[cellI]);
+        }
+        ncc = 0;
+
+        forAll (nei, faceI)
+        {
+            label ownCellI = own[faceI];
+            label neiCellI = nei[faceI];
+
+            cellCellAddr[ownCellI][ncc[ownCellI]++] = neiCellI;
+            cellCellAddr[neiCellI][ncc[neiCellI]++] = ownCellI;
         }
     }
 }

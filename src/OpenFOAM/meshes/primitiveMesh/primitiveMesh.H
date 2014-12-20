@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     primitiveMesh
@@ -175,9 +175,6 @@ class primitiveMesh
             //- Face centres
             mutable vectorField* faceCentresPtr_;
 
-            //- Edge vectors
-            mutable vectorField* edgeVectorsPtr_;
-
             //- Cell volumes
             mutable scalarField* cellVolumesPtr_;
 
@@ -273,10 +270,20 @@ class primitiveMesh
             ) const;
 
             //- Check if all points on face are shared with another face.
-            bool checkDuplicateFaces(const label, const Map<label>&) const;
+            bool checkDuplicateFaces
+            (
+                const label,
+                const Map<label>&,
+                labelHashSet*
+            ) const;
 
             //- Check that shared points are in consecutive order.
-            bool checkCommonOrder(const label, const Map<label>&) const;
+            bool checkCommonOrder
+            (
+                const label,
+                const Map<label>&,
+                labelHashSet*
+            ) const;
 
 
     // Static data members
@@ -438,7 +445,6 @@ public:
 
                 const vectorField& cellCentres() const;
                 const vectorField& faceCentres() const;
-                const vectorField& edgeVectors() const;
                 const scalarField& cellVolumes() const;
                 const vectorField& faceAreas() const;
 
@@ -514,6 +520,16 @@ public:
                     const bool report = false,
                     const scalar maxSin = 10,    // In degrees
                     labelHashSet* setPtr = NULL
+                ) const;
+
+                //- Check face warpage: decompose face and check ratio between
+                //  magnitude of sum of triangle areas and sum of magnitude of
+                //  triangle areas.
+                bool checkFaceFlatness
+                (
+                    const bool report,
+                    const scalar warnFlatness,  // When to include in set.
+                    labelHashSet* setPtr
                 ) const;
 
                 //- Check for unused points

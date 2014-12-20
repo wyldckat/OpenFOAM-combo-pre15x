@@ -2,7 +2,6 @@
 
 set -x
 
-wmake Sl
 wmake adiabaticFlameT
 wmake mixtureAdiabaticFlameT
 wmake equilibriumFlameT

@@ -1,0 +1,52 @@
+// ************************************************************************* //
+// FoamX Case Dictionary.
+
+version             1.0;
+format              ascii;
+root                "/home/ztukovic/foam/ztukovic2.0/run/icoFoam";
+case                "cavity";
+instance            "system";
+local               "";
+class               dictionary;
+form                dictionary;
+object              faSchemes;
+
+// ************************************************************************* //
+
+timeScheme              EulerImplicit;
+
+gradSchemes
+{
+    default             Gauss linear;
+    grad(p)             Gauss linear;
+}
+
+divSchemes
+{
+    default             none;
+    div(phis,Cs)        Gauss linear;
+}
+
+laplacianSchemes
+{
+    default             none;
+    laplacian(Ds,Cs)    Gauss linear corrected;
+}
+
+interpolationSchemes
+{
+    default         linear;
+}
+
+snGradSchemes
+{
+    default             corrected;
+}
+
+fluxRequired
+{
+    p;
+}
+
+
+// ************************************************************************* //

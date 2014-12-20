@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Extracts triSurface from a polyMesh. Triangulates all boundary faces.
@@ -63,8 +63,7 @@ int main(int argc, char *argv[])
     Info<< "Extracting triSurface from boundaryMesh ..."
         << endl << endl;
 
-    Sout<< '[' << Pstream::myProcNo() << "] "
-        << "Reading mesh from time " << runTime.value() << endl;
+    Pout<< "Reading mesh from time " << runTime.value() << endl;
 
 #   include "createPolyMesh.H"
 
@@ -120,8 +119,7 @@ int main(int argc, char *argv[])
             }
             else
             {
-                Sout<< '[' << Pstream::myProcNo() << "] "
-                    << patch.name() << " : skipped since processorPatch"
+                Pout<< patch.name() << " : skipped since processorPatch"
                     << endl;
             }
         }
@@ -149,8 +147,7 @@ int main(int argc, char *argv[])
         // Write local surface
         fileName localPath = runTime.path()/runTime.caseName() + ".ftr";
 
-        Sout<< '[' << Pstream::myProcNo() << "] "
-            << "Writing local surface to " << localPath << endl;
+        Pout<< "Writing local surface to " << localPath << endl;
 
         localSurface.write(localPath);
 

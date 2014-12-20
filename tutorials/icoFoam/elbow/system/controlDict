@@ -22,7 +22,7 @@ FoamFile
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-applicationClass icoFoam;
+application icoFoam;
 
 startFrom       latestTime;
 
@@ -38,7 +38,7 @@ writeControl    timeStep;
 
 writeInterval   20;
 
-cycleWrite      0;
+purgeWrite      0;
 
 writeFormat     ascii;
 

@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -46,6 +44,7 @@ Description
 #include "veryInhomogeneousMixture.H"
 #include "dieselMixture.H"
 #include "multiComponentMixture.H"
+#include "egrMixture.H"
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
@@ -110,6 +109,29 @@ makeCombustionThermo
     hhuCombustionThermo,
     hhuMixtureThermo,
     veryInhomogeneousMixture,
+    sutherlandTransport,
+    janafThermo,
+    perfectGas
+);
+
+
+makeCombustionThermo
+(
+    hhuCombustionThermo,
+    hhuMixtureThermo,
+    egrMixture,
+    constTransport,
+    hConstThermo,
+    perfectGas
+);
+
+
+
+makeCombustionThermo
+(
+    hhuCombustionThermo,
+    hhuMixtureThermo,
+    egrMixture,
     sutherlandTransport,
     janafThermo,
     perfectGas

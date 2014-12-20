@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     directPolyTopoChange
@@ -47,7 +47,7 @@ Description
     To see if point is equal to above value we don't use == (which might give
     problems with roundoff error) but instead compare the individual component
     with >.
-    - coupled patches: the reorderCoupledPatches routine (borrowed from
+    - coupled patches: the reorderCoupledFaces routine (borrowed from
     the couplePatches utility) should reorder faces inside of the patches.
     It will be called automatically on the mesh(const polyBoundaryMesh&, ...)
     call but has to be called specifically if you are constructing your own
@@ -58,6 +58,7 @@ Description
 
 SourceFiles
     directPolyTopoChange.C
+    directPolyTopoChangeCouples.C
     directPolyTopoChangeTemplates.C
 
 \*---------------------------------------------------------------------------*/
@@ -71,6 +72,9 @@ SourceFiles
 #include "IOobject.H"
 #include "point.H"
 #include "typeInfo.H"
+#include "pointField.H"
+#include "scalarField.H"
+#include "PtrList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -81,10 +85,12 @@ namespace Foam
 class face;
 class cell;
 class polyMesh;
-class morphMesh;
+class polyMesh;
 class Time;
 class fileName;
 class polyBoundaryMesh;
+class polyPatch;
+class dictionary;
 
 /*---------------------------------------------------------------------------*\
                            Class directPolyTopoChange Declaration
@@ -145,9 +151,111 @@ class directPolyTopoChange
         //- Do upper-triangular ordering and patch ordering.
         labelList getFaceOrder(const label nPatches) const;
 
-        //- Sizes of patches and number of internal faces.
-        void calcPatchSizes(label& nInternalFaces, labelList& patchSizes) const;
+        //- Compact and reorder faces according to map. Optionally check if
+        //  compacting faces creates illegal cells.
+        void reorderCompactFaces
+        (
+            const label newSize,
+            const labelList& oldToNew,
+            const bool checkCells
+        );
 
+        //- Sizes of patches and number of internal faces. patchSizes/starts
+        //  are either number of old patches or the max. region number + 1,
+        //  whichever is bigger.
+        void calcPatchSizes
+        (
+            const label nOldPatches,
+            label& nInternalFaces,
+            labelList& patchSizes,
+            labelList& patchStarts
+        ) const;
+
+        //- Create list of patches from patch dictionaries
+        static List<polyPatch*> createPatches
+        (
+            const wordList& patchNames,
+            const PtrList<dictionary>& patchDicts,
+            const label nInternalFaces,
+            const labelList& patchSizes,
+            const polyBoundaryMesh& boundaryMesh
+        );
+
+
+        // Coupling
+
+            //- Get face centre for slice of faces.
+            pointField calcFaceCentres(const label start, const label size)
+             const;
+
+            //- Get coordinate of f[0] for slice of faces
+            pointField getAnchorPoints(const label start, const label size)
+             const;
+
+            // Get local typical dimension and tolerance from that. Currently
+            // max of distance from centre to any of the face points.
+            scalarField calcFaceTol
+            (
+                const label start,
+                const label size,
+                const pointField& faceCentres
+            ) const;
+
+            //- Calculate anticlockwise rotation for f[0] to align with anchor
+            label getRotation
+            (
+                const face& f,
+                const point& anchor,
+                const scalar tol
+            ) const;
+
+            //- Rotate face by number of positions
+            static face rotateFace(const face& f, const label nPos);
+
+
+            //- Send ordering information on processorPolyPatch
+            void initOrderProcessorPolyPatch
+            (
+                const label neighbourProcNo,
+                const label start,
+                const label size
+            ) const;
+
+            //- Send ordering information on cyclicPolyPatch
+            void initOrderCyclicPolyPatch
+            (
+                const label start,
+                const label size
+            ) const;
+
+            //- Receive and calulate ordering
+            bool orderProcessorPolyPatch
+            (
+                const label neighbourProcNo,
+                const label start,
+                const label size,
+
+                labelList& faceMap,
+                labelList& rotation
+            ) const;
+
+            //- Receive and calulate ordering
+            bool orderCyclicPolyPatch
+            (
+                const label start,
+                const label size,
+
+                labelList& faceMap,
+                labelList& rotation
+            ) const;
+
+            //- Do all coupled patch face reordering
+            void reorderCoupledFaces
+            (
+                const PtrList<dictionary>& oldPatchDicts,
+                const labelList& patchStarts,
+                const labelList& patchSizes
+            );
 
 public:
 
@@ -223,8 +331,13 @@ public:
 
         // Edit
 
-            //- Add all points/faces/cells of mesh.
-            void addMesh(const polyMesh&);
+            //- Clear all storage
+            void clear();
+
+            //- Add all points/faces/cells of mesh. Additional offset for patch
+            //  ids.
+            void addMesh(const polyMesh&, const label patchOffset = 0);
+
 
             //- Add point. Return new point label.
             label addPoint(const point&);
@@ -232,8 +345,12 @@ public:
             //- Modify coordinate.
             void modifyPoint(const label, const point&);
 
+            //- Bulk modify coordinates
+            void movePoints(const pointField&);
+
             //- Remove point.
             void removePoint(const label);
+
 
             //- Add face to cells. Return new face label.
             label addFace
@@ -257,11 +374,13 @@ public:
             //- Remove face.
             void removeFace(const label);
 
+
             //- Add cell. Return new cell label.
             label addCell();
 
             //- Remove cell.
             void removeCell(const label);
+
 
             //- Remove all unused/removed points/faces/cells and update
             //  face ordering.
@@ -272,22 +391,31 @@ public:
 
             //- Construct mesh without patches. Use addPatches to add patches.
             //  Clears all data (faces_, cells_, etc) but the maps and regions_.
-            //  (Call reorderCoupledPatches to update cyclics/procBoundaries)
-            autoPtr<morphMesh> mesh(const IOobject& io);
+            autoPtr<polyMesh> mesh(const IOobject& io);
 
-            //- Sort faces on coupled patches to be consistent.
-            //  Does parallel communication.
-            void reorderCoupledPatches(morphMesh& mesh);
+            //- Helper function to get patch data in form of dictionaries
+            static PtrList<dictionary> getPatchDicts(const polyBoundaryMesh&);
 
             //- Construct mesh with patch names/types from old mesh.
             //  Adds old patches (and any new ones) and does
-            //  reorderCoupledPatches.
+            //  reorderCoupledFaces.
             //  Clears all data (faces_, cells_, etc) but the maps.
-            autoPtr<morphMesh> mesh
+            autoPtr<polyMesh> mesh
             (
                 const wordList& oldPatchNames,
-                const wordList& oldPatchTypes,
+                const PtrList<dictionary>& oldPatchDicts,
                 const IOobject& io
+            );
+
+            //- Inplace changes mesh with patch names/types from old mesh.
+            //  Adds old patches (and any new ones) and does
+            //  reorderCoupledFaces.
+            //  Clears all data (faces_, cells_, etc) but the maps.
+            void makeMesh
+            (
+                const wordList& oldPatchNames,
+                const PtrList<dictionary>& oldPatchDicts,
+                polyMesh& mesh
             );
 };
 

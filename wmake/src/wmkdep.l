@@ -21,7 +21,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     wmkdep
@@ -31,7 +31,7 @@ Description
      output of cpp -M. However, the output contains no duplications and 
      is ~40% faster than cpp.
 
-     The algorithm uses lex to scan for includes and searches the files
+     The algorithm uses flex to scan for includes and searches the files
      found.  Each file is entererd into a hash table so that files are
      scaned only once.  This is why this program is faster than cpp.
 
@@ -56,38 +56,33 @@ void importDirectory(const char* dirName);
 
 %}
 
-%s NORMAL CMNT CFNAME JFNAME FFNAME
+%s CMNT CFNAME JFNAME FFNAME
 %%
 
-%{
-    BEGIN NORMAL;
-%}
+"//".*\n                  ;             /* remove c++ style one line comments */
 
-<NORMAL>"//".*\n      ;                 /* remove c++ style one line comments */
+"/*"                      BEGIN(CMNT);    /* start removing c style comment */
+<CMNT>.|\n                ;
+<CMNT>"*/"                BEGIN(INITIAL); /* end removing c style comment */
 
-<NORMAL>"/*"          BEGIN CMNT;       /* start removing c style comment */
-<CMNT>.               |
-<CMNT>\n              ;
-<CMNT>"*/"            BEGIN NORMAL;     /* end removing c style comment */
+^#[ \t]*include[ \t]+\"   BEGIN(CFNAME);  /* c-file name */
+<CFNAME>[^"\n ]*        { BEGIN(INITIAL); nextFile(yytext); } /*"*/
 
-<NORMAL>#[ \t]*include[ \t]+\"  BEGIN CFNAME;
-<CFNAME>[^"\n]*       { BEGIN NORMAL; nextFile(yytext); } /*"*/
+^[ \t]*import[ \t]+       BEGIN(JFNAME);  /* java-file name */
+<JFNAME>java.*;           BEGIN(INITIAL);
+<JFNAME>org.*;            BEGIN(INITIAL);
+<JFNAME>com.*;            BEGIN(INITIAL);
+<JFNAME>sunw.*;           BEGIN(INITIAL);
+<JFNAME>sun.*;            BEGIN(INITIAL);
+<JFNAME>launcher.*;       BEGIN(INITIAL);
+<JFNAME>[^"\n*]*;       { BEGIN(INITIAL); importFile(yytext); } /*"*/
+<JFNAME>[^"\n]*\*;      { BEGIN(INITIAL); importDirectory(yytext); } /*"*/
 
-<NORMAL>^[ \t]*import[ \t]+   BEGIN JFNAME;
-<JFNAME>java.*;       { BEGIN NORMAL; }
-<JFNAME>org.*;        { BEGIN NORMAL; }
-<JFNAME>javax.*;      { BEGIN NORMAL; }
-<JFNAME>com.*;        { BEGIN NORMAL; }
-<JFNAME>sunw.*;       { BEGIN NORMAL; }
-<JFNAME>sun.*;        { BEGIN NORMAL; }
-<JFNAME>launcher.*;   { BEGIN NORMAL; }
-<JFNAME>[^"\n*]*;     { BEGIN NORMAL; importFile(yytext); } /*"*/
-<JFNAME>[^"\n]*\*;    { BEGIN NORMAL; importDirectory(yytext); } /*"*/
+"      "include[ \t]+\'   BEGIN(FFNAME);  /* FORTRAN-file name */
+<FFNAME>[^']*           { BEGIN(INITIAL); nextFile(yytext); } /*'*/
 
-<NORMAL>"      "include[ \t]+\'  BEGIN FFNAME;
-<FFNAME>[^']*         { BEGIN NORMAL; nextFile(yytext); } /*'*/
+.|\t|\n                   ;
 
-<NORMAL>.|\t|\n       ;
 %%
 
 
@@ -102,6 +97,7 @@ char* depFile = NULL;
 int main(int argc, char* argv[])
 {
     char *dotPtr, *slashPtr;
+    int i;
 
     if (argc == 1)
     {
@@ -113,8 +109,31 @@ int main(int argc, char* argv[])
     strcpy(sourceFile, argv[argc-1]);
     fprintf(stderr,"Making dependency list for source file %s\n", sourceFile);
     
-    nDirectories = argc-2;
-    directories = &argv[1];
+    
+    /* Get list of -I directories. */
+    nDirectories = 0;
+
+    for (i = 1; i < argc; i++)
+    {
+        if (strncmp(argv[i], "-I", 2) == 0)
+        {
+            nDirectories++;
+        }
+    }
+
+    directories = (char**)malloc(sizeof(char*)*nDirectories);
+
+    nDirectories = 0;
+
+    for (i = 1; i < argc; i++)
+    {
+        if (strncmp(argv[i], "-I", 2) == 0)
+        {
+            directories[nDirectories++] = strdup(argv[i] + 2);
+        }
+    }
+
+
 
     if ((dotPtr = strrchr(sourceFile, '.')) == NULL)
     {
@@ -175,6 +194,13 @@ int main(int argc, char* argv[])
     nextFile(sourceFile);
     yylex();
 
+
+    for (i = 0; i < nDirectories; i++)
+    {
+        free(directories[i]);
+    }
+    free(directories);
+
     free(sourceFile);
     free(sourceExt);
     free(objectFile);
@@ -185,9 +211,8 @@ int main(int argc, char* argv[])
 }
 
 
-int currentFile = -1;            /* file pointer stack counter */
-FILE* files[FILE_STACK_SIZE];    /* file pointer stack */
-
+int currentBuffer = 0;                     /* Buffer pointer stack counter */
+YY_BUFFER_STATE buffers[FILE_STACK_SIZE];  /* Buffer pointer stack */
 
 /* file name entry in hash table */
 
@@ -197,7 +222,7 @@ struct FileName
     struct FileName* next;
 };
 
-struct FileName* fileHashTable[HASH_TABLE_SIZE];    /* File hash table */
+struct FileName* fileHashTable[HASH_TABLE_SIZE];   /* File hash table */
 struct FileName* dirHashTable[HASH_TABLE_SIZE];    /* Directory hash table */
 
 
@@ -238,7 +263,7 @@ int lookUp(struct FileName** hashTable, const char* p)
 
 
 
-/* add a directory name to the file name */
+/* Add a directory name to the file name */
 
 char* addDirectoryName(const char* directoryName, const char* fileName)
 {
@@ -258,7 +283,7 @@ char* addDirectoryName(const char* directoryName, const char* fileName)
 }
 
 
-/* open a file and put pointer on the file pointer stack */
+/* open a file and create buffer and put on stack stack */
 
 void nextFile(const char* fileName)
 {
@@ -267,9 +292,7 @@ void nextFile(const char* fileName)
 
     if (lookUp(fileHashTable, fileName)) return;
 
-    currentFile++;
-
-    if(currentFile == FILE_STACK_SIZE)
+    if(currentBuffer >= FILE_STACK_SIZE)
     {
         fprintf
         (
@@ -281,17 +304,20 @@ void nextFile(const char* fileName)
         exit(1);
     }
 
-    if(!(files[currentFile] = fopen(fileName, "r")))
+    buffers[currentBuffer++] = YY_CURRENT_BUFFER;
+
+    if(!(yyin = fopen(fileName, "r")))
     {
         for(d=0; d<nDirectories; d++)
         {
-            /* Note the +2 which removes the -I */
-            pathName = addDirectoryName(directories[d]+2, fileName);
+            pathName = addDirectoryName(directories[d], fileName);
 
-            if ((files[currentFile] = fopen(pathName, "r")))
+            if ((yyin = fopen(pathName, "r")))
             { 
                 printf("%s: %s\n", depFile, pathName);
-                yyin = files[currentFile];
+                yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
+                BEGIN(INITIAL);
+
                 free(pathName);
 
                 return;
@@ -307,14 +333,16 @@ void nextFile(const char* fileName)
         );
 
         fflush(stdout);
-        currentFile--;
+        currentBuffer--;
+        BEGIN(INITIAL);
     }
     else
     {
         printf("%s: %s\n", depFile, fileName);
         fflush(stdout);
 
-        yyin = files[currentFile];
+        yy_switch_to_buffer(yy_create_buffer(yyin, YY_BUF_SIZE));
+        BEGIN(INITIAL);
     }
 }
 
@@ -403,23 +431,27 @@ void importDirectory(const char* dirName)
 
 int yywrap()
 {
-    /* close file which has just reached EOF */
-    fclose(files[currentFile]);
+    /* Delete buffer which has just reached EOF */
+    yy_delete_buffer(YY_CURRENT_BUFFER);
 
-    /* set file counter to previous file */
-    currentFile--;
+    /* Set buffer counter to previous buffer */
+    currentBuffer--;
 
-    if (currentFile >= 0) /* if file counter refers to a valid file */
+    if (currentBuffer >= 0) /* if buffer counter refers to a valid file */
     {
-        /* reset input file to the previous file on the file pointer stack */
-        yyin = files[currentFile];
+        /* reset input buffer to the previous buffer on the stack */
+        //yyin = buffers[currentBuffer];
+        yy_switch_to_buffer(buffers[currentBuffer]);
+
+        /* Return to the normal state for the previous buffer on the stack */
+        BEGIN(INITIAL);
 
         /* return 0 to inform lex to continue reading */
         return 0;
     }
-    else                 /* else there are no more files on the file stack */
+    else                 /* else there are no more buffers on the stack */
     {
-        /* return 1 to inform lex finish now that all files have been read */
+        /* return 1 to inform lex finish now that all buffers have been read */
         return 1;
     }
 }

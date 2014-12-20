@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     Cell layer addition/removal mesh modifier
@@ -80,7 +80,7 @@ void Foam::layerAdditionRemoval::checkDefinition()
             << abort(FatalError);
     }
 
-    if (morphEngine().mesh().faceZones()[faceZoneID_.index()].size() == 0)
+    if (mesh().faceZones()[faceZoneID_.index()].size() == 0)
     {
         FatalErrorIn
         (
@@ -128,14 +128,14 @@ Foam::layerAdditionRemoval::layerAdditionRemoval
 (
     const word& name,
     const label index,
-    const polyMeshMorphEngine& mme,
+    const polyMesh& mesh,
     const word& zoneName,
     const scalar minThickness,
     const scalar maxThickness
 )
 :
-    polyMeshModifier(name, index, mme, true),
-    faceZoneID_(zoneName, mme.mesh().faceZones()),
+    polyMeshModifier(name, index, mesh, true),
+    faceZoneID_(zoneName, mesh.faceZones()),
     minLayerThickness_(minThickness),
     maxLayerThickness_(maxThickness),
     oldLayerThickness_(-1.0),
@@ -154,11 +154,11 @@ Foam::layerAdditionRemoval::layerAdditionRemoval
     const word& name,
     const dictionary& dict,
     const label index,
-    const polyMeshMorphEngine& mme
+    const polyMesh& mesh
 )
 :
-    polyMeshModifier(name, index, mme, Switch(dict.lookup("active"))),
-    faceZoneID_(dict.lookup("faceZoneName"), mme.mesh().faceZones()),
+    polyMeshModifier(name, index, mesh, Switch(dict.lookup("active"))),
+    faceZoneID_(dict.lookup("faceZoneName"), mesh.faceZones()),
     minLayerThickness_(readScalar(dict.lookup("minLayerThickness"))),
     maxLayerThickness_(readScalar(dict.lookup("maxLayerThickness"))),
     oldLayerThickness_(readOldThickness(dict)),
@@ -198,14 +198,14 @@ bool Foam::layerAdditionRemoval::changeTopology() const
     //     When the min thickness falls below the threshold, trigger removal.
 
     const labelList& mc =
-        morphEngine().mesh().faceZones()[faceZoneID_.index()].masterCells();
+        mesh().faceZones()[faceZoneID_.index()].masterCells();
 
     const labelList& mf =
-        morphEngine().mesh().faceZones()[faceZoneID_.index()].addressing();
+        mesh().faceZones()[faceZoneID_.index()].addressing();
 
 
-    const scalarField& V = morphEngine().mesh().cellVolumes();
-    const vectorField& S = morphEngine().mesh().faceAreas();
+    const scalarField& V = mesh().cellVolumes();
+    const vectorField& S = mesh().faceAreas();
 
     if (min(V) < -VSMALL)
     {
@@ -282,7 +282,7 @@ bool Foam::layerAdditionRemoval::changeTopology() const
                             << "Triggering layer removal" << endl;
                     }
 
-                    triggerRemoval_ = morphEngine().mesh().time().timeIndex();
+                    triggerRemoval_ = mesh().time().timeIndex();
 
                     // Old thickness looses meaning.
                     // Set it up to indicate layer removal
@@ -314,7 +314,7 @@ bool Foam::layerAdditionRemoval::changeTopology() const
                     << "Triggering layer addition" << endl;
             }
 
-            triggerAddition_ = morphEngine().mesh().time().timeIndex();
+            triggerAddition_ = mesh().time().timeIndex();
 
             // Old thickness looses meaning.
             // Set it up to indicate layer removal
@@ -337,7 +337,7 @@ void Foam::layerAdditionRemoval::setRefinement(polyTopoChange& ref) const
     // Insert the layer addition/removal instructions
     // into the topological change
 
-    if (triggerRemoval_ == morphEngine().mesh().time().timeIndex())
+    if (triggerRemoval_ == mesh().time().timeIndex())
     {
         removeCellLayer(ref);
 
@@ -353,7 +353,7 @@ void Foam::layerAdditionRemoval::setRefinement(polyTopoChange& ref) const
         clearAddressing();
     }
 
-    if (triggerAddition_ == morphEngine().mesh().time().timeIndex())
+    if (triggerAddition_ == mesh().time().timeIndex())
     {
         addCellLayer(ref);
 
@@ -390,7 +390,7 @@ void Foam::layerAdditionRemoval::updateTopology(const mapPolyMesh&)
     }
 
     // Mesh has changed topologically.  Update local topological data
-    faceZoneID_.update(morphEngine().mesh().faceZones());
+    faceZoneID_.update(mesh().faceZones());
 
     clearAddressing();
 }

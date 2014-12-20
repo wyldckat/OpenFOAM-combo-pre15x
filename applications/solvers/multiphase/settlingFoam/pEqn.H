@@ -1,21 +1,10 @@
-volScalarField A = UEqn.A();
+volScalarField rUA = 1.0/UEqn.A();
 
-surfaceScalarField rUAf
-(
-    "(rho|A(U))",
-    fvc::interpolate(rho)*fvc::interpolate(1/A)
-);
+surfaceScalarField rUAf("(rho*1|A(U))", fvc::interpolate(rho)*fvc::interpolate(rUA));
 
-U = UEqn.H()/A;
-phi = fvc::interpolate(rho)*
-(
-    (
-        fvc::interpolate
-        (
-            U + UphiCoeff*fvc::ddt0(rho, U)/A, "interpolate((H(U)|A(U)))"
-        ) & mesh.Sf()
-    ) - UphiCoeff*fvc::interpolate(1.0/A)*fvc::ddt0(phi)
-);
+U = rUA*UEqn.H();
+phi = (fvc::interpolate(rho*U) & mesh.Sf())
+    + fvc::ddtPhiCorr(rUA, rho, U, phi);
 
 surfaceScalarField phiU("phiU", phi);
 
@@ -43,6 +32,5 @@ for(int nonOrth=0; nonOrth<=nNonOrthCorr; nonOrth++)
 #include "rhoEqn.H"
 #include "continuityErrs.H"
 
-U += fvc::reconstruct((phi - phiU)/fvc::interpolate(rho));
-
+U += rUA*fvc::reconstruct((phi - phiU)/rUAf);
 U.correctBoundaryConditions();

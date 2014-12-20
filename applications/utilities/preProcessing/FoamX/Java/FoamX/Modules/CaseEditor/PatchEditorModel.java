@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Modules.CaseEditor;
@@ -32,11 +32,11 @@ import java.util.*;
 import org.omg.CORBA.StringHolder;
 
 import FoamX.App;
-import FoamX.Editors.ApplicationClassEditor.BoundaryDefinitionModelItem;
+import FoamX.Editors.ApplicationEditor.BoundaryDefinitionModelItem;
 import FoamX.Exceptions.FoamXException;
 
-import FoamXServer.CaseServer.IBoundaryTypeDescriptor;
-import FoamXServer.CaseServer.IBoundaryTypeDescriptorHolder;
+import FoamXServer.CaseServer.IPatchPhysicalTypeDescriptor;
+import FoamXServer.CaseServer.IPatchPhysicalTypeDescriptorHolder;
 import FoamXServer.CaseServer.ICaseServer;
 import FoamXServer.ITypeDescriptorHolder;
 import FoamXServer.FoamXError;
@@ -83,12 +83,12 @@ public class PatchEditorModel
             // Store patch name and reference to the case server.
             caseServer_    = caseServer;
             patchName_     = patchName;
-            fields_        = caseServer_.applicationClass().fields();
+            fields_        = caseServer_.application().fields();
             numFields_     = fields_.length;
             patchFieldMap_ = new Hashtable();
 
             // Initialise the boundary types tree strcuture.
-            initialiseBoundaryTypes();
+            initialisePatchPhysicalTypes();
 
             // Initialise the patch parameter table.
             refreshPatchTable();
@@ -123,7 +123,7 @@ public class PatchEditorModel
             currentBoundaryDef_ = boundaryDef;
 
             // Update the boundary type in the case server.
-            caseServer_.setPatchBoundaryType
+            caseServer_.setPatchPhysicalType
             (
                 patchName_,
                 currentBoundaryDef_.getName()
@@ -148,7 +148,7 @@ public class PatchEditorModel
 
     //--------------------------------------------------------------------------
 
-    private void initialiseBoundaryTypes()
+    private void initialisePatchPhysicalTypes()
     {
         try
         {
@@ -164,19 +164,19 @@ public class PatchEditorModel
             currentBoundaryDef_ = null;
 
             // Get defined boundary type names from the application class object.
-            String[] boundaryTypes =
-                caseServer_.applicationClass().boundaryTypes();
-            for (int i=0; i <boundaryTypes.length; i++)
+            String[] patchPhysicalTypes =
+                caseServer_.application().patchPhysicalTypes();
+            for (int i=0; i <patchPhysicalTypes.length; i++)
             {
                 // Get Boundary Type Descriptor object.
-                IBoundaryTypeDescriptorHolder bndTypeDescHolder =
-                    new IBoundaryTypeDescriptorHolder();
-                caseServer_.applicationClass().getBoundaryType
+                IPatchPhysicalTypeDescriptorHolder bndTypeDescHolder =
+                    new IPatchPhysicalTypeDescriptorHolder();
+                caseServer_.application().getPatchPhysicalType
                 (
-                    boundaryTypes[i],
+                    patchPhysicalTypes[i],
                     bndTypeDescHolder
                 );
-                IBoundaryTypeDescriptor bndTypeDesc = bndTypeDescHolder.value;
+                IPatchPhysicalTypeDescriptor bndTypeDesc = bndTypeDescHolder.value;
 
                 // See if this boundary definition has been encountered before.
                 if (!boundaryDefMap_.containsKey(bndTypeDesc.name()))
@@ -205,14 +205,14 @@ public class PatchEditorModel
                 DefaultMutableTreeNode parentNode = null;
                 if
                 (
-                    nodeInfo.getSuperType().length() != 0
-                 && boundaryDefMap_.containsKey(nodeInfo.getSuperType())
+                    nodeInfo.getParentType().length() != 0
+                 && boundaryDefMap_.containsKey(nodeInfo.getParentType())
                 )
                 {
                     // Sub-type boundary definition.
                     parentNode = (DefaultMutableTreeNode)boundaryDefMap_.get
                     (
-                        nodeInfo.getSuperType()
+                        nodeInfo.getParentType()
                     );
                 }
                 else
@@ -227,16 +227,16 @@ public class PatchEditorModel
 
             // Select the specified boundary definition.
             StringHolder holder = new StringHolder();
-            caseServer_.getPatchBoundaryType(patchName_, holder);
-            String boundaryType = holder.value;
+            caseServer_.getPatchPhysicalType(patchName_, holder);
+            String patchPhysicalType = holder.value;
 
             // Find the node corresponding to the specified boundary type.
-            if (!boundaryDefMap_.containsKey(boundaryType))
+            if (!boundaryDefMap_.containsKey(patchPhysicalType))
             {
                 throw new FoamXException("Invalid boundary definition name.");
             }
             DefaultMutableTreeNode nodeItem =
-                (DefaultMutableTreeNode)boundaryDefMap_.get(boundaryType);
+                (DefaultMutableTreeNode)boundaryDefMap_.get(patchPhysicalType);
             currentBoundaryDef_ =
                 (BoundaryDefinitionModelItem)nodeItem.getUserObject();
         }

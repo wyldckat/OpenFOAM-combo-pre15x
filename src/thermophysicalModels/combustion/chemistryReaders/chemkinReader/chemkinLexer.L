@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     chemkinReader
@@ -343,8 +343,8 @@ bool finishReaction = false;
         }
         else
         {
-            Warning
-                << "chemkinReader::lex(): element " << currentElementName
+            WarningIn("chemkinReader::lex()")
+                << "element " << currentElementName
                 << " already in table." << endl;
         }
     }
@@ -398,8 +398,8 @@ bool finishReaction = false;
             }
             else
             {
-                Warning
-                    << "chemkinReader::lex(): specie " << specieName
+                WarningIn("chemkinReader::lex()")
+                    << "specie " << specieName
                     << " already in table." << endl;
             }
         }

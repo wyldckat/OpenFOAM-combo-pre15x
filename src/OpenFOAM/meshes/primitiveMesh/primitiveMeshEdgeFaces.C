@@ -29,7 +29,6 @@ Description
 #include "error.H"
 
 #include "primitiveMesh.H"
-#include "DynamicList.H"
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
@@ -42,7 +41,7 @@ void primitiveMesh::calcEdgeFaces() const
 {
     if (debug)
     {
-        Info<< "primitiveMesh::calcEdgeFaces() : "
+        Pout<< "primitiveMesh::calcEdgeFaces() : "
             << "calculating edgeFaces"
             << endl;
     }
@@ -57,10 +56,9 @@ void primitiveMesh::calcEdgeFaces() const
     }
     else
     {
-        // Create temporary storage
-        List<DynamicList<label, facesPerEdge_> > ef(nEdges());
-
         const labelListList& fEdgs = faceEdges();
+
+        labelList nef(nEdges(), 0);
 
         forAll (fEdgs, faceI)
         {
@@ -68,17 +66,32 @@ void primitiveMesh::calcEdgeFaces() const
 
             forAll (curEdges, edgeI)
             {
-                ef[curEdges[edgeI]].append(faceI);
+                label eI = curEdges[edgeI];
+
+                nef[eI]++;
             }
         }
 
-        efPtr_ = new labelListList(ef.size());
+        efPtr_ = new labelListList(nef.size());
         labelListList& edgeFaceAddr = *efPtr_;
 
-        // Copy into a plain list
-        forAll (ef, edgeI)
+        forAll(edgeFaceAddr, edgeI)
         {
-            edgeFaceAddr[edgeI].transfer(ef[edgeI].shrink());
+            edgeFaceAddr[edgeI].setSize(nef[edgeI]);
+        }
+        nef = 0;
+
+
+        forAll (fEdgs, faceI)
+        {
+            const labelList& curEdges = fEdgs[faceI];
+
+            forAll (curEdges, edgeI)
+            {
+                label eI = curEdges[edgeI];
+
+                edgeFaceAddr[eI][nef[eI]++] = faceI;
+            }
         }
     }
 }

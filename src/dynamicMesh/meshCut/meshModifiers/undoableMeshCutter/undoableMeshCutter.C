@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -29,8 +29,6 @@ Description
 #include "undoableMeshCutter.H"
 #include "polyMesh.H"
 #include "polyTopoChange.H"
-#include "topoCellLooper.H"
-#include "refineCell.H"
 #include "DynamicList.H"
 #include "meshCutter.H"
 #include "cellCuts.H"
@@ -120,12 +118,7 @@ void Foam::undoableMeshCutter::updateLabels
 
     bool changed = false;
 
-    for
-    (
-        Map<splitCell*>::const_iterator iter = liveSplitCells.begin();
-        iter != liveSplitCells.end();
-        ++iter
-    )
+    forAllConstIter(Map<splitCell*>,liveSplitCells, iter)
     {
         const splitCell* splitPtr = iter();
 
@@ -158,12 +151,7 @@ void Foam::undoableMeshCutter::updateLabels
         // since new labels (= keys in Map) might clash with existing ones.
         Map<splitCell*> newLiveSplitCells(2*liveSplitCells.size());
 
-        for
-        (
-            Map<splitCell*>::iterator iter = liveSplitCells.begin();
-            iter != liveSplitCells.end();
-            ++iter
-        )
+        forAllIter(Map<splitCell*>, liveSplitCells, iter)
         {
             splitCell* splitPtr = iter();
 
@@ -173,7 +161,7 @@ void Foam::undoableMeshCutter::updateLabels
 
             if (debug && (cellI != newCellI))
             {
-                Info<< "undoableMeshCutter::updateLabels :"
+                Pout<< "undoableMeshCutter::updateLabels :"
                     << " Updating live (split)cell from " << cellI
                     << " to " << newCellI << endl;
             }
@@ -216,12 +204,7 @@ Foam::undoableMeshCutter::~undoableMeshCutter()
 {
     // Clean split cell tree.
 
-    for
-    (
-        Map<splitCell*>::iterator iter = liveSplitCells_.begin();
-        iter != liveSplitCells_.end();
-        ++iter
-    )
+    forAllIter(Map<splitCell*>, liveSplitCells_, iter)
     {
         splitCell* splitPtr = iter();
 
@@ -263,12 +246,7 @@ void Foam::undoableMeshCutter::setRefinement
     if (undoable_)
     {
         // Use cells cut in this iteration to update splitCell tree.
-        for
-        (
-            Map<label>::const_iterator iter = addedCells().begin();
-            iter != addedCells().end();
-            ++iter
-        )
+        forAllConstIter(Map<label>, addedCells(), iter)
         {
             label cellI = iter.key();
 
@@ -308,18 +286,7 @@ void Foam::undoableMeshCutter::setRefinement
                         << abort(FatalError);
                 }
 
-                //Info<< "Inserting master cell:" << cellI
-                //    << " label:" << masterPtr->cellLabel()
-                //    << " parent:" << masterPtr->parent()->cellLabel()
-                //    << endl;
-
                 liveSplitCells_.insert(cellI, masterPtr);
-
-                //Info<< "Inserting slave cell:" << addedCellI
-                //    << " label:" << slavePtr->cellLabel()
-                //    << " parent:" << slavePtr->parent()->cellLabel()
-                //    << endl;
-
                 liveSplitCells_.insert(addedCellI, slavePtr);
             }
             else
@@ -349,16 +316,15 @@ void Foam::undoableMeshCutter::setRefinement
                 }
 
                 liveSplitCells_.insert(cellI, masterPtr);
-
                 liveSplitCells_.insert(addedCellI, slavePtr);
             }
         }
 
         if (debug & 2)
         {
-            Info<< "** After refinement: liveSplitCells_:" << endl;
+            Pout<< "** After refinement: liveSplitCells_:" << endl;
 
-            printRefTree(Info);
+            printRefTree(Pout);
         }
     }
 }
@@ -393,12 +359,7 @@ Foam::labelList Foam::undoableMeshCutter::getSplitFaces() const
 
     DynamicList<label> liveSplitFaces(liveSplitCells_.size());
 
-    for
-    (
-        Map<splitCell*>::const_iterator iter = liveSplitCells_.begin();
-        iter != liveSplitCells_.end();
-        ++iter
-    )
+    forAllConstIter(Map<splitCell*>, liveSplitCells_, iter)
     {
         const splitCell* splitPtr = iter();
 
@@ -442,18 +403,7 @@ Foam::labelList Foam::undoableMeshCutter::getSplitFaces() const
         }
     }
 
-    liveSplitFaces.shrink();
-
-    if (debug & 2)
-    {
-        Info<< "** in getSplitFaces : tree:" << endl;
-        printRefTree(Info);
-
-        Info<< "** in getSplitFaces : liveSplitFaces:"
-            << liveSplitFaces << endl;
-    }
-
-    return liveSplitFaces;
+    return liveSplitFaces.shrink();
 }
 
 
@@ -470,18 +420,13 @@ Foam::Map<Foam::label> Foam::undoableMeshCutter::getAddedCells() const
 
     Map<label> addedCells(liveSplitCells_.size());
 
-    for
-    (
-        Map<splitCell*>::const_iterator iter = liveSplitCells_.begin();
-        iter != liveSplitCells_.end();
-        ++iter
-    )
+    forAllConstIter(Map<splitCell*>, liveSplitCells_, iter)
     {
         const splitCell* splitPtr = iter();
 
         if (!splitPtr->parent())
         {
-            FatalErrorIn("undoableMeshCutter::getSplitFaces()")
+            FatalErrorIn("undoableMeshCutter::getAddedCells()")
                 << "Live split cell without parent" << endl
                 << "splitCell:" << splitPtr->cellLabel()
                 << abort(FatalError);
@@ -537,8 +482,8 @@ Foam::labelList Foam::undoableMeshCutter::removeSplitFaces
 
     if (facesToRemove.size() != splitFaces.size())
     {
-        Info<< "cellRegion:" << cellRegion << endl;
-        Info<< "cellRegionMaster:" << cellRegionMaster << endl;
+        Pout<< "cellRegion:" << cellRegion << endl;
+        Pout<< "cellRegionMaster:" << cellRegionMaster << endl;
 
         FatalErrorIn
         (
@@ -595,7 +540,7 @@ Foam::labelList Foam::undoableMeshCutter::removeSplitFaces
 
             if (debug)
             {
-                Info<< "Updating for removed splitFace " << faceI
+                Pout<< "Updating for removed splitFace " << faceI
                     << " own:" << own <<  " nbr:" << nbr
                     << " ownPtr:" << ownPtr->cellLabel()
                     << " nbrPtr:" << nbrPtr->cellLabel()

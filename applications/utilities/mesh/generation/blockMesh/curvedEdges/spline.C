@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     spline class : define a basic spline on nKnots knots - this
@@ -28,8 +28,6 @@ Description
     various splines that will have real uses)
 
 \*---------------------------------------------------------------------------*/
-
-#include "error.H"
 
 #include "spline.H"
 
@@ -97,7 +95,7 @@ vector spline::position(const scalar mu1) const
 
     for (register label i=0; i<knots_.size(); i++)
     {
-        tmp += B((scalar)(knots_.size() - 1)*mu1 - (scalar)i)*knots_[i];
+        tmp += B((knots_.size() - 1)*mu1 - i)*knots_[i];
     }
 
     return tmp;

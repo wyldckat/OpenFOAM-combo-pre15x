@@ -20,9 +20,10 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
+    Extrude mesh from existing patch or from patch read from file.
 
 \*---------------------------------------------------------------------------*/
 
@@ -31,6 +32,8 @@ Description
 #include "extrudedMesh.H"
 #include "dimensionedTypes.H"
 #include "linearNormalExtruder.H"
+#include "IFstream.H"
+#include "faceMesh.H"
 
 using namespace Foam;
 
@@ -40,31 +43,114 @@ using namespace Foam;
 int main(int argc, char *argv[])
 {
 #   include "setRoots.H"
-#   include "createTimes.H"
-#   include "createPolyMesh.H"
+#   include "createTimeExtruded.H"
 
-    label patchID = mesh.boundaryMesh().findPatchID(patchName);
 
-    if (patchID == -1)
+    if (args.options().found("sourceRoot") == args.options().found("surface"))
     {
         FatalErrorIn(args.executable())
-            << "Cannot find patch " << patchName << " in the source mesh.\n"
-            << "Valid patch names are " << mesh.boundaryMesh().names()
+            << "Need to specify either -sourceRoot/Case/Patch or -surface"
+            << " option to specify the source of the patch to extrude"
             << exit(FatalError);
     }
 
-    extrudedMesh eMesh
-    (
-        IOobject
+
+    autoPtr<extrudedMesh> eMeshPtr(NULL);
+
+    if (args.options().found("sourceRoot"))
+    {
+        fileName rootDirSource(args.options()["sourceRoot"]);
+        fileName caseDirSource(args.options()["sourceCase"]);
+        fileName patchName(args.options()["sourcePatch"]);
+
+        Info<< "Extruding patch " << patchName
+            << " on mesh " << rootDirSource << ' ' << caseDirSource << nl
+            << endl;
+
+        Time runTime
         (
-            extrudedMesh::defaultRegion,
-            runTimeExtruded.constant(),
-            runTimeExtruded
-        ),
-        mesh.boundaryMesh()[patchID],
-        nLayers,                        // number of layers
-        linearNormalExtruder(-thickness) // overall thickness (signed!)
-    );
+            Time::controlDictName,
+            rootDirSource,
+            caseDirSource
+        );
+
+#       include "createPolyMesh.H"
+
+        label patchID = mesh.boundaryMesh().findPatchID(patchName);
+
+        if (patchID == -1)
+        {
+            FatalErrorIn(args.executable())
+                << "Cannot find patch " << patchName
+                << " in the source mesh.\n"
+                << "Valid patch names are " << mesh.boundaryMesh().names()
+                << exit(FatalError);
+        }
+
+        const polyPatch& pp = mesh.boundaryMesh()[patchID];
+
+        {
+            fileName surfName(patchName + ".sMesh");
+
+            Info<< "Writing patch as surfaceMesh to " << surfName << nl << endl;
+
+            faceMesh fMesh(pp.localFaces(), pp.localPoints());
+
+            OFstream os(surfName);
+            os << fMesh << nl;
+        }
+
+        eMeshPtr.reset
+        (
+            new extrudedMesh
+            (
+                IOobject
+                (
+                    extrudedMesh::defaultRegion,
+                    runTimeExtruded.constant(),
+                    runTimeExtruded
+                ),
+                pp,
+                nLayers,                        // number of layers
+                linearNormalExtruder(-thickness) // overall thickness (signed!)
+            )
+        );
+    }
+    else
+    {
+        // Read from surface
+        fileName surfName(args.options()["surface"]);
+
+        Info<< "Extruding surfaceMesh read from file " << surfName << nl
+            << endl;
+
+        IFstream is(surfName);
+
+        faceMesh fMesh(is);
+
+        Info<< "Read patch from file " << surfName << ':' << nl
+            << "    points : " << fMesh.points().size() << nl
+            << "    faces  : " << fMesh.size() << nl
+            << endl;
+
+        eMeshPtr.reset
+        (
+            new extrudedMesh
+            (
+                IOobject
+                (
+                    extrudedMesh::defaultRegion,
+                    runTimeExtruded.constant(),
+                    runTimeExtruded
+                ),
+                fMesh,
+                nLayers,                         // number of layers
+                linearNormalExtruder(-thickness) // overall thickness (signed!)
+            )
+        );        
+    }
+
+    const extrudedMesh& eMesh = eMeshPtr();
 
     eMesh.checkMesh();
 

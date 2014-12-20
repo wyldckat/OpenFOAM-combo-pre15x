@@ -31,12 +31,14 @@ boundaryField
 {
     bottomWall      
     {
-        type            zeroGradient;
+        type            fixedValue;
+        value           uniform 0;
     }
 
     topWall         
     {
-        type            zeroGradient;
+        type            fixedValue;
+        value           uniform 0;
     }
 
     sides1          

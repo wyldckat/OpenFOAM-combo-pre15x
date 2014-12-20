@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -80,7 +80,7 @@ inline SubField<Type>::SubField
 template<class Type>
 inline SubField<Type>& SubField<Type>::null()
 {
-    SubField<Type>* nullPtr = (SubField<Type>*)NULL;
+    SubField<Type>* nullPtr = reinterpret_cast<SubField<Type>*>(NULL);
     return *nullPtr;
 }
 
@@ -91,14 +91,14 @@ inline tmp<Field<typename SubField<Type>::cmptType> > SubField<Type>::component
     const direction d
 ) const
 {
-    return ((const Field<Type>&)*this).component(d);
+    return (reinterpret_cast<const Field<Type>&>(*this)).component(d);
 }
 
 
 template<class Type>
 inline tmp<Field<Type> > SubField<Type>::T() const
 {
-    return ((const Field<Type>&)*this).T();
+    return (reinterpret_cast<const Field<Type>&>(*this)).T();
 }
 
 
@@ -115,7 +115,7 @@ inline void SubField<Type>::operator=(const SubField<Type>& rhs)
 template<class Type>
 inline SubField<Type>::operator const Field<Type>&() const
 {
-    return *((const Field<Type>*)(this));
+    return *(reinterpret_cast<const Field<Type>*>(this));
 }
 
 

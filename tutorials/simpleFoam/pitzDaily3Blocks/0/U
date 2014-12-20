@@ -58,6 +58,17 @@ boundaryField
         value           uniform (0 0 0);
     }
 
+    lowerWallInterface
+    {
+        type            fixedValue;
+        value           uniform (0 0 0);
+    }
+
+    interface    
+    {
+        type            zeroGradient;
+    }
+
     defaultFaces    
     {
         type            empty;

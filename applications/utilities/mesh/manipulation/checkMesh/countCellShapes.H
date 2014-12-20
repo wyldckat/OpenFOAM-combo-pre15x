@@ -47,7 +47,7 @@
         }
     }
 
-    Info<< "Number of cells by type: " << nl
+    Pout<< "Number of cells by type: " << nl
         << "    hexahedra:     " << nHex << nl
         << "    prisms:        " << nPrism << nl
         << "    wedges:        " << nWedge << nl

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -102,7 +102,7 @@ PointPatchField<PatchField, PointPatch, Type>::NewCalculatedType
 )
 {
     typename PointPatchConstructorTable::iterator patchTypeCstrIter =
-        PointPatchConstructorTablePtr_->find(pf.patchMesh().type());
+        PointPatchConstructorTablePtr_->find(pf.patch().type());
 
     if (patchTypeCstrIter != PointPatchConstructorTablePtr_->end())
     {
@@ -110,7 +110,7 @@ PointPatchField<PatchField, PointPatch, Type>::NewCalculatedType
         (
             patchTypeCstrIter()
             (
-                pf.patchMesh(),
+                pf.patch(),
                 Field<Type>::null()
             )
         );
@@ -121,7 +121,7 @@ PointPatchField<PatchField, PointPatch, Type>::NewCalculatedType
         (
             new CalculatedPointPatchField<PatchField, PointPatch, Type>
             (
-                pf.patchMesh(),
+                pf.patch(),
                 Field<Type>::null()
             )
         );

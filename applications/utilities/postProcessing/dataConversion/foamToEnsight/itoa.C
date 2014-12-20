@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
 
@@ -46,7 +46,7 @@ word itoa(const label n)
 
     for (label i=0; i<length; i++)
     {
-        label j = (label)leftOfN/pow(10, length - i - 1);
+        label j = label(leftOfN/pow(10, length - i - 1));
         leftOfN -= j*pow(10, length - i - 1);
         val[i] = offset + j;
     }

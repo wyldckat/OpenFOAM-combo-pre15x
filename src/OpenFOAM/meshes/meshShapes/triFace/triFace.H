@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     triFace
@@ -132,29 +132,13 @@ public:
 };
 
 
-/*---------------------------------------------------------------------------*\
-                Class Specialisation Hash<triFace> Declaration
-\*---------------------------------------------------------------------------*/
-
+//- Hash<triFace> specialisation 
+//  Simple commutative hash.
 template<>
-class Hash<triFace>
+inline label Hash<triFace>::operator()(const triFace& t) const
 {
-public:
-
-    Hash()
-    {}
-
-    //- Simple commutative hash.
-    label operator()(const triFace& t) const
-    {
-        return (t[0]*t[1]*t[2] + t[0]+t[1]+t[2]);
-    }
-
-    label operator()(const triFace& t, const label tableSize) const
-    {
-        return mag(operator()(t)) % tableSize;
-    }
-};
+    return (t[0]*t[1]*t[2] + t[0]+t[1]+t[2]);
+}
 
 
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //

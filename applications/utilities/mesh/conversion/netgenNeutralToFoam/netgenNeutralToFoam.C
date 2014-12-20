@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     read Neutral file format as written by Netgen4.4.
@@ -137,7 +137,8 @@ int main(int argc, char *argv[])
 
         if (domain != 1)
         {
-            Warning<< args.executable() << "Cannot handle multiple domains"
+            WarningIn(args.executable())
+                << "Cannot handle multiple domains"
                 << nl << "Ignoring domain " << domain << " setting on line "
                 << str.lineNumber() << endl;
         }
@@ -244,7 +245,8 @@ int main(int argc, char *argv[])
     if (vertsToBoundary.size() > 0)
     {
         // Didn't find cells connected to boundary faces.
-        Warning<< "There are boundary faces without attached cells."
+        WarningIn(args.executable())
+            << "There are boundary faces without attached cells."
             << "Boundary faces (as triFaces):" << vertsToBoundary.toc()
             << endl;
     }

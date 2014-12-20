@@ -28,12 +28,15 @@
 
 #   include "createPhi.H"
 
-    autoPtr<transportModel> laminarTransport
-    (
-        transportModel::New(U, phi)
-    );
+
+    label pRefCell = 0;
+    scalar pRefValue = 0.0;
+    setRefCell(p, mesh.solutionDict().subDict("SIMPLE"), pRefCell, pRefValue);
+
+
+    singlePhaseTransportModel laminarTransport(U, phi);
 
     autoPtr<turbulenceModel> turbulence
     (
-        turbulenceModel::New(U, phi, laminarTransport())
+        turbulenceModel::New(U, phi, laminarTransport)
     );

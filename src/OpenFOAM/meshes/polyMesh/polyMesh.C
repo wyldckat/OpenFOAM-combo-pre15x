@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -179,6 +179,9 @@ polyMesh::polyMesh(const IOobject& io)
 {
     // Set the primitive mesh
     calcFaceCells();
+
+    // Calculate topology for the patches (processor-processor comms etc.)
+    boundary_.updateTopology();
 
     // Calculate the geometry for the patches (transformation tensors etc.)
     boundary_.calcGeometry();
@@ -353,6 +356,107 @@ polyMesh::polyMesh
 }
 
 
+
+
+// Reset components without boundary.
+// Boundary is added using addPatches() member function
+// WARNING: ASSUMES CORRECT ORDERING OF DATA. 
+void polyMesh::polyMesh::reset
+(
+    const pointField& points,
+    const faceList& faces,
+    const cellList& cells
+)
+{
+    // Clear everything (copied from ~polyMesh)
+    clearOut();
+    resetMotion();
+    resetMorph();
+
+    // Clear minimal data
+    deleteDemandDrivenData(parallelDataPtr_);
+    deleteDemandDrivenData(morphEnginePtr_);
+    deleteDemandDrivenData(allOwnerPtr_);
+    deleteDemandDrivenData(allNeighbourPtr_);
+
+
+    // Take over new primitive data.
+
+    points_ = points;
+    faces_ = faces;
+    cells_ = cells;
+
+
+    // Flags the mesh files as being changed (copied from morph())
+    points_.writeOpt() = IOobject::AUTO_WRITE;
+    points_.instance() = time().timeName();
+
+    faces_.writeOpt() = IOobject::AUTO_WRITE;
+    faces_.instance() = time().timeName();
+
+    cells_.writeOpt() = IOobject::AUTO_WRITE;
+    cells_.instance() = time().timeName();
+
+    boundary_.writeOpt() = IOobject::AUTO_WRITE;
+    boundary_.instance() = time().timeName();
+
+    pointZones_.writeOpt() = IOobject::AUTO_WRITE;
+    pointZones_.instance() = time().timeName();
+
+    faceZones_.writeOpt() = IOobject::AUTO_WRITE;
+    faceZones_.instance() = time().timeName();
+
+    cellZones_.writeOpt() = IOobject::AUTO_WRITE;
+    cellZones_.instance() = time().timeName();
+
+
+    // Check if the faces and cells are valid
+    forAll (faces_, faceI)
+    {
+        const face& curFace = faces_[faceI];
+
+        if (min(curFace) < 0 || max(curFace) > points_.size())
+        {
+            FatalErrorIn
+            (
+                "polyMesh::polyMesh::reset\n"
+                "(\n"
+                "    const pointField& points,\n"
+                "    const faceList& faces,\n"
+                "    const cellList& cells\n"
+                ")\n"
+            )   << "Face " << faceI << "contains vertex labels out of range: "
+                << curFace << " Max point index = " << points_.size()
+                << abort(FatalError);
+        }
+    }
+
+    // Check if the faces and cells are valid
+    forAll (cells_, cellI)
+    {
+        const cell& curCell = cells_[cellI];
+
+        if (min(curCell) < 0 || max(curCell) > faces_.size())
+        {
+            FatalErrorIn
+            (
+                "polyMesh::polyMesh::reset\n"
+                "(\n"
+                "    const pointField& points,\n"
+                "    const faceList& faces,\n"
+                "    const cellList& cells\n"
+                ")\n"
+            )   << "Cell " << cellI << "contains face labels out of range: "
+                << curCell << " Max face index = " << faces_.size()
+                << abort(FatalError);
+        }
+    }
+
+    // Set the primitive mesh
+    calcFaceCells();
+}
+
+
 // * * * * * * * * * * * * * * * * Destructor  * * * * * * * * * * * * * * * //
 
 polyMesh::~polyMesh()
@@ -390,13 +494,13 @@ fileName polyMesh::meshDir() const
 }
 
 
-const word& polyMesh::pointsInstance() const
+const fileName& polyMesh::pointsInstance() const
 {
     return points_.instance();
 }
 
 
-const word& polyMesh::cellsInstance() const
+const fileName& polyMesh::cellsInstance() const
 {
     return cells_.instance();
 }
@@ -425,6 +529,9 @@ void polyMesh::addPatches(const List<polyPatch*> & p)
     // there is some info in parallelData which might be interesting inbetween
     // removeBoundary and addPatches.
     deleteDemandDrivenData(parallelDataPtr_);
+
+    // Calculate topology for the patches (processor-processor comms etc.)
+    boundary_.updateTopology();
 
     // Calculate the geometry for the patches (transformation tensors etc.)
     boundary_.calcGeometry();
@@ -468,7 +575,7 @@ void polyMesh::addZones
         // Copy the zone pointers
         forAll (pz, pI)
         {
-            ((ptrList<pointZone>&)pointZones_).hook(pz[pI]);
+            pointZones_.hook(pz[pI]);
         }
 
         pointZones_.writeOpt() = IOobject::AUTO_WRITE;
@@ -482,7 +589,7 @@ void polyMesh::addZones
         // Copy the zone pointers
         forAll (fz, fI)
         {
-            ((ptrList<faceZone>&)faceZones_).hook(fz[fI]);
+            faceZones_.hook(fz[fI]);
         }
 
         faceZones_.writeOpt() = IOobject::AUTO_WRITE;
@@ -496,7 +603,7 @@ void polyMesh::addZones
         // Copy the zone pointers
         forAll (cz, cI)
         {
-            ((ptrList<cellZone>&)cellZones_).hook(cz[cI]);
+            cellZones_.hook(cz[cI]);
         }
 
         cellZones_.writeOpt() = IOobject::AUTO_WRITE;
@@ -588,8 +695,7 @@ const pointField& polyMesh::oldAllPoints() const
     {
         if (debug || morphDebug)
         {
-            Warning
-                << "const pointField& polyMesh::oldAllPoints() const : "
+            WarningIn("const pointField& polyMesh::oldAllPoints() const")
                 << "Old points not available.  Forcing storage of old points"
                 << endl;
         }
@@ -686,7 +792,7 @@ const parallelInfo& polyMesh::parallelData() const
     {
         if (debug & 2)
         {
-            Warning<< "polyMesh::parallelData() const : "
+            WarningIn("polyMesh::parallelData() const")
                 << "Reading parallelInfo from file" << endl;
 
             // Old behaviour: read from file.
@@ -724,17 +830,19 @@ const parallelInfo& polyMesh::parallelData() const
 
 
 // Remove all files
-void polyMesh::removeFiles(const fileName& dir) const
+void polyMesh::removeFiles(const fileName& instanceDir) const
 {
-    rm(dir/"points");
-    rm(dir/"faces");
-    rm(dir/"cells");
-    rm(dir/"boundary");
-    rm(dir/"pointZones");
-    rm(dir/"faceZones");
-    rm(dir/"cellZones");
-    rm(dir/"meshModifiers");
-    rm(dir/"parallelData");
+    fileName meshFilesPath = db().path()/instanceDir/meshSubDir;
+
+    rm(meshFilesPath/"points");
+    rm(meshFilesPath/"faces");
+    rm(meshFilesPath/"cells");
+    rm(meshFilesPath/"boundary");
+    rm(meshFilesPath/"pointZones");
+    rm(meshFilesPath/"faceZones");
+    rm(meshFilesPath/"cellZones");
+    rm(meshFilesPath/"meshModifiers");
+    rm(meshFilesPath/"parallelData");
 }
 
 

@@ -1,16 +1,7 @@
 {
-    surfaceScalarField phir
-    (
-        IOobject
-        (
-            "phir",
-            runTime.timeName(),
-            mesh,
-            IOobject::NO_READ,
-            IOobject::NO_WRITE
-        ),
-        interface.cGamma()*mag(phi/mesh.magSf())*interface.nHatf()
-    );
+    surfaceScalarField phic = mag(phi/mesh.magSf());
+    phic = min(interface.cGamma()*phic, max(phic));
+    surfaceScalarField phir = phic*interface.nHatf();
 
     for (int gCorr=0; gCorr<nGammaCorr; gCorr++)
     {

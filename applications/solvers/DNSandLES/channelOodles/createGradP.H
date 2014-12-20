@@ -1,8 +1,8 @@
-    dimensionedVector gradP
+    dimensionedScalar gradP
     (
         "gradP",
         dimensionSet(0, 1, -2, 0, 0),
-        vector(0, 0, 0)
+        0.0
     );
 
 
@@ -22,5 +22,3 @@
         Info<< "Initializing with 0 pressure gradient" <<endl
             << endl;
     };
-
-    gradP.value() = (flowMask & gradP).value();

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Description
     write function for regIOobjects
@@ -49,8 +49,7 @@ bool regIOobject::write
 {
     if (!good())
     {
-        SeriousError
-            << "regIOobject::write() : "
+        SeriousErrorIn("regIOobject::write()")
             << "bad object " << name()
             << endl;
 
@@ -59,8 +58,7 @@ bool regIOobject::write
 
     if (!instance().size())
     {
-        SeriousError
-            << "regIOobject::write() : "
+        SeriousErrorIn("regIOobject::write()")
             << "instance undefined for object " << name()
             << endl;
 
@@ -75,7 +73,7 @@ bool regIOobject::write
      && instance() != time().system()
     )
     {
-        ((regIOobject&)(*this)).instance() = time().timeName();
+        const_cast<regIOobject&>(*this).instance() = time().timeName();
     }
 
     mkDir(path());

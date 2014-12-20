@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -109,7 +109,7 @@ void muSgsWallFunctionFvPatchScalarField::evaluate()
         sgsModel.subDict("wallFunctionCoeffs").lookup("E")
     ).value();
 
-    const scalarField& ry = patchMesh().deltaCoeffs();
+    const scalarField& ry = patch().deltaCoeffs();
 
     const fvPatchVectorField& U = lookupPatchField<volVectorField, vector>("U");
     vectorField Up = U.patchInternalField();
@@ -166,7 +166,7 @@ void muSgsWallFunctionFvPatchScalarField::evaluate()
 
     //This bit just reports the mean y+ value of wall patches
     //Delete if not required
-    const scalarField& wallFaceAreas(patchMesh().magSf());
+    const scalarField& wallFaceAreas(patch().magSf());
     const scalar totalPatchArea(sum(wallFaceAreas));
     scalar yPlusMean(0.0);
     scalar muSgsMean(0.0);
@@ -182,8 +182,8 @@ void muSgsWallFunctionFvPatchScalarField::evaluate()
                     muSgsw[facei]*(wallFaceAreas[facei]/totalPatchArea);
     }
 
-    Info << " Patch no " << patchMesh().index() << " = " << patchMesh().type()
-         << "; Patch name: " << patchMesh().name()
+    Info << " Patch no " << patch().index() << " = " << patch().type()
+         << "; Patch name: " << patch().name()
          << "; y+ Mean = " << yPlusMean
          << "; muSgs(mean)(wall) = " << muSgsMean << endl;
 

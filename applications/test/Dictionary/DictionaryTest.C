@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Application
     
@@ -39,19 +39,25 @@ class ent
 :
     public Dictionary<ent>::link
 {
-
+    word keyword_;
     int i_;
 
 public:
 
-    ent(int i)
+    ent(const word& keyword, int i)
     :
+        keyword_(keyword),
         i_(i)
     {}
 
+    const word& keyword() const
+    {
+        return keyword_;
+    }
+
     friend Ostream& operator<<(Ostream& os, const ent& e)
     {
-        os << e.i_ << endl;
+        os << e.keyword_ << ' ' << e.i_ << endl;
         return os;
     }
 };
@@ -67,8 +73,8 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i<10; i++)
     {
-        ent* ePtr = new ent(i);
-        dict.append(word("ent") + name(i), ePtr);
+        ent* ePtr = new ent(word("ent") + name(i), i);
+        dict.append(ePtr->keyword(), ePtr);
         dict.swapUp(ePtr);
     }
 
@@ -78,7 +84,7 @@ int main(int argc, char *argv[])
 
     for
     (
-        Dictionary<ent*>::iterator iter = dict.begin();
+        Dictionary<ent*>::const_iterator iter = dict.begin();
         iter != dict.end();
         ++iter
     )
@@ -95,8 +101,8 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i<10; i++)
     {
-        ent* ePtr = new ent(i);
-        dict2.append(word("ent") + name(i), ePtr);
+        ent* ePtr = new ent(word("ent") + name(i), i);
+        dict2.append(ePtr->keyword(), ePtr);
         dict2.swapUp(ePtr);
     }
 

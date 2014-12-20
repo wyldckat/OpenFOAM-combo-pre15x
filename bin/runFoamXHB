@@ -21,7 +21,7 @@
 #
 #     You should have received a copy of the GNU General Public License
 #     along with OpenFOAM; if not, write to the Free Software Foundation,
-#     Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+#     Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 #
 # Script
 #     runFoamXHB
@@ -79,10 +79,10 @@ cleanup() {
     fi
 
     #- Clean up files
-    rm -f $FOAMX_USER_CONFIG/HostBrowserLog.xml
+    rm -f $FOAMX_CONFIG/HostBrowserLog.xml
 
     #- nsd should already be done by nsd subshell but just to make sure.
-    rm -f $FOAMX_USER_CONFIG/ns.ref
+    rm -f $FOAMX_CONFIG/ns.ref
 }
 
 #-------------------------
@@ -91,24 +91,24 @@ cleanup() {
 #
 #-------------------------
 
-# Make sure that the FoamX client configuration file is available.
-if [ ! -r "$FOAMX_USER_CONFIG/FoamXClient.cfg" ] ; then
-    echo "Can't find FoamX FoamXClient.cfg file in $FOAMX_USER_CONFIG."
+# Make sure that the FoamX configuration directory is available.
+if [ ! -d "$FOAMX_CONFIG" ] ; then
+    echo "Can't find FoamX configuration directory at $FOAMX_CONFIG."
     exit 1
 fi
 
-# Make sure that the FoamX system directory is available.
-if [ ! -d "$FOAMX_SYSTEM_CONFIG" ] ; then
-    echo "Can't find FoamX system directory at $FOAMX_SYSTEM_CONFIG."
+# Make sure that the FoamX client configuration file is available.
+if [ ! -r "$FOAMX_CONFIG/FoamXClient.cfg" ] ; then
+    echo "Can't find FoamX FoamXClient.cfg file in $FOAMX_CONFIG."
     exit 1
 fi
 
 # Get host and port from FoamX client client configuration file.
-HOSTNAME=`getValue "$FOAMX_USER_CONFIG/FoamXClient.cfg" 'org.omg.CORBA.ORBInitialHost'`
+HOSTNAME=`getValue "$FOAMX_CONFIG/FoamXClient.cfg" 'org.omg.CORBA.ORBInitialHost'`
 if [ $? -ne 0 ]; then
     HOSTNAME=`uname -n`
 fi
-HOSTPORT=`getValue "$FOAMX_USER_CONFIG/FoamXClient.cfg" 'org.omg.CORBA.ORBInitialPort'`
+HOSTPORT=`getValue "$FOAMX_CONFIG/FoamXClient.cfg" 'org.omg.CORBA.ORBInitialPort'`
 if [ $? -ne 0 ]; then
     HOSTPORT=1234
 fi
@@ -117,23 +117,23 @@ myIOP="inet:$HOSTNAME:$HOSTPORT"
 #- Cleanup processes started by me
 trap cleanup 0 2 3 15
 
-rm -f $FOAMX_USER_CONFIG/ns.ref
+rm -f $FOAMX_CONFIG/ns.ref
 echo "Starting NameServer with $myIOP ..."
-nsd -ORBIIOPAddr $myIOP --ior $FOAMX_USER_CONFIG/ns.ref </dev/null &
+nsd -ORBIIOPAddr $myIOP --ior $FOAMX_CONFIG/ns.ref </dev/null &
 
-while [ ! -f $FOAMX_USER_CONFIG/ns.ref ]
+while [ ! -f $FOAMX_CONFIG/ns.ref ]
 do
     sleep 1
 done
 
-rm -f $FOAMX_USER_CONFIG/HostBrowserLog.xml
+rm -f $FOAMX_CONFIG/HostBrowserLog.xml
 echo "Starting FoamX Host Browser with $myIOP ..."
 FoamXHostBrowser -ORBNamingAddr $myIOP
 
 #- Alternatively use the corbaloc standard. Unfortunately that does not seem
 #  to work on the C++ end (the nsd starts up fine)
 #orbArgs="-ORBDefaultInitRef corbaloc://$HOSTNAME:$HOSTPORT"
-#nsd $orbArgs --ior $FOAMX_USER_CONFIG/ns.ref </dev/null &
+#nsd $orbArgs --ior $FOAMX_CONFIG/ns.ref </dev/null &
 #FoamXHostBrowser $orbArgs
 
 # Implicit trap 0

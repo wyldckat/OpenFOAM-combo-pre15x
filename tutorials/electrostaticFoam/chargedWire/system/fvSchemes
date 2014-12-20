@@ -35,13 +35,13 @@ gradSchemes
 divSchemes
 {
     default         none;
-    div(rhoFlux,rho) Gauss Gamma2 1;
+    div(rhoFlux,rho) Gauss limitedLinear 1;
 }
 
 laplacianSchemes
 {
     default         none;
-    laplacian(1,phi) Gauss linear corrected;
+    laplacian(phi)  Gauss linear corrected;
 }
 
 interpolationSchemes

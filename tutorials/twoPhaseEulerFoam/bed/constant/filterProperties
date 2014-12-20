@@ -1,0 +1,40 @@
+// The FOAM Project // File: filterProperties
+/*
+-------------------------------------------------------------------------------
+ =========         | dictionary
+ \\      /         |
+  \\    /          | Name:   filterProperties
+   \\  /           | Family: Data file
+    \\/            |
+    F ield         | FOAM version: 1.9.6
+    O peration     | Product of Nabla Ltd.
+    A and          |
+    M anipulation  | Email: Enquiries@Nabla.co.uk
+-------------------------------------------------------------------------------
+*/
+
+version  0.5;
+format   ascii;
+
+root     "/home/larsg/foam/run/bubble";
+case     "2D5x50_1";
+instance "constant";
+local    "";
+
+note     "filterProperties for Foam";
+
+class    dictionary;
+object   filterProperties;
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+filter                 off;
+
+// filterNormal has to be in the direction of trapped particles
+filterNormal           (0 0 1);
+
+filterPosition         filterPosition      [0 1 0 0 0]     (0 0 0.02);
+
+filterThickness        filterThickness     [0 1 0 0 0]     1.0e-6;
+
+// ************************************************************************* //

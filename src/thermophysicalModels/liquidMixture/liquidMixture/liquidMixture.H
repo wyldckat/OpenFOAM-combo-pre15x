@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     liquidMixture
@@ -39,7 +39,7 @@ Description
 
 #include "word.H"
 #include "scalarField.H"
-#include "ptrList.H"
+#include "PtrList.H"
 #include "liquid.H"
 #include "autoPtr.H"
 
@@ -63,7 +63,7 @@ class liquidMixture
         List<word> components_;
 
         //- The liquid properties
-        ptrList<liquid> properties_;
+        PtrList<liquid> properties_;
 
 
 public:
@@ -95,7 +95,7 @@ public:
         }
 
         //- Return the liquid properties
-        inline const ptrList<liquid>& properties() const
+        inline const PtrList<liquid>& properties() const
         {
             return properties_;
         }

@@ -1,0 +1,6 @@
+movingFvMesh/movingFvMesh.C
+movingFvMesh/newMovingFvMesh.C
+staticFvMesh/staticFvMesh.C
+movingInkJetFvMesh/movingInkJetFvMesh.C
+
+LIB = $(FOAM_LIBBIN)/libmovingFvMesh

@@ -20,9 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
-
-Description
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 
@@ -57,7 +55,7 @@ symmetryFvPatchField<Type>::symmetryFvPatchField
 :
     basicSymmetryFvPatchField<Type>(ptf, p, iF, mapper)
 {
-    if (typeid(this->patchMesh()) != typeid(symmetryFvPatch))
+    if (!isType<symmetryFvPatch>(this->patch()))
     {
         FatalErrorIn
         (
@@ -69,9 +67,9 @@ symmetryFvPatchField<Type>::symmetryFvPatchField
             "    const fvPatchFieldMapper& mapper\n"
             ")\n"
         )   << "Field type does not correspond to patch type for patch "
-            << this->patchMesh().index() << "." << endl
+            << this->patch().index() << "." << endl
             << "Field type: " << typeName << endl
-            << "Patch type: " << this->patchMesh().type()
+            << "Patch type: " << this->patch().type()
             << exit(FatalError);
     }
 }
@@ -87,7 +85,7 @@ symmetryFvPatchField<Type>::symmetryFvPatchField
 :
     basicSymmetryFvPatchField<Type>(p, iF, dict)
 {
-    if (typeid(p) != typeid(symmetryFvPatch))
+    if (!isType<symmetryFvPatch>(p))
     {
         FatalIOErrorIn
         (
@@ -98,7 +96,7 @@ symmetryFvPatchField<Type>::symmetryFvPatchField
             "    const dictionary& dict\n"
             ")\n",
             dict
-        )   << "patch " << this->patchMesh().index() << " not symmetry type. "
+        )   << "patch " << this->patch().index() << " not symmetry type. "
             << "Patch type = " << p.type()
             << exit(FatalIOError);
     }

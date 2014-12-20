@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     prefixOSstream
@@ -77,12 +77,7 @@ public:
             streamFormat format=ASCII,
             versionNumber version=currentVersion,
             compressionType compression=UNCOMPRESSED
-        )
-        :
-            OSstream(os, name, format, version, compression),
-            printPrefix_(true),
-            prefix_("")
-        {}
+        );
 
 
     // Member functions
@@ -103,6 +98,9 @@ public:
 
 
         // Write functions
+
+            //- Write next token to stream
+            virtual Ostream& write(const token&);
 
             //- Write character
             virtual Ostream& write(const char);

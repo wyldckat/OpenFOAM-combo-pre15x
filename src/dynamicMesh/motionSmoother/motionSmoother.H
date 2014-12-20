@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     motionSmoother
@@ -77,6 +77,22 @@ class twoDPointCorrector;
 
 class motionSmoother
 {
+    // Private class
+
+        //! Can be removed once in PstreamCombineReduce
+        template <class T>
+        class minEqOp
+        {
+
+        public:
+
+            void operator()(T& x, const T& y) const
+            {
+                x = min(x, y);
+            }
+        };
+
+
     // Private data
 
         //- Reference to polyMesh. Non-const since we move mesh.
@@ -247,6 +263,9 @@ public:
             //- Reference to mesh
             const polyMesh& mesh() const;
 
+            //- Reference to pointMesh
+            const pointMesh& pMesh() const;
+
             //- Reference to patch
             const indirectPrimitivePatch& patch() const;
 
@@ -261,6 +280,9 @@ public:
 
             //- Reference to displacement field
             pointVectorField& displacement();
+
+            //- Reference to displacement field
+            const pointVectorField& displacement() const;
 
             //- Reference to scale field
             const pointScalarField& scale() const;
@@ -291,31 +313,17 @@ public:
             //- Take over existing mesh position.
             void correct();
 
-            //- 2D correction (modifies passed pointField) and
-            //  polyMesh::movePoints
+
+            //- Move mesh. Does 2D correction (modifies passed pointField) and
+            //  polyMesh::movePoints. Returns swept volumes.
             tmp<scalarField> movePoints(pointField&);
-
-            //- Point-jacobi smoothing of internal points
-            template <class Type>
-            void smooth
-            (
-                GeometricField<Type, pointPatchField, pointMesh>&
-            ) const;
-
-            //- Fully explicit smoothing of internal points with varying
-            //  diffusivity.
-            template <class Type>
-            void smooth
-            (
-                const GeometricField<Type, pointPatchField, pointMesh>& fld,
-                const scalarField& edgeGamma,
-                GeometricField<Type, pointPatchField, pointMesh>& newFld
-            ) const;
 
             //- Move mesh with given scale. Return true if mesh ok or has
             //  less than nAllow errors, false
             //  otherwise and locally update scale. Smoothmesh=false means only
             //  patch points get moved.
+            //  Parallel ok (as long as displacement field is consistent
+            //  across patches)
             bool scaleMesh
             (
                 const bool smoothMesh = true,
@@ -327,7 +335,37 @@ public:
 
             //- Check mesh with current settings. Collects incorrect faces
             //  in set. Returns true if one or more faces in error.
+            //  Parallel ok.
             bool checkMesh(labelHashSet&) const;
+
+
+            // Helper functions to manipulate displacement vector.
+
+                //- Point-jacobi smoothing of internal points
+                template <class Type>
+                void smooth
+                (
+                    GeometricField<Type, pointPatchField, pointMesh>&
+                ) const;
+
+                //- Fully explicit smoothing of internal points with varying
+                //  diffusivity.
+                template <class Type>
+                void smooth
+                (
+                    const GeometricField<Type, pointPatchField, pointMesh>& fld,
+                    const scalarField& edgeGamma,
+                    GeometricField<Type, pointPatchField, pointMesh>& newFld
+                ) const;
+
+                //- Sychronizes patch points on pointField
+                template<class Type, class CombineOp>
+                static void syncField
+                (
+                    GeometricField<Type, pointPatchField, pointMesh>&,
+                    const Type& zero,
+                    const CombineOp& cop
+                );
 
 };
 

@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 Class
     vtkFoam
@@ -90,57 +90,61 @@ void Foam::vtkFoam::convertVolFields
                     convertPointField(tptf(), tf);
                 }
 
-                for(label regioni=1; regioni<selectedRegions_.size(); regioni++)
+                label regioni = 0;
+                forAll (mesh.boundaryMesh(), patchi)
                 {
-                    if (selectedRegions_[regioni])
+                    if (mesh.boundaryMesh()[patchi].size())
                     {
-                        label patchi = regioni - 1;
+                        regioni++;
 
-                        const fvPatchField<Type>& ptf
-                        (
-                            tf.boundaryField()[patchi]
-                        );
-
-                        if (typeid(ptf) != typeid(emptyFvPatchField<Type>))
+                        if (selectedRegions_[regioni])
                         {
-                            convertPatchFaceField
+                            const fvPatchField<Type>& ptf
                             (
-                                tf.name(),
-                                ptf,
-                                regioni
+                                tf.boundaryField()[patchi]
                             );
 
-                            convertPatchPointField
-                            (
-                                tptf().name(),
-                                tptf().boundaryField()[patchi]
-                                    .patchInternalField()(),
-                                regioni
-                            );
-                        }
-                        else
-                        {
-                            fvPatch p
-                            (
-                                ptf.patchMesh().patch(),
-                                tf.mesh().boundary()
-                            );
+                            if (!isType<emptyFvPatchField<Type> >(ptf))
+                            {
+                                convertPatchFaceField
+                                (
+                                    tf.name(),
+                                    ptf,
+                                    regioni
+                                );
 
-                            convertPatchFaceField
-                            (
-                                tf.name(),
-                                fvPatchField<Type>(p, tf)
-                                    .patchInternalField()(),
-                                regioni
-                            );
+                                convertPatchPointField
+                                (
+                                    tptf().name(),
+                                    tptf().boundaryField()[patchi]
+                                        .patchInternalField()(),
+                                    regioni
+                                );
+                            }
+                            else
+                            {
+                                fvPatch p
+                                (
+                                    ptf.patch().patch(),
+                                    tf.mesh().boundary()
+                                );
 
-                            convertPatchPointField
-                            (
-                                tptf().name(),
-                                tptf().boundaryField()[patchi]
-                                   .patchInternalField()(),
-                                regioni
-                            );
+                                convertPatchFaceField
+                                (
+                                    tf.name(),
+                                    fvPatchField<Type>(p, tf)
+                                        .patchInternalField()(),
+                                    regioni
+                                );
+
+                                convertPatchPointField
+                                (
+                                    tptf().name(),
+                                    tptf().boundaryField()[patchi]
+                                       .patchInternalField()(),
+                                    regioni
+                                );
+                            }
                         }
                     }
                 }
@@ -199,19 +203,23 @@ void Foam::vtkFoam::convertPointFields
                     );
                 }
 
-                for(label regioni=1; regioni<selectedRegions_.size(); regioni++)
+                label regioni = 0;
+                forAll (mesh.boundaryMesh(), patchi)
                 {
-                    if (selectedRegions_[regioni])
+                    if (mesh.boundaryMesh()[patchi].size())
                     {
-                        label patchi = regioni - 1;
+                        regioni++;
 
-                        convertPatchPointField
-                        (
-                            ptf.name(),
-                            ptf.boundaryField()[patchi]
-                                .patchInternalField()(),
-                            regioni
-                        );
+                        if (selectedRegions_[regioni])
+                        {
+                            convertPatchPointField
+                            (
+                                ptf.name(),
+                                ptf.boundaryField()[patchi]
+                               .patchInternalField()(),
+                                regioni
+                            );
+                        }
                     }
                 }
             }

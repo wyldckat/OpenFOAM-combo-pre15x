@@ -20,7 +20,7 @@ License
 
     You should have received a copy of the GNU General Public License
     along with OpenFOAM; if not, write to the Free Software Foundation,
-    Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA
+    Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301 USA
 
 \*---------------------------------------------------------------------------*/
 package FoamX.Editors.TypeEditor;
@@ -40,10 +40,10 @@ import javax.swing.event.TreeSelectionListener;
 
 import FoamX.App;
 import FoamX.Util.FoamXTypeEx;
-import FoamX.Editors.ApplicationClassEditor.ApplicationClassExeption;
+import FoamX.Editors.ApplicationEditor.ApplicationExeption;
 import FoamX.Util.FoamXTreeRenderer;
 
-import FoamXServer.CaseServer.IApplicationClass;
+import FoamXServer.CaseServer.IApplication;
 import FoamXServer.FoamXError;
 import FoamXServer.FoamXIOError;
 import FoamXServer.FoamXType;
@@ -56,7 +56,7 @@ class TypeEditorModel
 {
     //--------------------------------------------------------------------------
 
-    private IApplicationClass appClass_;
+    private IApplication app_;
     private java.util.Hashtable dictionaryMap_;         // Map of application classes top-level dictionary objects.
     private TypeNodeInfo currentType_;
     private JComboBox addSubTypeCombo_;
@@ -85,11 +85,11 @@ class TypeEditorModel
 
     //--------------------------------------------------------------------------
     /** TypeEditorModel constructor. */
-    public TypeEditorModel(IApplicationClass appClass, JTree tree, JTable table)
+    public TypeEditorModel(IApplication app, JTree tree, JTable table)
     {
         try
         {
-            appClass_      = appClass;
+            app_      = app;
             dictionaryMap_ = new Hashtable();
             currentType_   = null;
 
@@ -265,10 +265,10 @@ class TypeEditorModel
 
                     boolean canAddSubtype = !nodeInfo.isRootNode() && nodeInfo.isCompound();
 
-                    // If this is a list or a vectorSpace type, then only one sub-type is allowed.
+                    // If this is a list or a fixedList type, then only one sub-type is allowed.
                     if (canAddSubtype &&
                          (nodeInfo.getTypeDescriptorCache().getType().value() == FoamXType._Type_List ||
-                           nodeInfo.getTypeDescriptorCache().getType().value() == FoamXType._Type_VectorSpace))
+                           nodeInfo.getTypeDescriptorCache().getType().value() == FoamXType._Type_FixedList))
                     {
                         canAddSubtype = (nodeInfo.getTypeDescriptorCache().getNumElements() == 0);
                     }
@@ -374,11 +374,11 @@ class TypeEditorModel
         try
         {
             // Get list of dictionary keys from the application class and build the tree.
-            String[] dictKeys = appClass_.dictionaries();
+            String[] dictKeys = app_.dictionaries();
             for (int i=0; i <dictKeys.length; i++)
             {
                 ITypeDescriptorHolder typeDescHolder = new ITypeDescriptorHolder();
-                appClass_.getDictionary(dictKeys[i], typeDescHolder);
+                app_.getDictionary(dictKeys[i], typeDescHolder);
 
                 // Add node for this top level dictionary.
                 DefaultMutableTreeNode dictNode = addType(typeDescHolder.value);
@@ -522,7 +522,7 @@ class TypeEditorModel
                     typeParameters_.add(new TypeParameter(typeDesc, TypeParameter.PARAM_VALUELIST));
                     typeParameters_.add(new TypeParameter(typeDesc, TypeParameter.PARAM_LOOKUPDICT));
                 }
-                else if (currentType_.getTypeDescriptorCache().getType() == FoamXType.Type_VectorSpace)
+                else if (currentType_.getTypeDescriptorCache().getType() == FoamXType.Type_FixedList)
                 {
                     typeParameters_.add(new TypeParameter(typeDesc, TypeParameter.PARAM_NUMELEMENTS));
                     typeParameters_.add(new TypeParameter(typeDesc, TypeParameter.PARAM_ELEMENTLABELS));
@@ -551,9 +551,9 @@ class TypeEditorModel
 
     //--------------------------------------------------------------------------
 
-    void validate() throws ApplicationClassExeption
+    void validate() throws ApplicationExeption
     {
-        //throw new ApplicationClassExeption("Dictionaries", "No Fields Defined.");
+        //throw new ApplicationExeption("Dictionaries", "No Fields Defined.");
     }
 
     //--------------------------------------------------------------------------
@@ -774,7 +774,7 @@ class TypeEditorModel
                 {
                     // Create a new top level dictionary type descriptor object.
                     ITypeDescriptorHolder dictTypeDescHolder = new ITypeDescriptorHolder();
-                    appClass_.addDictionary(dictKey, dictTypeDescHolder);
+                    app_.addDictionary(dictKey, dictTypeDescHolder);
 
                     // Add new node to model.
                     DefaultMutableTreeNode nodeItem = addType(dictTypeDescHolder.value);
@@ -832,7 +832,7 @@ class TypeEditorModel
                     if (nodeInfo.isTopLevelType() && dictionaryMap_.containsKey(nodeInfo.getName()))
                     {
                         // Delete the top level dictionary type descriptor object.
-                        appClass_.deleteDictionary(nodeInfo.getName());
+                        app_.deleteDictionary(nodeInfo.getName());
 
                         // Remove from map.
                         dictionaryMap_.remove(nodeInfo.getName());
