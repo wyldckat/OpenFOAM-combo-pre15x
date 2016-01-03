@@ -11,7 +11,7 @@ Therefore, this repository will attempt to not include any source code that is u
 
 *Disclaimer*: This offering is not approved or endorsed by OpenCFD Limited, the producer of the OpenFOAM software and owner of the OPENFOAM®  and OpenCFD® trade marks.
 
-This [git repository](https://github.com/wyldckat/OpenFOAM-combo-pre15x) was brought to you by Bruno Santos (wyldckat@github working at [blueCAPE Lda](www.bluecape.com.pt)).
+This [git repository](https://github.com/wyldckat/OpenFOAM-combo-pre15x) was brought to you by Bruno Santos (wyldckat@github working at [blueCAPE Lda](http://www.bluecape.com.pt)).
 
 
 How to use
